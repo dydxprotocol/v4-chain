@@ -581,6 +581,96 @@ fetch(`${baseURL}/affiliates/metadata?address=string`,
 This operation does not require authentication
 </aside>
 
+## UpdateCode
+
+<a id="opIdUpdateCode"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/affiliates/referralCode', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "newCode": "string",
+  "address": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/affiliates/referralCode`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /affiliates/referralCode`
+
+> Body parameter
+
+```json
+{
+  "newCode": "string",
+  "address": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|true|none|
+|» newCode|body|string|true|none|
+|» address|body|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "referralCode": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[CreateReferralCodeResponse](#schemacreatereferralcoderesponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetSnapshot
 
 <a id="opIdGetSnapshot"></a>
@@ -4428,6 +4518,26 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |address|string|true|none|none|
+
+## CreateReferralCodeResponse
+
+<a id="schemacreatereferralcoderesponse"></a>
+<a id="schema_CreateReferralCodeResponse"></a>
+<a id="tocScreatereferralcoderesponse"></a>
+<a id="tocscreatereferralcoderesponse"></a>
+
+```json
+{
+  "referralCode": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|referralCode|string|true|none|none|
 
 ## AffiliateSnapshotResponseObject
 

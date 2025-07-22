@@ -11,14 +11,18 @@ import {
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
+  Body,
   Controller, Get, Query, Route,
+  Post,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
+import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
+import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { UpdateReferralCodeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -31,6 +35,8 @@ import {
   AffiliateSnapshotRequest,
   AffiliateTotalVolumeResponse,
   AffiliateTotalVolumeRequest,
+  CreateReferralCodeResponse,
+  CreateReferralCodeRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -123,6 +129,65 @@ class AffiliatesController extends Controller {
 
     return {
       address,
+    };
+  }
+
+  @Post('/referralCode')
+  async updateCode(
+    @Body() body: {
+      address: string,
+      newCode: string,
+    },
+  ): Promise<CreateReferralCodeResponse> {
+    const {
+      address,
+      newCode,
+    }: {
+      address: string,
+      newCode: string,
+    } = body;
+
+    // Check if the referral code already exists.
+    // There is a unique constraint but doing this allows us to have a better error message.
+    const existingUsernameRow = await SubaccountUsernamesTable.findByUsername(
+      newCode,
+    );
+    if (existingUsernameRow) {
+      throw new InvalidParamError('Referral code already exists');
+    }
+
+    const subAccount = await SubaccountTable.findAll(
+      {
+        address,
+        subaccountNumber: 0,
+      },
+      [],
+    );
+    // There is a code-level restriction, but it is possible to
+    // have more than one subaccount for an address
+    // It is also possible for there to be no username, if the task to create it has not run yet
+    if (subAccount.length !== 1) {
+      throw new InvalidParamError(
+        'Referral code update not available yet - please try again later',
+      );
+    }
+
+    const subaccountId = subAccount[0].id;
+
+    try {
+      // there are assumptions here that
+      // 1. There is only one entry per subaccountId
+      // 2. There is already an entry for the subaccountId
+      await SubaccountUsernamesTable.update({
+        username: newCode,
+        subaccountId,
+      });
+    } catch (error) {
+      throw new UnexpectedServerError('Failed to update referral code - please try again later');
+    }
+
+    return {
+      referralCode: newCode,
     };
   }
 
@@ -286,6 +351,112 @@ router.get(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_address.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/referralCode',
+  ...UpdateReferralCodeSchema(true),
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    const {
+      address,
+      newCode,
+      signedMessage,
+      pubKey,
+      timestamp,
+    }: CreateReferralCodeRequest = req.body;
+
+    try {
+      const failedValidationResponse = await validateSignature(
+        res,
+        AccountVerificationRequiredAction.UPDATE_CODE,
+        address,
+        timestamp,
+        newCode,
+        signedMessage,
+        pubKey,
+      );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
+      }
+
+      const controller: AffiliatesController = new AffiliatesController();
+      const response: CreateReferralCodeResponse = await controller.updateCode({
+        address,
+        newCode,
+      });
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'AffiliatesController POST /referralCode',
+        'Affiliates referral code error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.create_code.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+// Keplr wallet does uses a completely different signature format
+// so we need to have a separate endpoint for it
+router.post(
+  '/referralCode-keplr',
+  ...UpdateReferralCodeSchema(false),
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    const {
+      address,
+      newCode,
+      signedMessage,
+      pubKey,
+    }: CreateReferralCodeRequest = req.body;
+
+    try {
+      const failedValidationResponse = await validateSignatureKeplr(
+        res,
+        address,
+        newCode,
+        signedMessage,
+        pubKey,
+      );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
+      }
+
+      const controller: AffiliatesController = new AffiliatesController();
+      const response: CreateReferralCodeResponse = await controller.updateCode({
+        address,
+        newCode,
+      });
+      return res.send(response);
+
+    } catch (error) {
+      return handleControllerError(
+        'AffiliatesController POST /referralCode-keplr',
+        'Affiliates referral code error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.create_code.timing`,
         Date.now() - start,
       );
     }
