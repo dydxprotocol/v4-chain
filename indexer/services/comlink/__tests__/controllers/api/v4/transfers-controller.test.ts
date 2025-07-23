@@ -2,6 +2,7 @@ import {
   dbHelpers,
   IsoString,
   SubaccountTable,
+  SubaccountUsernamesTable,
   testConstants,
   testMocks,
   TransferCreateObject,
@@ -1104,6 +1105,7 @@ describe('transfers-controller#V4', () => {
     });
 
     it('Returns successfully when source subaccount does not exist', async () => {
+      await SubaccountUsernamesTable.deleteBySubaccountId(testConstants.defaultSubaccountId);
       await SubaccountTable.deleteById(testConstants.defaultSubaccountId);
 
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse();
@@ -1112,6 +1114,7 @@ describe('transfers-controller#V4', () => {
     });
 
     it('Returns successfully when recipient subaccount does not exist', async () => {
+      await SubaccountUsernamesTable.deleteBySubaccountId(testConstants.defaultSubaccountId2);
       await SubaccountTable.deleteById(testConstants.defaultSubaccountId2);
 
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse();

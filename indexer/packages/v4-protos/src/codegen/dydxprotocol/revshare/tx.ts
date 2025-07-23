@@ -1,5 +1,5 @@
 import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
-import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType } from "./revshare";
+import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType, OrderRouterRevShare, OrderRouterRevShareSDKType } from "./revshare";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to set the market mapper revenue share */
@@ -82,6 +82,28 @@ export interface MsgUpdateUnconditionalRevShareConfigResponse {}
 /** Response to MsgUpdateUnconditionalRevShareConfig */
 
 export interface MsgUpdateUnconditionalRevShareConfigResponseSDKType {}
+/** Governance message to create or update the order router revenue share */
+
+export interface MsgSetOrderRouterRevShare {
+  authority: string;
+  /** The order router rev share to create or update. */
+
+  orderRouterRevShare?: OrderRouterRevShare;
+}
+/** Governance message to create or update the order router revenue share */
+
+export interface MsgSetOrderRouterRevShareSDKType {
+  authority: string;
+  /** The order router rev share to create or update. */
+
+  order_router_rev_share?: OrderRouterRevShareSDKType;
+}
+/** Response to MsgSetOrderRouterRevShare */
+
+export interface MsgSetOrderRouterRevShareResponse {}
+/** Response to MsgSetOrderRouterRevShare */
+
+export interface MsgSetOrderRouterRevShareResponseSDKType {}
 
 function createBaseMsgSetMarketMapperRevenueShare(): MsgSetMarketMapperRevenueShare {
   return {
@@ -355,6 +377,95 @@ export const MsgUpdateUnconditionalRevShareConfigResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateUnconditionalRevShareConfigResponse>): MsgUpdateUnconditionalRevShareConfigResponse {
     const message = createBaseMsgUpdateUnconditionalRevShareConfigResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSetOrderRouterRevShare(): MsgSetOrderRouterRevShare {
+  return {
+    authority: "",
+    orderRouterRevShare: undefined
+  };
+}
+
+export const MsgSetOrderRouterRevShare = {
+  encode(message: MsgSetOrderRouterRevShare, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.orderRouterRevShare !== undefined) {
+      OrderRouterRevShare.encode(message.orderRouterRevShare, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetOrderRouterRevShare {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetOrderRouterRevShare();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.orderRouterRevShare = OrderRouterRevShare.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetOrderRouterRevShare>): MsgSetOrderRouterRevShare {
+    const message = createBaseMsgSetOrderRouterRevShare();
+    message.authority = object.authority ?? "";
+    message.orderRouterRevShare = object.orderRouterRevShare !== undefined && object.orderRouterRevShare !== null ? OrderRouterRevShare.fromPartial(object.orderRouterRevShare) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetOrderRouterRevShareResponse(): MsgSetOrderRouterRevShareResponse {
+  return {};
+}
+
+export const MsgSetOrderRouterRevShareResponse = {
+  encode(_: MsgSetOrderRouterRevShareResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetOrderRouterRevShareResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetOrderRouterRevShareResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSetOrderRouterRevShareResponse>): MsgSetOrderRouterRevShareResponse {
+    const message = createBaseMsgSetOrderRouterRevShareResponse();
     return message;
   }
 

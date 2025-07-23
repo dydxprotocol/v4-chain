@@ -18,4 +18,7 @@ const (
 	MarketMapperRevSharePrefix = "MarketMapperRevShare:"
 
 	UnconditionalRevShareConfigKey = "UnconditionalRevShareConfig"
+
+	// Key prefix for storing OrderRouterRevShareParams
+	OrderRouterRevSharePrefix = "OrderRouterRevShare:"
 )

@@ -8,14 +8,13 @@ import { rawQuery } from './stores-helpers';
 const layer2Tables = [
   'perpetual_positions',
   'fills',
-  'subaccount_usernames',
   'leaderboard_pnl',
   'funding_payments',
   'turnkey_users',
 ];
 
 const layer1Tables = [
-  'subaccounts',
+  'subaccount_usernames',
   'markets',
   'orders',
   'perpetual_markets',

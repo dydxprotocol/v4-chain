@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.revshare;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -32,6 +33,13 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/revshare/unconditional_rev_share";
   }
+
+  // Queries order router rev share
+  rpc OrderRouterRevShare(QueryOrderRouterRevShare)
+      returns (QueryOrderRouterRevShareResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/revshare/order_router_rev_share/{address}";
+  }
 }
 
 // Queries for the default market mapper revenue share params
@@ -56,4 +64,15 @@ message QueryUnconditionalRevShareConfig {}
 // Response type for QueryUnconditionalRevShareConfig
 message QueryUnconditionalRevShareConfigResponse {
   UnconditionalRevShareConfig config = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Queries order router rev shares
+message QueryOrderRouterRevShare {
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// Response type for QueryOrderRouterRevShare
+message QueryOrderRouterRevShareResponse {
+  OrderRouterRevShare order_router_rev_share = 1
+      [ (gogoproto.nullable) = false ];
 }

@@ -54,6 +54,24 @@ export interface UnconditionalRevShareConfig_RecipientConfigSDKType {
 
   share_ppm: number;
 }
+/** Message to set the order router revenue share */
+
+export interface OrderRouterRevShare {
+  /** The address of the order router. */
+  address: string;
+  /** The share of the revenue to be paid to the order router. */
+
+  sharePpm: number;
+}
+/** Message to set the order router revenue share */
+
+export interface OrderRouterRevShareSDKType {
+  /** The address of the order router. */
+  address: string;
+  /** The share of the revenue to be paid to the order router. */
+
+  share_ppm: number;
+}
 
 function createBaseMarketMapperRevShareDetails(): MarketMapperRevShareDetails {
   return {
@@ -193,6 +211,61 @@ export const UnconditionalRevShareConfig_RecipientConfig = {
 
   fromPartial(object: DeepPartial<UnconditionalRevShareConfig_RecipientConfig>): UnconditionalRevShareConfig_RecipientConfig {
     const message = createBaseUnconditionalRevShareConfig_RecipientConfig();
+    message.address = object.address ?? "";
+    message.sharePpm = object.sharePpm ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseOrderRouterRevShare(): OrderRouterRevShare {
+  return {
+    address: "",
+    sharePpm: 0
+  };
+}
+
+export const OrderRouterRevShare = {
+  encode(message: OrderRouterRevShare, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+
+    if (message.sharePpm !== 0) {
+      writer.uint32(16).uint32(message.sharePpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OrderRouterRevShare {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOrderRouterRevShare();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+
+        case 2:
+          message.sharePpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OrderRouterRevShare>): OrderRouterRevShare {
+    const message = createBaseOrderRouterRevShare();
     message.address = object.address ?? "";
     message.sharePpm = object.sharePpm ?? 0;
     return message;
