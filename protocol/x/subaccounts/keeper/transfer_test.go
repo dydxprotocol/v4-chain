@@ -1451,8 +1451,8 @@ func TestDistributeFees(t *testing.T) {
 				MakerOrderRouterAddr:              constants.BobAccAddress.String(),
 				TakerOrderRouterAddr:              constants.AliceAccAddress.String(),
 			},
-			expectedSubaccountsModuleAccBalance:     big.NewInt(50),   // 550 - 500
-			expectedFeeModuleAccBalance:             big.NewInt(2900), // 2500 + 500 - 100
+			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:             big.NewInt(2850), // 2500 + 500 - 150
 			expectedMarketMapperAccBalance:          big.NewInt(50),   // 0 + 50
 			expectedBuySideOrderRouterRevShare:      big.NewInt(50),   // 0 + 50
 			expectedSellSideOrderRouterRevShare:     big.NewInt(50),   // 0 + 50
@@ -1626,12 +1626,12 @@ func TestDistributeFees(t *testing.T) {
 				TakerOrderRouterAddr:              constants.BobAccAddress.String(),
 				MakerOrderRouterAddr:              constants.DaveAccAddress.String(),
 			},
-			expectedSubaccountsModuleAccBalance:     big.NewInt(87),   // 600 - 503
-			expectedFeeModuleAccBalance:             big.NewInt(2884), // 2500 + 500 - 108
-			expectedMarketMapperAccBalance:          big.NewInt(47),   // 10% of 475
+			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:             big.NewInt(2873), // 2500 + 500 - 127
+			expectedMarketMapperAccBalance:          big.NewInt(46),   // 10% of 465
 			expectedBuySideOrderRouterRevShare:      big.NewInt(20),   // 8% of 250
 			expectedSellSideOrderRouterRevShare:     big.NewInt(15),   // 6% of 250
-			expectedUnconditionalRevShareAccBalance: big.NewInt(47),   // 10% of 475
+			expectedUnconditionalRevShareAccBalance: big.NewInt(46),   // 10% of 465
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(4),
 			),
@@ -1642,12 +1642,12 @@ func TestDistributeFees(t *testing.T) {
 			revShare: revsharetypes.RevSharesForFill{
 				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
 					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(20),
-					revsharetypes.REV_SHARE_FEE_SOURCE_MAKER_FEE:            big.NewInt(5),
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(96),
+					revsharetypes.REV_SHARE_FEE_SOURCE_MAKER_FEE:            big.NewInt(15),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(92),
 				},
 				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
 					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            80_000,  // 8%
-					revsharetypes.REV_SHARE_FEE_SOURCE_MAKER_FEE:            20_000,  // 2%
+					revsharetypes.REV_SHARE_FEE_SOURCE_MAKER_FEE:            60_000,  // 6%
 					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 200_000, // 20%
 				},
 				AllRevShares: []revsharetypes.RevShare{
@@ -1655,14 +1655,14 @@ func TestDistributeFees(t *testing.T) {
 						Recipient:         constants.AliceAccAddress.String(),
 						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER,
-						QuoteQuantums:     big.NewInt(47),
+						QuoteQuantums:     big.NewInt(46),
 						RevSharePpm:       100_000, // 10%
 					},
 					{
 						Recipient:         constants.CarlAccAddress.String(),
 						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
-						QuoteQuantums:     big.NewInt(47),
+						QuoteQuantums:     big.NewInt(46),
 						RevSharePpm:       100_000, // 10%
 					},
 					{
