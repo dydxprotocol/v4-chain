@@ -66,7 +66,7 @@
     "@types/jest": "29.5.14",
     "@types/lodash": "^4.14.182",
     "@types/luxon": "^3.0.0",
-    "@types/node": "^18.0.3",
+    "@types/node": "20.19.3",
     "@types/redis": "2.8.27",
     "@types/response-time": "^2.3.5",
     "@types/supertest": "^2.0.12",
