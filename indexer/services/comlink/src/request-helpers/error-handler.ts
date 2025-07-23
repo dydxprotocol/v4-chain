@@ -17,7 +17,7 @@ export function handleUnexpectedFieldErrors(
     forEach(object, (value, key) => {
       if (!isEqual(value, base[key])) {
         if (isObject(value) && isObject(base[key])) {
-          difference(value, base[key], `${parentPath}${key}.`);
+          difference(value, base[key] as Record<string, {}>, `${parentPath}${key}.`);
         } else {
           errors.push({ msg: `Unexpected field: '${parentPath}${key}'` });
         }
