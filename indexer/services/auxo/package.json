@@ -30,12 +30,12 @@
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
     "@types/aws-lambda": "^8.10.108",
-    "@types/jest": "29.5.14",
+    "@types/jest": "^28.1.4",
     "@types/lodash": "^4.14.182",
     "@types/node": "^18.0.3",
     "@types/redis": "2.8.27",
     "esbuild": "^0.15.11",
-    "jest": "^29.7.0",
+    "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "tsconfig-paths": "^4.0.0",
     "typescript": "^4.7.4"
