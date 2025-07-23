@@ -2522,3 +2522,221 @@ func TestConditionalOrderExpiration(t *testing.T) {
 		})
 	}
 }
+
+func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
+	tests := map[string]struct {
+		subaccounts                        []satypes.Subaccount
+		orders                             []clobtypes.Order
+		priceUpdateForFirstBlock           *prices.MsgUpdateMarketPrices
+		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
+		expectedExistInState               map[clobtypes.OrderId]bool
+		expectedOrderOnMemClob             map[clobtypes.OrderId]bool
+		expectedOrderFillAmount            map[clobtypes.OrderId]uint64
+		expectedSubaccounts                []satypes.Subaccount
+	}{
+		"Conditional IOC reduce-only order closes position and gets resized to zero": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_500000USD,
+				// Alice has a long position of exactly 0.25 BTC
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(500_000_000_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(25_000_000), // 0.25 BTC long
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+			},
+			orders: []clobtypes.Order{
+				// Carl buys 0.25 BTC, which will exactly close Alice's position
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10,
+				// Alice tries to sell 0.5 BTC reduce-only but only has 0.25 BTC position
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
+			},
+			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_300_000), // Trigger the conditional order
+				},
+			},
+
+			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
+				2: {
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
+				},
+				3: {
+					// Should no longer be triggered after removal
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
+				},
+			},
+
+			expectedExistInState: map[clobtypes.OrderId]bool{
+				// Should be removed from state after resize to zero
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
+			},
+
+			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
+				// Fully filled
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId: false,
+			},
+
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId: 25_000_000,
+			},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(375_013_750_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(25_000_000),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(624_937_500_000),
+						),
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							genesisState.Subaccounts = tc.subaccounts
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *perptypes.GenesisState) {
+							genesisState.Params = constants.PerpetualsGenesisParams
+							genesisState.LiquidityTiers = constants.LiquidityTiers
+							genesisState.Perpetuals = []perptypes.Perpetual{
+								constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+								constants.EthUsd_20PercentInitial_10PercentMaintenance,
+							}
+						},
+					)
+					return genesis
+				}).Build()
+			ctx := tApp.InitChain()
+
+			// Create all orders
+			deliverTxsOverride := make([][]byte, 0)
+			deliverTxsOverride = append(deliverTxsOverride, constants.ValidEmptyMsgProposedOperationsTxBytes)
+
+			for _, order := range tc.orders {
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+					ctx,
+					tApp.App,
+					*clobtypes.NewMsgPlaceOrder(order),
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+
+					if order.IsStatefulOrder() {
+						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
+					}
+				}
+			}
+
+			if tc.priceUpdateForFirstBlock != nil {
+				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
+				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForFirstBlock))
+				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+				require.NoError(t, err)
+				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: deliverTxsOverride,
+			})
+
+			// Verify conditional order triggering for block 2
+			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[2]; ok {
+				for orderId, triggered := range expectedTriggeredOrders {
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 2)
+				}
+			}
+
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+			// Verify conditional order triggering for block 3
+			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {
+				for orderId, triggered := range expectedTriggeredOrders {
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
+				}
+			}
+
+			// Verify expectations
+			for orderId, exists := range tc.expectedOrderOnMemClob {
+				_, existsOnMemclob := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
+				require.Equal(
+					t,
+					exists,
+					existsOnMemclob,
+					"Order %v expected on memclob: %v, actual: %v",
+					orderId,
+					exists,
+					existsOnMemclob,
+				)
+			}
+
+			for orderId, expectedFillAmount := range tc.expectedOrderFillAmount {
+				exists, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+				if expectedFillAmount > 0 {
+					require.True(t, exists)
+					require.Equal(t, expectedFillAmount, fillAmount.ToUint64())
+				}
+			}
+
+			// Verify orders are removed from state
+			for orderId, expectedExists := range tc.expectedExistInState {
+				_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, orderId)
+				require.Equal(
+					t,
+					expectedExists,
+					found,
+					"Order %v expected exists in state: %v, actual: %v",
+					orderId,
+					expectedExists,
+					found,
+				)
+			}
+
+			for _, subaccount := range tc.expectedSubaccounts {
+				actualSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount.Id)
+				require.Equal(t, subaccount, actualSubaccount)
+			}
+		})
+	}
+}
