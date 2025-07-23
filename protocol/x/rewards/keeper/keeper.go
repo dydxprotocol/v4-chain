@@ -170,10 +170,6 @@ func (k Keeper) AddRewardSharesForFill(
 			takerOrderRouterRevShare = share.QuoteQuantums
 		}
 	}
-	k.Logger(ctx).Error(
-		"AddRewardSharesForFill",
-		"maxPossibleAffiliateRevShareQuoteQuantum", maxPossibleAffiliateRevShareQuoteQuantum,
-	)
 
 	// This is the amount of remaining fee: 1 - total_net_fee_rev_share_ppm
 	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
