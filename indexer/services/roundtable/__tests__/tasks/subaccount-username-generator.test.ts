@@ -7,6 +7,7 @@ import {
   dbHelpers,
   SubaccountUsernamesFromDatabase,
   SubaccountFromDatabase,
+  testConstants,
 } from '@dydxprotocol-indexer/postgres';
 import subaccountUsernameGenerator from '../../src/tasks/subaccount-username-generator';
 
@@ -19,6 +20,9 @@ describe('subaccount-username-generator', () => {
   beforeEach(async () => {
     await testMocks.seedData();
     await testMocks.seedAdditionalSubaccounts();
+    // delete all usernames that were seeded
+    await SubaccountUsernamesTable.deleteBySubaccountId(testConstants.defaultSubaccountId);
+    await SubaccountUsernamesTable.deleteBySubaccountId(testConstants.defaultSubaccountId2);
   });
 
   afterAll(async () => {

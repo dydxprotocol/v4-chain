@@ -5,6 +5,7 @@ import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
 import * as MarketTable from '../../src/stores/market-table';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
+import * as SubaccountUsernamesTable from '../../src/stores/subaccount-usernames-table';
 import * as TendermintEventTable from '../../src/stores/tendermint-event-table';
 import * as VaultTable from '../../src/stores/vault-table';
 import * as WalletTable from '../../src/stores/wallet-table';
@@ -39,6 +40,8 @@ import {
   defaultSubaccount2Num0,
   defaultSubaccount3Num0,
   defaultVault,
+  defaultSubaccountUsername2,
+  defaultSubaccountUsername,
 } from './constants';
 
 export async function seedAdditionalSubaccounts() {
@@ -54,6 +57,10 @@ export async function seedData() {
     SubaccountTable.create(defaultSubaccount2),
     SubaccountTable.create(isolatedSubaccount),
     SubaccountTable.create(isolatedSubaccount2),
+  ]);
+  await Promise.all([
+    SubaccountUsernamesTable.create(defaultSubaccountUsername),
+    SubaccountUsernamesTable.create(defaultSubaccountUsername2),
   ]);
   await Promise.all([
     MarketTable.create(defaultMarket),
@@ -88,13 +95,9 @@ export async function seedData() {
     AssetTable.create(defaultAsset2),
     AssetTable.create(defaultAsset3),
   ]);
-  await Promise.all([
-    WalletTable.create(defaultWallet),
-  ]);
+  await Promise.all([WalletTable.create(defaultWallet)]);
   await Promise.all([
     FirebaseNotificationTokenTable.create(defaultFirebaseNotificationToken),
   ]);
-  await Promise.all([
-    VaultTable.create(defaultVault),
-  ]);
+  await Promise.all([VaultTable.create(defaultVault)]);
 }
