@@ -34,7 +34,7 @@ We use [pnpm](https://pnpm.io/) in this repo because it is a "faster and more di
 nvm install
 nvm use
 nvm alias default $(nvm version) # optional
-npm i -g pnpm@6
+npm i -g pnpm@8
 ```
 
 ### Installation

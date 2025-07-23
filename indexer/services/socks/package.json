@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/index",
   "scripts": {
-    "start": "node --max-semi-space-size=128 --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
+    "start": "node --cppgc-young-generation --minor-gc-task-trigger=70 --incremental-marking-soft-trigger=10 --incremental-marking-hard-trigger=20 --scavenge-separate-stack-scanning --min-semi-space-size=256 --max-semi-space-size=512 --shared-string-table --compact-on-every-full-gc --maglev --maglev-inlining --turbo-string-builder --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",

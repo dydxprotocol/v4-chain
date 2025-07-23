@@ -30,11 +30,11 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Install pnpm
         run:
-          npm install -g pnpm@6.34.0
+          npm install -g pnpm@8.15.9
 
       - name: Install
         run: |
