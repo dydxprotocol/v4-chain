@@ -247,6 +247,7 @@ func (k Keeper) DistributeFees(
 		if err != nil {
 			return err
 		}
+
 		if err := k.TransferFees(
 			ctx,
 			assetId,
@@ -296,7 +297,7 @@ func (k Keeper) DistributeFees(
 		totalTakerFeeRevShareQuantums,
 		totalMakerFeeRevShareQuantums,
 	)
-	totalRevShareQuoteQuantums = totalRevShareQuoteQuantums.Add(
+	totalRevShareQuoteQuantums = big.NewInt(0).Add(
 		totalRevShareQuoteQuantums,
 		totalNetFeeRevShareQuantums,
 	)

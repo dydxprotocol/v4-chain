@@ -145,39 +145,69 @@ func (k Keeper) AddRewardSharesForFill(
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
 
+	// Calculate total net fee rev share ppm on the protocol
 	totalNetFeeRevSharePpm := uint32(0)
 	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE]; ok {
 		totalNetFeeRevSharePpm = value
 	}
-	maxPossibleTakerFeeRevShare := big.NewInt(0)
+	maxPossibleAffiliateRevShareQuoteQuantum := big.NewInt(0)
 
 	// taker revshare is always 0 if taker rolling volume is greater than or equal
 	// to Max30dTakerVolumeQuantums, so no need to reduce score by `max_possible_taker_fee_rev_share`
 	if fill.MonthlyRollingTakerVolumeQuantums < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
-		maxPossibleTakerFeeRevShare = lib.BigMulPpm(fill.TakerFeeQuoteQuantums,
+		maxPossibleAffiliateRevShareQuoteQuantum = lib.BigMulPpm(fill.TakerFeeQuoteQuantums,
 			lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
 			false,
 		)
 	}
 
+	// Remove the taker order router rev share from the taker fee
+	// Taker order router rev share is mutually exclusive with affiliate rev share
+	takerOrderRouterRevShare := big.NewInt(0)
+	for _, share := range revSharesForFill.AllRevShares {
+		if share.RevShareFeeSource == revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE &&
+			share.RevShareType == revsharetypes.REV_SHARE_TYPE_ORDER_ROUTER {
+			takerOrderRouterRevShare = share.QuoteQuantums
+		}
+	}
+	k.Logger(ctx).Error(
+		"AddRewardSharesForFill",
+		"maxPossibleAffiliateRevShareQuoteQuantum", maxPossibleAffiliateRevShareQuoteQuantum,
+	)
+
+	// This is the amount of remaining fee: 1 - total_net_fee_rev_share_ppm
 	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
 
 	// Calculate quote_quantums * max_maker_rebate. Result is non-positive.
+	// This is the amount of quote quantums that is rebate to the maker
 	makerRebateMulTakerVolume := lib.BigMulPpm(fill.FillQuoteQuantums, lib.BigI(maxMakerRebatePpm), false)
 
+	// Remove the rebate given to the maker from the taker fee
 	netTakerFee := new(big.Int).Add(
 		fill.TakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
 	)
+
+	// Remove the affiliate or order router fee from the taker fee
 	netTakerFee = netTakerFee.Sub(
 		netTakerFee,
-		maxPossibleTakerFeeRevShare,
+		maxPossibleAffiliateRevShareQuoteQuantum,
 	)
+
+	// Remove the taker order router fee from the taker fee
+	netTakerFee = netTakerFee.Sub(
+		netTakerFee,
+		takerOrderRouterRevShare,
+	)
+
+	// Factor out the protocol fees given as rev shares
 	takerWeight := lib.BigMulPpm(
 		netTakerFee,
 		lib.BigU(totalFeeSubNetRevSharePpm),
 		false,
 	)
+
+	// Give the taker the remaining reward shares
 	if takerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
@@ -194,7 +224,23 @@ func (k Keeper) AddRewardSharesForFill(
 	}
 
 	// Process reward weight for maker.
-	makerWeight := new(big.Int).Set(lib.BigMulPpm(fill.MakerFeeQuoteQuantums, lib.BigU(totalFeeSubNetRevSharePpm), false))
+	// This is the maker fee quote quantums * (1 - total_net_fee_rev_share_ppm)
+	makerOrderRouterRevShare := big.NewInt(0)
+	for _, share := range revSharesForFill.AllRevShares {
+		if share.RevShareFeeSource == revsharetypes.REV_SHARE_FEE_SOURCE_MAKER_FEE &&
+			share.RevShareType == revsharetypes.REV_SHARE_TYPE_ORDER_ROUTER {
+			makerOrderRouterRevShare = share.QuoteQuantums
+		}
+	}
+
+	// Remove the maker order router rev share from the maker fee
+	// Maker ORRS is 0 if there is a rebate
+	netMakerFee := new(big.Int).Sub(
+		fill.MakerFeeQuoteQuantums,
+		makerOrderRouterRevShare,
+	)
+	// Factor out the protocol fees from the remaining maker fee
+	makerWeight := new(big.Int).Set(lib.BigMulPpm(netMakerFee, lib.BigU(totalFeeSubNetRevSharePpm), false))
 	if makerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
