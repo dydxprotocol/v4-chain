@@ -225,4 +225,6 @@ type MatchableOrder interface {
 	// IsReduceOnly returns whether this is a reduce-only order.
 	// This always returns false for liquidation orders.
 	IsReduceOnly() bool
+	// GetOrderRouterAddress returns the order router address for this order.
+	GetOrderRouterAddress() string
 }

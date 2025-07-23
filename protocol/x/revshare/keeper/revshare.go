@@ -107,10 +107,13 @@ func (k Keeper) GetMarketMapperRevenueShareForMarket(ctx sdk.Context, marketId u
 }
 
 func (k Keeper) GetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string) (uint32, error) {
+	if orderRouterAddr == "" {
+		return 0, nil
+	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
-		return 0, types.ErrInvalidAddress.Wrapf("order router address is not valid: %s", orderRouterAddr)
+		return 0, types.ErrInvalidAddress
 	}
 
 	orderRouterRevShareBytes := store.Get(
@@ -128,7 +131,7 @@ func (k Keeper) SetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string, 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
-		return types.ErrInvalidAddress.Wrapf("order router address is not valid: %s", orderRouterAddr)
+		return types.ErrInvalidAddress
 	}
 
 	store.Set([]byte(orderRouterBech32Addr), lib.Uint32ToKey(revSharePpm))
@@ -198,6 +201,8 @@ func (k Keeper) GetAllRevShares(
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_MAKER_FEE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_MAKER_FEE] = 0
 
 	totalFeesShared := big.NewInt(0)
 	takerFees := fill.TakerFeeQuoteQuantums
@@ -213,21 +218,39 @@ func (k Keeper) GetAllRevShares(
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
-	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
-	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
+
+	var orderRouterRevShares []types.RevShare
+	netFeesSubRevenueShare := netFees
+	// No affiliate fees shared, so we can generate order router rev shares
+	if affiliateRevShares == nil {
+		orderRouterRevShares, err = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+		for _, revShare := range orderRouterRevShares {
+			netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, revShare.QuoteQuantums)
+		}
+	} else {
+		netFeesSubRevenueShare = new(big.Int).Sub(netFees, affiliateFeesShared)
+	}
+
+	if netFeesSubRevenueShare.Sign() <= 0 {
 		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
 	}
 
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubRevenueShare)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubRevenueShare)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
 
 	revShares = append(revShares, affiliateRevShares...)
+	if orderRouterRevShares != nil {
+		revShares = append(revShares, orderRouterRevShares...)
+	}
 	revShares = append(revShares, unconditionalRevShares...)
 	revShares = append(revShares, marketMapperRevShares...)
 
@@ -247,7 +270,7 @@ func (k Keeper) GetAllRevShares(
 		// Add the rev share ppm to the total for the fee source
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
-	//check total fees shared is less than or equal to net fees
+	// Check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
@@ -290,6 +313,65 @@ func (k Keeper) getAffiliateRevShares(
 			RevSharePpm:       feeSharePpm,
 		},
 	}, feesShared, nil
+}
+
+func (k Keeper) getOrderRouterRevShares(
+	ctx sdk.Context,
+	fill clobtypes.FillForProcess,
+	takerFees *big.Int,
+	makerFees *big.Int,
+) ([]types.RevShare, error) {
+	if fill.TakerOrderRouterAddr == "" && fill.MakerOrderRouterAddr == "" {
+		return nil, nil
+	}
+
+	orderRouterRevShares := []types.RevShare{}
+	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
+	if err != nil {
+		// This should never happen
+		k.Logger(ctx).Error("order router rev share not found for taker: " + fill.TakerOrderRouterAddr)
+		return nil, err
+	}
+
+	if fill.TakerOrderRouterAddr != "" {
+		// Orders can have 2 rev share ids, we need to calculate each side separately
+		// This is taker ppm * min(taker, taker - maker_rebate)
+		takerFeesSide := lib.BigMin(takerFees, new(big.Int).Add(takerFees, makerFees))
+		takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
+		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
+			Recipient:         fill.TakerOrderRouterAddr,
+			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+			RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+			QuoteQuantums:     takerRevShare,
+			RevSharePpm:       takerOrderRouterRevSharePpm,
+		})
+	}
+
+	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
+	if err != nil {
+		// This should never happen
+		k.Logger(ctx).Error("order router rev share not found for maker: " + fill.MakerOrderRouterAddr)
+		return nil, err
+	}
+
+	if fill.MakerOrderRouterAddr != "" {
+		// maker ppm * max(0, maker)
+		makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
+		makerRevShare := lib.BigMulPpm(makerFeeSide,
+			lib.BigU(makerOrderRouterRevSharePpm),
+			false,
+		)
+
+		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
+			Recipient:         fill.MakerOrderRouterAddr,
+			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
+			RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+			QuoteQuantums:     makerRevShare,
+			RevSharePpm:       makerOrderRouterRevSharePpm,
+		})
+	}
+
+	return orderRouterRevShares, nil
 }
 
 func (k Keeper) getUnconditionalRevShares(
