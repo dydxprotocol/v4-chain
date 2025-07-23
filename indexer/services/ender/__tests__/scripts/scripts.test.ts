@@ -1,51 +1,52 @@
 import {
-  IndexerTendermintEvent,
-  IndexerOrder_Side,
-  IndexerSubaccountId,
-  IndexerOrder_TimeInForce,
-  IndexerOrderId,
-  IndexerTendermintEvent_BlockEvent,
-  AssetCreateEventV1,
-  SubaccountUpdateEventV1,
-  MarketEventV1, IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
-import {
+  AssetPositionTable,
+  BlockTable,
   BUFFER_ENCODING_UTF_8,
   CLOB_STATUS_TO_MARKET_STATUS,
   dbHelpers,
-  AssetPositionTable,
-  PerpetualPositionTable,
-  Liquidity,
-  OrderSide,
-  PositionSide,
-  TendermintEventTable,
   FillTable,
   FundingIndexUpdatesTable,
+  Liquidity,
   OraclePriceTable,
+  OrderSide,
   OrderTable,
+  PerpetualPositionTable,
+  PositionSide,
   protocolTranslations,
-  SubaccountTable,
   storeHelpers,
-  testConstants,
-  uuid,
-  TransactionTable,
-  TransactionFromDatabase,
-  TransferTable,
-  BlockTable,
+  SubaccountTable,
   TendermintEventFromDatabase,
+  TendermintEventTable,
+  testConstants,
+  TransactionFromDatabase,
+  TransactionTable,
+  TransferTable,
+  uuid,
 } from '@dydxprotocol-indexer/postgres';
+import {
+  AssetCreateEventV1,
+  IndexerOrder_ConditionType,
+  IndexerOrder_Side,
+  IndexerOrder_TimeInForce,
+  IndexerOrderId,
+  IndexerSubaccountId,
+  IndexerTendermintEvent,
+  IndexerTendermintEvent_BlockEvent,
+  MarketEventV1,
+  SubaccountUpdateEventV1,
+} from '@dydxprotocol-indexer/v4-protos';
 
-import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 import {
   getWeightedAverage,
   indexerTendermintEventToTransactionIndex,
   perpetualPositionAndOrderSideMatching,
 } from '../../src/lib/helper';
-import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
-import { createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { defaultAssetCreateEvent, defaultMarketCreate } from '../helpers/constants';
+import { createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 
 describe('SQL Function Tests', () => {
   beforeAll(async () => {
@@ -163,13 +164,19 @@ describe('SQL Function Tests', () => {
   });
 
   it.each([
-    ['LIMIT', IndexerOrder_ConditionType.UNRECOGNIZED],
-    ['LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
-    ['TAKE_PROFIT', IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
-    ['STOP_LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
-  ])('dydx_protocol_condition_type_to_order_type (%s)', async (_name: string, value: IndexerOrder_ConditionType) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_protocol_condition_type_to_order_type('${value}') AS result`);
-    expect(result).toEqual(protocolTranslations.protocolConditionTypeToOrderType(value));
+    ['LIMIT', 32, IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['LIMIT', 32, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+    ['TAKE_PROFIT', 32, IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
+    ['STOP_LIMIT', 32, IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
+    ['LIMIT', 0, IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['LIMIT', 64, IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['TWAP', 128, IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['TWAP_SUBORDER', 256, IndexerOrder_ConditionType.UNRECOGNIZED],
+  ])('dydx_protocol_condition_type_to_order_type (%s)', async (_name: string, orderFlags: number, value: IndexerOrder_ConditionType) => {
+    const result = await getSingleRawQueryResultRow(`SELECT dydx_protocol_condition_type_to_order_type(${orderFlags}, '${value}'::jsonb) AS result`);
+    expect(result).toEqual(
+      protocolTranslations.protocolConditionTypeToOrderType(value, orderFlags),
+    );
   });
 
   it.each([

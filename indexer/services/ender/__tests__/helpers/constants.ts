@@ -5,6 +5,7 @@ import {
   ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
   ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   AssetCreateEventV1,
@@ -537,6 +538,23 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
         orderFlags: ORDER_FLAG_LONG_TERM,
       },
       goodTilBlockTime: 123,
+    },
+  },
+};
+export const defaultTwapOrderPlacementEvent: StatefulOrderEventV1 = {
+  twapOrderPlacement: {
+    order: {
+      ...defaultMakerOrder,
+      orderId: {
+        ...defaultMakerOrder.orderId!,
+        orderFlags: ORDER_FLAG_TWAP,
+      },
+      goodTilBlockTime: 123,
+      twapParameters: {
+        duration: 3000,
+        interval: 300,
+        priceTolerance: 0,
+      },
     },
   },
 };
