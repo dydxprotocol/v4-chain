@@ -29,6 +29,16 @@ func TestSetOrderRouterRevShare(t *testing.T) {
 			},
 			expectedErr: "",
 		},
+		"Failure - Invalid Revenue Share PPM": {
+			msg: &types.MsgSetOrderRouterRevShare{
+				Authority: lib.GovModuleAddress.String(),
+				OrderRouterRevShare: types.OrderRouterRevShare{
+					Address:  constants.AliceAccAddress.String(),
+					SharePpm: 1_000_000,
+				},
+			},
+			expectedErr: "rev share safety violation: rev shares greater than or equal to allowed amount",
+		},
 		"Failure - Invalid Authority": {
 			msg: &types.MsgSetOrderRouterRevShare{
 				Authority: constants.AliceAccAddress.String(),

@@ -17,4 +17,7 @@ type FillForProcess struct {
 	// below
 	MonthlyRollingTakerVolumeQuantums uint64
 	MarketId                          uint32
+	// Order router addresses for taker and maker
+	TakerOrderRouterAddr string
+	MakerOrderRouterAddr string
 }
