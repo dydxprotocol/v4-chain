@@ -179,7 +179,7 @@ export class TurnkeyController extends Controller {
 
   // returns the suborgId plus salt and adds the user to the turnkey users table store.
   private async createSuborg(params: CreateSuborgParams): Promise<TurnkeyCreateSuborgResponse> {
-    const oauthProviders = [];
+    const oauthProviders: TurnkeyApiTypes['v1OauthProviderParams'][] = [];
     if (params.oidcToken && params.providerName) {
       oauthProviders.push({
         providerName: params.providerName,
@@ -187,7 +187,7 @@ export class TurnkeyController extends Controller {
       });
     }
 
-    const authenticators = [];
+    const authenticators: TurnkeyApiTypes['v1AuthenticatorParamsV2'][] = [];
     if (params.authenticatorName && params.challenge && params.attestation) {
 
       // serialize the attestation object.
