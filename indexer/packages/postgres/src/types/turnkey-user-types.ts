@@ -1,5 +1,3 @@
-/* ------- TURNKEY USER TYPES ------- */
-
 export interface TurnkeyUserCreateObject {
   suborg_id: string,
   username?: string,

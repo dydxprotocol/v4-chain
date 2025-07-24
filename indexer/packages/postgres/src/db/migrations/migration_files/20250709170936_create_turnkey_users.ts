@@ -7,10 +7,10 @@ export async function up(knex: Knex): Promise<void> {
       table.text('suborg_id').primary(); // Primary key
       table.text('username').nullable(); // optional
       table.text('email').nullable().unique(); // optional but unique
-      table.text('svm_address').notNullable(); // indexed
-      table.text('evm_address').notNullable(); // indexed
+      table.text('svm_address').notNullable().unique(); // indexed
+      table.text('evm_address').notNullable().unique(); // indexed
       table.text('salt').notNullable(); // used to generate dydx keypair when combining the onboarding signature
-      table.text('dydx_address').nullable();
+      table.text('dydx_address').nullable().unique();
       table.timestamp('created_at').notNullable();
 
       // Indexes
