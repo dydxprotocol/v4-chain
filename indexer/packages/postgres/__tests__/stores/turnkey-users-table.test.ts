@@ -17,7 +17,6 @@ describe('TurnkeyUser store', () => {
 
   const defaultTurnkeyUser1 = {
     suborg_id: 'suborg-1',
-    username: 'user1',
     email: 'user1@example.com',
     svm_address: 'SVM123456789',
     evm_address: '0x1234567890abcdef1234567890abcdef12345678',
@@ -28,7 +27,6 @@ describe('TurnkeyUser store', () => {
 
   const defaultTurnkeyUser2 = {
     suborg_id: 'suborg-2',
-    username: 'user2',
     email: 'user2@example.com',
     svm_address: 'SVM987654321',
     evm_address: '0x9876543210fedcba9876543210fedcba98765432',
@@ -39,7 +37,6 @@ describe('TurnkeyUser store', () => {
 
   const defaultTurnkeyUser3 = {
     suborg_id: 'suborg-3',
-    username: 'user3',
     svm_address: 'SVM987654321',
     evm_address: '0x9876543210fedcba9876543210fedcba98765433',
     salt: 'salt3',
@@ -60,7 +57,6 @@ describe('TurnkeyUser store', () => {
     // Update with upsert
     const updatedUser = {
       ...defaultTurnkeyUser1,
-      username: 'updated_user1',
       email: 'updated_user1@example.com',
     };
     await TurnkeyUserTable.upsert(updatedUser);

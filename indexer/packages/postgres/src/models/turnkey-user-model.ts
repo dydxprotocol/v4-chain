@@ -21,7 +21,6 @@ export default class TurnkeyUserModel extends BaseModel {
       ],
       properties: {
         suborg_id: { type: 'string' },
-        username: { type: ['string', 'null'] },
         email: { type: ['string', 'null'] },
         svm_address: { type: 'string' },
         evm_address: { type: 'string' },
@@ -39,7 +38,6 @@ export default class TurnkeyUserModel extends BaseModel {
   static get sqlToJsonConversions() {
     return {
       suborg_id: 'string',
-      username: 'string',
       email: 'string',
       svm_address: 'string',
       evm_address: 'string',
@@ -50,8 +48,6 @@ export default class TurnkeyUserModel extends BaseModel {
   }
 
   suborg_id!: string;
-
-  username?: string;
 
   email?: string;
 
