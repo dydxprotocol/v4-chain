@@ -177,7 +177,7 @@ describe('TurnkeyController', () => {
           subOrganizationId: 'test-suborg-id-2',
           rootUserIds: ['user-id', 'user-id-2'],
           wallet: {
-            addresses: ['0x123', 'svm-address'],
+            addresses: ['0x123', 'svm-address2'],
           },
         } as any);
         jest.mocked(mockParentApiClient.getSubOrgIds).mockResolvedValueOnce({
