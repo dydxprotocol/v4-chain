@@ -51,6 +51,7 @@
     "luxon": "^3.0.1",
     "mkdirp": "^3.0.1",
     "nocache": "^3.0.4",
+    "node-fetch": "2",
     "rate-limiter-flexible": "^2.4.1",
     "redis": "2.8.0",
     "response-time": "^2.3.2",
