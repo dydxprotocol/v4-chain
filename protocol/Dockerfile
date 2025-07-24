@@ -1,6 +1,6 @@
 # NB: This is a digest for a multi-arch manifest list, you will want to get this by running
-# `docker buildx imagetools inspect golang:1.23.1-alpine`
-ARG GOLANG_1_23_ALPINE_DIGEST="ac67716dd016429be8d4c2c53a248d7bcdf06d34127d3dc451bda6aa5a87bc06"
+# `docker buildx imagetools inspect golang:1.24-alpine`
+ARG GOLANG_1_24_ALPINE_DIGEST="daae04ebad0c21149979cd8e9db38f565ecefd8547cf4a591240dc1972cf1399"
 
 # This Dockerfile is a stateless build of the `dydxprotocold` binary as a Docker container.
 # It does not include any configuration, state, or genesis information.
@@ -9,7 +9,7 @@ ARG GOLANG_1_23_ALPINE_DIGEST="ac67716dd016429be8d4c2c53a248d7bcdf06d34127d3dc45
 # Builder
 # --------------------------------------------------------
 
-FROM golang@sha256:${GOLANG_1_23_ALPINE_DIGEST} as builder
+FROM golang@sha256:${GOLANG_1_24_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
 
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Runner
 # --------------------------------------------------------
 
-FROM golang@sha256:${GOLANG_1_23_ALPINE_DIGEST}
+FROM golang@sha256:${GOLANG_1_24_ALPINE_DIGEST}
 
 RUN apk add --no-cache bash
 
