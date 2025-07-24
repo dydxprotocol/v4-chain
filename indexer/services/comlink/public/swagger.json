@@ -3226,6 +3226,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ]
       }

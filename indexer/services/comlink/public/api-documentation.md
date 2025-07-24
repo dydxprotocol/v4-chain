@@ -2767,6 +2767,7 @@ fetch(`${baseURL}/perpetualMarkets`,
 |---|---|---|---|---|
 |limit|query|number(double)|false|none|
 |ticker|query|string|false|none|
+|market|query|string|false|none|
 
 > Example responses
 

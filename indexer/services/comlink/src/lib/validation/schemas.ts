@@ -217,6 +217,10 @@ export const CheckTickerOptionalQuerySchema = checkSchema({
   ticker: checkTickerOptionalQuerySchema,
 });
 
+export const CheckMarketOptionalQuerySchema = checkSchema({
+  market: checkTickerOptionalQuerySchema,
+});
+
 export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
   ...checkAddressSchemaRecord,
   ...limitSchemaRecord,

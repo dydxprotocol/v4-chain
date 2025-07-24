@@ -162,14 +162,77 @@ describe('perpetual-markets-controller#V4', () => {
       );
     });
 
-    it('Returns 404 with unknown ticker', async () => {
-      const response: request.Response = await sendRequest({
+    it('Returns 404 with unknown ticker or market', async () => {
+      let response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/perpetualMarkets/${invalidTicker}`,
+        path: `/v4/perpetualMarkets/ticker=${invalidTicker}`,
         expectedStatus: 404,
       });
-
       expect(response.body.error).toContain('Not Found');
+      
+      response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/perpetualMarkets/market=${invalidTicker}`,
+        expectedStatus: 404,
+      });
+      expect(response.body.error).toContain('Not Found');
+    });
+
+    it('Returns 400 when both ticker and market are provided', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/perpetualMarkets?${getQueryString({
+          ticker: testConstants.defaultPerpetualMarket.ticker,
+          market: testConstants.defaultPerpetualMarket.ticker
+        })}`,
+        expectedStatus: 400,
+      });
+
+      expect(response.body.errors[0].msg).toContain('Only one of ticker or market may be provided');
+    });
+
+    it('Market parameter functions the same as ticker parameter', async () => {
+      // Get response using ticker parameter
+      const tickerResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/perpetualMarkets?${getQueryString({
+          ticker: testConstants.defaultPerpetualMarket.ticker
+        })}`,
+      });
+
+      // Get response using market parameter
+      const marketResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/perpetualMarkets?${getQueryString({
+          market: testConstants.defaultPerpetualMarket.ticker
+        })}`,
+      });
+
+      // Only one market should be returned in both cases
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined =
+        await PerpetualMarketTable.findByTicker(testConstants.defaultPerpetualMarket.ticker);
+      const market: MarketFromDatabase | undefined =
+        await MarketTable.findById(testConstants.defaultPerpetualMarket.marketId);
+      const liquidityTier: LiquidityTiersFromDatabase | undefined =
+        await LiquidityTiersTable.findById(testConstants.defaultPerpetualMarket.liquidityTierId);
+
+      // Verify both responses contain the same data
+      expectResponseWithMarkets(
+        tickerResponse,
+        [perpetualMarket!],
+        [liquidityTier!],
+        [market!],
+      );
+
+      expectResponseWithMarkets(
+        marketResponse,
+        [perpetualMarket!],
+        [liquidityTier!],
+        [market!],
+      );
+
+      // The response bodies should be identical
+      expect(tickerResponse.body).toEqual(marketResponse.body);
     });
   });
 });
