@@ -140,8 +140,6 @@ function handleTurnkeyError(
     errors: [{
       msg: error.message,
       type: 'TURNKEY_ERROR',
-      turnkeyCode: error.turnkeyCode,
-      turnkeyType: error.turnkeyType,
     }],
   });
 }
