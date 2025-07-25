@@ -3689,6 +3689,122 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## SignIn
+
+<a id="opIdSignIn"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/signin', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/signin`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/signin`
+
+> Body parameter
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  }
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[SignInRequest](#schemasigninrequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
+  "salt": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TurnkeyAuthResponse](#schematurnkeyauthresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetMegavaultHistoricalPnl
 
 <a id="opIdGetMegavaultHistoricalPnl"></a>
@@ -6344,6 +6460,103 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## TurnkeyAuthResponse
+
+<a id="schematurnkeyauthresponse"></a>
+<a id="schema_TurnkeyAuthResponse"></a>
+<a id="tocSturnkeyauthresponse"></a>
+<a id="tocsturnkeyauthresponse"></a>
+
+```json
+{
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
+  "salt": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|organizationId|string|false|none|none|
+|apiKeyId|string|false|none|none|
+|userId|string|false|none|none|
+|session|string|false|none|none|
+|salt|string|true|none|none|
+
+## SigninMethod
+
+<a id="schemasigninmethod"></a>
+<a id="schema_SigninMethod"></a>
+<a id="tocSsigninmethod"></a>
+<a id="tocssigninmethod"></a>
+
+```json
+"email"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|email|
+|*anonymous*|social|
+|*anonymous*|passkey|
+
+## SignInRequest
+
+<a id="schemasigninrequest"></a>
+<a id="schema_SignInRequest"></a>
+<a id="tocSsigninrequest"></a>
+<a id="tocssigninrequest"></a>
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  }
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|signinMethod|[SigninMethod](#schemasigninmethod)|true|none|none|
+|userEmail|string|false|none|none|
+|targetPublicKey|string|false|none|none|
+|provider|string|false|none|none|
+|oidcToken|string|false|none|none|
+|challenge|string|false|none|none|
+|attestation|object|false|none|none|
+|» transports|[string]|true|none|none|
+|» attestationObject|string|true|none|none|
+|» clientDataJson|string|true|none|none|
+|» credentialId|string|true|none|none|
 
 ## MegavaultHistoricalPnlResponse
 
