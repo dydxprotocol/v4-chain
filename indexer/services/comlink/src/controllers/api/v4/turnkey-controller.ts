@@ -162,7 +162,7 @@ export class TurnkeyController extends Controller {
     } else if (p.email) {
       suborgId = await this.getSuborgByEmail(p.email);
     } else {
-      throw new Error('Email is required to create a suborg');
+      throw new Error('One of email, oidcToken, or credentialId is required');
     }
 
     // find it in our table.
@@ -471,7 +471,7 @@ const SignInValidationSchema = checkSchema({
     in: ['body'],
     optional: true,
     isObject: true,
-    errorMessage: 'Attestation must be a string',
+    errorMessage: 'Attestation must be an object',
   },
   provider: {
     in: ['body'],
