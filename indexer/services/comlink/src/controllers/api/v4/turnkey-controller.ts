@@ -12,6 +12,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -102,7 +103,7 @@ export class TurnkeyController extends Controller {
         };
 
       } catch (error) {
-        throw new Error(`Email Signin: ${error}`);
+        throw this.wrapTurnkeyError(error, 'Email signin failed');
       }
     } else if (signinMethod === SigninMethod.SOCIAL) {
       if (!provider || !oidcToken || !targetPublicKey) {
@@ -115,7 +116,7 @@ export class TurnkeyController extends Controller {
           salt: resp.salt,
         };
       } catch (error) {
-        throw new Error(`Social Signin Error: ${error}`);
+        throw this.wrapTurnkeyError(error, 'Social signin failed');
       }
     } else if (signinMethod === SigninMethod.PASSKEY) {
       if (!challenge || !attestation) {
@@ -128,7 +129,7 @@ export class TurnkeyController extends Controller {
           salt: resp.salt,
         };
       } catch (error) {
-        throw new Error(`Passkey Signin Error: ${error}`);
+        throw this.wrapTurnkeyError(error, 'Passkey signin failed');
       }
     }
     throw new Error(`Invalid signin method. Must be one of: ${SigninMethod.EMAIL}, ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}`);
@@ -426,6 +427,16 @@ export class TurnkeyController extends Controller {
     return response.organizationIds?.[0] || '';
   }
 
+  // Helper method to wrap Turnkey errors with additional context
+  private wrapTurnkeyError(error: unknown, contextMessage: string): TurnkeyError {
+    if (error instanceof Error) {
+      return new TurnkeyError(
+        `${contextMessage}: ${error.message}`,
+      );
+    }
+    return new TurnkeyError(`${contextMessage}: ${String(error)}`);
+  }
+
 }
 
 // Validation schemas
@@ -499,7 +510,7 @@ router.post(
 
       const controller: TurnkeyController = new TurnkeyController();
 
-      const response = await controller.signIn(body);
+      const response: TurnkeyAuthResponse = await controller.signIn(body);
 
       return res.send(response);
     } catch (error) {

@@ -39,3 +39,10 @@ export class InvalidParamError extends Error {
     this.name = 'InvalidParamError';
   }
 }
+
+export class TurnkeyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TurnkeyError';
+  }
+}
