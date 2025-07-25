@@ -9,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -295,6 +296,230 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	require.True(t, found2, "Third suborder should exist in trigger store")
 	require.Equal(t, ctx.BlockTime().Unix()+int64(twapOrder.TwapParameters.Interval), triggerTime)
 }
+
+func TestNormalOrderWithNoCollateral(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	tApp.App.SubaccountsKeeper.SetSubaccount(ctx, constants.Alice_Num0_0USD)
+
+	order := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 50),
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: 100_000_000_000_000_000, // 10 BTC
+		Subticks: 100_000_000_000,
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(order)) {
+		resp := tApp.CheckTx(checkTx)
+		require.False(t, resp.IsOK(), "Expected CheckTx to fail with insufficient collateral. Response: %+v", resp)
+	}
+}
+
+func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Create a TWAP order: 100_000_000_000 quantums (10 BTC), 10 suborders of 1 BTC each
+	twapOrder := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_Twap,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: 100_000_000_000, // 10 BTC
+		Subticks: 0,               // market TWAP order
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 300), // 5 minutes from now
+		},
+		TwapParameters: &clobtypes.TwapParameters{
+			Duration:       300, // 5 minutes
+			Interval:       75,  // 75 seconds
+			PriceTolerance: 0,   // 0% slippage off oracle price
+		},
+	}
+
+	// Place the TWAP order
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(twapOrder)) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// --- First suborder trigger ---
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 75),
+	})
+
+	suborderId := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+
+	// Place a matching sell order for the first suborder
+	matchingOrder1 := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Bob_Num0,
+			ClientId:     1,
+			OrderFlags:   0,
+			ClobPairId:   0,
+		},
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+			GoodTilBlock: uint32(4),
+		},
+		Side:     clobtypes.Order_SIDE_SELL,
+		Quantums: 25_000_000_000,
+		Subticks: 100_000_000,
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(matchingOrder1)) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Simulate fill of first suborder
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 0),
+		RequestPrepareProposalTxsOverride: [][]byte{
+			testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewMatchOperationRaw(
+						&clobtypes.Order{
+							OrderId:  suborderId,
+							Side:     clobtypes.Order_SIDE_BUY,
+							Quantums: 25_000_000_000,
+							Subticks: 100_000_000,
+						},
+						[]clobtypes.MakerFill{
+							{
+								FillAmount:   25_000_000_000,
+								MakerOrderId: matchingOrder1.OrderId,
+							},
+						},
+					),
+				},
+			}),
+		},
+	})
+
+	// --- Second suborder trigger ---
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 75),
+	})
+
+	// Place a matching sell order for the second suborder
+	matchingOrder2 := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Bob_Num0,
+			ClientId:     2,
+			OrderFlags:   0,
+			ClobPairId:   0,
+		},
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+			GoodTilBlock: uint32(6),
+		},
+		Side:     clobtypes.Order_SIDE_SELL,
+		Quantums: 25_000_000_000, // 1 BTC
+		Subticks: 100_000_000,
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(matchingOrder2)) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Simulate fill of second suborder
+	suborderId2 := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 0),
+		RequestPrepareProposalTxsOverride: [][]byte{
+			testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewMatchOperationRaw(
+						&clobtypes.Order{
+							OrderId:  suborderId2,
+							Side:     clobtypes.Order_SIDE_BUY,
+							Quantums: 25_000_000_000,
+							Subticks: 100_000_000,
+						},
+						[]clobtypes.MakerFill{
+							{
+								FillAmount:   25_000_000_000,
+								MakerOrderId: matchingOrder2.OrderId,
+							},
+						},
+					),
+				},
+			}),
+		},
+	})
+
+	prev_alice_subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	require.NotNil(t, prev_alice_subaccount)
+
+	// tApp.App.SubaccountsKeeper.SetSubaccount(ctx, constants.Alice_Num0_0USD) // doesnt work
+	withdrawal := &sendingtypes.MsgWithdrawFromSubaccount{
+		Sender:    constants.Alice_Num0,
+		Recipient: constants.BobAccAddress.String(), // send to bob
+		AssetId:   constants.Usdc.Id,
+		Quantums:  99_999_900_011_000_000, // remaining balance
+	}
+	
+	CheckTx_MsgWithdrawFromSubaccount := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: withdrawal.Sender.Owner,
+			Gas:                  200_000,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		withdrawal,
+	)
+	tApp.CheckTx(CheckTx_MsgWithdrawFromSubaccount)
+	
+	post_alice_subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	require.NotNil(t, post_alice_subaccount)
+
+	ctx = tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
+
+	alice_subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	require.NotNil(t, alice_subaccount)
+
+	// --- Third suborder trigger (should fail to place due to insufficient collateral) ---
+	ctx = tApp.AdvanceToBlock(7, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 75),
+	})
+
+	// There should be no new suborder placed for Alice
+	suborderId3 := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	suborder3, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId3)
+	require.False(t, found, "No new suborder should be placed after running out of collateral")
+	require.Nil(t, suborder3, "No new suborder should be placed after running out of collateral")
+
+	// The TWAP order should be removed from the store (since it failed to place a suborder)
+	_, found = tApp.App.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.False(t, found, "TWAP order placement should be deleted after failed suborder due to insufficient collateral")
+}
+
 
 func TestTwapOrderCancellation(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
