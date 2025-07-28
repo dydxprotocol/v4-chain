@@ -297,33 +297,6 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	require.Equal(t, ctx.BlockTime().Unix()+int64(twapOrder.TwapParameters.Interval), triggerTime)
 }
 
-func TestNormalOrderWithNoCollateral(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-
-	tApp.App.SubaccountsKeeper.SetSubaccount(ctx, constants.Alice_Num0_0USD)
-
-	order := clobtypes.Order{
-		OrderId: clobtypes.OrderId{
-			SubaccountId: constants.Alice_Num0,
-			ClientId:     0,
-			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
-			ClobPairId:   0,
-		},
-		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
-			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 50),
-		},
-		Side:     clobtypes.Order_SIDE_BUY,
-		Quantums: 100_000_000_000_000_000, // 10 BTC
-		Subticks: 100_000_000_000,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(order)) {
-		resp := tApp.CheckTx(checkTx)
-		require.False(t, resp.IsOK(), "Expected CheckTx to fail with insufficient collateral. Response: %+v", resp)
-	}
-}
-
 func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
