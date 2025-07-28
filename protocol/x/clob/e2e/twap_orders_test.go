@@ -382,7 +382,11 @@ func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 		Quantums: 25_000_000_000,
 		Subticks: 100_000_000,
 	}
-	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(matchingOrder1)) {
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(matchingOrder1),
+	) {
 		resp := tApp.CheckTx(checkTx)
 		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
 	}
@@ -432,7 +436,11 @@ func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 		Quantums: 25_000_000_000, // 1 BTC
 		Subticks: 100_000_000,
 	}
-	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(matchingOrder2)) {
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(matchingOrder2),
+	) {
 		resp := tApp.CheckTx(checkTx)
 		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
 	}
@@ -468,17 +476,14 @@ func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 		},
 	})
 
-	prev_alice_subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
-	require.NotNil(t, prev_alice_subaccount)
-
 	// tApp.App.SubaccountsKeeper.SetSubaccount(ctx, constants.Alice_Num0_0USD) // doesnt work
 	withdrawal := &sendingtypes.MsgWithdrawFromSubaccount{
 		Sender:    constants.Alice_Num0,
 		Recipient: constants.BobAccAddress.String(), // send to bob
 		AssetId:   constants.Usdc.Id,
-		Quantums:  99_999_900_011_000_000, // remaining balance
+		Quantums:  99_999_995_000_000_000, // remaining balance + 95B to be below collat requirements for next suborder
 	}
-	
+
 	CheckTx_MsgWithdrawFromSubaccount := testapp.MustMakeCheckTx(
 		ctx,
 		tApp.App,
@@ -490,14 +495,7 @@ func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 		withdrawal,
 	)
 	tApp.CheckTx(CheckTx_MsgWithdrawFromSubaccount)
-	
-	post_alice_subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
-	require.NotNil(t, post_alice_subaccount)
-
 	ctx = tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
-
-	alice_subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
-	require.NotNil(t, alice_subaccount)
 
 	// --- Third suborder trigger (should fail to place due to insufficient collateral) ---
 	ctx = tApp.AdvanceToBlock(7, testapp.AdvanceToBlockOptions{
@@ -511,15 +509,13 @@ func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
 		ClobPairId:   0,
 	}
-	suborder3, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId3)
+	_, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId3)
 	require.False(t, found, "No new suborder should be placed after running out of collateral")
-	require.Nil(t, suborder3, "No new suborder should be placed after running out of collateral")
 
 	// The TWAP order should be removed from the store (since it failed to place a suborder)
 	_, found = tApp.App.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
 	require.False(t, found, "TWAP order placement should be deleted after failed suborder due to insufficient collateral")
 }
-
 
 func TestTwapOrderCancellation(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
