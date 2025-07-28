@@ -64,7 +64,6 @@ func NewLiquidationOrderFillEvent(
 	makerFee int64,
 	takerFee int64,
 	makerBuilderFee uint64,
-	makerOrderRouterFee uint64,
 	totalFilledMaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
 ) *OrderFillEventV1 {
@@ -97,7 +96,8 @@ func NewLiquidationOrderFillEvent(
 		MakerBuilderFee:         makerBuilderFee,
 		TakerBuilderFee:         0, // protocol generated liquidation orders have no builder fee
 		MakerOrderRouterAddress: makerOrderRouterAddress,
-		MakerOrderRouterFee:     makerOrderRouterFee,
+		TakerOrderRouterAddress: "",
+		MakerOrderRouterFee:     0,
 		TakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
 	}
 }

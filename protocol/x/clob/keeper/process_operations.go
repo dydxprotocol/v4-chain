@@ -653,7 +653,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
 					matchWithOrders.MakerBuilderFee,
-					matchWithOrders.MakerOrderRouterFee,
 					totalFilledMaker,
 					affiliateRevSharesQuoteQuantums,
 				),
