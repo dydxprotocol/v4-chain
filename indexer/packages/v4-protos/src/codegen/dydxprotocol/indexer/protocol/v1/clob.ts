@@ -582,6 +582,9 @@ export interface IndexerOrder {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builderCodeParams?: BuilderCodeParameters;
+  /** order_router_address is the metadata for the partner or order router of an order. */
+
+  orderRouterAddress: string;
 }
 /**
  * IndexerOrderV1 represents a single order belonging to a `Subaccount`
@@ -655,6 +658,9 @@ export interface IndexerOrderSDKType {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builder_code_params?: BuilderCodeParametersSDKType;
+  /** order_router_address is the metadata for the partner or order router of an order. */
+
+  order_router_address: string;
 }
 /**
  * BuilderCodeParameters represents the metadata for the partner or builder of
@@ -771,7 +777,8 @@ function createBaseIndexerOrder(): IndexerOrder {
     clientMetadata: 0,
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
-    builderCodeParams: undefined
+    builderCodeParams: undefined,
+    orderRouterAddress: ""
   };
 }
 
@@ -823,6 +830,10 @@ export const IndexerOrder = {
 
     if (message.builderCodeParams !== undefined) {
       BuilderCodeParameters.encode(message.builderCodeParams, writer.uint32(98).fork()).ldelim();
+    }
+
+    if (message.orderRouterAddress !== "") {
+      writer.uint32(106).string(message.orderRouterAddress);
     }
 
     return writer;
@@ -885,6 +896,10 @@ export const IndexerOrder = {
           message.builderCodeParams = BuilderCodeParameters.decode(reader, reader.uint32());
           break;
 
+        case 13:
+          message.orderRouterAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -908,6 +923,7 @@ export const IndexerOrder = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.builderCodeParams = object.builderCodeParams !== undefined && object.builderCodeParams !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParams) : undefined;
+    message.orderRouterAddress = object.orderRouterAddress ?? "";
     return message;
   }
 
