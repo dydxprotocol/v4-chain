@@ -177,5 +177,9 @@ export default class OrderModel extends BaseModel {
 
   updatedAtHeight!: string;
 
-  orderRouterAddress!: string;
+  builderAddress?: string;
+
+  feePpm?: string;
+
+  orderRouterAddress?: string;
 }

@@ -162,7 +162,7 @@ export default class FillModel extends Model {
 
   builderFee!: string;
 
-  builderAddress!: string;
+  builderAddress?: string;
 
-  orderRouterAddress!: string;
+  orderRouterAddress?: string;
 }
