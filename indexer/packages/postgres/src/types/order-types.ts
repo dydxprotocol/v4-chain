@@ -111,4 +111,5 @@ export enum OrderColumns {
   createdAtHeight = 'createdAtHeight',
   clientMetadata = 'clientMetadata',
   triggerPrice = 'triggerPrice',
+  orderRouterAddress = 'orderRouterAddress',
 }
