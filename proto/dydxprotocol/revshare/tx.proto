@@ -25,15 +25,9 @@ service Msg {
   rpc UpdateUnconditionalRevShareConfig(MsgUpdateUnconditionalRevShareConfig)
       returns (MsgUpdateUnconditionalRevShareConfigResponse);
 
-<<<<<<< HEAD
   // SetOrderRouterRevShare sets the revenue share for an order router.
   rpc SetOrderRouterRevShare(MsgSetOrderRouterRevShare)
       returns (MsgSetOrderRouterRevShareResponse);
-=======
-  // SetOrderRouterRevShares sets the revenue share for an order router.
-  rpc SetOrderRouterRevShares(MsgSetOrderRouterRevShares)
-      returns (MsgSetOrderRouterRevSharesResponse);
->>>>>>> 0c91117ff (Add governance messages)
 }
 
 // Message to set the market mapper revenue share
