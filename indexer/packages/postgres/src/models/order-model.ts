@@ -98,6 +98,7 @@ export default class OrderModel extends BaseModel {
         updatedAtHeight: { type: 'string', pattern: IntegerPattern },
         builderAddress: { type: ['string', 'null'], default: null },
         feePpm: { type: ['string', 'null'], default: null },
+        orderRouterAddress: { type: ['string', 'null'], default: null },
       },
     };
   }
@@ -130,6 +131,7 @@ export default class OrderModel extends BaseModel {
       triggerPrice: 'string',
       updatedAt: 'date-time',
       updatedAtHeight: 'string',
+      orderRouterAddress: 'string',
     };
   }
 
@@ -174,4 +176,6 @@ export default class OrderModel extends BaseModel {
   updatedAt!: IsoString;
 
   updatedAtHeight!: string;
+
+  orderRouterAddress!: string;
 }

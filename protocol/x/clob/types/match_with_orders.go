@@ -15,6 +15,8 @@ type MatchWithOrders struct {
 	TakerFee        int64
 	MakerBuilderFee uint64
 	TakerBuilderFee uint64
+	MakerOrderRouterFee uint64
+	TakerOrderRouterFee uint64
 }
 
 // Validate performs stateless validation on an order match. This validation does

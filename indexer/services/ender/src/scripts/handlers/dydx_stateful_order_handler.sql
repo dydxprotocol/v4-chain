@@ -69,6 +69,13 @@ BEGIN
         END CASE;
 
         CASE
+            WHEN order_->>'orderRouterAddress' IS NOT NULL THEN
+                order_record."orderRouterAddress" = order_->>'orderRouterAddress';
+            ELSE
+                order_record."orderRouterAddress" = null;
+        END CASE;
+
+        CASE
             WHEN order_->'builderCodeParams' IS NOT NULL THEN
                 order_record."builderAddress" = jsonb_extract_path_text(order_, 'builderCodeParams', 'builderAddress');
                 order_record."feePpm" = jsonb_extract_path_text(order_, 'builderCodeParams', 'feePpm')::bigint;
@@ -98,7 +105,8 @@ BEGIN
                        "status" = order_record."status",
                        "triggerPrice" = order_record."triggerPrice",
                        "builderAddress" = order_record."builderAddress",
-                       "feePpm" = order_record."feePpm"
+                       "feePpm" = order_record."feePpm",
+                       "orderRouterAddress" = order_record."orderRouterAddress"
         RETURNING * INTO order_record;
 
         RETURN jsonb_build_object(

@@ -90,6 +90,7 @@ export default class FillModel extends Model {
         affiliateRevShare: { type: 'string', pattern: NonNegativeNumericPattern },
         builderFee: { type: ['string', 'null'], default: null },
         builderAddress: { type: ['string', 'null'], default: null },
+        orderRouterAddress: { type: ['string', 'null'], default: null },
       },
     };
   }
@@ -121,6 +122,7 @@ export default class FillModel extends Model {
       affiliateRevShare: 'string',
       builderFee: 'string',
       builderAddress: 'string',
+      orderRouterAddress: 'string',
     };
   }
 
@@ -161,4 +163,6 @@ export default class FillModel extends Model {
   builderFee!: string;
 
   builderAddress!: string;
+
+  orderRouterAddress!: string;
 }

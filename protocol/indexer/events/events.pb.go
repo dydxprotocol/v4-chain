@@ -729,6 +729,10 @@ type OrderFillEventV1 struct {
 	MakerBuilderAddress string `protobuf:"bytes,12,opt,name=maker_builder_address,json=makerBuilderAddress,proto3" json:"maker_builder_address,omitempty"`
 	// builder address for taker
 	TakerBuilderAddress string `protobuf:"bytes,13,opt,name=taker_builder_address,json=takerBuilderAddress,proto3" json:"taker_builder_address,omitempty"`
+	// order router address for maker
+	MakerOrderRouterAddress string `protobuf:"bytes,14,opt,name=maker_order_router_address,json=makerOrderRouterAddress,proto3" json:"maker_order_router_address,omitempty"`
+	// order router address for taker
+	TakerOrderRouterAddress string `protobuf:"bytes,15,opt,name=taker_order_router_address,json=takerOrderRouterAddress,proto3" json:"taker_order_router_address,omitempty"`
 }
 
 func (m *OrderFillEventV1) Reset()         { *m = OrderFillEventV1{} }
@@ -874,6 +878,20 @@ func (m *OrderFillEventV1) GetMakerBuilderAddress() string {
 func (m *OrderFillEventV1) GetTakerBuilderAddress() string {
 	if m != nil {
 		return m.TakerBuilderAddress
+	}
+	return ""
+}
+
+func (m *OrderFillEventV1) GetMakerOrderRouterAddress() string {
+	if m != nil {
+		return m.MakerOrderRouterAddress
+	}
+	return ""
+}
+
+func (m *OrderFillEventV1) GetTakerOrderRouterAddress() string {
+	if m != nil {
+		return m.TakerOrderRouterAddress
 	}
 	return ""
 }

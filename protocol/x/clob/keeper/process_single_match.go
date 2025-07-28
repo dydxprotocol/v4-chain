@@ -589,6 +589,8 @@ func (k Keeper) persistMatchedOrders(
 			makerOrderRouterFeeQuoteQuantums.Add(makerOrderRouterFeeQuoteQuantums, revShare.QuoteQuantums)
 		}
 	}
+	matchWithOrders.MakerOrderRouterFee = makerOrderRouterFeeQuoteQuantums.Uint64()
+	matchWithOrders.TakerOrderRouterFee = takerOrderRouterFeeQuoteQuantums.Uint64()
 
 	// Emit an event indicating a match occurred.
 	ctx.EventManager().EmitEvent(

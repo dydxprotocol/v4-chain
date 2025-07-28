@@ -20,6 +20,7 @@ DECLARE
     fee numeric;
     builder_fee numeric;
     builder_address text;
+    order_router_address text;
     affiliate_rev_share numeric;
     fill_amount numeric;
     total_filled numeric;
@@ -86,6 +87,7 @@ BEGIN
     builder_fee = dydx_trim_scale(dydx_get_builder_fee(fill_liquidity, event_data) *
                                   power(10, asset_record."atomicResolution")::numeric);
     builder_address = dydx_get_builder_address(fill_liquidity, event_data);
+    order_router_address = dydx_get_order_router_address(fill_liquidity, event_data);
     affiliate_rev_share = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
                                     power(10, asset_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
@@ -144,7 +146,8 @@ BEGIN
                 "updatedAt" = order_record."updatedAt",
                 "updatedAtHeight" = order_record."updatedAtHeight",
                 "builderAddress" = order_record."builderAddress",
-                "feePpm" = order_record."feePpm"
+                "feePpm" = order_record."feePpm",
+                "orderRouterAddress" = order_record."orderRouterAddress"
             WHERE id = order_uuid;
         ELSE
             order_record."id" = order_uuid;
@@ -160,7 +163,7 @@ BEGIN
             INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
              "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
-             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm")
+             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm", "orderRouterAddress")
             VALUES (order_record.*);
         END IF;
     END IF;
@@ -170,7 +173,7 @@ BEGIN
             block_height, transaction_index, event_index);
     INSERT INTO fills
     ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
-     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress")
+     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress", "orderRouterAddress")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -189,7 +192,8 @@ BEGIN
             fee,
             affiliate_rev_share,
             NULLIF(builder_fee, 0),
-            NULLIF(builder_address, ''))
+            NULLIF(builder_address, ''),
+            NULLIF(order_router_address, ''))
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
