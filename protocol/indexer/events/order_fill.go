@@ -96,8 +96,7 @@ func NewLiquidationOrderFillEvent(
 		MakerBuilderFee:         makerBuilderFee,
 		TakerBuilderFee:         0, // protocol generated liquidation orders have no builder fee
 		MakerOrderRouterAddress: makerOrderRouterAddress,
-		TakerOrderRouterAddress: "",
-		MakerOrderRouterFee:     0,
+		MakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
 		TakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
 	}
 }
