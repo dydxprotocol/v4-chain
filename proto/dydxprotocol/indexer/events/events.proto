@@ -183,7 +183,6 @@ message OrderFillEventV1 {
   uint64 maker_order_router_fee = 16;
   // fee for taker order router in USDC quantums.
   uint64 taker_order_router_fee = 17;
-
 }
 
 // DeleveragingEvent message contains all the information for a deleveraging

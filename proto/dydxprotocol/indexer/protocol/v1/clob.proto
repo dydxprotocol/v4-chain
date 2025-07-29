@@ -154,7 +154,8 @@ message IndexerOrder {
   // builder_code_params is the metadata for the partner or builder of an order.
   BuilderCodeParameters builder_code_params = 12;
 
-  // order_router_address is the metadata for the partner or order router of an order.
+  // order_router_address is the metadata for the partner or order router of an
+  // order.
   string order_router_address = 13;
 }
 
