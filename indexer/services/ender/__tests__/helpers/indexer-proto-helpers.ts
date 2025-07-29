@@ -410,6 +410,7 @@ export function createOrder({
   clientMetadata,
   builderAddress,
   feePpm,
+  orderRouterAddress,
 }: {
   subaccountId: IndexerSubaccountId,
   clientId: number,
@@ -424,6 +425,7 @@ export function createOrder({
   clientMetadata: number,
   builderAddress?: string,
   feePpm?: number,
+  orderRouterAddress?: string,
 }): IndexerOrder {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   let orderJSON: any = {
@@ -462,6 +464,14 @@ export function createOrder({
       goodTilBlockTime: goodTilOneof.goodTilBlockTime,
     };
   }
+
+  if (orderRouterAddress !== undefined) {
+    orderJSON = {
+      ...orderJSON,
+      orderRouterAddress,
+    };
+  }
+
   return IndexerOrder.fromPartial(orderJSON);
 }
 
@@ -562,6 +572,7 @@ export async function expectFillInDatabase({
   hasOrderId = true,
   builderAddress = null,
   builderFee = null,
+  orderRouterAddress = null,
 }: {
   subaccountId: string,
   clientId: string,
@@ -583,6 +594,7 @@ export async function expectFillInDatabase({
   hasOrderId?: boolean,
   builderAddress?: string | null,
   builderFee?: string | null,
+  orderRouterAddress?: string | null,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -607,6 +619,7 @@ export async function expectFillInDatabase({
     affiliateRevShare,
     builderAddress,
     builderFee,
+    orderRouterAddress,
   }));
 }
 
@@ -641,6 +654,7 @@ export async function expectOrderInDatabase({
   updatedAtHeight,
   builderAddress,
   feePpm,
+  orderRouterAddress,
 }: {
   subaccountId: string,
   clientId: string,
@@ -660,6 +674,7 @@ export async function expectOrderInDatabase({
   updatedAtHeight: string,
   builderAddress?: string,
   feePpm?: number,
+  orderRouterAddress?: string,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -686,6 +701,7 @@ export async function expectOrderInDatabase({
     updatedAtHeight,
     builderAddress: builderAddress ?? null,
     feePpm: feePpm ?? null,
+    orderRouterAddress: orderRouterAddress ?? null,
   }));
 }
 
