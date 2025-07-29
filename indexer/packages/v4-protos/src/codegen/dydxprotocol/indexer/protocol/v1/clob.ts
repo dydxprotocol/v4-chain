@@ -582,10 +582,7 @@ export interface IndexerOrder {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builderCodeParams?: BuilderCodeParameters;
-  /**
-   * order_router_address is the metadata for the partner or order router of an
-   * order.
-   */
+  /** order_router_address is the metadata for the order router of an order. */
 
   orderRouterAddress: string;
 }
@@ -661,10 +658,7 @@ export interface IndexerOrderSDKType {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builder_code_params?: BuilderCodeParametersSDKType;
-  /**
-   * order_router_address is the metadata for the partner or order router of an
-   * order.
-   */
+  /** order_router_address is the metadata for the order router of an order. */
 
   order_router_address: string;
 }
@@ -784,7 +778,7 @@ function createBaseIndexerOrder(): IndexerOrder {
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
     builderCodeParams: undefined,
-    orderRouterAddress: ""
+    orderRouterAddress: undefined
   };
 }
 
@@ -838,7 +832,7 @@ export const IndexerOrder = {
       BuilderCodeParameters.encode(message.builderCodeParams, writer.uint32(98).fork()).ldelim();
     }
 
-    if (message.orderRouterAddress !== "") {
+    if (message.orderRouterAddress !== undefined) {
       writer.uint32(106).string(message.orderRouterAddress);
     }
 
@@ -929,7 +923,7 @@ export const IndexerOrder = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.builderCodeParams = object.builderCodeParams !== undefined && object.builderCodeParams !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParams) : undefined;
-    message.orderRouterAddress = object.orderRouterAddress ?? "";
+    message.orderRouterAddress = object.orderRouterAddress ?? undefined;
     return message;
   }
 
