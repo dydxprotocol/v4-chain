@@ -121,7 +121,7 @@ export interface FillFromDatabase {
   affiliateRevShare: string,
   builderAddress?: string,
   builderFee?: string,
-  orderRouterAddress: string,
+  orderRouterAddress?: string,
 }
 
 export interface BlockFromDatabase {
