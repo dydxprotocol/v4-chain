@@ -1293,7 +1293,7 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "subaccountNumber": 0,
       "builderFee": "string",
       "builderAddress": "string",
-      "orderRouterAddress": "string",
+      "orderRouterAddress": "string"
     }
   ]
 }
@@ -1396,7 +1396,7 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "subaccountNumber": 0,
       "builderFee": "string",
       "builderAddress": "string",
-      "orderRouterAddress": "string",
+      "orderRouterAddress": "string"
     }
   ]
 }
