@@ -332,7 +332,8 @@ type IndexerOrder struct {
 	ConditionalOrderTriggerSubticks uint64 `protobuf:"varint,11,opt,name=conditional_order_trigger_subticks,json=conditionalOrderTriggerSubticks,proto3" json:"conditional_order_trigger_subticks,omitempty"`
 	// builder_code_params is the metadata for the partner or builder of an order.
 	BuilderCodeParams *BuilderCodeParameters `protobuf:"bytes,12,opt,name=builder_code_params,json=builderCodeParams,proto3" json:"builder_code_params,omitempty"`
-	// order_router_address is the metadata for the partner or order router of an order.
+	// order_router_address is the metadata for the partner or order router of an
+	// order.
 	OrderRouterAddress string `protobuf:"bytes,13,opt,name=order_router_address,json=orderRouterAddress,proto3" json:"order_router_address,omitempty"`
 }
 

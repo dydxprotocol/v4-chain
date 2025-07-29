@@ -582,7 +582,10 @@ export interface IndexerOrder {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builderCodeParams?: BuilderCodeParameters;
-  /** order_router_address is the metadata for the partner or order router of an order. */
+  /**
+   * order_router_address is the metadata for the partner or order router of an
+   * order.
+   */
 
   orderRouterAddress: string;
 }
@@ -658,7 +661,10 @@ export interface IndexerOrderSDKType {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builder_code_params?: BuilderCodeParametersSDKType;
-  /** order_router_address is the metadata for the partner or order router of an order. */
+  /**
+   * order_router_address is the metadata for the partner or order router of an
+   * order.
+   */
 
   order_router_address: string;
 }
