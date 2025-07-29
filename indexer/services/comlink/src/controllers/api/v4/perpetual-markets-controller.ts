@@ -9,6 +9,7 @@ import {
   LiquidityTiersMap,
   LiquidityTiersFromDatabase,
   PerpetualMarketWithMarket,
+  perpetualMarketRefresher
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -21,12 +22,12 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { NotFoundError } from '../../../lib/errors';
+import { NotFoundError, InvalidParamError } from '../../../lib/errors';
 import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckLimitSchema, CheckTickerOptionalQuerySchema } from '../../../lib/validation/schemas';
+import { CheckLimitSchema, CheckTickerOptionalQuerySchema, CheckMarketOptionalQuerySchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { perpetualMarketToResponseObject } from '../../../request-helpers/request-transformer';
@@ -46,15 +47,23 @@ class PerpetualMarketsController extends Controller {
   async listPerpetualMarkets(
     @Query() limit?: number,
       @Query() ticker?: string,
+      @Query() market?: string,
   ): Promise<PerpetualMarketResponse> {
     const liquidityTiersMap: LiquidityTiersMap = liquidityTierRefresher.getLiquidityTiersMap();
-    if (ticker !== undefined) {
+    
+    if (ticker && market) {
+      throw new InvalidParamError('Only one of ticker or market may be provided');
+    }
+
+    const identifier = ticker || market;
+
+    if (identifier !== undefined) {
       const perpetualMarket: (
         PerpetualMarketFromDatabase | undefined
-      ) = await PerpetualMarketTable.findByTicker(ticker);
+      ) = await PerpetualMarketTable.findByTicker(identifier);
 
       if (perpetualMarket === undefined) {
-        throw new NotFoundError(`${ticker} not found in markets of type ${MarketType.PERPETUAL}`);
+        throw new NotFoundError(`${identifier} not found in markets of type ${MarketType.PERPETUAL}`);
       }
 
       const market: (
@@ -62,16 +71,16 @@ class PerpetualMarketsController extends Controller {
       ) = await MarketTable.findById(perpetualMarket.marketId);
 
       if (market === undefined) {
-        throw new NotFoundError(`Market not found for ticker ${ticker}`);
+        throw new NotFoundError(`Market not found for ticker ${identifier}`);
       }
 
       if (liquidityTiersMap[perpetualMarket.liquidityTierId] === undefined) {
-        throw new NotFoundError(`Liquidity tier ${perpetualMarket.liquidityTierId} not found for ticker ${ticker}`);
+        throw new NotFoundError(`Liquidity tier ${perpetualMarket.liquidityTierId} not found for ticker ${identifier}`);
       }
 
       return {
         markets: {
-          [ticker]: perpetualMarketToResponseObject(
+          [identifier]: perpetualMarketToResponseObject(
             perpetualMarket,
             liquidityTiersMap[perpetualMarket.liquidityTierId],
             market,
@@ -136,6 +145,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitSchema,
   ...CheckTickerOptionalQuerySchema,
+  ...CheckMarketOptionalQuerySchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
@@ -143,9 +153,11 @@ router.get(
     const {
       limit,
       ticker,
+      market,
     }: {
       limit: number,
       ticker?: string,
+      market?: string,
     } = matchedData(req) as PerpetualMarketRequest;
 
     try {
@@ -153,6 +165,7 @@ router.get(
       const response: PerpetualMarketResponse = await controller.listPerpetualMarkets(
         limit,
         ticker,
+        market,
       );
 
       return res.send(response);
