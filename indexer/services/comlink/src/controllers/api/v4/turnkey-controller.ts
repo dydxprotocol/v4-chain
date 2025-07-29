@@ -40,6 +40,7 @@ interface SignInRequest {
   oidcToken?: string,
   challenge?: string,
   attestation?: TurnkeyApiTypes['v1Attestation'],
+  magicLink?: string,
 }
 
 @Route('turnkey')
@@ -83,6 +84,7 @@ export class TurnkeyController extends Controller {
       oidcToken,
       challenge,
       attestation,
+      magicLink,
     } = body;
     // Determine authentication method
     if (signinMethod === SigninMethod.EMAIL) {
@@ -90,7 +92,7 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail is required for email signin');
       }
       try {
-        const resp = await this.emailSignin(userEmail, targetPublicKey!);
+        const resp = await this.emailSignin(userEmail, targetPublicKey!, magicLink);
         if (resp.userId === undefined || resp.apiKeyId === undefined) {
           throw new Error('Could not send email auth bundle');
         }
@@ -267,7 +269,6 @@ export class TurnkeyController extends Controller {
       salt,
       created_at: new Date().toISOString(),
     });
-    // TODO: set the policies on api user
 
     // Best efforts to check that the subOrg.rootUserIds[0] is the end user
     const user = await this.bridgeSenderApiClient.getUser({
@@ -282,12 +283,6 @@ export class TurnkeyController extends Controller {
     } else if (user.user.userEmail && user.user.userEmail !== params.email) {
       throw new Error('End User not found');
     }
-    // Remove the Delegated Account from the root quorum.
-    await this.bridgeSenderApiClient.updateRootQuorum({
-      organizationId: subOrg.subOrganizationId,
-      threshold: 1,
-      userIds: [subOrg.rootUserIds?.[0] as string], // keep end user.
-    });
     return {
       subOrgId: subOrg.subOrganizationId,
       salt,
@@ -298,6 +293,7 @@ export class TurnkeyController extends Controller {
   private async emailSignin(
     userEmail: string,
     targetPublicKey: string,
+    magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // Validate email format
     if (!this.isValidEmail(userEmail)) {
@@ -318,7 +314,7 @@ export class TurnkeyController extends Controller {
       emailCustomization: {
         appName: 'dydx',
         logoUrl: 'https://cdn.prod.website-files.com/649ca755d082f1dfc4ed62a4/6870a124cba22652a69c409d_icon%20(1).png',
-        magicLinkTemplate: 'https://dydx.trade/login?token=%s',
+        magicLinkTemplate: `${config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink}=%s`,
       },
       invalidateExisting: true,
       organizationId: suborg.subOrgId,
@@ -454,6 +450,12 @@ const SignInValidationSchema = checkSchema({
     isEmail: true,
     errorMessage: 'Must be a valid email address',
   },
+  magicLink: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Magic link must be a string',
+  },
   targetPublicKey: {
     in: ['body'],
     optional: true,
@@ -502,6 +504,7 @@ router.post(
         signinMethod: SigninMethod,
         userEmail: string,
         targetPublicKey: string,
+        magicLink: string,
         provider: string,
         oidcToken: string,
         challenge: string,

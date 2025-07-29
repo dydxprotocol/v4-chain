@@ -1678,6 +1678,9 @@
               "credentialId"
             ],
             "type": "object"
+          },
+          "magicLink": {
+            "type": "string"
           }
         },
         "required": [

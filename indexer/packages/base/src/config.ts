@@ -40,7 +40,7 @@ export const baseConfigSchema = {
   TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
-
+  TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),
   ENABLE_LOGS_IN_TEST: parseBoolean({ default: false }),
