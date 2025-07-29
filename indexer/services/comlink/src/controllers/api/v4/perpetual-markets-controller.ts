@@ -49,7 +49,6 @@ class PerpetualMarketsController extends Controller {
       @Query() market?: string,
   ): Promise<PerpetualMarketResponse> {
     const liquidityTiersMap: LiquidityTiersMap = liquidityTierRefresher.getLiquidityTiersMap();
-    
     if (ticker && market) {
       throw new InvalidParamError('Only one of ticker or market may be provided');
     }
@@ -65,11 +64,11 @@ class PerpetualMarketsController extends Controller {
         throw new NotFoundError(`${identifier} not found in markets of type ${MarketType.PERPETUAL}`);
       }
 
-      const market: (
+      const marketTable: (
         MarketFromDatabase | undefined
       ) = await MarketTable.findById(perpetualMarket.marketId);
 
-      if (market === undefined) {
+      if (marketTable === undefined) {
         throw new NotFoundError(`Market not found for ticker ${identifier}`);
       }
 
@@ -82,7 +81,7 @@ class PerpetualMarketsController extends Controller {
           [identifier]: perpetualMarketToResponseObject(
             perpetualMarket,
             liquidityTiersMap[perpetualMarket.liquidityTierId],
-            market,
+            marketTable,
           ),
         },
       };

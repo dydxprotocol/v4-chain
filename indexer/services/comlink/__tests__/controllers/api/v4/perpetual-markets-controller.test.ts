@@ -183,7 +183,7 @@ describe('perpetual-markets-controller#V4', () => {
         type: RequestMethod.GET,
         path: `/v4/perpetualMarkets?${getQueryString({
           ticker: testConstants.defaultPerpetualMarket.ticker,
-          market: testConstants.defaultPerpetualMarket.ticker
+          market: testConstants.defaultPerpetualMarket.ticker,
         })}`,
         expectedStatus: 400,
       });
@@ -196,7 +196,7 @@ describe('perpetual-markets-controller#V4', () => {
       const tickerResponse: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/perpetualMarkets?${getQueryString({
-          ticker: testConstants.defaultPerpetualMarket.ticker
+          ticker: testConstants.defaultPerpetualMarket.ticker,
         })}`,
       });
 
@@ -204,17 +204,17 @@ describe('perpetual-markets-controller#V4', () => {
       const marketResponse: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/perpetualMarkets?${getQueryString({
-          market: testConstants.defaultPerpetualMarket.ticker
+          market: testConstants.defaultPerpetualMarket.ticker,
         })}`,
       });
 
       // Only one market should be returned in both cases
-      const perpetualMarket: PerpetualMarketFromDatabase | undefined =
-        await PerpetualMarketTable.findByTicker(testConstants.defaultPerpetualMarket.ticker);
-      const market: MarketFromDatabase | undefined =
-        await MarketTable.findById(testConstants.defaultPerpetualMarket.marketId);
-      const liquidityTier: LiquidityTiersFromDatabase | undefined =
-        await LiquidityTiersTable.findById(testConstants.defaultPerpetualMarket.liquidityTierId);
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined = await
+      PerpetualMarketTable.findByTicker(testConstants.defaultPerpetualMarket.ticker);
+      const market: MarketFromDatabase | undefined = await
+      MarketTable.findById(testConstants.defaultPerpetualMarket.marketId);
+      const liquidityTier: LiquidityTiersFromDatabase | undefined = await
+      LiquidityTiersTable.findById(testConstants.defaultPerpetualMarket.liquidityTierId);
 
       // Verify both responses contain the same data
       expectResponseWithMarkets(
