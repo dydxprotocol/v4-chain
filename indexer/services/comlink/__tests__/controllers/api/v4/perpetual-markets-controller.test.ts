@@ -162,20 +162,20 @@ describe('perpetual-markets-controller#V4', () => {
       );
     });
 
-    it('Returns 404 with unknown ticker or market', async () => {
+    it('Returns 400 with unknown ticker or market', async () => {
       let response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/perpetualMarkets?${getQueryString({ ticker: invalidTicker })}`,
-        expectedStatus: 404,
+        expectedStatus: 400,
       });
-      expect(response.body.error).toContain('Not Found');
+      expect(response.body.errors[0].msg).toContain('ticker must be a valid ticker');
 
       response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/perpetualMarkets?${getQueryString({ market: invalidTicker })}`,
-        expectedStatus: 404,
+        expectedStatus: 400,
       });
-      expect(response.body.error).toContain('Not Found');
+      expect(response.body.errors[0].msg).toContain('ticker must be a valid ticker');
     });
 
     it('Returns 400 when both ticker and market are provided', async () => {

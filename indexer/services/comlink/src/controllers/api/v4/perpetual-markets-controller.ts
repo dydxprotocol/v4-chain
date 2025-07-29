@@ -9,7 +9,6 @@ import {
   LiquidityTiersMap,
   LiquidityTiersFromDatabase,
   PerpetualMarketWithMarket,
-  perpetualMarketRefresher
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
