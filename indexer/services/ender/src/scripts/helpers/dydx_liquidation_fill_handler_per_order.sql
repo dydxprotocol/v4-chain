@@ -196,7 +196,7 @@ BEGIN
             NULLIF(builder_fee, 0),
             NULLIF(builder_address, ''),
             NULLIF(order_router_fee, 0),
-            NULLIF(order_router_address, '')),
+            NULLIF(order_router_address, ''))
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
