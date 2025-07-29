@@ -155,7 +155,7 @@ message IndexerOrder {
   BuilderCodeParameters builder_code_params = 12;
 
   // order_router_address is the metadata for the order router of an order.
-  string order_router_address = 13 [ (gogoproto.nullable) = true ];
+  string order_router_address = 13;
 }
 
 // BuilderCodeParameters represents the metadata for the partner or builder of

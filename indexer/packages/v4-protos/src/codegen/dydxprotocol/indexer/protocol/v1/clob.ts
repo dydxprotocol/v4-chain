@@ -778,7 +778,7 @@ function createBaseIndexerOrder(): IndexerOrder {
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
     builderCodeParams: undefined,
-    orderRouterAddress: ''
+    orderRouterAddress: ""
   };
 }
 
@@ -832,7 +832,7 @@ export const IndexerOrder = {
       BuilderCodeParameters.encode(message.builderCodeParams, writer.uint32(98).fork()).ldelim();
     }
 
-    if (message.orderRouterAddress !== undefined) {
+    if (message.orderRouterAddress !== "") {
       writer.uint32(106).string(message.orderRouterAddress);
     }
 
@@ -923,7 +923,7 @@ export const IndexerOrder = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.builderCodeParams = object.builderCodeParams !== undefined && object.builderCodeParams !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParams) : undefined;
-    message.orderRouterAddress = object.orderRouterAddress ?? undefined;
+    message.orderRouterAddress = object.orderRouterAddress ?? "";
     return message;
   }
 
