@@ -778,7 +778,7 @@ function createBaseIndexerOrder(): IndexerOrder {
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
     builderCodeParams: undefined,
-    orderRouterAddress: undefined
+    orderRouterAddress: ''
   };
 }
 
