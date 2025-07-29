@@ -134,7 +134,7 @@ BEGIN
             "updatedAtHeight" = order_record."updatedAtHeight",
             "builderAddress" = order_record."builderAddress",
             "feePpm" = order_record."feePpm",
-            "orderRouterAddress" = order_record."orderRouterAddress",
+            "orderRouterAddress" = order_record."orderRouterAddress"
         WHERE id = order_uuid;
     ELSE
         order_record."id" = order_uuid;
