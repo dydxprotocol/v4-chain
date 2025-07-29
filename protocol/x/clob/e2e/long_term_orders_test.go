@@ -1312,6 +1312,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 											25_000_000,
 											0,
 											0,
+											0,
+											0,
 											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetBaseQuantums(),
 											PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 											big.NewInt(0),

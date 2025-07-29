@@ -23,6 +23,8 @@ var (
 	takerFee              = int64(5)
 	makerBuilderFee       = uint64(0)
 	takerBuilderFee       = uint64(0)
+	makerOrderRouterFee   = uint64(0)
+	takerOrderRouterFee   = uint64(0)
 	affiliateRevShare     = big.NewInt(0)
 )
 
