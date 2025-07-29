@@ -64,7 +64,6 @@ describe('protocolTranslations', () => {
     clientMetadata: 0,
     conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
     conditionalOrderTriggerSubticks: Long.fromValue(0, true),
-    orderRouterAddress: '',
   };
   const goodTilBlockTimeOrder: IndexerOrder = {
     ...goodTilBlockOrder,
