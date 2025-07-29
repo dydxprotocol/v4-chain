@@ -43,10 +43,7 @@ DECLARE
     fee numeric;
     builder_fee numeric;
     builder_address text;
-<<<<<<< Updated upstream
-=======
     order_router_fee numeric;
->>>>>>> Stashed changes
     order_router_address text;
     affiliate_rev_share numeric;
     affiliate_rev numeric;
@@ -92,10 +89,7 @@ BEGIN
     builder_fee = dydx_trim_scale(dydx_get_builder_fee(fill_liquidity, event_data) *
                           power(10, asset_record."atomicResolution")::numeric);
     builder_address = dydx_get_builder_address(fill_liquidity, event_data);
-<<<<<<< Updated upstream
-=======
     order_router_fee = dydx_get_order_router_fee(fill_liquidity, event_data);
->>>>>>> Stashed changes
     order_router_address = dydx_get_order_router_address(fill_liquidity, event_data);
     affiliate_rev_share = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
                                     power(10, asset_record."atomicResolution")::numeric);
