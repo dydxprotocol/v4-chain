@@ -37,6 +37,8 @@ func TestNewOrderFillEvent_Success(t *testing.T) {
 		takerFee,
 		makerBuilderFee,
 		takerBuilderFee,
+		makerOrderRouterFee,
+		takerOrderRouterFee,
 		fillAmount,
 		fillAmount,
 		affiliateRevShare,
