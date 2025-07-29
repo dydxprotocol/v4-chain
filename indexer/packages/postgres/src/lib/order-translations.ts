@@ -80,6 +80,7 @@ export function convertToIndexerOrderWithSubaccount(
     conditionType: orderTypeToProtocolConditionType(order.type),
     conditionalOrderTriggerSubticks: triggerSubticks,
     builderCodeParams: builderCodeParameters,
+    orderRouterAddress: order.orderRouterAddress ?? "",
   };
 
   return indexerOrder;
