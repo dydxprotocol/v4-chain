@@ -337,7 +337,7 @@ describe('request-transformer', () => {
         subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
         builderAddress: undefined,
         feePpm: undefined,
-        orderRouterAddress: "",
+        orderRouterAddress: '',
       });
     });
   });
