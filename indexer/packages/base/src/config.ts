@@ -40,6 +40,8 @@ export const baseConfigSchema = {
   TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
+  // Alchemy API key for skip bridge.
+  ALCHEMY_KEY: parseString({ default: '' }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

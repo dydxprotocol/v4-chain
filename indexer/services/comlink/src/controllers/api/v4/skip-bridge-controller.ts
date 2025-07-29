@@ -1,23 +1,72 @@
+import { dbHelpers } from '@dydxprotocol-indexer/postgres';
 import { create, findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
-import { route, executeRoute, setClientOptions } from '@skip-go/client/cjs';
-import { TurnkeyClient } from '@turnkey/http';
-import { ApiKeyStamper, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
-import { createAccount } from '@turnkey/viem';
+import {
+  route, executeRoute, setClientOptions,
+} from '@skip-go/client/cjs';
+import { Adapter } from '@solana/wallet-adapter-base';
+import { Keypair, Transaction } from '@solana/web3.js';
+// import { TurnkeyClient } from '@turnkey/http';
+import { Turnkey } from '@turnkey/sdk-server';
+import { TurnkeySigner } from '@turnkey/solana';
+// import { createAccount } from '@turnkey/viem';
 import { decode, encode } from 'bech32';
+import bs58 from 'bs58';
 import express from 'express';
 import { checkSchema } from 'express-validator';
+import fetch, { Headers, Request, Response } from 'node-fetch';
 import {
   Controller, Post, Query, Route,
 } from 'tsoa';
-import { http, createWalletClient } from 'viem';
-import { mainnet, goerli, sepolia, arbitrum } from 'viem/chains';
+import nacl from 'tweetnacl';
+import {
+  mainnet, arbitrum,
+} from 'viem/chains';
 
 import config from '../../../config';
 import { handleControllerError } from '../../../lib/helpers';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { dbHelpers } from '@dydxprotocol-indexer/postgres';
+// import { privateKeyToAccount } from 'viem/accounts';
+
+// Polyfill Headers for Node.js 16
+if (!globalThis.fetch) {
+  // @ts-ignore
+  globalThis.fetch = fetch;
+  // @ts-ignore
+  globalThis.Headers = Headers;
+  // @ts-ignore
+  globalThis.Request = Request;
+  // @ts-ignore
+  globalThis.Response = Response;
+}
+
+// Add global declaration for types
+declare global {
+  interface Array<T> {
+    findLast(predicate: (value: T, index: number, obj: T[]) => unknown): T | undefined,
+  }
+}
+
+// Polyfill
+if (!Array.prototype.findLast) {
+  // eslint-disable-next-line no-extend-native
+  Array.prototype.findLast = function <T>(
+    this: T[],
+    callback: (element: T, index: number, array: T[]) => unknown,
+  ): T | undefined {
+    if (this == null) {
+      throw new TypeError('this is null or not defined');
+    }
+    const len = this.length;
+    for (let i = len - 1; i >= 0; i--) {
+      if (callback(this[i], i, this)) {
+        return this[i];
+      }
+    }
+    return undefined;
+  };
+}
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
@@ -84,6 +133,91 @@ function getAddress(
   }
 }
 
+// const amount = "1100000"; // 1 USDC in smallest denomination (6 decimals for USDC)
+
+// async function getSkipRouteData(sourceAddress: string): Promise<{data: string,
+// toAddress: string}>{
+//   const routeResult = await route({
+//     amountIn: amount, // Desired amount in smallest denomination (e.g., uatom)
+//     sourceAssetDenom: assetMap.eth_USDC, // USDC on Base
+//     sourceAssetChainId: mainnet.id.toString(),
+//     destAssetDenom: "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+//     destAssetChainId: "dydx-mainnet-1",
+//     cumulativeAffiliateFeeBps: '0',
+//     goFast: true,
+//   });
+//   if (!routeResult) {
+//     throw new Error("Failed to find a route");
+//   }
+//   console.log('Route Result:', routeResult);
+
+//   const userAddresses = await Promise.all(
+//     routeResult!.requiredChainAddresses.map(async (chainId) => ({
+//       chainId,
+//       address: await getAddress(chainId, sourceAddress),
+//     }))
+//   );
+
+//   // getting the route data as shown here: https://github.com/skip-mev/skip-go/blob/a8907b389fa27fa942c42abca9181c0b0eee98e1/packages/client/src/public-functions/executeRoute.ts#L126
+//   let addressList: string[] = [];
+//   userAddresses.forEach((userAddress, index) => {
+//     const requiredChainAddress = routeResult.requiredChainAddresses[index];
+
+//     if (requiredChainAddress === userAddress?.chainId) {
+//       addressList.push(userAddress.address);
+//     }
+//   });
+
+//   if (addressList.length !== routeResult.requiredChainAddresses.length) {
+//     addressList = userAddresses.map((x) => x.address);
+//   }
+
+//   const validLength =
+//     addressList.length === routeResult.requiredChainAddresses.length ||
+//     addressList.length === routeResult.chainIds?.length;
+
+//   if (!validLength) {
+//     throw new Error("executeRoute error: invalid address list");
+//   }
+
+//   const timeoutSeconds = '60'; // Set a timeout for the messages request
+//   const response = await messages({
+//     timeoutSeconds,
+//     amountIn: routeResult?.amountIn,
+//     amountOut: routeResult.estimatedAmountOut || '0',
+//     sourceAssetChainId: routeResult?.sourceAssetChainId,
+//     sourceAssetDenom: routeResult?.sourceAssetDenom,
+//     destAssetChainId: routeResult?.destAssetChainId,
+//     destAssetDenom: routeResult?.destAssetDenom,
+//     operations: routeResult?.operations,
+//     addressList,
+//     slippageTolerancePercent: '1',
+//   });
+
+//   console.log('Skip Route Data:', response);
+
+//   let data = '';
+//   let toAddress = '';
+//   response?.msgs?.forEach((msg, index) => {
+//     if ('evmTx' in msg) {
+//       console.log(`Message ${index + 1} EVM Transaction:`, msg.evmTx);
+//       data = msg.evmTx.data || '';
+//       toAddress = msg.evmTx.to || '';
+//     } else if ('svmTx' in msg) {
+//       console.log(`Message ${index + 1} SVM Transaction:`, msg.svmTx);
+//     } else if ('multiChainMsg' in msg) {
+//       console.log(`Message ${index + 1} Multi-Chain Message:`, msg.multiChainMsg);
+//     }
+//   });
+//   return { data, toAddress };
+// }
+
+// const srcAccountPrivateKey = '0x11ecbbfcc6fa1a7c1c0b00f59423b6934376a20f26430f9f15d2eafb0643d7a5'
+
+// const eip7702Account = privateKeyToAccount(
+//   sourceAccountPrivateKey, // generatePrivateKey() ?? (process.env.PRIVATE_KEY as Hex)
+// );
+
 function toNobleAddress(address: string): string | null {
   try {
     const decoded = decode(address);
@@ -120,58 +254,92 @@ function toNeutronAddress(address: string): string | null {
   }
 }
 
-async function getEvmSigner(suborgId: string) {
+// function getEvmSigner(suborgId: string, signWith: string) {
+//   return async (chainId: string) => {
+//     // 1. Initialize Turnkey HTTP client
+//     // const httpClient = new TurnkeyClient(
+//     //   { baseUrl: config.TURNKEY_API_BASE_URL as string },
+//     //   new ApiKeyStamper({
+//     //     apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
+//     //     apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
+//     //   }),
+//     // );
 
-  // 1. Initialize Turnkey HTTP client
-  const httpClient = new TurnkeyClient(
-    { baseUrl: config.TURNKEY_API_BASE_URL },
-    new ApiKeyStamper({
-      apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY!,
-      apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY!,
-    }),
-  );
+//     const serverClient = new Turnkey({
+//       apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
+//       apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
+//       apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
+//       defaultOrganizationId: suborgId,
+//     });
 
-  // api client
-  const apiClient = new TurnkeyServerSDK({
-    apiBaseUrl: config.TURNKEY_API_BASE_URL,
-    apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY,
-    apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY,
-    defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
-  }).apiClient();
+//     const chain = {
+//       [mainnet.id.toString()]: mainnet,
+//       [sepolia.id.toString()]: sepolia,
+//       [arbitrum.id.toString()]: arbitrum,
+//     }[chainId];
+//     if (!chain) {
+//       throw new Error(`Unsupported chainId: ${chainId}`);
+//     }
 
-  // find the wallet account for the suborgId
-  const wallets = await apiClient.getWallets({
-    organizationId: suborgId,
+//     const turnkeyAccount = await createAccount({
+//       client: serverClient.apiClient(),
+//       organizationId: suborgId,
+//       signWith,
+//     });
+
+//     const rpcUrls: Record<string, string> = {
+//       [mainnet.id.toString()]: `https://eth-mainnet.g.alchemy.com/v2/${config.ALCHEMY_KEY}`,
+//       [sepolia.id.toString()]: `https://eth-sepolia.g.alchemy.com/v2/${config.ALCHEMY_KEY}`,
+//       [arbitrum.id.toString()]: `https://arb-mainnet.g.alchemy.com/v2/${config.ALCHEMY_KEY}`,
+//     };
+
+//     const rpcUrl = rpcUrls[chainId];
+//     if (!rpcUrl) {
+//       throw new Error(`No RPC URL configured for chainId: ${chainId}`);
+//     }
+
+//     return createWalletClient({
+//       account: turnkeyAccount,
+//       chain,
+//       transport: http(rpcUrl),
+//     });
+//   };
+// }
+
+function getSvmSigner(suborgId: string, signWith: string) {
+  const serverClient = new Turnkey({
+    apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
+    apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
+    apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
+    defaultOrganizationId: suborgId,
   });
 
-  // use the first wallet account.
-  const wallet = wallets.wallets[0];
-  if (!wallet) {
-    throw new Error('No wallet found');
-  }
+  const turnkeySigner = new TurnkeySigner({
+    organizationId: suborgId,
+    client: serverClient.apiClient(),
+  });
 
-  return async (chainId: string) => {
-    const chain = {
-      1: mainnet,
-      5: goerli,
-      11155111: sepolia,
-    }[chainId];
-    if (!chain) {
-      throw new Error(`Unsupported chainId: ${chainId}`);
-    }
-    // 2. Create the Viem‐compatible Turnkey account
-    const turnkeyAccount = await createAccount({
-      client: httpClient,
-      organizationId: config.TURNKEY_ORGANIZATION_ID!,
-      signWith: wallet.walletId,
-    });
-    // 3. Create and return a WalletClient that uses Turnkey to sign
-    return createWalletClient({
-      account: turnkeyAccount,
-      chain: mainnet,
-      transport: http(`https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`),
-    });
-  };
+  // eslint-disable-next-line @typescript-eslint/require-await
+  return async () => ({
+    publicKey: {
+      toString: () => signWith,
+      toBase58: () => signWith,
+    },
+    signTransaction: async (tx: Transaction) => {
+      try {
+        return await turnkeySigner.signTransaction(tx, signWith);
+      } catch (error) {
+        throw new Error(`Failed to sign transaction with TurnkeySigner: ${error.message}`);
+      }
+    },
+    signAllTransactions: async (txs: Transaction[]) => {
+      try {
+        return await turnkeySigner.signAllTransactions(txs, signWith);
+      } catch (error) {
+        throw new Error(`Failed to sign transactions with TurnkeySigner: ${error.message}`);
+      }
+    },
+  } as Adapter);
 }
 
 @Route('bridging')
@@ -218,16 +386,32 @@ class BridgeController extends Controller {
     // search for suborgId,
     let record: TurnkeyUserFromDatabase | undefined;
     if (chainId === mainnet.id.toString()) {
-      record = await findByEvmAddress(userAddresses[0].address);
+      record = await findByEvmAddress(fromAddress);
+    } else if (chainId === 'solana') {
+      record = await findBySvmAddress(fromAddress);
     }
 
     console.log('userAddresses is ', userAddresses);
     console.log('executing transaction...');
-
+    // Replace with your own private key
+    const solanaSponsorPrivateKey = '3UJeupkPcz7Xc3QLQ96UDTv1N2rHpKXFRgXS3MW6XiqADGFHBdm7eS5G5aCVd8Nnf5xEnGLVv76dkosXx98Pjnwo';
+    const sponsorKeypair = Keypair.fromSecretKey(
+      bs58.decode(solanaSponsorPrivateKey),
+    );
+    console.log('sponsorKeypair is ', sponsorKeypair.publicKey.toString());
     await executeRoute({
       route: path,
       userAddresses,
-      getEvmSigner: await getEvmSigner(record?.suborg_id || ''),
+      simulate: false,
+      // getEvmSigner: getEvmSigner(record?.suborg_id || '', fromAddress),
+      getSvmSigner: getSvmSigner(record?.suborg_id || '', fromAddress),
+      svmFeePayer: {
+        address: sponsorKeypair.publicKey.toString(), // Replace with the fee payer's Solana address
+        signTransaction: (dataToSign: Buffer) => {
+          const data = new Uint8Array(dataToSign);
+          return Promise.resolve(nacl.sign.detached(data, sponsorKeypair.secretKey));
+        },
+      },
       onTransactionBroadcast: async ({ chainId: c, txHash }) => {
         await console.log(`Broadcasted on ${c}: ${txHash}`);
       },
@@ -239,6 +423,9 @@ class BridgeController extends Controller {
       },
       onTransactionSignRequested: async ({ chainId: c, signerAddress }) => {
         await console.log(`Sign requested for ${c}`, signerAddress);
+      },
+      onValidateGasBalance: async ({ chainId: c, txIndex, status }) => {
+        await console.log('validate: ', c, txIndex, status);
       },
     });
 
@@ -326,10 +513,10 @@ router.post(
       // create a sample db record.
       await dbHelpers.clearData();
       await create({
-        evm_address: '0xEc58845E98c3C2bA4C83B83730EBD58C75433a97',
-        svm_address: '7wMtPuTfupJBfqZdq5S8mTfaJeccwLdwPuvyV2jtZvko',
+        evm_address: '0x46c9E748dfb814Da6577fD4ceF8f785CE7bB4Be7',
+        svm_address: 'AuV1WxiP1bswKykhC9KB5J1Ek1xmq9AdZANWGP97hsPh',
         dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-        suborg_id: 'fed75fec-9243-4114-b58b-8bb0ce15cba9',
+        suborg_id: '70528f95-da66-49f4-a096-fe50a19f2e6d',
         salt: '1234567890',
         created_at: new Date().toISOString(),
       });
@@ -344,10 +531,10 @@ router.post(
       const bridgeController = new BridgeController();
       console.log('starting bridge...');
       await bridgeController.startBridge(
-        '0xEc58845E98c3C2bA4C83B83730EBD58C75433a97',
-        '2000000', // 2 USDC
-        'arb_USDC',
-        arbitrum.id.toString(),
+        'AuV1WxiP1bswKykhC9KB5J1Ek1xmq9AdZANWGP97hsPh',
+        '1000000', // 2 USDC
+        'sol_USDC',
+        'solana',
       );
 
       return res.status(200).send({
