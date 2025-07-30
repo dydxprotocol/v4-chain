@@ -176,7 +176,7 @@ BEGIN
     INSERT INTO fills
     ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
      "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress",
-     "order_router_fee", "orderRouterAddress")
+     "orderRouterFee", "orderRouterAddress")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,

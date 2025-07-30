@@ -69,19 +69,19 @@ BEGIN
         END CASE;
 
         CASE
-            WHEN order_->>'orderRouterAddress' IS NOT NULL THEN
-                order_record."orderRouterAddress" = order_->>'orderRouterAddress';
-            ELSE
-                order_record."orderRouterAddress" = null;
-        END CASE;
-
-        CASE
             WHEN order_->'builderCodeParams' IS NOT NULL THEN
                 order_record."builderAddress" = jsonb_extract_path_text(order_, 'builderCodeParams', 'builderAddress');
                 order_record."feePpm" = jsonb_extract_path_text(order_, 'builderCodeParams', 'feePpm')::bigint;
             ELSE
                 order_record."builderAddress" = null;
                 order_record."feePpm" = null;
+        END CASE;
+
+        CASE
+            WHEN order_->>'orderRouterAddress' IS NOT NULL THEN
+                order_record."orderRouterAddress" = order_->>'orderRouterAddress';
+            ELSE
+                order_record."orderRouterAddress" = null;
         END CASE;
 
         INSERT INTO orders VALUES (order_record.*) ON CONFLICT ("id") DO
