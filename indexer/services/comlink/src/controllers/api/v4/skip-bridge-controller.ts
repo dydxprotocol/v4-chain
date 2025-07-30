@@ -686,47 +686,17 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
+    // alchemy don't care.
     res.status(200).send();
     try {
-
-      console.log({
-        apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY,
-        apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY,
-        organizationId: config.TURNKEY_ORGANIZATION_ID,
-        apiBaseUrl: config.TURNKEY_API_BASE_URL,
-      });
-      // create a sample db record.
-      await dbHelpers.clearData();
-      await create({
-        evm_address: '0x46c9E748dfb814Da6577fD4ceF8f785CE7bB4Be7',
-        svm_address: 'AuV1WxiP1bswKykhC9KB5J1Ek1xmq9AdZANWGP97hsPh',
-        dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-        suborg_id: '70528f95-da66-49f4-a096-fe50a19f2e6d',
-        salt: '1234567890',
-        created_at: new Date().toISOString(),
-      });
-
-      console.log({
-        apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY,
-        apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY,
-        organizationId: config.TURNKEY_ORGANIZATION_ID,
-        apiBaseUrl: config.TURNKEY_API_BASE_URL,
-      });
-
+      const { fromAddress, amount, asset, chainId } = req.body;
       const bridgeController = new BridgeController();
-      console.log('starting bridge...');
       await bridgeController.startBridge(
-        '0x46c9E748dfb814Da6577fD4ceF8f785CE7bB4Be7',
-        '500000', // 2 USDC
-        Asset.USDC,
-        mainnet.id.toString(),
+        fromAddress,
+        amount,
+        asset,
+        chainId,
       );
-      // await bridgeController.startBridge(
-      //   'AuV1WxiP1bswKykhC9KB5J1Ek1xmq9AdZANWGP97hsPh',
-      //   '500000', // .5 USDC
-      //   Asset.USDC,
-      //   'solana',
-      // );
       return; 
     } catch (error) {
       return handleControllerError(
