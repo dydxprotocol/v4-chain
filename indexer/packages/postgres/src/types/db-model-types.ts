@@ -122,6 +122,7 @@ export interface FillFromDatabase {
   builderAddress?: string,
   builderFee?: string,
   orderRouterAddress?: string,
+  orderRouterFee?: string,
 }
 
 export interface BlockFromDatabase {
