@@ -551,6 +551,7 @@ describe('OrderHandler', () => {
           clientMetadata: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
           updatedAtHeight: '0',
+          orderRouterAddress: '',
         }),
         // taker order
         OrderTable.create({
@@ -570,7 +571,7 @@ describe('OrderHandler', () => {
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
-          updatedAtHeight: '0',
+          updatedAtHeight: '0'
         }),
       ]);
 
@@ -1843,8 +1844,8 @@ function createOrderFillEvent(
   takerBuilderAddress: string = testConstants.noBuilderAddress,
   makerOrderRouterFee: number = 0,
   takerOrderRouterFee: number = 0,
-  makerOrderRouterAddress: string = testConstants.noBuilderAddress,
-  takerOrderRouterAddress: string = testConstants.noBuilderAddress,
+  makerOrderRouterAddress: string = testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: string = testConstants.noOrderRouterAddress,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
