@@ -405,7 +405,7 @@ class BridgeController extends Controller {
     console.log('userAddresses is ', userAddresses);
     console.log('executing transaction...');
     // Replace with your own private key
-    const solanaSponsorPrivateKey = '3UJeupkPcz7Xc3QLQ96UDTv1N2rHpKXFRgXS3MW6XiqADGFHBdm7eS5G5aCVd8Nnf5xEnGLVv76dkosXx98Pjnwo';
+    const solanaSponsorPrivateKey = '';
     const sponsorKeypair = Keypair.fromSecretKey(
       bs58.decode(solanaSponsorPrivateKey),
     );
