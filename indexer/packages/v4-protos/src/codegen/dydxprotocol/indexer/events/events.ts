@@ -657,6 +657,7 @@ export interface StatefulOrderEventV1 {
   conditionalOrderTriggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1;
   longTermOrderPlacement?: StatefulOrderEventV1_LongTermOrderPlacementV1;
   orderReplacement?: StatefulOrderEventV1_LongTermOrderReplacementV1;
+  twapOrderPlacement?: StatefulOrderEventV1_TwapOrderPlacementV1;
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
@@ -673,6 +674,7 @@ export interface StatefulOrderEventV1SDKType {
   conditional_order_triggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType;
   long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
   order_replacement?: StatefulOrderEventV1_LongTermOrderReplacementV1SDKType;
+  twap_order_placement?: StatefulOrderEventV1_TwapOrderPlacementV1SDKType;
 }
 /**
  * A stateful order placement contains an order.
@@ -762,6 +764,16 @@ export interface StatefulOrderEventV1_LongTermOrderReplacementV1 {
 export interface StatefulOrderEventV1_LongTermOrderReplacementV1SDKType {
   /** vault replaces orders with a different order ID */
   old_order_id?: IndexerOrderIdSDKType;
+  order?: IndexerOrderSDKType;
+}
+/** A twap order placement contains an order. */
+
+export interface StatefulOrderEventV1_TwapOrderPlacementV1 {
+  order?: IndexerOrder;
+}
+/** A twap order placement contains an order. */
+
+export interface StatefulOrderEventV1_TwapOrderPlacementV1SDKType {
   order?: IndexerOrderSDKType;
 }
 /**
@@ -2897,7 +2909,8 @@ function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
     conditionalOrderPlacement: undefined,
     conditionalOrderTriggered: undefined,
     longTermOrderPlacement: undefined,
-    orderReplacement: undefined
+    orderReplacement: undefined,
+    twapOrderPlacement: undefined
   };
 }
 
@@ -2925,6 +2938,10 @@ export const StatefulOrderEventV1 = {
 
     if (message.orderReplacement !== undefined) {
       StatefulOrderEventV1_LongTermOrderReplacementV1.encode(message.orderReplacement, writer.uint32(66).fork()).ldelim();
+    }
+
+    if (message.twapOrderPlacement !== undefined) {
+      StatefulOrderEventV1_TwapOrderPlacementV1.encode(message.twapOrderPlacement, writer.uint32(74).fork()).ldelim();
     }
 
     return writer;
@@ -2963,6 +2980,10 @@ export const StatefulOrderEventV1 = {
           message.orderReplacement = StatefulOrderEventV1_LongTermOrderReplacementV1.decode(reader, reader.uint32());
           break;
 
+        case 9:
+          message.twapOrderPlacement = StatefulOrderEventV1_TwapOrderPlacementV1.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2980,6 +3001,7 @@ export const StatefulOrderEventV1 = {
     message.conditionalOrderTriggered = object.conditionalOrderTriggered !== undefined && object.conditionalOrderTriggered !== null ? StatefulOrderEventV1_ConditionalOrderTriggeredV1.fromPartial(object.conditionalOrderTriggered) : undefined;
     message.longTermOrderPlacement = object.longTermOrderPlacement !== undefined && object.longTermOrderPlacement !== null ? StatefulOrderEventV1_LongTermOrderPlacementV1.fromPartial(object.longTermOrderPlacement) : undefined;
     message.orderReplacement = object.orderReplacement !== undefined && object.orderReplacement !== null ? StatefulOrderEventV1_LongTermOrderReplacementV1.fromPartial(object.orderReplacement) : undefined;
+    message.twapOrderPlacement = object.twapOrderPlacement !== undefined && object.twapOrderPlacement !== null ? StatefulOrderEventV1_TwapOrderPlacementV1.fromPartial(object.twapOrderPlacement) : undefined;
     return message;
   }
 
@@ -3269,6 +3291,51 @@ export const StatefulOrderEventV1_LongTermOrderReplacementV1 = {
   fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderReplacementV1>): StatefulOrderEventV1_LongTermOrderReplacementV1 {
     const message = createBaseStatefulOrderEventV1_LongTermOrderReplacementV1();
     message.oldOrderId = object.oldOrderId !== undefined && object.oldOrderId !== null ? IndexerOrderId.fromPartial(object.oldOrderId) : undefined;
+    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseStatefulOrderEventV1_TwapOrderPlacementV1(): StatefulOrderEventV1_TwapOrderPlacementV1 {
+  return {
+    order: undefined
+  };
+}
+
+export const StatefulOrderEventV1_TwapOrderPlacementV1 = {
+  encode(message: StatefulOrderEventV1_TwapOrderPlacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.order !== undefined) {
+      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_TwapOrderPlacementV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStatefulOrderEventV1_TwapOrderPlacementV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.order = IndexerOrder.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StatefulOrderEventV1_TwapOrderPlacementV1>): StatefulOrderEventV1_TwapOrderPlacementV1 {
+    const message = createBaseStatefulOrderEventV1_TwapOrderPlacementV1();
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     return message;
   }

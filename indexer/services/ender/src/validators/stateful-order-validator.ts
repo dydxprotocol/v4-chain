@@ -1,6 +1,7 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import { OrderTable } from '@dydxprotocol-indexer/postgres';
 import { VAULTS_CLOB_0_TO_999 } from '@dydxprotocol-indexer/postgres/build/src/lib/helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_TWAP_SUBORDER } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
   IndexerOrder,
@@ -32,14 +33,20 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.event.orderRemoval === undefined &&
       this.event.conditionalOrderPlacement === undefined &&
       this.event.conditionalOrderTriggered === undefined &&
-      this.event.longTermOrderPlacement === undefined
+      this.event.longTermOrderPlacement === undefined &&
+      this.event.twapOrderPlacement === undefined
     ) {
       return this.logAndThrowParseMessageError(
         'One of orderPlace, orderRemoval, conditionalOrderPlacement, conditionalOrderTriggered, ' +
-        'longTermOrderPlacement must be defined in StatefulOrderEvent',
+        'longTermOrderPlacement, or twapOrderPlacement must be defined in StatefulOrderEvent',
         { event: this.event },
       );
     }
+    logger.info({
+      message: 'StatefulOrderValidator',
+      at: 'validate',
+      event: this.event,
+    });
     if (this.event.orderPlace !== undefined) {
       this.validateOrderPlace(this.event.orderPlace);
     } else if (this.event.orderRemoval !== undefined) {
@@ -48,9 +55,9 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.validateConditionalOrderPlacement(this.event.conditionalOrderPlacement);
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       this.validateConditionalOrderTriggered(this.event.conditionalOrderTriggered);
-    } else { // longTermOrderPlacement
+    } else if (this.event.longTermOrderPlacement !== undefined) {
       this.validateLongTermOrderPlacement(this.event.longTermOrderPlacement!);
-    }
+    } // validate twap?
   }
 
   private validateStatefulOrder(order: IndexerOrder): void {
@@ -189,9 +196,9 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
 
     this.validateStatefulOrder(order);
 
-    if (order.orderId!.orderFlags !== ORDER_FLAG_LONG_TERM) {
+    if (order.orderId!.orderFlags !== ORDER_FLAG_LONG_TERM && order.orderId!.orderFlags !== ORDER_FLAG_TWAP_SUBORDER) {
       return this.logAndThrowParseMessageError(
-        `StatefulOrderEvent long term order must have order flag ${ORDER_FLAG_LONG_TERM}`,
+        `StatefulOrderEvent long term order must have order flag ${ORDER_FLAG_LONG_TERM} or ${ORDER_FLAG_TWAP_SUBORDER}`,
         { event: this.event },
       );
     }
@@ -206,7 +213,10 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return ConditionalOrderPlacementHandler;
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       return ConditionalOrderTriggeredHandler;
-    } else if (this.event.longTermOrderPlacement !== undefined) {
+    } else if (
+      this.event.longTermOrderPlacement !== undefined ||
+      this.event.twapOrderPlacement !== undefined
+    ) {
       return StatefulOrderPlacementHandler;
     }
     return undefined;
@@ -292,6 +302,8 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return this.event.conditionalOrderTriggered.triggeredOrderId!.subaccountId!;
     } else if (this.event.longTermOrderPlacement !== undefined) {
       return this.event.longTermOrderPlacement.order!.orderId!.subaccountId!;
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      return this.event.twapOrderPlacement.order!.orderId!.subaccountId!;
     }
     return {
       owner: '',
@@ -314,6 +326,8 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return OrderTable.orderIdToUuid(this.event.conditionalOrderTriggered.triggeredOrderId!);
     } else if (this.event.longTermOrderPlacement !== undefined) {
       return OrderTable.orderIdToUuid(this.event.longTermOrderPlacement.order!.orderId!);
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      return OrderTable.orderIdToUuid(this.event.twapOrderPlacement.order!.orderId!);
     }
     return '';
   }

@@ -565,7 +565,8 @@
           "LIQUIDATED",
           "LIQUIDATION",
           "DELEVERAGED",
-          "OFFSETTING"
+          "OFFSETTING",
+          "TWAP_SUBORDER"
         ],
         "type": "string"
       },
@@ -1013,7 +1014,8 @@
           "FILLED",
           "CANCELED",
           "BEST_EFFORT_CANCELED",
-          "UNTRIGGERED"
+          "UNTRIGGERED",
+          "ERROR"
         ],
         "type": "string"
       },
@@ -1041,7 +1043,9 @@
           "STOP_MARKET",
           "TRAILING_STOP",
           "TAKE_PROFIT",
-          "TAKE_PROFIT_MARKET"
+          "TAKE_PROFIT_MARKET",
+          "TWAP",
+          "TWAP_SUBORDER"
         ],
         "type": "string"
       },
@@ -1099,6 +1103,15 @@
             "type": "string"
           },
           "feePpm": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "interval": {
+            "type": "string"
+          },
+          "priceTolerance": {
             "type": "string"
           },
           "timeInForce": {
@@ -1365,7 +1378,8 @@
         "enum": [
           "LIMIT",
           "LIQUIDATED",
-          "DELEVERAGED"
+          "DELEVERAGED",
+          "TWAP_SUBORDER"
         ],
         "type": "string"
       },
@@ -2374,6 +2388,14 @@
             "schema": {
               "format": "double",
               "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fillType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/FillType"
             }
           }
         ]

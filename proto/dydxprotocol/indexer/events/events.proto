@@ -261,6 +261,7 @@ message StatefulOrderEventV1 {
     ConditionalOrderTriggeredV1 conditional_order_triggered = 6;
     LongTermOrderPlacementV1 long_term_order_placement = 7;
     LongTermOrderReplacementV1 order_replacement = 8;
+    TwapOrderPlacementV1 twap_order_placement = 9;
   }
 
   // A stateful order placement contains an order.
@@ -298,6 +299,11 @@ message StatefulOrderEventV1 {
     dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id =
         1; // vault replaces orders with a different order ID
     dydxprotocol.indexer.protocol.v1.IndexerOrder order = 2;
+  }
+
+  // A twap order placement contains an order.
+  message TwapOrderPlacementV1 {
+    dydxprotocol.indexer.protocol.v1.IndexerOrder order = 1;
   }
 }
 

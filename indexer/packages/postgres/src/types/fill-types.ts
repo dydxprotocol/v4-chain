@@ -27,6 +27,8 @@ export enum FillType {
   // OFFSETTING is for the offsetting subaccount in a deleveraging event.
   // The fill type will be set to maker.
   OFFSETTING = 'OFFSETTING',
+  // TWAP is for a TWAP fill.
+  TWAP_SUBORDER = 'TWAP_SUBORDER',
 }
 
 export interface FillCreateObject {
