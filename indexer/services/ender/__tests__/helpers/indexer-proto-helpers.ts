@@ -573,6 +573,7 @@ export async function expectFillInDatabase({
   builderAddress = null,
   builderFee = null,
   orderRouterAddress = null,
+  orderRouterFee = null,
 }: {
   subaccountId: string,
   clientId: string,
@@ -595,6 +596,7 @@ export async function expectFillInDatabase({
   builderAddress?: string | null,
   builderFee?: string | null,
   orderRouterAddress?: string | null,
+  orderRouterFee?: string | null,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -620,6 +622,7 @@ export async function expectFillInDatabase({
     builderAddress,
     builderFee,
     orderRouterAddress,
+    orderRouterFee,
   }));
 }
 
