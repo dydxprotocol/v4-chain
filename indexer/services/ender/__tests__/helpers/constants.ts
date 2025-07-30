@@ -364,8 +364,8 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   takerBuilderAddress: testConstants.noBuilderAddress,
   makerOrderRouterFee: Long.fromValue(0, true),
   takerOrderRouterFee: Long.fromValue(0, true),
-  makerOrderRouterAddress: testConstants.noBuilderAddress,
-  takerOrderRouterAddress: testConstants.noBuilderAddress,
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultOrder: OrderFillEventWithOrder = {
   makerOrder: defaultMakerOrder,
@@ -382,8 +382,8 @@ export const defaultOrder: OrderFillEventWithOrder = {
   takerBuilderAddress: testConstants.noBuilderAddress,
   makerOrderRouterFee: Long.fromValue(0, true),
   takerOrderRouterFee: Long.fromValue(0, true),
-  makerOrderRouterAddress: testConstants.noBuilderAddress,
-  takerOrderRouterAddress: testConstants.noBuilderAddress,
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
@@ -400,8 +400,8 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   takerBuilderAddress: testConstants.noBuilderAddress,
   makerOrderRouterFee: Long.fromValue(0, true),
   takerOrderRouterFee: Long.fromValue(0, true),
-  makerOrderRouterAddress: testConstants.noBuilderAddress,
-  takerOrderRouterAddress: testConstants.noBuilderAddress,
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultLiquidation: OrderFillEventWithLiquidation = {
   makerOrder: defaultMakerOrder,
@@ -418,8 +418,8 @@ export const defaultLiquidation: OrderFillEventWithLiquidation = {
   takerBuilderAddress: testConstants.noBuilderAddress,
   makerOrderRouterFee: Long.fromValue(0, true),
   takerOrderRouterFee: Long.fromValue(0, true),
-  makerOrderRouterAddress: testConstants.noBuilderAddress,
-  takerOrderRouterAddress: testConstants.noBuilderAddress,
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 
 export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
