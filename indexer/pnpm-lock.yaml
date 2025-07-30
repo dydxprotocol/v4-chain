@@ -19,8 +19,6 @@ importers:
       '@bugsnag/node': ^7.18.0
       '@bugsnag/plugin-express': ^7.18.0
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
-      '@solana/wallet-adapter-base': ^0.9.27
-      '@solana/web3.js': ^1.98.0
       '@types/big.js': ^6.1.5
       '@types/express': ^4.17.13
       '@types/jest': ^28.1.4
@@ -46,8 +44,6 @@ importers:
       '@bugsnag/js': 7.18.0
       '@bugsnag/node': 7.18.0
       '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
-      '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.0
-      '@solana/web3.js': 1.98.0
       axios: 1.2.1
       big.js: 6.2.1
       bignumber.js: 9.0.2
@@ -495,6 +491,8 @@ importers:
       '@types/response-time': ^2.3.5
       '@types/supertest': ^2.0.12
       '@types/swagger-ui-express': ^4.1.3
+      '@zerodev/ecdsa-validator': ^5.4.9
+      '@zerodev/sdk': ^5.4.41
       array.prototype.findlast: ^1.2.5
       bech32: 1.1.4
       big.js: ^6.2.1
@@ -551,6 +549,8 @@ importers:
       '@turnkey/sdk-server': 4.2.3_typescript@5.8.3
       '@turnkey/solana': 1.0.35_typescript@5.8.3
       '@turnkey/viem': 0.9.10_typescript@5.8.3+viem@2.31.7
+      '@zerodev/ecdsa-validator': 5.4.9_@zerodev+sdk@5.4.41+viem@2.31.7
+      '@zerodev/sdk': 5.4.41_viem@2.31.7
       array.prototype.findlast: 1.2.5
       bech32: 1.1.4
       big.js: 6.2.1
@@ -6398,7 +6398,7 @@ packages:
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
-      semver: 7.5.4
+      semver: 7.7.2
       tar: 6.2.1
     transitivePeerDependencies:
       - encoding
@@ -8155,6 +8155,25 @@ packages:
 
   /@yarnpkg/lockfile/1.1.0:
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
+    dev: false
+
+  /@zerodev/ecdsa-validator/5.4.9_@zerodev+sdk@5.4.41+viem@2.31.7:
+    resolution: {integrity: sha512-9NVE8/sQIKRo42UOoYKkNdmmHJY8VlT4t+2MHD2ipLg21cpbY9fS17TGZh61+Bl3qlqc8pP23I6f89z9im7kuA==}
+    peerDependencies:
+      '@zerodev/sdk': ^5.4.13
+      viem: ^2.28.0
+    dependencies:
+      '@zerodev/sdk': 5.4.41_viem@2.31.7
+      viem: 2.31.7_typescript@5.8.3
+    dev: false
+
+  /@zerodev/sdk/5.4.41_viem@2.31.7:
+    resolution: {integrity: sha512-YNXLYq4PXdC8u6NVzKNDnN42MKnXignehs0eAgyTb1Er57C4ueClR3ShR64QQ0oCL20NRtzMt/dJ+Yi+sVXndA==}
+    peerDependencies:
+      viem: ^2.28.0
+    dependencies:
+      semver: 7.7.2
+      viem: 2.31.7_typescript@5.8.3
     dev: false
 
   /abbrev/1.1.1:
@@ -13482,7 +13501,7 @@ packages:
       jest-util: 28.1.1
       natural-compare: 1.4.0
       pretty-format: 28.1.1
-      semver: 7.3.7
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -15903,6 +15922,7 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
+    dev: true
 
   /semver/7.5.4:
     resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
@@ -15911,6 +15931,11 @@ packages:
     dependencies:
       lru-cache: 6.0.0
     dev: false
+
+  /semver/7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
+    engines: {node: '>=10'}
+    hasBin: true
 
   /send/0.18.0:
     resolution: {integrity: sha512-qqWzuOjSFOuqPjFe4NOsMLafToQQwBSOEpS+FwEt3A2V3vKubTquT3vmLTQpFgMXp8AlFWFuP1qKaJZOtPpVXg==}
@@ -16549,7 +16574,7 @@ packages:
       mime: 2.6.0
       qs: 6.10.3
       readable-stream: 3.6.0
-      semver: 7.5.4
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
     dev: false

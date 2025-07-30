@@ -42,6 +42,8 @@ export const baseConfigSchema = {
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   // Alchemy API key for skip bridge.
   ALCHEMY_KEY: parseString({ default: '' }),
+  // ZeroDev RPC for skip bridge.
+  ZERODEV_RPC: parseString({ default: '' }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

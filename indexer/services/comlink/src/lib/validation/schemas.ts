@@ -205,6 +205,67 @@ const checkZeroPaymentsOptionalParamSchema: ParamSchema = {
   isBoolean: true,
 };
 
+const checkBridgeSchema: Record<string, ParamSchema> = {
+  // Validate the event object structure
+  event: {
+    in: 'body',
+    isObject: true,
+    errorMessage: 'Event must be an object',
+  },
+  'event.activity': {
+    in: 'body',
+    isArray: true,
+    errorMessage: 'Event.activity must be an array',
+  },
+  'event.activity.*.fromAddress': {
+    in: 'body',
+    isString: true,
+    errorMessage: 'Activity fromAddress must be a string',
+  },
+  'event.activity.*.toAddress': {
+    in: 'body',
+    isString: true,
+    optional: true,
+    errorMessage: 'Activity toAddress must be a string',
+  },
+  'event.activity.*.asset': {
+    in: 'body',
+    isString: true,
+    optional: true,
+    errorMessage: 'Activity asset must be a string',
+  },
+  'event.activity.*.value': {
+    in: 'body',
+    isNumeric: true,
+    optional: true,
+    errorMessage: 'Activity value must be a number',
+  },
+  'event.network': {
+    in: 'body',
+    isString: true,
+    optional: true,
+    errorMessage: 'Event network must be a string',
+  },
+  // Webhook metadata
+  id: {
+    in: 'body',
+    isString: true,
+    optional: true,
+  },
+  type: {
+    in: 'body',
+    isString: true,
+    optional: true,
+  },
+  webhookId: {
+    in: 'body',
+    isString: true,
+    optional: true,
+  },
+};
+
+export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
+
 export const CheckZeroPaymentsOptionalParamSchema = checkSchema({
   showZeroPayments: checkZeroPaymentsOptionalParamSchema,
 });

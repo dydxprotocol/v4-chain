@@ -1293,6 +1293,33 @@
         "type": "object",
         "additionalProperties": false
       },
+      "BridgeResponse": {
+        "properties": {
+          "toAddress": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "asset": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "toAddress",
+          "amount",
+          "asset"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "Asset": {
+        "enum": [
+          "USDC",
+          "DAI"
+        ],
+        "type": "string"
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -3465,6 +3492,58 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/bridging/startBridge": {
+      "post": {
+        "operationId": "StartBridge",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BridgeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fromAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "amount",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Asset"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chainId",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ]

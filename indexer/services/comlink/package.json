@@ -43,6 +43,8 @@
     "@turnkey/sdk-server": "^4.2.3",
     "@turnkey/solana": "^1.0.35",
     "@turnkey/viem": "^0.9.10",
+    "@zerodev/ecdsa-validator": "^5.4.9",
+    "@zerodev/sdk": "^5.4.41",
     "array.prototype.findlast": "^1.2.5",
     "bech32": "1.1.4",
     "big.js": "^6.2.1",
