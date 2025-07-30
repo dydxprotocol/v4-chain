@@ -661,6 +661,7 @@ describe('OrderHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
+        orderRouterAddress: ''
       });
 
       const takerOrderSize: string = '0.1002'; // quantums in human = (1e9 + 2e6) * 1e-10 = 0.1002
