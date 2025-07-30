@@ -69,7 +69,7 @@ BEGIN
         END CASE;
 
         CASE
-            WHEN order_->>'orderRouterAddress' IS NOT NULL AND order_->>'orderRouterAddress' != '' THEN
+            WHEN order_->>'orderRouterAddress' IS NOT NULL THEN
                 order_record."orderRouterAddress" = order_->>'orderRouterAddress';
             ELSE
                 order_record."orderRouterAddress" = null;
