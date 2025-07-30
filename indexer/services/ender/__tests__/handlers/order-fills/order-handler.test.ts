@@ -571,7 +571,7 @@ describe('OrderHandler', () => {
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
-          updatedAtHeight: '0'
+          updatedAtHeight: '0',
         }),
       ]);
 
@@ -661,7 +661,7 @@ describe('OrderHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
-        orderRouterAddress: ''
+        orderRouterAddress: '',
       });
 
       const takerOrderSize: string = '0.1002'; // quantums in human = (1e9 + 2e6) * 1e-10 = 0.1002
