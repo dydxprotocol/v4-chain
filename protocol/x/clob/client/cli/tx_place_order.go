@@ -15,9 +15,9 @@ import (
 
 func CmdPlaceOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "place-order owner subaccount_number clientId clobPairId side quantums subticks goodTilBlock",
-		Short: "Broadcast message place_order. Assumes short term order placement.",
-		Args:  cobra.ExactArgs(8),
+		Use:   "place-order owner subaccount_number clientId clobPairId side quantums subticks goodTilBlock builderAddress builderPpm orderRouterAddress",
+		Short: "Broadcast message place_order.",
+		Args:  cobra.RangeArgs(8, 10),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]
 
@@ -61,6 +61,31 @@ func CmdPlaceOrder() *cobra.Command {
 				return err
 			}
 
+			// Optional Params
+			builderCodeAddr := ""
+			if len(args) > 7 {
+				builderCodeAddr, err = cast.ToStringE(args[8])
+				if err != nil {
+					return err
+				}
+			}
+
+			builderCodePpm := uint32(0)
+			if len(args) > 8 {
+				builderCodePpm, err = cast.ToUint32E(args[9])
+				if err != nil {
+					return err
+				}
+			}
+
+			orderRouterRevShareAddr := ""
+			if len(args) > 9 {
+				orderRouterRevShareAddr, err = cast.ToStringE(args[10])
+				if err != nil {
+					return err
+				}
+			}
+
 			msg := types.NewMsgPlaceOrder(
 				types.Order{
 					OrderId: types.OrderId{
@@ -76,6 +101,11 @@ func CmdPlaceOrder() *cobra.Command {
 					Quantums:     argQuantums,
 					Subticks:     argSubticks,
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: argGoodTilBlock},
+					BuilderCodeParameters: &types.BuilderCodeParameters{
+						BuilderAddress: builderCodeAddr,
+						FeePpm:         uint32(builderCodePpm),
+					},
+					OrderRouterAddress: orderRouterRevShareAddr,
 				},
 			)
 			if err := msg.ValidateBasic(); err != nil {
