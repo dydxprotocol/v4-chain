@@ -54,6 +54,7 @@ BEGIN
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
+        order_record."orderRouterAddress" = (order_->>'orderRouterAddress')::text;
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN
@@ -75,13 +76,6 @@ BEGIN
             ELSE
                 order_record."builderAddress" = null;
                 order_record."feePpm" = null;
-        END CASE;
-
-        CASE
-            WHEN order_->>'orderRouterAddress' IS NOT NULL THEN
-                order_record."orderRouterAddress" = order_->>'orderRouterAddress';
-            ELSE
-                order_record."orderRouterAddress" = null;
         END CASE;
 
         INSERT INTO orders VALUES (order_record.*) ON CONFLICT ("id") DO
