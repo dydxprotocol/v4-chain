@@ -24,6 +24,7 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
+import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -269,6 +270,11 @@ export class TurnkeyController extends Controller {
       salt,
       created_at: new Date().toISOString(),
     });
+
+    // need to also add the svm and evm addresses to the alchemy hook
+    if (evmAddress && svmAddress) {
+      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
+    }
 
     // Best efforts to check that the subOrg.rootUserIds[0] is the end user
     const user = await this.bridgeSenderApiClient.getUser({
