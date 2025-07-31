@@ -449,7 +449,6 @@ func TestTwapOrderStopsPlacingSubordersWhenCollateralIsDepleted(t *testing.T) {
 		},
 	})
 
-	// tApp.App.SubaccountsKeeper.SetSubaccount(ctx, constants.Alice_Num0_0USD) // doesnt work
 	withdrawal := &sendingtypes.MsgWithdrawFromSubaccount{
 		Sender:    constants.Alice_Num0,
 		Recipient: constants.BobAccAddress.String(), // send to bob

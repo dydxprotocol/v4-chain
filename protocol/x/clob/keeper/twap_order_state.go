@@ -336,9 +336,10 @@ func (k Keeper) GenerateSuborder(
 
 	parentOrder := twapOrderPlacement.Order
 	order := types.Order{
-		OrderId:    suborderId,
-		Side:       twapOrderPlacement.Order.Side,
-		ReduceOnly: twapOrderPlacement.Order.ReduceOnly, // TODO: (anmol) client metadata?
+		OrderId:        suborderId,
+		Side:           twapOrderPlacement.Order.Side,
+		ReduceOnly:     twapOrderPlacement.Order.ReduceOnly,
+		ClientMetadata: twapOrderPlacement.Order.ClientMetadata,
 	}
 
 	priceTolerancePpm := int32(parentOrder.TwapParameters.PriceTolerance)
