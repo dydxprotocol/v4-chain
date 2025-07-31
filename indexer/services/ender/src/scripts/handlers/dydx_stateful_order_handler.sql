@@ -68,6 +68,7 @@ BEGIN
                 order_record."type" = 'LIMIT';
                 order_record."status" = 'OPEN';
         END CASE;
+        
 
         CASE
             WHEN order_->'builderCodeParams' IS NOT NULL THEN
