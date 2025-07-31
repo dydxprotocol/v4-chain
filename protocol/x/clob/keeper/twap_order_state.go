@@ -318,16 +318,12 @@ func (k Keeper) calculateSuborderQuantums(
 	return suborderQuantumsRounded.Uint64()
 }
 
-func calculateSuborderPrice(
+func chooseLimitOrAdjustedPrice(
 	parentOrder types.Order,
 	adjustedSubticks uint64,
 ) uint64 {
 	if parentOrder.Subticks != 0 {
-		if parentOrder.Side == types.Order_SIDE_BUY {
-			return lib.Min(adjustedSubticks, parentOrder.Subticks)
-		} else {
-			return lib.Max(adjustedSubticks, parentOrder.Subticks)
-		}
+		return parentOrder.Subticks
 	}
 	return adjustedSubticks
 }
@@ -368,7 +364,7 @@ func (k Keeper) GenerateSuborder(
 
 	// set the subticks based on the adjusted price and the limit price (if configured)
 	// by the parent twap order
-	order.Subticks = calculateSuborderPrice(parentOrder, suborderAdjustedPrice)
+	order.Subticks = chooseLimitOrAdjustedPrice(parentOrder, suborderAdjustedPrice)
 	// calculate the suborder quantums based on remaining quantums and legs
 	order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement, clobPair)
 
