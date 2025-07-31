@@ -270,19 +270,6 @@ export class TurnkeyController extends Controller {
       created_at: new Date().toISOString(),
     });
 
-    // Best efforts to check that the subOrg.rootUserIds[0] is the end user
-    const user = await this.bridgeSenderApiClient.getUser({
-      organizationId: subOrg.subOrganizationId,
-      userId: subOrg.rootUserIds?.[0] as string,
-    });
-    if (
-      user.user.authenticators.length > 0 &&
-      user.user.authenticators[0].credentialId !== params.attestation?.credentialId
-    ) {
-      throw new Error('End User not found');
-    } else if (user.user.userEmail && user.user.userEmail !== params.email) {
-      throw new Error('End User not found');
-    }
     return {
       subOrgId: subOrg.subOrganizationId,
       salt,
