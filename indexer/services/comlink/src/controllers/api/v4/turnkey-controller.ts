@@ -24,6 +24,7 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
+import { isValidEmail } from '../../../helpers/utility/validation';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -283,7 +284,7 @@ export class TurnkeyController extends Controller {
     magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // Validate email format
-    if (!this.isValidEmail(userEmail)) {
+    if (!isValidEmail(userEmail)) {
       throw new Error('Invalid email format');
     }
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
@@ -366,12 +367,6 @@ export class TurnkeyController extends Controller {
       organizationId: suborg.subOrgId,
       salt: suborg.salt,
     };
-  }
-
-  // Utility methods
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
   }
 
   // default 32 bytes.
