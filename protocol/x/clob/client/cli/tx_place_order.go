@@ -15,9 +15,9 @@ import (
 
 func CmdPlaceOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "place-order owner subaccount_number clientId clobPairId side quantums subticks goodTilBlock builderAddress builderPpm orderRouterAddress",
+		Use:   "place-order owner subaccount_number clientId clobPairId side quantums subticks goodTilBlock",
 		Short: "Broadcast message place_order.",
-		Args:  cobra.RangeArgs(8, 10),
+		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]
 
@@ -56,34 +56,33 @@ func CmdPlaceOrder() *cobra.Command {
 				return err
 			}
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			// Optional Params from flags
+			builderCodeAddr, err := cmd.Flags().GetString("builder-address")
 			if err != nil {
 				return err
 			}
 
-			// Optional Params
-			builderCodeAddr := ""
-			if len(args) > 7 {
-				builderCodeAddr, err = cast.ToStringE(args[8])
-				if err != nil {
-					return err
+			builderCodePpm, err := cmd.Flags().GetUint32("builder-ppm")
+			if err != nil {
+				return err
+			}
+
+			var builderParams *types.BuilderCodeParameters
+			if builderCodeAddr != "" {
+				builderParams = &types.BuilderCodeParameters{
+					BuilderAddress: builderCodeAddr,
+					FeePpm:         builderCodePpm,
 				}
 			}
 
-			builderCodePpm := uint32(0)
-			if len(args) > 8 {
-				builderCodePpm, err = cast.ToUint32E(args[9])
-				if err != nil {
-					return err
-				}
+			orderRouterRevShareAddr, err := cmd.Flags().GetString("order-router-address")
+			if err != nil {
+				return err
 			}
 
-			orderRouterRevShareAddr := ""
-			if len(args) > 9 {
-				orderRouterRevShareAddr, err = cast.ToStringE(args[10])
-				if err != nil {
-					return err
-				}
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
 			}
 
 			msg := types.NewMsgPlaceOrder(
@@ -97,15 +96,12 @@ func CmdPlaceOrder() *cobra.Command {
 						ClobPairId: argClobPairId,
 						OrderFlags: types.OrderIdFlags_ShortTerm,
 					},
-					Side:         types.Order_Side(argSide),
-					Quantums:     argQuantums,
-					Subticks:     argSubticks,
-					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: argGoodTilBlock},
-					BuilderCodeParameters: &types.BuilderCodeParameters{
-						BuilderAddress: builderCodeAddr,
-						FeePpm:         uint32(builderCodePpm),
-					},
-					OrderRouterAddress: orderRouterRevShareAddr,
+					Side:                  types.Order_Side(argSide),
+					Quantums:              argQuantums,
+					Subticks:              argSubticks,
+					GoodTilOneof:          &types.Order_GoodTilBlock{GoodTilBlock: argGoodTilBlock},
+					BuilderCodeParameters: builderParams,
+					OrderRouterAddress:    orderRouterRevShareAddr,
 				},
 			)
 			if err := msg.ValidateBasic(); err != nil {
@@ -135,6 +131,11 @@ func CmdPlaceOrder() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	customflags.AddTxPermissionedKeyFlagsToCmd(cmd)
+
+	// Add optional flags
+	cmd.Flags().String("builder-address", "", "Builder address for revenue sharing")
+	cmd.Flags().Uint32("builder-ppm", 0, "Builder fee in parts per million")
+	cmd.Flags().String("order-router-address", "", "Order router address for revenue sharing")
 
 	return cmd
 }
