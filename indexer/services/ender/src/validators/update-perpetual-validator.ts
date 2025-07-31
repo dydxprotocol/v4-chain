@@ -6,9 +6,9 @@ import {
   UpdatePerpetualEventV3,
 } from '@dydxprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { UpdatePerpetualHandler } from '../handlers/update-perpetual-handler';
-import { Validator } from './validator';
 
 export class UpdatePerpetualValidator extends Validator<
   UpdatePerpetualEventV1 | UpdatePerpetualEventV2 | UpdatePerpetualEventV3

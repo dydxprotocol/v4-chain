@@ -51,9 +51,9 @@ describe('historical-trading-reward-aggregations-controller#V4', () => {
   const startedAt2: DateTime = startedAt.plus({ month: 1 });
   const defaultCompletedTradingRewardAggregationCreate: TradingRewardAggregationCreateObject = {
     address: testConstants.defaultAddress,
-    startedAt: startedAt.toISO(),
+    startedAt: startedAt.toISO()!,
     startedAtHeight: testConstants.defaultBlock.blockHeight,
-    endedAt: startedAt2.toISO(),
+    endedAt: startedAt2.toISO()!,
     endedAtHeight: '10000', // ignored field for the purposes of this test
     period: TradingRewardAggregationPeriod.MONTHLY,
     amount: testConversionHelpers.convertToDenomScale('10'),
@@ -61,7 +61,7 @@ describe('historical-trading-reward-aggregations-controller#V4', () => {
   let defaultCompletedTradingRewardAggregation: TradingRewardAggregationFromDatabase;
   const defaultIncompleteTradingRewardAggregationCreate: TradingRewardAggregationCreateObject = {
     address: testConstants.defaultAddress,
-    startedAt: startedAt2.toISO(),
+    startedAt: startedAt2.toISO()!,
     startedAtHeight: testConstants.defaultBlock2.blockHeight,
     period: TradingRewardAggregationPeriod.MONTHLY,
     amount: testConversionHelpers.convertToDenomScale('20'),
@@ -120,7 +120,7 @@ describe('historical-trading-reward-aggregations-controller#V4', () => {
         path: `/v4/historicalTradingRewardAggregations/${testConstants.defaultAddress}` +
         `?${getQueryString({
           period: TradingRewardAggregationPeriod.MONTHLY,
-          startingBeforeOrAt: startedAt.toISO(),
+          startingBeforeOrAt: startedAt.toISO()!,
         })}`,
       });
 

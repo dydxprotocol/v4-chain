@@ -1,8 +1,8 @@
 import { UpsertVaultEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import { ConsolidatedKafkaEvent } from '../lib/types';
 
 export class UpsertVaultHandler extends Handler<UpsertVaultEventV1> {
   eventType: string = 'UpsertVaultEventV1';

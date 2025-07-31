@@ -2,9 +2,9 @@ import path from 'path';
 
 import { Model } from 'objection';
 
+import BaseModel from './base-model';
 import { IntegerPattern, NonNegativeNumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
-import BaseModel from './base-model';
 
 export default class AssetPositionModel extends BaseModel {
   static get tableName() {

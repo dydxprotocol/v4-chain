@@ -68,7 +68,7 @@ describe('create-leaderboard', () => {
   it('leaderboard not updated if last processed pnl time < cached leaderboard time', async () => {
     await LeaderboardPnlProcessedCache.setProcessedTime(
       LeaderboardPnlTimeSpan.ALL_TIME,
-      DateTime.utc().toISO(),
+      DateTime.utc().toISO()!,
       redisClient,
     );
     const task: () => Promise<void> = generateLeaderboardTaskFromTimespan(
@@ -97,7 +97,7 @@ async function setupRankedPnlTicksData() {
     {
       subaccountId: testConstants.defaultSubaccountId,
       equity: '1100',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       totalPnl: '1200',
       netTransfers: '50',
       blockHeight: '9',
@@ -106,7 +106,7 @@ async function setupRankedPnlTicksData() {
     {
       subaccountId: testConstants.defaultSubaccountIdWithAlternateAddress,
       equity: '1090',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       totalPnl: '1190',
       netTransfers: '50',
       blockHeight: '7',

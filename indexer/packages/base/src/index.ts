@@ -15,6 +15,7 @@ export * from './stats-util';
 export * from './date-helpers';
 export * from './instance-id';
 export * from './az-id';
+export { requestId } from './request-id';
 
 // Do this outside logger.ts to avoid a dependency cycle with logger transports that may trigger
 // additional logging.

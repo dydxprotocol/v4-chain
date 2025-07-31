@@ -103,7 +103,7 @@ export class ComplianceControllerHelper extends Controller {
       complianceData = await ComplianceTable.upsert({
         ..._.omitBy(response, _.isUndefined) as ComplianceDataCreateObject,
         provider: complianceProvider.provider,
-        updatedAt: DateTime.utc().toISO(),
+        updatedAt: DateTime.utc().toISO()!,
       });
     }
 

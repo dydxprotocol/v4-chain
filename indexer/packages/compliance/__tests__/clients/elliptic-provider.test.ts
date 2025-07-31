@@ -1,13 +1,13 @@
-import axios, { AxiosResponse } from 'axios';
+import { TooManyRequestsError } from '@dydxprotocol-indexer/base';
+import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { ComplianceClientResponse } from 'packages/compliance/src';
 import {
   EllipticPostArgs,
   EllipticProviderClient,
   HOLISTIC,
 } from '../../src/clients/elliptic-provider';
-import { ComplianceClientError } from '../../src/lib/error';
-import { TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import config from '../../src/config';
-import { ComplianceClientResponse } from 'packages/compliance/src';
+import { ComplianceClientError } from '../../src/lib/error';
 
 const defaultAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 
@@ -22,6 +22,7 @@ describe('elliptic-provider', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
@@ -137,7 +138,7 @@ function getMockResponse(
     statusText: '',
     headers: {},
     request: null,
-    config: {},
+    config: {} as InternalAxiosRequestConfig,
     data: {
       id: 'b7535048-76f8-4f60-bdd3-9d659298f9e7',
       type: 'wallet_exposure',

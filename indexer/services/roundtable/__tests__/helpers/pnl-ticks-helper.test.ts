@@ -450,7 +450,7 @@ describe('pnl-ticks-helper', () => {
     const usdcPosition: Big = new Big('100');
     const usdcNetTransfersSinceLastPnlTick: Big = new Big('-5.5');
     const latestBlockHeight: string = '5';
-    const latestBlockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    const latestBlockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO()!;
     const pnlTick: PnlTicksCreateObject = getNewPnlTick(
       testConstants.defaultSubaccountId,
       subaccountAssetNetTransferMap,
@@ -470,7 +470,7 @@ describe('pnl-ticks-helper', () => {
       equity: '190600.000000',
       totalPnl: '190620.500000',
       netTransfers: '-5.500000',
-      createdAt: dateTime.toISO(),
+      createdAt: dateTime.toISO()!,
       blockHeight: latestBlockHeight,
       blockTime: latestBlockTime,
     });
@@ -479,11 +479,11 @@ describe('pnl-ticks-helper', () => {
   it('getNewPnlTicks with prior pnl ticks', async () => {
     config.PNL_TICK_UPDATE_INTERVAL_MS = 3_600_000;
     const blockHeight: string = '5';
-    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO()!;
     const ticksForSubaccounts: PnlTickForSubaccounts = {
       [testConstants.defaultSubaccountId]: {
         ...testConstants.defaultPnlTick,
-        createdAt: DateTime.utc(2022, 6, 2).toISO(),
+        createdAt: DateTime.utc(2022, 6, 2).toISO()!,
       },
     };
     await LatestAccountPnlTicksCache.set(
@@ -504,7 +504,7 @@ describe('pnl-ticks-helper', () => {
     expect(newTicksToCreate).toEqual(
       expect.arrayContaining([
         {
-          createdAt: dateTime.toISO(),
+          createdAt: dateTime.toISO()!,
           blockHeight,
           blockTime,
           equity: '0.000000',
@@ -519,7 +519,7 @@ describe('pnl-ticks-helper', () => {
   it('getNewPnlTicks without prior pnl ticks', async () => {
     jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
     const blockHeight: string = '5';
-    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO()!;
     await TransferTable.create(testConstants.defaultTransfer);
     await BlockTable.create({
       blockHeight,
@@ -533,7 +533,7 @@ describe('pnl-ticks-helper', () => {
     expect(newTicksToCreate).toEqual(
       expect.arrayContaining([
         {
-          createdAt: dateTime.toISO(),
+          createdAt: dateTime.toISO()!,
           blockHeight,
           blockTime,
           equity: '0.000000',
@@ -542,7 +542,7 @@ describe('pnl-ticks-helper', () => {
           totalPnl: '-10.000000',
         },
         {
-          createdAt: dateTime.toISO(),
+          createdAt: dateTime.toISO()!,
           blockHeight,
           blockTime,
           equity: '0.000000',

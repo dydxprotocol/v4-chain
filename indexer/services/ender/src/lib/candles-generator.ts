@@ -261,7 +261,7 @@ export class CandlesGenerator {
       )];
     }
 
-    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO();
+    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO()!;
     if (!sameStartTime) {
       // - Candle exists & !sameStartTime & there is a block update - create candle
       //   update previous candle orderbookMidPriceClose
@@ -319,7 +319,7 @@ export class CandlesGenerator {
       return _.some(
         Object.values(CandleResolution),
         (resolution: CandleResolution) => {
-          const startedAtISOString: string = this.resolutionStartTimes.get(resolution)!.toISO();
+          const startedAtISOString: string = this.resolutionStartTimes.get(resolution)!.toISO()!;
           const existingCandle: CandleFromDatabase | undefined = getCandle(ticker, resolution);
           return existingCandle === undefined || existingCandle.startedAt !== startedAtISOString;
         },
@@ -378,7 +378,7 @@ export class CandlesGenerator {
     orderbookMidPrice: OrderbookMidPrice,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO()!,
       ticker,
       resolution,
       low: blockCandleUpdate.low,
@@ -410,7 +410,7 @@ export class CandlesGenerator {
     orderbookMidPrice: OrderbookMidPrice,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO()!,
       ticker,
       resolution,
       low: existingCandle.close,

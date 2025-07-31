@@ -23,6 +23,7 @@ import { IndexerOrderId, LiquidationOrderV1 } from '@dydxprotocol-indexer/v4-pro
 import Long from 'long';
 import * as pg from 'pg';
 
+import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
@@ -30,7 +31,6 @@ import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithLiquidation } from '../../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithLiquidation } from '../../lib/types';
-import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'LiquidationEvent';

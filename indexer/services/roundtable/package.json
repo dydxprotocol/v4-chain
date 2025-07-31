@@ -46,6 +46,7 @@
     "@types/redis": "2.8.27",
     "@types/seedrandom": "^3.0.8",
     "@types/uuid": "^8.3.4",
+    "eslint": "^8.39.0",
     "jest": "^28.1.2",
     "redis": "2.8.0",
     "ts-node": "^10.8.2",

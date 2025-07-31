@@ -152,7 +152,7 @@ describe('compliance-controller#V4', () => {
           ...testConstants.nonBlockedComplianceData,
           updatedAt: DateTime.utc().minus({
             seconds: config.MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS * 2,
-          }).toISO(),
+          }).toISO()!,
         });
         let data: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
         expect(data).toHaveLength(1);
@@ -191,7 +191,7 @@ describe('compliance-controller#V4', () => {
       // Seed the database with an old blocked compliance record
         const oldUpdatedAt: string = DateTime.utc().minus({
           seconds: config.MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS * 2,
-        }).toISO();
+        }).toISO()!;
         await ComplianceTable.create({
           ...testConstants.blockedComplianceData,
           updatedAt: oldUpdatedAt,

@@ -270,7 +270,7 @@ export async function get24HourInformation(perpetualMarketIds: string[]): Promis
   _.Dictionary<Market24HourTradeVolumes>
 > {
   // Rename perpetualMarketId to clobPairId
-  const oneDayAgo: string = DateTime.local().minus({ days: 1 }).toISO();
+  const oneDayAgo: string = DateTime.local().minus({ days: 1 }).toISO()!;
   const result: {
     rows: Market24HourTradeVolumes[],
   } = await knexReadReplica.getConnection().raw(
@@ -329,11 +329,11 @@ export async function getCostOfFills(
     .getConnection()
     .raw(
       `
-      SELECT SUM(CASE 
-                  WHEN side = 'SELL' THEN price * size 
-                  ELSE -1 * price * size 
+      SELECT SUM(CASE
+                  WHEN side = 'SELL' THEN price * size
+                  ELSE -1 * price * size
                 END) AS "cost"
-      FROM fills 
+      FROM fills
       WHERE "subaccountId" = ?
         AND "createdAtHeight" <= ?;
       `,
@@ -508,7 +508,7 @@ export async function getOpenSizeWithFundingIndex(
     .raw(
       `
       WITH input AS (
-        SELECT 
+        SELECT
           f."clobPairId",
           SUM(CASE
             WHEN side = 'SELL' THEN -1 * size
@@ -523,7 +523,7 @@ export async function getOpenSizeWithFundingIndex(
         GROUP BY
           f."clobPairId"
       )
-      SELECT 
+      SELECT
         input.*,
         fiu."fundingIndex",
         fiu."effectiveAtHeight" as "fundingIndexHeight"

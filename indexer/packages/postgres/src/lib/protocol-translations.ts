@@ -303,7 +303,7 @@ export function getGoodTilBlockTime(order: IndexerOrder): IsoString | undefined 
     // `goodTilBlockTime` is the unix timestamp in seconds
     // Reference:
     // https://github.com/dydxprotocol/v4/blob/main/proto/dydxprotocol/clob/order.proto#L138-L144
-    return DateTime.fromSeconds(order.goodTilBlockTime).toUTC().toISO();
+    return DateTime.fromSeconds(order.goodTilBlockTime).toUTC().toISO()!;
   }
   return undefined;
 }

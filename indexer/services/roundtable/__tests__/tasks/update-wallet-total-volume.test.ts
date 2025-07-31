@@ -40,13 +40,13 @@ describe('update-wallet-total-volume', () => {
     // Set persistent cache totalVolumeUpdateTime to now so task does not backfill
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-      value: DateTime.utc().toISO(),
+      value: DateTime.utc().toISO()!,
     });
 
     // First task run: one new fill
     await FillTable.create({
       ...testConstants.defaultFill,
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       eventId: testConstants.defaultTendermintEventId,
       price: '1',
       size: '1',
@@ -56,7 +56,7 @@ describe('update-wallet-total-volume', () => {
     const updatedDt1: DateTime = DateTime.utc();
     await BlockTable.create({
       blockHeight: '3',
-      time: updatedDt1.toISO(),
+      time: updatedDt1.toISO()!,
     });
 
     // Run task
@@ -80,7 +80,7 @@ describe('update-wallet-total-volume', () => {
     const updatedDt2: DateTime = DateTime.utc();
     await BlockTable.create({
       blockHeight: '4',
-      time: updatedDt2.toISO(),
+      time: updatedDt2.toISO()!,
     });
     await walletTotalVolumeUpdateTask();
 
@@ -98,7 +98,7 @@ describe('update-wallet-total-volume', () => {
     // Third task run: one new fill
     await FillTable.create({
       ...testConstants.defaultFill,
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       eventId: testConstants.defaultTendermintEventId2,
       price: '1',
       size: '1',
@@ -106,7 +106,7 @@ describe('update-wallet-total-volume', () => {
     const updatedDt3: DateTime = DateTime.utc();
     await BlockTable.create({
       blockHeight: '5',
-      time: updatedDt3.toISO(),
+      time: updatedDt3.toISO()!,
     });
     await walletTotalVolumeUpdateTask();
 
@@ -129,21 +129,21 @@ describe('update-wallet-total-volume', () => {
       // Create 3 fills spanning 2 weeks in the past
       FillTable.create({
         ...testConstants.defaultFill,
-        createdAt: currentDt.toISO(),
+        createdAt: currentDt.toISO()!,
         eventId: testConstants.defaultTendermintEventId,
         price: '1',
         size: '1',
       }),
       FillTable.create({
         ...testConstants.defaultFill,
-        createdAt: currentDt.minus({ weeks: 1 }).toISO(),
+        createdAt: currentDt.minus({ weeks: 1 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId2,
         price: '2',
         size: '2',
       }),
       FillTable.create({
         ...testConstants.defaultFill,
-        createdAt: currentDt.minus({ weeks: 2 }).toISO(),
+        createdAt: currentDt.minus({ weeks: 2 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId3,
         price: '3',
         size: '3',
@@ -151,18 +151,18 @@ describe('update-wallet-total-volume', () => {
       // Set persistent cache totalVolumeUpdateTime to 3 weeks ago to emulate backfill from 3 weeks.
       PersistentCacheTable.create({
         key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-        value: currentDt.minus({ weeks: 3 }).toISO(),
+        value: currentDt.minus({ weeks: 3 }).toISO()!,
       }),
       // Create block at current time
       BlockTable.create({
         blockHeight: '3',
-        time: DateTime.utc().toISO(),
+        time: DateTime.utc().toISO()!,
       }),
     ]);
 
     // Simulate backfill
     let backfillTime = await getTotalVolumeUpdateTime();
-    while (backfillTime !== undefined && DateTime.fromISO(backfillTime.toISO()) < currentDt) {
+    while (backfillTime !== undefined && DateTime.fromISO(backfillTime.toISO()!) < currentDt) {
       await walletTotalVolumeUpdateTask();
       backfillTime = await getTotalVolumeUpdateTime();
     }
@@ -186,21 +186,21 @@ describe('update-wallet-total-volume', () => {
     await Promise.all([
       FillTable.create({
         ...testConstants.defaultFill,
-        createdAt: referenceDt.plus({ days: 1 }).toISO(),
+        createdAt: referenceDt.plus({ days: 1 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId,
         price: '1',
         size: '1',
       }),
       FillTable.create({
         ...testConstants.defaultFill,
-        createdAt: referenceDt.plus({ days: 4 }).toISO(),
+        createdAt: referenceDt.plus({ days: 4 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId2,
         price: '2',
         size: '2',
       }),
       FillTable.create({
         ...testConstants.defaultFill,
-        createdAt: referenceDt.plus({ days: 7 }).toISO(),
+        createdAt: referenceDt.plus({ days: 7 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId3,
         price: '3',
         size: '3',
@@ -208,7 +208,7 @@ describe('update-wallet-total-volume', () => {
       // Create block in the future relative to referenceDt
       BlockTable.create({
         blockHeight: '3',
-        time: referenceDt.plus({ days: 7 }).toISO(),
+        time: referenceDt.plus({ days: 7 }).toISO()!,
       }),
     ]);
 
@@ -229,7 +229,7 @@ describe('update-wallet-total-volume', () => {
 
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-      value: DateTime.utc().toISO(),
+      value: DateTime.utc().toISO()!,
     });
 
     await walletTotalVolumeUpdateTask();

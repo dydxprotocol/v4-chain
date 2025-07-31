@@ -58,14 +58,14 @@ describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.offsetting!.owner,
     subaccountNumber: defaultDeleveragingEvent.offsetting!.number,
-    updatedAt: createdDateTime.toISO(),
+    updatedAt: createdDateTime.toISO()!,
     updatedAtHeight: createdHeight,
   };
 
   const deleveragedSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.liquidated!.owner,
     subaccountNumber: defaultDeleveragingEvent.liquidated!.number,
-    updatedAt: createdDateTime.toISO(),
+    updatedAt: createdDateTime.toISO()!,
     updatedAtHeight: createdHeight,
   };
 
@@ -115,7 +115,7 @@ describe('DeleveragingHandler', () => {
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
-    createdAt: DateTime.utc().toISO(),
+    createdAt: DateTime.utc().toISO()!,
     createdAtHeight: '1',
     openEventId: testConstants.defaultTendermintEventId,
     lastEventId: testConstants.defaultTendermintEventId,
@@ -247,7 +247,7 @@ describe('DeleveragingHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.OFFSETTING,
         clobPairId: perpetualMarket!.clobPairId,
@@ -267,7 +267,7 @@ describe('DeleveragingHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.DELEVERAGED,
         clobPairId: perpetualMarket!.clobPairId,

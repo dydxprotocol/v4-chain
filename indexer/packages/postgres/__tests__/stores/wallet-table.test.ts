@@ -94,8 +94,8 @@ describe('Wallet store', () => {
 
       // Update totalVolume for a time window that covers all fills
       await WalletTable.updateTotalVolume(
-        firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
-        firstFillTime.plus({ hours: 1 }).toISO(),
+        firstFillTime.minus({ hours: 1 }).toISO()!, // need to minus because left bound is exclusive
+        firstFillTime.plus({ hours: 1 }).toISO()!,
       );
       const wallet1: WalletFromDatabase | undefined = await WalletTable
         .findById(defaultWallet.address);
@@ -108,8 +108,8 @@ describe('Wallet store', () => {
       // For convenience, we will reuse the existing fills data. The total volume calculated in this
       // window should be added to the total volume above.
       await WalletTable.updateTotalVolume(
-        firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
-        firstFillTime.plus({ minutes: 2 }).toISO(),
+        firstFillTime.toISO()!, // exclusive -> filters out first fill from each subaccount
+        firstFillTime.plus({ minutes: 2 }).toISO()!,
       );
       const wallet2 = await WalletTable.findById(defaultWallet.address);
       expect(wallet2).toEqual(expect.objectContaining({
@@ -150,7 +150,7 @@ async function populateWalletSubaccountFill(): Promise<DateTime> {
       FillTable.create({
         ...defaultFill,
         subaccountId: defaultSubaccountId,
-        createdAt: referenceDt.plus({ minutes: i }).toISO(),
+        createdAt: referenceDt.plus({ minutes: i }).toISO()!,
         eventId: eventIds[eventIdx],
         price: '1',
         size: '1',
@@ -163,7 +163,7 @@ async function populateWalletSubaccountFill(): Promise<DateTime> {
     FillTable.create({
       ...defaultFill,
       subaccountId: isolatedSubaccountId,
-      createdAt: referenceDt.toISO(),
+      createdAt: referenceDt.toISO()!,
       eventId: eventIds[eventIdx],
       price: '10',
       size: '10',

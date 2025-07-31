@@ -688,7 +688,7 @@ export function aggregateHourlyPnlTicks(
   const hourlyPnlTicks: Map<string, PnlTicksFromDatabase> = new Map();
   const hourlySubaccountIds: Map<string, Set<string>> = new Map();
   for (const pnlTick of pnlTicks) {
-    const truncatedTime: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').toISO();
+    const truncatedTime: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').toISO()!;
     if (hourlyPnlTicks.has(truncatedTime)) {
       const subaccountIds: Set<string> = hourlySubaccountIds.get(truncatedTime) as Set<string>;
       if (subaccountIds.has(pnlTick.subaccountId)) {

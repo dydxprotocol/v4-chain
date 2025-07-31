@@ -15,11 +15,11 @@ import {
 import { DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 import config from '../../config';
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
-import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEventV1> {
   eventType: string = 'DeleveragingEvent';

@@ -1,6 +1,6 @@
+import BaseModel from './base-model';
 import { NonNegativeNumericPattern, NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
-import BaseModel from './base-model';
 
 export default class AffiliateInfoModel extends BaseModel {
   static get tableName() {

@@ -24,6 +24,7 @@
     "paths": {
       "@dydxprotocol-indexer/example-package": ["packages/example-package/src"],
     },
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules"

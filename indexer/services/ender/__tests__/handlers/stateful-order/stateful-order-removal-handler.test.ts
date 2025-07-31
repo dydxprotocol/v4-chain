@@ -146,7 +146,7 @@ describe('statefulOrderRemovalHandler', () => {
     expect(order).toBeDefined();
     expect(order).toEqual(expect.objectContaining({
       status: OrderStatus.CANCELED,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     }));
 

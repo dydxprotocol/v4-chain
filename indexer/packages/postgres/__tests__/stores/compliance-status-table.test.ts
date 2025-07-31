@@ -116,7 +116,7 @@ describe('Compliance status store', () => {
 
     const updatedTime: string = DateTime.fromISO(
       noncompliantStatusData.createdAt!,
-    ).plus({ minutes: 10 }).toUTC().toISO();
+    ).plus({ minutes: 10 }).toUTC().toISO()!;
 
     await ComplianceStatusTable.update({
       address: noncompliantStatusData.address,
@@ -181,7 +181,7 @@ describe('Compliance status store', () => {
     const compliantUpsertStatusData: ComplianceStatusUpsertObject = {
       address: defaultAddress,
       status: ComplianceStatus.COMPLIANT,
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO()!,
     };
     await ComplianceStatusTable.create(noncompliantStatusUpsertData);
     const otherAddress: string = '0x123456789abcdef';
