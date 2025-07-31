@@ -78,12 +78,12 @@ const usdcAddressByChainId: Record<string, string> = {
 
 enum Asset {
   USDC = 'USDC',
-  ETH = 'DAI',
+  ETH = 'ETH',
 }
 
 const assetAddressLookerUpper: Record<Asset, Record<string, string>> = {
   [Asset.USDC]: usdcAddressByChainId,
-  [Asset.ETH]: {}, // TODO: Add DAI address mappings when needed
+  [Asset.ETH]: {}, // TODO: Add ETH address mappings
 }
 
 async function getDydxAddress(address: string, chainId: string): Promise<string> {
