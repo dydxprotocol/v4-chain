@@ -108,18 +108,12 @@ func main() {
 			msg = &events.MarketEventV1{}
 		case "asset_create":
 			msg = &events.AssetCreateEventV1{}
-		case "perpetual_market_create":
-			msg = &events.PerpetualMarketCreateEventV1{}
 		case "liquidity_tier":
 			msg = &events.LiquidityTierUpsertEventV1{}
 		case "update_clob_pair":
 			msg = &events.UpdateClobPairEventV1{}
-		case "update_perpetual":
-			msg = &events.UpdatePerpetualEventV1{}
 		case "trading_rewards":
 			msg = &events.TradingRewardsEventV1{}
-		case "open_interest_update":
-			msg = &events.OpenInterestUpdateEventV1{}
 		case "register_affiliate":
 			msg = &events.RegisterAffiliateEventV1{}
 		case "upsert_vault":
