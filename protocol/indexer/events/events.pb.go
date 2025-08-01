@@ -5,15 +5,16 @@ package events
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	types1 "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -729,6 +730,14 @@ type OrderFillEventV1 struct {
 	MakerBuilderAddress string `protobuf:"bytes,12,opt,name=maker_builder_address,json=makerBuilderAddress,proto3" json:"maker_builder_address,omitempty"`
 	// builder address for taker
 	TakerBuilderAddress string `protobuf:"bytes,13,opt,name=taker_builder_address,json=takerBuilderAddress,proto3" json:"taker_builder_address,omitempty"`
+	// order router fee for maker
+	MakerOrderRouterFee uint64 `protobuf:"varint,14,opt,name=maker_order_router_fee,json=makerOrderRouterFee,proto3" json:"maker_order_router_fee,omitempty"`
+	// order router fee for taker
+	TakerOrderRouterFee uint64 `protobuf:"varint,15,opt,name=taker_order_router_fee,json=takerOrderRouterFee,proto3" json:"taker_order_router_fee,omitempty"`
+	// order router address for maker
+	MakerOrderRouterAddress string `protobuf:"bytes,16,opt,name=maker_order_router_address,json=makerOrderRouterAddress,proto3" json:"maker_order_router_address,omitempty"`
+	// order router address for taker
+	TakerOrderRouterAddress string `protobuf:"bytes,17,opt,name=taker_order_router_address,json=takerOrderRouterAddress,proto3" json:"taker_order_router_address,omitempty"`
 }
 
 func (m *OrderFillEventV1) Reset()         { *m = OrderFillEventV1{} }
