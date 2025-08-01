@@ -43,7 +43,8 @@ export const baseConfigSchema = {
   // Alchemy API key for skip bridge.
   ALCHEMY_KEY: parseString({ default: '' }),
   // ZeroDev RPC for skip bridge.
-  ZERODEV_RPC: parseString({ default: '' }),
+  ZERODEV_API_KEY: parseString({ default: '' }),
+  ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

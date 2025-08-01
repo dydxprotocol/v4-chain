@@ -21,6 +21,7 @@ import nacl from 'tweetnacl';
 import {
   mainnet, arbitrum,
   sepolia,
+  avalanche,
 } from 'viem/chains';
 
 import config from '../../../config';
@@ -38,21 +39,28 @@ const controllerName: string = 'bridging-controller';
 
 setClientOptions();
 
-
-const publicClients: Record<string, PublicClient> = {
-  [mainnet.id.toString()]: createPublicClient({
-    transport: http(config.ZERODEV_RPC),
-    chain: mainnet
-  }),
-  [arbitrum.id.toString()]: createPublicClient({
-    transport: http(config.ZERODEV_RPC),
-    chain: arbitrum
-  }),
-}
-
 const chains: Record<string, Chain> = {
   [mainnet.id.toString()]: mainnet,
   [arbitrum.id.toString()]: arbitrum,
+  [avalanche.id.toString()]: avalanche,
+}
+const publicClients = Object.keys(chains).reduce((acc, chainId) => {
+  acc[chainId] = createPublicClient({
+    transport: http(getRPCEndpoint(chainId)),
+    chain: chains[chainId]
+  });
+  return acc;
+}, {} as Record<string, PublicClient>);
+
+function isSupportedEVMChainId(chainId: string): boolean {
+  return Object.keys(chains).includes(chainId);
+}
+
+function getRPCEndpoint(chainId: string): string {
+  if (!isSupportedEVMChainId(chainId)) {
+    throw new Error(`Unsupported chainId: ${chainId}`);
+  }
+  return `${config.ZERODEV_API_BASE_URL}/${config.ZERODEV_API_KEY}/chain/${chainId}`;
 }
 
 const turnkeySenderClient = new Turnkey({
@@ -71,7 +79,7 @@ interface BridgeResponse {
 const usdcAddressByChainId: Record<string, string> = {
   [mainnet.id.toString()]: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // usdc on ethereum mainnet.
   [arbitrum.id.toString()]: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // usdc on arbitrum.
-  [sepolia.id.toString()]: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // usdc on sepolia.
+  [avalanche.id.toString()]: '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e', // usdc on avalanche.
   'solana': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // usdc on solana.
   'dydx-mainnet-1': 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5', // usdc on dydx.
 };
@@ -86,9 +94,25 @@ const assetAddressLookerUpper: Record<Asset, Record<string, string>> = {
   [Asset.ETH]: {}, // TODO: Add ETH address mappings
 }
 
+
+// Prefix is one of osmosis, neutron, noble. This is how we convert dydx addresses
+// to other chain addresses on cosmos. Address here is dydx address.
+function toClientAddressWithPrefix(prefix: string,address: string): string | null {
+  try {
+    const decoded = decode(address);
+    if (decoded.prefix !== 'dydx') {
+      return null;
+    }
+    return encode(prefix, decoded.words);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Finds the dydx address for a given evm or svm address. 
 async function getDydxAddress(address: string, chainId: string): Promise<string> {
   let dydxAddress = '';
-  if (chainId === mainnet.id.toString() || chainId === arbitrum.id.toString()) {
+  if (isSupportedEVMChainId(chainId)) {
     // look up in turnkey table
     console.log('looking up in turnkey table for evm address', address);
     const record = await findByEvmAddress(address);
@@ -104,28 +128,23 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
   return dydxAddress;
 }
 
+
+// TODO: Verify that this function is 1000% correct. @RUI and @TYLER and @JARED
 function getAddress(
   chainId: string,
   sourceAddress: string,
   dydxAddress: string,
 ): string {
+  if (isSupportedEVMChainId(chainId)) {
+    return sourceAddress;
+  }
   switch (chainId) {
-    case 'solana':
-    case '42161': // arbitrum
-    case '11155111': // sepolia
-    case '1': // mainnet
-    case '5': // goerli
-    case '43114': // avalanche
-    case '137': // polygon
-    case '8453': // base
-    case '10': // optimism
-      return sourceAddress;
     case 'noble-1':
-      return toNobleAddress(dydxAddress) || '';
+      return toClientAddress('noble', dydxAddress) || '';
     case 'osmosis-1':
-      return toOsmosisAddress(dydxAddress) || '';
+      return toClientAddress('osmo', dydxAddress) || '';
     case 'neutron':
-      return toNeutronAddress(dydxAddress) || '';
+      return toClientAddress('neutron', dydxAddress) || '';
     case 'dydx-mainnet-1':
       return dydxAddress;
     default:
@@ -133,10 +152,12 @@ function getAddress(
   }
 }
 
-// const amount = "1100000"; // 1 USDC in smallest denomination (6 decimals for USDC)
-
-async function getSkipRouteData(sourceAddress: string, dydxAddress: string, amount: string, chainId: string): Promise<{data: string,
-toAddress: string}>{
+// Grabs the raw skip route data to carry out the bridge on our own.
+async function getSkipRouteData(sourceAddress: string, dydxAddress: string, amount: string, chainId: string): Promise<{
+  data: string,
+  toAddress: string
+}> {
+  console.log('usdcAddressByChainId[chainId]', usdcAddressByChainId[chainId]);
   const routeResult = await route({
     amountIn: amount, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom: usdcAddressByChainId[chainId], // USDC on mainnet. TODO: GENERALIZE
@@ -160,7 +181,6 @@ toAddress: string}>{
     }))
   );
 
-  // getting the route data as shown here: https://github.com/skip-mev/skip-go/blob/a8907b389fa27fa942c42abca9181c0b0eee98e1/packages/client/src/public-functions/executeRoute.ts#L126
   let addressList: string[] = [];
   userAddresses.forEach((userAddress, index) => {
     const requiredChainAddress = routeResult.requiredChainAddresses[index];
@@ -212,92 +232,6 @@ toAddress: string}>{
   return { data, toAddress };
 }
 
-// const srcAccountPrivateKey = '0x11ecbbfcc6fa1a7c1c0b00f59423b6934376a20f26430f9f15d2eafb0643d7a5'
-
-// const eip7702Account = privateKeyToAccount(
-//   sourceAccountPrivateKey, // generatePrivateKey() ?? (process.env.PRIVATE_KEY as Hex)
-// );
-
-function toNobleAddress(address: string): string | null {
-  try {
-    const decoded = decode(address);
-    if (decoded.prefix !== 'dydx') {
-      return null;
-    }
-    return encode('noble', decoded.words);
-  } catch (e) {
-    return null;
-  }
-}
-
-function toOsmosisAddress(address: string): string | null {
-  try {
-    const decoded = decode(address);
-    if (decoded.prefix !== 'dydx') {
-      return null;
-    }
-    return encode('osmo', decoded.words);
-  } catch (e) {
-    return null;
-  }
-}
-
-function toNeutronAddress(address: string): string | null {
-  try {
-    const decoded = decode(address);
-    if (decoded.prefix !== 'dydx') {
-      return null;
-    }
-    return encode('neutron', decoded.words);
-  } catch (e) {
-    return null;
-  }
-}
-
-function getEvmSigner(suborgId: string, signWith: string) {
-  return async (chainId: string) => {
-    const serverClient = new Turnkey({
-      apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
-      apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
-      apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
-      defaultOrganizationId: suborgId,
-    });
-
-    const chain = {
-      [mainnet.id.toString()]: mainnet,
-      [arbitrum.id.toString()]: arbitrum,
-    }[chainId];
-    if (!chain) {
-      throw new Error(`Unsupported chainId: ${chainId}`);
-    }
-
-    
-    const turnkeyAccount = await createAccount({
-      // @ts-ignore
-      client: serverClient.apiClient(),
-      organizationId: suborgId,
-      signWith,
-    });
-
-    const rpcUrls: Record<string, string> = {
-      [mainnet.id.toString()]: `https://eth-mainnet.g.alchemy.com/v2/${config.ALCHEMY_KEY}`,
-      [sepolia.id.toString()]: `https://eth-sepolia.g.alchemy.com/v2/${config.ALCHEMY_KEY}`,
-      [arbitrum.id.toString()]: `https://arb-mainnet.g.alchemy.com/v2/${config.ALCHEMY_KEY}`,
-    };
-
-    const rpcUrl = rpcUrls[chainId];
-    if (!rpcUrl) {
-      throw new Error(`No RPC URL configured for chainId: ${chainId}`);
-    }
-
-    return createWalletClient({
-      account: turnkeyAccount,
-      chain,
-      transport: http(rpcUrl),
-    });
-  };
-}
-
 function getSvmSigner(suborgId: string, signWith: string) {
   const serverClient = new Turnkey({
     apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
@@ -335,7 +269,6 @@ function getSvmSigner(suborgId: string, signWith: string) {
 }
 
 
-
 @Route('bridging')
 class BridgeController extends Controller {
   @Post('/startBridge')
@@ -347,9 +280,12 @@ class BridgeController extends Controller {
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
       return this.startSolanaBridge(fromAddress, amount, asset);
-    }
-    if (chainId === mainnet.id.toString() || chainId === arbitrum.id.toString()) {
-      return this.startEvmBridge(fromAddress, amount, asset, chainId);
+    } else if (isSupportedEVMChainId(chainId)) {
+      if (chainId === avalanche.id.toString()) {
+        return this.startEvmBridgePre7702(fromAddress, amount, asset, chainId);
+      } else {
+        return this.startEvmBridge(fromAddress, amount, asset, chainId);
+      }
     }
     throw new Error(`Unsupported chainId: ${chainId}`);
   }
@@ -413,7 +349,6 @@ class BridgeController extends Controller {
     await executeRoute({
       route: path,
       userAddresses,
-      getEvmSigner: getEvmSigner(record?.suborg_id || '', fromAddress),
       getSvmSigner: getSvmSigner(record?.suborg_id || '', fromAddress),
       svmFeePayer: {
         address: sponsorKeypair.publicKey.toString(), // Replace with the fee payer's Solana address
@@ -422,7 +357,7 @@ class BridgeController extends Controller {
           return Promise.resolve(nacl.sign.detached(data, sponsorKeypair.secretKey));
         },
       },
-      // TO DO: ADD RETRY LOGIC
+      // ADD RETRY LOGIC???
       onTransactionBroadcast: async ({ chainId: c, txHash }) => {
         await console.log(`Broadcasted on ${c}: ${txHash}`);
       },
@@ -461,8 +396,8 @@ class BridgeController extends Controller {
     }
     const skipRoute = await getSkipRouteData(fromAddress, record.dydx_address, amount, chainId);
     if (!skipRoute) {
-        console.error("Failed to get Skip route data");
-        process.exit(1);
+      console.error("Failed to get Skip route data");
+      process.exit(1);
     }
     const skipRouteData = skipRoute.data;
     const skipToAddress = skipRoute.toAddress;
@@ -480,80 +415,80 @@ class BridgeController extends Controller {
 
     // kernel account
     const account = await createKernelAccount(publicClients[chainId], {
-        eip7702Account: turnkeyAccount,
-        entryPoint,
-        kernelVersion: KERNEL_V3_3,
+      eip7702Account: turnkeyAccount,
+      entryPoint,
+      kernelVersion: KERNEL_V3_3,
     })
     console.log("account", account.address);
 
     const zerodevPaymaster = createZeroDevPaymasterClient({
       chain: chains[chainId],
-      transport: http(config.ZERODEV_RPC),
+      transport: http(getRPCEndpoint(chainId)),
     });
 
     const kernelClient = createKernelAccountClient({
-        account,
-        chain: chains[chainId],
-        client: publicClients[chainId],
-        bundlerTransport: http(config.ZERODEV_RPC),
-        paymaster: {
-            getPaymasterData: async (userOperation) => {
-                return zerodevPaymaster.sponsorUserOperation({ userOperation })
-            },
-
+      account,
+      chain: chains[chainId],
+      client: publicClients[chainId],
+      bundlerTransport: http(getRPCEndpoint(chainId)),
+      paymaster: {
+        getPaymasterData: async (userOperation) => {
+          return zerodevPaymaster.sponsorUserOperation({ userOperation })
         },
-        paymasterContext: { token: assetAddressLookerUpper[asset as Asset][chainId] },
-        userOperation: {
-            estimateFeesPerGas: async ({ bundlerClient }) => {
-                return getUserOperationGasPrice(bundlerClient)
-            }
+
+      },
+      // paymasterContext: { token: assetAddressLookerUpper[asset as Asset][chainId] },
+      userOperation: {
+        estimateFeesPerGas: async ({ bundlerClient }) => {
+          return getUserOperationGasPrice(bundlerClient)
         }
+      }
     })
 
     const userOpHash = await kernelClient.sendUserOperation({
-        callData: await kernelClient.account.encodeCalls([
-            {
-                to: usdcAddressByChainId[chainId] as `0x${string}`,
-                value: BigInt(0),
-                data: encodeFunctionData({
-                  abi: [
-                      {
-                          name: 'approve',
-                          type: 'function',
-                          stateMutability: 'nonpayable',
-                          inputs: [
-                              { name: 'spender', type: 'address' },
-                              { name: 'amount', type: 'uint256' },
-                          ],
-                          outputs: [{ name: '', type: 'bool' }],
-                      },
-                  ],
-                  functionName: 'approve',
-                  args: [
-                      (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
-                      BigInt(amount) // 5.5 USDC (6 decimals)
-                  ],
-              }), //"0x",
-            },
-            {
-                to: (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
-                value: BigInt(0),
-                data: skipRouteData.startsWith("0x") ? skipRouteData as Hex : ("0x" + skipRouteData) as Hex, //"0x",
-            },
-        ]),
+      callData: await kernelClient.account.encodeCalls([
+        {
+          to: usdcAddressByChainId[chainId] as `0x${string}`,
+          value: BigInt(0),
+          data: encodeFunctionData({
+            abi: [
+              {
+                name: 'approve',
+                type: 'function',
+                stateMutability: 'nonpayable',
+                inputs: [
+                  { name: 'spender', type: 'address' },
+                  { name: 'amount', type: 'uint256' },
+                ],
+                outputs: [{ name: '', type: 'bool' }],
+              },
+            ],
+            functionName: 'approve',
+            args: [
+              (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
+              BigInt(amount) // 5.5 USDC (6 decimals)
+            ],
+          }), //"0x",
+        },
+        {
+          to: (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
+          value: BigInt(0),
+          data: skipRouteData.startsWith("0x") ? skipRouteData as Hex : ("0x" + skipRouteData) as Hex, //"0x",
+        },
+      ]),
     });
     console.log("UserOp sent:", userOpHash);
     console.log("Waiting for UserOp to be completed...");
 
     const { receipt } = await kernelClient.waitForUserOperationReceipt({
-        hash: userOpHash,
+      hash: userOpHash,
     });
     console.log(
-        "UserOp completed",
-        `tx/${receipt.transactionHash}`
+      "UserOp completed",
+      `tx/${receipt.transactionHash}`
     );
     return {
-      toAddress: fromAddress, 
+      toAddress: fromAddress,
       amount,
       asset,
     };
@@ -571,8 +506,8 @@ class BridgeController extends Controller {
     }
     const skipRoute = await getSkipRouteData(fromAddress, record.dydx_address, amount, chainId);
     if (!skipRoute) {
-        console.error("Failed to get Skip route data");
-        process.exit(1);
+      console.error("Failed to get Skip route data");
+      process.exit(1);
     }
     const skipRouteData = skipRoute.data;
     const skipToAddress = skipRoute.toAddress;
@@ -588,7 +523,7 @@ class BridgeController extends Controller {
       signWith: fromAddress,
     });
 
-  
+
     // Construct a validator
     const ecdsaValidator = await signerToEcdsaValidator(publicClients[chainId], {
       signer: turnkeyAccount,
@@ -598,82 +533,82 @@ class BridgeController extends Controller {
 
     // kernel account
     const account = await createKernelAccount(publicClients[chainId], {
-        entryPoint,
-        plugins: {
-          sudo: ecdsaValidator,
-        },
-        kernelVersion: KERNEL_V3_1,
+      entryPoint,
+      plugins: {
+        sudo: ecdsaValidator,
+      },
+      kernelVersion: KERNEL_V3_1,
     })
     console.log("account", account.address);
 
     const zerodevPaymaster = createZeroDevPaymasterClient({
       chain: chains[chainId],
-      transport: http(config.ZERODEV_RPC),
+      transport: http(getRPCEndpoint(chainId)),
     });
 
     const kernelClient = createKernelAccountClient({
-        account,
-        chain: chains[chainId],
-        client: publicClients[chainId],
-        bundlerTransport: http(config.ZERODEV_RPC),
-        paymaster: {
-            getPaymasterData: async (userOperation) => {
-                return zerodevPaymaster.sponsorUserOperation({ userOperation })
-            },
-
+      account,
+      chain: chains[chainId],
+      client: publicClients[chainId],
+      bundlerTransport: http(getRPCEndpoint(chainId)),
+      paymaster: {
+        getPaymasterData: async (userOperation) => {
+          return zerodevPaymaster.sponsorUserOperation({ userOperation })
         },
-        // paymasterContext: { token: assetAddressLookerUpper[asset as Asset][chainId] },
-        userOperation: {
-            estimateFeesPerGas: async ({ bundlerClient }) => {
-                return getUserOperationGasPrice(bundlerClient)
-            }
+
+      },
+      // paymasterContext: { token: assetAddressLookerUpper[asset as Asset][chainId] },
+      userOperation: {
+        estimateFeesPerGas: async ({ bundlerClient }) => {
+          return getUserOperationGasPrice(bundlerClient)
         }
+      }
     })
 
     const userOpHash = await kernelClient.sendUserOperation({
-        callData: await kernelClient.account.encodeCalls([
-            {
-                to: usdcAddressByChainId[chainId] as `0x${string}`,
-                value: BigInt(0),
-                data: encodeFunctionData({
-                  abi: [
-                      {
-                          name: 'approve',
-                          type: 'function',
-                          stateMutability: 'nonpayable',
-                          inputs: [
-                              { name: 'spender', type: 'address' },
-                              { name: 'amount', type: 'uint256' },
-                          ],
-                          outputs: [{ name: '', type: 'bool' }],
-                      },
-                  ],
-                  functionName: 'approve',
-                  args: [
-                      (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
-                      BigInt(amount)
-                  ],
-              }), //"0x",
-            },
-            {
-                to: (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
-                value: BigInt(0),
-                data: skipRouteData.startsWith("0x") ? skipRouteData as Hex : ("0x" + skipRouteData) as Hex, //"0x",
-            },
-        ]),
+      callData: await kernelClient.account.encodeCalls([
+        {
+          to: usdcAddressByChainId[chainId] as `0x${string}`,
+          value: BigInt(0),
+          data: encodeFunctionData({
+            abi: [
+              {
+                name: 'approve',
+                type: 'function',
+                stateMutability: 'nonpayable',
+                inputs: [
+                  { name: 'spender', type: 'address' },
+                  { name: 'amount', type: 'uint256' },
+                ],
+                outputs: [{ name: '', type: 'bool' }],
+              },
+            ],
+            functionName: 'approve',
+            args: [
+              (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
+              BigInt(amount)
+            ],
+          }), //"0x",
+        },
+        {
+          to: (skipToAddress.startsWith("0x") ? skipToAddress : ("0x" + skipToAddress)) as Hex,
+          value: BigInt(0),
+          data: skipRouteData.startsWith("0x") ? skipRouteData as Hex : ("0x" + skipRouteData) as Hex, //"0x",
+        },
+      ]),
     });
     console.log("UserOp sent:", userOpHash);
     console.log("Waiting for UserOp to be completed...");
 
     const { receipt } = await kernelClient.waitForUserOperationReceipt({
-        hash: userOpHash,
+      hash: userOpHash,
     });
     console.log(
-        "UserOp completed",
-        `tx/${receipt.transactionHash}`
+      "UserOp completed",
+      `tx/${receipt.transactionHash}`
     );
     return {
-      toAddress: fromAddress, 
+      toAddress: fromAddress,
       amount,
       asset,
     };
