@@ -87,6 +87,7 @@ export const defaultOrder: IndexerOrder = {
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+  orderRouterAddress: '',
 };
 export const defaultOrderGoodTilBlockTime: IndexerOrder = {
   ...defaultOrder,
