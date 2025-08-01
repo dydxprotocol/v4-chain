@@ -6,12 +6,11 @@ package types
 import (
 	encoding_binary "encoding/binary"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-
-	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -333,8 +332,6 @@ type IndexerOrder struct {
 	ConditionalOrderTriggerSubticks uint64 `protobuf:"varint,11,opt,name=conditional_order_trigger_subticks,json=conditionalOrderTriggerSubticks,proto3" json:"conditional_order_trigger_subticks,omitempty"`
 	// builder_code_params is the metadata for the partner or builder of an order.
 	BuilderCodeParams *BuilderCodeParameters `protobuf:"bytes,12,opt,name=builder_code_params,json=builderCodeParams,proto3" json:"builder_code_params,omitempty"`
-	// order_router_address is the address of the order router that created this order.
-	OrderRouterAddress string `protobuf:"bytes,13,opt,name=order_router_address,json=orderRouterAddress,proto3" json:"order_router_address,omitempty"`
 }
 
 func (m *IndexerOrder) Reset()         { *m = IndexerOrder{} }
