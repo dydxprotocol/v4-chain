@@ -118,8 +118,6 @@ func (k Keeper) fetchStateStoresForOrder(
 		return k.GetUntriggeredConditionalOrderPlacementStore(ctx)
 	} else if orderId.IsLongTermOrder() || orderId.IsTwapSuborder() {
 		return k.GetLongTermOrderPlacementStore(ctx)
-	} else if orderId.IsTwapOrder() {
-		return k.GetTWAPOrderPlacementStore(ctx)
 	}
 	panic(
 		fmt.Sprintf(

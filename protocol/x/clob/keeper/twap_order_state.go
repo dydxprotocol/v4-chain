@@ -194,7 +194,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			// no-op after trigger key has been deleted
 		case parentTwapCompleted:
 			// TODO: (anmol) emit indexer event (TWAP completion)?
-			k.DeleteTWAPOrderPlacement(ctx, *op.twapOrderPlacement)
+			k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 		case createSuborder:
 			// decrement remaining legs
 			k.DecrementTwapOrderRemainingLegs(ctx, *op.twapOrderPlacement)
@@ -209,7 +209,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			err := k.HandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
 			if err != nil {
 				// TODO: (anmol) emit indexer event (TWAP error)
-				k.DeleteTWAPOrderPlacement(ctx, *op.twapOrderPlacement)
+				k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 				k.DeleteSuborderFromTriggerStore(ctx, triggerKey)
 			}
 		default:
@@ -223,13 +223,13 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 
 func (k Keeper) DeleteTWAPOrderPlacement(
 	ctx sdk.Context,
-	twapOrderPlacement types.TwapOrderPlacement,
+	orderId types.OrderId,
 ) {
 	// Decrement the stateful order count for the TWAP order.
-	k.CheckAndDecrementStatefulOrderCount(ctx, twapOrderPlacement.Order.OrderId)
+	k.CheckAndDecrementStatefulOrderCount(ctx, orderId)
 
 	store := k.GetTWAPOrderPlacementStore(ctx)
-	orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
+	orderKey := orderId.ToStateKey()
 	store.Delete(orderKey)
 }
 
