@@ -95,7 +95,6 @@ export async function registerAddressWithAlchemyWebhook(address: string, webhook
     at: 'TurnkeyController#registerAddressWithAlchemyWebhook',
     message: `Address ${address} successfully added to Alchemy webhook`,
     address,
-    webhookId: config.ALCHEMY_WEBHOOK_ID,
   });
 }
 
