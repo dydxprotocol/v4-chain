@@ -39,19 +39,19 @@ The expected JSON structure should look like:
 
 ### Option 1: Run directly with Go
 ```bash
-go run deserialize_proto.go <json_file_path>
+make run JSON=<json_file_path>
 ```
 
 ### Option 2: Build and run
 ```bash
-go build deserialize_proto.go
+make build
 ./deserialize_proto <json_file_path>
 ```
 
 ### Examples
 ```bash
 # Deserialize events from a specific file
-go run deserialize_proto.go my_events.json
+make run JSON=events.json
 
 # Or after building
 ./deserialize_proto cloudwatch_events.json
