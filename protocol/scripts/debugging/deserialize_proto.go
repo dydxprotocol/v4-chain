@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -41,7 +40,7 @@ func main() {
 	jsonFilePath := os.Args[1]
 
 	// Open the JSON file for reading
-	file, err := ioutil.ReadFile(jsonFilePath)
+	file, err := os.ReadFile(jsonFilePath)
 	if err != nil {
 		log.Fatalf("failed to read event file '%s': %v", jsonFilePath, err)
 	}
