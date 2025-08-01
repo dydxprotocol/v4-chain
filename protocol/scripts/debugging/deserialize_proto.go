@@ -89,7 +89,11 @@ func main() {
 			bytes[k] = byte(val)
 		}
 
-		fmt.Printf("--- Event Index: %d, Transaction Index: %d, Subtype: %s ---\n", event.EventIndex, event.TransactionIndex, event.Subtype)
+		fmt.Printf("--- Event Index: %d, Transaction Index: %d, Subtype: %s ---\n",
+			event.EventIndex,
+			event.TransactionIndex,
+			event.Subtype,
+		)
 
 		var msg proto.Message
 		switch event.Subtype {
