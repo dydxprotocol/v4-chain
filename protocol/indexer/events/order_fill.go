@@ -47,8 +47,8 @@ func NewOrderFillEvent(
 		AffiliateRevShare:       affiliateRevShareQuoteQuantums.Uint64(),
 		MakerOrderRouterFee:     makerOrderRouterFee,
 		TakerOrderRouterFee:     takerOrderRouterFee,
-		MakerOrderRouterAddress: getOrderRouterAddress(makerOrder),
-		TakerOrderRouterAddress: getOrderRouterAddress(takerOrder),
+		MakerOrderRouterAddress: makerOrder.GetOrderRouterAddress(),
+		TakerOrderRouterAddress: takerOrder.GetOrderRouterAddress(),
 	}
 }
 
@@ -93,7 +93,7 @@ func NewLiquidationOrderFillEvent(
 		MakerBuilderAddress:     makerBuilderAddress,
 		MakerBuilderFee:         makerBuilderFee,
 		TakerBuilderFee:         0, // protocol generated liquidation orders have no builder fee
-		MakerOrderRouterAddress: getOrderRouterAddress(makerOrder),
+		MakerOrderRouterAddress: makerOrder.GetOrderRouterAddress(),
 		TakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
 	}
 }
@@ -104,12 +104,4 @@ func getBuilderAddress(order clobtypes.Order) string {
 		builderAddress = order.GetBuilderCodeParameters().GetBuilderAddress()
 	}
 	return builderAddress
-}
-
-func getOrderRouterAddress(order clobtypes.Order) string {
-	orderRouterAddress := ""
-	if order.GetOrderRouterAddress() != "" {
-		orderRouterAddress = order.GetOrderRouterAddress()
-	}
-	return orderRouterAddress
 }
