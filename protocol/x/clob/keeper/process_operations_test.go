@@ -2817,6 +2817,7 @@ func setupNewMockEventManager(
 						match.MakerBuilderFee,
 						match.TotalFilledTaker,
 						big.NewInt(0),
+						match.MakerOrderRouterFee,
 					),
 				),
 			).Return()
