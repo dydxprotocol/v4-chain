@@ -1268,33 +1268,6 @@ func (k Keeper) InitStatefulOrders(
 	}
 }
 
-// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks
-// adjusted by a given directional price tolerance in ppm, rounded to the nearest multiple
-// of SubticksPerTick. A positive price tolerance increases the price, while a negative price
-// tolerance decreases it.
-//
-// For example:
-//   - price tolerance = 500_000 means 50% higher than oracle price
-//   - price tolerance = -500_000 means 50% lower than oracle price
-func (k Keeper) GetOraclePriceAdjustedByPercentageSubticks(
-	ctx sdk.Context,
-	clobPair types.ClobPair,
-	directionalPriceTolerancePpm int32,
-) uint64 {
-	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-	adjustment := int32(1_000_000) + directionalPriceTolerancePpm
-
-	adjustedPrice := lib.BigRatMulPpm(oraclePriceSubticksRat, uint32(adjustment))
-	// Round to the nearest multiple of SubticksPerTick
-	roundedSubticks := lib.BigRatRoundToMultiple(
-		adjustedPrice,
-		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
-		directionalPriceTolerancePpm >= 0, // round up for positive adjustments, down for negative
-	)
-
-	return roundedSubticks.Uint64()
-}
-
 // sendOffchainMessagesWithTxHash sends all the `Message` in the offchainUpdates passed in along with
 // an additional header for the transaction hash passed in.
 func (k Keeper) sendOffchainMessagesWithTxHash(
