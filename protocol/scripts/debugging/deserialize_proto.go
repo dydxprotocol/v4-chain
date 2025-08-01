@@ -28,7 +28,7 @@ type IndexerTendermintBlock struct {
 }
 
 type BlockData struct {
-	IndexerTendermintBlock IndexerTendermintBlock `json:"indexerTendermintBlock"`
+	IndexerTendermintBlock IndexerTendermintBlock `json:"block"`
 }
 
 func main() {
@@ -53,6 +53,7 @@ func main() {
 		log.Fatalf("failed to unmarshal json: %v", err)
 	}
 
+	fmt.Printf("Found %d events\n\n", len(blockData.IndexerTendermintBlock.Events))
 	for _, event := range blockData.IndexerTendermintBlock.Events {
 		// Convert dataBytes map to byte slice
 		if len(event.DataBytes) == 0 {
