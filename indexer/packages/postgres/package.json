@@ -2,41 +2,29 @@
   "name": "@dydxprotocol-indexer/postgres",
   "version": "0.0.1",
   "description": "",
-  "main": "build/src/index.js",
-  "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
-    "@types/big.js": "^6.1.5",
-    "@types/jest": "^28.1.4",
-    "@types/lodash": "^4.14.182",
-    "@types/luxon": "^3.0.0",
-    "@types/node": "^18.0.3",
-    "@types/pg": "^8.6.5",
-    "@types/uuid": "^8.3.4",
-    "jest": "^28.1.2",
-    "typescript": "^4.7.4"
-  },
-  "scripts": {
-    "migrate:make": "knex migrate:make -x ts",
-    "migrate": "knex migrate:latest",
-    "migrate:rollback": "knex migrate:rollback",
-    "migrate:unlock": "knex migrate:unlock",
-    "lint": "eslint --ext .ts,.js .",
-    "lint:fix": "eslint --ext .ts,.js . --fix",
-    "build": "rm -rf build/ && tsc",
-    "build:prod": "pnpm run build",
-    "build:watch": "pnpm run build -- --watch",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dydxprotocol/indexer.git"
   },
-  "author": "",
   "license": "AGPL-3.0",
-  "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+  "author": "",
+  "main": "build/src/index.js",
+  "scripts": {
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "migrate": "knex migrate:latest",
+    "migrate:make": "knex migrate:make -x ts",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:unlock": "knex migrate:unlock",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
@@ -52,5 +40,18 @@
     "pg": "^8.7.3",
     "ts-node": "^10.8.2",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/big.js": "^6.1.5",
+    "@types/jest": "^28.1.4",
+    "@types/lodash": "^4.14.182",
+    "@types/luxon": "^3.0.0",
+    "@types/node": "^18.0.3",
+    "@types/pg": "^8.6.5",
+    "@types/uuid": "^8.3.4",
+    "eslint": "^8.39.0",
+    "jest": "^28.1.2",
+    "typescript": "^4.7.4"
   }
 }

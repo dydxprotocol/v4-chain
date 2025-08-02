@@ -10,9 +10,9 @@ import {
 import * as pg from 'pg';
 
 import config from '../config';
+import { Handler } from './handler';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class PerpetualMarketCreationHandler extends Handler<
   PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2

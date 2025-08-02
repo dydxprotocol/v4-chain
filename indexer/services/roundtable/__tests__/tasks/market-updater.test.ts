@@ -219,9 +219,9 @@ describe('market-updater', () => {
     const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send');
     synchronizeWrapBackgroundTask(wrapBackgroundTask);
 
-    const now: string = DateTime.local().toISO();
-    const lessThan24HAgo: string = DateTime.local().minus({ hour: 23 }).toISO();
-    const moreThan24HAgo: string = DateTime.local().minus({ hour: 24, minute: 5 }).toISO();
+    const now: string = DateTime.local().toISO()!;
+    const lessThan24HAgo: string = DateTime.local().minus({ hour: 23 }).toISO()!;
+    const moreThan24HAgo: string = DateTime.local().minus({ hour: 24, minute: 5 }).toISO()!;
 
     const blockHeights = ['3', '4', '6', '7'];
 

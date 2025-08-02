@@ -41,7 +41,7 @@ describe('update-affiliate-info', () => {
     // Set persistent cache affiliateInfoUpdateTime to slightly in past so task does not backfill
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      value: DateTime.utc().toISO(),
+      value: DateTime.utc().toISO()!,
     });
 
     const updatedDt1: DateTime = DateTime.utc();
@@ -57,7 +57,7 @@ describe('update-affiliate-info', () => {
       // Create block to simulate time passing
       BlockTable.create({
         blockHeight: '3',
-        time: updatedDt1.toISO(),
+        time: updatedDt1.toISO()!,
       }),
     ]);
 
@@ -92,7 +92,7 @@ describe('update-affiliate-info', () => {
       FillTable.create({
         ...testConstants.defaultFill,
         liquidity: Liquidity.TAKER,
-        createdAt: DateTime.utc().toISO(),
+        createdAt: DateTime.utc().toISO()!,
         eventId: testConstants.defaultTendermintEventId,
         price: '1',
         size: '1',
@@ -109,7 +109,7 @@ describe('update-affiliate-info', () => {
     const updatedDt2: DateTime = DateTime.utc();
     await BlockTable.create({
       blockHeight: '4',
-      time: updatedDt2.toISO(),
+      time: updatedDt2.toISO()!,
     });
 
     await affiliateInfoUpdateTask();
@@ -143,7 +143,7 @@ describe('update-affiliate-info', () => {
       // Set persistent cache to 3 weeks ago to emulate backfill from 3 weeks.
       PersistentCacheTable.create({
         key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-        value: currentDt.minus({ weeks: 3 }).toISO(),
+        value: currentDt.minus({ weeks: 3 }).toISO()!,
       }),
       // defaultWallet2 will be affiliate and defaultWallet will be referee
       AffiliateReferredUsersTable.create({
@@ -155,7 +155,7 @@ describe('update-affiliate-info', () => {
       FillTable.create({
         ...testConstants.defaultFill,
         liquidity: Liquidity.TAKER,
-        createdAt: currentDt.minus({ weeks: 1 }).toISO(),
+        createdAt: currentDt.minus({ weeks: 1 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId,
         price: '1',
         size: '1',
@@ -165,7 +165,7 @@ describe('update-affiliate-info', () => {
       FillTable.create({
         ...testConstants.defaultFill,
         liquidity: Liquidity.TAKER,
-        createdAt: currentDt.minus({ weeks: 2 }).toISO(),
+        createdAt: currentDt.minus({ weeks: 2 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId2,
         price: '1',
         size: '1',
@@ -175,13 +175,13 @@ describe('update-affiliate-info', () => {
       // Create block at current time
       BlockTable.create({
         blockHeight: '3',
-        time: DateTime.utc().toISO(),
+        time: DateTime.utc().toISO()!,
       }),
     ]);
 
     // Simulate backfill
     let backfillTime: DateTime | undefined = await getAffiliateInfoUpdateTime();
-    while (backfillTime !== undefined && DateTime.fromISO(backfillTime.toISO()) < currentDt) {
+    while (backfillTime !== undefined && DateTime.fromISO(backfillTime.toISO()!) < currentDt) {
       await affiliateInfoUpdateTask();
       backfillTime = await getAffiliateInfoUpdateTime();
     }
@@ -224,7 +224,7 @@ describe('update-affiliate-info', () => {
       FillTable.create({
         ...testConstants.defaultFill,
         liquidity: Liquidity.TAKER,
-        createdAt: referenceDt.plus({ days: 1 }).toISO(),
+        createdAt: referenceDt.plus({ days: 1 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId,
         price: '1',
         size: '1',
@@ -234,7 +234,7 @@ describe('update-affiliate-info', () => {
       FillTable.create({
         ...testConstants.defaultFill,
         liquidity: Liquidity.TAKER,
-        createdAt: referenceDt.plus({ days: 7 }).toISO(),
+        createdAt: referenceDt.plus({ days: 7 }).toISO()!,
         eventId: testConstants.defaultTendermintEventId2,
         price: '1',
         size: '1',
@@ -244,7 +244,7 @@ describe('update-affiliate-info', () => {
       // Create block in the future relative to referenceDt
       BlockTable.create({
         blockHeight: '3',
-        time: referenceDt.plus({ days: 7 }).toISO(),
+        time: referenceDt.plus({ days: 7 }).toISO()!,
       }),
     ]);
 
@@ -274,7 +274,7 @@ describe('update-affiliate-info', () => {
 
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      value: DateTime.utc().toISO(),
+      value: DateTime.utc().toISO()!,
     });
 
     await affiliateInfoUpdateTask();

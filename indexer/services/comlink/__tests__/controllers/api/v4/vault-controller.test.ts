@@ -70,32 +70,32 @@ describe('vault-controller#V4', () => {
       await Promise.all([
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: twoDaysAgo.toISO(),
+          time: twoDaysAgo.toISO()!,
           blockHeight: twoDayBlockHeight,
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: twoHoursAgo.toISO(),
+          time: twoHoursAgo.toISO()!,
           blockHeight: twoHourBlockHeight,
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: currentDay.toISO(),
+          time: currentDay.toISO()!,
           blockHeight: currentDayBlockHeight,
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: latestTime.toISO(),
+          time: latestTime.toISO()!,
           blockHeight: latestBlockHeight,
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: almostTwoDaysAgo.toISO(),
+          time: almostTwoDaysAgo.toISO()!,
           blockHeight: almostTwoDayBlockHeight,
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: currentHour.toISO(),
+          time: currentHour.toISO()!,
           blockHeight: currentHourBlockHeight,
         }),
       ]);
@@ -103,7 +103,7 @@ describe('vault-controller#V4', () => {
       await SubaccountTable.create({
         address: MEGAVAULT_MODULE_ADDRESS,
         subaccountNumber: 0,
-        updatedAt: latestTime.toISO(),
+        updatedAt: latestTime.toISO()!,
         updatedAtHeight: latestBlockHeight,
       });
       await Promise.all([
@@ -144,7 +144,7 @@ describe('vault-controller#V4', () => {
       ['no resolution', '', [1, 2], 4, undefined],
       ['daily resolution', '?resolution=day', [1, 2], 4, undefined],
       ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], 4, undefined],
-      ['start date adjust PnL', '?resolution=hour', [1, 2, 3, 4], 4, twoDaysAgo.toISO()],
+      ['start date adjust PnL', '?resolution=hour', [1, 2, 3, 4], 4, twoDaysAgo.toISO()!],
     ])('Get /megavault/historicalPnl with single vault subaccount (%s)', async (
       _name: string,
       queryParam: string,
@@ -173,8 +173,8 @@ describe('vault-controller#V4', () => {
         ...createdPnlTicks[finalTickIndex],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
-        blockTime: latestTime.toISO(),
-        createdAt: latestTime.toISO(),
+        blockTime: latestTime.toISO()!,
+        createdAt: latestTime.toISO()!,
       };
 
       const response: request.Response = await sendRequest({
@@ -220,14 +220,14 @@ describe('vault-controller#V4', () => {
           ...testConstants.defaultVault,
           address: testConstants.defaultAddress,
           clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-          createdAt: twoDaysAgo.toISO(),
+          createdAt: twoDaysAgo.toISO()!,
         }),
         // Single tick for this vault will be excluded from result.
         VaultTable.create({
           ...testConstants.defaultVault,
           address: testConstants.vaultAddress,
           clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
-          createdAt: almostTwoDaysAgo.toISO(),
+          createdAt: almostTwoDaysAgo.toISO()!,
         }),
         AssetPositionTable.upsert({
           ...testConstants.defaultAssetPosition,
@@ -236,7 +236,7 @@ describe('vault-controller#V4', () => {
         TransferTable.create({
           ...testConstants.defaultTransfer,
           recipientSubaccountId: MEGAVAULT_SUBACCOUNT_ID,
-          createdAt: twoDaysAgo.toISO(),
+          createdAt: twoDaysAgo.toISO()!,
         }),
       ]);
 
@@ -258,8 +258,8 @@ describe('vault-controller#V4', () => {
         ...expectedPnlTickBase,
         equity: Big(vault1Equity).add(vault2Equity).add(mainVaultEquity).toFixed(),
         blockHeight: latestBlockHeight,
-        blockTime: latestTime.toISO(),
-        createdAt: latestTime.toISO(),
+        blockTime: latestTime.toISO()!,
+        createdAt: latestTime.toISO()!,
       };
 
       expect(response.body.megavaultPnl).toHaveLength(expectedTicksIndex1.length + 1);
@@ -326,8 +326,8 @@ describe('vault-controller#V4', () => {
         ...createdPnlTicks[currentTickIndex],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
-        blockTime: latestTime.toISO(),
-        createdAt: latestTime.toISO(),
+        blockTime: latestTime.toISO()!,
+        createdAt: latestTime.toISO()!,
       };
 
       const response: request.Response = await sendRequest({
@@ -378,15 +378,15 @@ describe('vault-controller#V4', () => {
         ...createdPnlTicks[currentTickIndex1],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
-        blockTime: latestTime.toISO(),
-        createdAt: latestTime.toISO(),
+        blockTime: latestTime.toISO()!,
+        createdAt: latestTime.toISO()!,
       };
       const finalTick2: PnlTicksResponseObject = {
         ...createdPnlTicks[currentTickIndex2],
         equity: Big(vault2Equity).toFixed(),
         blockHeight: latestBlockHeight,
-        blockTime: latestTime.toISO(),
-        createdAt: latestTime.toISO(),
+        blockTime: latestTime.toISO()!,
+        createdAt: latestTime.toISO()!,
       };
 
       const response: request.Response = await sendRequest({
@@ -618,27 +618,27 @@ describe('vault-controller#V4', () => {
       PnlTicksTable.create(testConstants.defaultPnlTick),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
-        blockTime: twoDaysAgo.toISO(),
-        createdAt: twoDaysAgo.toISO(),
+        blockTime: twoDaysAgo.toISO()!,
+        createdAt: twoDaysAgo.toISO()!,
         blockHeight: twoDayBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
-        blockTime: twoHoursAgo.toISO(),
-        createdAt: twoHoursAgo.toISO(),
+        blockTime: twoHoursAgo.toISO()!,
+        createdAt: twoHoursAgo.toISO()!,
         blockHeight: twoHourBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
-        blockTime: currentDay.toISO(),
-        createdAt: currentDay.toISO(),
+        blockTime: currentDay.toISO()!,
+        createdAt: currentDay.toISO()!,
         blockHeight: currentDayBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         totalPnl: (2 * parseFloat(testConstants.defaultPnlTick.totalPnl)).toString(),
-        blockTime: currentHour.toISO(),
-        createdAt: currentHour.toISO(),
+        blockTime: currentHour.toISO()!,
+        createdAt: currentHour.toISO()!,
         blockHeight: currentHourBlockHeight,
       }),
       PnlTicksTable.create({
@@ -649,29 +649,29 @@ describe('vault-controller#V4', () => {
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
-        blockTime: almostTwoDaysAgo.toISO(),
-        createdAt: almostTwoDaysAgo.toISO(),
+        blockTime: almostTwoDaysAgo.toISO()!,
+        createdAt: almostTwoDaysAgo.toISO()!,
         blockHeight: almostTwoDayBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
-        blockTime: twoHoursAgo.toISO(),
-        createdAt: twoHoursAgo.toISO(),
+        blockTime: twoHoursAgo.toISO()!,
+        createdAt: twoHoursAgo.toISO()!,
         blockHeight: twoHourBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
-        blockTime: currentDay.toISO(),
-        createdAt: currentDay.toISO(),
+        blockTime: currentDay.toISO()!,
+        createdAt: currentDay.toISO()!,
         blockHeight: currentDayBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
-        blockTime: currentHour.toISO(),
-        createdAt: currentHour.toISO(),
+        blockTime: currentHour.toISO()!,
+        createdAt: currentHour.toISO()!,
         blockHeight: currentHourBlockHeight,
       }),
     ]);
@@ -685,29 +685,29 @@ describe('vault-controller#V4', () => {
         PnlTicksTable.create({
           ...testConstants.defaultPnlTick,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
-          blockTime: twoDaysAgo.toISO(),
-          createdAt: twoDaysAgo.toISO(),
+          blockTime: twoDaysAgo.toISO()!,
+          createdAt: twoDaysAgo.toISO()!,
           blockHeight: twoDayBlockHeight,
         }),
         PnlTicksTable.create({
           ...testConstants.defaultPnlTick,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
-          blockTime: twoHoursAgo.toISO(),
-          createdAt: twoHoursAgo.toISO(),
+          blockTime: twoHoursAgo.toISO()!,
+          createdAt: twoHoursAgo.toISO()!,
           blockHeight: twoHourBlockHeight,
         }),
         PnlTicksTable.create({
           ...testConstants.defaultPnlTick,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
-          blockTime: currentDay.toISO(),
-          createdAt: currentDay.toISO(),
+          blockTime: currentDay.toISO()!,
+          createdAt: currentDay.toISO()!,
           blockHeight: currentDayBlockHeight,
         }),
         PnlTicksTable.create({
           ...testConstants.defaultPnlTick,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
-          blockTime: currentHour.toISO(),
-          createdAt: currentHour.toISO(),
+          blockTime: currentHour.toISO()!,
+          createdAt: currentHour.toISO()!,
           blockHeight: currentHourBlockHeight,
         }),
       ]);

@@ -57,10 +57,10 @@ export default async function runTask(): Promise<void> {
       message: `Updating affiliate info from ${windowStartTime.toISO()} to ${windowEndTime.toISO()}`,
     });
     const updateAffiliateInfoStartTime: number = Date.now();
-    await AffiliateInfoTable.updateInfo(windowStartTime.toISO(), windowEndTime.toISO(), txId);
+    await AffiliateInfoTable.updateInfo(windowStartTime.toISO()!, windowEndTime.toISO()!, txId);
     await PersistentCacheTable.upsert({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      value: windowEndTime.toISO(),
+      value: windowEndTime.toISO()!,
     }, { txId });
 
     await Transaction.commit(txId);

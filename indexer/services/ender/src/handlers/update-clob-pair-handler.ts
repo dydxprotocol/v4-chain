@@ -7,10 +7,10 @@ import {
 import { UpdateClobPairEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import { Handler } from './handler';
 import config from '../config';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
   eventType: string = 'UpdateClobPairEventV1';

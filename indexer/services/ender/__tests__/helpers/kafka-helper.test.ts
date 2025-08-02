@@ -49,7 +49,7 @@ describe('kafka-helper', () => {
       entryPrice: '20000',
       sumOpen: '10',
       sumClose: '0',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       createdAtHeight: '1',
       openEventId: testConstants.defaultTendermintEventId,
       lastEventId: testConstants.defaultTendermintEventId,
@@ -316,7 +316,7 @@ describe('kafka-helper', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       createdAtHeight: '1',
     };
 
@@ -331,7 +331,7 @@ describe('kafka-helper', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       createdAtHeight: '1',
     };
 
@@ -343,7 +343,7 @@ describe('kafka-helper', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       createdAtHeight: '1',
     };
 
@@ -462,7 +462,7 @@ describe('kafka-helper', () => {
       id: OraclePriceTable.uuid(0, height),
       marketId: 0,
       price: '500000.00',
-      effectiveAt: DateTime.utc().toISO(),
+      effectiveAt: DateTime.utc().toISO()!,
       effectiveAtHeight: height,
     };
 

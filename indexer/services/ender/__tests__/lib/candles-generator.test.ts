@@ -97,7 +97,7 @@ describe('candleHelper', () => {
   const previousStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime.minus({ minutes: 1 }),
     CandleResolution.ONE_MINUTE,
-  ).toISO();
+  ).toISO()!;
   const lowPrice: string = '7500';
   const openPrice: string = '7000';
   const closePrice: string = '8000';
@@ -139,7 +139,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO()!;
 
         return {
           ...defaultCandle,
@@ -187,7 +187,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO()!;
 
         return {
           ...defaultCandle,
@@ -221,7 +221,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO()!;
 
         return CandleTable.create({
           startedAt: currentStartedAt,
@@ -257,7 +257,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO()!;
 
         return {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),
@@ -307,8 +307,8 @@ describe('candleHelper', () => {
       '100', // open interest
       false, // block contains trades
       { // expected candle
-        id: CandleTable.uuid(startedAt.toISO(), defaultCandle.ticker, CandleResolution.ONE_MINUTE),
-        startedAt: startedAt.toISO(),
+        id: CandleTable.uuid(startedAt.toISO()!, defaultCandle.ticker, CandleResolution.ONE_MINUTE),
+        startedAt: startedAt.toISO()!,
         ticker: testConstants.defaultPerpetualMarket.ticker,
         resolution: CandleResolution.ONE_MINUTE,
         low: closePrice,
@@ -346,8 +346,8 @@ describe('candleHelper', () => {
       true, // block contains trades
       { // expected candle
         ...defaultCandle,
-        id: CandleTable.uuid(startedAt.toISO(), defaultCandle.ticker, CandleResolution.ONE_MINUTE),
-        startedAt: startedAt.toISO(),
+        id: CandleTable.uuid(startedAt.toISO()!, defaultCandle.ticker, CandleResolution.ONE_MINUTE),
+        startedAt: startedAt.toISO()!,
         resolution: CandleResolution.ONE_MINUTE,
         startingOpenInterest: '100',
         orderbookMidPriceClose: '1000',
@@ -359,7 +359,7 @@ describe('candleHelper', () => {
     [
       'updates empty candle', // description
       { // initial candle
-        startedAt: startedAt.toISO(),
+        startedAt: startedAt.toISO()!,
         ticker: testConstants.defaultPerpetualMarket.ticker,
         resolution: CandleResolution.ONE_MINUTE,
         low: closePrice,
@@ -377,8 +377,8 @@ describe('candleHelper', () => {
       true, // block contains trades
       { // expected candle
         ...defaultCandle,
-        id: CandleTable.uuid(startedAt.toISO(), defaultCandle.ticker, CandleResolution.ONE_MINUTE),
-        startedAt: startedAt.toISO(),
+        id: CandleTable.uuid(startedAt.toISO()!, defaultCandle.ticker, CandleResolution.ONE_MINUTE),
+        startedAt: startedAt.toISO()!,
         resolution: CandleResolution.ONE_MINUTE,
         startingOpenInterest: existingStartingOpenInterest,
         orderbookMidPriceClose: null,
@@ -399,7 +399,7 @@ describe('candleHelper', () => {
     [
       'does not update candle when there are no trades and an existing candle', // description
       { // initial candle
-        startedAt: startedAt.toISO(),
+        startedAt: startedAt.toISO()!,
         ticker: testConstants.defaultPerpetualMarket.ticker,
         resolution: CandleResolution.ONE_MINUTE,
         low: lowPrice,
@@ -416,8 +416,8 @@ describe('candleHelper', () => {
       '100', // open interest
       false, // block contains trades
       { // expected candle
-        id: CandleTable.uuid(startedAt.toISO(), defaultCandle.ticker, CandleResolution.ONE_MINUTE),
-        startedAt: startedAt.toISO(),
+        id: CandleTable.uuid(startedAt.toISO()!, defaultCandle.ticker, CandleResolution.ONE_MINUTE),
+        startedAt: startedAt.toISO()!,
         ticker: testConstants.defaultPerpetualMarket.ticker,
         resolution: CandleResolution.ONE_MINUTE,
         low: lowPrice,
@@ -466,7 +466,7 @@ describe('candleHelper', () => {
 
     if (expectedCandle === undefined) {
       // Verify no candles in postgres and no kafka messages
-      await verifyNoCandleInPostgres(CandleResolution.ONE_MINUTE, startedAt.toISO());
+      await verifyNoCandleInPostgres(CandleResolution.ONE_MINUTE, startedAt.toISO()!);
       verifyNoCandlesKafkaMessages(publisher, CandleResolution.ONE_MINUTE);
     } else {
       const expectedCandles: CandleFromDatabase[] = [expectedCandle];
@@ -492,7 +492,7 @@ describe('candleHelper', () => {
     const startTime: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
       testConstants.createdDateTime.minus({ minutes: 100 }),
       CandleResolution.ONE_MINUTE,
-    ).toUTC().toISO();
+    ).toUTC().toISO()!;
 
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
@@ -558,7 +558,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO()!;
 
         return {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),
@@ -595,7 +595,7 @@ describe('candleHelper', () => {
     const startTime: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
       testConstants.createdDateTime.minus({ minutes: 100 }),
       CandleResolution.ONE_MINUTE,
-    ).toISO();
+    ).toISO()!;
 
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
@@ -658,7 +658,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO()!;
 
         return {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),

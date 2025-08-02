@@ -16,6 +16,7 @@ import {
   Controller, Get, Path, Route,
 } from 'tsoa';
 
+import { ComplianceControllerHelper } from './compliance-controller';
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
@@ -32,7 +33,6 @@ import ExportResponseCodeStats from '../../../request-helpers/export-response-co
 import {
   ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest,
 } from '../../../types';
-import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-v2-controller';
@@ -80,7 +80,7 @@ class ComplianceV2Controller extends Controller {
       );
       if (restricted) {
         let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
-        const updatedAt: string = DateTime.utc().toISO();
+        const updatedAt: string = DateTime.utc().toISO()!;
         if (complianceStatus.length === 0) {
           complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
             address,
@@ -273,7 +273,7 @@ async function checkCompliance(
   if (isWhitelistedAddress(address)) {
     return res.send({
       status: ComplianceStatus.COMPLIANT,
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO()!,
     });
   }
 
@@ -291,7 +291,7 @@ async function checkCompliance(
     WalletTable.findById(address),
   ]);
 
-  const updatedAt: string = DateTime.utc().toISO();
+  const updatedAt: string = DateTime.utc().toISO()!;
   const complianceStatusFromDatabase:
   ComplianceStatusFromDatabase | undefined = await upsertComplianceStatus(
     req,
@@ -466,7 +466,7 @@ if (config.EXPOSE_SET_COMPLIANCE_ENDPOINT) {
           address,
           status,
           reason,
-          updatedAt: DateTime.utc().toISO(),
+          updatedAt: DateTime.utc().toISO()!,
         });
         const response: ComplianceV2Response = {
           status: complianceStatus.status,

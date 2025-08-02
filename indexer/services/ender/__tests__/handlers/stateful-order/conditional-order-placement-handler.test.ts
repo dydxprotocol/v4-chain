@@ -159,7 +159,7 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: null,
       feePpm: null,
@@ -195,7 +195,7 @@ describe('conditionalOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
@@ -223,7 +223,7 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: null,
       feePpm: null,

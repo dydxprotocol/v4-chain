@@ -1,8 +1,8 @@
 import { IndexerTendermintEvent, UpsertVaultEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { UpsertVaultHandler } from '../handlers/upsert-vault-handler';
-import { Validator } from './validator';
 
 export class UpsertVaultValidator extends Validator<UpsertVaultEventV1> {
   public validate(): void {

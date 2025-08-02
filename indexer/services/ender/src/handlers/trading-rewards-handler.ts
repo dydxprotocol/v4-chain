@@ -9,9 +9,9 @@ import { TradingRewardsEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import * as pg from 'pg';
 
+import { Handler } from './handler';
 import config from '../config';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class TradingRewardsHandler extends Handler<TradingRewardsEventV1> {
   eventType: string = 'TradingRewardEvent';
