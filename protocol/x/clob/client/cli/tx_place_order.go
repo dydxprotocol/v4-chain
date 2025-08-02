@@ -16,7 +16,7 @@ import (
 func CmdPlaceOrder() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "place-order owner subaccount_number clientId clobPairId side quantums subticks goodTilBlock",
-		Short: "Broadcast message place_order. Assumes short term order placement.",
+		Short: "Broadcast message place_order.",
 		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]

@@ -77,6 +77,13 @@ BEGIN
                 order_record."feePpm" = null;
         END CASE;
 
+        CASE
+            WHEN order_->>'orderRouterAddress' IS NOT NULL THEN
+                order_record."orderRouterAddress" = order_->>'orderRouterAddress';
+            ELSE
+                order_record."orderRouterAddress" = null;
+        END CASE;
+
         INSERT INTO orders VALUES (order_record.*) ON CONFLICT ("id") DO
             UPDATE SET
                        "subaccountId" = order_record."subaccountId",
@@ -98,7 +105,8 @@ BEGIN
                        "status" = order_record."status",
                        "triggerPrice" = order_record."triggerPrice",
                        "builderAddress" = order_record."builderAddress",
-                       "feePpm" = order_record."feePpm"
+                       "feePpm" = order_record."feePpm",
+                       "orderRouterAddress" = order_record."orderRouterAddress"
         RETURNING * INTO order_record;
 
         RETURN jsonb_build_object(

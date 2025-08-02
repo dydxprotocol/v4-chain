@@ -551,6 +551,7 @@ describe('OrderHandler', () => {
           clientMetadata: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
           updatedAtHeight: '0',
+          orderRouterAddress: '',
         }),
         // taker order
         OrderTable.create({
@@ -660,6 +661,7 @@ describe('OrderHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
+        orderRouterAddress: '',
       });
 
       const takerOrderSize: string = '0.1002'; // quantums in human = (1e9 + 2e6) * 1e-10 = 0.1002
@@ -1841,6 +1843,10 @@ function createOrderFillEvent(
   takerBuilderFee: number = 0,
   makerBuilderAddress: string = testConstants.noBuilderAddress,
   takerBuilderAddress: string = testConstants.noBuilderAddress,
+  makerOrderRouterFee: number = 0,
+  takerOrderRouterFee: number = 0,
+  makerOrderRouterAddress: string = testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: string = testConstants.noOrderRouterAddress,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1855,6 +1861,10 @@ function createOrderFillEvent(
     takerBuilderFee: Long.fromValue(takerBuilderFee, false),
     makerBuilderAddress,
     takerBuilderAddress,
+    makerOrderRouterFee: Long.fromValue(makerOrderRouterFee, true),
+    takerOrderRouterFee: Long.fromValue(takerOrderRouterFee, true),
+    makerOrderRouterAddress,
+    takerOrderRouterAddress,
   } as OrderFillEventV1;
 }
 

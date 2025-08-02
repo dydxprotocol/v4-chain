@@ -184,6 +184,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      orderRouterAddress: defaultOrder.orderRouterAddress,
     });
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
@@ -231,6 +232,7 @@ describe('statefulOrderPlacementHandler', () => {
       clientMetadata: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: '0',
+      orderRouterAddress: defaultOrder.orderRouterAddress,
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
@@ -261,6 +263,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      orderRouterAddress: defaultOrder.orderRouterAddress,
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });
