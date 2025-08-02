@@ -629,6 +629,9 @@
           },
           "builderAddress": {
             "type": "string"
+          },
+          "orderRouterAddress": {
+            "type": "string"
           }
         },
         "required": [
@@ -1099,6 +1102,9 @@
             "type": "string"
           },
           "feePpm": {
+            "type": "string"
+          },
+          "orderRouterAddress": {
             "type": "string"
           },
           "timeInForce": {

@@ -65,6 +65,7 @@ export interface OrderCreateObject {
   triggerPrice?: string,
   builderAddress?: string,
   feePpm?: string,
+  orderRouterAddress?: string,
 }
 
 export interface OrderUpdateObject {

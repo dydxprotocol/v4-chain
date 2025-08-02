@@ -20,6 +20,8 @@ func NewOrderFillEvent(
 	takerFee int64,
 	makerBuilderFee uint64,
 	takerBuilderFee uint64,
+	makerOrderRouterFee uint64,
+	takerOrderRouterFee uint64,
 	totalFilledMaker satypes.BaseQuantums,
 	totalFilledTaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
@@ -27,20 +29,26 @@ func NewOrderFillEvent(
 	indexerTakerOrder := v1.OrderToIndexerOrder(takerOrder)
 	makerBuilderAddress := getBuilderAddress(makerOrder)
 	takerBuilderAddress := getBuilderAddress(takerOrder)
+	makerOrderRouterAddress := getOrderRouterAddress(makerOrder)
+	takerOrderRouterAddress := getOrderRouterAddress(takerOrder)
 	return &OrderFillEventV1{
 		MakerOrder: v1.OrderToIndexerOrder(makerOrder),
 		TakerOrder: &OrderFillEventV1_Order{
 			Order: &indexerTakerOrder,
 		},
-		FillAmount:          fillAmount.ToUint64(),
-		MakerFee:            makerFee,
-		TakerFee:            takerFee,
-		MakerBuilderFee:     makerBuilderFee,
-		TakerBuilderFee:     takerBuilderFee,
-		MakerBuilderAddress: makerBuilderAddress,
-		TakerBuilderAddress: takerBuilderAddress,
-		TotalFilledMaker:    totalFilledMaker.ToUint64(),
-		TotalFilledTaker:    totalFilledTaker.ToUint64(),
+		FillAmount:              fillAmount.ToUint64(),
+		MakerFee:                makerFee,
+		TakerFee:                takerFee,
+		MakerBuilderFee:         makerBuilderFee,
+		TakerBuilderFee:         takerBuilderFee,
+		MakerBuilderAddress:     makerBuilderAddress,
+		TakerBuilderAddress:     takerBuilderAddress,
+		MakerOrderRouterFee:     makerOrderRouterFee,
+		TakerOrderRouterFee:     takerOrderRouterFee,
+		MakerOrderRouterAddress: makerOrderRouterAddress,
+		TakerOrderRouterAddress: takerOrderRouterAddress,
+		TotalFilledMaker:        totalFilledMaker.ToUint64(),
+		TotalFilledTaker:        totalFilledTaker.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
 		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
 	}
@@ -73,6 +81,7 @@ func NewLiquidationOrderFillEvent(
 	}
 
 	makerBuilderAddress := getBuilderAddress(makerOrder)
+	makerOrderRouterAddress := getOrderRouterAddress(makerOrder)
 	return &OrderFillEventV1{
 		MakerOrder:       v1.OrderToIndexerOrder(makerOrder),
 		TakerOrder:       &OrderFillEventV1_LiquidationOrder{LiquidationOrder: &liquidationOrder},
@@ -82,10 +91,13 @@ func NewLiquidationOrderFillEvent(
 		TotalFilledMaker: totalFilledMaker.ToUint64(),
 		TotalFilledTaker: fillAmount.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
-		AffiliateRevShare:   affiliateRevShareQuoteQuantums.Uint64(),
-		MakerBuilderAddress: makerBuilderAddress,
-		MakerBuilderFee:     makerBuilderFee,
-		TakerBuilderFee:     0, // protocol generated liquidation orders have no builder fee
+		AffiliateRevShare:       affiliateRevShareQuoteQuantums.Uint64(),
+		MakerBuilderAddress:     makerBuilderAddress,
+		MakerBuilderFee:         makerBuilderFee,
+		TakerBuilderFee:         0, // protocol generated liquidation orders have no builder fee
+		MakerOrderRouterAddress: makerOrderRouterAddress,
+		MakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
+		TakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
 	}
 }
 
@@ -95,4 +107,12 @@ func getBuilderAddress(order clobtypes.Order) string {
 		builderAddress = order.GetBuilderCodeParameters().GetBuilderAddress()
 	}
 	return builderAddress
+}
+
+func getOrderRouterAddress(order clobtypes.Order) string {
+	orderRouterAddress := ""
+	if order.OrderRouterAddress != "" {
+		orderRouterAddress = order.OrderRouterAddress
+	}
+	return orderRouterAddress
 }

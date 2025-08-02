@@ -571,6 +571,8 @@ export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
 
 export const noBuilderAddress: string = '';
 
+export const noOrderRouterAddress: string = '';
+
 export const defaultFill: FillCreateObject = {
   subaccountId: defaultSubaccountId,
   side: OrderSide.BUY,

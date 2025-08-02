@@ -158,6 +158,7 @@ func orderToIndexerOrder_GoodTilBlock(
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
 		BuilderCodeParams:               OrderBuilderCodeParamsToIndexerOrderBuilderCodeParams(order.BuilderCodeParameters),
+		OrderRouterAddress:              order.OrderRouterAddress,
 	}
 }
 
@@ -177,6 +178,7 @@ func orderToIndexerOrder_GoodTilBlockTime(
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
 		BuilderCodeParams:               OrderBuilderCodeParamsToIndexerOrderBuilderCodeParams(order.BuilderCodeParameters),
+		OrderRouterAddress:              order.OrderRouterAddress,
 	}
 }
 

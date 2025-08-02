@@ -8,13 +8,15 @@ import (
 
 // MatchWithOrders represents a match which occurred between two orders and the amount that was matched.
 type MatchWithOrders struct {
-	MakerOrder      MatchableOrder
-	TakerOrder      MatchableOrder
-	FillAmount      satypes.BaseQuantums
-	MakerFee        int64
-	TakerFee        int64
-	MakerBuilderFee uint64
-	TakerBuilderFee uint64
+	MakerOrder          MatchableOrder
+	TakerOrder          MatchableOrder
+	FillAmount          satypes.BaseQuantums
+	MakerFee            int64
+	TakerFee            int64
+	MakerBuilderFee     uint64
+	TakerBuilderFee     uint64
+	MakerOrderRouterFee uint64
+	TakerOrderRouterFee uint64
 }
 
 // Validate performs stateless validation on an order match. This validation does

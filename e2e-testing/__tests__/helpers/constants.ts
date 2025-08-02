@@ -34,6 +34,7 @@ export const defaultOrder: IPlaceOrder = {
   timeInForce: Order_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
   reduceOnly: false,
   clientMetadata: 0,
+  orderRouterAddress: '',
 };
 
 export const orderDetails: OrderDetails[] = [

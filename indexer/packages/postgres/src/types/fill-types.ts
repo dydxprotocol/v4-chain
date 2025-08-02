@@ -48,6 +48,7 @@ export interface FillCreateObject {
   affiliateRevShare: string,
   builderAddress?: string,
   builderFee?: string,
+  orderRouterAddress?: string,
 }
 
 export interface FillUpdateObject {
@@ -81,6 +82,7 @@ export enum FillColumns {
   affiliateRevShare = 'affiliateRevShare',
   builderAddress = 'builderAddress',
   builderFee = 'builderFee',
+  orderRouterAddress = 'orderRouterAddress',
 }
 
 export type CostOfFills = {

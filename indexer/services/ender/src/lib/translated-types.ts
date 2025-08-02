@@ -44,4 +44,12 @@ export interface OrderFillWithLiquidity {
   makerBuilderAddress: string,
   /** Builder address for the taker. */
   takerBuilderAddress: string,
+  /** Order router fee for the maker in USDC quantums. */
+  makerOrderRouterFee: Long,
+  /** Order router fee for the taker in USDC quantums. */
+  takerOrderRouterFee: Long,
+  /** Order router address for the maker. */
+  makerOrderRouterAddress: string,
+  /** Order router address for the taker. */
+  takerOrderRouterAddress: string,
 }
