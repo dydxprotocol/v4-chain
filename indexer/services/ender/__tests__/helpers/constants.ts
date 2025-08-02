@@ -311,6 +311,7 @@ export const defaultMakerOrder: IndexerOrder = {
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+  orderRouterAddress: '',
 };
 export const defaultTakerOrder: IndexerOrder = {
   orderId: defaultOrderId2,
@@ -323,6 +324,7 @@ export const defaultTakerOrder: IndexerOrder = {
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+  orderRouterAddress: '',
 };
 export const defaultVaultOrder: IndexerOrder = {
   ...defaultMakerOrder,
@@ -359,6 +361,10 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultOrder: OrderFillEventWithOrder = {
   makerOrder: defaultMakerOrder,
@@ -373,6 +379,10 @@ export const defaultOrder: OrderFillEventWithOrder = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
@@ -387,6 +397,10 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultLiquidation: OrderFillEventWithLiquidation = {
   makerOrder: defaultMakerOrder,
@@ -401,6 +415,10 @@ export const defaultLiquidation: OrderFillEventWithLiquidation = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 
 export const defaultEmptySubaccountUpdate: SubaccountUpdate = {

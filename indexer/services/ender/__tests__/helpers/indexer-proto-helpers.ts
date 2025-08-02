@@ -462,6 +462,7 @@ export function createOrder({
       goodTilBlockTime: goodTilOneof.goodTilBlockTime,
     };
   }
+
   return IndexerOrder.fromPartial(orderJSON);
 }
 

@@ -1855,6 +1855,10 @@ function createOrderFillEvent(
     takerBuilderFee: Long.fromValue(takerBuilderFee, false),
     makerBuilderAddress,
     takerBuilderAddress,
+    makerOrderRouterFee: Long.fromValue(0, true),
+    takerOrderRouterFee: Long.fromValue(0, true),
+    makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+    takerOrderRouterAddress: testConstants.noOrderRouterAddress,
   } as OrderFillEventV1;
 }
 

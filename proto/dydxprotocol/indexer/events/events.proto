@@ -175,6 +175,14 @@ message OrderFillEventV1 {
   string maker_builder_address = 12;
   // builder address for taker
   string taker_builder_address = 13;
+  // fee for maker order router in USDC quantums
+  uint64 maker_order_router_fee = 14;
+  // fee for taker order router in USDC quantums
+  uint64 taker_order_router_fee = 15;
+  // order router address for maker
+  string maker_order_router_address = 16;
+  // order router address for taker
+  string taker_order_router_address = 17;
 }
 
 // DeleveragingEvent message contains all the information for a deleveraging
