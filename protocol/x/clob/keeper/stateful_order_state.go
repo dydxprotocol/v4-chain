@@ -321,14 +321,12 @@ func (k Keeper) MustRemoveStatefulOrder(
 		// Remove the order fill amount from state.
 		k.RemoveOrderFillAmount(ctx, orderId)
 		// Delete the Stateful order placement from state.
-	}
-
-	k.DeleteLongTermOrderPlacement(ctx, orderId)
-
-	// Cancelling a TWAP parent order will attempt to cancel the in-flight suborder.
-	// Since a TWAP suborder is maintained as a normal stateful order, cancelling a
-	// suborder follows the same flow as other stateful orders.
-	if order.OrderId.IsTwapOrder() {
+		k.DeleteLongTermOrderPlacement(ctx, orderId)
+	} else {
+		k.DeleteTWAPOrderPlacement(ctx, orderId)
+		// Cancelling a TWAP parent order will attempt to cancel the in-flight suborder.
+		// Since a TWAP suborder is maintained as a normal stateful order, cancelling a
+		// suborder follows the same flow as other stateful orders.
 		suborderId := k.twapToSuborderId(order.OrderId)
 		// GoodTilBlockTime is set to the current block time + 10 seconds.
 		// This is because an in-flight suborder will have a good-til-block time of

@@ -137,6 +137,53 @@ func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	)
 }
 
+func TestDuplicateTWAPOrderPlacement(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Place a TWAP order to buy 100B quantums over 4 legs
+	twapOrder := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_Twap,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: 100_000_000_000, // 100B quantums
+		Subticks: 200_000_000,     // $20,000 per oracle price
+		TwapParameters: &clobtypes.TwapParameters{
+			Duration:       320,
+			Interval:       80,
+			PriceTolerance: 10_000,
+		},
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 100),
+		},
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(twapOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(twapOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.False(t, resp.IsOK(), "Expected CheckTx to fail. Response: %+v", resp)
+		require.Contains(t, resp.GetLog(), "A stateful order with this OrderId already exists")
+	}
+}
+
 func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()

@@ -951,36 +951,53 @@ func (k Keeper) PerformStatefulOrderValidation(
 			)
 		}
 
-		// If the stateful order already exists in state, validate
-		// that the new stateful order has a higher priority than the existing order.
-		statefulOrderPlacement, found = k.GetLongTermOrderPlacement(ctx, order.OrderId)
-
-		// If this is a pre-existing stateful order, then we expect it to exist in state.
-		// Panic if the order is not in state, as this indicates an application error.
-		if isPreexistingStatefulOrder && !found {
-			panic(
-				fmt.Sprintf(
-					"PerformStatefulOrderValidation: Expected pre-existing stateful order to exist in state "+
-						"order: (%+v).",
+		if order.OrderId.IsTwapOrder() {
+			twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, order.OrderId)
+			if found {
+				existingOrder := twapOrderPlacement.Order
+				return errorsmod.Wrapf(
+					types.ErrStatefulOrderAlreadyExists,
+					"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
+						"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
+						"Existing order: (%+v). New order: (%+v).",
+					existingOrder.GetGoodTilBlockTime(),
+					goodTilBlockTimeUnix,
+					existingOrder,
 					order,
-				),
-			)
-		}
+				)
+			}
+		} else {
+			// If the stateful order already exists in state, validate
+			// that the new stateful order has a higher priority than the existing order.
+			statefulOrderPlacement, found = k.GetLongTermOrderPlacement(ctx, order.OrderId)
 
-		// If this is not pre-existing stateful order, then we expect it does not exist in state.
-		// TODO(DEC-1238): Support stateful order replacements.
-		if !isPreexistingStatefulOrder && found {
-			existingOrder := statefulOrderPlacement.GetOrder()
-			return errorsmod.Wrapf(
-				types.ErrStatefulOrderAlreadyExists,
-				"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
-					"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
-					"Existing order: (%+v). New order: (%+v).",
-				existingOrder.GetGoodTilBlockTime(),
-				goodTilBlockTimeUnix,
-				existingOrder,
-				order,
-			)
+			// If this is a pre-existing stateful order, then we expect it to exist in state.
+			// Panic if the order is not in state, as this indicates an application error.
+			if isPreexistingStatefulOrder && !found {
+				panic(
+					fmt.Sprintf(
+						"PerformStatefulOrderValidation: Expected pre-existing stateful order to exist in state "+
+							"order: (%+v).",
+						order,
+					),
+				)
+			}
+
+			// If this is not pre-existing stateful order, then we expect it does not exist in state.
+			// TODO(DEC-1238): Support stateful order replacements.
+			if !isPreexistingStatefulOrder && found {
+				existingOrder := statefulOrderPlacement.GetOrder()
+				return errorsmod.Wrapf(
+					types.ErrStatefulOrderAlreadyExists,
+					"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
+						"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
+						"Existing order: (%+v). New order: (%+v).",
+					existingOrder.GetGoodTilBlockTime(),
+					goodTilBlockTimeUnix,
+					existingOrder,
+					order,
+				)
+			}
 		}
 
 		if order.IsConditionalOrder() {
