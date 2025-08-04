@@ -336,6 +336,17 @@ export interface FundingPaymentsFromDatabase {
   fundingIndex: string,
 }
 
+export interface TurnkeyUserFromDatabase {
+  suborg_id: string,
+  username?: string,
+  email?: string,
+  svm_address: string,
+  evm_address: string,
+  salt: string,
+  dydx_address?: string,
+  created_at: string,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
