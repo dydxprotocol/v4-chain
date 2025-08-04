@@ -185,6 +185,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      orderRouterAddress: defaultOrder.orderRouterAddress,
     });
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {

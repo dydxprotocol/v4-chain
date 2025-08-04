@@ -165,6 +165,8 @@ export function fillToResponseObject(
     subaccountNumber,
     builderFee: fill.builderFee ?? undefined,
     builderAddress: fill.builderAddress ?? undefined,
+    orderRouterAddress: fill.orderRouterAddress ?? undefined,
+    orderRouterFee: fill.orderRouterFee ?? undefined,
   };
 }
 
