@@ -371,9 +371,9 @@ describe('statefulOrderPlacementHandler', () => {
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
       orderRouterAddress: testConstants.defaultAddress,
-      duration: null,
-      interval: null,
-      priceTolerance: null,
+      duration: defaultOrder.twapParameters?.duration.toString() ?? null,
+      interval: defaultOrder.twapParameters?.interval.toString() ?? null,
+      priceTolerance: defaultOrder.twapParameters?.priceTolerance.toString() ?? null,
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });

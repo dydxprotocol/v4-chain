@@ -1527,7 +1527,7 @@ describe('OrderHandler', () => {
       orderFlags: ORDER_FLAG_TWAP_SUBORDER.toString(),
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: true,
-      clientMetadata: 0
+      clientMetadata: 0,
     });
 
     // create initial PerpetualPositions with closed previous positions
@@ -1676,7 +1676,7 @@ describe('OrderHandler', () => {
         producerSendMock,
         eventId,
         ORDER_FLAG_SHORT_TERM,
-        ORDER_FLAG_TWAP_SUBORDER,
+        ORDER_FLAG_TWAP,
         testConstants.defaultPerpetualMarket3.id,
         testConstants.defaultPerpetualMarket3.clobPairId,
       ),
@@ -1689,10 +1689,10 @@ describe('OrderHandler', () => {
         OrderTable.orderIdToUuid(makerOrderProto.orderId!),
         orderFillEvent.totalFilledMaker.toString(),
       ),
-      // expectStateFilledQuantums(
-      //   OrderTable.orderIdToUuid(takerSuborderProto.orderId!),
-      //   orderFillEvent.totalFilledTaker.toString(),
-      // ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 

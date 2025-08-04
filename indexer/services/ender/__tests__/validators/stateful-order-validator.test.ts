@@ -27,7 +27,12 @@ import {
 } from '../helpers/constants';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_CONDITIONAL,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP_SUBORDER,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { dbHelpers, OrderTable, testMocks } from '@dydxprotocol-indexer/postgres';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -212,7 +217,7 @@ describe('stateful-order-validator', () => {
             },
           },
         },
-        `StatefulOrderEvent long term order must have order flag ${ORDER_FLAG_LONG_TERM}`,
+        `StatefulOrderEvent long term order must have order flag ${ORDER_FLAG_LONG_TERM} or ${ORDER_FLAG_TWAP_SUBORDER}`,
       ],
 
       // Order Removal Validations
