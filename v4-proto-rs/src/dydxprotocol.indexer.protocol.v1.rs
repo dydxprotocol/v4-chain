@@ -164,6 +164,9 @@ pub struct IndexerOrder {
     /// orderId.ClobPairId`).
     #[prost(uint64, tag = "11")]
     pub conditional_order_trigger_subticks: u64,
+    /// builder_code_params is the metadata for the partner or builder of an order.
+    #[prost(message, optional, tag = "12")]
+    pub builder_code_params: ::core::option::Option<BuilderCodeParameters>,
     /// Information about when the order expires.
     #[prost(oneof = "indexer_order::GoodTilOneof", tags = "5, 6")]
     pub good_til_oneof: ::core::option::Option<indexer_order::GoodTilOneof>,
@@ -346,6 +349,28 @@ impl ::prost::Name for IndexerOrder {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.indexer.protocol.v1.IndexerOrder".into()
+    }
+}
+/// BuilderCodeParameters represents the metadata for the partner or builder of
+/// an order. This allows them to specify a fee for providing there service which
+/// will be paid out in the event of an order fill.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BuilderCodeParameters {
+    /// The address of the builder to which the fee will be paid.
+    #[prost(string, tag = "1")]
+    pub builder_address: ::prost::alloc::string::String,
+    /// The fee enforced on the order in ppm.
+    #[prost(uint32, tag = "2")]
+    pub fee_ppm: u32,
+}
+impl ::prost::Name for BuilderCodeParameters {
+    const NAME: &'static str = "BuilderCodeParameters";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.protocol.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.protocol.v1.BuilderCodeParameters".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.protocol.v1.BuilderCodeParameters".into()
     }
 }
 /// Status of the CLOB.
