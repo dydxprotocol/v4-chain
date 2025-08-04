@@ -281,6 +281,45 @@ func (k Keeper) UpdateTWAPOrderRemainingQuantityOnFill(
 	return nil
 }
 
+// GetSubticksForTWAPSuborder returns the oracle price in subticks
+// adjusted by a given directional price tolerance in ppm, rounded to the nearest multiple
+// of SubticksPerTick. A positive price tolerance increases the price, while a negative price
+// tolerance decreases it. If a TWAP order has a subticks value, it will always be used
+// instead of the adjusted oracle price.
+//
+// For example:
+//   - price tolerance = 500_000 means 50% higher than oracle price
+//   - price tolerance = -500_000 means 50% lower than oracle price
+func (k Keeper) calculateSuborderSubticks(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+	twapOrderPlacement types.TwapOrderPlacement,
+) uint64 {
+	if twapOrderPlacement.Order.Subticks != 0 {
+		return twapOrderPlacement.Order.Subticks
+	}
+
+	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+
+	twapOrder := twapOrderPlacement.Order
+	priceTolerancePpm := int32(twapOrder.TwapParameters.PriceTolerance)
+	if twapOrder.Side == types.Order_SIDE_SELL {
+		// for sell orders, we want to adjust the price down
+		priceTolerancePpm = -priceTolerancePpm
+	}
+	adjustment := int32(1_000_000) + priceTolerancePpm
+
+	adjustedPrice := lib.BigRatMulPpm(oraclePriceSubticksRat, uint32(adjustment))
+	// Round to the nearest multiple of SubticksPerTick
+	roundedSubticks := lib.BigRatRoundToMultiple(
+		adjustedPrice,
+		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
+		priceTolerancePpm >= 0, // round up for positive adjustments, down for negative
+	)
+
+	return roundedSubticks.Uint64()
+}
+
 func (k Keeper) calculateSuborderQuantums(
 	twapOrderPlacement types.TwapOrderPlacement,
 	clobPair types.ClobPair,
@@ -342,15 +381,12 @@ func (k Keeper) GenerateSuborder(
 		ClientMetadata: twapOrderPlacement.Order.ClientMetadata,
 	}
 
-	priceTolerancePpm := int32(parentOrder.TwapParameters.PriceTolerance)
-	if parentOrder.Side == types.Order_SIDE_SELL {
-		// for sell orders, we want to adjust the price down
-		priceTolerancePpm = -priceTolerancePpm
-	}
-
 	// calculate the suborder price with slippage adjustment
 	clobPair := k.mustGetClobPair(ctx, parentOrder.GetClobPairId())
-	order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, priceTolerancePpm)
+
+	// set the subticks based on the adjusted price and the limit price (if configured)
+	// by the parent twap order
+	order.Subticks = k.calculateSuborderSubticks(ctx, clobPair, twapOrderPlacement)
 
 	// calculate the suborder quantums based on remaining quantums and legs
 	order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement, clobPair)
