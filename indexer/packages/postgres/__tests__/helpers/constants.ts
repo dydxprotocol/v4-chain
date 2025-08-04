@@ -389,6 +389,7 @@ export const defaultOrder: OrderCreateObject = {
   clientMetadata: '0',
   updatedAt: '2023-01-22T00:00:00.000Z',
   updatedAtHeight: '1',
+  orderRouterAddress: '',
 };
 
 export const isolatedMarketOrder: OrderCreateObject = {
@@ -408,6 +409,7 @@ export const isolatedMarketOrder: OrderCreateObject = {
   clientMetadata: '0',
   updatedAt: '2023-01-22T00:00:00.000Z',
   updatedAtHeight: '1',
+  orderRouterAddress: '',
 };
 
 export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
@@ -418,6 +420,7 @@ export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
   createdAtHeight: '1',
   orderFlags: ORDER_FLAG_LONG_TERM.toString(),
 };
+
 
 export const defaultConditionalOrder: OrderCreateObject = {
   ...defaultOrderGoodTilBlockTime,

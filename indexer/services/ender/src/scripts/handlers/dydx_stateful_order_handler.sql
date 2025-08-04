@@ -54,7 +54,7 @@ BEGIN
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
-        order_record."orderRouterAddress" = order_->'orderRouterAddress'::text;
+        order_record."orderRouterAddress" = order_->>'orderRouterAddress';
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN

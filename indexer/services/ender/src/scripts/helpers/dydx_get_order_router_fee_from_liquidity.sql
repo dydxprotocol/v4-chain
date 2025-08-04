@@ -6,9 +6,9 @@ CREATE OR REPLACE FUNCTION dydx_get_order_router_fee(fill_liquidity text, event_
 */
 BEGIN
     IF fill_liquidity = 'TAKER' THEN
-        RETURN event_data->>'takerOrderRouterFee';
+        RETURN dydx_from_jsonlib_long(event_data->'takerOrderRouterFee');
     ELSE
-        RETURN event_data->>'makerOrderRouterFee';
+        RETURN dydx_from_jsonlib_long(event_data->'makerOrderRouterFee');
     END IF;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;

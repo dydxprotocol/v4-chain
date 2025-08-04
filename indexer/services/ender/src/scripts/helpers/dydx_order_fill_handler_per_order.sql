@@ -113,7 +113,7 @@ BEGIN
     order_record."clientMetadata" = order_client_metadata;
     order_record."updatedAt" = block_time;
     order_record."updatedAtHeight" = block_height;
-    order_record."orderRouterAddress" = order_->'orderRouterAddress'::text;
+    order_record."orderRouterAddress" = order_->>'orderRouterAddress';
 
     IF FOUND THEN
         order_record."totalFilled" = total_filled;
