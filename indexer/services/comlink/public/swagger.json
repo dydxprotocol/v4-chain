@@ -1101,6 +1101,9 @@
           "feePpm": {
             "type": "string"
           },
+          "orderRouterAddress": {
+            "type": "string"
+          },
           "timeInForce": {
             "$ref": "#/components/schemas/APITimeInForce"
           },

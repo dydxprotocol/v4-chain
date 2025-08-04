@@ -31,6 +31,10 @@ export function orderFillEventV1ToOrderFill(
     takerBuilderFee: event.event.takerBuilderFee,
     makerBuilderAddress: event.event.makerBuilderAddress,
     takerBuilderAddress: event.event.takerBuilderAddress,
+    makerOrderRouterFee: event.event.makerOrderRouterFee,
+    takerOrderRouterFee: event.event.takerOrderRouterFee,
+    makerOrderRouterAddress: event.event.makerOrderRouterAddress,
+    takerOrderRouterAddress: event.event.takerOrderRouterAddress,
   };
 }
 
@@ -50,6 +54,10 @@ export function orderFillWithLiquidityToOrderFillEventWithOrder(
     takerBuilderFee: orderFillWithLiquidity.takerBuilderFee,
     makerBuilderAddress: orderFillWithLiquidity.makerBuilderAddress,
     takerBuilderAddress: orderFillWithLiquidity.takerBuilderAddress,
+    makerOrderRouterFee: orderFillWithLiquidity.makerOrderRouterFee,
+    takerOrderRouterFee: orderFillWithLiquidity.takerOrderRouterFee,
+    makerOrderRouterAddress: orderFillWithLiquidity.makerOrderRouterAddress,
+    takerOrderRouterAddress: orderFillWithLiquidity.takerOrderRouterAddress,
   };
 }
 
@@ -69,5 +77,9 @@ export function orderFillWithLiquidityToOrderFillEventWithLiquidation(
     takerBuilderFee: orderFillWithLiquidity.takerBuilderFee,
     makerBuilderAddress: orderFillWithLiquidity.makerBuilderAddress,
     takerBuilderAddress: orderFillWithLiquidity.takerBuilderAddress,
+    makerOrderRouterFee: orderFillWithLiquidity.makerOrderRouterFee,
+    takerOrderRouterFee: orderFillWithLiquidity.takerOrderRouterFee,
+    makerOrderRouterAddress: orderFillWithLiquidity.makerOrderRouterAddress,
+    takerOrderRouterAddress: orderFillWithLiquidity.takerOrderRouterAddress,
   };
 }

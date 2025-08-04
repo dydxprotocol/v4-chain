@@ -24,6 +24,8 @@ var (
 	makerBuilderFee       = uint64(0)
 	takerBuilderFee       = uint64(0)
 	affiliateRevShare     = big.NewInt(0)
+	makerOrderRouterFee   = uint64(0)
+	takerOrderRouterFee   = uint64(0)
 )
 
 func TestNewOrderFillEvent_Success(t *testing.T) {
@@ -38,6 +40,8 @@ func TestNewOrderFillEvent_Success(t *testing.T) {
 		fillAmount,
 		fillAmount,
 		affiliateRevShare,
+		makerOrderRouterFee,
+		takerOrderRouterFee,
 	)
 
 	expectedOrderFillEventProto := &events.OrderFillEventV1{
@@ -66,6 +70,7 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		makerBuilderFee,
 		fillAmount,
 		affiliateRevShare,
+		0,
 	)
 
 	expectedLiquidationOrder := events.LiquidationOrderV1{

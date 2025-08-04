@@ -431,6 +431,18 @@ export interface OrderFillEventV1 {
   /** builder address for taker */
 
   takerBuilderAddress: string;
+  /** fee for maker order router in USDC quantums */
+
+  makerOrderRouterFee: Long;
+  /** fee for taker order router in USDC quantums */
+
+  takerOrderRouterFee: Long;
+  /** order router address for maker */
+
+  makerOrderRouterAddress: string;
+  /** order router address for taker */
+
+  takerOrderRouterAddress: string;
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
@@ -475,6 +487,18 @@ export interface OrderFillEventV1SDKType {
   /** builder address for taker */
 
   taker_builder_address: string;
+  /** fee for maker order router in USDC quantums */
+
+  maker_order_router_fee: Long;
+  /** fee for taker order router in USDC quantums */
+
+  taker_order_router_fee: Long;
+  /** order router address for maker */
+
+  maker_order_router_address: string;
+  /** order router address for taker */
+
+  taker_order_router_address: string;
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -2474,7 +2498,11 @@ function createBaseOrderFillEventV1(): OrderFillEventV1 {
     makerBuilderFee: Long.UZERO,
     takerBuilderFee: Long.UZERO,
     makerBuilderAddress: "",
-    takerBuilderAddress: ""
+    takerBuilderAddress: "",
+    makerOrderRouterFee: Long.UZERO,
+    takerOrderRouterFee: Long.UZERO,
+    makerOrderRouterAddress: "",
+    takerOrderRouterAddress: ""
   };
 }
 
@@ -2530,6 +2558,22 @@ export const OrderFillEventV1 = {
 
     if (message.takerBuilderAddress !== "") {
       writer.uint32(106).string(message.takerBuilderAddress);
+    }
+
+    if (!message.makerOrderRouterFee.isZero()) {
+      writer.uint32(112).uint64(message.makerOrderRouterFee);
+    }
+
+    if (!message.takerOrderRouterFee.isZero()) {
+      writer.uint32(120).uint64(message.takerOrderRouterFee);
+    }
+
+    if (message.makerOrderRouterAddress !== "") {
+      writer.uint32(130).string(message.makerOrderRouterAddress);
+    }
+
+    if (message.takerOrderRouterAddress !== "") {
+      writer.uint32(138).string(message.takerOrderRouterAddress);
     }
 
     return writer;
@@ -2596,6 +2640,22 @@ export const OrderFillEventV1 = {
           message.takerBuilderAddress = reader.string();
           break;
 
+        case 14:
+          message.makerOrderRouterFee = (reader.uint64() as Long);
+          break;
+
+        case 15:
+          message.takerOrderRouterFee = (reader.uint64() as Long);
+          break;
+
+        case 16:
+          message.makerOrderRouterAddress = reader.string();
+          break;
+
+        case 17:
+          message.takerOrderRouterAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2620,6 +2680,10 @@ export const OrderFillEventV1 = {
     message.takerBuilderFee = object.takerBuilderFee !== undefined && object.takerBuilderFee !== null ? Long.fromValue(object.takerBuilderFee) : Long.UZERO;
     message.makerBuilderAddress = object.makerBuilderAddress ?? "";
     message.takerBuilderAddress = object.takerBuilderAddress ?? "";
+    message.makerOrderRouterFee = object.makerOrderRouterFee !== undefined && object.makerOrderRouterFee !== null ? Long.fromValue(object.makerOrderRouterFee) : Long.UZERO;
+    message.takerOrderRouterFee = object.takerOrderRouterFee !== undefined && object.takerOrderRouterFee !== null ? Long.fromValue(object.takerOrderRouterFee) : Long.UZERO;
+    message.makerOrderRouterAddress = object.makerOrderRouterAddress ?? "";
+    message.takerOrderRouterAddress = object.takerOrderRouterAddress ?? "";
     return message;
   }
 
