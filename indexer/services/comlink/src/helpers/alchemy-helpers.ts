@@ -12,7 +12,7 @@ const evmChainIdToAlchemyWebhookId: Record<string, string> = {
 
 const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
-export async function addAddressesToAlchemyWebhook(evmAddress: string, svmAddress?: string): Promise<void> {
+export async function addAddressesToAlchemyWebhook(evmAddress?: string, svmAddress?: string): Promise<void> {
   try {
     // Add EVM address to webhook for monitoring
     if (evmAddress) {
