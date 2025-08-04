@@ -487,30 +487,18 @@ export interface OrderFillEventV1SDKType {
   /** builder address for taker */
 
   taker_builder_address: string;
-<<<<<<< HEAD
-=======
   /** fee for maker order router in USDC quantums */
 
   maker_order_router_fee: Long;
   /** fee for taker order router in USDC quantums */
 
   taker_order_router_fee: Long;
->>>>>>> main
   /** order router address for maker */
 
   maker_order_router_address: string;
   /** order router address for taker */
 
   taker_order_router_address: string;
-<<<<<<< HEAD
-  /** fee for maker order router in USDC quantums. */
-
-  maker_order_router_fee: Long;
-  /** fee for taker order router in USDC quantums. */
-
-  taker_order_router_fee: Long;
-=======
->>>>>>> main
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -2511,17 +2499,10 @@ function createBaseOrderFillEventV1(): OrderFillEventV1 {
     takerBuilderFee: Long.UZERO,
     makerBuilderAddress: "",
     takerBuilderAddress: "",
-<<<<<<< HEAD
-    makerOrderRouterAddress: "",
-    takerOrderRouterAddress: "",
-    makerOrderRouterFee: Long.UZERO,
-    takerOrderRouterFee: Long.UZERO
-=======
     makerOrderRouterFee: Long.UZERO,
     takerOrderRouterFee: Long.UZERO,
     makerOrderRouterAddress: "",
     takerOrderRouterAddress: ""
->>>>>>> main
   };
 }
 
@@ -2579,22 +2560,6 @@ export const OrderFillEventV1 = {
       writer.uint32(106).string(message.takerBuilderAddress);
     }
 
-<<<<<<< HEAD
-    if (message.makerOrderRouterAddress !== "") {
-      writer.uint32(114).string(message.makerOrderRouterAddress);
-    }
-
-    if (message.takerOrderRouterAddress !== "") {
-      writer.uint32(122).string(message.takerOrderRouterAddress);
-    }
-
-    if (!message.makerOrderRouterFee.isZero()) {
-      writer.uint32(128).uint64(message.makerOrderRouterFee);
-    }
-
-    if (!message.takerOrderRouterFee.isZero()) {
-      writer.uint32(136).uint64(message.takerOrderRouterFee);
-=======
     if (!message.makerOrderRouterFee.isZero()) {
       writer.uint32(112).uint64(message.makerOrderRouterFee);
     }
@@ -2609,7 +2574,6 @@ export const OrderFillEventV1 = {
 
     if (message.takerOrderRouterAddress !== "") {
       writer.uint32(138).string(message.takerOrderRouterAddress);
->>>>>>> main
     }
 
     return writer;
@@ -2677,23 +2641,6 @@ export const OrderFillEventV1 = {
           break;
 
         case 14:
-<<<<<<< HEAD
-          message.makerOrderRouterAddress = reader.string();
-          break;
-
-        case 15:
-          message.takerOrderRouterAddress = reader.string();
-          break;
-
-        case 16:
-          message.makerOrderRouterFee = (reader.uint64() as Long);
-          break;
-
-        case 17:
-          message.takerOrderRouterFee = (reader.uint64() as Long);
-          break;
-
-=======
           message.makerOrderRouterFee = (reader.uint64() as Long);
           break;
 
@@ -2709,7 +2656,6 @@ export const OrderFillEventV1 = {
           message.takerOrderRouterAddress = reader.string();
           break;
 
->>>>>>> main
         default:
           reader.skipType(tag & 7);
           break;
@@ -2734,17 +2680,10 @@ export const OrderFillEventV1 = {
     message.takerBuilderFee = object.takerBuilderFee !== undefined && object.takerBuilderFee !== null ? Long.fromValue(object.takerBuilderFee) : Long.UZERO;
     message.makerBuilderAddress = object.makerBuilderAddress ?? "";
     message.takerBuilderAddress = object.takerBuilderAddress ?? "";
-<<<<<<< HEAD
-    message.makerOrderRouterAddress = object.makerOrderRouterAddress ?? "";
-    message.takerOrderRouterAddress = object.takerOrderRouterAddress ?? "";
-    message.makerOrderRouterFee = object.makerOrderRouterFee !== undefined && object.makerOrderRouterFee !== null ? Long.fromValue(object.makerOrderRouterFee) : Long.UZERO;
-    message.takerOrderRouterFee = object.takerOrderRouterFee !== undefined && object.takerOrderRouterFee !== null ? Long.fromValue(object.takerOrderRouterFee) : Long.UZERO;
-=======
     message.makerOrderRouterFee = object.makerOrderRouterFee !== undefined && object.makerOrderRouterFee !== null ? Long.fromValue(object.makerOrderRouterFee) : Long.UZERO;
     message.takerOrderRouterFee = object.takerOrderRouterFee !== undefined && object.takerOrderRouterFee !== null ? Long.fromValue(object.takerOrderRouterFee) : Long.UZERO;
     message.makerOrderRouterAddress = object.makerOrderRouterAddress ?? "";
     message.takerOrderRouterAddress = object.takerOrderRouterAddress ?? "";
->>>>>>> main
     return message;
   }
 

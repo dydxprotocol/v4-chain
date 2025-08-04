@@ -661,14 +661,10 @@ export interface IndexerOrderSDKType {
   /** builder_code_params is the metadata for the partner or builder of an order. */
 
   builder_code_params?: BuilderCodeParametersSDKType;
-<<<<<<< HEAD
-  /** order_router_address is the metadata for the order router of an order. */
-=======
   /**
    * order_router_address is the address of the order router that forwarded this
    * order.
    */
->>>>>>> main
 
   order_router_address: string;
 }
