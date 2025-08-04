@@ -47,7 +47,6 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
-import { noOrderRouterAddress } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('statefulOrderPlacementHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
