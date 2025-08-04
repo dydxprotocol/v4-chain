@@ -534,6 +534,7 @@ export function redisOrderToResponseObject(
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
     builderAddress: redisOrder.order!.builderCodeParams?.builderAddress ?? undefined,
     feePpm: redisOrder.order!.builderCodeParams?.feePpm.toString() ?? undefined,
+    orderRouterAddress: redisOrder.order!.orderRouterAddress ?? undefined,
   };
 }
 
