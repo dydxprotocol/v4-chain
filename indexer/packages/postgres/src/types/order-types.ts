@@ -65,6 +65,7 @@ export interface OrderCreateObject {
   triggerPrice?: string,
   builderAddress?: string,
   feePpm?: string,
+  orderRouterAddress?: string,
 }
 
 export interface OrderUpdateObject {
@@ -85,6 +86,7 @@ export interface OrderUpdateObject {
   goodTilBlockTime?: string | null,
   clientMetadata?: string,
   triggerPrice?: string,
+  orderRouterAddress?: string,
 }
 
 export enum OrderColumns {
