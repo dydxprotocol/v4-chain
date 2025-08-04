@@ -163,7 +163,7 @@ describe('conditionalOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: null,
       feePpm: null,
-      orderRouterAddress: "",
+      orderRouterAddress: '',
     });
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
@@ -228,7 +228,7 @@ describe('conditionalOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: null,
       feePpm: null,
-      orderRouterAddress: "",
+      orderRouterAddress: '',
     });
     expectOrderSubaccountKafkaMessage(
       producerSendMock,

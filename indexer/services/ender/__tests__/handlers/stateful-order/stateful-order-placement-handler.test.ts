@@ -262,7 +262,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
-      orderRouterAddress: "",
+      orderRouterAddress: '',
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });
