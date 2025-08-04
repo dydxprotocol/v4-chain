@@ -52,6 +52,17 @@ import { Handler } from './handler';
  */
 export class OrderUpdateHandler extends Handler {
   protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
+    if (update.orderUpdate?.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderUpdateHandler#handle',
+        debug: 'td0426',
+        message: 'Received OffChainUpdate with OrderUpdate.',
+        orderId: update.orderUpdate?.orderId,
+        update,
+        priceLevel: 'n/a',
+        txHash: this.txHash,
+      });
+    }
     logger.info({
       at: 'OrderUpdateHandler#handle',
       message: 'Received OffChainUpdate with OrderUpdate.',
@@ -71,6 +82,17 @@ export class OrderUpdateHandler extends Handler {
       this.generateTimingStatsOptions('update_order_cache_update'),
     );
 
+    if (orderUpdate.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderUpdateHandler#handle',
+        debug: 'td0426',
+        message: 'OrderUpdate processed',
+        orderId: orderUpdate.orderId,
+        orderUpdate,
+        updateResult,
+        priceLevel: updateResult.order?.price,
+      });
+    }
     logger.info({
       at: 'OrderUpdateHandler#handle',
       message: 'OrderUpdate processed',
@@ -91,8 +113,21 @@ export class OrderUpdateHandler extends Handler {
           redisClient,
         );
       }
+
+      if (orderUpdate.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'OrderUpdateHandler#handle',
+          debug: 'td0426',
+          message: 'UpdateResult.updated is false',
+          orderId: orderUpdate.orderId,
+          update,
+          priceLevel: updateResult.order?.price,
+          updateResult,
+        });
+      }
       logger.info({
         at: 'OrderUpdateHandler#handle',
+        // NEXT: look into this. This happens quite often.
         message: 'Received order update for order that does not exist, order id ' +
                  `${JSON.stringify(orderUpdate.orderId!)}`,
         update,
@@ -127,6 +162,17 @@ export class OrderUpdateHandler extends Handler {
         updateResult,
         sizeDeltaInQuantums,
       );
+      if (updateResult.order?.order?.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'OrderUpdateHandler#updatePriceLevel',
+          debug: 'td0426',
+          message: 'OrderUpdate updated price level',
+          orderId: updateResult.order?.order?.orderId,
+          sizeDeltaInQuantums,
+          updateResult,
+          priceLevel: updateResult.order?.price,
+        });
+      }
 
       const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
         .getPerpetualMarketFromTicker(updateResult.order!.ticker);
@@ -190,6 +236,16 @@ export class OrderUpdateHandler extends Handler {
       return Big(updateResult.oldTotalFilledQuantums!);
     }
 
+    if (updateResult.order?.order?.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderUpdateHandler#getCappedOldTotalFilledQuantums',
+        debug: 'td0426',
+        message: 'Old total filled quantums of order exceeds order size in quantums.',
+        orderId: updateResult.order!.order!.orderId,
+        updateResult,
+        priceLevel: updateResult.order?.price,
+      });
+    }
     // Cap old total filled quantums for an order to the size of the order in quantums, log an error
     // if the old total filled quantums for an order exceeds it's size in quantums
     logger.info({
@@ -197,6 +253,7 @@ export class OrderUpdateHandler extends Handler {
       message: 'Old total filled quantums of order exceeds order size in quantums.',
       updateResult,
     });
+
     stats.increment(
       `${config.SERVICE_NAME}.order_update_old_total_filled_exceeds_size`,
       1,
@@ -220,6 +277,17 @@ export class OrderUpdateHandler extends Handler {
       return Big(orderUpdate.totalFilledQuantums!.toNumber().toString());
     }
 
+    if (orderUpdate.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderUpdateHandler#getCappedNewTotalFilledQuantums',
+        debug: 'td0426',
+        message: 'New total filled quantums of order exceeds order size in quantums.',
+        orderId: orderUpdate.orderId,
+        orderUpdate,
+        updateResult,
+        priceLevel: updateResult.order?.price,
+      });
+    }
     // Cap new total filled quantums for an order to the size of the order in quantums, log an error
     // if the new total filled quantums for an order exceeds it's size in quantums
     logger.info({

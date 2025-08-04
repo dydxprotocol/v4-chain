@@ -82,6 +82,16 @@ export class OrderRemoveHandler extends Handler {
       update,
       txHash: this.txHash,
     });
+    if (update.orderRemove?.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderRemoveHandler#handle',
+        debug: 'td0426',
+        message: 'Received OffChainUpdate with OrderRemove.',
+        orderId: update.orderRemove?.removedOrderId,
+        update,
+        priceLevel: 'n/a',
+      });
+    }
     const orderRemove: OrderRemoveV1 = update.orderRemove!;
     const reason: OrderRemovalReason = orderRemove.reason;
 
@@ -98,6 +108,16 @@ export class OrderRemoveHandler extends Handler {
         1,
         { instance: getInstanceId() },
       );
+      if (update.orderRemove?.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'OrderRemoveHandler#handle',
+          message: 'Order was expired by Indexer but is no longer expired. Ignoring.',
+          debug: 'td0426',
+          orderId: update.orderRemove?.removedOrderId,
+          orderRemove,
+          priceLevel: 'n/a',
+        });
+      }
       logger.info({
         at: 'OrderRemoveHandler#handle',
         message: 'Order was expired by Indexer but is no longer expired. Ignoring.',
@@ -113,6 +133,17 @@ export class OrderRemoveHandler extends Handler {
       }),
       this.generateTimingStatsOptions('remove_order'),
     );
+    if (update.orderRemove?.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderRemoveHandler#handle',
+        message: 'OrderRemove processed',
+        debug: 'td0426',
+        orderId: update.orderRemove?.removedOrderId,
+        orderRemove,
+        removeOrderResult,
+        priceLevel: 'n/a',
+      });
+    }
     logger.info({
       at: 'OrderRemoveHandler#handle',
       message: 'OrderRemove processed',
@@ -128,11 +159,23 @@ export class OrderRemoveHandler extends Handler {
         1,
         { instance: getInstanceId() },
       );
+      if (update.orderRemove?.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'OrderRemoveHandler#handle',
+          message: 'Order was expired by Indexer',
+          debug: 'td0426',
+          orderId: update.orderRemove?.removedOrderId,
+          orderRemove,
+          removeOrderResult,
+          priceLevel: 'n/a',
+        });
+      }
       logger.info({
         at: 'OrderRemoveHandler#handle',
         message: 'Order was expired by Indexer',
         orderRemove,
         removeOrderResult,
+        priceLevel: 'n/a',
       });
     }
 
@@ -288,6 +331,17 @@ export class OrderRemoveHandler extends Handler {
     }
     // This can happen for short term orders if the order place message was not received.
     if (!removeOrderResult.removed) {
+      if (orderRemove.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'OrderRemoveHandler#handle',
+          message: 'Order was expired by Indexer',
+          debug: 'td0426',
+          orderId: orderRemove?.removedOrderId,
+          orderRemove,
+          removeOrderResult,
+          priceLevel: 'n/a',
+        });
+      }
       logger.info({
         at: 'orderRemoveHandler#handleOrderRemoval',
         message: 'Unable to find order',
@@ -394,6 +448,25 @@ export class OrderRemoveHandler extends Handler {
       ),
       this.generateTimingStatsOptions('update_price_level_cache'),
     );
+    const clobPairId = removeOrderResult.removedOrder?.order?.orderId?.clobPairId;
+    if (clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderRemoveHandler#updateOrderbook',
+        message: 'OrderRemove updated price level',
+        orderId: removeOrderResult.removedOrder?.order?.orderId,
+        removeOrderResult,
+        updatedQuantums,
+        priceLevel: protocolTranslations.subticksToPriceWithParams(
+          removeOrderResult.removedOrder?.order?.subticks.toString() ?? '0',
+          config.ORDER_DEBUG_QUANTUM_CONVERSION_EXPONENT,
+          config.ORDER_DEBUG_ATOMIC_RESOLUTION,
+        ),
+        sizeDeltaInQuantums: this.getSizeDeltaInQuantums(
+          removeOrderResult,
+          removeOrderResult.removedOrder!,
+        ),
+      });
+    }
     const orderbookMessage: Message = {
       value: this.createOrderbookWebsocketMessage(
         removeOrderResult.removedOrder!,
@@ -468,6 +541,16 @@ export class OrderRemoveHandler extends Handler {
         1,
         { instance: getInstanceId() },
       );
+      if (orderRemove.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'orderRemoveHandler#isOrderExpired',
+          message: 'Could not find order for Indexer-expired expiry verification',
+          debug: 'td0426',
+          orderId: orderRemove?.removedOrderId,
+          orderRemove,
+          priceLevel: 'n/a',
+        });
+      }
       logger.info({
         at: 'orderRemoveHandler#isOrderExpired',
         message: 'Could not find order for Indexer-expired expiry verification',
@@ -496,6 +579,18 @@ export class OrderRemoveHandler extends Handler {
         1,
         { instance: getInstanceId() },
       );
+      if (orderRemove.removedOrderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'orderRemoveHandler#isOrderExpired',
+          message: 'Indexer marked order that is not yet expired as expired',
+          debug: 'td0426',
+          orderId: orderRemove?.removedOrderId,
+          orderRemove,
+          redisOrder,
+          block,
+          priceLevel: redisOrder.price,
+        });
+      }
       logger.info({
         at: 'orderRemoveHandler#isOrderExpired',
         message: 'Indexer marked order that is not yet expired as expired',
@@ -568,6 +663,18 @@ export class OrderRemoveHandler extends Handler {
     // rather than having off-chain updates sent from the protocol. Change to error once it's
     // confirmed this case no longer happens normally.
     if (sizeDelta.gt(0)) {
+      const clobPairId = removeOrderResult.removedOrder?.order?.orderId?.clobPairId;
+      if (clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+        logger.warning({
+          at: 'orderRemoveHandler#getSizeDeltaInQuantums',
+          message: 'Indexer marked order that is not yet expired as expired',
+          debug: 'td0426',
+          orderId: removeOrderResult.removedOrder?.order?.orderId,
+          removeOrderResult,
+          redisOrder,
+          priceLevel: redisOrder.price,
+        });
+      }
       logger.info({
         at: 'orderRemoveHandler#getSizeDeltaInQuantums',
         message: 'Total filled of order exceeds quantums of order',
