@@ -199,8 +199,8 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
     if (order.orderId!.orderFlags !== ORDER_FLAG_LONG_TERM &&
       order.orderId!.orderFlags !== ORDER_FLAG_TWAP_SUBORDER) {
       return this.logAndThrowParseMessageError(
-        `StatefulOrderEvent long term order must have order flag 
-        ${ORDER_FLAG_LONG_TERM} or ${ORDER_FLAG_TWAP_SUBORDER}`,
+        'StatefulOrderEvent long term order must have order flag' +
+        `${ORDER_FLAG_LONG_TERM} or ${ORDER_FLAG_TWAP_SUBORDER}`,
         { event: this.event },
       );
     }

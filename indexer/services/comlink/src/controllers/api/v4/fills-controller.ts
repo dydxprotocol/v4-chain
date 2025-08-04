@@ -57,14 +57,14 @@ const fillsCacheControlMiddleware = cacheControlMiddleware(config.CACHE_CONTROL_
 class FillsController extends Controller {
   @Get('/')
   async getFills(
-    @Query() address: string,
-    @Query() subaccountNumber: number,
-    @Query() market?: string,
-    @Query() marketType?: MarketType,
-    @Query() limit?: number,
-    @Query() createdBeforeOrAtHeight?: number,
-    @Query() createdBeforeOrAt?: IsoString,
-    @Query() page?: number,
+      @Query() address: string,
+      @Query() subaccountNumber: number,
+      @Query() market?: string,
+      @Query() marketType?: MarketType,
+      @Query() limit?: number,
+      @Query() createdBeforeOrAtHeight?: number,
+      @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<FillResponse> {
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
@@ -125,11 +125,11 @@ class FillsController extends Controller {
   // Note: This is expected to be used for FE only, where `parentSubaccount -> childSubaccount`
   // mapping is relevant. API traders should use `fills/` instead.
   async getFillsForParentSubaccount(
-    @Query() address: string,
-    @Query() parentSubaccountNumber: number,
-    @Query() limit?: number,
-    @Query() page?: number,
-    @Query() fillType?: FillType,
+      @Query() address: string,
+      @Query() parentSubaccountNumber: number,
+      @Query() limit?: number,
+      @Query() page?: number,
+      @Query() fillType?: FillType,
   ): Promise<FillResponse> {
     // Get subaccountIds for all child subaccounts of the parent subaccount
     // Create a record of subaccountId to subaccount number
