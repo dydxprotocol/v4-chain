@@ -74,6 +74,9 @@ export default class OrderModel extends BaseModel {
         'triggerPrice',
         'updatedAt',
         'updatedAtHeight',
+        'duration',
+        'interval',
+        'priceTolerance',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
@@ -99,6 +102,9 @@ export default class OrderModel extends BaseModel {
         builderAddress: { type: ['string', 'null'], default: null },
         feePpm: { type: ['string', 'null'], default: null },
         orderRouterAddress: { type: ['string', 'null'], default: null },
+        duration: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
+        interval: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
+        priceTolerance: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
       },
     };
   }

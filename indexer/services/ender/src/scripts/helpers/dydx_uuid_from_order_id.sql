@@ -5,6 +5,15 @@ CREATE OR REPLACE FUNCTION dydx_uuid_from_order_id(order_id jsonb) RETURNS uuid 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 BEGIN
+    IF (order_id->>'orderFlags')::bigint = 256 THEN
+        -- Twap suborders should be mapped to their parent order.
+        return dydx_uuid_from_order_id_parts(
+            dydx_uuid_from_subaccount_id(order_id->'subaccountId'),
+            order_id->>'clientId',
+            order_id->>'clobPairId',
+            '128');
+    END IF;
+
     return dydx_uuid_from_order_id_parts(
         dydx_uuid_from_subaccount_id(order_id->'subaccountId'),
         order_id->>'clientId',

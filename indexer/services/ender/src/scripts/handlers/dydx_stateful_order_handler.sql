@@ -21,10 +21,18 @@ DECLARE
     perpetual_market_record perpetual_markets%ROWTYPE;
     order_record orders%ROWTYPE;
     subaccount_record subaccounts%ROWTYPE;
+    order_flag bigint;
 BEGIN
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
-    IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL THEN
-        order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
+    IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL OR event_data->'twapOrderPlacement' IS NOT NULL THEN
+        order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order', event_data->'twapOrderPlacement'->'order');
+        order_flag = (order_->'orderId'->'orderFlags')::bigint;
+
+        -- IF order_flag = 256 THEN
+        --     -- Twap suborders are not stored in the orders table.
+        --     RETURN NULL;
+        -- END IF;
+
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
@@ -48,25 +56,35 @@ BEGIN
                                                          perpetual_market_record."atomicResolution")::numeric);
         order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
         order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
-        order_record."orderFlags" = (order_->'orderId'->'orderFlags')::bigint;
+        order_record."orderFlags" = order_flag;
         order_record."goodTilBlockTime" = to_timestamp((order_->'goodTilBlockTime')::double precision);
         order_record."clientMetadata" = (order_->'clientMetadata')::bigint;
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
         order_record."orderRouterAddress" = order_->>'orderRouterAddress';
+        order_record."type" = dydx_protocol_condition_type_to_order_type((order_->'orderId'->'orderFlags')::bigint, order_->'conditionType');
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN
-                order_record."type" = dydx_protocol_condition_type_to_order_type(order_->'conditionType');
                 order_record."status" = 'UNTRIGGERED';
                 order_record."triggerPrice" = dydx_trim_scale(dydx_from_jsonlib_long(order_->'conditionalOrderTriggerSubticks') *
                                                               power(10, perpetual_market_record."quantumConversionExponent" +
                                                                         QUOTE_CURRENCY_ATOMIC_RESOLUTION -
                                                                         perpetual_market_record."atomicResolution")::numeric);
-            ELSE
-                order_record."type" = 'LIMIT';
+                order_record."duration" = NULL;
+                order_record."interval" = NULL;
+                order_record."priceTolerance" = NULL;
+            WHEN event_data->'twapOrderPlacement' IS NOT NULL THEN
                 order_record."status" = 'OPEN';
+                order_record."duration" = (order_->'twapParameters'->'duration');
+                order_record."interval" = (order_->'twapParameters'->'interval');
+                order_record."priceTolerance" = (order_->'twapParameters'->'priceTolerance');
+            ELSE
+                order_record."status" = 'OPEN';
+                order_record."duration" = NULL;
+                order_record."interval" = NULL;
+                order_record."priceTolerance" = NULL;
         END CASE;
 
         CASE
