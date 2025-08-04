@@ -546,6 +546,8 @@ func (k Keeper) PersistMatchOrdersToState(
 					totalFilledMaker,
 					totalFilledTaker,
 					affiliateRevSharesQuoteQuantums,
+					matchWithOrders.MakerOrderRouterFee,
+					matchWithOrders.TakerOrderRouterFee,
 				),
 			),
 		)
@@ -655,6 +657,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 					matchWithOrders.MakerBuilderFee,
 					totalFilledMaker,
 					affiliateRevSharesQuoteQuantums,
+					matchWithOrders.MakerOrderRouterFee,
 				),
 			),
 		)

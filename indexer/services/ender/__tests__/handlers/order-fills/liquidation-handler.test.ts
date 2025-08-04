@@ -1206,10 +1206,10 @@ function createLiquidationOrderFillEvent(
     takerBuilderFee: Long.fromValue(0, false),
     makerBuilderAddress: testConstants.noBuilderAddress,
     takerBuilderAddress: testConstants.noBuilderAddress,
+    makerOrderRouterFee: Long.fromValue(0, true),
+    takerOrderRouterFee: Long.fromValue(0, true),
     makerOrderRouterAddress: testConstants.noOrderRouterAddress,
     takerOrderRouterAddress: testConstants.noOrderRouterAddress,
-    makerOrderRouterFee: Long.fromValue(0, false),
-    takerOrderRouterFee: Long.fromValue(0, false),
   } as OrderFillEventV1;
 }
 
