@@ -454,6 +454,8 @@ replace (
 	cosmossdk.io/x/evidence => cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/upgrade => cosmossdk.io/x/upgrade v0.1.1
 	github.com/btcsuite/btcd/btcec/v2 => github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/mesh-sdk-go v0.8.9
+	github.com/coinbase/rosetta-sdk-go/types => github.com/coinbase/mesh-sdk-go/types v1.0.0
 	github.com/cosmos/ibc-go/v8 => github.com/dydxprotocol/ibc-go/v8 v8.0.0-rc.0.0.20250312180215-8733b3edf43a
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
