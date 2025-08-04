@@ -3117,7 +3117,7 @@ fetch(`${baseURL}/bridging/startBridge?fromAddress=string&amount=string&asset=US
 |Parameter|Value|
 |---|---|
 |asset|USDC|
-|asset|DAI|
+|asset|ETH|
 
 > Example responses
 
@@ -6172,7 +6172,7 @@ or
 |Property|Value|
 |---|---|
 |*anonymous*|USDC|
-|*anonymous*|DAI|
+|*anonymous*|ETH|
 
 ## TraderSearchResponseObject
 

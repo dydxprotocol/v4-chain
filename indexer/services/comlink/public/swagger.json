@@ -1316,7 +1316,7 @@
       "Asset": {
         "enum": [
           "USDC",
-          "DAI"
+          "ETH"
         ],
         "type": "string"
       },

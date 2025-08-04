@@ -1,3 +1,4 @@
+import { Alchemy, Network } from 'alchemy-sdk';
 import { create, findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import {
@@ -26,7 +27,7 @@ import {
   type SmartAccountImplementation,
 } from 'viem/account-abstraction';
 import {
-  Chain, createPublicClient, encodeFunctionData, Hex, http, PublicClient,
+  Chain, checksumAddress, createPublicClient, encodeFunctionData, Hex, http, PublicClient,
 } from 'viem';
 import {
   mainnet, arbitrum,
@@ -39,8 +40,7 @@ import { handleControllerError } from '../../../lib/helpers';
 import { CheckBridgeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-
-// import { privateKeyToAccount } from 'viem/accounts';
+import { dbHelpers } from '@dydxprotocol-indexer/postgres';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
@@ -54,6 +54,15 @@ const chains: Record<string, Chain> = {
   [base.id.toString()]: base,
   [optimism.id.toString()]: optimism,
 };
+
+const alchemyChainMapping: Record<string, Network> = {
+  [arbitrum.id.toString()]: Network.ARB_MAINNET,
+  [avalanche.id.toString()]: Network.AVAX_MAINNET,
+  [base.id.toString()]: Network.BASE_MAINNET,
+  [optimism.id.toString()]: Network.OPT_MAINNET,
+  [mainnet.id.toString()]: Network.ETH_MAINNET,
+};
+
 const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   acc[chainId] = createPublicClient({
     transport: http(getRPCEndpoint(chainId)),
@@ -83,7 +92,7 @@ const turnkeySenderClient = new Turnkey({
 interface BridgeResponse {
   toAddress: string,
   amount: string,
-  asset: string,
+  sourceAssetDenom: string,
 }
 
 const usdcAddressByChainId: Record<string, string> = {
@@ -165,13 +174,14 @@ function getAddress(
 // Grabs the raw skip route data to carry out the bridge on our own.
 async function getSkipCallData(
   sourceAddress: string,
+  sourceAssetDenom: string,
   dydxAddress: string,
   amount: string,
   chainId: string,
 ): Promise<Parameters<SmartAccountImplementation["encodeCalls"]>[0]> {
   const routeResult = await route({
     amountIn: amount, // Desired amount in smallest denomination (e.g., uatom)
-    sourceAssetDenom: usdcAddressByChainId[chainId], // USDC on mainnet. TODO: GENERALIZE
+    sourceAssetDenom,
     sourceAssetChainId: chainId,
     destAssetDenom: usdcAddressByChainId['dydx-mainnet-1'],
     destAssetChainId: 'dydx-mainnet-1',
@@ -183,6 +193,7 @@ async function getSkipCallData(
   }
 
   console.log('Route Result:', routeResult);
+  console.log('dydx addy is:', dydxAddress);
 
   const userAddresses = await Promise.all(
     routeResult.requiredChainAddresses.map(async (cid) => ({
@@ -309,43 +320,56 @@ function getSvmSigner(suborgId: string, signWith: string) {
 
 @Route('bridging')
 class BridgeController extends Controller {
-  @Post('/startBridge')
-  async startBridge(
+  @Post('/sweep')
+  async sweep(
     @Query() fromAddress: string,
-      @Query() amount: string,
-      @Query() asset: Asset,
-      @Query() chainId: string,
+    @Query() chainId: string,
   ): Promise<BridgeResponse> {
+    let bridgeFn: (fromAddress: string, amount: string, sourceAssetDenom: string, chainId: string) => Promise<BridgeResponse> | undefined;
     if (chainId === 'solana') {
-      return this.startSolanaBridge(fromAddress, amount, asset);
+      bridgeFn = this.startSolanaBridge;
     } else if (isSupportedEVMChainId(chainId)) {
-      if (chainId === avalanche.id.toString()) {
-        return this.startEvmBridgePre7702(fromAddress, amount, asset, chainId);
-      } else {
-        return this.startEvmBridge(fromAddress, amount, asset, chainId);
-      }
+      bridgeFn = chainId === avalanche.id.toString() ? this.startEvmBridgePre7702 : this.startEvmBridge;
+    } else {
+      throw new Error(`Unsupported chainId: ${chainId}`);
     }
-    throw new Error(`Unsupported chainId: ${chainId}`);
+    const alchemy = new Alchemy({
+      apiKey: config.ALCHEMY_API_KEY,
+      network: alchemyChainMapping[chainId],
+    });
+
+    // search for assets that exist on this account on this chain.
+    const usdcToSearch = usdcAddressByChainId[chainId];
+    const assets = await alchemy.core.getTokenBalances(fromAddress);
+
+    console.log('assets', assets);
+
+    for (const token of assets.tokenBalances) {
+      console.log('token', token);
+      // TODO: Under what scenario will tokenBalance be undefined?
+      if (token.contractAddress.toLowerCase() === usdcToSearch.toLowerCase() && token.tokenBalance) {
+        await bridgeFn(fromAddress, token.tokenBalance, token.contractAddress, chainId);
+      }
+      // TODO: Add other assets here.
+    }
+
+    return {
+      toAddress: fromAddress,
+      amount: '0',
+      sourceAssetDenom: 'USDC'
+    };
   }
 
   async startSolanaBridge(
     fromAddress: string,
     amount: string,
-    asset: Asset,
+    sourceAssetDenom: string,
+    chainId: string,
   ): Promise<BridgeResponse> {
-    const chainId = 'solana';
-    const addressLookUpper = assetAddressLookerUpper[asset];
-    if (!addressLookUpper) {
-      throw new Error(`Unsupported asset: ${asset}`);
-    }
-    const usdcAddress = addressLookUpper[chainId];
-    if (!usdcAddress) {
-      throw new Error(`Unsupported chainId: ${chainId} for asset: ${asset}`);
-    }
     const path = await route({
       goFast: true,
       amountIn: amount,
-      sourceAssetDenom: usdcAddress,
+      sourceAssetDenom,
       sourceAssetChainId: chainId,
       destAssetChainId: 'dydx-mainnet-1',
       cumulativeAffiliateFeeBps: '0',
@@ -413,28 +437,31 @@ class BridgeController extends Controller {
       },
     });
 
-    // TODO: Implement bridge creation logic
-    const bridge: BridgeResponse = {
+    return {
       toAddress: fromAddress,
       amount,
-      asset,
+      sourceAssetDenom,
     };
-    return bridge;
   }
 
   async startEvmBridge(
     fromAddress: string,
     amount: string,
-    asset: Asset,
+    sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
+    console.log("fromAddress is ", fromAddress);
+    console.log("amount is ", amount);
+    console.log("chainId is ", chainId);
+    fromAddress = checksumAddress(fromAddress as `0x${string}`);
+    console.log("checksummed fromAddress is ", fromAddress);
     const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
     let callData: Parameters<SmartAccountImplementation["encodeCalls"]>[0] = [];
     try {
-      callData = await getSkipCallData(fromAddress, record.dydx_address, amount, chainId);
+      callData = await getSkipCallData(fromAddress, sourceAssetDenom, record.dydx_address, amount, chainId);
       console.log('Skip Call Data:', callData);
     } catch (error) {
       console.error('Failed to get Skip call data', error);
@@ -499,14 +526,14 @@ class BridgeController extends Controller {
     return {
       toAddress: fromAddress,
       amount,
-      asset,
+      sourceAssetDenom,
     };
   }
 
   async startEvmBridgePre7702(
     fromAddress: string,
     amount: string,
-    asset: Asset,
+    sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
     const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
@@ -515,7 +542,7 @@ class BridgeController extends Controller {
     }
     let callData: Parameters<SmartAccountImplementation["encodeCalls"]>[0] = [];
     try {
-      callData = await getSkipCallData(fromAddress, record.dydx_address, amount, chainId);
+      callData = await getSkipCallData(fromAddress, sourceAssetDenom, record.dydx_address, amount, chainId);
       console.log('Skip Call Data:', callData);
     } catch (error) {
       console.error('Failed to get Skip call data', error);
@@ -589,9 +616,16 @@ class BridgeController extends Controller {
     return {
       toAddress: fromAddress,
       amount,
-      asset,
+      sourceAssetDenom,
     };
   }
+}
+
+function resolveAmount(amount: string, asset: Asset): string {
+  if (asset === Asset.USDC) {
+    return Math.floor(Number(amount) * 10 ** 6).toString();
+  }
+  return amount;
 }
 
 router.post(
@@ -600,18 +634,46 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    // alchemy don't care.
+    // HERE: Do we want to return an accurate response to Alchemy here?
     res.status(200).send();
     try {
-      const { fromAddress, amount, asset, chainId } = req.body;
+      await dbHelpers.clearData();
+      await create({
+        evm_address: '0x46c9E748dfb814Da6577fD4ceF8f785CE7bB4Be7',
+        svm_address: 'AuV1WxiP1bswKykhC9KB5J1Ek1xmq9AdZANWGP97hsPh',
+        dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+        suborg_id: '70528f95-da66-49f4-a096-fe50a19f2e6d',
+        salt: '1234567890',
+        created_at: new Date().toISOString(),
+      });
+      const { event } = req.body;
       const bridgeController = new BridgeController();
-      await bridgeController.startBridge(
-        fromAddress,
-        amount,
-        asset,
-        chainId,
-      );
-      return; 
+      let chainId = '';
+      // TODO: Add support for eth mainnet, avax, base, opt and sol. 
+      if (event.network = "ARB_MAINNET") {
+        chainId = arbitrum.id.toString();
+      }
+
+      const addressesToProcess = new Set<string>();
+      for (const activity of req.body.event.activity) {
+        const fromAddress = activity.toAddress;
+        addressesToProcess.add(fromAddress);
+      }
+      // validate the addressesToProcess to see if they are indeed turnkey users. 
+      for (const fromAddress of addressesToProcess) {
+        const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
+        if (!record || !record.dydx_address) {
+          throw new Error('Failed to derive dYdX address');
+        }
+      }
+      // Iterate over the set 'toProcess' and process each item
+      for (const fromAddress of addressesToProcess) {
+        await bridgeController.sweep(
+          fromAddress,
+          chainId,
+        );
+      }
+      return;
     } catch (error) {
       return handleControllerError(
         'BridgeController POST /startBridge',
