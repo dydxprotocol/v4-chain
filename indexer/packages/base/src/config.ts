@@ -40,7 +40,13 @@ export const baseConfigSchema = {
   TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
-  TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
+  // Alchemy API key for skip bridge.
+  ALCHEMY_KEY: parseString({ default: '' }),
+  ALCHEMY_API_KEY: parseString({ default: '' }),
+  // ZeroDev RPC for skip bridge.
+  ZERODEV_API_KEY: parseString({ default: '' }),
+  ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
+
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),
   ENABLE_LOGS_IN_TEST: parseBoolean({ default: false }),
