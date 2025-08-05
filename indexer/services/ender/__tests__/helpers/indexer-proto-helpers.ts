@@ -410,6 +410,7 @@ export function createOrder({
   clientMetadata,
   builderAddress,
   feePpm,
+  orderRouterAddress,
 }: {
   subaccountId: IndexerSubaccountId,
   clientId: number,
@@ -424,6 +425,7 @@ export function createOrder({
   clientMetadata: number,
   builderAddress?: string,
   feePpm?: number,
+  orderRouterAddress?: string,
 }): IndexerOrder {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   let orderJSON: any = {
@@ -460,6 +462,13 @@ export function createOrder({
     orderJSON = {
       ...orderJSON,
       goodTilBlockTime: goodTilOneof.goodTilBlockTime,
+    };
+  }
+
+  if (orderRouterAddress !== undefined) {
+    orderJSON = {
+      ...orderJSON,
+      orderRouterAddress,
     };
   }
 
