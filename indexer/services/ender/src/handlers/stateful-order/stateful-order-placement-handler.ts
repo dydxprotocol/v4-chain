@@ -38,6 +38,10 @@ export class StatefulOrderPlacementHandler
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    if (!resultRow) {
+      return [];
+    }
+
     let order: IndexerOrder;
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
