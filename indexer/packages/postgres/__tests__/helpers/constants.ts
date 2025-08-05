@@ -421,7 +421,6 @@ export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
   orderFlags: ORDER_FLAG_LONG_TERM.toString(),
 };
 
-
 export const defaultConditionalOrder: OrderCreateObject = {
   ...defaultOrderGoodTilBlockTime,
   type: OrderType.STOP_LIMIT,
