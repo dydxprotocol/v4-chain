@@ -1,6 +1,13 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import config from '../config';
 import { arbitrum, avalanche, base, mainnet, optimism } from 'viem/chains';
+import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
+import { createAccount } from '@turnkey/viem';
+import { findByEvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table'
+import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
+import { createKernelAccount } from '@zerodev/sdk';
+import { Chain, createPublicClient, http, PublicClient } from 'viem';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
@@ -9,6 +16,30 @@ const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [base.id.toString()]: 'wh_8pntnwk3jltyduwe',
   [optimism.id.toString()]: 'wh_99yjvuacl28obf0i',
 };
+
+function getRPCEndpoint(chainId: string): string {
+  if (!Object.keys(chains).includes(chainId)) {
+    throw new Error(`Unsupported chainId: ${chainId}`);
+  }
+  return `${config.ZERODEV_API_BASE_URL}/${config.ZERODEV_API_KEY}/chain/${chainId}`;
+}
+
+const chains: Record<string, Chain> = {
+  [mainnet.id.toString()]: mainnet,
+  [arbitrum.id.toString()]: arbitrum,
+  [avalanche.id.toString()]: avalanche,
+  [base.id.toString()]: base,
+  [optimism.id.toString()]: optimism,
+};
+
+const publicClients = Object.keys(chains).reduce((acc, chainId) => {
+  acc[chainId] = createPublicClient({
+    transport: http(getRPCEndpoint(chainId)),
+    chain: chains[chainId],
+  });
+  return acc;
+}, {} as Record<string, PublicClient>);
+
 
 const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
@@ -66,7 +97,12 @@ export async function addAddressesToAlchemyWebhook(evmAddress?: string, svmAddre
 // Register address with Alchemy webhook using REST API
 export async function registerAddressWithAlchemyWebhook(address: string, webhookId: string): Promise<void> {
   const webhookUrl = 'https://dashboard.alchemy.com/api/update-webhook-addresses';
-
+  const addressesToAdd: string[] = [address];
+  if (webhookId === evmChainIdToAlchemyWebhookId[avalanche.id.toString()]) {
+    // for avalanche, we also should add the smart account address to the webhook.
+    const smartAccountAddress = await getSmartAccountAddress(address);
+    addressesToAdd.push(smartAccountAddress);
+  }
   const response = await fetch(webhookUrl, {
     method: 'PATCH',
     headers: {
@@ -75,7 +111,7 @@ export async function registerAddressWithAlchemyWebhook(address: string, webhook
     },
     body: JSON.stringify({
       webhook_id: webhookId,
-      addresses_to_add: [address],
+      addresses_to_add: addressesToAdd,
       addresses_to_remove: [],
     }),
   });
@@ -128,4 +164,38 @@ async function registerAddressWithAlchemyWebhookWithRetry(address: string, webho
       await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
     }
   }
+}
+
+
+async function getSmartAccountAddress(address: string): Promise<string> {
+  const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(address);
+  if (!record || !record.dydx_address) {
+    throw new Error('Failed to derive dYdX address');
+  }
+  const entryPoint = getEntryPoint('0.7');
+
+  // Initialize a Turnkey-powered Viem Account
+  const turnkeyAccount = await createAccount({
+    // @ts-ignore
+    client: turnkeySenderClient.apiClient(),
+    organizationId: record.suborg_id,
+    signWith: address,
+  });
+
+  // Construct a validator
+  const ecdsaValidator = await signerToEcdsaValidator(publicClients[avalanche.id.toString()], {
+    signer: turnkeyAccount,
+    entryPoint,
+    kernelVersion: KERNEL_V3_1,
+  });
+
+  // kernel account
+  const account = await createKernelAccount(publicClients[avalanche.id.toString()], {
+    entryPoint,
+    plugins: {
+      sudo: ecdsaValidator,
+    },
+    kernelVersion: KERNEL_V3_1,
+  });
+  return account.address;
 }
