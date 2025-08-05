@@ -1253,9 +1253,7 @@
       },
       "constitution": ""
     },
-    "govplus": {
-
-    },
+    "govplus": {},
     "ibc": {
       "client_genesis": {
         "clients": [],
@@ -4438,9 +4436,7 @@
         "fee_multiplier_ppm": 990000
       }
     },
-    "sending": {
-
-    },
+    "sending": {},
     "slashing": {
       "params": {
         "signed_blocks_window": "3000",
@@ -4529,9 +4525,7 @@
       },
       "total_escrowed": []
     },
-    "upgrade": {
-
-    },
+    "upgrade": {},
     "vault": {
       "total_shares": {
         "num_shares": "2000000000"
