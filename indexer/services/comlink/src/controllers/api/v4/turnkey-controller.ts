@@ -25,6 +25,7 @@ import {
   GetSuborgParams,
 } from '../../../types';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { isValidEmail } from '../../../helpers/utility/validation';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -275,20 +276,6 @@ export class TurnkeyController extends Controller {
     if (evmAddress && svmAddress) {
       await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
     }
-
-    // Best efforts to check that the subOrg.rootUserIds[0] is the end user
-    const user = await this.bridgeSenderApiClient.getUser({
-      organizationId: subOrg.subOrganizationId,
-      userId: subOrg.rootUserIds?.[0] as string,
-    });
-    if (
-      user.user.authenticators.length > 0 &&
-      user.user.authenticators[0].credentialId !== params.attestation?.credentialId
-    ) {
-      throw new Error('End User not found');
-    } else if (user.user.userEmail && user.user.userEmail !== params.email) {
-      throw new Error('End User not found');
-    }
     return {
       subOrgId: subOrg.subOrganizationId,
       salt,
@@ -302,7 +289,7 @@ export class TurnkeyController extends Controller {
     magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // Validate email format
-    if (!this.isValidEmail(userEmail)) {
+    if (!isValidEmail(userEmail)) {
       throw new Error('Invalid email format');
     }
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
@@ -385,12 +372,6 @@ export class TurnkeyController extends Controller {
       organizationId: suborg.subOrgId,
       salt: suborg.salt,
     };
-  }
-
-  // Utility methods
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
   }
 
   // default 32 bytes.
