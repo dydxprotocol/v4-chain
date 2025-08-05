@@ -1702,7 +1702,7 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: true,
       clientMetadata: 0,
-      orderRouterAddress: testConstants.defaultAddress2
+      orderRouterAddress: testConstants.defaultAddress2,
     });
 
     const fillAmount: number = takerQuantums;
@@ -1778,7 +1778,7 @@ describe('OrderHandler', () => {
 
     const quoteAmount: string = '0.000000000000001'; // quote amount is price * fillAmount = 1e-14 * 1e-1 = 1e-15
     const price: string = '0.00000000000001';
-    const totalFilledSize: string = (takerQuantums/makerQuantums).toString()
+    const totalFilledSize: string = (takerQuantums / makerQuantums).toString()
 
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -1799,7 +1799,7 @@ describe('OrderHandler', () => {
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
       orderRouterAddress: testConstants.defaultAddress2,
-      orderRouterFee: "0.02",
+      orderRouterFee: '0.02',
     });
 
     await expectFillInDatabase({
@@ -1821,10 +1821,9 @@ describe('OrderHandler', () => {
       fee: defaultMakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
       orderRouterAddress: testConstants.defaultAddress,
-      orderRouterFee: "0.01",
+      orderRouterFee: '0.01',
     });
   });
-
 
   it.each([
     [
