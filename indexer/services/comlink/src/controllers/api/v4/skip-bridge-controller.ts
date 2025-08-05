@@ -452,7 +452,7 @@ class BridgeController extends Controller {
     );
     await executeRoute({
       route: path,
-      // simulate: false,
+      simulate: false,
       userAddresses,
       getSvmSigner: getSvmSigner(record?.suborg_id || '', fromAddress),
       svmFeePayer: {
