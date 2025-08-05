@@ -5,7 +5,6 @@ import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   setupBaseQuery,
   verifyAllRequiredFields,
-  rawQuery,
 } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
@@ -158,32 +157,32 @@ export async function findById(
     .returning('*');
 }
 
-export async function getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+export async function getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
   subaccountId: string,
   createdAfterHeight: string,
   createdBeforeOrAtHeight: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<Big> {
-  const queryString: string = `
-    SELECT SUM("payment") AS "netPayments"
-    FROM funding_payments
-    WHERE "subaccountId" = '${subaccountId}'
-      AND "createdAtHeight" > ${createdAfterHeight}
-      AND "createdAtHeight" <= ${createdBeforeOrAtHeight};
-    `;
+  const baseQuery: QueryBuilder<FundingPaymentsModel> = setupBaseQuery<FundingPaymentsModel>(
+    FundingPaymentsModel,
+    options,
+  );
 
-  const result: {
-    rows: {
-      netPayments: string | null,
-    }[],
-  } = await rawQuery(queryString, options);
+  const result = await baseQuery
+    .sum(FundingPaymentsColumns.payment)
+    .where(FundingPaymentsColumns.subaccountId, subaccountId)
+    .where(FundingPaymentsColumns.createdAtHeight, '>', createdAfterHeight)
+    .where(FundingPaymentsColumns.createdAtHeight, '<=', createdBeforeOrAtHeight);
+
+  type SumResult = { sum: string | null };
+  const sumResult = result[0] as unknown as SumResult;
 
   // If no results or null payment, return 0
-  if (result.rows.length === 0 || result.rows[0].netPayments === null) {
-    return Big(0);
+  if (result.length === 0 || sumResult.sum === null) {
+    return new Big(0);
   }
 
-  return Big(result.rows[0].netPayments);
+  return new Big(sumResult.sum);
 }
 
 /**

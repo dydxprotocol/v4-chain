@@ -171,7 +171,7 @@ describe('funding payments store', () => {
     ]);
 
     const netPayments = await
-    FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+    FundingPaymentsTable.getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
       defaultSubaccountId,
       '10',
       '30',
@@ -203,7 +203,7 @@ describe('funding payments store', () => {
     ]);
 
     const netPayments = await
-    FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+    FundingPaymentsTable.getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
       defaultSubaccountId,
       '10',
       '30',
@@ -278,7 +278,7 @@ describe('funding payments store', () => {
 
     // Test with defaultSubaccountId
     const netPayments1 = await
-    FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+    FundingPaymentsTable.getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
       defaultSubaccountId,
       '10',
       '30',
@@ -289,7 +289,7 @@ describe('funding payments store', () => {
 
     // Test with defaultSubaccountId2
     const netPayments2 = await
-    FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+    FundingPaymentsTable.getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
       defaultSubaccountId2,
       '10',
       '30',
@@ -324,7 +324,7 @@ describe('funding payments store', () => {
 
     // Test case 1: No payments in the specified block height range
     const netPaymentsOutsideRange = await
-    FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+    FundingPaymentsTable.getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
       defaultSubaccountId,
       '10',
       '40',
@@ -335,7 +335,7 @@ describe('funding payments store', () => {
 
     // Test case 2: No payments for this subaccount
     const netPaymentsNonExistentSubaccount = await
-    FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+    FundingPaymentsTable.getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
       defaultSubaccountId3,
       '10',
       '60',
