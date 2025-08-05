@@ -170,11 +170,12 @@ describe('funding payments store', () => {
       FundingPaymentsTable.create(fundingPayment2),
     ]);
 
-    const netPayments = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
-      defaultSubaccountId,
-      '10',
-      '30',
-    );
+    const netPayments =
+    await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+        defaultSubaccountId,
+        '10',
+        '30',
+      );
 
     // fundingPayment1 is at height 10 which is excluded
     // fundingPayment2 has payment: '-3.2'
@@ -201,11 +202,12 @@ describe('funding payments store', () => {
       FundingPaymentsTable.create(fundingPayment2),
     ]);
 
-    const netPayments = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
-      defaultSubaccountId,
-      '10',
-      '30',
-    );
+    const netPayments =
+    await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+        defaultSubaccountId,
+        '10',
+        '30',
+      );
 
     // Sum of payments: -2.5 + 7.8 = 5.3
     expect(netPayments.toString()).toEqual('5.3');
@@ -275,21 +277,23 @@ describe('funding payments store', () => {
     ]);
 
     // Test with defaultSubaccountId
-    const netPayments1 = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
-      defaultSubaccountId,
-      '10',
-      '30',
-    );
+    const netPayments1 =
+      await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+        defaultSubaccountId,
+        '10',
+        '30',
+      );
 
     // Sum of all payments for defaultSubaccountId in the range: -4.2 + 2.5 + (-1.8) = -3.5
     expect(netPayments1.toString()).toEqual('-3.5');
 
     // Test with defaultSubaccountId2
-    const netPayments2 = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
-      defaultSubaccountId2,
-      '10',
-      '30',
-    );
+    const netPayments2 =
+      await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+        defaultSubaccountId2,
+        '10',
+        '30',
+      );
 
     // Sum of all payments for defaultSubaccountId2 in the range: 6.7 + (-2.3) + 1.5 = 5.9
     expect(netPayments2.toString()).toEqual('5.9');
@@ -319,21 +323,23 @@ describe('funding payments store', () => {
     ]);
 
     // Test case 1: No payments in the specified block height range
-    const netPaymentsOutsideRange = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
-      defaultSubaccountId,
-      '10',
-      '40',
-    );
+    const netPaymentsOutsideRange =
+      await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+        defaultSubaccountId,
+        '10',
+        '40',
+      );
 
     // Should return 0 when no payments are found in the range
     expect(netPaymentsOutsideRange.toString()).toEqual('0');
 
     // Test case 2: No payments for this subaccount
-    const netPaymentsNonExistentSubaccount = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
-      defaultSubaccountId3,
-      '10',
-      '60',
-    );
+    const netPaymentsNonExistentSubaccount =
+      await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+        defaultSubaccountId3,
+        '10',
+        '60',
+      );
 
     // Should return 0 for a subaccount with no payments
     expect(netPaymentsNonExistentSubaccount.toString()).toEqual('0');

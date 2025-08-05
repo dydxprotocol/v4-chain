@@ -2,10 +2,10 @@ import Big from 'big.js';
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import { 
+import {
   setupBaseQuery,
   verifyAllRequiredFields,
-  rawQuery
+  rawQuery,
 } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
@@ -171,13 +171,13 @@ export async function getNetFundingPaymentsBetweenBockHeightsForSubaccount(
       AND "createdAtHeight" > ${createdAfterHeight}
       AND "createdAtHeight" <= ${createdBeforeOrAtHeight};
     `;
-  
+
   const result: {
     rows: {
       netPayments: string | null,
     }[],
   } = await rawQuery(queryString, options);
-  
+
   // If no results or null payment, return 0
   if (result.rows.length === 0 || result.rows[0].netPayments === null) {
     return Big(0);
