@@ -8,6 +8,7 @@ import { seedData } from '../helpers/mock-generators';
 import {
   defaultSubaccountId,
   defaultSubaccountId2,
+  defaultSubaccountId3,
   defaultFundingPayment,
   defaultFundingPayment2,
 } from '../helpers/constants';
@@ -292,5 +293,49 @@ describe('funding payments store', () => {
 
     // Sum of all payments for defaultSubaccountId2 in the range: 6.7 + (-2.3) + 1.5 = 5.9
     expect(netPayments2.toString()).toEqual('5.9');
+  });
+
+  it('returns 0 for subaccounts with no funding payments in the specified range', async () => {
+    // Create a payment outside the block height range we'll query
+    const fundingPaymentOutsideRange: FundingPaymentsCreateObject = {
+      ...defaultFundingPayment,
+      createdAt: '2023-03-01T00:00:00.000Z',
+      createdAtHeight: '50',
+      payment: '5.0',
+    };
+
+    // Create a payment for a different subaccount
+    const fundingPaymentDifferentSubaccount: FundingPaymentsCreateObject = {
+      ...defaultFundingPayment,
+      subaccountId: defaultSubaccountId2,
+      createdAt: '2023-03-01T00:00:00.000Z',
+      createdAtHeight: '25',
+      payment: '3.0',
+    };
+
+    await Promise.all([
+      FundingPaymentsTable.create(fundingPaymentOutsideRange),
+      FundingPaymentsTable.create(fundingPaymentDifferentSubaccount),
+    ]);
+
+    // Test case 1: No payments in the specified block height range
+    const netPaymentsOutsideRange = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+      defaultSubaccountId,
+      '10',
+      '40',
+    );
+
+    // Should return 0 when no payments are found in the range
+    expect(netPaymentsOutsideRange.toString()).toEqual('0');
+
+    // Test case 2: No payments for this subaccount
+    const netPaymentsNonExistentSubaccount = await FundingPaymentsTable.getNetFundingPaymentsBetweenBockHeightsForSubaccount(
+      defaultSubaccountId3,
+      '10',
+      '60',
+    );
+
+    // Should return 0 for a subaccount with no payments
+    expect(netPaymentsNonExistentSubaccount.toString()).toEqual('0');
   });
 });
