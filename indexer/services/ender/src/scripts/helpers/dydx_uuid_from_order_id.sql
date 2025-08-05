@@ -5,7 +5,12 @@ CREATE OR REPLACE FUNCTION dydx_uuid_from_order_id(order_id jsonb) RETURNS uuid 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 BEGIN
+    RAISE WARNING 'RECEIVED ORDER UUID REQUEST: %', order_id;
+    RAISE WARNING 'ORDER ID TYPE: %', order_id->>'orderFlags';
+    RAISE WARNING 'MATCH TWAP SUBORDER: %', (order_id->>'orderFlags')::bigint = 256;
+
     IF (order_id->>'orderFlags')::bigint = 256 THEN
+      RAISE WARNING 'MAPPING TWAP SUBORDER TO PARENT ORDER IN UUID CHECK';
         -- Twap suborders should be mapped to their parent order.
         return dydx_uuid_from_order_id_parts(
             dydx_uuid_from_subaccount_id(order_id->'subaccountId'),

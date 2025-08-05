@@ -28,12 +28,11 @@ BEGIN
         order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order', event_data->'twapOrderPlacement'->'order');
         order_flag = (order_->'orderId'->'orderFlags')::bigint;
 
-        -- IF order_flag = 256 THEN
-        --     -- Twap suborders are not stored in the orders table.
-        --     RETURN NULL;
-        -- END IF;
-
-        RAISE WARNING 'RECEIVED ORDER PLACEMENT EVENT: %', order_;
+        IF order_flag = 256 THEN
+            -- Twap suborders are not stored in the orders table.
+            RAISE WARNING 'IGNORING TWAP SUBORDER ORDER PLACEMENT EVENT: %', order_;
+            RETURN NULL;
+        END IF;
 
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
@@ -45,6 +44,7 @@ BEGIN
           TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
         */
         order_record."id" = dydx_uuid_from_order_id(order_->'orderId');
+        RAISE WARNING 'RECEIVED ORDER PLACEMENT EVENT: % | UUID: %', order_, order_record."id";
         order_record."subaccountId" = dydx_uuid_from_subaccount_id(order_->'orderId'->'subaccountId');
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
         order_record."clobPairId" = clob_pair_id;
