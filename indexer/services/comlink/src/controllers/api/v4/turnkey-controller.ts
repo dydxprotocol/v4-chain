@@ -12,6 +12,8 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { isValidEmail } from '../../../helpers/utility/validation';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -24,8 +26,6 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
-import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
-import { isValidEmail } from '../../../helpers/utility/validation';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */

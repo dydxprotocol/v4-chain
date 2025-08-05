@@ -1,13 +1,18 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import config from '../config';
-import { arbitrum, avalanche, base, mainnet, optimism } from 'viem/chains';
-import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
-import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
-import { createAccount } from '@turnkey/viem';
-import { findByEvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table'
+import { findByEvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
+import { createAccount } from '@turnkey/viem';
+import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
 import { createKernelAccount } from '@zerodev/sdk';
-import { Chain, createPublicClient, http, PublicClient } from 'viem';
+import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import {
+  Chain, createPublicClient, http, PublicClient,
+} from 'viem';
+import {
+  arbitrum, avalanche, base, mainnet, optimism,
+} from 'viem/chains';
+
+import config from '../config';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
@@ -40,21 +45,20 @@ const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   return acc;
 }, {} as Record<string, PublicClient>);
 
-
 const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
-export async function addAddressesToAlchemyWebhook(evmAddress?: string, svmAddress?: string): Promise<void> {
+export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   try {
     // Add EVM address to webhook for monitoring
-    if (evmAddress) {
+    if (evm) {
       // Iterate over all EVM networks and register the address with each webhook
       for (const [chainId, webhookId] of Object.entries(evmChainIdToAlchemyWebhookId)) {
         try {
-          await registerAddressWithAlchemyWebhookWithRetry(evmAddress, webhookId);
+          await registerAddressWithAlchemyWebhookWithRetry(evm, webhookId);
           logger.info({
             at: 'TurnkeyController#addAddressesToAlchemyWebhook',
             message: `Successfully registered EVM address with webhook for chain ${chainId}`,
-            address: evmAddress,
+            address: evm,
             chainId,
             webhookId,
           });
@@ -63,7 +67,7 @@ export async function addAddressesToAlchemyWebhook(evmAddress?: string, svmAddre
             at: 'TurnkeyController#addAddressesToAlchemyWebhook',
             message: `Failed to register EVM address with webhook for chain ${chainId} after retries`,
             error,
-            address: evmAddress,
+            address: evm,
             chainId,
             webhookId,
           });
@@ -72,13 +76,13 @@ export async function addAddressesToAlchemyWebhook(evmAddress?: string, svmAddre
     }
 
     // Add SVM address to webhook for monitoring
-    if (svmAddress) {
-      await registerAddressWithAlchemyWebhookWithRetry(svmAddress, solanaAlchemyWebhookId);
+    if (svm) {
+      await registerAddressWithAlchemyWebhookWithRetry(svm, solanaAlchemyWebhookId);
       logger.info({
         at: 'TurnkeyController#addAddressesToAlchemyWebhook',
         message: 'Successfully added svm address to Alchemy webhook',
-        evmAddress,
-        svmAddress,
+        evmAddress: evm,
+        svmAddress: svm,
       });
     }
 
@@ -87,15 +91,18 @@ export async function addAddressesToAlchemyWebhook(evmAddress?: string, svmAddre
       at: 'TurnkeyController#addAddressesToAlchemyWebhook',
       message: 'Failed to add addresses to Alchemy webhook',
       error,
-      evmAddress,
-      svmAddress,
+      evmAddress: evm,
+      svmAddress: svm,
     });
     // Don't throw error to avoid breaking the main flow
   }
 }
 
 // Register address with Alchemy webhook using REST API
-export async function registerAddressWithAlchemyWebhook(address: string, webhookId: string): Promise<void> {
+export async function registerAddressWithAlchemyWebhook(
+  address: string,
+  webhookId: string,
+): Promise<void> {
   const webhookUrl = 'https://dashboard.alchemy.com/api/update-webhook-addresses';
   const addressesToAdd: string[] = [address];
   if (webhookId === evmChainIdToAlchemyWebhookId[avalanche.id.toString()]) {
@@ -135,7 +142,10 @@ export async function registerAddressWithAlchemyWebhook(address: string, webhook
 }
 
 // Register address with Alchemy webhook using REST API with retry logic
-async function registerAddressWithAlchemyWebhookWithRetry(address: string, webhookId: string): Promise<void> {
+async function registerAddressWithAlchemyWebhookWithRetry(
+  address: string,
+  webhookId: string,
+): Promise<void> {
   const maxRetries = 3;
   const delay = 1000; // 1 second
 
@@ -161,11 +171,10 @@ async function registerAddressWithAlchemyWebhookWithRetry(address: string, webho
         address,
         webhookId,
       });
-      await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
     }
   }
 }
-
 
 async function getSmartAccountAddress(address: string): Promise<string> {
   const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(address);

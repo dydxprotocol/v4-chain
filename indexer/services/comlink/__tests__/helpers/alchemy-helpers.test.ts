@@ -1,8 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { arbitrum, avalanche, base, mainnet, optimism } from 'viem/chains';
-
 import { addAddressesToAlchemyWebhook, registerAddressWithAlchemyWebhook } from '../../src/helpers/alchemy-helpers';
-import config from '../../src/config';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -57,7 +54,7 @@ describe('alchemy-helpers', () => {
             addresses_to_add: [address],
             addresses_to_remove: [],
           }),
-        }
+        },
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith({
@@ -81,7 +78,7 @@ describe('alchemy-helpers', () => {
       } as Response);
 
       await expect(registerAddressWithAlchemyWebhook(address, webhookId)).rejects.toThrow(
-        'Failed to register address with Alchemy webhook: Not Found - {"error": "Webhook not found"}'
+        'Failed to register address with Alchemy webhook: Not Found - {"error": "Webhook not found"}',
       );
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -211,7 +208,7 @@ describe('alchemy-helpers', () => {
             addresses_to_add: [svmAddress],
             addresses_to_remove: [],
           }),
-        })
+        }),
       );
     });
 
@@ -228,10 +225,10 @@ describe('alchemy-helpers', () => {
 
       // Should only be called for EVM chains (5 times)
       expect(mockFetch).toHaveBeenCalledTimes(5);
-      
+
       // Verify no Solana webhook call
       const calls = mockFetch.mock.calls;
-      calls.forEach(call => {
+      calls.forEach((call) => {
         const body = JSON.parse(call[1]!.body as string);
         expect(body.webhook_id).not.toBe('wh_solana');
       });
@@ -239,7 +236,6 @@ describe('alchemy-helpers', () => {
 
     it('should handle retry logic correctly', async () => {
       const evmAddress = '0x1234567890123456789012345678901234567890';
-      const webhookId = 'wh_test123';
 
       // Mock first two calls to fail, third to succeed
       mockFetch
@@ -300,7 +296,7 @@ describe('alchemy-helpers', () => {
     });
 
     it('should handle very long addresses', async () => {
-      const longAddress = '0x' + '1'.repeat(100);
+      const longAddress = `0x${'1'.repeat(100)}`;
 
       mockFetch.mockResolvedValue({
         ok: true,
@@ -311,10 +307,10 @@ describe('alchemy-helpers', () => {
       await addAddressesToAlchemyWebhook(longAddress, '');
 
       expect(mockFetch).toHaveBeenCalledTimes(5);
-      
+
       // Verify the long address is included in the request
       const calls = mockFetch.mock.calls;
-      calls.forEach(call => {
+      calls.forEach((call) => {
         const body = JSON.parse(call[1]!.body as string);
         expect(body.addresses_to_add).toContain(longAddress);
       });
