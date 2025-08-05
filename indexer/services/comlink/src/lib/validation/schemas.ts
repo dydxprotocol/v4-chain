@@ -212,13 +212,41 @@ const checkBridgeSchema: Record<string, ParamSchema> = {
     isObject: true,
     errorMessage: 'Event must be an object',
   },
+  // for solana
+  'event.transaction': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.transaction must be an array',
+  },
+  'event.transaction.*.meta': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.transaction.transaction must be an array',
+  },
+  'event.transaction.*.meta.*.post_token_balances': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.transaction.meta.post_token_balances must be an array',
+  },
+  'event.transaction.*.meta.*.post_token_balances.*.amount': {
+    in: 'body',
+    optional: true,
+    isString: true,
+    errorMessage: 'Event.transaction.meta.post_token_balances.amount must be a string',
+  },
+  // for evm
   'event.activity': {
     in: 'body',
+    optional: true,
     isArray: true,
     errorMessage: 'Event.activity must be an array',
   },
   'event.activity.*.fromAddress': {
     in: 'body',
+    optional: true,
     isString: true,
     errorMessage: 'Activity fromAddress must be a string',
   },
