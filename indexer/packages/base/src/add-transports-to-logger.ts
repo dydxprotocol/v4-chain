@@ -58,7 +58,20 @@ export function addTransportsToLogger(): void {
     );
   }
 
-  // Send all logs to the console.
+  if (config.isStaging() || config.isTest() || config.isDevelopment()) {
+    logger.add(
+      new winston.transports.Console({
+        level: config.LOG_LEVEL,
+        format: (config.isTest() || config.isDevelopment()) ? alignedWithColorsAndTime : undefined,
+
+        // Disable in development and test since the output is too verbose and mostly redundant with
+        // the stack logged by the Bugsnag client.
+        handleExceptions: config.isProduction() || config.isStaging(),
+        handleRejections: config.isProduction() || config.isStaging(),
+      } as TransportStreamOptions),
+    );
+  }
+
   if (!config.isTest() || config.ENABLE_LOGS_IN_TEST) {
     logger.add(
       new winston.transports.Console({
