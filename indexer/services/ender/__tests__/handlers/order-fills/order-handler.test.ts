@@ -45,6 +45,8 @@ import {
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
   Timestamp,
+  TradeMessage,
+  StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { KafkaMessage } from 'kafkajs';
@@ -80,6 +82,7 @@ import {
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
+import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -1694,6 +1697,216 @@ describe('OrderHandler', () => {
         orderFillEvent.totalFilledTaker.toString(),
       ),
     ]);
+  });
+
+  it('creates and updates twaps through suborder fills', async () => {
+    // Create a parent TWAP order with duration 300 and interval 30
+    const parentTwapOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 123,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: 100_000_000_000, // 100 units
+      subticks: 1_000_000, // price
+      goodTilOneof: {
+        goodTilBlock: 100,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_TWAP.toString(), // 128
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 2,
+      duration: 300,
+      interval: 30,
+      priceTolerance: 0.01,
+    });
+
+    // The parent order is inserted by the handler, so we don't need to insert it manually.
+
+    // Create two suborders (TWAP suborders) that will be filled
+    const suborder1 = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 123,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: 10_000_000_000, // 10 units
+      subticks: 1_000_000,
+      goodTilOneof: {
+        goodTilBlock: 100,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_TWAP_SUBORDER.toString(), // 256
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 2,
+      duration: 300,
+      interval: 30,
+      priceTolerance: 0.01,
+    });
+
+    const suborder2 = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 123,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: 10_000_000_000, // 10 units
+      subticks: 1_000_000,
+      goodTilOneof: {
+        goodTilBlock: 100,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_TWAP_SUBORDER.toString(), // 256
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 3,
+      duration: 300,
+      interval: 30,
+      priceTolerance: 0.01,
+    });
+
+    // Create a maker order that will match the suborders
+    const makerOrder1 = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 200,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: 10_000_000_000,
+      subticks: 1_000_000,
+      goodTilOneof: {
+        goodTilBlock: 100,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 55,
+    });
+
+    const makerOrder2 = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 201,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: 10_000_000_000,
+      subticks: 1_000_000,
+      goodTilOneof: {
+        goodTilBlock: 100,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 56,
+    });
+
+
+    // create initial PerpetualPositions with closed previous positions
+    await Promise.all([
+      // previous position for subaccount 1
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+        size: '0',
+        status: PerpetualPositionStatus.CLOSED,
+        openEventId: testConstants.defaultTendermintEventId,
+      }),
+      // previous position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+        subaccountId: testConstants.defaultSubaccountId2,
+        size: '0',
+        status: PerpetualPositionStatus.CLOSED,
+        openEventId: testConstants.defaultTendermintEventId,
+      }),
+      // initial position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+        subaccountId: testConstants.defaultSubaccountId2,
+      }),
+    ]);
+
+    // First suborder fill event
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
+      makerOrder1,
+      suborder1,
+      10_000_000_000,
+      10_000_000_000,
+      10_000_000_000,
+    );
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    // After first fill, parent TWAP totalFilled should be 1000000
+    await expectOrderInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '123',
+      size: '100000000', // because the size is being set by the fill message
+      totalFilled: '100000000', // 10
+      price: '0.00000000000001',
+      status: OrderStatus.FILLED, // orderSize > totalFilled so status is open
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(suborder1.side),
+      orderFlags: parentTwapOrder.orderId!.orderFlags.toString(),
+      timeInForce: TimeInForce.IOC,
+      reduceOnly: false,
+      goodTilBlock: protocolTranslations.getGoodTilBlock(parentTwapOrder)?.toString(),
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(parentTwapOrder),
+      clientMetadata: parentTwapOrder.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    });
+
+    // // Second suborder fill event
+    const orderFillEvent2: OrderFillEventV1 = createOrderFillEvent(
+      makerOrder2,
+      suborder2,
+      10_000_000_000,
+      10_000_000_000,
+      10_000_000_000,
+    );
+
+    const kafkaMessage2: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent: orderFillEvent2,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10) + 1,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    const producerSendMock2: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage2);
+
+    await expectOrderInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '123',
+      size: '100000000', // because the size is being set by the fill message
+      totalFilled: '200000000', // 20
+      price: '0.00000000000001',
+      status: OrderStatus.FILLED, // orderSize > totalFilled so status is open
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(suborder1.side),
+      orderFlags: parentTwapOrder.orderId!.orderFlags.toString(),
+      timeInForce: TimeInForce.IOC,
+      reduceOnly: false,
+      goodTilBlock: protocolTranslations.getGoodTilBlock(parentTwapOrder)?.toString(),
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(parentTwapOrder),
+      clientMetadata: parentTwapOrder.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: '4',
+    });
   });
 
   it.each([

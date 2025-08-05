@@ -33,6 +33,8 @@ BEGIN
         --     RETURN NULL;
         -- END IF;
 
+        RAISE WARNING 'RECEIVED ORDER PLACEMENT EVENT: %', order_;
+
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
@@ -76,6 +78,7 @@ BEGIN
                 order_record."interval" = NULL;
                 order_record."priceTolerance" = NULL;
             WHEN event_data->'twapOrderPlacement' IS NOT NULL THEN
+                RAISE WARNING 'RECEIVED TWAP ORDER PLACEMENT EVENT: %', order_;
                 order_record."status" = 'OPEN';
                 order_record."duration" = (order_->'twapParameters'->'duration');
                 order_record."interval" = (order_->'twapParameters'->'interval');
@@ -136,6 +139,8 @@ BEGIN
                 order_id = event_data->'orderRemoval'->'removedOrderId';
                 order_record."status" = 'CANCELED';
         END CASE;
+
+        RAISE WARNING 'RECEIVED ORDER REMOVAL/CANCEL EVENT: % | UUID: %', event_data, dydx_uuid_from_order_id(order_id);
 
         clob_pair_id = (order_id->'clobPairId')::bigint;
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);

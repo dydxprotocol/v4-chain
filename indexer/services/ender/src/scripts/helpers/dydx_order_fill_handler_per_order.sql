@@ -70,6 +70,7 @@ BEGIN
 
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
+    RAISE WARNING 'RECIEVING ORDER FILL MESSAGE: %', order_;
     order_size = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
                                  power(10, perpetual_market_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
@@ -116,11 +117,19 @@ BEGIN
     order_record."updatedAtHeight" = block_height;
     order_record."orderRouterAddress" = order_->>'orderRouterAddress';
 
-    IF FOUND THEN
-        order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
+    -- IF (order_->'orderId'->>'orderFlags')::bigint = 256 THEN
+    --     RAISE NOTICE 'UUID: % | Fill Amount: %, Total Filled: %', order_uuid, fill_amount, order_record."totalFilled";
+    -- END IF;
 
+    RAISE WARNING 'ORDER UUID: % | FOUND: %', order_uuid, FOUND;
+
+    IF FOUND THEN
+        -- RAISE EXCEPTION 'Total filled: % | Fill Amount: %', order_record."totalFilled", fill_amount;
+        order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
-            order_record."totalFilled" = total_filled + fill_amount; 
+            
+            order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
+            RAISE WARNING 'UPDATING PARENT TWAP ORDER: % | TOTAL FILLED: %', order_uuid, order_record."totalFilled";
             -- Twap suborders shouldn't update all the fields. For example, order flags should remain 128 (not updated to 256).
             UPDATE orders
             SET
@@ -130,7 +139,7 @@ BEGIN
                 "updatedAt" = order_record."updatedAt",
                 "updatedAtHeight" = order_record."updatedAtHeight",
                 "totalFilled" = order_record."totalFilled" -- keep track of fill amount for the parent order
-            WHERE id = order_uuid;
+            WHERE "id" = order_uuid;
         ELSE
             order_record."totalFilled" = total_filled;
 
@@ -158,6 +167,10 @@ BEGIN
         
 >>>>>>> 9c1f5d863 (Support TWAP in the Indexer)
     ELSE
+        -- IF fill_type = 'TWAP_SUBORDER' THEN
+        --     RAISE EXCEPTION 'UUID NOT FOUND CREATING ORDER: % ', order_uuid;
+        -- END IF;
+        RAISE WARNING 'CREATING NEW ORDER FROM FILL MESSAGE: %', order_uuid;
         order_record."id" = order_uuid;
         order_record."subaccountId" = subaccount_uuid;
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
@@ -175,6 +188,7 @@ BEGIN
 
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
             order_record."orderFlags" = 128; -- Twap suborders should be mapped to their parent order.
+            RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
         END IF;
         
         INSERT INTO orders
