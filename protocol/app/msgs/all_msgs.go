@@ -131,6 +131,8 @@ var (
 		"/cosmos.staking.v1beta1.MsgDelegateResponse":                  {},
 		"/cosmos.staking.v1beta1.MsgEditValidator":                     {},
 		"/cosmos.staking.v1beta1.MsgEditValidatorResponse":             {},
+		"/cosmos.staking.v1beta1.MsgSetProposers":                      {},
+		"/cosmos.staking.v1beta1.MsgSetProposersResponse":              {},
 		"/cosmos.staking.v1beta1.MsgUndelegate":                        {},
 		"/cosmos.staking.v1beta1.MsgUndelegateResponse":                {},
 		"/cosmos.staking.v1beta1.MsgUpdateParams":                      {},
