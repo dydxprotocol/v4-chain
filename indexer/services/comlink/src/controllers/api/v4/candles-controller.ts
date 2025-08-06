@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
   CandleFromDatabase, CandleResolution, CandleTable,
 } from '@dydxprotocol-indexer/postgres';
@@ -19,6 +19,9 @@ import { CandleRequest, CandleResponse } from '../../../types';
 
 const router = express.Router();
 const controllerName: string = 'candles-controller';
+const candlesCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_CANDLES,
+);
 
 @Route('candles')
 class CandleController extends Controller {
@@ -50,6 +53,7 @@ class CandleController extends Controller {
 router.get(
   '/perpetualMarkets/:ticker',
   rateLimiterMiddleware(getReqRateLimiter),
+  candlesCacheControlMiddleware,
   ...CheckLimitSchema,
   ...CheckTickerParamSchema,
   ...checkSchema({

@@ -48,7 +48,6 @@
     "express-validator": "^6.14.2",
     "lodash": "^4.17.21",
     "luxon": "^3.0.1",
-    "nocache": "^3.0.4",
     "rate-limiter-flexible": "^2.4.1",
     "redis": "2.8.0",
     "response-time": "^2.3.2",

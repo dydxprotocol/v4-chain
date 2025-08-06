@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   CandleFromDatabase,
   CandleResolution,
@@ -25,6 +25,9 @@ import { SparklineResponseObject, SparklinesRequest, SparklineTimePeriod } from 
 
 const router = express.Router();
 const controllerName: string = 'sparklines-controller';
+const sparklinesCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_SPARKLINES,
+);
 
 @Route('sparklines')
 class SparklinesController extends Controller {
@@ -55,6 +58,7 @@ class SparklinesController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  sparklinesCacheControlMiddleware,
   ...checkSchema({
     timePeriod: {
       in: 'query',
