@@ -21,20 +21,12 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-<<<<<<< HEAD
 import { NotFoundError } from '../../../lib/errors';
-=======
-import { InvalidParamError, NotFoundError } from '../../../lib/errors';
->>>>>>> d00cb3b8 (feat(comlink): add configurable Cache-Control middleware (#3023))
 import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-<<<<<<< HEAD
 import { CheckLimitSchema, CheckTickerOptionalQuerySchema } from '../../../lib/validation/schemas';
-=======
-import { CheckLimitSchema, CheckMarketOptionalQuerySchema, CheckTickerOptionalQuerySchema } from '../../../lib/validation/schemas';
->>>>>>> d00cb3b8 (feat(comlink): add configurable Cache-Control middleware (#3023))
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { perpetualMarketToResponseObject } from '../../../request-helpers/request-transformer';
