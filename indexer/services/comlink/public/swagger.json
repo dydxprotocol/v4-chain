@@ -1603,6 +1603,101 @@
         "type": "object",
         "additionalProperties": false
       },
+      "TurnkeyAuthResponse": {
+        "properties": {
+          "organizationId": {
+            "type": "string"
+          },
+          "apiKeyId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "salt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "salt"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SigninMethod": {
+        "enum": [
+          "email",
+          "social",
+          "passkey"
+        ],
+        "type": "string"
+      },
+      "SignInRequest": {
+        "properties": {
+          "signinMethod": {
+            "$ref": "#/components/schemas/SigninMethod"
+          },
+          "userEmail": {
+            "type": "string"
+          },
+          "targetPublicKey": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "oidcToken": {
+            "type": "string"
+          },
+          "challenge": {
+            "type": "string"
+          },
+          "attestation": {
+            "properties": {
+              "transports": {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "AUTHENTICATOR_TRANSPORT_BLE",
+                    "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                    "AUTHENTICATOR_TRANSPORT_NFC",
+                    "AUTHENTICATOR_TRANSPORT_USB",
+                    "AUTHENTICATOR_TRANSPORT_HYBRID"
+                  ]
+                },
+                "type": "array"
+              },
+              "attestationObject": {
+                "type": "string"
+              },
+              "clientDataJson": {
+                "type": "string"
+              },
+              "credentialId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transports",
+              "attestationObject",
+              "clientDataJson",
+              "credentialId"
+            ],
+            "type": "object"
+          },
+          "magicLink": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "signinMethod"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "MegavaultHistoricalPnlResponse": {
         "properties": {
           "megavaultPnl": {
@@ -3746,6 +3841,35 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/signin": {
+      "post": {
+        "operationId": "SignIn",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnkeyAuthResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/vault/v1/megavault/historicalPnl": {

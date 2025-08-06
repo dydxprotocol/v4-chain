@@ -35,6 +35,7 @@
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "@keplr-wallet/cosmos": "^0.12.122",
     "@tsoa/runtime": "^5.0.0",
+    "@turnkey/sdk-server": "^4.2.2",
     "bech32": "1.1.4",
     "big.js": "^6.2.1",
     "binary-searching": "^2.0.5",
@@ -48,7 +49,9 @@
     "express-validator": "^6.14.2",
     "lodash": "^4.17.21",
     "luxon": "^3.0.1",
+    "mkdirp": "^3.0.1",
     "nocache": "^3.0.4",
+    "node-fetch": "2",
     "rate-limiter-flexible": "^2.4.1",
     "redis": "2.8.0",
     "response-time": "^2.3.2",
@@ -67,6 +70,7 @@
     "@types/lodash": "^4.14.182",
     "@types/luxon": "^3.0.0",
     "@types/node": "^18.0.3",
+    "@types/node-fetch": "^2.6.12",
     "@types/redis": "2.8.27",
     "@types/response-time": "^2.3.5",
     "@types/supertest": "^2.0.12",
@@ -75,7 +79,7 @@
     "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "tsconfig-paths": "^4.0.0",
-    "typescript": "^4.7.4"
+    "typescript": "^5.8.3"
   },
   "repository": {
     "type": "git",

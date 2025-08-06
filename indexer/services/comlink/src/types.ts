@@ -28,6 +28,7 @@ import {
   VaultFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { TurnkeyApiTypes } from '@turnkey/sdk-server';
 import Big from 'big.js';
 import express from 'express';
 
@@ -788,4 +789,40 @@ export interface FundingPaymentResponseObject {
 
 export interface FundingPaymentResponse extends PaginationResponse {
   fundingPayments: FundingPaymentResponseObject[],
+}
+
+/* ------- TURNKEY TYPES ------- */
+export interface TurnkeyAuthResponse {
+  organizationId?: string,
+  apiKeyId?: string,
+  userId?: string,
+  session?: string,
+  salt: string,
+}
+
+export interface TurnkeyCreateSuborgResponse {
+  subOrgId: string,
+  apiKeyId?: string,
+  userId?: string,
+  salt: string,
+}
+
+export interface CreateSuborgParams {
+  email?: string,
+  providerName?: string,
+  oidcToken?: string,
+  authenticatorName?: string,
+  challenge?: string,
+  attestation?: TurnkeyApiTypes['v1Attestation'],
+}
+export interface GetSuborgParams {
+  email?: string,
+  oidcToken?: string,
+  credentialId?: string,
+}
+
+export enum SigninMethod {
+  EMAIL = 'email',
+  SOCIAL = 'social',
+  PASSKEY = 'passkey',
 }
