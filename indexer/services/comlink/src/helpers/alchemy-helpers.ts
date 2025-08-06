@@ -2,11 +2,11 @@ import { logger } from '@dydxprotocol-indexer/base';
 import { findByEvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { createAccount } from '@turnkey/viem';
-import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
+import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { createKernelAccount } from '@zerodev/sdk';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import {
-  Chain, createPublicClient, http, PublicClient,
+  Address, Chain, createPublicClient, http, PublicClient,
 } from 'viem';
 import {
   arbitrum, avalanche, base, mainnet, optimism,
@@ -36,14 +36,6 @@ const chains: Record<string, Chain> = {
   [base.id.toString()]: base,
   [optimism.id.toString()]: optimism,
 };
-
-const publicClients = Object.keys(chains).reduce((acc, chainId) => {
-  acc[chainId] = createPublicClient({
-    transport: http(getRPCEndpoint(chainId)),
-    chain: chains[chainId],
-  });
-  return acc;
-}, {} as Record<string, PublicClient>);
 
 const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
@@ -181,30 +173,17 @@ async function getSmartAccountAddress(address: string): Promise<string> {
   if (!record || !record.dydx_address) {
     throw new Error('Failed to derive dYdX address');
   }
-  const entryPoint = getEntryPoint('0.7');
-
-  // Initialize a Turnkey-powered Viem Account
-  const turnkeyAccount = await createAccount({
-    // @ts-ignore
-    client: turnkeySenderClient.apiClient(),
-    organizationId: record.suborg_id,
-    signWith: address,
+  const publicAvalancheClient = createPublicClient({
+    transport: http(getRPCEndpoint(avalanche.id.toString())),
+    chain: avalanche,
   });
 
-  // Construct a validator
-  const ecdsaValidator = await signerToEcdsaValidator(publicClients[avalanche.id.toString()], {
-    signer: turnkeyAccount,
-    entryPoint,
+  const kernelAddress = await getKernelAddressFromECDSA({
+    publicClient: publicAvalancheClient,
+    entryPoint: getEntryPoint('0.7'),
     kernelVersion: KERNEL_V3_1,
+    eoaAddress: record.evm_address as Address,
+    index: BigInt(0),
   });
-
-  // kernel account
-  const account = await createKernelAccount(publicClients[avalanche.id.toString()], {
-    entryPoint,
-    plugins: {
-      sudo: ecdsaValidator,
-    },
-    kernelVersion: KERNEL_V3_1,
-  });
-  return account.address;
+  return kernelAddress;
 }
