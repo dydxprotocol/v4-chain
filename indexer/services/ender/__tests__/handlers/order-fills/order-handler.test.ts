@@ -1747,7 +1747,7 @@ describe('OrderHandler', () => {
       clientId: 123,
       side: IndexerOrder_Side.SIDE_BUY,
       quantums: 10_000_000_000, // 10 units
-      subticks: 1_000_000,
+      subticks: 2_000_000,
       goodTilOneof: {
         goodTilBlock: 100,
       },
@@ -1783,7 +1783,7 @@ describe('OrderHandler', () => {
       clientId: 201,
       side: IndexerOrder_Side.SIDE_SELL,
       quantums: 10_000_000_000,
-      subticks: 1_000_000,
+      subticks: 2_000_000,
       goodTilOneof: {
         goodTilBlock: 100,
       },
@@ -1855,7 +1855,7 @@ describe('OrderHandler', () => {
       size: '100000000', // because the size is being set by the fill message
       totalFilled: '100000000', // 10
       price: '0.00000000000001',
-      status: OrderStatus.FILLED, // orderSize > totalFilled so status is open
+      status: OrderStatus.FILLED,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       side: protocolTranslations.protocolOrderSideToOrderSide(suborder1.side),
       orderFlags: parentTwapOrder.orderId!.orderFlags.toString(),
@@ -1894,7 +1894,7 @@ describe('OrderHandler', () => {
       clientId: '123',
       size: '100000000', // because the size is being set by the fill message
       totalFilled: '200000000', // 20
-      price: '0.00000000000001',
+      price: '0.000000000000015',
       status: OrderStatus.FILLED, // orderSize > totalFilled so status is open
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       side: protocolTranslations.protocolOrderSideToOrderSide(suborder1.side),

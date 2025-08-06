@@ -127,7 +127,7 @@ BEGIN
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
             RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
 
-            order_record."price" = ((order_record."totalFilled" * order_record."price") + (fill_amount * order_price)) / (order_record."totalFilled" + fill_amount);
+            order_record."price" = dydx_trim_scale(((order_record."totalFilled" * order_record."price") + (fill_amount * order_price)) / (order_record."totalFilled" + fill_amount));
             order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
             order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", order_canceled_status, jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
@@ -138,6 +138,7 @@ BEGIN
             SET
                 "side" = order_record."side",
                 "status" = order_record."status",
+                "price" = order_record."price",
                 "reduceOnly" = order_record."reduceOnly",
                 "updatedAt" = order_record."updatedAt",
                 "updatedAtHeight" = order_record."updatedAtHeight",
@@ -172,9 +173,6 @@ BEGIN
         
 >>>>>>> 9c1f5d863 (Support TWAP in the Indexer)
     ELSE
-        -- IF fill_type = 'TWAP_SUBORDER' THEN
-        --     RAISE EXCEPTION 'UUID NOT FOUND CREATING ORDER: % ', order_uuid;
-        -- END IF;
         RAISE WARNING 'CREATING NEW ORDER FROM FILL MESSAGE: %', order_uuid;
         order_record."id" = order_uuid;
         order_record."subaccountId" = subaccount_uuid;
