@@ -234,10 +234,10 @@ benchmark:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -run=^# -bench=. -benchtime=5s -benchmem ./...
 
 test-container:
-	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./...
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./testing/containertest/...
 
 test-container-accept:
-	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./... -args -accept
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./testing/containertest/... -args -accept
 
 test-container-build:
 	$(MAKE) localnet-build
