@@ -137,9 +137,10 @@ BEGIN
                 order_record."status" = 'OPEN';
             ELSE
                 order_id = event_data->'orderRemoval'->'removedOrderId';
-                IF order_flag != 256 THEN
+                order_record."status" = 'CANCELED';
+                IF order_flag = 256 THEN
                     -- TWP Suborder removals should not update parent order status.
-                    order_record."status" = 'CANCELED';
+                    order_record."status" = 'OPEN';
                 END IF;
         END CASE;
 
