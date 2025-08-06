@@ -1,12 +1,10 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { findByEvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
-import { createAccount } from '@turnkey/viem';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
-import { createKernelAccount } from '@zerodev/sdk';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import {
-  Address, Chain, createPublicClient, http, PublicClient,
+  Address, Chain, createPublicClient, http,
 } from 'viem';
 import {
   arbitrum, avalanche, base, mainnet, optimism,
