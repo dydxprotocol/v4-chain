@@ -1,15 +1,11 @@
 name: Protocol Build & Push Image to AWS ECR
 
 on:  # yamllint disable-line rule:truthy
-  pull_request:
-    branches:
-      - '*' # all branches in pull request can be deployed for testing
   push:
     branches:
       - main
       - 'release/protocol/v[0-9]+.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
-      - 'add_postgres_changes'
 
 jobs:
   build-and-push-snapshot-dev:
