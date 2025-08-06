@@ -180,6 +180,8 @@ export interface FillResponseObject {
   subaccountNumber: number,
   builderFee?: string,
   builderAddress?: string,
+  orderRouterAddress?: string,
+  orderRouterFee?: string,
 }
 
 /* ------- TRANSFER TYPES ------- */
