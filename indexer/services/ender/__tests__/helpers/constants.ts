@@ -339,6 +339,7 @@ export const defaultVaultOrder: IndexerOrder = {
   goodTilBlock: undefined,
   goodTilBlockTime: 123,
   timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+  orderRouterAddress: '',
 };
 export const defaultLiquidationOrder: LiquidationOrderV1 = {
   liquidated: defaultSubaccountId,

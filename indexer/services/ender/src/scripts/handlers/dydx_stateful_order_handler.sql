@@ -54,6 +54,7 @@ BEGIN
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
+        order_record."orderRouterAddress" = (order_->>'orderRouterAddress')::text;
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN
@@ -67,6 +68,7 @@ BEGIN
                 order_record."type" = 'LIMIT';
                 order_record."status" = 'OPEN';
         END CASE;
+        
 
         CASE
             WHEN order_->'builderCodeParams' IS NOT NULL THEN
@@ -98,7 +100,8 @@ BEGIN
                        "status" = order_record."status",
                        "triggerPrice" = order_record."triggerPrice",
                        "builderAddress" = order_record."builderAddress",
-                       "feePpm" = order_record."feePpm"
+                       "feePpm" = order_record."feePpm",
+                       "orderRouterAddress" = order_record."orderRouterAddress"
         RETURNING * INTO order_record;
 
         RETURN jsonb_build_object(

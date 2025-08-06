@@ -1292,7 +1292,8 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string"
     }
   ]
 }
@@ -1394,7 +1395,8 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string"
     }
   ]
 }
@@ -5015,7 +5017,8 @@ This operation does not require authentication
   "clientMetadata": "string",
   "subaccountNumber": 0,
   "builderFee": "string",
-  "builderAddress": "string"
+  "builderAddress": "string",
+  "orderRouterAddress": "string"
 }
 
 ```
@@ -5041,6 +5044,7 @@ This operation does not require authentication
 |subaccountNumber|integer(int32)|true|none|none|
 |builderFee|string|false|none|none|
 |builderAddress|string|false|none|none|
+|orderRouterAddress|string|false|none|none|
 
 ## FillResponse
 
@@ -5072,7 +5076,8 @@ This operation does not require authentication
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string"
     }
   ]
 }

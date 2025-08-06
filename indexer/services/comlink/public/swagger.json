@@ -629,6 +629,9 @@
           },
           "builderAddress": {
             "type": "string"
+          },
+          "orderRouterAddress": {
+            "type": "string"
           }
         },
         "required": [
