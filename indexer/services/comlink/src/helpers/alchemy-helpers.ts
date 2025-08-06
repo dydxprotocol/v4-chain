@@ -37,7 +37,6 @@ const chains: Record<string, Chain> = {
   [optimism.id.toString()]: optimism,
 };
 
-
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   try {
     // Add EVM address to webhook for monitoring

@@ -1,18 +1,8 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import { addAddressesToAlchemyWebhook, registerAddressWithAlchemyWebhook } from '../../src/helpers/alchemy-helpers';
 import { dbHelpers, TurnkeyUserCreateObject, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 
 // Mock fetch globally
 global.fetch = jest.fn();
-
-// Mock the logger
-// jest.mock('@dydxprotocol-indexer/base', () => ({
-//   logger: {
-//     info: jest.fn(),
-//     error: jest.fn(),
-//     warning: jest.fn(),
-//   },
-// }));
 
 // Mock the ZeroDev SDK functions
 jest.mock('@zerodev/ecdsa-validator', () => ({
@@ -146,9 +136,7 @@ describe('alchemy-helpers', () => {
       (http as jest.Mock).mockReturnValue({});
 
 
-      console.log('Starting...');
       await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
-      console.log('Ending...');
 
       // Should be called for each EVM chain + Solana
       const expectedWebhookIds = [
