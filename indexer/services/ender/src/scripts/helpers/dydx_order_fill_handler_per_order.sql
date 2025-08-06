@@ -127,7 +127,7 @@ BEGIN
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
             RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
 
-            order_record."price" = (order_record."totalFilled" * order_record."price") + (fill_amount * order_price) / (order_record."totalFilled" + fill_amount);
+            order_record."price" = ((order_record."totalFilled" * order_record."price") + (fill_amount * order_price)) / (order_record."totalFilled" + fill_amount);
             order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
             order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", order_canceled_status, jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
@@ -181,6 +181,7 @@ BEGIN
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
         order_record."clobPairId" = clob_pair_id;
         order_record."side" = order_side;
+        order_record."price" = order_price;
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
