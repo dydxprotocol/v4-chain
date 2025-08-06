@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   AddressUsername,
   WalletTable,
@@ -41,6 +41,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'affiliates-controller';
+const affiliatesCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_AFFILIATES,
+);
 
 // TODO(OTE-731): replace api stubs with real logic
 @Route('affiliates')
@@ -277,6 +280,7 @@ class AffiliatesController extends Controller {
 router.get(
   '/metadata',
   rateLimiterMiddleware(getReqRateLimiter),
+  affiliatesCacheControlMiddleware,
   ...checkSchema({
     address: {
       in: ['query'],
@@ -316,6 +320,7 @@ router.get(
 router.get(
   '/address',
   rateLimiterMiddleware(getReqRateLimiter),
+  affiliatesCacheControlMiddleware,
   ...checkSchema({
     referralCode: {
       in: ['query'],
@@ -461,6 +466,7 @@ router.post(
 router.get(
   '/snapshot',
   rateLimiterMiddleware(getReqRateLimiter),
+  affiliatesCacheControlMiddleware,
   ...checkSchema({
     addressFilter: {
       in: ['query'],
@@ -546,6 +552,7 @@ router.get(
 router.get(
   '/total_volume',
   rateLimiterMiddleware(getReqRateLimiter),
+  affiliatesCacheControlMiddleware,
   ...checkSchema({
     address: {
       in: ['query'],
