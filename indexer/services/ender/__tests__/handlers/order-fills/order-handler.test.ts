@@ -1683,7 +1683,7 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: false,
       clientMetadata: 0,
-      orderRouterAddress: testConstants.defaultAddress
+      orderRouterAddress: testConstants.defaultAddress,
     });
 
     const takerSubticks: number = 150_000;
@@ -1778,7 +1778,7 @@ describe('OrderHandler', () => {
 
     const quoteAmount: string = '0.000000000000001'; // quote amount is price * fillAmount = 1e-14 * 1e-1 = 1e-15
     const price: string = '0.00000000000001';
-    const totalFilledSize: string = (takerQuantums / makerQuantums).toString()
+    const totalFilledSize: string = (takerQuantums / makerQuantums).toString();
 
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
