@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   AssetColumns,
   AssetFromDatabase,
@@ -53,6 +53,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'asset-positions-controller';
+const assetPositionsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_ASSET_POSITIONS,
+);
 
 @Route('assetPositions')
 class AssetPositionsController extends Controller {
@@ -279,6 +282,7 @@ async function adjustAssetPositionsWithFunding(
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  assetPositionsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
@@ -321,6 +325,7 @@ router.get(
 router.get(
   '/parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  assetPositionsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   handleValidationErrors,
   complianceAndGeoCheck,

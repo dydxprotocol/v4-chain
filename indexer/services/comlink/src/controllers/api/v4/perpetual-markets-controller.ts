@@ -1,13 +1,13 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
+  liquidityTierRefresher,
+  LiquidityTiersFromDatabase,
+  LiquidityTiersMap,
+  MarketFromDatabase,
+  MarketTable,
   PerpetualMarketColumns,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
-  MarketTable,
-  MarketFromDatabase,
-  liquidityTierRefresher,
-  LiquidityTiersMap,
-  LiquidityTiersFromDatabase,
   PerpetualMarketWithMarket,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
@@ -39,6 +39,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'perpetual-markets-controller';
+const perpetualMarketsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_PERPETUAL_MARKETS,
+);
 
 @Route('perpetualMarkets')
 class PerpetualMarketsController extends Controller {
@@ -134,6 +137,7 @@ class PerpetualMarketsController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  perpetualMarketsCacheControlMiddleware,
   ...CheckLimitSchema,
   ...CheckTickerOptionalQuerySchema,
   handleValidationErrors,
