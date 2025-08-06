@@ -20,6 +20,8 @@ const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [optimism.id.toString()]: 'wh_99yjvuacl28obf0i',
 };
 
+const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
+
 function getRPCEndpoint(chainId: string): string {
   if (!Object.keys(chains).includes(chainId)) {
     throw new Error(`Unsupported chainId: ${chainId}`);
@@ -35,7 +37,6 @@ const chains: Record<string, Chain> = {
   [optimism.id.toString()]: optimism,
 };
 
-const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   try {
@@ -168,8 +169,8 @@ async function registerAddressWithAlchemyWebhookWithRetry(
 
 async function getSmartAccountAddress(address: string): Promise<string> {
   const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(address);
-  if (!record || !record.dydx_address) {
-    throw new Error('Failed to derive dYdX address');
+  if (!record) {
+    throw new Error(`EOA Account does not exist in the database: ${address}`);
   }
   const publicAvalancheClient = createPublicClient({
     transport: http(getRPCEndpoint(avalanche.id.toString())),
