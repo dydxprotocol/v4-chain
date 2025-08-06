@@ -1,13 +1,13 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
+  liquidityTierRefresher,
+  LiquidityTiersFromDatabase,
+  LiquidityTiersMap,
+  MarketFromDatabase,
+  MarketTable,
   PerpetualMarketColumns,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
-  MarketTable,
-  MarketFromDatabase,
-  liquidityTierRefresher,
-  LiquidityTiersMap,
-  LiquidityTiersFromDatabase,
   PerpetualMarketWithMarket,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
@@ -21,12 +21,12 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { NotFoundError, InvalidParamError } from '../../../lib/errors';
+import { InvalidParamError, NotFoundError } from '../../../lib/errors';
 import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckLimitSchema, CheckTickerOptionalQuerySchema, CheckMarketOptionalQuerySchema } from '../../../lib/validation/schemas';
+import { CheckLimitSchema, CheckMarketOptionalQuerySchema, CheckTickerOptionalQuerySchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { perpetualMarketToResponseObject } from '../../../request-helpers/request-transformer';
@@ -39,6 +39,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'perpetual-markets-controller';
+const perpetualMarketsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_PERPETUAL_MARKETS,
+);
 
 @Route('perpetualMarkets')
 class PerpetualMarketsController extends Controller {
@@ -141,6 +144,7 @@ class PerpetualMarketsController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  perpetualMarketsCacheControlMiddleware,
   ...CheckLimitSchema,
   ...CheckTickerOptionalQuerySchema,
   ...CheckMarketOptionalQuerySchema,
