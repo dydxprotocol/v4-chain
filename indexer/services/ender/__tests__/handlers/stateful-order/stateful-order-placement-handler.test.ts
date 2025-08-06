@@ -99,6 +99,16 @@ describe('statefulOrderPlacementHandler', () => {
       order: defaultOrder,
     },
   };
+
+  const defaultStatefulOrderEventWithORRS: StatefulOrderEventV1 = {
+    orderPlace: {
+      order: {
+        ...defaultOrder,
+        orderRouterAddress: testConstants.defaultAddress,
+      },
+    },
+  };
+
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
   let producerSendMock: jest.SpyInstance;
 
@@ -184,6 +194,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      orderRouterAddress: defaultOrder.orderRouterAddress,
     });
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
@@ -261,6 +272,72 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      orderRouterAddress: '',
+    });
+    // TODO[IND-20]: Add tests for vulcan messages
+  });
+
+  it.each([
+    // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
+    ['stateful order placement with ORRS', defaultStatefulOrderEventWithORRS],
+  ])('successfully upserts order with %s', async (
+    _name: string,
+    statefulOrderEvent: StatefulOrderEventV1,
+  ) => {
+    const subaccountId: string = SubaccountTable.subaccountIdToUuid(
+      defaultOrder.orderId!.subaccountId!,
+    );
+    const clientId: string = defaultOrder.orderId!.clientId.toString();
+    const clobPairId: string = defaultOrder.orderId!.clobPairId.toString();
+    await OrderTable.create({
+      subaccountId,
+      clientId,
+      clobPairId,
+      side: OrderSide.SELL,
+      size: '100',
+      totalFilled: '0',
+      price: '200',
+      type: OrderType.LIMIT,
+      status: OrderStatus.CANCELED,
+      timeInForce: TimeInForce.GTT,
+      reduceOnly: true,
+      orderFlags: '0',
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
+      createdAtHeight: '1',
+      clientMetadata: '0',
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: '0',
+    });
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      statefulOrderEvent,
+    );
+
+    await onMessage(kafkaMessage);
+    const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
+    expect(order).toEqual({
+      id: orderId,
+      subaccountId,
+      clientId,
+      clobPairId,
+      side: OrderSide.BUY,
+      size: getSize(defaultOrder, testConstants.defaultPerpetualMarket),
+      totalFilled: '0',
+      price: getPrice(defaultOrder, testConstants.defaultPerpetualMarket),
+      type: OrderType.LIMIT, // TODO: Add additional order types once we support
+      status: OrderStatus.OPEN,
+      timeInForce: protocolTranslations.protocolOrderTIFToTIF(defaultOrder.timeInForce),
+      reduceOnly: defaultOrder.reduceOnly,
+      orderFlags: defaultOrder.orderId!.orderFlags.toString(),
+      goodTilBlock: null,
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
+      createdAtHeight: '3',
+      clientMetadata: '0',
+      triggerPrice: null,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+      builderAddress: defaultOrder.builderCodeParams?.builderAddress,
+      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      orderRouterAddress: testConstants.defaultAddress,
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });
