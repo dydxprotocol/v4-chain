@@ -135,7 +135,6 @@ describe('alchemy-helpers', () => {
       (createPublicClient as jest.Mock).mockReturnValue({});
       (http as jest.Mock).mockReturnValue({});
 
-
       await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
 
       // Should be called for each EVM chain + Solana
