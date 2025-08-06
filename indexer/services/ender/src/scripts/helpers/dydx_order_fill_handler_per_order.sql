@@ -106,7 +106,6 @@ BEGIN
     SELECT * INTO order_record FROM orders WHERE "id" = order_uuid;
     order_record."side" = order_side;
     order_record."size" = order_size;
-    order_record."price" = order_price;
     order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
     order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
     order_record."orderFlags" = jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint;
@@ -125,11 +124,15 @@ BEGIN
 
     IF FOUND THEN
         -- RAISE EXCEPTION 'Total filled: % | Fill Amount: %', order_record."totalFilled", fill_amount;
-        order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
-            
+            RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
+
+            order_record."price" = (order_record."totalFilled" * order_record."price") + (fill_amount * order_price) / (order_record."totalFilled" + fill_amount);
             order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
-            RAISE WARNING 'UPDATING PARENT TWAP ORDER: % | TOTAL FILLED: %', order_uuid, order_record."totalFilled";
+
+            order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", order_canceled_status, jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
+            
+            RAISE WARNING 'UPDATING PARENT TWAP ORDER: % | TOTAL FILLED: % | PRICE: %', order_uuid, order_record."totalFilled", order_record."price";
             -- Twap suborders shouldn't update all the fields. For example, order flags should remain 128 (not updated to 256).
             UPDATE orders
             SET
@@ -142,6 +145,8 @@ BEGIN
             WHERE "id" = order_uuid;
         ELSE
             order_record."totalFilled" = total_filled;
+            order_record."price" = order_price;
+            order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
 
             UPDATE orders
             SET
