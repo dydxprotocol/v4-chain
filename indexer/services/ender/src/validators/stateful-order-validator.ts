@@ -1,7 +1,8 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import { OrderTable } from '@dydxprotocol-indexer/postgres';
 import { VAULTS_CLOB_0_TO_999 } from '@dydxprotocol-indexer/postgres/build/src/lib/helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_TWAP, ORDER_FLAG_TWAP_SUBORDER } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_TWAP, ORDER_FLAG_TWAP_SUBORDER,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
   IndexerOrder,
@@ -60,7 +61,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.event.conditionalOrderTriggered === undefined &&
       this.event.longTermOrderPlacement === undefined &&
       this.event.twapOrderPlacement === undefined
-    )
+    );
   }
 
   private validateStatefulOrder(order: IndexerOrder): void {

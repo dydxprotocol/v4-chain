@@ -63,7 +63,12 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
-import { ORDER_FLAG_SHORT_TERM, ORDER_FLAG_LONG_TERM, ORDER_FLAG_TWAP_SUBORDER, ORDER_FLAG_TWAP } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_TWAP_SUBORDER,
+  ORDER_FLAG_TWAP,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import { defaultLiquidation, defaultLiquidationEvent, defaultPreviousHeight } from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
@@ -1068,7 +1073,7 @@ describe('LiquidationHandler', () => {
       status: OrderStatus.OPEN, // orderSize > totalFilled so status is open
       clobPairId: defaultClobPairId,
       side: makerOrderProto.side === IndexerOrder_Side.SIDE_BUY ? OrderSide.BUY : OrderSide.SELL,
-      orderFlags: ORDER_FLAG_TWAP.toString(), 
+      orderFlags: ORDER_FLAG_TWAP.toString(),
       timeInForce: TimeInForce.GTT,
       reduceOnly: false,
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
@@ -1146,7 +1151,7 @@ describe('LiquidationHandler', () => {
       ),
       expectTimingStats(),
     ]);
-  })
+  });
 
   it('LiquidationOrderFillEvent fails liquidationOrder validation', async () => {
     const makerQuantums: number = 10_000_000;

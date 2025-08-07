@@ -1,4 +1,5 @@
-import { bytesToBigInt,
+import {
+  bytesToBigInt,
   ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
   ORDER_FLAG_SHORT_TERM,
@@ -329,6 +330,10 @@ export function protocolConditionTypeToOrderType(
   protocolConditionType: IndexerOrder_ConditionType,
   orderFlag: number = 32,
 ): OrderType {
+  if (!(protocolConditionType in CONDITION_TYPE_TO_ORDER_TYPE_MAP)) {
+    throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
+  }
+
   switch (orderFlag) {
     case ORDER_FLAG_SHORT_TERM:
       return OrderType.LIMIT;

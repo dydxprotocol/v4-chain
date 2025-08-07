@@ -219,12 +219,12 @@ describe('statefulOrderPlacementHandler', () => {
       triggerPrice: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
-      builderAddress: defaultOrder.builderCodeParams?.builderAddress,
-      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
-      orderRouterAddress: defaultOrder.orderRouterAddress,
-      duration: testOrder.twapParameters?.duration ?? null,
-      interval: testOrder.twapParameters?.interval ?? null,
-      priceTolerance: testOrder.twapParameters?.priceTolerance ?? null,
+      builderAddress: testOrder.builderCodeParams?.builderAddress ?? null,
+      feePpm: testOrder.builderCodeParams?.feePpm.toString() ?? null,
+      orderRouterAddress: testOrder.orderRouterAddress,
+      duration: testOrder.twapParameters?.duration.toString() ?? null,
+      interval: testOrder.twapParameters?.interval.toString() ?? null,
+      priceTolerance: testOrder.twapParameters?.priceTolerance.toString() ?? null,
     });
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
@@ -303,9 +303,12 @@ describe('statefulOrderPlacementHandler', () => {
       triggerPrice: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
-      builderAddress: defaultOrder.builderCodeParams?.builderAddress,
-      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
+      builderAddress: testOrder.builderCodeParams?.builderAddress ?? null,
+      feePpm: testOrder.builderCodeParams?.feePpm.toString() ?? null,
       orderRouterAddress: '',
+      duration: testOrder.twapParameters?.duration.toString() ?? null,
+      interval: testOrder.twapParameters?.interval.toString() ?? null,
+      priceTolerance: testOrder.twapParameters?.priceTolerance.toString() ?? null,
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });

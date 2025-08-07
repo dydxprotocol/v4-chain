@@ -44,7 +44,7 @@ import {
   OrderFillEventV1,
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
-  Timestamp
+  Timestamp,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { KafkaMessage } from 'kafkajs';
@@ -1786,7 +1786,6 @@ describe('OrderHandler', () => {
       clientMetadata: 56,
     });
 
-
     // create initial PerpetualPositions with closed previous positions
     await Promise.all([
       // previous position for subaccount 1
@@ -1837,7 +1836,6 @@ describe('OrderHandler', () => {
       txHash: defaultTxHash,
     });
 
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     // After first fill, parent TWAP totalFilled should be 1000000
@@ -1879,7 +1877,6 @@ describe('OrderHandler', () => {
       txHash: defaultTxHash,
     });
 
-    const producerSendMock2: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage2);
 
     await expectOrderInDatabase({
@@ -1915,7 +1912,7 @@ describe('OrderHandler', () => {
       size: '100000000',
       price: '0.00000000000001',
       quoteAmount: '0.000001',
-      eventId: eventId,
+      eventId,
       transactionHash: defaultTxHash,
       createdAt: defaultDateTime.toISO(),
       createdAtHeight: defaultHeight,
@@ -1927,7 +1924,6 @@ describe('OrderHandler', () => {
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
     });
-
 
     const eventId2: Buffer = TendermintEventTable.createEventId(
       '4',
