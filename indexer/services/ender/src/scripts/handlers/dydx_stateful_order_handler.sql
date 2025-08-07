@@ -30,7 +30,6 @@ BEGIN
 
         IF order_flag = constants.order_flag_twap_suborder() THEN
             -- Twap suborders are not stored in the orders table.
-            RAISE WARNING 'IGNORING TWAP SUBORDER ORDER PLACEMENT EVENT: %', order_;
             RETURN NULL;
         END IF;
 
@@ -44,7 +43,6 @@ BEGIN
           TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
         */
         order_record."id" = dydx_uuid_from_order_id(order_->'orderId');
-        RAISE WARNING 'RECEIVED ORDER PLACEMENT EVENT: % | UUID: %', order_, order_record."id";
         order_record."subaccountId" = dydx_uuid_from_subaccount_id(order_->'orderId'->'subaccountId');
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
         order_record."clobPairId" = clob_pair_id;
@@ -78,7 +76,6 @@ BEGIN
                 order_record."interval" = NULL;
                 order_record."priceTolerance" = NULL;
             WHEN event_data->'twapOrderPlacement' IS NOT NULL THEN
-                RAISE WARNING 'RECEIVED TWAP ORDER PLACEMENT EVENT: %', order_;
                 order_record."status" = 'OPEN';
                 order_record."duration" = (order_->'twapParameters'->'duration');
                 order_record."interval" = (order_->'twapParameters'->'interval');
@@ -98,8 +95,6 @@ BEGIN
                 order_record."builderAddress" = null;
                 order_record."feePpm" = null;
         END CASE;
-
-        RAISE WARNING 'INSERTING ORDER HELPPPP: %', order_record;
 
         INSERT INTO orders (
             "id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", 
@@ -164,8 +159,6 @@ BEGIN
                     order_record."status" = 'OPEN';
                 END IF;
         END CASE;
-
-        RAISE WARNING 'RECEIVED ORDER REMOVAL/CANCEL EVENT: % | UUID: %', event_data, dydx_uuid_from_order_id(order_id);
 
         clob_pair_id = (order_id->'clobPairId')::bigint;
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);

@@ -186,7 +186,6 @@ BEGIN
             IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
                 order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
                 order_record."type" = 'TWAP';
-                RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
             END IF;
             
             order_record."duration" = NULL;

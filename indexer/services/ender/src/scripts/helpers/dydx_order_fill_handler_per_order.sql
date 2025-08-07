@@ -70,7 +70,6 @@ BEGIN
 
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
-    RAISE WARNING 'RECIEVING ORDER FILL MESSAGE: %', order_;
     order_size = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
                                  power(10, perpetual_market_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
@@ -117,18 +116,13 @@ BEGIN
     order_record."updatedAtHeight" = block_height;
     order_record."orderRouterAddress" = order_->>'orderRouterAddress';
 
-    RAISE WARNING 'ORDER UUID: % | FOUND: %', order_uuid, FOUND;
-
     IF FOUND THEN
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
-            RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
-
             order_record."price" = dydx_get_weighted_average(order_record."price", order_record."totalFilled", maker_price, fill_amount);
             order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
             order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", order_canceled_status, jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
             
-            RAISE WARNING 'UPDATING PARENT TWAP ORDER: % | TOTAL FILLED: % | PRICE: %', order_uuid, order_record."totalFilled", order_record."price";
             -- Twap suborders shouldn't update all the fields. For example, order flags should remain 128 (not updated to 256).
             UPDATE orders
             SET
@@ -167,7 +161,6 @@ BEGIN
         END IF;
 
     ELSE
-        RAISE WARNING 'CREATING NEW ORDER FROM FILL MESSAGE: %', order_uuid;
         order_record."id" = order_uuid;
         order_record."subaccountId" = subaccount_uuid;
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
@@ -187,10 +180,8 @@ BEGIN
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
             order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
             order_record."type" = 'TWAP';
-            RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
         END IF;
 
-        RAISE WARNING 'INSERTING ORDER HELPPPP2: %', order_record;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
