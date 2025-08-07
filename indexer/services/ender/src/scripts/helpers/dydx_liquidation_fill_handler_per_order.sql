@@ -132,7 +132,7 @@ BEGIN
 
         IF FOUND THEN
             IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
-                order_record."price" = dydx_trim_scale(((order_record."totalFilled" * order_record."price") + (fill_amount * maker_price)) / (order_record."totalFilled" + fill_amount));
+                order_record."price" = dydx_get_weighted_average(order_record."price", order_record."totalFilled", maker_price, fill_amount);
                 order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
                 order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", 'NOT_CANCELED', jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
