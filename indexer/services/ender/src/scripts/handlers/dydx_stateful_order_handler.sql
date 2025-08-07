@@ -99,7 +99,25 @@ BEGIN
                 order_record."feePpm" = null;
         END CASE;
 
-        INSERT INTO orders VALUES (order_record.*) ON CONFLICT ("id") DO
+        RAISE WARNING 'INSERTING ORDER HELPPPP: %', order_record;
+
+        INSERT INTO orders (
+            "id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", 
+            "price", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlockTime", 
+            "clientMetadata", "createdAtHeight", "updatedAt", "updatedAtHeight", 
+            "orderRouterAddress", "type", "status", "triggerPrice", "builderAddress", 
+            "feePpm", "duration", "interval", "priceTolerance"
+        ) VALUES (
+            order_record."id", order_record."subaccountId", order_record."clientId", 
+            order_record."clobPairId", order_record."side", order_record."size", 
+            order_record."totalFilled", order_record."price", order_record."timeInForce", 
+            order_record."reduceOnly", order_record."orderFlags", order_record."goodTilBlockTime", 
+            order_record."clientMetadata", order_record."createdAtHeight", order_record."updatedAt", 
+            order_record."updatedAtHeight", order_record."orderRouterAddress", order_record."type", 
+            order_record."status", order_record."triggerPrice", order_record."builderAddress", 
+            order_record."feePpm", order_record."duration", order_record."interval", 
+            order_record."priceTolerance"
+        ) ON CONFLICT ("id") DO
             UPDATE SET
                        "subaccountId" = order_record."subaccountId",
                        "clientId" = order_record."clientId",

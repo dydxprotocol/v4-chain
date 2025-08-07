@@ -74,6 +74,7 @@ export default class OrderModel extends BaseModel {
         'triggerPrice',
         'updatedAt',
         'updatedAtHeight',
+        'orderRouterAddress',
         'duration',
         'interval',
         'priceTolerance',
@@ -137,12 +138,12 @@ export default class OrderModel extends BaseModel {
       triggerPrice: 'string',
       updatedAt: 'date-time',
       updatedAtHeight: 'string',
-      builderAddress: 'string',
-      feePpm: 'string',
-      orderRouterAddress: 'string',
       duration: 'string',
       interval: 'string',
       priceTolerance: 'string',
+      builderAddress: 'string',
+      feePpm: 'string',
+      orderRouterAddress: 'string',
     };
   }
 

@@ -189,13 +189,22 @@ BEGIN
             order_record."type" = 'TWAP';
             RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
         END IF;
-        
+
+        RAISE WARNING 'INSERTING ORDER HELPPPP2: %', order_record;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm",
             "orderRouterAddress", "duration", "interval", "priceTolerance")
-        VALUES (order_record.*);
+        VALUES (
+            order_record."id", order_record."subaccountId", order_record."clientId", order_record."clobPairId",
+            order_record."side", order_record."size", order_record."totalFilled", order_record."price", order_record."type",
+            order_record."status", order_record."timeInForce", order_record."reduceOnly", order_record."orderFlags",
+            order_record."goodTilBlock", order_record."goodTilBlockTime", order_record."createdAtHeight",
+            order_record."clientMetadata", order_record."triggerPrice", order_record."updatedAt", order_record."updatedAtHeight",
+            order_record."builderAddress", order_record."feePpm", order_record."orderRouterAddress", order_record."duration",
+            order_record."interval", order_record."priceTolerance"
+        );
     END IF;
 
     /* Insert the associated fill record for this order_fill event. */
