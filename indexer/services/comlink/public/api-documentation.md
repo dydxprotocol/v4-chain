@@ -3815,7 +3815,8 @@ const inputBody = '{
     "attestationObject": "string",
     "clientDataJson": "string",
     "credentialId": "string"
-  }
+  },
+  "magicLink": "string"
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -3859,7 +3860,8 @@ fetch(`${baseURL}/turnkey/signin`,
     "attestationObject": "string",
     "clientDataJson": "string",
     "credentialId": "string"
-  }
+  },
+  "magicLink": "string"
 }
 ```
 
@@ -6674,7 +6676,8 @@ or
     "attestationObject": "string",
     "clientDataJson": "string",
     "credentialId": "string"
-  }
+  },
+  "magicLink": "string"
 }
 
 ```
@@ -6694,6 +6697,7 @@ or
 |» attestationObject|string|true|none|none|
 |» clientDataJson|string|true|none|none|
 |» credentialId|string|true|none|none|
+|magicLink|string|false|none|none|
 
 ## MegavaultHistoricalPnlResponse
 

@@ -12,6 +12,9 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { isValidEmail } from '../../../helpers/utility/validation';
+import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -39,6 +42,7 @@ interface SignInRequest {
   oidcToken?: string,
   challenge?: string,
   attestation?: TurnkeyApiTypes['v1Attestation'],
+  magicLink?: string,
 }
 
 @Route('turnkey')
@@ -82,6 +86,7 @@ export class TurnkeyController extends Controller {
       oidcToken,
       challenge,
       attestation,
+      magicLink,
     } = body;
     // Determine authentication method
     if (signinMethod === SigninMethod.EMAIL) {
@@ -89,7 +94,7 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail is required for email signin');
       }
       try {
-        const resp = await this.emailSignin(userEmail, targetPublicKey!);
+        const resp = await this.emailSignin(userEmail, targetPublicKey!, magicLink);
         if (resp.userId === undefined || resp.apiKeyId === undefined) {
           throw new Error('Could not send email auth bundle');
         }
@@ -102,7 +107,7 @@ export class TurnkeyController extends Controller {
         };
 
       } catch (error) {
-        throw new Error(`Email Signin: ${error}`);
+        throw this.wrapTurnkeyError(error, 'Email signin failed');
       }
     } else if (signinMethod === SigninMethod.SOCIAL) {
       if (!provider || !oidcToken || !targetPublicKey) {
@@ -115,7 +120,7 @@ export class TurnkeyController extends Controller {
           salt: resp.salt,
         };
       } catch (error) {
-        throw new Error(`Social Signin Error: ${error}`);
+        throw this.wrapTurnkeyError(error, 'Social signin failed');
       }
     } else if (signinMethod === SigninMethod.PASSKEY) {
       if (!challenge || !attestation) {
@@ -128,7 +133,7 @@ export class TurnkeyController extends Controller {
           salt: resp.salt,
         };
       } catch (error) {
-        throw new Error(`Passkey Signin Error: ${error}`);
+        throw this.wrapTurnkeyError(error, 'Passkey signin failed');
       }
     }
     throw new Error(`Invalid signin method. Must be one of: ${SigninMethod.EMAIL}, ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}`);
@@ -161,7 +166,7 @@ export class TurnkeyController extends Controller {
     } else if (p.email) {
       suborgId = await this.getSuborgByEmail(p.email);
     } else {
-      throw new Error('Email is required to create a suborg');
+      throw new Error('One of email, oidcToken, or credentialId is required');
     }
 
     // find it in our table.
@@ -266,27 +271,11 @@ export class TurnkeyController extends Controller {
       salt,
       created_at: new Date().toISOString(),
     });
-    // TODO: set the policies on api user
 
-    // Best efforts to check that the subOrg.rootUserIds[0] is the end user
-    const user = await this.bridgeSenderApiClient.getUser({
-      organizationId: subOrg.subOrganizationId,
-      userId: subOrg.rootUserIds?.[0] as string,
-    });
-    if (
-      user.user.authenticators.length > 0 &&
-      user.user.authenticators[0].credentialId !== params.attestation?.credentialId
-    ) {
-      throw new Error('End User not found');
-    } else if (user.user.userEmail && user.user.userEmail !== params.email) {
-      throw new Error('End User not found');
+    // need to also add the svm and evm addresses to the alchemy hook
+    if (evmAddress && svmAddress) {
+      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
     }
-    // Remove the Delegated Account from the root quorum.
-    await this.bridgeSenderApiClient.updateRootQuorum({
-      organizationId: subOrg.subOrganizationId,
-      threshold: 1,
-      userIds: [subOrg.rootUserIds?.[0] as string], // keep end user.
-    });
     return {
       subOrgId: subOrg.subOrganizationId,
       salt,
@@ -297,9 +286,10 @@ export class TurnkeyController extends Controller {
   private async emailSignin(
     userEmail: string,
     targetPublicKey: string,
+    magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // Validate email format
-    if (!this.isValidEmail(userEmail)) {
+    if (!isValidEmail(userEmail)) {
       throw new Error('Invalid email format');
     }
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
@@ -317,7 +307,7 @@ export class TurnkeyController extends Controller {
       emailCustomization: {
         appName: 'dydx',
         logoUrl: 'https://cdn.prod.website-files.com/649ca755d082f1dfc4ed62a4/6870a124cba22652a69c409d_icon%20(1).png',
-        magicLinkTemplate: 'https://dydx.trade/login?token=%s',
+        magicLinkTemplate: `${config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink}=%s`,
       },
       invalidateExisting: true,
       organizationId: suborg.subOrgId,
@@ -384,12 +374,6 @@ export class TurnkeyController extends Controller {
     };
   }
 
-  // Utility methods
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
   // default 32 bytes.
   private generateSalt(bytes: number = 32): string {
     return randomBytes(bytes).toString('hex');
@@ -426,6 +410,16 @@ export class TurnkeyController extends Controller {
     return response.organizationIds?.[0] || '';
   }
 
+  // Helper method to wrap Turnkey errors with additional context
+  private wrapTurnkeyError(error: unknown, contextMessage: string): TurnkeyError {
+    if (error instanceof Error) {
+      return new TurnkeyError(
+        `${contextMessage}: ${error.message}`,
+      );
+    }
+    return new TurnkeyError(`${contextMessage}: ${String(error)}`);
+  }
+
 }
 
 // Validation schemas
@@ -442,6 +436,12 @@ const SignInValidationSchema = checkSchema({
     optional: true,
     isEmail: true,
     errorMessage: 'Must be a valid email address',
+  },
+  magicLink: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Magic link must be a string',
   },
   targetPublicKey: {
     in: ['body'],
@@ -460,7 +460,7 @@ const SignInValidationSchema = checkSchema({
     in: ['body'],
     optional: true,
     isObject: true,
-    errorMessage: 'Attestation must be a string',
+    errorMessage: 'Attestation must be an object',
   },
   provider: {
     in: ['body'],
@@ -491,6 +491,7 @@ router.post(
         signinMethod: SigninMethod,
         userEmail: string,
         targetPublicKey: string,
+        magicLink: string,
         provider: string,
         oidcToken: string,
         challenge: string,
@@ -499,7 +500,7 @@ router.post(
 
       const controller: TurnkeyController = new TurnkeyController();
 
-      const response = await controller.signIn(body);
+      const response: TurnkeyAuthResponse = await controller.signIn(body);
 
       return res.send(response);
     } catch (error) {

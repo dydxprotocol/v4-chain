@@ -39,6 +39,7 @@ export const baseConfigSchema = {
   // API keys for senders to use to start bridging.
   TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
+  TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   // Alchemy API key for skip bridge.
   ALCHEMY_KEY: parseString({ default: '' }),

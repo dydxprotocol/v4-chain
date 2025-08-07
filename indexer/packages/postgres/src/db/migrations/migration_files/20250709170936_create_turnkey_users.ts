@@ -5,7 +5,6 @@ export async function up(knex: Knex): Promise<void> {
     .schema
     .createTable('turnkey_users', (table) => {
       table.text('suborg_id').primary(); // Primary key
-      table.text('username').nullable(); // optional
       table.text('email').nullable().unique(); // optional but unique
       table.text('svm_address').notNullable().unique(); // indexed
       table.text('evm_address').notNullable().unique(); // indexed

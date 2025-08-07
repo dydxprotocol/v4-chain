@@ -1,6 +1,5 @@
 export interface TurnkeyUserCreateObject {
   suborg_id: string,
-  username?: string,
   email?: string,
   svm_address: string,
   evm_address: string,
@@ -11,7 +10,6 @@ export interface TurnkeyUserCreateObject {
 
 export enum TurnkeyUserColumns {
   suborg_id = 'suborg_id',
-  username = 'username',
   email = 'email',
   svm_address = 'svm_address',
   evm_address = 'evm_address',
