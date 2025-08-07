@@ -1,11 +1,11 @@
 //go:build all || container_test
 
-package v_8_2_test
+package v_9_0_test
 
 import (
 	"testing"
 
-	v_8_2 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.2"
+	v_9_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.0"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -24,7 +24,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_8_2.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_9_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)

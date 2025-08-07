@@ -1,21 +1,21 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
-  PerpetualPositionStatus,
-  SubaccountTable,
-  PerpetualPositionFromDatabase,
-  PerpetualPositionTable,
-  IsoString,
-  PerpetualMarketsMap,
-  QueryableField,
-  MarketFromDatabase,
-  MarketTable,
-  MarketsMap,
-  MarketColumns,
-  perpetualMarketRefresher,
-  SubaccountFromDatabase,
   BlockFromDatabase,
   BlockTable,
   FundingIndexMap,
+  IsoString,
+  MarketColumns,
+  MarketFromDatabase,
+  MarketsMap,
+  MarketTable,
+  perpetualMarketRefresher,
+  PerpetualMarketsMap,
+  PerpetualPositionFromDatabase,
+  PerpetualPositionStatus,
+  PerpetualPositionTable,
+  QueryableField,
+  SubaccountFromDatabase,
+  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -32,11 +32,11 @@ import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
-  getFundingIndexMaps,
-  handleControllerError,
-  getPerpetualPositionsWithUpdatedFunding,
-  initializePerpetualPositionsWithFunding,
   getChildSubaccountNums,
+  getFundingIndexMaps,
+  getPerpetualPositionsWithUpdatedFunding,
+  handleControllerError,
+  initializePerpetualPositionsWithFunding,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
@@ -57,6 +57,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'perpetual-positions-controller';
+const perpetualPositionsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_PERPETUAL_POSITIONS,
+);
 
 @Route('perpetualPositions')
 class PerpetualPositionsController extends Controller {
@@ -298,6 +301,7 @@ async function adjustPerpetualPositionsWithUpdatedFunding(
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  perpetualPositionsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...checkSchema({
@@ -362,6 +366,7 @@ router.get(
 router.get(
   '/parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  perpetualPositionsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...checkSchema({

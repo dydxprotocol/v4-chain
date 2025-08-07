@@ -65,6 +65,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*slashing.MsgUpdateParams,
 
 		// staking
+		*staking.MsgSetProposers,
 		*staking.MsgUpdateParams,
 
 		// upgrade

@@ -1,29 +1,38 @@
-import { logger, NodeEnv, stats } from '@dydxprotocol-indexer/base';
 import {
-  createNotification, NotificationType, NotificationDynamicFieldKey, sendFirebaseMessage,
+  cacheControlMiddleware,
+  logger,
+  noCacheControlMiddleware,
+  NodeEnv,
+  stats,
+} from '@dydxprotocol-indexer/base';
+import {
+  createNotification,
+  NotificationDynamicFieldKey,
+  NotificationType,
+  sendFirebaseMessage,
 } from '@dydxprotocol-indexer/notifications';
 import {
+  AssetFromDatabase,
   AssetPositionFromDatabase,
-  BlockTable,
+  AssetPositionTable,
+  AssetTable,
   BlockFromDatabase,
+  BlockTable,
+  FirebaseNotificationTokenTable,
+  FundingIndexMap,
+  FundingIndexUpdatesTable,
+  MarketFromDatabase,
+  MarketTable,
+  Options,
+  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PerpetualPositionTable,
   QueryableField,
   SubaccountFromDatabase,
   SubaccountTable,
-  AssetPositionTable,
-  AssetTable,
-  AssetFromDatabase,
-  MarketTable,
-  MarketFromDatabase,
-  Options,
-  FundingIndexUpdatesTable,
-  FundingIndexMap,
-  WalletTable,
   WalletFromDatabase,
-  perpetualMarketRefresher,
-  FirebaseNotificationTokenTable,
+  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -31,9 +40,11 @@ import {
   matchedData,
 } from 'express-validator';
 import {
-  Route, Get, Path, Controller,
-  Post,
   Body,
+  Controller,
+  Get, Path,
+  Post,
+  Route,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -42,10 +53,10 @@ import { AccountVerificationRequiredAction, validateSignature, validateSignature
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { DatabaseError, NotFoundError } from '../../../lib/errors';
 import {
-  getFundingIndexMaps,
-  handleControllerError,
   getChildSubaccountIds,
+  getFundingIndexMaps,
   getSubaccountResponse,
+  handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
@@ -58,16 +69,19 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
   AddressRequest,
+  AddressResponse,
+  ParentSubaccountRequest,
+  ParentSubaccountResponse,
+  RegisterTokenRequest,
   SubaccountRequest,
   SubaccountResponseObject,
-  AddressResponse,
-  ParentSubaccountResponse,
-  ParentSubaccountRequest,
-  RegisterTokenRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'addresses-controller';
+const addressesCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_ADDRESSES,
+);
 
 @Route('addresses')
 class AddressesController extends Controller {
@@ -365,6 +379,7 @@ class AddressesController extends Controller {
 router.get(
   '/:address',
   rateLimiterMiddleware(getReqRateLimiter),
+  addressesCacheControlMiddleware,
   ...CheckAddressSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
@@ -404,6 +419,7 @@ router.get(
 router.get(
   '/:address/subaccountNumber/:subaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  addressesCacheControlMiddleware,
   ...CheckSubaccountSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
@@ -448,6 +464,7 @@ router.get(
 router.get(
   '/:address/parentSubaccountNumber/:parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  addressesCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
@@ -494,6 +511,7 @@ router.get(
 
 router.post(
   '/:address/registerToken',
+  noCacheControlMiddleware,
   CheckAddressSchema,
   RegisterTokenValidationSchema,
   handleValidationErrors,
@@ -546,6 +564,7 @@ router.post(
 router.post(
   '/:address/testNotification',
   rateLimiterMiddleware(getReqRateLimiter),
+  noCacheControlMiddleware,
   ...CheckAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
