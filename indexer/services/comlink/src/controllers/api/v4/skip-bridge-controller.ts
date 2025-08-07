@@ -27,6 +27,7 @@ import {
   type SmartAccountImplementation,
 } from 'viem/account-abstraction';
 import {
+  Address,
   Chain, checksumAddress, createPublicClient, encodeFunctionData, Hex, http, PublicClient,
 } from 'viem';
 import {
@@ -585,6 +586,9 @@ class BridgeController extends Controller {
    * This function is primarily used for avalanche as they do not support the eip7702 yet.
    * Similar logic to startEvmBridge with the distinction that the smart account is a different
    * address as the EOA account.
+   * We will only auto bridge funds sent to the smart account address for avalance pre 7702 because 
+   * no gas sponsorship is possible pre 7702. We are assuming that the address provided will be a
+   * smart account address and that the underlying EOA address is a valid entry in our database.
    */
   async startEvmBridgePre7702(
     fromAddress: string,
@@ -592,6 +596,7 @@ class BridgeController extends Controller {
     sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
+    const eoaAddress = getEOAAddressFromSmartAccountAddress(fromAddress)
     const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
@@ -687,6 +692,10 @@ class BridgeController extends Controller {
       sourceAssetDenom,
     };
   }
+}
+
+function getEOAAddressFromSmartAccountAddress(address: Address): Address {
+  return '0x0001';
 }
 
 /* returns the addresses to sweep and the chainId.
