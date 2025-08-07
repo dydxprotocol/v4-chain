@@ -1,5 +1,5 @@
-import { Alchemy, Network } from 'alchemy-sdk';
-import { create, findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
+import { logger, stats } from '@dydxprotocol-indexer/base';
+import { findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import {
   route, executeRoute, setClientOptions, messages,
@@ -15,6 +15,7 @@ import {
   createZeroDevPaymasterClient, getUserOperationGasPrice,
 } from '@zerodev/sdk';
 import { getEntryPoint, KERNEL_V3_3, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { Alchemy, Network } from 'alchemy-sdk';
 import { decode, encode } from 'bech32';
 import bs58 from 'bs58';
 import express from 'express';
@@ -22,14 +23,13 @@ import {
   Controller, Post, Query, Route,
 } from 'tsoa';
 import nacl from 'tweetnacl';
-
-import {
-  type SmartAccountImplementation,
-} from 'viem/account-abstraction';
 import {
   Address,
   Chain, checksumAddress, createPublicClient, encodeFunctionData, Hex, http, PublicClient,
 } from 'viem';
+import {
+  type SmartAccountImplementation,
+} from 'viem/account-abstraction';
 import {
   mainnet, arbitrum,
   avalanche, base,
@@ -41,8 +41,6 @@ import { handleControllerError } from '../../../lib/helpers';
 import { CheckBridgeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { dbHelpers } from '@dydxprotocol-indexer/postgres';
-import { logger, stats } from '@dydxprotocol-indexer/base';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
@@ -52,7 +50,7 @@ setClientOptions({
   endpointOptions: {
     endpoints: {
       solana: {
-        rpc: "https://go.skip.build/api/rpc/solana",
+        rpc: 'https://go.skip.build/api/rpc/solana',
       },
     },
   },
@@ -72,7 +70,7 @@ const chainIdToAlchemyNetworkMap: Record<string, Network> = {
   [base.id.toString()]: Network.BASE_MAINNET,
   [optimism.id.toString()]: Network.OPT_MAINNET,
   [mainnet.id.toString()]: Network.ETH_MAINNET,
-  'solana': Network.SOLANA_MAINNET,
+  solana: Network.SOLANA_MAINNET,
 };
 
 const alchemyNetworkToChainIdMap: Record<string, string> = {
@@ -131,11 +129,6 @@ enum Asset {
   ETH = 'ETH',
 }
 
-const assetAddressLookerUpper: Record<Asset, Record<string, string>> = {
-  [Asset.USDC]: usdcAddressByChainId,
-  [Asset.ETH]: {}, // TODO: Add ETH address mappings
-};
-
 // Prefix is one of osmosis, neutron, noble. This is how we convert dydx addresses
 // to other chain addresses on cosmos. Address here is dydx address.
 function toClientAddressWithPrefix(prefix: string, address: string): string | null {
@@ -155,12 +148,20 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
   let dydxAddress = '';
   if (isSupportedEVMChainId(chainId)) {
     // look up in turnkey table
-    console.log('looking up in turnkey table for evm address', address);
+    logger.info({
+      at: `${controllerName}#getDydxAddress`,
+      message: 'Looking up in turnkey table for evm address',
+      address,
+    });
     const record = await findByEvmAddress(address);
     dydxAddress = record?.dydx_address || '';
   } else if (chainId === 'solana') {
     // look up in turnkey table
-    console.log('looking up in turnkey table for svm address', address);
+    logger.info({
+      at: `${controllerName}#getDydxAddress`,
+      message: 'Looking up in turnkey table for svm address',
+      address,
+    });
     const record = await findBySvmAddress(address);
     dydxAddress = record?.dydx_address || '';
   } else {
@@ -199,7 +200,7 @@ async function getSkipCallData(
   dydxAddress: string,
   amount: string,
   chainId: string,
-): Promise<Parameters<SmartAccountImplementation["encodeCalls"]>[0]> {
+): Promise<Parameters<SmartAccountImplementation['encodeCalls']>[0]> {
   const routeResult = await route({
     amountIn: amount, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
@@ -213,8 +214,12 @@ async function getSkipCallData(
     throw new Error('Failed to find a route');
   }
 
-  console.log('Route Result:', routeResult);
-  console.log('dydx addy is:', dydxAddress);
+  logger.info({
+    at: `${controllerName}#getSkipCallData`,
+    message: 'Route result obtained',
+    routeResult,
+    dydxAddress,
+  });
 
   const userAddresses = await Promise.all(
     routeResult.requiredChainAddresses.map(async (cid) => ({
@@ -261,13 +266,25 @@ async function getSkipCallData(
   let toAddress = '';
   response?.msgs?.forEach((msg, index) => {
     if ('evmTx' in msg) {
-      console.log(`Message ${index + 1} EVM Transaction:`, msg.evmTx);
+      logger.info({
+        at: `${controllerName}#getSkipCallData`,
+        message: `Message ${index + 1} EVM Transaction`,
+        evmTx: msg.evmTx,
+      });
       data = msg.evmTx.data || '';
       toAddress = msg.evmTx.to || '';
     } else if ('svmTx' in msg) {
-      console.log(`Message ${index + 1} SVM Transaction:`, msg.svmTx);
+      logger.info({
+        at: `${controllerName}#getSkipCallData`,
+        message: `Message ${index + 1} SVM Transaction`,
+        svmTx: msg.svmTx,
+      });
     } else if ('multiChainMsg' in msg) {
-      console.log(`Message ${index + 1} Multi-Chain Message:`, msg.multiChainMsg);
+      logger.info({
+        at: `${controllerName}#getSkipCallData`,
+        message: `Message ${index + 1} Multi-Chain Message`,
+        multiChainMsg: msg.multiChainMsg,
+      });
     }
   });
 
@@ -291,7 +308,7 @@ async function getSkipCallData(
         functionName: 'approve',
         args: [
           (toAddress.startsWith('0x') ? toAddress : (`0x${toAddress}`)) as Hex,
-          BigInt(amount), // 5.5 USDC (6 decimals)
+          BigInt(amount),
         ],
       }), // "0x",
     },
@@ -300,7 +317,7 @@ async function getSkipCallData(
       value: BigInt(0),
       data: data.startsWith('0x') ? data as Hex : (`0x${data}`) as Hex, // "0x",
     },
-  ]
+  ];
 }
 
 function getSvmSigner(suborgId: string, signWith: string) {
@@ -346,12 +363,16 @@ class BridgeController extends Controller {
   @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
-    @Query() chainId: string,
-    // optionally provide the contract and amount, primarily used for solana.
-    @Query() amount?: string,
-    @Query() contract?: string,
+      @Query() chainId: string,
+      // optionally provide the contract and amount, primarily used for solana.
+      @Query() amount?: string,
   ): Promise<BridgeResponse> {
-    let bridgeFn: (fromAddress: string, amount: string, sourceAssetDenom: string, chainId: string) => Promise<BridgeResponse> | undefined;
+    let bridgeFn: (
+      fromAddress: string,
+      amount: string,
+      sourceAssetDenom: string,
+      chainId: string,
+    ) => Promise<BridgeResponse> | undefined;
     if (chainId === 'solana') {
       bridgeFn = this.startSolanaBridge;
       if (amount) {
@@ -361,14 +382,16 @@ class BridgeController extends Controller {
           logger.error({
             at: `${controllerName}#sweep->startSolanaBridge`,
             message: `Failed to bridge token ${usdcAddressByChainId.solana}`,
-            error: error,
+            error,
           });
         }
       } else {
         throw new Error('Amount and contract is required for solana');
       }
     } else if (isSupportedEVMChainId(chainId)) {
-      bridgeFn = chainId === avalanche.id.toString() ? this.startEvmBridgePre7702 : this.startEvmBridge;
+      bridgeFn = chainId === avalanche.id.toString()
+        ? this.startEvmBridgePre7702
+        : this.startEvmBridge;
       const alchemy = new Alchemy({
         apiKey: config.ALCHEMY_API_KEY,
         network: chainIdToAlchemyNetworkMap[chainId],
@@ -377,14 +400,13 @@ class BridgeController extends Controller {
       // search for assets that exist on this account on this chain.
       const usdcToSearch = usdcAddressByChainId[chainId];
       const assets = await alchemy.core.getTokenBalances(fromAddress);
-      console.log("HERE3")
-
-      console.log('assets', assets);
 
       for (const token of assets.tokenBalances) {
-        console.log('token', token);
         // TODO: Under what scenario will tokenBalance be undefined?
-        if (token.contractAddress.toLowerCase() === usdcToSearch.toLowerCase() && token.tokenBalance) {
+        if (
+          token.contractAddress.toLowerCase() === usdcToSearch.toLowerCase() &&
+          token.tokenBalance
+        ) {
           // validate that the token balance is not 0.
           if (parseInt(token.tokenBalance, 16) > 0) {
             try {
@@ -392,8 +414,8 @@ class BridgeController extends Controller {
             } catch (error) {
               logger.error({
                 at: `${controllerName}#sweep->startEvmBridge`,
-                message: `Failed to bridge token ${token.contractAddress}`, 
-                error: error,
+                message: `Failed to bridge token ${token.contractAddress}`,
+                error,
               });
             }
           }
@@ -407,7 +429,7 @@ class BridgeController extends Controller {
     return {
       toAddress: fromAddress,
       amount: '0',
-      sourceAssetDenom: 'USDC'
+      sourceAssetDenom: Asset.USDC,
     };
   }
 
@@ -466,28 +488,56 @@ class BridgeController extends Controller {
         },
       },
       // ADD RETRY LOGIC???
+      // eslint-disable-next-line @typescript-eslint/require-await
       onTransactionBroadcast: async ({ chainId: c, txHash }) => {
         logger.info({
           message: `Broadcasted on ${c}: ${txHash}`,
           from: fromAddress,
-          amount: amount,
-          sourceAssetDenom: sourceAssetDenom,
-          chainId: chainId,
+          amount,
+          sourceAssetDenom,
+          chainId,
           toAddress: fromAddress,
           at: new Date().toISOString(),
         });
       },
+      // eslint-disable-next-line @typescript-eslint/require-await
       onTransactionCompleted: async ({ chainId: c, txHash, status }) => {
-        await console.log(`Completed on ${c}: ${txHash} (Status: ${status})`);
+        logger.info({
+          at: `${controllerName}#startSolanaBridge`,
+          message: 'Transaction completed',
+          chainId: c,
+          txHash,
+          status,
+        });
       },
+      // eslint-disable-next-line @typescript-eslint/require-await
       onTransactionTracked: async ({ chainId: c, txHash, explorerLink }) => {
-        await console.log(`Tracking ${c}: ${txHash} (Explorer: ${explorerLink})`);
+        logger.info({
+          at: `${controllerName}#startSolanaBridge`,
+          message: 'Transaction tracked',
+          chainId: c,
+          txHash,
+          explorerLink,
+        });
       },
+      // eslint-disable-next-line @typescript-eslint/require-await
       onTransactionSignRequested: async ({ chainId: c, signerAddress }) => {
-        await console.log(`Sign requested for ${c}`, signerAddress);
+        logger.info({
+          at: `${controllerName}#startSolanaBridge`,
+          message: 'Sign requested',
+          chainId: c,
+          signerAddress,
+        });
       },
+      // eslint-disable-next-line @typescript-eslint/require-await
       onValidateGasBalance: async ({ chainId: c, txIndex, status }) => {
-        await console.log('validate: ', c, txIndex, status);
+        logger.info({
+          at: `${controllerName}#startSolanaBridge`,
+          message: 'Gas balance validation',
+          chainId: c,
+          txIndex,
+          status,
+        });
       },
     });
 
@@ -498,10 +548,10 @@ class BridgeController extends Controller {
     };
   }
 
-  /* 
+  /*
    * This function is used to bridge evm assets that are supported by the skip bridge.
    * This is done by using the eip7702 kernel account with zero dev to sponsor the user operation.
-   * This function is used for all evm chains that support eip7702 including arbitrum, ethereum, 
+   * This function is used for all evm chains that support eip7702 including arbitrum, ethereum,
    * base, and optimism.
   */
   async startEvmBridge(
@@ -514,14 +564,20 @@ class BridgeController extends Controller {
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
-    let callData: Parameters<SmartAccountImplementation["encodeCalls"]>[0] = [];
+    let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
-      callData = await getSkipCallData(fromAddress, sourceAssetDenom, record.dydx_address, amount, chainId);
+      callData = await getSkipCallData(
+        fromAddress,
+        sourceAssetDenom,
+        record.dydx_address,
+        amount,
+        chainId,
+      );
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridge`,
-        message: `Failed to get Skip call data`,
-        error: error,
+        message: 'Failed to get Skip call data',
+        error,
       });
       throw error;
     }
@@ -573,10 +629,11 @@ class BridgeController extends Controller {
     const { receipt } = await kernelClient.waitForUserOperationReceipt({
       hash: userOpHash,
     });
-    console.log(
-      'UserOp completed',
-      `tx/${receipt.transactionHash}`,
-    );
+    logger.info({
+      at: `${controllerName}#startEvmBridge`,
+      message: 'UserOp completed',
+      transactionHash: receipt.transactionHash,
+    });
     return {
       toAddress: fromAddress,
       amount,
@@ -600,19 +657,25 @@ class BridgeController extends Controller {
     sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
-    const eoaAddress = getEOAAddressFromSmartAccountAddress(fromAddress as Address)
-    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
+    const eoaAddress = getEOAAddressFromSmartAccountAddress(fromAddress as Address);
+    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(eoaAddress);
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
-    let callData: Parameters<SmartAccountImplementation["encodeCalls"]>[0] = [];
+    let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
-      callData = await getSkipCallData(fromAddress, sourceAssetDenom, record.dydx_address, amount, chainId);
+      callData = await getSkipCallData(
+        eoaAddress,
+        sourceAssetDenom,
+        record.dydx_address,
+        amount,
+        chainId,
+      );
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridgePre7702`,
-        message: `Failed to get Skip call data`,
-        error: error,
+        message: 'Failed to get Skip call data',
+        error,
       });
       throw error;
     }
@@ -620,11 +683,12 @@ class BridgeController extends Controller {
     const entryPoint = getEntryPoint('0.7');
 
     // Initialize a Turnkey-powered Viem Account
+    // needs to sign with eoa address.
     const turnkeyAccount = await createAccount({
       // @ts-ignore
       client: turnkeySenderClient.apiClient(),
       organizationId: record.suborg_id,
-      signWith: fromAddress,
+      signWith: eoaAddress,
     });
 
     // Construct a validator
@@ -642,7 +706,11 @@ class BridgeController extends Controller {
       },
       kernelVersion: KERNEL_V3_1,
     });
-    console.log('account', account.address);
+    logger.info({
+      at: `${controllerName}#startEvmBridgePre7702`,
+      message: 'Account created',
+      accountAddress: account.address,
+    });
 
     const zerodevPaymaster = createZeroDevPaymasterClient({
       chain: chains[chainId],
@@ -672,21 +740,25 @@ class BridgeController extends Controller {
       const userOpHash = await kernelClient.sendUserOperation({
         callData: await kernelClient.account.encodeCalls(callData),
       });
-      console.log('UserOp sent:', userOpHash);
-      console.log('Waiting for UserOp to be completed...');
-  
+      logger.info({
+        at: `${controllerName}#startEvmBridgePre7702`,
+        message: 'UserOp sent',
+        userOpHash,
+      });
+
       const { receipt } = await kernelClient.waitForUserOperationReceipt({
         hash: userOpHash,
       });
-      console.log(
-        'UserOp completed',
-        `tx/${receipt.transactionHash}`,
-      );
+      logger.info({
+        at: `${controllerName}#startEvmBridgePre7702`,
+        message: 'UserOp completed',
+        transactionHash: receipt.transactionHash,
+      });
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridgePre7702`,
-        message: `Failed to send user operation, AVAX does not support eip7702 yet, did you remember to send to the smart account?`,
-        error: error,
+        message: 'Failed to send user operation, AVAX does not support eip7702 yet, did you remember to send to the smart account?',
+        error,
       });
       throw new Error(`Failed to send user operation, AVAX does not support eip7702 yet, did you remember to send to the smart account?, error: ${error}`);
     }
@@ -698,7 +770,7 @@ class BridgeController extends Controller {
   }
 }
 
-function getEOAAddressFromSmartAccountAddress(address: Address): Address {
+function getEOAAddressFromSmartAccountAddress(_: Address): Address {
   return '0x0001';
 }
 
@@ -707,12 +779,13 @@ function getEOAAddressFromSmartAccountAddress(address: Address): Address {
  *     this amount is the usdc amount that is being swept.
  * for evm sweeps, an amount is not included in the map.
  */
-async function parseEvent(e: any): Promise<{ addressesToSweep: Map<string, string>, chainId: string }> {
-  const { event: { transaction, activity, network } } = e;
-  console.log("network is ", network);
+async function parseEvent(e: express.Request): Promise<{
+  addressesToSweep: Map<string, string>,
+  chainId: string,
+}> {
+  const { event: { transaction, activity, network } } = e.body;
   let chainId = '';
   chainId = alchemyNetworkToChainIdMap[network];
-  console.log("chainId is ", chainId);
   const addressesToProcess = new Map<string, string>();
   // for evm parsing only
   if (activity) {
@@ -729,39 +802,51 @@ async function parseEvent(e: any): Promise<{ addressesToSweep: Map<string, strin
       }
       for (const meta of tx.meta || []) {
         for (const postTokenBalance of meta.post_token_balances || []) {
-          console.log("postTokenBalance is ", postTokenBalance);
-          // usdc is the only supported asset for solana so we only include the usdc amount 
-          // and ignore the rest.
-          if (postTokenBalance.owner && postTokenBalance.mint === usdcAddressByChainId.solana && postTokenBalance.ui_token_amount.ui_amount > 0) {
+          // usdc is the only supported asset for solana so we only include the usdc amount
+          // and ignore the rest and we only sweep if there is a positive amount.
+          if (
+            postTokenBalance.owner &&
+            postTokenBalance.mint === usdcAddressByChainId.solana &&
+            postTokenBalance.ui_token_amount.ui_amount > 0
+          ) {
             addressesToProcess.set(postTokenBalance.owner, postTokenBalance.ui_token_amount.amount);
           }
         }
       }
     }
   }
-  console.log("addressesToProcess is ", addressesToProcess);
   // validate the addressesToProcess to see if they are indeed turnkey users.
   const addressesToSweep = new Map<string, string>();
-  console.log("fromAddresses is ", addressesToProcess.keys());
   for (const fromAddress of addressesToProcess.keys()) {
-    // if the chain is solana, then we need to also include the token amount. 
+    // if the chain is solana, then we need to also include the token amount.
     // USDC is the only supported asset for solana so that will be the contract address.
-    if (chainId == "solana") {
-      console.log("searching for address ", fromAddress);
+    if (chainId === 'solana') {
       const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(fromAddress);
       if (!record || !record.dydx_address) {
-        console.log(`failed to find a turnkey user for address ${fromAddress}`);
+        logger.warning({
+          at: `${controllerName}#parseEvent`,
+          message: 'Failed to find a turnkey user for address',
+          address: fromAddress,
+        });
         continue;
       }
-      console.log("found a turnkey user for address ", fromAddress);
-      // add the amount to the map as well. 
+      logger.info({
+        at: `${controllerName}#parseEvent`,
+        message: 'Found a turnkey user for address',
+        address: fromAddress,
+      });
+      // add the amount to the map as well.
       addressesToSweep.set(fromAddress, addressesToProcess.get(fromAddress) || '');
     } else {
       // need the checksummed address to find the turnkey user.
       const checkSummedFromAddress = checksumAddress(fromAddress as `0x${string}`);
-      const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(checkSummedFromAddress);
+      const record = await findByEvmAddress(checkSummedFromAddress);
       if (!record || !record.dydx_address) {
-        console.log(`failed to find a turnkey user for address ${checkSummedFromAddress}`);
+        logger.warning({
+          at: `${controllerName}#parseEvent`,
+          message: 'Failed to find a turnkey user for address',
+          address: checkSummedFromAddress,
+        });
         continue;
       }
       // no amount required for evm.
@@ -789,7 +874,7 @@ router.post(
         await bridgeController.sweep(
           fromAddress,
           chainId,
-          addressesToSweep.get(fromAddress) == '' ? undefined : addressesToSweep.get(fromAddress),
+          addressesToSweep.get(fromAddress) === '' ? undefined : addressesToSweep.get(fromAddress),
         );
       }
       res.status(200).send();

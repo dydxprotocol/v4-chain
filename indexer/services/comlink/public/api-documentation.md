@@ -3110,7 +3110,6 @@ fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
 |fromAddress|query|string|true|none|
 |chainId|query|string|true|none|
 |amount|query|string|false|none|
-|contract|query|string|false|none|
 
 > Example responses
 

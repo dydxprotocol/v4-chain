@@ -22,7 +22,7 @@ declare global {
 // Polyfill
 if (!Array.prototype.findLast) {
   // eslint-disable-next-line no-extend-native
-  Array.prototype.findLast = function <T>(
+  Array.prototype.findLast = function findLast<T>(
     this: T[],
     callback: (element: T, index: number, array: T[]) => unknown,
   ): T | undefined {

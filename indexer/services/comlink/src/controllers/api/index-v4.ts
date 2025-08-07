@@ -1,4 +1,4 @@
-import './helpers/polyfill/polyfill';
+import '../../helpers/polyfill/polyfill';
 import express from 'express';
 
 import AddressesController from './v4/addresses-controller';

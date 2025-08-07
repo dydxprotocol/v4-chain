@@ -3533,14 +3533,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "contract",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
           }
         ]
       }
