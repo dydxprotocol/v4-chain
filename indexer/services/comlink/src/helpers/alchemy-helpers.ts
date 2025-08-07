@@ -1,5 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { findByEvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
+import { findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
@@ -41,6 +41,10 @@ export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): 
   try {
     // Add EVM address to webhook for monitoring
     if (evm) {
+      const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(evm);
+      if (!record) {
+        throw new Error(`EVM address does not exist in the database: ${evm}`);
+      }
       // Iterate over all EVM networks and register the address with each webhook
       for (const [chainId, webhookId] of Object.entries(evmChainIdToAlchemyWebhookId)) {
         try {
@@ -67,13 +71,11 @@ export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): 
 
     // Add SVM address to webhook for monitoring
     if (svm) {
+      const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(svm);
+      if (!record) {
+        throw new Error(`SVM address does not exist in the database: ${svm}`);
+      }
       await registerAddressWithAlchemyWebhookWithRetry(svm, solanaAlchemyWebhookId);
-      logger.info({
-        at: 'TurnkeyController#addAddressesToAlchemyWebhook',
-        message: 'Successfully added svm address to Alchemy webhook',
-        evmAddress: evm,
-        svmAddress: svm,
-      });
     }
 
   } catch (error) {
@@ -84,7 +86,6 @@ export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): 
       evmAddress: evm,
       svmAddress: svm,
     });
-    // Don't throw error to avoid breaking the main flow
   }
 }
 
@@ -166,11 +167,12 @@ async function registerAddressWithAlchemyWebhookWithRetry(
   }
 }
 
+/* 
+ * Returns the smart account address indexed at 0 with entry point 0.7. 
+ * Also assumes that the address provided here is a valid address that 
+ * already exists in our database.
+ */
 async function getSmartAccountAddress(address: string): Promise<string> {
-  const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(address);
-  if (!record) {
-    throw new Error(`EOA Account does not exist in the database: ${address}`);
-  }
   const publicAvalancheClient = createPublicClient({
     transport: http(getRPCEndpoint(avalanche.id.toString())),
     chain: avalanche,
@@ -180,7 +182,7 @@ async function getSmartAccountAddress(address: string): Promise<string> {
     publicClient: publicAvalancheClient,
     entryPoint: getEntryPoint('0.7'),
     kernelVersion: KERNEL_V3_1,
-    eoaAddress: record.evm_address as Address,
+    eoaAddress: address as Address,
     index: BigInt(0),
   });
   return kernelAddress;

@@ -40,7 +40,7 @@ describe('alchemy-helpers', () => {
       salt: 'test-salt',
       created_at: new Date().toISOString(),
       evm_address: '0x1234567890123456789012345678901234567890',
-      svm_address: 'dydx1234567890123456789012345678901234567890',
+      svm_address: 'ABC123DEF456GHI789JKL012MNO345PQR678STU901VWX234YZA567',
     };
     await TurnkeyUsersTable.create(mockUser);
   });
@@ -284,7 +284,7 @@ describe('alchemy-helpers', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should handle malformed addresses', async () => {
+    it('should handle addresses that do not exist in database', async () => {
       const malformedAddress = 'invalid-address';
 
       mockFetch.mockResolvedValue({
@@ -295,29 +295,8 @@ describe('alchemy-helpers', () => {
 
       await addAddressesToAlchemyWebhook(malformedAddress, '');
 
-      // Should still attempt to register the malformed address
-      expect(mockFetch).toHaveBeenCalledTimes(5);
-    });
-
-    it('should handle very long addresses', async () => {
-      const longAddress = `0x${'1'.repeat(100)}`;
-
-      mockFetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-      } as Response);
-
-      await addAddressesToAlchemyWebhook(longAddress, '');
-
-      expect(mockFetch).toHaveBeenCalledTimes(5);
-
-      // Verify the long address is included in the request
-      const calls = mockFetch.mock.calls;
-      calls.forEach((call) => {
-        const body = JSON.parse(call[1]!.body as string);
-        expect(body.addresses_to_add).toContain(longAddress);
-      });
+      // Should not make any webhook calls
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 });
