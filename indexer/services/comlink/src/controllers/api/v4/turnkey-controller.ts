@@ -12,6 +12,8 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { isValidEmail } from '../../../helpers/utility/validation';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -24,7 +26,6 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
-import { isValidEmail } from '../../../helpers/utility/validation';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -271,6 +272,10 @@ export class TurnkeyController extends Controller {
       created_at: new Date().toISOString(),
     });
 
+    // need to also add the svm and evm addresses to the alchemy hook
+    if (evmAddress && svmAddress) {
+      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
+    }
     return {
       subOrgId: subOrg.subOrganizationId,
       salt,
