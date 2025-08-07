@@ -167,9 +167,9 @@ async function registerAddressWithAlchemyWebhookWithRetry(
   }
 }
 
-/* 
- * Returns the smart account address indexed at 0 with entry point 0.7. 
- * Also assumes that the address provided here is a valid address that 
+/*
+ * Returns the smart account address indexed at 0 with entry point 0.7.
+ * Also assumes that the address provided here is a valid address that
  * already exists in our database.
  */
 async function getSmartAccountAddress(address: string): Promise<string> {
