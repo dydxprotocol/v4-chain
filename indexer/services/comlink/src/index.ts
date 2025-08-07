@@ -1,4 +1,3 @@
-import './helpers/polyfill/polyfill';
 import {
   logger,
   wrapBackgroundTask,

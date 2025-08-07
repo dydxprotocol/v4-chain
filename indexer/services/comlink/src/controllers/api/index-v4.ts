@@ -1,3 +1,4 @@
+import './helpers/polyfill/polyfill';
 import express from 'express';
 
 import AddressesController from './v4/addresses-controller';
@@ -25,7 +26,6 @@ import TradesController from './v4/trades-controller';
 import TransfersController from './v4/transfers-controller';
 import { router as TurnkeyController } from './v4/turnkey-controller';
 import VaultController from './v4/vault-controller';
-
 // Keep routers in alphabetical order
 
 const router: express.Router = express.Router();
