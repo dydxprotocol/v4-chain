@@ -24,11 +24,11 @@ DECLARE
     order_flag bigint;
 BEGIN
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
-    IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL OR event_data->'twapOrderPlacement' IS NOT NULL THEN
+    IF coalesce(event_data->'orderPlace', event_data->'longTermOrderPlacement', event_data->'conditionalOrderPlacement', event_data->'twapOrderPlacement') IS NOT NULL THEN
         order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order', event_data->'twapOrderPlacement'->'order');
         order_flag = (order_->'orderId'->'orderFlags')::bigint;
 
-        IF order_flag = 256 THEN
+        IF order_flag = constants.order_flag_twap_suborder() THEN
             -- Twap suborders are not stored in the orders table.
             RAISE WARNING 'IGNORING TWAP SUBORDER ORDER PLACEMENT EVENT: %', order_;
             RETURN NULL;
@@ -138,7 +138,7 @@ BEGIN
             ELSE
                 order_id = event_data->'orderRemoval'->'removedOrderId';
                 order_record."status" = 'CANCELED';
-                IF (order_id->>'orderFlags')::bigint = 256 THEN
+                IF (order_id->>'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
                     -- TWP Suborder removals should not update parent order status.
                     order_record."status" = 'OPEN';
                 END IF;

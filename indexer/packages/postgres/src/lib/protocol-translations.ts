@@ -1,4 +1,10 @@
-import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
+import { bytesToBigInt,
+  ORDER_FLAG_CONDITIONAL,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP,
+  ORDER_FLAG_TWAP_SUBORDER,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   ClobPairStatus,
   IndexerOrder,
@@ -324,9 +330,9 @@ export function protocolConditionTypeToOrderType(
   orderFlag: number = 32,
 ): OrderType {
   switch (orderFlag) {
-    case 0:
+    case ORDER_FLAG_SHORT_TERM:
       return OrderType.LIMIT;
-    case 32:
+    case ORDER_FLAG_CONDITIONAL:
       switch (protocolConditionType) {
         case IndexerOrder_ConditionType.UNRECOGNIZED:
         case IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED:
@@ -338,11 +344,11 @@ export function protocolConditionTypeToOrderType(
         default:
           throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
       }
-    case 64:
+    case ORDER_FLAG_LONG_TERM:
       return OrderType.LIMIT;
-    case 128:
+    case ORDER_FLAG_TWAP:
       return OrderType.TWAP;
-    case 256:
+    case ORDER_FLAG_TWAP_SUBORDER:
       return OrderType.TWAP_SUBORDER;
     default:
       throw new Error(`Unexpected OrderFlags: ${orderFlag}`);

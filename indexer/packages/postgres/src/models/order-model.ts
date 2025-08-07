@@ -140,6 +140,9 @@ export default class OrderModel extends BaseModel {
       builderAddress: 'string',
       feePpm: 'string',
       orderRouterAddress: 'string',
+      duration: 'string',
+      interval: 'string',
+      priceTolerance: 'string',
     };
   }
 
@@ -190,4 +193,10 @@ export default class OrderModel extends BaseModel {
   feePpm?: string;
 
   orderRouterAddress?: string;
+
+  duration?: string;
+
+  interval?: string;
+
+  priceTolerance?: string;
 }

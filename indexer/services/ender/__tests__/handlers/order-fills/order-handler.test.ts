@@ -1907,6 +1907,59 @@ describe('OrderHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: '4',
     });
+
+    const eventId: Buffer = TendermintEventTable.createEventId(
+      defaultHeight,
+      transactionIndex,
+      eventIndex,
+    );
+
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '123',
+      liquidity: Liquidity.TAKER,
+      size: '100000000',
+      price: '0.00000000000001',
+      quoteAmount: '0.000001',
+      eventId: eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.TWAP_SUBORDER,
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(suborder2.side),
+      orderFlags: parentTwapOrder.orderId!.orderFlags.toString(),
+      clientMetadata: suborder2.clientMetadata.toString(),
+      fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+    });
+
+
+    const eventId2: Buffer = TendermintEventTable.createEventId(
+      '4',
+      transactionIndex,
+      eventIndex,
+    );
+
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '123',
+      liquidity: Liquidity.TAKER,
+      size: '100000000',
+      price: '0.00000000000002',
+      quoteAmount: '0.000002',
+      eventId: eventId2,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: '4',
+      type: FillType.TWAP_SUBORDER,
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(suborder2.side),
+      orderFlags: parentTwapOrder.orderId!.orderFlags.toString(),
+      clientMetadata: suborder2.clientMetadata.toString(),
+      fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+    });
   });
 
   it.each([

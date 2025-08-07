@@ -1,7 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { OrderTable } from '@dydxprotocol-indexer/postgres';
 import { VAULTS_CLOB_0_TO_999 } from '@dydxprotocol-indexer/postgres/build/src/lib/helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_TWAP_SUBORDER } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_TWAP, ORDER_FLAG_TWAP_SUBORDER } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
   IndexerOrder,
@@ -14,6 +14,7 @@ import {
   StatefulOrderEventV1_LongTermOrderPlacementV1,
   IndexerOrder_ConditionType,
   IndexerSubaccountId,
+  StatefulOrderEventV1_TwapOrderPlacementV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -28,25 +29,14 @@ import { Validator } from './validator';
 
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {
-    if (
-      this.event.orderPlace === undefined &&
-      this.event.orderRemoval === undefined &&
-      this.event.conditionalOrderPlacement === undefined &&
-      this.event.conditionalOrderTriggered === undefined &&
-      this.event.longTermOrderPlacement === undefined &&
-      this.event.twapOrderPlacement === undefined
-    ) {
+    if (this.allOrderPlacementTypesUndefined()) {
       return this.logAndThrowParseMessageError(
         'One of orderPlace, orderRemoval, conditionalOrderPlacement, conditionalOrderTriggered, ' +
         'longTermOrderPlacement, or twapOrderPlacement must be defined in StatefulOrderEvent',
         { event: this.event },
       );
     }
-    logger.info({
-      message: 'StatefulOrderValidator',
-      at: 'validate',
-      event: this.event,
-    });
+
     if (this.event.orderPlace !== undefined) {
       this.validateOrderPlace(this.event.orderPlace);
     } else if (this.event.orderRemoval !== undefined) {
@@ -57,7 +47,20 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.validateConditionalOrderTriggered(this.event.conditionalOrderTriggered);
     } else if (this.event.longTermOrderPlacement !== undefined) {
       this.validateLongTermOrderPlacement(this.event.longTermOrderPlacement!);
-    } // validate twap?
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      this.validateTwapOrderPlacement(this.event.twapOrderPlacement!);
+    }
+  }
+
+  private allOrderPlacementTypesUndefined(): boolean {
+    return (
+      this.event.orderPlace === undefined &&
+      this.event.orderRemoval === undefined &&
+      this.event.conditionalOrderPlacement === undefined &&
+      this.event.conditionalOrderTriggered === undefined &&
+      this.event.longTermOrderPlacement === undefined &&
+      this.event.twapOrderPlacement === undefined
+    )
   }
 
   private validateStatefulOrder(order: IndexerOrder): void {
@@ -201,6 +204,35 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return this.logAndThrowParseMessageError(
         'StatefulOrderEvent long term order must have order flag ' +
         `${ORDER_FLAG_LONG_TERM} or ${ORDER_FLAG_TWAP_SUBORDER}`,
+        { event: this.event },
+      );
+    }
+  }
+
+  private validateTwapOrderPlacement(
+    twapOrderPlacement: StatefulOrderEventV1_TwapOrderPlacementV1,
+  ): void {
+    const order: IndexerOrder | undefined = twapOrderPlacement.order;
+    if (order === undefined) {
+      return this.logAndThrowParseMessageError(
+        'StatefulOrderEvent twap order placement must contain an order',
+        { event: this.event },
+      );
+    }
+
+    this.validateStatefulOrder(order);
+
+    if (order.orderId!.orderFlags !== ORDER_FLAG_TWAP) {
+      return this.logAndThrowParseMessageError(
+        'StatefulOrderEvent twap order must have order flag ' +
+        `${ORDER_FLAG_TWAP}`,
+        { event: this.event },
+      );
+    }
+
+    if (order.twapParameters === undefined) {
+      return this.logAndThrowParseMessageError(
+        'StatefulOrderEvent TWAP order must have twapParameters',
         { event: this.event },
       );
     }

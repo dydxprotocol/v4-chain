@@ -96,7 +96,8 @@ BEGIN
                                     power(10, asset_record."atomicResolution")::numeric);
     order_router_address = dydx_get_order_router_address(fill_liquidity, event_data);
 
-    fill_type = CASE WHEN (order_->'orderId'->>'orderFlags')::bigint = 256 THEN 'TWAP_SUBORDER' ELSE fill_type END;
+    fill_type = CASE WHEN (order_->'orderId'->>'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN 'TWAP_SUBORDER' ELSE fill_type END;
+
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
     order_side = dydx_from_protocol_order_side(order_->'side');
@@ -116,15 +117,10 @@ BEGIN
     order_record."updatedAtHeight" = block_height;
     order_record."orderRouterAddress" = order_->>'orderRouterAddress';
 
-    -- IF (order_->'orderId'->>'orderFlags')::bigint = 256 THEN
-    --     RAISE NOTICE 'UUID: % | Fill Amount: %, Total Filled: %', order_uuid, fill_amount, order_record."totalFilled";
-    -- END IF;
-
     RAISE WARNING 'ORDER UUID: % | FOUND: %', order_uuid, FOUND;
 
     IF FOUND THEN
-        -- RAISE EXCEPTION 'Total filled: % | Fill Amount: %', order_record."totalFilled", fill_amount;
-        IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
+        IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
             RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
 
             order_record."price" = dydx_trim_scale(((order_record."totalFilled" * order_record."price") + (fill_amount * order_price)) / (order_record."totalFilled" + fill_amount));
@@ -190,8 +186,8 @@ BEGIN
         order_record."interval" = NULL;
         order_record."priceTolerance" = NULL;
 
-        IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = 256 THEN
-            order_record."orderFlags" = 128; -- Twap suborders should be mapped to their parent order.
+        IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+            order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
             RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
         END IF;
         

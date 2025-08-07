@@ -1,15 +1,14 @@
 import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
-  FillColumns,
-  FillFromDatabase,
-  FillTable,
-  FillType,
-  IsoString,
-  Ordering,
-  PerpetualMarketFromDatabase,
-  perpetualMarketRefresher,
-  QueryableField,
   SubaccountTable,
+  IsoString,
+  perpetualMarketRefresher,
+  PerpetualMarketFromDatabase,
+  FillTable,
+  FillFromDatabase,
+  QueryableField,
+  FillColumns,
+  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -33,9 +32,9 @@ import {
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckLimitAndCreatedBeforeOrAtSchema,
-  CheckPaginationSchema,
-  CheckParentSubaccountSchema,
   CheckSubaccountSchema,
+  CheckParentSubaccountSchema,
+  CheckPaginationSchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -57,7 +56,7 @@ const fillsCacheControlMiddleware = cacheControlMiddleware(config.CACHE_CONTROL_
 class FillsController extends Controller {
   @Get('/')
   async getFills(
-      @Query() address: string,
+    @Query() address: string,
       @Query() subaccountNumber: number,
       @Query() market?: string,
       @Query() marketType?: MarketType,
@@ -125,11 +124,10 @@ class FillsController extends Controller {
   // Note: This is expected to be used for FE only, where `parentSubaccount -> childSubaccount`
   // mapping is relevant. API traders should use `fills/` instead.
   async getFillsForParentSubaccount(
-      @Query() address: string,
+    @Query() address: string,
       @Query() parentSubaccountNumber: number,
       @Query() limit?: number,
       @Query() page?: number,
-      @Query() fillType?: FillType,
   ): Promise<FillResponse> {
     // Get subaccountIds for all child subaccounts of the parent subaccount
     // Create a record of subaccountId to subaccount number
@@ -140,34 +138,27 @@ class FillsController extends Controller {
       },
     );
 
-    // = await FillTable.findAll(
-    //   {
-    //     parentSubaccount: {
-    //       address,
-    //       subaccountNumber: parentSubaccountNumber,
-    //     },
-    //     limit,
-    //     page,
-    //   },
-    //   [QueryableField.LIMIT],
-    //   page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
-
     const {
       results: fills,
       limit: pageSize,
       offset,
       total,
-    } = await FillTable.getFillsForParentSubaccount(
-      address,
-      parentSubaccountNumber,
-      limit || config.API_LIMIT_V4,
-      page,
-      fillType,
+    } = await FillTable.findAll(
+      {
+        parentSubaccount: {
+          address,
+          subaccountNumber: parentSubaccountNumber,
+        },
+        limit,
+        page,
+      },
+      [QueryableField.LIMIT],
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     const clobPairIdToPerpetualMarket: Record<
-      string,
-      PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
+        string,
+        PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
     const clobPairIdToMarket: MarketAndTypeByClobPairId = _.mapValues(
       clobPairIdToPerpetualMarket,
       (perpetualMarket: PerpetualMarketFromDatabase) => {
@@ -237,7 +228,7 @@ router.get(
     }: FillRequest = matchedData(req) as FillRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
-    const subaccountNum: number = +subaccountNumber;
+    const subaccountNum : number = +subaccountNumber;
 
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
@@ -315,7 +306,7 @@ router.get(
     }: ParentSubaccountFillRequest = matchedData(req) as ParentSubaccountFillRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
-    const parentSubaccountNum: number = +parentSubaccountNumber;
+    const parentSubaccountNum : number = +parentSubaccountNumber;
 
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
