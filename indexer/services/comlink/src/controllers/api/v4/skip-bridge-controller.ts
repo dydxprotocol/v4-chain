@@ -5,7 +5,7 @@ import {
   route, executeRoute, setClientOptions, messages,
 } from '@skip-go/client/cjs';
 import { Adapter } from '@solana/wallet-adapter-base';
-import { Keypair, Transaction } from '@solana/web3.js';
+import { Keypair, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
 import { TurnkeySigner } from '@turnkey/solana';
 import { createAccount } from '@turnkey/viem';
@@ -324,13 +324,15 @@ function getSvmSigner(suborgId: string, signWith: string) {
     },
     signTransaction: async (tx: Transaction) => {
       try {
+        // @ts-ignore
         return await turnkeySigner.signTransaction(tx, signWith);
       } catch (error) {
         throw new Error(`Failed to sign transaction with TurnkeySigner: ${error.message}`);
       }
     },
-    signAllTransactions: async (txs: Transaction[]) => {
+    signAllTransactions: async (txs: (Transaction | VersionedTransaction)[]) => {
       try {
+        // @ts-ignore
         return await turnkeySigner.signAllTransactions(txs, signWith);
       } catch (error) {
         throw new Error(`Failed to sign transactions with TurnkeySigner: ${error.message}`);
@@ -583,12 +585,14 @@ class BridgeController extends Controller {
   }
 
   /*
-   * This function is primarily used for avalanche as they do not support the eip7702 yet.
+   * This function is only used for avalanche as they do not support the eip7702 yet.
    * Similar logic to startEvmBridge with the distinction that the smart account is a different
    * address as the EOA account.
-   * We will only auto bridge funds sent to the smart account address for avalance pre 7702 because 
+   *
+   * We will only auto bridge funds sent to the smart account address for avalance pre 7702 because
    * no gas sponsorship is possible pre 7702. We are assuming that the address provided will be a
    * smart account address and that the underlying EOA address is a valid entry in our database.
+   *
    */
   async startEvmBridgePre7702(
     fromAddress: string,
@@ -596,7 +600,7 @@ class BridgeController extends Controller {
     sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
-    const eoaAddress = getEOAAddressFromSmartAccountAddress(fromAddress)
+    const eoaAddress = getEOAAddressFromSmartAccountAddress(fromAddress as Address)
     const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');

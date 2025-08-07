@@ -1301,24 +1301,17 @@
           "amount": {
             "type": "string"
           },
-          "asset": {
+          "sourceAssetDenom": {
             "type": "string"
           }
         },
         "required": [
           "toAddress",
           "amount",
-          "asset"
+          "sourceAssetDenom"
         ],
         "type": "object",
         "additionalProperties": false
-      },
-      "Asset": {
-        "enum": [
-          "USDC",
-          "ETH"
-        ],
-        "type": "string"
       },
       "TraderSearchResponseObject": {
         "properties": {
@@ -3500,9 +3493,9 @@
         ]
       }
     },
-    "/bridging/startBridge": {
+    "/bridging/sweep": {
       "post": {
-        "operationId": "StartBridge",
+        "operationId": "Sweep",
         "responses": {
           "200": {
             "description": "Ok",
@@ -3527,7 +3520,7 @@
           },
           {
             "in": "query",
-            "name": "amount",
+            "name": "chainId",
             "required": true,
             "schema": {
               "type": "string"
@@ -3535,16 +3528,16 @@
           },
           {
             "in": "query",
-            "name": "asset",
-            "required": true,
+            "name": "amount",
+            "required": false,
             "schema": {
-              "$ref": "#/components/schemas/Asset"
+              "type": "string"
             }
           },
           {
             "in": "query",
-            "name": "chainId",
-            "required": true,
+            "name": "contract",
+            "required": false,
             "schema": {
               "type": "string"
             }

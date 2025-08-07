@@ -3053,9 +3053,9 @@ fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&paren
 This operation does not require authentication
 </aside>
 
-## StartBridge
+## Sweep
 
-<a id="opIdStartBridge"></a>
+<a id="opIdSweep"></a>
 
 > Code samples
 
@@ -3069,8 +3069,8 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
-r = requests.post(f'{baseURL}/bridging/startBridge', params={
-  'fromAddress': 'string',  'amount': 'string',  'asset': 'USDC',  'chainId': 'string'
+r = requests.post(f'{baseURL}/bridging/sweep', params={
+  'fromAddress': 'string',  'chainId': 'string'
 }, headers = headers)
 
 print(r.json())
@@ -3087,7 +3087,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/bridging/startBridge?fromAddress=string&amount=string&asset=USDC&chainId=string`,
+fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
 {
   method: 'POST',
 
@@ -3101,23 +3101,16 @@ fetch(`${baseURL}/bridging/startBridge?fromAddress=string&amount=string&asset=US
 
 ```
 
-`POST /bridging/startBridge`
+`POST /bridging/sweep`
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |fromAddress|query|string|true|none|
-|amount|query|string|true|none|
-|asset|query|[Asset](#schemaasset)|true|none|
 |chainId|query|string|true|none|
-
-#### Enumerated Values
-
-|Parameter|Value|
-|---|---|
-|asset|USDC|
-|asset|ETH|
+|amount|query|string|false|none|
+|contract|query|string|false|none|
 
 > Example responses
 
@@ -3127,7 +3120,7 @@ fetch(`${baseURL}/bridging/startBridge?fromAddress=string&amount=string&asset=US
 {
   "toAddress": "string",
   "amount": "string",
-  "asset": "string"
+  "sourceAssetDenom": "string"
 }
 ```
 
@@ -6138,7 +6131,7 @@ or
 {
   "toAddress": "string",
   "amount": "string",
-  "asset": "string"
+  "sourceAssetDenom": "string"
 }
 
 ```
@@ -6149,32 +6142,7 @@ or
 |---|---|---|---|---|
 |toAddress|string|true|none|none|
 |amount|string|true|none|none|
-|asset|string|true|none|none|
-
-## Asset
-
-<a id="schemaasset"></a>
-<a id="schema_Asset"></a>
-<a id="tocSasset"></a>
-<a id="tocsasset"></a>
-
-```json
-"USDC"
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string|false|none|none|
-
-#### Enumerated Values
-
-|Property|Value|
-|---|---|
-|*anonymous*|USDC|
-|*anonymous*|ETH|
+|sourceAssetDenom|string|true|none|none|
 
 ## TraderSearchResponseObject
 

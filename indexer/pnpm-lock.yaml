@@ -471,7 +471,7 @@ importers:
       '@keplr-wallet/cosmos': ^0.12.122
       '@skip-go/client': ^1.4.0
       '@solana/wallet-adapter-base': ^0.9.27
-      '@solana/web3.js': 1.98.0
+      '@solana/web3.js': 1.98.4
       '@tsoa/runtime': ^5.0.0
       '@turnkey/http': ^3.5.1
       '@turnkey/sdk-server': ^4.2.3
@@ -542,9 +542,9 @@ importers:
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       '@dydxprotocol/v4-client-js': 2.5.0
       '@keplr-wallet/cosmos': 0.12.122
-      '@skip-go/client': 1.5.1_b176ea4a16c938d3e5954e1d33f700da
-      '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.0
-      '@solana/web3.js': 1.98.0
+      '@skip-go/client': 1.5.1_38aa90f16dff32ec20779c440d6ba925
+      '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.4
+      '@solana/web3.js': 1.98.4_typescript@5.8.3
       '@tsoa/runtime': 5.0.0
       '@turnkey/http': 3.6.0
       '@turnkey/sdk-server': 4.3.0_typescript@5.8.3
@@ -7117,7 +7117,7 @@ packages:
     dependencies:
       '@sinonjs/commons': 1.8.3
 
-  /@skip-go/client/1.5.1_b176ea4a16c938d3e5954e1d33f700da:
+  /@skip-go/client/1.5.1_38aa90f16dff32ec20779c440d6ba925:
     resolution: {integrity: sha512-tf4qs2qpRHuvF5dF0RcRFLTcFx+/Ar9X3GXXy81/WacdPbQ5kGOMqWDsIRlN2LB17xC+Mn5Hcu0ZKYqYA1eNFA==}
     peerDependencies:
       '@solana/web3.js': ^1.95.8
@@ -7130,8 +7130,8 @@ packages:
       '@cosmjs/proto-signing': 0.33.1
       '@cosmjs/stargate': 0.33.1
       '@keplr-wallet/unit': 0.12.262_starknet@7.6.4
-      '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.0
-      '@solana/web3.js': 1.98.0
+      '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.4
+      '@solana/web3.js': 1.98.4_typescript@5.8.3
       bech32: 2.0.0
       cosmjs-types: 0.9.0
       keccak: 3.0.4
@@ -7597,14 +7597,14 @@ packages:
       typescript: 5.8.3
     dev: false
 
-  /@solana/wallet-adapter-base/0.9.27_@solana+web3.js@1.98.0:
+  /@solana/wallet-adapter-base/0.9.27_@solana+web3.js@1.98.4:
     resolution: {integrity: sha512-kXjeNfNFVs/NE9GPmysBRKQ/nf+foSaq3kfVSeMcO/iVgigyRmB551OjU3WyAolLG/1jeEfKLqF9fKwMCRkUqg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@solana/web3.js': ^1.98.0
     dependencies:
       '@solana/wallet-standard-features': 1.3.0
-      '@solana/web3.js': 1.98.0
+      '@solana/web3.js': 1.98.4_typescript@5.8.3
       '@wallet-standard/base': 1.1.0
       '@wallet-standard/features': 1.1.0
       eventemitter3: 5.0.1
@@ -7616,30 +7616,6 @@ packages:
     dependencies:
       '@wallet-standard/base': 1.1.0
       '@wallet-standard/features': 1.1.0
-    dev: false
-
-  /@solana/web3.js/1.98.0:
-    resolution: {integrity: sha512-nz3Q5OeyGFpFCR+erX2f6JPt3sKhzhYcSycBCSPkWjzSVDh/Rr1FqTVMRe58FKO16/ivTUcuJjeS5MyBvpkbzA==}
-    dependencies:
-      '@babel/runtime': 7.28.2
-      '@noble/curves': 1.9.4
-      '@noble/hashes': 1.8.0
-      '@solana/buffer-layout': 4.0.1
-      agentkeepalive: 4.6.0
-      bigint-buffer: 1.1.5
-      bn.js: 5.2.1
-      borsh: 0.7.0
-      bs58: 4.0.1
-      buffer: 6.0.3
-      fast-stable-stringify: 1.0.0
-      jayson: 4.2.0
-      node-fetch: 2.7.0
-      rpc-websockets: 9.1.3
-      superstruct: 2.0.2
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
     dev: false
 
   /@solana/web3.js/1.98.4_typescript@5.8.3:
@@ -7932,7 +7908,7 @@ packages:
       '@turnkey/crypto': 2.4.1
       '@turnkey/encoding': 0.5.0
     optionalDependencies:
-      viem: 2.33.0_typescript@5.8.3
+      viem: 2.31.7_typescript@5.8.3
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -7946,7 +7922,7 @@ packages:
       '@turnkey/crypto': 2.4.3
       '@turnkey/encoding': 0.5.0
     optionalDependencies:
-      viem: 2.33.0_typescript@5.8.3
+      viem: 2.31.7_typescript@5.8.3
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -9250,14 +9226,6 @@ packages:
 
   /big.js/6.2.1:
     resolution: {integrity: sha512-bCtHMwL9LeDIozFn+oNhhFoq+yQ3BNdnsLSASUxLciOb1vgvpHsIO1dsENiGMgbb4SkP5TrzWzRiLddn8ahVOQ==}
-    dev: false
-
-  /bigint-buffer/1.1.5:
-    resolution: {integrity: sha512-trfYco6AoZ+rKhKnxA0hgX0HAbVP/s808/EuDSe2JDzUnCp/xAsli35Orvk67UrTEcwuxZqYZDmfA2RXJgxVvA==}
-    engines: {node: '>= 10.0.0'}
-    requiresBuild: true
-    dependencies:
-      bindings: 1.5.0
     dev: false
 
   /bignumber.js/9.0.2:
@@ -11895,6 +11863,14 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
+    dev: true
+    optional: true
+
+  /fsevents/2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+    requiresBuild: true
     optional: true
 
   /function-bind/1.1.1:
@@ -12262,7 +12238,7 @@ packages:
       source-map: 0.6.1
       wordwrap: 1.0.0
     optionalDependencies:
-      uglify-js: 3.17.4
+      uglify-js: 3.19.3
     dev: false
 
   /har-schema/2.0.0:
@@ -13533,7 +13509,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
+      ts-node: 10.8.2_5faceb518d942d9e0d26e6d93b1febee
     transitivePeerDependencies:
       - supports-color
 
@@ -13712,7 +13688,7 @@ packages:
       micromatch: 4.0.5
       walker: 1.0.8
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /jest-haste-map/28.1.3:
     resolution: {integrity: sha512-3S+RQWDXccXDKSWnkHa/dPwt+2qwA8CJzR61w3FoYCvoo3Pn8tvGcysmMF0Bj0EX5RYvAI2EIvC57OmotfdtKA==}
@@ -17378,7 +17354,6 @@ packages:
       typescript: 5.8.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    dev: true
 
   /ts-node/10.8.2_64708740079a51ed2e240ab651df249f:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
@@ -17586,8 +17561,8 @@ packages:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
     dev: false
 
-  /uglify-js/3.17.4:
-    resolution: {integrity: sha512-T9q82TJI9e/C1TAxYvfb16xO120tMVFZrGA3f9/P4424DNu6ypK103y0GPFVa17yotwSyZW5iYXgjYHkGrJW/g==}
+  /uglify-js/3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
     hasBin: true
     requiresBuild: true
@@ -17869,31 +17844,6 @@ packages:
       - utf-8-validate
       - zod
     dev: false
-
-  /viem/2.33.0_typescript@5.8.3:
-    resolution: {integrity: sha512-SxBM3CmeU+LWLlBclV9MPdbuFV8mQEl0NeRc9iyYU4a7Xb5sr5oku3s/bRGTPpEP+1hCAHYpM09/ui3/dQ6EsA==}
-    requiresBuild: true
-    peerDependencies:
-      typescript: '>=5.0.4'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      '@noble/curves': 1.9.2
-      '@noble/hashes': 1.8.0
-      '@scure/bip32': 1.7.0
-      '@scure/bip39': 1.6.0
-      abitype: 1.0.8_typescript@5.8.3
-      isows: 1.0.7_ws@8.18.2
-      ox: 0.8.1_typescript@5.8.3
-      typescript: 5.8.3
-      ws: 8.18.2
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-      - zod
-    dev: false
-    optional: true
 
   /walker/1.0.8:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}
