@@ -1368,18 +1368,6 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
 |parentSubaccountNumber|query|number(double)|true|none|
 |limit|query|number(double)|false|none|
 |page|query|number(double)|false|none|
-|fillType|query|[FillType](#schemafilltype)|false|none|
-
-#### Enumerated Values
-
-|Parameter|Value|
-|---|---|
-|fillType|LIMIT|
-|fillType|LIQUIDATED|
-|fillType|LIQUIDATION|
-|fillType|DELEVERAGED|
-|fillType|OFFSETTING|
-|fillType|TWAP_SUBORDER|
 
 > Example responses
 

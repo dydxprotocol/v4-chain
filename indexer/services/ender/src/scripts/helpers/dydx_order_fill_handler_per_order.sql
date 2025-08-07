@@ -166,8 +166,6 @@ BEGIN
             WHERE id = order_uuid;
         END IF;
 
-        
->>>>>>> 9c1f5d863 (Support TWAP in the Indexer)
     ELSE
         RAISE WARNING 'CREATING NEW ORDER FROM FILL MESSAGE: %', order_uuid;
         order_record."id" = order_uuid;

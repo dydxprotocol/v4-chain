@@ -2398,14 +2398,6 @@
               "format": "double",
               "type": "number"
             }
-          },
-          {
-            "in": "query",
-            "name": "fillType",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/FillType"
-            }
           }
         ]
       }

@@ -121,6 +121,9 @@ BEGIN
                        "triggerPrice" = order_record."triggerPrice",
                        "builderAddress" = order_record."builderAddress",
                        "feePpm" = order_record."feePpm",
+                       "duration" = order_record."duration",
+                       "interval" = order_record."interval",
+                       "priceTolerance" = order_record."priceTolerance",
                        "orderRouterAddress" = order_record."orderRouterAddress"
         RETURNING * INTO order_record;
 

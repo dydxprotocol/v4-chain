@@ -44,9 +44,7 @@ import {
   OrderFillEventV1,
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
-  Timestamp,
-  TradeMessage,
-  StatefulOrderEventV1,
+  Timestamp
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { KafkaMessage } from 'kafkajs';
@@ -82,7 +80,6 @@ import {
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
-import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
