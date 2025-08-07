@@ -877,7 +877,7 @@ router.post(
           addressesToSweep.get(fromAddress) === '' ? undefined : addressesToSweep.get(fromAddress),
         );
       }
-      res.status(200).send();
+      return res.status(200).send();
     } catch (error) {
       return handleControllerError(
         'BridgeController POST /startBridge',
@@ -892,7 +892,6 @@ router.post(
         Date.now() - start,
       );
     }
-    return;
   },
 );
 
