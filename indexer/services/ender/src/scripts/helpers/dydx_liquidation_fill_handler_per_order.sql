@@ -131,28 +131,46 @@ BEGIN
         order_record."orderRouterAddress" = order_->'orderRouterAddress'::text;
 
         IF FOUND THEN
-            order_record."totalFilled" = total_filled;
-            order_record."status" = dydx_get_order_status(total_filled, order_record.size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
+            IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+                order_record."price" = dydx_trim_scale(((order_record."totalFilled" * order_record."price") + (fill_amount * maker_price)) / (order_record."totalFilled" + fill_amount));
+                order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
-            UPDATE orders
-            SET
-                "side" = order_record."side",
-                "size" = order_record."size",
-                "totalFilled" = order_record."totalFilled",
-                "price" = order_record."price",
-                "status" = order_record."status",
-                "orderFlags" = order_record."orderFlags",
-                "goodTilBlock" = order_record."goodTilBlock",
-                "goodTilBlockTime" = order_record."goodTilBlockTime",
-                "timeInForce" = order_record."timeInForce",
-                "reduceOnly" = order_record."reduceOnly",
-                "clientMetadata" = order_record."clientMetadata",
-                "updatedAt" = order_record."updatedAt",
-                "updatedAtHeight" = order_record."updatedAtHeight",
-                "builderAddress" = order_record."builderAddress",
-                "feePpm" = order_record."feePpm",
-                "orderRouterAddress" = order_record."orderRouterAddress"
-            WHERE id = order_uuid;
+                order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", 'NOT_CANCELED', jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
+                UPDATE orders
+                SET
+                    "side" = order_record."side",
+                    "status" = order_record."status",
+                    "price" = order_record."price",
+                    "reduceOnly" = order_record."reduceOnly",
+                    "updatedAt" = order_record."updatedAt",
+                    "updatedAtHeight" = order_record."updatedAtHeight",
+                    "totalFilled" = order_record."totalFilled" -- keep track of fill amount for the parent order
+                WHERE "id" = order_uuid;
+            
+            ELSE
+                order_record."totalFilled" = total_filled;
+                order_record."status" = dydx_get_order_status(total_filled, order_record.size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
+
+                UPDATE orders
+                SET
+                    "side" = order_record."side",
+                    "size" = order_record."size",
+                    "totalFilled" = order_record."totalFilled",
+                    "price" = order_record."price",
+                    "status" = order_record."status",
+                    "orderFlags" = order_record."orderFlags",
+                    "goodTilBlock" = order_record."goodTilBlock",
+                    "goodTilBlockTime" = order_record."goodTilBlockTime",
+                    "timeInForce" = order_record."timeInForce",
+                    "reduceOnly" = order_record."reduceOnly",
+                    "clientMetadata" = order_record."clientMetadata",
+                    "updatedAt" = order_record."updatedAt",
+                    "updatedAtHeight" = order_record."updatedAtHeight",
+                    "builderAddress" = order_record."builderAddress",
+                    "feePpm" = order_record."feePpm",
+                    "orderRouterAddress" = order_record."orderRouterAddress"
+                WHERE id = order_uuid;
+            END IF;
         ELSE
             order_record."id" = order_uuid;
             order_record."subaccountId" = subaccount_uuid;
@@ -164,19 +182,16 @@ BEGIN
             order_record."totalFilled" = fill_amount;
             order_record."status" = dydx_get_order_status(fill_amount, order_size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
             order_record."createdAtHeight" = block_height;
-            
-            -- Set TWAP fields based on order type
-            IF (order_->'orderId'->'orderFlags')::bigint = 256 THEN
-                -- This is a TWAP order, set the TWAP parameters
-                order_record."duration" = (order_->'twapParameters'->'duration')::bigint;
-                order_record."interval" = (order_->'twapParameters'->'interval')::bigint;
-                order_record."priceTolerance" = (order_->'twapParameters'->'priceTolerance')::bigint;
-            ELSE
-                -- Not a TWAP order, set to NULL
-                order_record."duration" = NULL;
-                order_record."interval" = NULL;
-                order_record."priceTolerance" = NULL;
+
+            IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+                order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
+                order_record."type" = 'TWAP';
+                RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
             END IF;
+            
+            order_record."duration" = NULL;
+            order_record."interval" = NULL;
+            order_record."priceTolerance" = NULL;
             
             INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",

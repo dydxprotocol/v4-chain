@@ -677,6 +677,7 @@ export async function expectOrderInDatabase({
   duration,
   interval,
   priceTolerance,
+  orderType,
 }: {
   subaccountId: string,
   clientId: string,
@@ -699,6 +700,7 @@ export async function expectOrderInDatabase({
   duration?: number,
   interval?: number,
   priceTolerance?: number,
+  orderType?: OrderType,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -713,7 +715,7 @@ export async function expectOrderInDatabase({
     size,
     totalFilled,
     price,
-    type: OrderType.LIMIT, // TODO: Add additional order types
+    type: orderType ?? OrderType.LIMIT, // TODO: Add additional order types
     status,
     timeInForce,
     reduceOnly,

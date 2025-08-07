@@ -123,7 +123,7 @@ BEGIN
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
             RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
 
-            order_record."price" = dydx_trim_scale(((order_record."totalFilled" * order_record."price") + (fill_amount * order_price)) / (order_record."totalFilled" + fill_amount));
+            order_record."price" = dydx_trim_scale(((order_record."totalFilled" * order_record."price") + (fill_amount * maker_price)) / (order_record."totalFilled" + fill_amount));
             order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
             order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", order_canceled_status, jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
@@ -188,6 +188,7 @@ BEGIN
 
         IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
             order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
+            order_record."type" = 'TWAP';
             RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
         END IF;
         

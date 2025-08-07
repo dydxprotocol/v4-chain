@@ -1626,6 +1626,7 @@ describe('OrderHandler', () => {
       clientMetadata: takerOrderProto.clientMetadata.toString(),
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
+      orderType: OrderType.TWAP,
     });
 
     const eventId: Buffer = TendermintEventTable.createEventId(
@@ -1737,9 +1738,6 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: false,
       clientMetadata: 2,
-      duration: 300,
-      interval: 30,
-      priceTolerance: 0.01,
     });
 
     const suborder2 = createOrder({
@@ -1755,10 +1753,7 @@ describe('OrderHandler', () => {
       orderFlags: ORDER_FLAG_TWAP_SUBORDER.toString(), // 256
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: false,
-      clientMetadata: 3,
-      duration: 300,
-      interval: 30,
-      priceTolerance: 0.01,
+      clientMetadata: 2,
     });
 
     // Create a maker order that will match the suborders
@@ -1866,6 +1861,7 @@ describe('OrderHandler', () => {
       clientMetadata: parentTwapOrder.clientMetadata.toString(),
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
+      orderType: OrderType.TWAP,
     });
 
     // // Second suborder fill event
@@ -1906,6 +1902,7 @@ describe('OrderHandler', () => {
       clientMetadata: parentTwapOrder.clientMetadata.toString(),
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: '4',
+      orderType: OrderType.TWAP,
     });
 
     const eventId: Buffer = TendermintEventTable.createEventId(
@@ -1929,7 +1926,7 @@ describe('OrderHandler', () => {
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       side: protocolTranslations.protocolOrderSideToOrderSide(suborder2.side),
       orderFlags: parentTwapOrder.orderId!.orderFlags.toString(),
-      clientMetadata: suborder2.clientMetadata.toString(),
+      clientMetadata: suborder1.clientMetadata.toString(),
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
     });
