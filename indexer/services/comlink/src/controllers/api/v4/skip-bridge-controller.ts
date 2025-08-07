@@ -782,15 +782,6 @@ router.post(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     try {
-      await dbHelpers.clearData();
-      await create({
-        evm_address: '0x46c9E748dfb814Da6577fD4ceF8f785CE7bB4Be7',
-        svm_address: 'AuV1WxiP1bswKykhC9KB5J1Ek1xmq9AdZANWGP97hsPh',
-        dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-        suborg_id: '70528f95-da66-49f4-a096-fe50a19f2e6d',
-        salt: '1234567890',
-        created_at: new Date().toISOString(),
-      });
       const bridgeController = new BridgeController();
       const { addressesToSweep, chainId } = await parseEvent(req.body);
       // Iterate over the set 'toProcess' and process each item
