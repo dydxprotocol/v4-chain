@@ -11,7 +11,8 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "test:clean": "pnpm run build; NODE_ENV=test jest --runInBand --forceExit"
   },
   "author": "",
   "license": "BSL",
