@@ -1,5 +1,5 @@
 -- Create a separate schema for constants
-CREATE SCHEMA constants;
+CREATE SCHEMA IF NOT EXISTS constants;
 
 -- Create functions in the constants schema
 CREATE OR REPLACE FUNCTION constants.order_flag_twap() RETURNS bigint AS $$
