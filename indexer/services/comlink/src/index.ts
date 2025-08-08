@@ -29,8 +29,12 @@ function startServer() {
     });
   });
 
-  server.keepAliveTimeout = config.KEEP_ALIVE_MS;
   server.headersTimeout = config.HEADERS_TIMEOUT_MS;
+  server.keepAliveTimeout = config.KEEP_ALIVE_MS;
+  server.maxHeadersCount = config.MAX_HEADERS_COUNT;
+  server.maxRequestsPerSocket = config.MAX_REQUESTS_PER_SOCKET;
+  server.requestTimeout = config.REQUEST_TIMEOUT_MS;
+  server.timeout = config.SOCKET_TIMEOUT_MS;
 }
 
 async function start() {
