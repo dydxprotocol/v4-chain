@@ -225,12 +225,7 @@ func (k Keeper) GetAllRevShares(
 	// In the case that the taker has an affiliate fee and the maker does not, then no order router fees are generated
 	// for the maker or the taker
 	if len(affiliateRevShares) == 0 {
-		orderRouterRevShares, err = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
-		if err != nil {
-			// Not found order router rev shares doesn't mean no rev shares. It will lead to no revenue being
-			// shared with that order
-			return types.RevSharesForFill{}, err
-		}
+		orderRouterRevShares, _ = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
 		for _, revShare := range orderRouterRevShares {
 			netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, revShare.QuoteQuantums)
 		}
