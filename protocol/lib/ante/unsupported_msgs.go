@@ -2,6 +2,7 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
@@ -25,7 +26,8 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 		// nolint:staticcheck
 		*vaulttypes.MsgSetVaultQuotingParams,
 		// nolint:staticcheck
-		*vaulttypes.MsgUpdateParams:
+		*vaulttypes.MsgUpdateParams,
+		*crisis.MsgVerifyInvariant:
 		return true
 	}
 	return false
