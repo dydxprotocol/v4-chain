@@ -328,42 +328,42 @@ func (k Keeper) getOrderRouterRevShares(
 	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
 	if err != nil {
 		k.Logger(ctx).Error("order router rev share invalid for taker: " + fill.TakerOrderRouterAddr)
-	}
-
-	if fill.TakerOrderRouterAddr != "" {
-		// Orders can have 2 rev share ids, we need to calculate each side separately
-		// This is taker ppm * min(taker, taker - maker_rebate)
-		takerFeesSide := lib.BigMin(takerFees, new(big.Int).Add(takerFees, makerFees))
-		takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
-		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
-			Recipient:         fill.TakerOrderRouterAddr,
-			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
-			RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-			QuoteQuantums:     takerRevShare,
-			RevSharePpm:       takerOrderRouterRevSharePpm,
-		})
+	} else {
+		if fill.TakerOrderRouterAddr != "" {
+			// Orders can have 2 rev share ids, we need to calculate each side separately
+			// This is taker ppm * min(taker, taker - maker_rebate)
+			takerFeesSide := lib.BigMin(takerFees, new(big.Int).Add(takerFees, makerFees))
+			takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
+			orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
+				Recipient:         fill.TakerOrderRouterAddr,
+				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+				QuoteQuantums:     takerRevShare,
+				RevSharePpm:       takerOrderRouterRevSharePpm,
+			})
+		}
 	}
 
 	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
 	if err != nil {
 		k.Logger(ctx).Error("order router rev share invalid for maker: " + fill.MakerOrderRouterAddr)
-	}
+	} else {
+		if fill.MakerOrderRouterAddr != "" {
+			// maker ppm * max(0, maker)
+			makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
+			makerRevShare := lib.BigMulPpm(makerFeeSide,
+				lib.BigU(makerOrderRouterRevSharePpm),
+				false,
+			)
 
-	if fill.MakerOrderRouterAddr != "" {
-		// maker ppm * max(0, maker)
-		makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
-		makerRevShare := lib.BigMulPpm(makerFeeSide,
-			lib.BigU(makerOrderRouterRevSharePpm),
-			false,
-		)
-
-		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
-			Recipient:         fill.MakerOrderRouterAddr,
-			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
-			RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-			QuoteQuantums:     makerRevShare,
-			RevSharePpm:       makerOrderRouterRevSharePpm,
-		})
+			orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
+				Recipient:         fill.MakerOrderRouterAddr,
+				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
+				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+				QuoteQuantums:     makerRevShare,
+				RevSharePpm:       makerOrderRouterRevSharePpm,
+			})
+		}
 	}
 
 	return orderRouterRevShares
