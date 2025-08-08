@@ -29,7 +29,7 @@ export const orderId: IndexerOrderId = {
   clobPairId: 0,
   orderFlags: ORDER_FLAG_SHORT_TERM,
 };
-export const createdAt: IsoString = DateTime.utc().toISO();
+export const createdAt: IsoString = DateTime.utc().toISO()!;
 export const createdAtHeight: string = '1';
 export const order: IndexerOrder = {
   orderId,

@@ -2,7 +2,6 @@ import { requestId } from '@dydxprotocol-indexer/base';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express, { Express } from 'express';
-import nocache from 'nocache';
 import responseTime from 'response-time';
 import swaggerUi from 'swagger-ui-express';
 
