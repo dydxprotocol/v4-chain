@@ -187,13 +187,6 @@ func (k Keeper) PlaceShortTermOrder(
 	order.OrderId.MustBeShortTermOrder()
 	orderLabels := order.GetOrderLabels()
 
-	if _, err := k.revshareKeeper.GetOrderRouterRevShare(
-		ctx,
-		order.GetOrderRouterAddress(),
-	); err != nil {
-		return 0, 0, err
-	}
-
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
 	defer func() {
 		telemetry.IncrCounterWithLabels(
