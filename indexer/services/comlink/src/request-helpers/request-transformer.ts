@@ -165,6 +165,8 @@ export function fillToResponseObject(
     subaccountNumber,
     builderFee: fill.builderFee ?? undefined,
     builderAddress: fill.builderAddress ?? undefined,
+    orderRouterAddress: fill.orderRouterAddress ?? undefined,
+    orderRouterFee: fill.orderRouterFee ?? undefined,
   };
 }
 
@@ -534,6 +536,7 @@ export function redisOrderToResponseObject(
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
     builderAddress: redisOrder.order!.builderCodeParams?.builderAddress ?? undefined,
     feePpm: redisOrder.order!.builderCodeParams?.feePpm.toString() ?? undefined,
+    orderRouterAddress: redisOrder.order!.orderRouterAddress ?? undefined,
   };
 }
 
