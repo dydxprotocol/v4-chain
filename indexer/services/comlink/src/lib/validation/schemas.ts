@@ -9,14 +9,18 @@ import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
 
+const addressSchema = {
+  isString: true as const,
+  custom: {
+    options: isValidAddress,
+  },
+  errorMessage: 'address must be a valid dydx address',
+};
+
 export const CheckSubaccountSchema = checkSchema({
   address: {
     in: ['params', 'query'],
-    isString: true,
-    custom: {
-      options: isValidAddress,
-    },
-    errorMessage: 'address must be a valid dydx address',
+    ...addressSchema,
   },
   subaccountNumber: {
     in: ['params', 'query'],
@@ -30,11 +34,7 @@ export const CheckSubaccountSchema = checkSchema({
 export const CheckParentSubaccountSchema = checkSchema({
   address: {
     in: ['params', 'query'],
-    isString: true,
-    custom: {
-      options: isValidAddress,
-    },
-    errorMessage: 'address must be a valid dydx address',
+    ...addressSchema,
   },
   parentSubaccountNumber: {
     in: ['params', 'query'],
@@ -285,6 +285,45 @@ export const RegisterTokenValidationSchema = [
       return true;
     }),
 ];
+
+export const UpdateReferralCodeSchema = (withTimestamp: boolean = true) => checkSchema({
+  address: {
+    in: ['body'],
+    ...addressSchema,
+  },
+  newCode: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'newCode must be a valid string',
+    custom: {
+      options: validateReferralCode,
+    },
+  },
+  signedMessage: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'signedMessage must be a valid string',
+  },
+  pubKey: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'pubKey must be a valid string',
+  },
+  ...(withTimestamp ? {
+    timestamp: {
+      in: ['body'],
+      isInt: true,
+      errorMessage: 'timestamp must be a valid integer',
+    },
+  } : {}),
+});
+
+function validateReferralCode(code: string): boolean {
+  if (code.length < 3 || code.length > 32 || !/^[a-zA-Z0-9]*$/.test(code)) {
+    return false;
+  }
+  return true;
+}
 
 function verifyIsBech32(address: string): Error | undefined {
   try {

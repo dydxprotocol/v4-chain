@@ -272,6 +272,18 @@
         "type": "object",
         "additionalProperties": false
       },
+      "CreateReferralCodeResponse": {
+        "properties": {
+          "referralCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "referralCode"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "AffiliateSnapshotResponseObject": {
         "properties": {
           "affiliateAddress": {
@@ -1905,6 +1917,47 @@
             }
           }
         ]
+      }
+    },
+    "/affiliates/referralCode": {
+      "post": {
+        "operationId": "UpdateCode",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateReferralCodeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "newCode": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "newCode",
+                  "address"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
       }
     },
     "/affiliates/snapshot": {
