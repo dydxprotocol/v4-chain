@@ -225,7 +225,7 @@ func (k Keeper) GetAllRevShares(
 	// In the case that the taker has an affiliate fee and the maker does not, then no order router fees are generated
 	// for the maker or the taker
 	if len(affiliateRevShares) == 0 {
-		orderRouterRevShares, _ = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
+		orderRouterRevShares = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
 		for _, revShare := range orderRouterRevShares {
 			netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, revShare.QuoteQuantums)
 		}
@@ -319,9 +319,9 @@ func (k Keeper) getOrderRouterRevShares(
 	fill clobtypes.FillForProcess,
 	takerFees *big.Int,
 	makerFees *big.Int,
-) ([]types.RevShare, error) {
+) []types.RevShare {
 	if fill.TakerOrderRouterAddr == "" && fill.MakerOrderRouterAddr == "" {
-		return nil, nil
+		return []types.RevShare{}
 	}
 
 	orderRouterRevShares := []types.RevShare{}
@@ -362,7 +362,7 @@ func (k Keeper) getOrderRouterRevShares(
 		})
 	}
 
-	return orderRouterRevShares, nil
+	return orderRouterRevShares
 }
 
 func (k Keeper) getUnconditionalRevShares(
