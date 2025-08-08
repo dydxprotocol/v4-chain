@@ -23,10 +23,7 @@ COPY ./packages/notifications/ ./packages/notifications/
 # Copy tsconfig in order to build typescript into javascript
 COPY tsconfig.json ./
 
-# Install pnpm
 RUN npm install -g pnpm@6
-
-# Install npm modules using pnpm
 RUN pnpm install --loglevel warn --frozen-lockfile --unsafe-perm
 RUN pnpm run build:prod:all
 

@@ -10,9 +10,6 @@ RUN chown dydx -R /home/dydx/app
 
 WORKDIR /home/dydx/app
 
-# Copy pnpm lock and workspace and package.json from base directory
-COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
-
 # Copy patches
 COPY ./patches ./patches
 
@@ -59,6 +56,8 @@ COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 RUN chown dydx -R /home/dydx/app
 
 USER dydx
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+RUN npm install -g pnpm@6
 RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
 WORKDIR /home/dydx/app/services/$service
