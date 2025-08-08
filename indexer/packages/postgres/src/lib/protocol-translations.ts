@@ -1,10 +1,16 @@
-import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
+import { bytesToBigInt,
+  ORDER_FLAG_CONDITIONAL,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP,
+  ORDER_FLAG_TWAP_SUBORDER,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
+  ClobPairStatus,
   IndexerOrder,
+  IndexerOrder_ConditionType,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
-  IndexerOrder_ConditionType,
-  ClobPairStatus,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
@@ -64,6 +70,9 @@ const ORDER_TYPE_TO_CONDITION_TYPE_MAP: Record<OrderType, IndexerOrder_Condition
   // Unused order types
   [OrderType.MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   [OrderType.TRAILING_STOP]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+
+  [OrderType.TWAP]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  [OrderType.TWAP_SUBORDER]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
 };
 
 /**
@@ -318,12 +327,32 @@ export function getGoodTilBlockTime(order: IndexerOrder): IsoString | undefined 
  */
 export function protocolConditionTypeToOrderType(
   protocolConditionType: IndexerOrder_ConditionType,
+  orderFlag: number = 32,
 ): OrderType {
-  if (!(protocolConditionType in CONDITION_TYPE_TO_ORDER_TYPE_MAP)) {
-    throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
+  switch (orderFlag) {
+    case ORDER_FLAG_SHORT_TERM:
+      return OrderType.LIMIT;
+    case ORDER_FLAG_CONDITIONAL:
+      switch (protocolConditionType) {
+        case IndexerOrder_ConditionType.UNRECOGNIZED:
+        case IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED:
+          return OrderType.LIMIT;
+        case IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS:
+          return OrderType.STOP_LIMIT;
+        case IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT:
+          return OrderType.TAKE_PROFIT;
+        default:
+          throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
+      }
+    case ORDER_FLAG_LONG_TERM:
+      return OrderType.LIMIT;
+    case ORDER_FLAG_TWAP:
+      return OrderType.TWAP;
+    case ORDER_FLAG_TWAP_SUBORDER:
+      return OrderType.TWAP_SUBORDER;
+    default:
+      throw new Error(`Unexpected OrderFlags: ${orderFlag}`);
   }
-
-  return CONDITION_TYPE_TO_ORDER_TYPE_MAP[protocolConditionType];
 }
 
 /**

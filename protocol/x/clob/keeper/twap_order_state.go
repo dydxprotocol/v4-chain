@@ -206,7 +206,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			)
 
 			// place triggered suborder
-			err := k.HandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
+			err := k.safeHandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
 			if err != nil {
 				// TODO: (anmol) emit indexer event (TWAP error)
 				k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
@@ -278,6 +278,7 @@ func (k Keeper) UpdateTWAPOrderRemainingQuantityOnFill(
 	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
 	store.Set(orderKey, twapOrderPlacementBytes)
 
+	// would be cleaner to send indexer event here
 	return nil
 }
 
@@ -397,4 +398,31 @@ func (k Keeper) GenerateSuborder(
 	}
 
 	return &order, true
+}
+
+// safeHandleMsgPlaceOrder safely calls HandleMsgPlaceOrder with panic recovery.
+// This is used in end blockers where panics should be caught and logged rather than
+// causing the entire block to fail.
+func (k Keeper) safeHandleMsgPlaceOrder(
+	ctx sdk.Context,
+	msg *types.MsgPlaceOrder,
+	isStateful bool,
+) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			k.Logger(ctx).Error(
+				"panic recovered in HandleMsgPlaceOrder for twap suborder",
+				"panic", r,
+				"orderId", msg.Order.OrderId,
+				"isStateful", isStateful,
+			)
+			err = errorsmod.Wrapf(
+				types.ErrInvalidPlaceOrder,
+				"panic in HandleMsgPlaceOrder: %v",
+				r,
+			)
+		}
+	}()
+
+	return k.HandleMsgPlaceOrder(ctx, msg, isStateful)
 }

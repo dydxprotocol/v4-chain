@@ -13,6 +13,7 @@ export enum OrderStatus {
   CANCELED = 'CANCELED',
   BEST_EFFORT_CANCELED = 'BEST_EFFORT_CANCELED',
   UNTRIGGERED = 'UNTRIGGERED',
+  ERROR = 'ERROR',
 }
 
 export enum OrderType {
@@ -23,6 +24,8 @@ export enum OrderType {
   TRAILING_STOP = 'TRAILING_STOP',
   TAKE_PROFIT = 'TAKE_PROFIT',
   TAKE_PROFIT_MARKET = 'TAKE_PROFIT_MARKET',
+  TWAP = 'TWAP',
+  TWAP_SUBORDER = 'TWAP_SUBORDER',
 }
 
 export enum TimeInForce {
@@ -66,6 +69,9 @@ export interface OrderCreateObject {
   builderAddress?: string,
   feePpm?: string,
   orderRouterAddress?: string,
+  duration?: string,
+  interval?: string,
+  priceTolerance?: string,
 }
 
 export interface OrderUpdateObject {
@@ -87,6 +93,9 @@ export interface OrderUpdateObject {
   clientMetadata?: string,
   triggerPrice?: string,
   orderRouterAddress?: string,
+  duration?: string | null,
+  interval?: string | null,
+  priceTolerance?: string | null,
 }
 
 export enum OrderColumns {
@@ -112,4 +121,7 @@ export enum OrderColumns {
   createdAtHeight = 'createdAtHeight',
   clientMetadata = 'clientMetadata',
   triggerPrice = 'triggerPrice',
+  duration = 'duration',
+  interval = 'interval',
+  priceTolerance = 'priceTolerance',
 }

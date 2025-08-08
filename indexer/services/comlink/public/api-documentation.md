@@ -2299,6 +2299,8 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 
 > Example responses
 
@@ -2326,6 +2328,9 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
     "builderAddress": "string",
     "feePpm": "string",
     "orderRouterAddress": "string",
+    "duration": "string",
+    "interval": "string",
+    "priceTolerance": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2369,6 +2374,9 @@ Status Code **200**
 |» builderAddress|string|false|none|none|
 |» feePpm|string|false|none|none|
 |» orderRouterAddress|string|false|none|none|
+|» duration|string|false|none|none|
+|» interval|string|false|none|none|
+|» priceTolerance|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2407,6 +2415,8 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -2415,6 +2425,7 @@ Status Code **200**
 |*anonymous*|CANCELED|
 |*anonymous*|BEST_EFFORT_CANCELED|
 |*anonymous*|UNTRIGGERED|
+|*anonymous*|ERROR|
 |*anonymous*|BEST_EFFORT_OPENED|
 
 <aside class="success">
@@ -2501,6 +2512,8 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 
 > Example responses
 
@@ -2528,6 +2541,9 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
     "builderAddress": "string",
     "feePpm": "string",
     "orderRouterAddress": "string",
+    "duration": "string",
+    "interval": "string",
+    "priceTolerance": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2571,6 +2587,9 @@ Status Code **200**
 |» builderAddress|string|false|none|none|
 |» feePpm|string|false|none|none|
 |» orderRouterAddress|string|false|none|none|
+|» duration|string|false|none|none|
+|» interval|string|false|none|none|
+|» priceTolerance|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2609,6 +2628,8 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -2617,6 +2638,7 @@ Status Code **200**
 |*anonymous*|CANCELED|
 |*anonymous*|BEST_EFFORT_CANCELED|
 |*anonymous*|UNTRIGGERED|
+|*anonymous*|ERROR|
 |*anonymous*|BEST_EFFORT_OPENED|
 
 <aside class="success">
@@ -2702,6 +2724,9 @@ fetch(`${baseURL}/orders/{orderId}`,
   "builderAddress": "string",
   "feePpm": "string",
   "orderRouterAddress": "string",
+  "duration": "string",
+  "interval": "string",
+  "priceTolerance": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -4968,6 +4993,7 @@ This operation does not require authentication
 |*anonymous*|LIQUIDATION|
 |*anonymous*|DELEVERAGED|
 |*anonymous*|OFFSETTING|
+|*anonymous*|TWAP_SUBORDER|
 
 ## MarketType
 
@@ -5563,6 +5589,7 @@ This operation does not require authentication
 |*anonymous*|CANCELED|
 |*anonymous*|BEST_EFFORT_CANCELED|
 |*anonymous*|UNTRIGGERED|
+|*anonymous*|ERROR|
 
 ## BestEffortOpenedStatus
 
@@ -5643,6 +5670,8 @@ or
 |*anonymous*|TRAILING_STOP|
 |*anonymous*|TAKE_PROFIT|
 |*anonymous*|TAKE_PROFIT_MARKET|
+|*anonymous*|TWAP|
+|*anonymous*|TWAP_SUBORDER|
 
 ## OrderResponseObject
 
@@ -5672,6 +5701,9 @@ or
   "builderAddress": "string",
   "feePpm": "string",
   "orderRouterAddress": "string",
+  "duration": "string",
+  "interval": "string",
+  "priceTolerance": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -5706,6 +5738,9 @@ or
 |builderAddress|string|false|none|none|
 |feePpm|string|false|none|none|
 |orderRouterAddress|string|false|none|none|
+|duration|string|false|none|none|
+|interval|string|false|none|none|
+|priceTolerance|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
@@ -6087,6 +6122,7 @@ or
 |*anonymous*|LIMIT|
 |*anonymous*|LIQUIDATED|
 |*anonymous*|DELEVERAGED|
+|*anonymous*|TWAP_SUBORDER|
 
 ## TradeResponseObject
 

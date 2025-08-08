@@ -20,13 +20,19 @@ import {
   defaultStatefulOrderPlacementEvent,
   defaultStatefulOrderRemovalEvent,
   defaultTime,
+  defaultTwapOrderPlacementEvent,
   defaultTxHash,
   defaultVaultOrderPlacementEvent,
   defaultVaultOrderRemovalEvent,
 } from '../helpers/constants';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_CONDITIONAL,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP_SUBORDER,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { dbHelpers, OrderTable, testMocks } from '@dydxprotocol-indexer/postgres';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -62,6 +68,7 @@ describe('stateful-order-validator', () => {
       ['conditional order placement', defaultConditionalOrderPlacementEvent],
       ['conditional order triggered', defaultConditionalOrderTriggeredEvent],
       ['long term order placement', defaultLongTermOrderPlacementEvent],
+      ['twap order placement', defaultTwapOrderPlacementEvent],
     ])('does not throw error on valid %s', (_message: string, event: StatefulOrderEventV1) => {
       const validator: StatefulOrderValidator = new StatefulOrderValidator(
         event,
@@ -79,7 +86,7 @@ describe('stateful-order-validator', () => {
         'does not contain any event',
         {},
         'One of orderPlace, orderRemoval, conditionalOrderPlacement, ' +
-        'conditionalOrderTriggered, longTermOrderPlacement must be defined in StatefulOrderEvent',
+        'conditionalOrderTriggered, longTermOrderPlacement, or twapOrderPlacement must be defined in StatefulOrderEvent',
       ],
 
       // TODO(IND-334): Remove tests after deprecating StatefulOrderPlacement events
@@ -210,7 +217,7 @@ describe('stateful-order-validator', () => {
             },
           },
         },
-        `StatefulOrderEvent long term order must have order flag ${ORDER_FLAG_LONG_TERM}`,
+        `StatefulOrderEvent long term order must have order flag ${ORDER_FLAG_LONG_TERM} or ${ORDER_FLAG_TWAP_SUBORDER}`,
       ],
 
       // Order Removal Validations

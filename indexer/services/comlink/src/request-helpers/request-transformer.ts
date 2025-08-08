@@ -503,6 +503,9 @@ export function postgresOrderToResponseObject(
     builderAddress: order.builderAddress ?? undefined,
     feePpm: order.feePpm ?? undefined,
     subaccountNumber,
+    duration: order.duration ?? undefined,
+    interval: order.interval ?? undefined,
+    priceTolerance: order.priceTolerance ?? undefined,
   };
 }
 
