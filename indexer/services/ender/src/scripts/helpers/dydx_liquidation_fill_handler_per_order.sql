@@ -25,6 +25,8 @@ DECLARE
     total_filled numeric;
     maker_price numeric;
     event_id bytea;
+    order_router_address text;
+    order_router_fee numeric;
 /**
   Parameters:
     - field: the field storing the order to process.
@@ -92,6 +94,9 @@ BEGIN
                                   power(10, perpetual_market_record."quantumConversionExponent" +
                                             asset_record."atomicResolution" -
                                             perpetual_market_record."atomicResolution")::numeric);
+    order_router_fee = dydx_trim_scale(dydx_get_order_router_fee(fill_liquidity, event_data) *
+                                    power(10, asset_record."atomicResolution")::numeric);
+    order_router_address = dydx_get_order_router_address(fill_liquidity, event_data);
 
     IF field = 'makerOrder' THEN
         order_uuid = dydx_uuid_from_order_id(order_->'orderId');
@@ -123,6 +128,7 @@ BEGIN
         order_record."clientMetadata" = order_client_metadata;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
+        order_record."orderRouterAddress" = order_->'orderRouterAddress'::text;
 
         IF FOUND THEN
             order_record."totalFilled" = total_filled;
@@ -144,7 +150,8 @@ BEGIN
                 "updatedAt" = order_record."updatedAt",
                 "updatedAtHeight" = order_record."updatedAtHeight",
                 "builderAddress" = order_record."builderAddress",
-                "feePpm" = order_record."feePpm"
+                "feePpm" = order_record."feePpm",
+                "orderRouterAddress" = order_record."orderRouterAddress"
             WHERE id = order_uuid;
         ELSE
             order_record."id" = order_uuid;
@@ -160,7 +167,7 @@ BEGIN
             INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
              "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
-             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm")
+             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm", "orderRouterAddress")
             VALUES (order_record.*);
         END IF;
     END IF;
@@ -170,7 +177,8 @@ BEGIN
             block_height, transaction_index, event_index);
     INSERT INTO fills
     ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
-     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress")
+     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress",
+     "orderRouterFee", "orderRouterAddress")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -189,7 +197,9 @@ BEGIN
             fee,
             affiliate_rev_share,
             NULLIF(builder_fee, 0),
-            NULLIF(builder_address, ''))
+            NULLIF(builder_address, ''),
+            NULLIF(order_router_fee, 0),
+            NULLIF(order_router_address, ''))
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
