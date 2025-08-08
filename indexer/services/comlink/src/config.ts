@@ -30,11 +30,14 @@ export const configSchema = {
   CORS_ORIGIN: parseString({ default: '*' }),
   HEADERS_TIMEOUT_MS: parseInteger({ default: 200 }),
   KEEP_ALIVE_MS: parseInteger({ default: 10_000 }),
-  MAX_HEADERS_COUNT: parseInteger({ default: 100 }), // ~40 headers are expected from client and CDN
-  MAX_REQUESTS_PER_SOCKET: parseInteger({ default: 0 }),  // Unlimited
+  // ~40 headers are expected from client and CDN
+  MAX_HEADERS_COUNT: parseInteger({ default: 100 }),
+  // Unlimited
+  MAX_REQUESTS_PER_SOCKET: parseInteger({ default: 0 }),
   PORT: parseInteger({ default: 8080 }),
   REQUEST_TIMEOUT_MS: parseInteger({ default: 500 }),
-  SOCKET_TIMEOUT_MS: parseInteger({ default: 30_000 }), // Very long because funding queries are very slow
+  // Very long because funding queries are very slow
+  SOCKET_TIMEOUT_MS: parseInteger({ default: 30_000 }),
 
   // Rate limit Redis URL
   RATE_LIMIT_REDIS_URL: parseString({
