@@ -23,7 +23,8 @@ const headerKey: 'X-Request-Id' = 'X-Request-Id';
 
 export function requestId(): RequestHandler {
   return function requestIdHandler(req: Request, res: Response, next: NextFunction) {
-    req.id = req.headers[headerKey] || randomUUID();
+    // get ignores case
+    req.id = req.get(headerKey) || randomUUID();
     res.setHeader(headerKey, req.id);
     next();
   };
