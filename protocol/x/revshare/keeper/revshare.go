@@ -222,7 +222,8 @@ func (k Keeper) GetAllRevShares(
 	var orderRouterRevShares []types.RevShare
 	netFeesSubRevenueShare := netFees
 	// No affiliate fees shared, so we can generate order router rev shares
-	if affiliateRevShares == nil {
+	// In the case that the taker has an affiliate fee and the maker does not, then no order router fees are generated
+	if len(affiliateRevShares) == 0 {
 		orderRouterRevShares, err = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
 		if err != nil {
 			return types.RevSharesForFill{}, err
@@ -329,7 +330,7 @@ func (k Keeper) getOrderRouterRevShares(
 	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
 	if err != nil {
 		// This should never happen
-		k.Logger(ctx).Error("order router rev share not found for taker: " + fill.TakerOrderRouterAddr)
+		k.Logger(ctx).Error("order router rev share invalid for taker: " + fill.TakerOrderRouterAddr)
 		return nil, err
 	}
 
@@ -350,7 +351,7 @@ func (k Keeper) getOrderRouterRevShares(
 	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
 	if err != nil {
 		// This should never happen
-		k.Logger(ctx).Error("order router rev share not found for maker: " + fill.MakerOrderRouterAddr)
+		k.Logger(ctx).Error("order router rev share invalid for maker: " + fill.MakerOrderRouterAddr)
 		return nil, err
 	}
 
