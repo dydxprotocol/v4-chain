@@ -22,7 +22,9 @@
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
     "start": "node --max-semi-space-size=128 --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "test:clean": "pnpm run build; NODE_ENV=test jest --runInBand --forceExit",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",

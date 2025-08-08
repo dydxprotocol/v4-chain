@@ -1663,6 +1663,168 @@ describe('OrderHandler', () => {
     expect(takerOrder!.status).toEqual(OrderStatus.FILLED);
   });
 
+  it('correctly sets the maker and taker order router fees and addresses', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const makerQuantums: number = 100;
+    const makerSubticks: number = 1_000_000;
+
+    const makerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: makerQuantums,
+      subticks: makerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 0,
+      orderRouterAddress: testConstants.defaultAddress,
+    });
+
+    const takerSubticks: number = 150_000;
+    const takerQuantums: number = 10;
+    const takerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: takerQuantums,
+      subticks: takerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: true,
+      clientMetadata: 0,
+      orderRouterAddress: testConstants.defaultAddress2,
+    });
+
+    const fillAmount: number = takerQuantums;
+    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
+      makerOrderProto,
+      takerOrderProto,
+      fillAmount,
+      fillAmount,
+      fillAmount,
+      0,
+      0,
+      testConstants.noBuilderAddress,
+      testConstants.noBuilderAddress,
+      10_000,
+      20_000,
+      testConstants.defaultAddress,
+      testConstants.defaultAddress2,
+    );
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await Promise.all([
+      // initial position for subaccount 1
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+      // initial position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        subaccountId: testConstants.defaultSubaccountId2,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+    ]);
+
+    await onMessage(kafkaMessage);
+
+    const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
+    const takerOrderId: string = OrderTable.orderIdToUuid(takerOrderProto.orderId!);
+
+    const [makerOrder, takerOrder]: [
+      OrderFromDatabase | undefined,
+      OrderFromDatabase | undefined
+    ] = await Promise.all([
+      OrderTable.findById(makerOrderId),
+      OrderTable.findById(takerOrderId),
+    ]);
+
+    expect(makerOrder).toBeDefined();
+    expect(takerOrder).toBeDefined();
+
+    // maker order is partially filled
+    expect(makerOrder!.status).toEqual(OrderStatus.CANCELED);
+
+    // taker order is fully filled
+    expect(takerOrder!.status).toEqual(OrderStatus.FILLED);
+
+    expect(makerOrder!.orderRouterAddress).toEqual(testConstants.defaultAddress);
+
+    expect(takerOrder!.orderRouterAddress).toEqual(testConstants.defaultAddress2);
+
+    const eventId: Buffer = TendermintEventTable.createEventId(
+      defaultHeight,
+      transactionIndex,
+      eventIndex,
+    );
+
+    const quoteAmount: string = '0.000000000000001'; // quote amount is price * fillAmount = 1e-14 * 1e-1 = 1e-15
+    const price: string = '0.00000000000001';
+    const totalFilledSize: string = (takerQuantums / makerQuantums).toString();
+
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId2,
+      clientId: '0',
+      liquidity: Liquidity.TAKER,
+      size: totalFilledSize,
+      price,
+      quoteAmount,
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIMIT,
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(takerOrderProto.side),
+      orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
+      clientMetadata: takerOrderProto.clientMetadata.toString(),
+      fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+      orderRouterAddress: testConstants.defaultAddress2,
+      orderRouterFee: '0.02',
+    });
+
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '0',
+      liquidity: Liquidity.MAKER,
+      size: totalFilledSize,
+      price,
+      quoteAmount,
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIMIT,
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
+      orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
+      clientMetadata: makerOrderProto.clientMetadata.toString(),
+      fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+      orderRouterAddress: testConstants.defaultAddress,
+      orderRouterFee: '0.01',
+    });
+  });
+
   it.each([
     [
       'limit',
@@ -1841,6 +2003,10 @@ function createOrderFillEvent(
   takerBuilderFee: number = 0,
   makerBuilderAddress: string = testConstants.noBuilderAddress,
   takerBuilderAddress: string = testConstants.noBuilderAddress,
+  makerOrderRouterFee: number = 0,
+  takerOrderRouterFee: number = 0,
+  makerOrderRouterAddress: string = testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: string = testConstants.noOrderRouterAddress,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1855,6 +2021,10 @@ function createOrderFillEvent(
     takerBuilderFee: Long.fromValue(takerBuilderFee, false),
     makerBuilderAddress,
     takerBuilderAddress,
+    makerOrderRouterFee: Long.fromValue(makerOrderRouterFee, true),
+    takerOrderRouterFee: Long.fromValue(takerOrderRouterFee, true),
+    makerOrderRouterAddress,
+    takerOrderRouterAddress,
   } as OrderFillEventV1;
 }
 

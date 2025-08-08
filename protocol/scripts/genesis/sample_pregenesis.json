@@ -4018,6 +4018,7 @@
         "min_commission_rate": "0.05",
         "unbonding_time": "2592000s"
       },
+      "proposers": [],
       "redelegations": [],
       "unbonding_delegations": [],
       "validators": []

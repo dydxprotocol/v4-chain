@@ -335,6 +335,7 @@ describe('request-transformer', () => {
         ticker,
         clientMetadata: redisOrder.order!.clientMetadata.toString(),
         subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
+        orderRouterAddress: redisOrder.order!.orderRouterAddress ?? undefined,
       });
     });
   });

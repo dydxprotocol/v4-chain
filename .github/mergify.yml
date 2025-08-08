@@ -165,4 +165,19 @@ pull_request_rules:
       backport:
         branches:
           - release/indexer/v8.1.x
-
+  - name: backport to release/protocol/v9.x branch
+    conditions:
+      - base=main
+      - label=backport/protocol/v9.x
+    actions:
+      backport:
+        branches:
+          - release/protocol/v9.x
+  - name: backport to release/indexer/v9.x branch
+    conditions:
+      - base=main
+      - label=backport/indexer/v9.x
+    actions:
+      backport:
+        branches:
+          - release/indexer/v9.x

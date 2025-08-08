@@ -23,6 +23,8 @@ func NewOrderFillEvent(
 	totalFilledMaker satypes.BaseQuantums,
 	totalFilledTaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
+	makerOrderRouterFee uint64,
+	takerOrderRouterFee uint64,
 ) *OrderFillEventV1 {
 	indexerTakerOrder := v1.OrderToIndexerOrder(takerOrder)
 	makerBuilderAddress := getBuilderAddress(makerOrder)
@@ -42,7 +44,11 @@ func NewOrderFillEvent(
 		TotalFilledMaker:    totalFilledMaker.ToUint64(),
 		TotalFilledTaker:    totalFilledTaker.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
-		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
+		AffiliateRevShare:       affiliateRevShareQuoteQuantums.Uint64(),
+		MakerOrderRouterFee:     makerOrderRouterFee,
+		TakerOrderRouterFee:     takerOrderRouterFee,
+		MakerOrderRouterAddress: makerOrder.GetOrderRouterAddress(),
+		TakerOrderRouterAddress: takerOrder.GetOrderRouterAddress(),
 	}
 }
 
@@ -58,6 +64,7 @@ func NewLiquidationOrderFillEvent(
 	makerBuilderFee uint64,
 	totalFilledMaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
+	makerOrderRouterFee uint64,
 ) *OrderFillEventV1 {
 	if !liquidationTakerOrder.IsLiquidation() {
 		panic(fmt.Sprintf("liquidationTakerOrder is not a liquidation order: %v", liquidationTakerOrder))
@@ -82,10 +89,12 @@ func NewLiquidationOrderFillEvent(
 		TotalFilledMaker: totalFilledMaker.ToUint64(),
 		TotalFilledTaker: fillAmount.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
-		AffiliateRevShare:   affiliateRevShareQuoteQuantums.Uint64(),
-		MakerBuilderAddress: makerBuilderAddress,
-		MakerBuilderFee:     makerBuilderFee,
-		TakerBuilderFee:     0, // protocol generated liquidation orders have no builder fee
+		AffiliateRevShare:       affiliateRevShareQuoteQuantums.Uint64(),
+		MakerBuilderAddress:     makerBuilderAddress,
+		MakerBuilderFee:         makerBuilderFee,
+		TakerBuilderFee:         0, // protocol generated liquidation orders have no builder fee
+		MakerOrderRouterAddress: makerOrder.GetOrderRouterAddress(),
+		TakerOrderRouterFee:     0, // protocol generated liquidation orders have no order router fee
 	}
 }
 

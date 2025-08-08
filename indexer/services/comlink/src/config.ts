@@ -66,6 +66,30 @@ export const configSchema = {
   VAULT_LATEST_PNL_TICK_WINDOW_HOURS: parseInteger({ default: 1 }),
   VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS: parseInteger({ default: 250_000 }),
   VAULT_CACHE_TTL_MS: parseInteger({ default: 120_000 }), // 2 minutes
+
+  // Cache-Control directives
+  CACHE_CONTROL_DIRECTIVE_ADDRESSES: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_AFFILIATES: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_ASSET_POSITIONS: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_CANDLES: parseString({ default: 'public, max-age=1' }),
+  // omit compliance
+  CACHE_CONTROL_DIRECTIVE_FILLS: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_FUNDING: parseString({ default: 'public, max-age=10' }),
+  // omit height
+  CACHE_CONTROL_DIRECTIVE_HISTORICAL_BLOCK_TRADING_REWARDS: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_HISTORICAL_FUNDING: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_HISTORICAL_PNL: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_HISTORICAL_TRADING_REWARDS: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_ORDERBOOK: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_ORDERS: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_PERPETUAL_MARKETS: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_PERPETUAL_POSITIONS: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_SOCIAL_TRADING: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_SPARKLINES: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_TIME: parseString({ default: 'no-cache, no-store, no-transform' }),
+  CACHE_CONTROL_DIRECTIVE_TRADES: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_TRANSFERS: parseString({ default: 'public, max-age=1' }),
+  CACHE_CONTROL_DIRECTIVE_VAULTS: parseString({ default: 'public, max-age=10' }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

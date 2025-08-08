@@ -1,5 +1,13 @@
-import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { CountryHeaders, isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
+import {
+  logger,
+  stats,
+  TooManyRequestsError,
+} from '@dydxprotocol-indexer/base';
+import {
+  CountryHeaders,
+  isRestrictedCountryHeaders,
+  isWhitelistedAddress,
+} from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
   ComplianceStatus,

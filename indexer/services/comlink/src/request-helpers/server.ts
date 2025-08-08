@@ -30,8 +30,6 @@ export default function server(
 
   app.use(cors(corsOptions));
 
-  app.use(nocache());
-
   app.get('/health', (_req: express.Request, res: express.Response) => {
     res.json({ ok: true });
   });

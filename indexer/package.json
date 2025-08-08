@@ -14,6 +14,7 @@
     "lint:fix:all": "pnpm run --parallel lint:fix",
     "coverage:all": "pnpm recursive run --workspace-concurrency=1 coverage",
     "test:all": "pnpm recursive run --workspace-concurrency=1 test",
+    "test:clean:all": "pnpm recursive run --workspace-concurrency=1 test:clean",
     "postinstall": "patch-package"
   },
   "author": "",

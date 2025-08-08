@@ -1,5 +1,6 @@
 import {
   stats,
+  cacheControlMiddleware,
 } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
@@ -73,6 +74,7 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
+const vaultCacheControlMiddleware = cacheControlMiddleware(config.CACHE_CONTROL_DIRECTIVE_VAULTS);
 
 interface VaultMapping {
   [subaccountId: string]: VaultFromDatabase,
@@ -355,6 +357,8 @@ class VaultController extends Controller {
 
 router.get(
   '/v1/megavault/historicalPnl',
+  rateLimiterMiddleware(getReqRateLimiter),
+  vaultCacheControlMiddleware,
   ...checkSchema({
     resolution: {
       in: 'query',
@@ -366,7 +370,6 @@ router.get(
     },
   }),
   handleValidationErrors,
-  rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
@@ -398,6 +401,8 @@ router.get(
 
 router.get(
   '/v1/vaults/historicalPnl',
+  rateLimiterMiddleware(getReqRateLimiter),
+  vaultCacheControlMiddleware,
   ...checkSchema({
     resolution: {
       in: 'query',
@@ -409,7 +414,6 @@ router.get(
     },
   }),
   handleValidationErrors,
-  rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
@@ -442,6 +446,7 @@ router.get(
 router.get(
   '/v1/megavault/positions',
   rateLimiterMiddleware(getReqRateLimiter),
+  vaultCacheControlMiddleware,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
