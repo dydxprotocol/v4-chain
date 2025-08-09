@@ -1,5 +1,5 @@
-import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
+import UpsertQueryBuilder from '../query-builders/upsert';
 
 export default class PersistentCacheModel extends BaseModel {
   static get tableName() {

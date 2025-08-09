@@ -631,7 +631,7 @@ describe('addresses-controller#V4', () => {
     beforeEach(() => {
       verifySignatureMock.mockResolvedValue(true);
       toBech32Mock.mockReturnValue(testConstants.defaultAddress);
-      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(validTimestamp)); // Mock current time
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(validTimestamp) as DateTime<true>); // Mock current time
       statsSpy = jest.spyOn(stats, 'increment');
     });
 

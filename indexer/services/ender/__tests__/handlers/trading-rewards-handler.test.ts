@@ -137,14 +137,14 @@ describe('tradingRewardHandler', () => {
     expect(firstTradingReward).toEqual({
       id: firstTradingRewardId,
       address: testConstants.defaultWallet.address,
-      blockTime: defaultDateTime.toISO(),
+      blockTime: defaultDateTime.toISO()!,
       blockHeight: defaultHeight.toString(),
       amount: testConversionHelpers.denomToHumanReadableConversion(1),
     });
     expect(secondTradingReward).toEqual({
       id: secondTradingRewardId,
       address: testConstants.defaultWallet2.address,
-      blockTime: defaultDateTime.toISO(),
+      blockTime: defaultDateTime.toISO()!,
       blockHeight: defaultHeight.toString(),
       amount: testConversionHelpers.denomToHumanReadableConversion(1_000_000_000),
     });

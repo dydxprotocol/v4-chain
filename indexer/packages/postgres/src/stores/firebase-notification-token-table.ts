@@ -144,7 +144,7 @@ export async function registerToken(
     {
       token,
       address,
-      updatedAt: DateTime.now().toISO(),
+      updatedAt: DateTime.now().toISO()!,
       language,
     },
     options,

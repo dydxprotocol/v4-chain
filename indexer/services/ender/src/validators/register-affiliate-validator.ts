@@ -1,8 +1,8 @@
 import { IndexerTendermintEvent, RegisterAffiliateEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { RegisterAffiliateHandler } from '../handlers/register-affiliate-handler';
-import { Validator } from './validator';
 
 export class RegisterAffiliateValidator extends Validator<RegisterAffiliateEventV1> {
   public validate(): void {

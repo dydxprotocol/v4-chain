@@ -47,11 +47,11 @@ import { Big } from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
+import { Handler } from './handler';
+import { getStateRemainingQuantums } from './helpers';
 import { isVaultOrder } from '../helpers/orders';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
-import { Handler } from './handler';
-import { getStateRemainingQuantums } from './helpers';
 
 /**
  * Handler for OrderRemove messages.

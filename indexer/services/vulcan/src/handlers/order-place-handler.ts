@@ -29,10 +29,10 @@ import {
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
+import { Handler } from './handler';
 import { isVaultOrder } from '../helpers/orders';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
-import { Handler } from './handler';
 
 /**
  * Handler for OrderPlace messages.

@@ -99,8 +99,8 @@ describe('Affiliate info store', () => {
 
       // Perform update
       await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 2 }).toISO(),
-        referenceDt.toISO(),
+        referenceDt.minus({ minutes: 2 }).toISO()!,
+        referenceDt.toISO()!,
       );
 
       // Get affiliate info (wallet2 is affiliate)
@@ -129,8 +129,8 @@ describe('Affiliate info store', () => {
 
       // Perform update: catches first 2 fills
       await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 3 }).toISO(),
-        referenceDt.minus({ minutes: 2 }).toISO(),
+        referenceDt.minus({ minutes: 3 }).toISO()!,
+        referenceDt.minus({ minutes: 2 }).toISO()!,
       );
 
       const updatedInfo1: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
@@ -152,8 +152,8 @@ describe('Affiliate info store', () => {
 
       // Perform update: catches next 2 fills
       await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 2 }).toISO(),
-        referenceDt.minus({ minutes: 1 }).toISO(),
+        referenceDt.minus({ minutes: 2 }).toISO()!,
+        referenceDt.minus({ minutes: 1 }).toISO()!,
       );
 
       const updatedInfo2 = await AffiliateInfoTable.findById(
@@ -180,8 +180,8 @@ describe('Affiliate info store', () => {
         referredAtBlock: '2',
       });
       await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 1 }).toISO(),
-        referenceDt.toISO(),
+        referenceDt.minus({ minutes: 1 }).toISO()!,
+        referenceDt.toISO()!,
       );
       const updatedInfo3 = await AffiliateInfoTable.findById(
         defaultWallet2.address,
@@ -217,7 +217,7 @@ describe('Affiliate info store', () => {
         ...defaultFill,
         liquidity: Liquidity.TAKER,
         subaccountId: defaultOrder.subaccountId,
-        createdAt: referenceDt.toISO(),
+        createdAt: referenceDt.toISO()!,
         createdAtHeight: '1',
         eventId: defaultTendermintEventId,
         price: '1',
@@ -227,8 +227,8 @@ describe('Affiliate info store', () => {
       });
 
       await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 1 }).toISO(),
-        referenceDt.toISO(),
+        referenceDt.minus({ minutes: 1 }).toISO()!,
+        referenceDt.toISO()!,
       );
 
       const updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
@@ -411,7 +411,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       ...defaultFill,
       liquidity: Liquidity.TAKER,
       subaccountId: defaultOrder.subaccountId,
-      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO()!,
       eventId: defaultTendermintEventId,
       price: '1',
       size: '1',
@@ -422,7 +422,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       ...defaultFill,
       liquidity: Liquidity.MAKER,
       subaccountId: defaultOrder.subaccountId,
-      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO()!,
       eventId: defaultTendermintEventId2,
       price: '1',
       size: '1',
@@ -433,7 +433,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       ...defaultFill,
       liquidity: Liquidity.MAKER, // use uneven number of maker/taker
       subaccountId: defaultOrder.subaccountId,
-      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO()!,
       eventId: defaultTendermintEventId3,
       price: '1',
       size: '1',
@@ -444,7 +444,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       ...defaultFill,
       liquidity: Liquidity.MAKER,
       subaccountId: defaultOrder.subaccountId,
-      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO()!,
       eventId: defaultTendermintEventId4,
       price: '1',
       size: '1',
@@ -455,7 +455,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       ...defaultFill,
       liquidity: Liquidity.TAKER,
       subaccountId: defaultOrder.subaccountId,
-      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO()!,
       eventId: defaultTendermintEventId4,
       price: '1',
       size: '1',
@@ -467,7 +467,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       ...defaultFill,
       liquidity: Liquidity.MAKER,
       subaccountId: defaultOrder.subaccountId,
-      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO()!,
       eventId: defaultTendermintEventId,
       price: '1',
       size: '1',

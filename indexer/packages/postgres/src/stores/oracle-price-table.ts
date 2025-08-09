@@ -212,12 +212,12 @@ export async function findLatestPricesByDateTime(
 
 export async function getPricesFrom24hAgo(
 ): Promise<PriceMap> {
-  const oneDayAgo: string = DateTime.utc().minus({ days: 1 }).toISO();
+  const oneDayAgo: string = DateTime.utc().minus({ days: 1 }).toISO()!;
   return findLatestPricesByDateTime(oneDayAgo);
 }
 
 export async function getLatestPrices(): Promise<PriceMap> {
-  const now: string = DateTime.utc().toISO();
+  const now: string = DateTime.utc().toISO()!;
   return findLatestPricesByDateTime(now);
 }
 

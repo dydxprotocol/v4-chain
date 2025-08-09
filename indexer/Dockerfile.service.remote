@@ -1,5 +1,5 @@
 # Dockerfile to containerize services for a cloud provider
-FROM dydxprotocol/indexer-node:16-alpine
+FROM dydxprotocol/indexer-node:18-alpine
 ENV NODE_ENV=development
 ARG service
 
@@ -12,16 +12,28 @@ RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
 RUN chown dydx -R /home/dydx/app
+WORKDIR /home/dydx/app/services/$service
 
-WORKDIR /home/dydx/app
+RUN apk add --no-cache dnsmasq
+RUN echo 'bind-interfaces' > /etc/dnsmasq.conf && \
+    echo 'cache-size=50000' >> /etc/dnsmasq.conf && \
+    echo 'dns-forward-max=10000' >> /etc/dnsmasq.conf && \
+    echo 'listen-address=127.0.0.1' >> /etc/dnsmasq.conf && \
+    echo 'local-ttl=5' >> /etc/dnsmasq.conf && \
+    echo 'max-cache-ttl=86400' >> /etc/dnsmasq.conf && \
+    echo 'max-ttl=86400' >> /etc/dnsmasq.conf && \
+    echo 'min-cache-ttl=300' >> /etc/dnsmasq.conf && \
+    echo 'neg-ttl=60' >> /etc/dnsmasq.conf && \
+    echo 'no-poll' >> /etc/dnsmasq.conf && \
+    echo 'port=53' >> /etc/dnsmasq.conf
 
-# Copy pnpm lock and workspace and package.json from base directory
-COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+RUN apk add --no-cache chrony
+RUN echo 'server 169.254.169.123 iburst minpoll 4 maxpoll 4' >> /etc/chrony/chrony.conf && \
+    echo 'driftfile /var/lib/chrony/drift' >> /etc/chrony/chrony.conf && \
+    echo 'rtcsync' >> /etc/chrony/chrony.conf && \
+    echo 'makestep 1.0 3' >> /etc/chrony/chrony.conf && \
+    echo 'logdir /var/log/chrony' >> /etc/chrony/chrony.conf
 
-# Copy patches
-COPY ./patches ./patches
-
-# Copy package.json from all packages being run
 COPY ./packages/base/package.json ./packages/base/
 COPY ./packages/kafka/package.json ./packages/kafka/
 COPY ./packages/postgres/package.json ./packages/postgres/
@@ -31,7 +43,6 @@ COPY ./packages/v4-proto-parser/package.json ./packages/v4-proto-parser/package.
 COPY ./packages/compliance/package.json ./packages/compliance/
 COPY ./packages/notifications/package.json ./packages/notifications/
 
-# Copy build files from all packages being run
 COPY ./packages/base/build ./packages/base/build/
 COPY ./packages/kafka/build ./packages/kafka/build/
 COPY ./packages/postgres/build ./packages/postgres/build/
@@ -41,31 +52,27 @@ COPY ./packages/v4-proto-parser/build ./packages/v4-proto-parser/build/
 COPY ./packages/compliance/build ./packages/compliance/build/
 COPY ./packages/notifications/build ./packages/notifications/build/
 
-# Copy package.json, build files, and environment files from service being run
 COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
 
-# Copy service dependency patches
+COPY ./patches ./patches
 RUN mkdir -p ./services/${service}/patches
 COPY ./services/${service}/patches ./services/${service}/patches/
-
-# Copy package dependency patches
+RUN mkdir -p ./packages/dev/patches
+COPY ./packages/dev/patches ./packages/dev/patches/
 RUN mkdir -p ./packages/v4-protos/patches
 COPY ./packages/v4-protos/patches ./packages/v4-protos/patches/
 RUN mkdir -p ./packages/kafka/patches
 COPY ./packages/kafka/patches ./packages/kafka/patches/
 
-# Copy container start script
-COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
-
-RUN chown dydx -R /home/dydx/app
-
-# Install npm modules using pnpm
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+RUN npm install -g pnpm@6
 RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
-USER dydx
-
-WORKDIR /home/dydx/app/services/$service
+COPY ./scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+ENTRYPOINT ["./docker-entrypoint.sh"]
+COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 
 CMD ["sh", "-c", "bash ./scripts/container-run.sh"]

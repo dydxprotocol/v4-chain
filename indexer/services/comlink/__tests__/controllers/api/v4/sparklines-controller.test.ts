@@ -177,7 +177,7 @@ describe('sparklines-controller#V4', () => {
           // Store prices oldest to newest
           allClosePrices.push(close);
           // Create candles from 99h ago to now, aligned to hour marks, in chronological order.
-          const startedAt = now.minus({ hours: 99 - i }).toISO();
+          const startedAt = now.minus({ hours: 99 - i }).toISO()!;
           return CandleTable.create({
             ...testConstants.defaultCandle,
             resolution,
@@ -216,7 +216,7 @@ describe('sparklines-controller#V4', () => {
               startedAt: DateTime
                 .fromISO(testConstants.defaultCandle.startedAt)
                 .minus({ hour: i })
-                .toISO(),
+                .toISO()!,
               ticker: testConstants.defaultPerpetualMarket.ticker,
               resolution,
               close: firstClosing,
@@ -234,7 +234,7 @@ describe('sparklines-controller#V4', () => {
               startedAt: DateTime
                 .fromISO(testConstants.defaultCandle.startedAt)
                 .minus({ hour: i })
-                .toISO(),
+                .toISO()!,
               ticker: testConstants.defaultPerpetualMarket2.ticker,
               resolution,
               close: secondClosing,

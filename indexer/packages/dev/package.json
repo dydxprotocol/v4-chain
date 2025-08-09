@@ -16,11 +16,12 @@
   },
   "devDependencies": {
     "@types/jest": "^28.1.4",
+    "@types/minimatch": "5.1.2",
     "@types/node": "^18.0.3",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",
     "coveralls": "^3.1.1",
-    "eslint": "^8.0.1",
+    "eslint": "^8.39.0",
     "eslint-config-airbnb-typescript": "^9.0.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-jsx-a11y": "^6.4.1",
@@ -28,6 +29,7 @@
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4",
     "jest": "^28.1.2",
+    "jest-environment-node": "^28.1.2",
     "typescript": "^4.7.4"
   },
   "repository": {
