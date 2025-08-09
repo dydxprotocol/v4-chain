@@ -70,6 +70,4 @@ RUN chmod +x ./docker-entrypoint.sh
 ENTRYPOINT ["./docker-entrypoint.sh"]
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 
-USER dydx
-
 CMD ["./scripts/container-run.sh"]
