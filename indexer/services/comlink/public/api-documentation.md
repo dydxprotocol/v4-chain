@@ -3053,6 +3053,86 @@ fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&paren
 This operation does not require authentication
 </aside>
 
+## Sweep
+
+<a id="opIdSweep"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/bridging/sweep', params={
+  'fromAddress': 'string',  'chainId': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /bridging/sweep`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|fromAddress|query|string|true|none|
+|chainId|query|string|true|none|
+|amount|query|string|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "toAddress": "string",
+  "amount": "string",
+  "sourceAssetDenom": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[BridgeResponse](#schemabridgeresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SearchTrader
 
 <a id="opIdSearchTrader"></a>
@@ -6038,6 +6118,30 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |positions|[[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)]|true|none|none|
+
+## BridgeResponse
+
+<a id="schemabridgeresponse"></a>
+<a id="schema_BridgeResponse"></a>
+<a id="tocSbridgeresponse"></a>
+<a id="tocsbridgeresponse"></a>
+
+```json
+{
+  "toAddress": "string",
+  "amount": "string",
+  "sourceAssetDenom": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|toAddress|string|true|none|none|
+|amount|string|true|none|none|
+|sourceAssetDenom|string|true|none|none|
 
 ## TraderSearchResponseObject
 

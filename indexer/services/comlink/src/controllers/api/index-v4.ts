@@ -1,3 +1,4 @@
+import '../../helpers/polyfill/polyfill';
 import express from 'express';
 
 import AddressesController from './v4/addresses-controller';
@@ -17,6 +18,7 @@ import OrderbooksController from './v4/orderbook-controller';
 import OrdersController from './v4/orders-controller';
 import PerpetualMarketController from './v4/perpetual-markets-controller';
 import PerpetualPositionsController from './v4/perpetual-positions-controller';
+import BridgeController from './v4/skip-bridge-controller';
 import SocialTradingController from './v4/social-trading-controller';
 import SparklinesController from './v4/sparklines-controller';
 import TimeController from './v4/time-controller';
@@ -24,7 +26,6 @@ import TradesController from './v4/trades-controller';
 import TransfersController from './v4/transfers-controller';
 import { router as TurnkeyController } from './v4/turnkey-controller';
 import VaultController from './v4/vault-controller';
-
 // Keep routers in alphabetical order
 
 const router: express.Router = express.Router();
@@ -52,5 +53,6 @@ router.use('/screen', ComplianceController);
 router.use('/compliance', ComplianceV2Controller);
 router.use('/trader', SocialTradingController);
 router.use('/vault', VaultController);
+router.use('/bridging', BridgeController);
 
 export default router;
