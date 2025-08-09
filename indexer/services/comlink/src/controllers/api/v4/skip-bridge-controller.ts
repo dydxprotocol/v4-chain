@@ -129,9 +129,15 @@ enum Asset {
   ETH = 'ETH',
 }
 
+enum CosmosPrefix {
+  OSMO = 'osmo',
+  NEUTRON = 'neutron',
+  NOBLE = 'noble',
+}
+
 // Prefix is one of osmosis, neutron, noble. This is how we convert dydx addresses
 // to other chain addresses on cosmos. Address here is dydx address.
-function toClientAddressWithPrefix(prefix: string, address: string): string | null {
+function toClientAddressWithPrefix(prefix: CosmosPrefix, address: string): string | null {
   try {
     const decoded = decode(address);
     if (decoded.prefix !== 'dydx') {
@@ -181,11 +187,11 @@ function getAddress(
   }
   switch (chainId) {
     case 'noble-1':
-      return toClientAddressWithPrefix('noble', dydxAddress) || '';
+      return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress) || '';
     case 'osmosis-1':
-      return toClientAddressWithPrefix('osmo', dydxAddress) || '';
+      return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress) || '';
     case 'neutron':
-      return toClientAddressWithPrefix('neutron', dydxAddress) || '';
+      return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress) || '';
     case 'dydx-mainnet-1':
       return dydxAddress;
     default:
@@ -868,7 +874,7 @@ router.post(
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();
-      const { addressesToSweep, chainId } = await parseEvent(req.body);
+      const { addressesToSweep, chainId } = await parseEvent(req);
       // Iterate over the set 'toProcess' and process each item
       for (const fromAddress of addressesToSweep.keys()) {
         await bridgeController.sweep(
