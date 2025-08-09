@@ -7,28 +7,27 @@ RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
 RUN chown dydx -R /home/dydx/app
-WORKDIR /home/dydx/app
-RUN chown dydx -R /home/dydx/app
+WORKDIR /home/dydx/app/services/$service
 
 RUN apk add --no-cache dnsmasq
 RUN echo 'bind-interfaces' > /etc/dnsmasq.conf && \
-    echo 'cache-size=50000' >> /etc/dnsmasq.conf && \
-    echo 'dns-forward-max=10000' >> /etc/dnsmasq.conf && \
-    echo 'listen-address=127.0.0.1' >> /etc/dnsmasq.conf && \
-    echo 'local-ttl=5' >> /etc/dnsmasq.conf && \
-    echo 'max-cache-ttl=86400' >> /etc/dnsmasq.conf && \
-    echo 'max-ttl=86400' >> /etc/dnsmasq.conf && \
-    echo 'min-cache-ttl=300' >> /etc/dnsmasq.conf && \
-    echo 'neg-ttl=60' >> /etc/dnsmasq.conf && \
-    echo 'no-poll' >> /etc/dnsmasq.conf && \
-    echo 'port=53' >> /etc/dnsmasq.conf
+echo 'cache-size=50000' >> /etc/dnsmasq.conf && \
+echo 'dns-forward-max=10000' >> /etc/dnsmasq.conf && \
+echo 'listen-address=127.0.0.1' >> /etc/dnsmasq.conf && \
+echo 'local-ttl=5' >> /etc/dnsmasq.conf && \
+echo 'max-cache-ttl=86400' >> /etc/dnsmasq.conf && \
+echo 'max-ttl=86400' >> /etc/dnsmasq.conf && \
+echo 'min-cache-ttl=300' >> /etc/dnsmasq.conf && \
+echo 'neg-ttl=60' >> /etc/dnsmasq.conf && \
+echo 'no-poll' >> /etc/dnsmasq.conf && \
+echo 'port=53' >> /etc/dnsmasq.conf
 
 RUN apk add --no-cache chrony
 RUN echo 'server 169.254.169.123 iburst minpoll 4 maxpoll 4' >> /etc/chrony/chrony.conf && \
-    echo 'driftfile /var/lib/chrony/drift' >> /etc/chrony/chrony.conf && \
-    echo 'rtcsync' >> /etc/chrony/chrony.conf && \
-    echo 'makestep 1.0 3' >> /etc/chrony/chrony.conf && \
-    echo 'logdir /var/log/chrony' >> /etc/chrony/chrony.conf
+echo 'driftfile /var/lib/chrony/drift' >> /etc/chrony/chrony.conf && \
+echo 'rtcsync' >> /etc/chrony/chrony.conf && \
+echo 'makestep 1.0 3' >> /etc/chrony/chrony.conf && \
+echo 'logdir /var/log/chrony' >> /etc/chrony/chrony.conf
 
 COPY ./packages/base/package.json ./packages/base/
 COPY ./packages/kafka/package.json ./packages/kafka/
@@ -66,19 +65,11 @@ COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
 RUN npm install -g pnpm@6
 RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
-RUN cat > /usr/local/bin/docker-entrypoint.sh << 'EOF'
-#!/bin/sh
-dnsmasq &
-echo "nameserver 127.0.0.1" > /etc/resolv.conf
-chronyd &
-exec "$@"
-EOF
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-
+COPY ./scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+ENTRYPOINT ["./docker-entrypoint.sh"]
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 
 USER dydx
-WORKDIR /home/dydx/app/services/$service
 
 CMD ["./scripts/container-run.sh"]

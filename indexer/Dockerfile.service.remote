@@ -12,8 +12,7 @@ RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
 RUN chown dydx -R /home/dydx/app
-WORKDIR /home/dydx/app
-RUN chown dydx -R /home/dydx/app
+WORKDIR /home/dydx/app/services/$service
 
 RUN apk add --no-cache dnsmasq
 RUN echo 'bind-interfaces' > /etc/dnsmasq.conf && \
@@ -71,19 +70,11 @@ COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
 RUN npm install -g pnpm@6
 RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
-RUN cat > /usr/local/bin/docker-entrypoint.sh << 'EOF'
-#!/bin/sh
-dnsmasq &
-echo "nameserver 127.0.0.1" > /etc/resolv.conf
-chronyd &
-exec "$@"
-EOF
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-
+COPY ./scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+ENTRYPOINT ["./docker-entrypoint.sh"]
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 
 USER dydx
-WORKDIR /home/dydx/app/services/$service
 
 CMD ["sh", "-c", "bash ./scripts/container-run.sh"]
