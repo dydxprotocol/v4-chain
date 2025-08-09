@@ -41,6 +41,7 @@ import { handleControllerError } from '../../../lib/helpers';
 import { CheckBridgeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
+import { dbHelpers, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
@@ -207,6 +208,10 @@ async function getSkipCallData(
   amount: string,
   chainId: string,
 ): Promise<Parameters<SmartAccountImplementation['encodeCalls']>[0]> {
+  // support for hex amounts.
+  if (amount.startsWith('0x')) {
+    amount = parseInt(amount, 16).toString();
+  }
   const routeResult = await route({
     amountIn: amount, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
@@ -214,6 +219,10 @@ async function getSkipCallData(
     destAssetDenom: usdcAddressByChainId['dydx-mainnet-1'],
     destAssetChainId: 'dydx-mainnet-1',
     cumulativeAffiliateFeeBps: '0',
+    smartRelay: true, // skip recommended to enable for better routes and less faults. 
+    smartSwapOptions: {
+      splitRoutes: true,
+    },
     goFast: true,
   });
   if (!routeResult) {
@@ -402,10 +411,20 @@ class BridgeController extends Controller {
         apiKey: config.ALCHEMY_API_KEY,
         network: chainIdToAlchemyNetworkMap[chainId],
       });
-
+      logger.info({
+        at: `${controllerName}#sweep->startEvmBridge`,
+        message: 'Searching for assets',
+        fromAddress,
+        chainId,
+      });
       // search for assets that exist on this account on this chain.
       const usdcToSearch = usdcAddressByChainId[chainId];
       const assets = await alchemy.core.getTokenBalances(fromAddress);
+      logger.info({
+        at: `${controllerName}#sweep->startEvmBridge`,
+        message: 'Assets found',
+        assets,
+      });
 
       for (const token of assets.tokenBalances) {
         // TODO: Under what scenario will tokenBalance be undefined?
@@ -415,8 +434,15 @@ class BridgeController extends Controller {
         ) {
           // validate that the token balance is not 0.
           if (parseInt(token.tokenBalance, 16) > 0) {
+            logger.info({
+              at: `${controllerName}#sweep->startEvmBridge`,
+              message: 'Bridge token',
+              fromAddress,
+              chainId,
+              token,
+            });
             try {
-              await bridgeFn(fromAddress, token.tokenBalance, token.contractAddress, chainId);
+              await bridgeFn(fromAddress, token.tokenBalance, usdcToSearch, chainId);
             } catch (error) {
               logger.error({
                 at: `${controllerName}#sweep->startEvmBridge`,
@@ -637,6 +663,12 @@ class BridgeController extends Controller {
     });
     logger.info({
       at: `${controllerName}#startEvmBridge`,
+      message: 'UserOp sent',
+      userOpHash,
+      receipt,
+    });
+    logger.info({
+      at: `${controllerName}#startEvmBridge`,
       message: 'UserOp completed',
       transactionHash: receipt.transactionHash,
     });
@@ -845,8 +877,8 @@ async function parseEvent(e: express.Request): Promise<{
       addressesToSweep.set(fromAddress, addressesToProcess.get(fromAddress) || '');
     } else {
       // need the checksummed address to find the turnkey user.
-      const checkSummedFromAddress = checksumAddress(fromAddress as `0x${string}`);
-      const record = await findByEvmAddress(checkSummedFromAddress);
+      const checkSummedFromAddress = checksumAddress(fromAddress as Address);
+      const record = await findByEvmAddress(checkSummedFromAddress as string);
       if (!record || !record.dydx_address) {
         logger.warning({
           at: `${controllerName}#parseEvent`,
@@ -871,6 +903,15 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
+    // await dbHelpers.clearData()
+    // await TurnkeyUsersTable.create({
+    //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
+    //   svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
+    //   evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
+    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
+    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+    //   created_at: new Date().toISOString(),
+    // })
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();
