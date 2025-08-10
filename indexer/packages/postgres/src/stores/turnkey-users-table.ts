@@ -37,6 +37,19 @@ export async function findBySvmAddress(
     .first();
 }
 
+export async function findBySmartAccountAddress(
+  smartAccountAddress: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const baseQuery: QueryBuilder<TurnkeyUserModel> = setupBaseQuery<TurnkeyUserModel>(
+    TurnkeyUserModel,
+    options,
+  );
+  return baseQuery
+    .where(TurnkeyUserColumns.smart_account_address, smartAccountAddress)
+    .first();
+}
+
 export async function findByEmail(
   email: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
