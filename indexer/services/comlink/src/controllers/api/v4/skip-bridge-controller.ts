@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
+import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import {
   route, executeRoute, setClientOptions, messages,
@@ -42,11 +42,17 @@ import { CheckBridgeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { dbHelpers, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
+import { getSmartAccountAddress } from '../../../helpers/alchemy-helpers';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
 
+const entryPoint = getEntryPoint('0.7');
+
 // set the skip client options to use the skip rpc.
+// for some reason, skip requires you to call this function 
+// as initiation even if you're not setting an rpc.
+// Calling route() without this will throw error.
 setClientOptions({
   endpointOptions: {
     endpoints: {
@@ -225,6 +231,11 @@ async function getSkipCallData(
     },
     goFast: true,
   });
+  logger.info({
+    at: `${controllerName}#getSkipCallData`,
+    message: 'Route result obtained',
+    routeResult,
+  });
   if (!routeResult) {
     throw new Error('Failed to find a route');
   }
@@ -378,9 +389,9 @@ class BridgeController extends Controller {
   @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
-      @Query() chainId: string,
-      // optionally provide the contract and amount, primarily used for solana.
-      @Query() amount?: string,
+    @Query() chainId: string,
+    // optionally provide the contract and amount, primarily used for solana.
+    @Query() amount?: string,
   ): Promise<BridgeResponse> {
     let bridgeFn: (
       fromAddress: string,
@@ -614,8 +625,6 @@ class BridgeController extends Controller {
       throw error;
     }
 
-    const entryPoint = getEntryPoint('0.7');
-
     // Initialize a Turnkey-powered Viem Account
     const turnkeyAccount = await createAccount({
       // @ts-ignore
@@ -688,6 +697,8 @@ class BridgeController extends Controller {
    * no gas sponsorship is possible pre 7702. We are assuming that the address provided will be a
    * smart account address and that the underlying EOA address is a valid entry in our database.
    *
+   * Notice that the fromAddress is swapped out for the EOA address at the get go. 
+   * This is because we assume only smart account addresses are being swept.
    */
   async startEvmBridgePre7702(
     fromAddress: string,
@@ -695,15 +706,23 @@ class BridgeController extends Controller {
     sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
-    const eoaAddress = getEOAAddressFromSmartAccountAddress(fromAddress as Address);
-    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(eoaAddress);
+    try {
+      fromAddress = await getEOAAddressFromSmartAccountAddress(fromAddress as Address);
+    } catch (error) {
+      logger.error({
+        at: `${controllerName}#startEvmBridgePre7702`,
+        message: 'Failed to get EOA address from smart account address',
+        error,
+      });
+    }
+    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
     let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
       callData = await getSkipCallData(
-        eoaAddress,
+        fromAddress,
         sourceAssetDenom,
         record.dydx_address,
         amount,
@@ -726,7 +745,7 @@ class BridgeController extends Controller {
       // @ts-ignore
       client: turnkeySenderClient.apiClient(),
       organizationId: record.suborg_id,
-      signWith: eoaAddress,
+      signWith: fromAddress,
     });
 
     // Construct a validator
@@ -808,8 +827,13 @@ class BridgeController extends Controller {
   }
 }
 
-function getEOAAddressFromSmartAccountAddress(_: Address): Address {
-  return '0x0001';
+async function getEOAAddressFromSmartAccountAddress(smartAccountAddress: Address): Promise<Address> {
+  smartAccountAddress = checksumAddress(smartAccountAddress)
+  const record = await findBySmartAccountAddress(smartAccountAddress)
+  if (!record || !record.evm_address) {
+    throw new Error('Failed to find a turnkey user for address');
+  }
+  return record.evm_address as Address;
 }
 
 /* returns the addresses to sweep and the chainId.
@@ -855,7 +879,7 @@ async function parseEvent(e: express.Request): Promise<{
   }
   // validate the addressesToProcess to see if they are indeed turnkey users.
   const addressesToSweep = new Map<string, string>();
-  for (const fromAddress of addressesToProcess.keys()) {
+  for (let fromAddress of addressesToProcess.keys()) {
     // if the chain is solana, then we need to also include the token amount.
     // USDC is the only supported asset for solana so that will be the contract address.
     if (chainId === 'solana') {
@@ -876,9 +900,18 @@ async function parseEvent(e: express.Request): Promise<{
       // add the amount to the map as well.
       addressesToSweep.set(fromAddress, addressesToProcess.get(fromAddress) || '');
     } else {
-      // need the checksummed address to find the turnkey user.
+      // evm otherwise, check to see if the chain is avalanche, in which case 
+      // we need to use the underlying eoa address to find the turnkey user.
+      // this is also the address we need to use to kick off the bridge, but 
+      // this address is hot swapped on the actual bridging fn because we still need 
+      // the smart account address for amount validation.
       const checkSummedFromAddress = checksumAddress(fromAddress as Address);
-      const record = await findByEvmAddress(checkSummedFromAddress as string);
+      let record: TurnkeyUserFromDatabase | undefined;
+      if (chainId === avalanche.id.toString()) {
+        record = await findBySmartAccountAddress(checkSummedFromAddress);
+      } else {
+        record = await findByEvmAddress(checkSummedFromAddress);
+      }
       if (!record || !record.dydx_address) {
         logger.warning({
           at: `${controllerName}#parseEvent`,
@@ -908,10 +941,12 @@ router.post(
     //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
     //   svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
     //   evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
+    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
     //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
     //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
     //   created_at: new Date().toISOString(),
     // })
+
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();

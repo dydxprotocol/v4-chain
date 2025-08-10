@@ -12,7 +12,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../../../helpers/alchemy-helpers';
 import { isValidEmail } from '../../../helpers/utility/validation';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
@@ -26,6 +26,7 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
+import { Address, checksumAddress } from 'viem';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -250,10 +251,16 @@ export class TurnkeyController extends Controller {
     // parent org api client no longer has permissions to do anything.
     let evmAddress = '';
     let svmAddress = '';
+    // smart account address can be derived offchain before we send any user ops. 
+    // smart account address is needed by the frontend to display the correct 
+    // deposit address for the avalanche chain since it does not support eip7702.
+    let smartAccountAddress = '';
     for (const address of subOrg.wallet?.addresses || []) {
       if (address.startsWith('0x')) {
         // evm always starts with 0x
         evmAddress = address;
+        smartAccountAddress = await getSmartAccountAddress(evmAddress);
+        smartAccountAddress = checksumAddress(smartAccountAddress as Address)
       } else {
         // if not evm, then must be svm
         svmAddress = address;
@@ -268,6 +275,7 @@ export class TurnkeyController extends Controller {
       email: params.email,
       svm_address: svmAddress,
       evm_address: evmAddress,
+      smart_account_address: smartAccountAddress,
       salt,
       created_at: new Date().toISOString(),
     });

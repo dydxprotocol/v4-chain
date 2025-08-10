@@ -172,7 +172,7 @@ async function registerAddressWithAlchemyWebhookWithRetry(
  * Also assumes that the address provided here is a valid address that
  * already exists in our database.
  */
-async function getSmartAccountAddress(address: string): Promise<string> {
+export async function getSmartAccountAddress(address: string): Promise<string> {
   const publicAvalancheClient = createPublicClient({
     transport: http(getRPCEndpoint(avalanche.id.toString())),
     chain: avalanche,
