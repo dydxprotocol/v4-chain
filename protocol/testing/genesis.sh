@@ -2225,31 +2225,31 @@ function edit_genesis() {
 
 	# Vaults
 	# Set default quoting params.
-	# dasel put -t int -f "$GENESIS" ".app_state.vault.default_quoting_params.spread_min_ppm" -v '3000'
-	# # Set operator params.
-	# dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.operator" -v 'dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky'
-	# dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.metadata.name" -v 'Governance'
-	# dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.metadata.description" -v 'Governance Module Account'
-	# # Set total shares and owner shares.
-	# if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
-	# 	vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
-	# else
-	# 	vault_owner_address="${INPUT_TEST_ACCOUNTS[0]}"
-	# fi
-	# total_deposit=$((DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT * ${#INPUT_VAULT_NUMBERS[@]})) 
-	# dasel put -t string -f "$GENESIS" ".app_state.vault.total_shares.num_shares" -v "${total_deposit}"
-	# dasel put -t json -f "$GENESIS" ".app_state.vault.owner_shares.[]" -v '{}'
-	# dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].owner" -v "${vault_owner_address}"
-	# dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].shares.num_shares" -v "${total_deposit}"
-	# # Set vaults.
-	# vault_idx=0
-	# for number in "${INPUT_VAULT_NUMBERS[@]}"; do
-	# 	dasel put -t json -f "$GENESIS" '.app_state.vault.vaults.[]' -v '{}'
-	# 	dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.type" -v 'VAULT_TYPE_CLOB'
-	# 	dasel put -t int -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.number" -v "${number}"
-	# 	dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
-	# 	vault_idx=$(($vault_idx + 1))
-	# done
+	dasel put -t int -f "$GENESIS" ".app_state.vault.default_quoting_params.spread_min_ppm" -v '3000'
+	# Set operator params.
+	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.operator" -v 'dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky'
+	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.metadata.name" -v 'Governance'
+	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.metadata.description" -v 'Governance Module Account'
+	# Set total shares and owner shares.
+	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
+		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
+	else
+		vault_owner_address="${INPUT_TEST_ACCOUNTS[0]}"
+	fi
+	total_deposit=$((DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT * ${#INPUT_VAULT_NUMBERS[@]})) 
+	dasel put -t string -f "$GENESIS" ".app_state.vault.total_shares.num_shares" -v "${total_deposit}"
+	dasel put -t json -f "$GENESIS" ".app_state.vault.owner_shares.[]" -v '{}'
+	dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].owner" -v "${vault_owner_address}"
+	dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].shares.num_shares" -v "${total_deposit}"
+	# Set vaults.
+	vault_idx=0
+	for number in "${INPUT_VAULT_NUMBERS[@]}"; do
+		dasel put -t json -f "$GENESIS" '.app_state.vault.vaults.[]' -v '{}'
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.type" -v 'VAULT_TYPE_CLOB'
+		dasel put -t int -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.number" -v "${number}"
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
+		vault_idx=$(($vault_idx + 1))
+	done
 
 	# Update accountplus module.
 	dasel put -t bool -f "$GENESIS" '.app_state.dydxaccountplus.params.is_smart_account_active' -v 'true'
