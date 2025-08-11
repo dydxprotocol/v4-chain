@@ -732,6 +732,17 @@ export interface AffiliateAddressResponse {
   address: string,
 }
 
+export interface CreateReferralCodeRequest {
+  address: string,
+  newCode: string,
+  signedMessage: string, // base64 encoded
+  pubKey: string, // base64 encoded
+  timestamp: number, // UNIX timestamp in seconds
+}
+export interface CreateReferralCodeResponse {
+  referralCode: string,
+}
+
 export interface AffiliateSnapshotResponse {
   affiliateList: AffiliateSnapshotResponseObject[],
   total: number,

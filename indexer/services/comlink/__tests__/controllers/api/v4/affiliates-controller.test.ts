@@ -15,10 +15,41 @@ import {
   RequestMethod,
   AffiliateSnapshotResponseObject,
 } from '../../../../src/types';
-import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
+import { AccountVerificationRequiredAction } from '../../../../src/helpers/compliance/compliance-utils';
+
+import request from 'supertest';
+import { ExtendedSecp256k1Signature, Secp256k1 } from '@cosmjs/crypto';
+import { verifyADR36Amino } from '@keplr-wallet/cosmos';
+import { stats } from '@dydxprotocol-indexer/base';
+import { DateTime } from 'luxon';
+import { toBech32 } from '@cosmjs/encoding';
+
+jest.mock('@cosmjs/crypto', () => ({
+  ...jest.requireActual('@cosmjs/crypto'),
+  Secp256k1: {
+    verifySignature: jest.fn(),
+  },
+  ExtendedSecp256k1Signature: {
+    fromFixedLength: jest.fn(),
+  },
+}));
+
+jest.mock('@keplr-wallet/cosmos', () => ({
+  ...jest.requireActual('@keplr-wallet/cosmos'),
+  verifyADR36Amino: jest.fn(),
+}));
+
+jest.mock('@cosmjs/encoding', () => ({
+  toBech32: jest.fn(),
+}));
 
 describe('affiliates-controller#V4', () => {
+
+  const verifySignatureMock = Secp256k1.verifySignature as jest.Mock;
+  const fromFixedLengthMock = ExtendedSecp256k1Signature.fromFixedLength as jest.Mock;
+  const verifyADR36AminoMock = verifyADR36Amino as jest.Mock;
+  const toBech32Mock = toBech32 as jest.Mock;
   beforeAll(async () => {
     await dbHelpers.migrate();
   });
@@ -30,7 +61,6 @@ describe('affiliates-controller#V4', () => {
   describe('GET /metadata', () => {
     beforeEach(async () => {
       await testMocks.seedData();
-      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
     });
 
     afterEach(async () => {
@@ -147,7 +177,6 @@ describe('affiliates-controller#V4', () => {
   describe('GET /address', () => {
     beforeEach(async () => {
       await testMocks.seedData();
-      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
     });
 
     afterEach(async () => {
@@ -177,6 +206,165 @@ describe('affiliates-controller#V4', () => {
     });
   });
 
+  describe('POST /referralCode', () => {
+    const defaultSubaccountId = SubaccountTable.uuid(
+      testConstants.defaultSubaccount.address,
+      testConstants.defaultSubaccount.subaccountNumber,
+    );
+
+    beforeEach(async () => {
+      await testMocks.seedData();
+      verifySignatureMock.mockResolvedValue(true);
+      fromFixedLengthMock.mockResolvedValue({} as ExtendedSecp256k1Signature);
+      verifyADR36AminoMock.mockReturnValue(true);
+      toBech32Mock.mockReturnValue(testConstants.defaultAddress);
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(stats, 'increment');
+    });
+
+    afterEach(async () => {
+      await dbHelpers.clearData();
+    });
+
+    const mockCreateCodeRequest = (code: string, address?: string) => ({
+      address: address || testConstants.defaultWallet.address,
+      newCode: code,
+      action: AccountVerificationRequiredAction.UPDATE_CODE,
+      signedMessage: 'signedMessage',
+      pubKey: address || testConstants.defaultWallet.address,
+      timestamp: DateTime.now().toSeconds(),
+    });
+
+    it('should update a referral code for a valid address if it already exists', async () => {
+      const newCode = 'NewCode12345';
+      const response2: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/affiliates/referralCode',
+        body: mockCreateCodeRequest(newCode),
+        expectedStatus: 200,
+      });
+
+      expect(response2.body).toEqual({
+        referralCode: newCode,
+      });
+
+      // query the database to check if the referral code was updated
+      const usernameRow = await SubaccountUsernamesTable.findByUsername(newCode);
+      expect(usernameRow).toEqual({
+        username: newCode,
+        subaccountId: defaultSubaccountId,
+      });
+
+      const usernameRowByAddress = await SubaccountUsernamesTable.findByAddress([
+        testConstants.defaultWallet.address,
+      ]);
+      expect(usernameRowByAddress).toEqual([{
+        username: newCode,
+        address: testConstants.defaultWallet.address,
+      }]);
+    });
+
+    it('should update a referral code for a valid address for keplr if it already exists', async () => {
+      const newCode = 'NewCode12345';
+      const newRequest = mockCreateCodeRequest(newCode);
+      const response2: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/affiliates/referralCode-keplr',
+        body: {
+          ...newRequest,
+          // these two are not used in the keplr version of the request
+          timestamp: undefined,
+          action: undefined,
+        },
+        expectedStatus: 200,
+      });
+
+      expect(response2.body).toEqual({
+        referralCode: newCode,
+      });
+
+      // query the database to check if the referral code was updated
+      const usernameRow = await SubaccountUsernamesTable.findByUsername(newCode);
+      expect(usernameRow).toEqual({
+        username: newCode,
+        subaccountId: defaultSubaccountId,
+      });
+
+      const usernameRowByAddress = await SubaccountUsernamesTable.findByAddress([
+        testConstants.defaultWallet.address,
+      ]);
+      expect(usernameRowByAddress).toEqual([{
+        username: newCode,
+        address: testConstants.defaultWallet.address,
+      }]);
+    });
+
+    it('should fail to create a referral code for an invalid address', async () => {
+      const invalidAddress = 'invalidAddress';
+      const newCode = 'NewCode123';
+      // mock the signature verification to return true
+      verifySignatureMock.mockResolvedValue(true);
+      fromFixedLengthMock.mockResolvedValue({} as ExtendedSecp256k1Signature);
+      verifyADR36AminoMock.mockReturnValue(true);
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(stats, 'increment');
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/affiliates/referralCode',
+        body: mockCreateCodeRequest(newCode, invalidAddress),
+        expectedStatus: 400,  // helper performs expect on status
+      });
+    });
+
+    it('should fail to update an existing referral code if another user has it', async () => {
+      const newCode = 'NewCode123';
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/affiliates/referralCode',
+        body: mockCreateCodeRequest(newCode, testConstants.defaultWallet.address),
+        expectedStatus: 200,
+      });
+
+      toBech32Mock.mockReturnValue(testConstants.defaultWallet2.address);
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/affiliates/referralCode',
+        body: mockCreateCodeRequest(newCode, testConstants.defaultWallet2.address),
+        expectedStatus: 400,
+        errorMsg: 'Referral code already exists',
+      });
+    });
+
+    it('should fail for invalid codes and succeed for valid codes', async () => {
+      const validCodes = [
+        '1234567890',
+        'foobar123',
+        'foobar3319',
+      ];
+      const invalidCodes = [
+        '1',
+        '1234567890123456789012345678901234567890',
+        'foobar*123',
+      ];
+      for (const code of validCodes) {
+        await sendRequest({
+          type: RequestMethod.POST,
+          path: '/v4/affiliates/referralCode',
+          body: mockCreateCodeRequest(code, testConstants.defaultWallet.address),
+          expectedStatus: 200,
+        });
+      }
+      for (const code of invalidCodes) {
+        await sendRequest({
+          type: RequestMethod.POST,
+          path: '/v4/affiliates/referralCode',
+          body: mockCreateCodeRequest(code, testConstants.defaultWallet.address),
+          expectedStatus: 400,
+        });
+      }
+    });
+  });
+
   describe('GET /snapshot', () => {
     const defaultInfo: AffiliateInfoCreateObject = testConstants.defaultAffiliateInfo;
     const defaultInfo2: AffiliateInfoCreateObject = testConstants.defaultAffiliateInfo2;
@@ -184,20 +372,13 @@ describe('affiliates-controller#V4', () => {
 
     beforeEach(async () => {
       await testMocks.seedData();
-      // Create username for defaultWallet
-      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
-
       // Create defaultWallet2, subaccount, and username
       await WalletTable.create(testConstants.defaultWallet2);
       await SubaccountTable.create(testConstants.defaultSubaccountDefaultWalletAddress);
-      await SubaccountUsernamesTable.create(
-        testConstants.subaccountUsernameWithDefaultWalletAddress,
-      );
 
       // Create defaultWallet3, create subaccount, create username
       await WalletTable.create(testConstants.defaultWallet3);
       await SubaccountTable.create(testConstants.defaultSubaccountWithAlternateAddress);
-      await SubaccountUsernamesTable.create(testConstants.subaccountUsernameWithAlternativeAddress);
 
       // Create affiliate infos
       await Promise.all([
@@ -264,7 +445,6 @@ describe('affiliates-controller#V4', () => {
         currentOffset: 0,
       };
       expect(response.body.affiliateList).toHaveLength(0);
-      expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
       expect(response.body.currentOffset).toEqual(expectedResponse.currentOffset);
       expect(response.body.total).toEqual(expectedResponse.total);
     });
@@ -283,7 +463,6 @@ describe('affiliates-controller#V4', () => {
         currentOffset: offset,
       };
       expect(response.body.affiliateList).toHaveLength(0);
-      expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
       expect(response.body.currentOffset).toEqual(expectedResponse.currentOffset);
       expect(response.body.total).toEqual(expectedResponse.total);
     });
