@@ -162,7 +162,7 @@ async function registerAddressWithAlchemyWebhookWithRetry(
         address,
         webhookId,
       });
-      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1))); // linear backoff
     }
   }
 }
