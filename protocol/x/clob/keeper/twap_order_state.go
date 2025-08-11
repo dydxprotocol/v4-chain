@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"runtime/debug"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -411,11 +412,16 @@ func (k Keeper) safeHandleMsgPlaceOrder(
 		// recover stops a panicking goroutine and returns the error if present
 		// this will help us catch any exceptions resulting from order placement
 		if r := recover(); r != nil {
+			var orderId any
+			if msg != nil {
+				orderId = msg.Order.OrderId
+			}
 			k.Logger(ctx).Error(
 				"panic recovered in HandleMsgPlaceOrder for twap suborder",
 				"panic", r,
-				"orderId", msg.Order.OrderId,
+				"orderId", orderId,
 				"isStateful", isStateful,
+				"stack", string(debug.Stack()),
 			)
 			err = errorsmod.Wrapf(
 				types.ErrInvalidPlaceOrder,
