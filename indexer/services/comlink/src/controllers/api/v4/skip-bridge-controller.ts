@@ -2,7 +2,7 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import {
-  route, executeRoute, setClientOptions, messages,
+  route, executeRoute, setClientOptions, messages, balances
 } from '@skip-go/client/cjs';
 import { Adapter } from '@solana/wallet-adapter-base';
 import { Keypair, Transaction, VersionedTransaction } from '@solana/web3.js';
@@ -131,6 +131,13 @@ const usdcAddressByChainId: Record<string, string> = {
   'dydx-mainnet-1': 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5', // usdc on dydx.
 };
 
+const ethDenomByChainId: Record<string, string> = {
+  [mainnet.id.toString()]: 'ethereum-native', // eth on ethereum mainnet.
+  [arbitrum.id.toString()]: 'arbitrum-native', // eth on arbitrum.
+  [base.id.toString()]: 'base-native', // eth on base.
+  [optimism.id.toString()]: 'optimism-native', // eth on optimism.
+};
+
 enum Asset {
   USDC = 'USDC',
   ETH = 'ETH',
@@ -228,6 +235,7 @@ async function getSkipCallData(
     smartRelay: true, // skip recommended to enable for better routes and less faults. 
     smartSwapOptions: {
       splitRoutes: true,
+      evmSwaps: true, // needed for native eth bridging. 
     },
     goFast: true,
   });
@@ -314,8 +322,22 @@ async function getSkipCallData(
     }
   });
 
-  return [
+
+  // need value to be the amount if native asset.
+  let value = BigInt(0);
+  if (Object.values(ethDenomByChainId).map((x) => x.toLowerCase()).includes(sourceAssetDenom.toLowerCase())) {
+    value = BigInt(amount);
+  }
+
+  const callData = [
     {
+      to: (toAddress.startsWith('0x') ? toAddress : (`0x${toAddress}`)) as Hex,
+      value,
+      data: data.startsWith('0x') ? data as Hex : (`0x${data}`) as Hex, // "0x",
+    },
+  ];
+  if (Object.values(usdcAddressByChainId).map((x) => x.toLowerCase()).includes(sourceAssetDenom.toLowerCase())) {
+    callData.unshift({
       to: usdcAddressByChainId[chainId] as `0x${string}`,
       value: BigInt(0),
       data: encodeFunctionData({
@@ -337,13 +359,11 @@ async function getSkipCallData(
           BigInt(amount),
         ],
       }), // "0x",
-    },
-    {
-      to: (toAddress.startsWith('0x') ? toAddress : (`0x${toAddress}`)) as Hex,
-      value: BigInt(0),
-      data: data.startsWith('0x') ? data as Hex : (`0x${data}`) as Hex, // "0x",
-    },
-  ];
+    });
+  }
+
+
+  return callData;
 }
 
 function getSvmSigner(suborgId: string, signWith: string) {
@@ -430,41 +450,74 @@ class BridgeController extends Controller {
       });
       // search for assets that exist on this account on this chain.
       const usdcToSearch = usdcAddressByChainId[chainId];
-      const assets = await alchemy.core.getTokenBalances(fromAddress);
+      const ethToSearch = ethDenomByChainId[chainId];
+
+      const assetsToSearch = [usdcToSearch, ethToSearch];
+      const assets = await balances({
+        chains: {
+          [chainId]: {
+            address: fromAddress,
+          },
+        },
+      });
       logger.info({
         at: `${controllerName}#sweep->startEvmBridge`,
         message: 'Assets found',
         assets,
       });
 
-      for (const token of assets.tokenBalances) {
-        // TODO: Under what scenario will tokenBalance be undefined?
-        if (
-          token.contractAddress.toLowerCase() === usdcToSearch.toLowerCase() &&
-          token.tokenBalance
-        ) {
-          // validate that the token balance is not 0.
-          if (parseInt(token.tokenBalance, 16) > 0) {
-            logger.info({
+      for (const asset of assetsToSearch) {
+        const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
+        if (balance && parseInt(balance, 10) > 0) {
+          logger.info({
+            at: `${controllerName}#sweep->startEvmBridge`,
+            message: 'Bridge token',
+            fromAddress,
+            chainId,
+            asset,
+            balance,
+          });
+          try {
+            await bridgeFn(fromAddress, balance, asset, chainId);
+          } catch (error) {
+            logger.error({
               at: `${controllerName}#sweep->startEvmBridge`,
-              message: 'Bridge token',
-              fromAddress,
-              chainId,
-              token,
+              message: `Failed to bridge token ${asset}`,
+              error,
             });
-            try {
-              await bridgeFn(fromAddress, token.tokenBalance, usdcToSearch, chainId);
-            } catch (error) {
-              logger.error({
-                at: `${controllerName}#sweep->startEvmBridge`,
-                message: `Failed to bridge token ${token.contractAddress}`,
-                error,
-              });
-            }
           }
         }
-        // TODO: Add other assets here.
       }
+
+      // for (const token of assets?.chains?.[chainId]?.denoms) {
+      //   // TODO: Under what scenario will tokenBalance be undefined?
+      //   if (
+      //     (token.contractAddress.toLowerCase() === usdcToSearch.toLowerCase() ||
+      //     token.contractAddress.toLowerCase() === ethToSearch.toLowerCase()) &&
+      //     token.tokenBalance
+      //   ) {
+      //     // validate that the token balance is not 0.
+      //     if (parseInt(token.tokenBalance, 16) > 0) {
+      //       logger.info({
+      //         at: `${controllerName}#sweep->startEvmBridge`,
+      //         message: 'Bridge token',
+      //         fromAddress,
+      //         chainId,
+      //         token,
+      //       });
+      //       try {
+      //         await bridgeFn(fromAddress, token.tokenBalance, usdcToSearch, chainId);
+      //       } catch (error) {
+      //         logger.error({
+      //           at: `${controllerName}#sweep->startEvmBridge`,
+      //           message: `Failed to bridge token ${token.contractAddress}`,
+      //           error,
+      //         });
+      //       }
+      //     }
+      //   }
+      //   // TODO: Add other assets here.
+      // }
     } else {
       throw new Error(`Unsupported chainId: ${chainId}`);
     }
@@ -658,7 +711,6 @@ class BridgeController extends Controller {
         getPaymasterData: async (userOperation) => {
           return zerodevPaymaster.sponsorUserOperation({ userOperation });
         },
-
       },
       // paymasterContext: { token: assetAddressLookerUpper[asset as Asset][chainId] },
       userOperation: {
@@ -940,16 +992,16 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    // await dbHelpers.clearData()
-    // await TurnkeyUsersTable.create({
-    //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
-    //   svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
-    //   evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
-    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
-    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
-    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-    //   created_at: new Date().toISOString(),
-    // })
+    await dbHelpers.clearData()
+    await TurnkeyUsersTable.create({
+      suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
+      svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
+      evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
+      smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
+      salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
+      dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+      created_at: new Date().toISOString(),
+    })
 
     const start: number = Date.now();
     try {

@@ -1616,6 +1616,9 @@
       },
       "TurnkeyAuthResponse": {
         "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
           "organizationId": {
             "type": "string"
           },
@@ -3888,6 +3891,55 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/uploadDydxAddress": {
+      "post": {
+        "operationId": "UploadDydxAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "signature": {
+                    "type": "string"
+                  },
+                  "dydxAddress": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "signature",
+                  "dydxAddress"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
       }
     },
     "/turnkey/signin": {
