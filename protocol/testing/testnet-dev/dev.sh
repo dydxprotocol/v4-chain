@@ -249,6 +249,6 @@ edit_config() {
 }
 
 install_prerequisites
-create_validators
 setup_preupgrade_binary
+create_validators
 setup_cosmovisor
