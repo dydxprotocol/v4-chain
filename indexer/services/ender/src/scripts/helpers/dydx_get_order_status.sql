@@ -30,7 +30,7 @@ BEGIN
     IF total_filled >= size THEN
         RETURN 'FILLED';
     /** Order flag of 64 is a stateful term order */
-    ELSIF order_flags = 64 THEN /** 1. Stateful Order */
+    ELSIF order_flags = 64 OR order_flags = 256 THEN /** 1. Stateful Order or Twap Suborder */
         RETURN 'OPEN';
     ELSIF time_in_force = 'FOK' THEN /** 2. Short-term FOK */
         RETURN 'FILLED';

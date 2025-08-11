@@ -5,6 +5,7 @@ CREATE OR REPLACE FUNCTION dydx_uuid_from_order_id_parts(subaccount_id uuid, cli
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 BEGIN
+    RAISE WARNING 'CONCAT UUID PARTS: %', concat(subaccount_id, '-', client_id, '-', clob_pair_id, '-', order_flags);
     return dydx_uuid(concat(subaccount_id, '-', client_id, '-', clob_pair_id, '-', order_flags));
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;

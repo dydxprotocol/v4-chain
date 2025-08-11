@@ -70,6 +70,7 @@ BEGIN
 
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
+    RAISE WARNING 'RECIEVING ORDER FILL MESSAGE: %', order_;
     order_size = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
                                  power(10, perpetual_market_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
@@ -95,6 +96,8 @@ BEGIN
                                     power(10, asset_record."atomicResolution")::numeric);
     order_router_address = dydx_get_order_router_address(fill_liquidity, event_data);
 
+    fill_type = CASE WHEN (order_->'orderId'->>'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN 'TWAP_SUBORDER' ELSE fill_type END;
+
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
     order_side = dydx_from_protocol_order_side(order_->'side');
@@ -104,7 +107,6 @@ BEGIN
     SELECT * INTO order_record FROM orders WHERE "id" = order_uuid;
     order_record."side" = order_side;
     order_record."size" = order_size;
-    order_record."price" = order_price;
     order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
     order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
     order_record."orderFlags" = jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint;
@@ -115,44 +117,84 @@ BEGIN
     order_record."updatedAtHeight" = block_height;
     order_record."orderRouterAddress" = order_->>'orderRouterAddress';
 
-    IF FOUND THEN
-        order_record."totalFilled" = total_filled;
-        order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
+    RAISE WARNING 'ORDER UUID: % | FOUND: %', order_uuid, FOUND;
 
-        UPDATE orders
-        SET
-            "side" = order_record."side",
-            "size" = order_record."size",
-            "totalFilled" = order_record."totalFilled",
-            "price" = order_record."price",
-            "status" = order_record."status",
-            "orderFlags" = order_record."orderFlags",
-            "goodTilBlock" = order_record."goodTilBlock",
-            "goodTilBlockTime" = order_record."goodTilBlockTime",
-            "timeInForce" = order_record."timeInForce",
-            "reduceOnly" = order_record."reduceOnly",
-            "clientMetadata" = order_record."clientMetadata",
-            "updatedAt" = order_record."updatedAt",
-            "updatedAtHeight" = order_record."updatedAtHeight",
-            "builderAddress" = order_record."builderAddress",
-            "feePpm" = order_record."feePpm",
-            "orderRouterAddress" = order_record."orderRouterAddress"
-        WHERE id = order_uuid;
+    IF FOUND THEN
+        IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+            RAISE WARNING 'PRE-UPDATE DATA -> TOTAL FILLED: % | PRICE: % | FILL AMOUNT: % | ORDER PRICE: %', order_record."totalFilled", order_record."price", fill_amount, order_price ;
+
+            order_record."price" = dydx_get_weighted_average(order_record."price", order_record."totalFilled", maker_price, fill_amount);
+            order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
+
+            order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", order_canceled_status, jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
+            
+            RAISE WARNING 'UPDATING PARENT TWAP ORDER: % | TOTAL FILLED: % | PRICE: %', order_uuid, order_record."totalFilled", order_record."price";
+            -- Twap suborders shouldn't update all the fields. For example, order flags should remain 128 (not updated to 256).
+            UPDATE orders
+            SET
+                "side" = order_record."side",
+                "status" = order_record."status",
+                "price" = order_record."price",
+                "reduceOnly" = order_record."reduceOnly",
+                "updatedAt" = order_record."updatedAt",
+                "updatedAtHeight" = order_record."updatedAtHeight",
+                "totalFilled" = order_record."totalFilled" -- keep track of fill amount for the parent order
+            WHERE "id" = order_uuid;
+        ELSE
+            order_record."totalFilled" = total_filled;
+            order_record."price" = order_price;
+            order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
+
+            UPDATE orders
+            SET
+                "side" = order_record."side",
+                "size" = order_record."size",
+                "totalFilled" = order_record."totalFilled",
+                "price" = order_record."price",
+                "status" = order_record."status",
+                "orderFlags" = order_record."orderFlags",
+                "goodTilBlock" = order_record."goodTilBlock",
+                "goodTilBlockTime" = order_record."goodTilBlockTime",
+                "timeInForce" = order_record."timeInForce",
+                "reduceOnly" = order_record."reduceOnly",
+                "clientMetadata" = order_record."clientMetadata",
+                "updatedAt" = order_record."updatedAt",
+                "updatedAtHeight" = order_record."updatedAtHeight",
+                "builderAddress" = order_record."builderAddress",
+                "feePpm" = order_record."feePpm",
+                "orderRouterAddress" = order_record."orderRouterAddress"
+            WHERE id = order_uuid;
+        END IF;
+
     ELSE
+        RAISE WARNING 'CREATING NEW ORDER FROM FILL MESSAGE: %', order_uuid;
         order_record."id" = order_uuid;
         order_record."subaccountId" = subaccount_uuid;
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
         order_record."clobPairId" = clob_pair_id;
         order_record."side" = order_side;
+        order_record."price" = order_price;
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
         order_record."status" = dydx_get_order_status(fill_amount, order_size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
         order_record."createdAtHeight" = block_height;
+
+        order_record."duration" = NULL;
+        order_record."interval" = NULL;
+        order_record."priceTolerance" = NULL;
+
+        IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+            order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
+            order_record."type" = 'TWAP';
+            RAISE WARNING 'CREATING TWAP PARENT ORDER: %', order_uuid;
+        END IF;
+        
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
-            "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm", "orderRouterAddress")
+            "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm",
+            "orderRouterAddress", "duration", "interval", "priceTolerance")
         VALUES (order_record.*);
     END IF;
 
