@@ -789,6 +789,7 @@ export interface FundingPaymentResponse extends PaginationResponse {
 
 /* ------- TURNKEY TYPES ------- */
 export interface TurnkeyAuthResponse {
+  dydxAddress?: string,
   organizationId?: string,
   apiKeyId?: string,
   userId?: string,
@@ -800,6 +801,7 @@ export interface TurnkeyCreateSuborgResponse {
   subOrgId: string,
   apiKeyId?: string,
   userId?: string,
+  dydxAddress?: string,
   salt: string,
 }
 

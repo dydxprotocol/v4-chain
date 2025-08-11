@@ -78,7 +78,7 @@ export class TurnkeyController extends Controller {
   @Post('/uploadDydxAddress')
   async uploadDydxAddress(
     @Body() body: { dydxAddress: string, signature: string },
-  ): Promise<{ success: boolean } > {
+  ): Promise<{ success: boolean }> {
     const { dydxAddress, signature } = body;
     if (!dydxAddress || !signature) {
       throw new TurnkeyError('dydxAddress and signature are required');
@@ -134,6 +134,7 @@ export class TurnkeyController extends Controller {
           userId: resp.userId,
           organizationId: resp.subOrgId,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
 
       } catch (error) {
@@ -148,6 +149,7 @@ export class TurnkeyController extends Controller {
         return {
           session: resp.session,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
       } catch (error) {
         throw this.wrapTurnkeyError(error, 'Social signin failed');
@@ -161,6 +163,7 @@ export class TurnkeyController extends Controller {
         return {
           organizationId: resp.organizationId,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
       } catch (error) {
         throw this.wrapTurnkeyError(error, 'Passkey signin failed');
@@ -173,7 +176,11 @@ export class TurnkeyController extends Controller {
     return randomBytes(16).toString('hex');
   }
 
-  // returns the suborgId plus salt if the user exists.
+  /*
+   * Returns the suborgId plus salt if the user exists.
+   * Additionally will include the dydxAddress if the user has one uploaded already.
+   * 
+   */
   private async getSuborg(p: GetSuborgParams): Promise<TurnkeyCreateSuborgResponse | undefined> {
     if (p.email) {
       const user = await TurnkeyUsersTable.findByEmail(p.email);
@@ -182,6 +189,7 @@ export class TurnkeyController extends Controller {
         return {
           subOrgId: user.suborg_id,
           salt: user.salt,
+          dydxAddress: user.dydx_address || '',
         };
       }
       return undefined;
@@ -206,6 +214,7 @@ export class TurnkeyController extends Controller {
         return {
           subOrgId: user?.suborg_id || '',
           salt: user?.salt || '',
+          dydxAddress: user?.dydx_address || '',
         };
       }
     }
@@ -349,11 +358,13 @@ export class TurnkeyController extends Controller {
       invalidateExisting: true,
       organizationId: suborg.subOrgId,
     });
+
     return {
       subOrgId: suborg.subOrgId,
       apiKeyId: emailAuthResponse.activity.result.emailAuthResult?.apiKeyId,
       userId: emailAuthResponse.activity.result.emailAuthResult?.userId,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -383,6 +394,7 @@ export class TurnkeyController extends Controller {
     return {
       session: oauthLoginResponse.activity.result.oauthLoginResult?.session,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -408,6 +420,7 @@ export class TurnkeyController extends Controller {
     return {
       organizationId: suborg.subOrgId,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 

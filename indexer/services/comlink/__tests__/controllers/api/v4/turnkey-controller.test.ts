@@ -8,12 +8,13 @@ describe('TurnkeyController', () => {
   let mockBridgeSenderApiClient: TurnkeyApiClient;
   let controller: TurnkeyController;
   const mockUser: TurnkeyUserCreateObject = {
-    suborg_id: 'test-org',
+    suborg_id: 'test-suborg-id',
     email: 'test@example.com',
     salt: 'test-salt',
     created_at: new Date().toISOString(),
     evm_address: '0x1234567890123456789012345678901234567890',
-    svm_address: 'dydx1234567890123456789012345678901234567890',
+    svm_address: 'svm1234567890123456789012345678901234567890',
+    dydx_address: 'dydx1234567890123456789012345678901234567890',
   };
 
   beforeAll(async () => {
@@ -36,6 +37,7 @@ describe('TurnkeyController', () => {
       updateRootQuorum: jest.fn(),
     } as unknown as TurnkeyApiClient;
     controller = new TurnkeyController(mockParentApiClient, mockBridgeSenderApiClient);
+    await TurnkeyUsersTable.create(mockUser);
   });
 
   afterAll(async () => {
@@ -47,7 +49,6 @@ describe('TurnkeyController', () => {
   describe('POST /signin', () => {
     describe('Email signin', () => {
       it('should successfully sign in existing user with email', async () => {
-        await TurnkeyUsersTable.create(mockUser);
 
         jest.mocked(mockParentApiClient.emailAuth).mockResolvedValue({
           activity: {
@@ -74,7 +75,7 @@ describe('TurnkeyController', () => {
       it('should create new user and sign in with email', async () => {
         // No existing user in database
         jest.mocked(mockParentApiClient.createSubOrganization).mockResolvedValue({
-          subOrganizationId: 'test-suborg-id',
+          subOrganizationId: 'test-suborg-id-2',
           rootUserIds: ['user-id', 'user-id-2'],
           wallet: {
             addresses: ['0x123', 'svm-address'],
@@ -106,13 +107,13 @@ describe('TurnkeyController', () => {
         const createdUser = await TurnkeyUsersTable.findByEmail('test2@example.com');
         expect(createdUser).toBeDefined();
         expect(createdUser?.email).toEqual('test2@example.com');
-        expect(createdUser?.suborg_id).toEqual('test-suborg-id');
+        expect(createdUser?.suborg_id).toEqual('test-suborg-id-2');
         expect(createdUser?.evm_address).toEqual('0x123');
         expect(createdUser?.svm_address).toEqual('svm-address');
         expect(createdUser?.salt).toBeDefined();
         expect(response?.apiKeyId).toEqual('api-key-id');
         expect(response?.userId).toEqual('user-id');
-        expect(response?.organizationId).toEqual('test-suborg-id');
+        expect(response?.organizationId).toEqual('test-suborg-id-2');
       });
 
       it('should throw error for invalid email format', async () => {
@@ -121,6 +122,26 @@ describe('TurnkeyController', () => {
           userEmail: 'invalid-email',
           targetPublicKey: 'target-public-key',
         })).rejects.toThrow();
+      });
+
+      it('should return the dydx address if it exists', async () => {
+        jest.mocked(mockParentApiClient.emailAuth).mockResolvedValue({
+          activity: {
+            result: {
+              emailAuthResult: {
+                apiKeyId: 'api-key-id',
+                userId: 'user-id',
+              },
+            },
+          },
+        } as any);
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'test@example.com',
+          targetPublicKey: 'target-public-key',
+        });
+
+        expect(response?.dydxAddress).toEqual('dydx1234567890123456789012345678901234567890');
       });
 
       it('should throw error when required fields are missing', async () => {
@@ -153,6 +174,29 @@ describe('TurnkeyController', () => {
         });
 
         expect(response?.session).toEqual('session-token');
+      });
+
+      it('should return the dydx address if it exists', async () => {
+        jest.mocked(mockParentApiClient.getSubOrgIds).mockResolvedValueOnce({
+          organizationIds: ['test-suborg-id'],
+        } as any);
+        jest.mocked(mockParentApiClient.oauthLogin).mockResolvedValue({
+          activity: {
+            result: {
+              oauthLoginResult: {
+                session: 'session-token',
+              },
+            },
+          },
+        } as any);
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.SOCIAL,
+          targetPublicKey: 'target-public-key',
+          provider: 'google',
+          oidcToken: 'oidc-token',
+        });
+
+        expect(response?.dydxAddress).toEqual('dydx1234567890123456789012345678901234567890');
       });
 
       it('should throw error when required fields are missing', async () => {
@@ -217,6 +261,21 @@ describe('TurnkeyController', () => {
           challenge: 'challenge',
           attestation: undefined,
         })).rejects.toThrow();
+      });
+
+      it('should return the dydx address if it exists', async () => {
+        jest.mocked(mockParentApiClient.getSubOrgIds).mockResolvedValueOnce({
+          organizationIds: ['test-suborg-id'],
+        } as any);
+        // await TurnkeyUsersTable.create(mockUser);
+
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.PASSKEY,
+          challenge: 'challenge',
+          attestation: mockAttestation as any,
+        });
+
+        expect(response?.dydxAddress).toEqual('dydx1234567890123456789012345678901234567890');
       });
     });
   });
