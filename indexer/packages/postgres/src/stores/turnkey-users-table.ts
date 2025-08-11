@@ -97,3 +97,25 @@ export async function upsert(
   }
   return turnkeyUsers[0];
 }
+
+export async function updateDydxAddressByEvmAddress(
+  evmAddress: string,
+  dydxAddress: string,
+  options: Options = { txId: undefined },
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const existing: TurnkeyUserModel | undefined = await TurnkeyUserModel.query(
+    Transaction.get(options.txId),
+  )
+    .where(TurnkeyUserColumns.evm_address, evmAddress)
+    .first();
+
+  if (!existing) {
+    return undefined;
+  }
+
+  const updated = await existing.$query().patch({
+    [TurnkeyUserColumns.dydx_address]: dydxAddress,
+  }).returning('*');
+
+  return updated as unknown as TurnkeyUserFromDatabase | undefined;
+}

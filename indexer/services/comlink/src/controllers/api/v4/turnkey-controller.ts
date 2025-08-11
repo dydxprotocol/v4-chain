@@ -26,7 +26,7 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
-import { Address, checksumAddress } from 'viem';
+import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -73,6 +73,35 @@ export class TurnkeyController extends Controller {
         defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
       }).apiClient();
     }
+  }
+
+  @Post('/uploadDydxAddress')
+  async uploadDydxAddress(
+    @Body() body: { dydxAddress: string, signature: string },
+  ): Promise<{ success: boolean } > {
+    const { dydxAddress, signature } = body;
+    if (!dydxAddress || !signature) {
+      throw new TurnkeyError('dydxAddress and signature are required');
+    }
+
+    // Recover the signer from the signed dydxAddress message
+    let recovered: Address;
+    try {
+      recovered = await recoverMessageAddress({ message: dydxAddress, signature: signature as `0x${string}` });
+    } catch (err) {
+      throw this.wrapTurnkeyError(err, 'Failed to recover address from signature');
+    }
+
+    // Try to find user by the recovered address, falling back to lowercase variant
+    const evmAddressChecksum = checksumAddress(recovered);
+    let user = await TurnkeyUsersTable.findByEvmAddress(evmAddressChecksum);
+    if (!user) {
+      throw new TurnkeyError('No user found for recovered EVM address');
+    }
+
+    await (TurnkeyUsersTable as any).updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
+
+    return { success: true };
   }
 
   @Post('/signin')
@@ -262,7 +291,7 @@ export class TurnkeyController extends Controller {
         smartAccountAddress = await getSmartAccountAddress(evmAddress);
         smartAccountAddress = checksumAddress(smartAccountAddress as Address)
       } else {
-        // if not evm, then must be svm
+        // if not evm, then must be svm 
         svmAddress = address;
       }
     }
@@ -484,6 +513,19 @@ const SignInValidationSchema = checkSchema({
   },
 });
 
+const UploadDydxAddressValidationSchema = checkSchema({
+  dydxAddress: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'dydxAddress must be a string',
+  },
+  signature: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'signature must be a string',
+  },
+});
+
 // Express route
 router.post(
   '/signin',
@@ -522,6 +564,36 @@ router.post(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.post_signin.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/uploadAddress',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...UploadDydxAddressValidationSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const body = matchedData(req) as { dydxAddress: string, signature: string };
+      const controller: TurnkeyController = new TurnkeyController();
+      const response = await controller.uploadDydxAddress(body);
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController POST /uploadDydxAddress',
+        'Turnkey uploadDydxAddress error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.post_uploadDydxAddress.timing`,
         Date.now() - start,
       );
     }

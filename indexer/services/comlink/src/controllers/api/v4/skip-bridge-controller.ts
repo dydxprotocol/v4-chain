@@ -484,6 +484,10 @@ class BridgeController extends Controller {
   ): Promise<BridgeResponse> {
     const path = await route({
       goFast: true,
+      smartRelay: true, // skip recommended to enable for better routes and less faults.
+      smartSwapOptions: {
+        splitRoutes: true,
+      },
       amountIn: amount,
       sourceAssetDenom,
       sourceAssetChainId: chainId,
