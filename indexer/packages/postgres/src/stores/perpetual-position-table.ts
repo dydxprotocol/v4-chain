@@ -242,6 +242,89 @@ export async function closePosition(
 }
 
 /**
+ * Retrieves a map of open and closed perpetual positions for a list of subaccounts.
+ * The returned object has subaccountId as keys, with each value containing two maps:
+ * - open: Map of open perpetual positions keyed by perpetualId
+ * - closed: Map of closed perpetual positions keyed by perpetualId that were closed between lastHourBlockHeight and currentBlockHeight
+ * 
+ * @param subaccountIds - List of subaccount IDs to query for
+ * @param currentBlockHeight - Current block height
+ * @param lastHourBlockHeight - Block height from an hour ago
+ * @param options - Query options
+ * @returns Map of subaccountIds to their open and closed perpetual positions
+ */
+export async function findPositionsForSubaccounts(
+  subaccountIds: string[],
+  currentBlockHeight: number,
+  lastHourBlockHeight: number,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<{
+  [subaccountId: string]: {
+    open: { [perpetualId: string]: PerpetualPositionFromDatabase },
+    closed: { [perpetualId: string]: PerpetualPositionFromDatabase },
+  }
+}> {
+  if (subaccountIds.length === 0) {
+    return {};
+  }
+
+  // Query for open positions
+  const openPositions: PerpetualPositionFromDatabase[] = await findAll(
+    {
+      subaccountId: subaccountIds,
+      status: [PerpetualPositionStatus.OPEN],
+    },
+    [],
+    options,
+  );
+
+  // Query for recently closed positions using the baseQuery approach
+  let closedPositionsQuery: QueryBuilder<PerpetualPositionModel> = setupBaseQuery<PerpetualPositionModel>(
+    PerpetualPositionModel,
+    options,
+  );
+
+  closedPositionsQuery = closedPositionsQuery
+    .whereIn(PerpetualPositionColumns.subaccountId, subaccountIds)
+    .where(PerpetualPositionColumns.status, PerpetualPositionStatus.CLOSED)
+    .where(PerpetualPositionColumns.closedAtHeight, '>=', lastHourBlockHeight)
+    .where(PerpetualPositionColumns.closedAtHeight, '<=', currentBlockHeight);
+  
+  const closedPositions: PerpetualPositionFromDatabase[] = await closedPositionsQuery.returning('*');
+
+  // Initialize the result map
+  const result: {
+    [subaccountId: string]: {
+      open: { [perpetualId: string]: PerpetualPositionFromDatabase },
+      closed: { [perpetualId: string]: PerpetualPositionFromDatabase },
+    }
+  } = {};
+
+  // Initialize entries for all subaccountIds
+  subaccountIds.forEach((subaccountId) => {
+    result[subaccountId] = {
+      open: {},
+      closed: {},
+    };
+  });
+
+  // Populate open positions
+  openPositions.forEach((position) => {
+    const { subaccountId, perpetualId } = position;
+    result[subaccountId].open[perpetualId] = position;
+  });
+
+  // Populate closed positions
+  closedPositions.forEach((position) => {
+    const { subaccountId, perpetualId } = position;
+    result[subaccountId].closed[perpetualId] = position;
+  });
+
+  return result;
+}
+
+
+/**
  * Validates close position and returns the update object to update the position.
  */
 export function closePositionUpdateObject(
