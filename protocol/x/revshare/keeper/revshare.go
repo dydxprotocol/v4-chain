@@ -327,7 +327,7 @@ func (k Keeper) getOrderRouterRevShares(
 	orderRouterRevShares := []types.RevShare{}
 	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
 	if err != nil {
-		k.Logger(ctx).Error("order router rev share invalid for taker: " + fill.TakerOrderRouterAddr)
+		k.Logger(ctx).Warn("order router rev share invalid for taker: " + fill.TakerOrderRouterAddr)
 	} else {
 		if fill.TakerOrderRouterAddr != "" {
 			// Orders can have 2 rev share ids, we need to calculate each side separately
@@ -346,7 +346,7 @@ func (k Keeper) getOrderRouterRevShares(
 
 	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
 	if err != nil {
-		k.Logger(ctx).Error("order router rev share invalid for maker: " + fill.MakerOrderRouterAddr)
+		k.Logger(ctx).Warn("order router rev share invalid for maker: " + fill.MakerOrderRouterAddr)
 	} else {
 		if fill.MakerOrderRouterAddr != "" {
 			// maker ppm * max(0, maker)
