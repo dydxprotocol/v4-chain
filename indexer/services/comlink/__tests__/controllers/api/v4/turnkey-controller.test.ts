@@ -1,6 +1,7 @@
 import { dbHelpers, TurnkeyUserCreateObject, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient } from '@turnkey/sdk-server';
 import { TurnkeyController } from '../../../../src/controllers/api/v4/turnkey-controller';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { SigninMethod } from '../../../../src/types';
 
 describe('TurnkeyController', () => {
@@ -15,6 +16,17 @@ describe('TurnkeyController', () => {
     evm_address: '0x1234567890123456789012345678901234567890',
     svm_address: 'svm1234567890123456789012345678901234567890',
     dydx_address: 'dydx1234567890123456789012345678901234567890',
+  };
+
+  const testPrivateKey = generatePrivateKey();
+  const generatedEvmWallet = privateKeyToAccount(testPrivateKey);
+  const mockUser2: TurnkeyUserCreateObject = {
+    suborg_id: 'test-suborg-id-3',
+    email: 'test3@example.com',
+    salt: 'test-salt',
+    created_at: new Date().toISOString(),
+    evm_address: generatedEvmWallet.address,
+    svm_address: 'svm1234567890123456789012345678901234567891',
   };
 
   beforeAll(async () => {
@@ -38,6 +50,7 @@ describe('TurnkeyController', () => {
     } as unknown as TurnkeyApiClient;
     controller = new TurnkeyController(mockParentApiClient, mockBridgeSenderApiClient);
     await TurnkeyUsersTable.create(mockUser);
+    await TurnkeyUsersTable.create(mockUser2);
   });
 
   afterAll(async () => {
@@ -277,6 +290,23 @@ describe('TurnkeyController', () => {
 
         expect(response?.dydxAddress).toEqual('dydx1234567890123456789012345678901234567890');
       });
+    });
+  });
+
+  describe('POST /uploadDydxAddress', () => {
+    it('should upload the dydx address', async () => {
+      const newDydxAddress = 'dydx1234567890123456789012345678901234567891';
+      const signature = await generatedEvmWallet.signMessage({ message: newDydxAddress });
+      const response = await controller.uploadDydxAddress({
+        dydxAddress: newDydxAddress,
+        signature,
+      });
+
+      expect(response).toEqual({ success: true });
+
+      // verify the dydx address is updated in the database
+      const user = await TurnkeyUsersTable.findByEmail('test3@example.com');
+      expect(user?.dydx_address).toEqual('dydx1234567890123456789012345678901234567891');
     });
   });
 });

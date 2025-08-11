@@ -99,7 +99,7 @@ export class TurnkeyController extends Controller {
       throw new TurnkeyError('No user found for recovered EVM address');
     }
 
-    await (TurnkeyUsersTable as any).updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
+    await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
 
     return { success: true };
   }
