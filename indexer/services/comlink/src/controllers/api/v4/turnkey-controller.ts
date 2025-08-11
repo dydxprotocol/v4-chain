@@ -320,7 +320,9 @@ export class TurnkeyController extends Controller {
 
     // need to also add the svm and evm addresses to the alchemy hook
     if (evmAddress && svmAddress) {
-      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
+      // We don't need to wait for it since
+      // frontend doesn't really neeed the results???
+      addAddressesToAlchemyWebhook(evmAddress, svmAddress);
     }
     return {
       subOrgId: subOrg.subOrganizationId,
