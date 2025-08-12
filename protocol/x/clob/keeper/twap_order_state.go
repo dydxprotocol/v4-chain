@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -408,28 +409,22 @@ func (k Keeper) safeHandleMsgPlaceOrder(
 	msg *types.MsgPlaceOrder,
 	isStateful bool,
 ) (err error) {
-	defer func() {
-		// recover stops a panicking goroutine and returns the error if present
-		// this will help us catch any exceptions resulting from order placement
-		if r := recover(); r != nil {
-			var orderId any
-			if msg != nil {
-				orderId = msg.Order.OrderId
-			}
-			k.Logger(ctx).Error(
-				"panic recovered in HandleMsgPlaceOrder for twap suborder",
-				"panic", r,
-				"orderId", orderId,
-				"isStateful", isStateful,
-				"stack", string(debug.Stack()),
-			)
-			err = errorsmod.Wrapf(
-				types.ErrInvalidPlaceOrder,
-				"panic in HandleMsgPlaceOrder: %v",
-				r,
-			)
-		}
-	}()
+	if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
+		return k.HandleMsgPlaceOrder(ctx, msg, isStateful)
+	}); err != nil {
+		k.Logger(ctx).Error(
+			"error recovered in HandleMsgPlaceOrder for twap suborder",
+			"error", err,
+			"order", msg.Order,
+		)
 
-	return k.HandleMsgPlaceOrder(ctx, msg, isStateful)
+		err = errorsmod.Wrapf(
+			types.ErrInvalidPlaceOrder,
+			"error in HandleMsgPlaceOrder: %v",
+			err,
+		)
+		return err
+	}
+
+	return nil
 }
