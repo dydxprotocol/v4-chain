@@ -409,28 +409,26 @@ func (k Keeper) safeHandleMsgPlaceOrder(
 	msg *types.MsgPlaceOrder,
 	isStateful bool,
 ) (err error) {
-	if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
+	err = abci.RunCached(ctx, func(ctx sdk.Context) error {
 		return k.HandleMsgPlaceOrder(ctx, msg, isStateful)
-	}); err != nil {
-		var orderId any
-		if msg != nil {
-			orderId = msg.Order.OrderId
-		}
-		k.Logger(ctx).Error(
-			"failed to handle TWAP suborder placement via HandleMsgPlaceOrder (panic recovered or error)",
-			"cause", err,
-			"orderId", orderId,
-			"isStateful", isStateful,
-			"stack", fmt.Sprintf("%+v", err),
-		)
+	})
 
-		err = errorsmod.Wrapf(
-			types.ErrInvalidPlaceOrder,
-			"error in HandleMsgPlaceOrder: %v",
-			err,
-		)
-		return err
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	var orderId any
+	if msg != nil {
+		orderId = msg.Order.OrderId
+	}
+
+	k.Logger(ctx).Error(
+		"failed to handle TWAP suborder placement via HandleMsgPlaceOrder (panic recovered or error)",
+		"cause", err,
+		"orderId", orderId,
+		"isStateful", isStateful,
+		"stack", fmt.Sprintf("%+v", err),
+	)
+
+	return err
 }
