@@ -419,7 +419,7 @@ func (k Keeper) safeHandleMsgPlaceOrder(
 			"isStateful", isStateful,
 			"stack", fmt.Sprintf("%+v", err),
 		)
-		
+
 		return err
 	}
 
