@@ -199,7 +199,6 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 		case parentTwapCancelled:
 			// no-op after trigger key has been deleted
 		case parentTwapCompleted:
-			// TODO: (anmol) emit indexer event (TWAP completion)?
 			k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 		case createSuborder:
 			// decrement remaining legs
@@ -214,7 +213,6 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			// place triggered suborder
 			err := k.safeHandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
 			if err != nil {
-				// TODO: (anmol) emit indexer event (TWAP error)
 				k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 				k.DeleteSuborderFromTriggerStore(ctx, triggerKey)
 
@@ -364,7 +362,6 @@ func (k Keeper) calculateSuborderQuantums(
 	// Round down to nearest multiple of StepBaseQuantums
 	quantumsByStepBaseQuantums := lib.BigDivFloor(suborderQuantums, lib.BigU(clobPair.StepBaseQuantums))
 	if quantumsByStepBaseQuantums.Uint64() == 0 {
-		// TODO: (anmol) cancel parent twap on order gen failure
 		return 0
 	}
 
