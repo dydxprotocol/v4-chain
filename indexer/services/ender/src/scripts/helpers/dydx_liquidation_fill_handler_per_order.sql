@@ -182,6 +182,8 @@ BEGIN
             order_record."createdAtHeight" = block_height;
 
             IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+                -- This is a handled case but is not expected for twap. Parent orders should always exist
+                RAISE WARNING 'Twap suborders should always have a parent order. Order UUID: %', order_uuid;
                 order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
                 order_record."type" = 'TWAP';
                 order_record."price" = maker_price;
