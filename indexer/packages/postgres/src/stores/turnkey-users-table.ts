@@ -37,6 +37,19 @@ export async function findBySvmAddress(
     .first();
 }
 
+export async function findBySmartAccountAddress(
+  smartAccountAddress: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const baseQuery: QueryBuilder<TurnkeyUserModel> = setupBaseQuery<TurnkeyUserModel>(
+    TurnkeyUserModel,
+    options,
+  );
+  return baseQuery
+    .where(TurnkeyUserColumns.smart_account_address, smartAccountAddress)
+    .first();
+}
+
 export async function findByEmail(
   email: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -83,4 +96,26 @@ export async function upsert(
     throw new Error('Upsert failed to return records');
   }
   return turnkeyUsers[0];
+}
+
+export async function updateDydxAddressByEvmAddress(
+  evmAddress: string,
+  dydxAddress: string,
+  options: Options = { txId: undefined },
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const existing: TurnkeyUserModel | undefined = await TurnkeyUserModel.query(
+    Transaction.get(options.txId),
+  )
+    .where(TurnkeyUserColumns.evm_address, evmAddress)
+    .first();
+
+  if (!existing) {
+    return undefined;
+  }
+
+  const updated = await existing.$query().patch({
+    [TurnkeyUserColumns.dydx_address]: dydxAddress,
+  }).returning('*');
+
+  return updated as unknown as TurnkeyUserFromDatabase | undefined;
 }

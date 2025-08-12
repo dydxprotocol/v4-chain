@@ -342,6 +342,7 @@ export interface TurnkeyUserFromDatabase {
   email?: string,
   svm_address: string,
   evm_address: string,
+  smart_account_address?: string,
   salt: string,
   dydx_address?: string,
   created_at: string,

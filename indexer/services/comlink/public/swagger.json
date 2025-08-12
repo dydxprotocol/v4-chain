@@ -1293,6 +1293,26 @@
         "type": "object",
         "additionalProperties": false
       },
+      "BridgeResponse": {
+        "properties": {
+          "toAddress": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "sourceAssetDenom": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "toAddress",
+          "amount",
+          "sourceAssetDenom"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -1596,6 +1616,9 @@
       },
       "TurnkeyAuthResponse": {
         "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
           "organizationId": {
             "type": "string"
           },
@@ -3473,6 +3496,50 @@
         ]
       }
     },
+    "/bridging/sweep": {
+      "post": {
+        "operationId": "Sweep",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BridgeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fromAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chainId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "amount",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/trader/search": {
       "get": {
         "operationId": "SearchTrader",
@@ -3824,6 +3891,55 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/uploadDydxAddress": {
+      "post": {
+        "operationId": "UploadDydxAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "signature": {
+                    "type": "string"
+                  },
+                  "dydxAddress": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "signature",
+                  "dydxAddress"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
       }
     },
     "/turnkey/signin": {

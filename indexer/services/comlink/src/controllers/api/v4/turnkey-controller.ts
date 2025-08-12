@@ -12,7 +12,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../../../helpers/alchemy-helpers';
 import { isValidEmail } from '../../../helpers/utility/validation';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
@@ -26,6 +26,7 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
+import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -74,6 +75,35 @@ export class TurnkeyController extends Controller {
     }
   }
 
+  @Post('/uploadDydxAddress')
+  async uploadDydxAddress(
+    @Body() body: { dydxAddress: string, signature: string },
+  ): Promise<{ success: boolean }> {
+    const { dydxAddress, signature } = body;
+    if (!dydxAddress || !signature) {
+      throw new TurnkeyError('dydxAddress and signature are required');
+    }
+
+    // Recover the signer from the signed dydxAddress message
+    let recovered: Address;
+    try {
+      recovered = await recoverMessageAddress({ message: dydxAddress, signature: signature as `0x${string}` });
+    } catch (err) {
+      throw this.wrapTurnkeyError(err, 'Failed to recover address from signature');
+    }
+
+    // Try to find user by the recovered address, falling back to lowercase variant
+    const evmAddressChecksum = checksumAddress(recovered);
+    let user = await TurnkeyUsersTable.findByEvmAddress(evmAddressChecksum);
+    if (!user) {
+      throw new TurnkeyError('No user found for recovered EVM address');
+    }
+
+    await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
+
+    return { success: true };
+  }
+
   @Post('/signin')
   async signIn(
     @Body() body: SignInRequest,
@@ -104,6 +134,7 @@ export class TurnkeyController extends Controller {
           userId: resp.userId,
           organizationId: resp.subOrgId,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
 
       } catch (error) {
@@ -118,6 +149,7 @@ export class TurnkeyController extends Controller {
         return {
           session: resp.session,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
       } catch (error) {
         throw this.wrapTurnkeyError(error, 'Social signin failed');
@@ -131,6 +163,7 @@ export class TurnkeyController extends Controller {
         return {
           organizationId: resp.organizationId,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
       } catch (error) {
         throw this.wrapTurnkeyError(error, 'Passkey signin failed');
@@ -143,7 +176,11 @@ export class TurnkeyController extends Controller {
     return randomBytes(16).toString('hex');
   }
 
-  // returns the suborgId plus salt if the user exists.
+  /*
+   * Returns the suborgId plus salt if the user exists.
+   * Additionally will include the dydxAddress if the user has one uploaded already.
+   * 
+   */
   private async getSuborg(p: GetSuborgParams): Promise<TurnkeyCreateSuborgResponse | undefined> {
     if (p.email) {
       const user = await TurnkeyUsersTable.findByEmail(p.email);
@@ -152,6 +189,7 @@ export class TurnkeyController extends Controller {
         return {
           subOrgId: user.suborg_id,
           salt: user.salt,
+          dydxAddress: user.dydx_address || '',
         };
       }
       return undefined;
@@ -176,6 +214,7 @@ export class TurnkeyController extends Controller {
         return {
           subOrgId: user?.suborg_id || '',
           salt: user?.salt || '',
+          dydxAddress: user?.dydx_address || '',
         };
       }
     }
@@ -250,12 +289,18 @@ export class TurnkeyController extends Controller {
     // parent org api client no longer has permissions to do anything.
     let evmAddress = '';
     let svmAddress = '';
+    // smart account address can be derived offchain before we send any user ops. 
+    // smart account address is needed by the frontend to display the correct 
+    // deposit address for the avalanche chain since it does not support eip7702.
+    let smartAccountAddress = '';
     for (const address of subOrg.wallet?.addresses || []) {
       if (address.startsWith('0x')) {
         // evm always starts with 0x
         evmAddress = address;
+        smartAccountAddress = await getSmartAccountAddress(evmAddress);
+        smartAccountAddress = checksumAddress(smartAccountAddress as Address)
       } else {
-        // if not evm, then must be svm
+        // if not evm, then must be svm 
         svmAddress = address;
       }
     }
@@ -268,13 +313,16 @@ export class TurnkeyController extends Controller {
       email: params.email,
       svm_address: svmAddress,
       evm_address: evmAddress,
+      smart_account_address: smartAccountAddress,
       salt,
       created_at: new Date().toISOString(),
     });
 
     // need to also add the svm and evm addresses to the alchemy hook
     if (evmAddress && svmAddress) {
-      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
+      // We don't need to wait for it since
+      // frontend doesn't really neeed the results???
+      addAddressesToAlchemyWebhook(evmAddress, svmAddress);
     }
     return {
       subOrgId: subOrg.subOrganizationId,
@@ -312,11 +360,13 @@ export class TurnkeyController extends Controller {
       invalidateExisting: true,
       organizationId: suborg.subOrgId,
     });
+
     return {
       subOrgId: suborg.subOrgId,
       apiKeyId: emailAuthResponse.activity.result.emailAuthResult?.apiKeyId,
       userId: emailAuthResponse.activity.result.emailAuthResult?.userId,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -346,6 +396,7 @@ export class TurnkeyController extends Controller {
     return {
       session: oauthLoginResponse.activity.result.oauthLoginResult?.session,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -371,6 +422,7 @@ export class TurnkeyController extends Controller {
     return {
       organizationId: suborg.subOrgId,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -476,6 +528,19 @@ const SignInValidationSchema = checkSchema({
   },
 });
 
+const UploadDydxAddressValidationSchema = checkSchema({
+  dydxAddress: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'dydxAddress must be a string',
+  },
+  signature: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'signature must be a string',
+  },
+});
+
 // Express route
 router.post(
   '/signin',
@@ -514,6 +579,36 @@ router.post(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.post_signin.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/uploadAddress',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...UploadDydxAddressValidationSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const body = matchedData(req) as { dydxAddress: string, signature: string };
+      const controller: TurnkeyController = new TurnkeyController();
+      const response = await controller.uploadDydxAddress(body);
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController POST /uploadDydxAddress',
+        'Turnkey uploadDydxAddress error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.post_uploadDydxAddress.timing`,
         Date.now() - start,
       );
     }

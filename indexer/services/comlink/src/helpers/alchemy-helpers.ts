@@ -162,7 +162,7 @@ async function registerAddressWithAlchemyWebhookWithRetry(
         address,
         webhookId,
       });
-      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
+      await new Promise((resolve) => setTimeout(resolve, delay * (i + 1))); // linear backoff
     }
   }
 }
@@ -172,7 +172,7 @@ async function registerAddressWithAlchemyWebhookWithRetry(
  * Also assumes that the address provided here is a valid address that
  * already exists in our database.
  */
-async function getSmartAccountAddress(address: string): Promise<string> {
+export async function getSmartAccountAddress(address: string): Promise<string> {
   const publicAvalancheClient = createPublicClient({
     transport: http(getRPCEndpoint(avalanche.id.toString())),
     chain: avalanche,

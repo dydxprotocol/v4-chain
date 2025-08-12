@@ -3053,6 +3053,86 @@ fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&paren
 This operation does not require authentication
 </aside>
 
+## Sweep
+
+<a id="opIdSweep"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/bridging/sweep', params={
+  'fromAddress': 'string',  'chainId': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /bridging/sweep`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|fromAddress|query|string|true|none|
+|chainId|query|string|true|none|
+|amount|query|string|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "toAddress": "string",
+  "amount": "string",
+  "sourceAssetDenom": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[BridgeResponse](#schemabridgeresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SearchTrader
 
 <a id="opIdSearchTrader"></a>
@@ -3689,6 +3769,104 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## UploadDydxAddress
+
+<a id="opIdUploadDydxAddress"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/uploadDydxAddress', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signature": "string",
+  "dydxAddress": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/uploadDydxAddress`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/uploadDydxAddress`
+
+> Body parameter
+
+```json
+{
+  "signature": "string",
+  "dydxAddress": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|true|none|
+|» signature|body|string|true|none|
+|» dydxAddress|body|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|Inline|
+
+### Response Schema
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» success|boolean|true|none|none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SignIn
 
 <a id="opIdSignIn"></a>
@@ -3789,6 +3967,7 @@ fetch(`${baseURL}/turnkey/signin`,
 
 ```json
 {
+  "dydxAddress": "string",
   "organizationId": "string",
   "apiKeyId": "string",
   "userId": "string",
@@ -6039,6 +6218,30 @@ or
 |---|---|---|---|---|
 |positions|[[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)]|true|none|none|
 
+## BridgeResponse
+
+<a id="schemabridgeresponse"></a>
+<a id="schema_BridgeResponse"></a>
+<a id="tocSbridgeresponse"></a>
+<a id="tocsbridgeresponse"></a>
+
+```json
+{
+  "toAddress": "string",
+  "amount": "string",
+  "sourceAssetDenom": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|toAddress|string|true|none|none|
+|amount|string|true|none|none|
+|sourceAssetDenom|string|true|none|none|
+
 ## TraderSearchResponseObject
 
 <a id="schematradersearchresponseobject"></a>
@@ -6472,6 +6675,7 @@ or
 
 ```json
 {
+  "dydxAddress": "string",
   "organizationId": "string",
   "apiKeyId": "string",
   "userId": "string",
@@ -6485,6 +6689,7 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|dydxAddress|string|false|none|none|
 |organizationId|string|false|none|none|
 |apiKeyId|string|false|none|none|
 |userId|string|false|none|none|
