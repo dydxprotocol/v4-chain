@@ -33,6 +33,8 @@ describe('Pnl store', () => {
 
   it('Successfully creates a Pnl record', async () => {
     await PnlTable.create(defaultPnl);
+    const fetched = await PnlTable.findById(defaultPnl.subaccountId, defaultPnl.createdAt);
+    expect(fetched).toEqual(expect.objectContaining(defaultPnl));
   });
 
   it('Successfully creates multiple Pnl records', async () => {
@@ -73,7 +75,7 @@ describe('Pnl store', () => {
         subaccountId: [defaultSubaccountId],
       },
       [],
-      { readReplica: true },
+      {},
     );
 
     expect(pnls.length).toEqual(2);

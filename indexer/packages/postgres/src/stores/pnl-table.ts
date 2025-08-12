@@ -139,8 +139,7 @@ export async function findById(
   return baseQuery
     .where(PnlColumns.subaccountId, subaccountId)
     .where(PnlColumns.createdAt, createdAt)
-    .first()
-    .returning('*');
+    .first();
 }
 
 async function handleLimitAndPagination(
@@ -173,7 +172,7 @@ async function handleLimitAndPagination(
 
     query = query.offset(offset).limit(limit);
 
-    const results = (await query.returning('*')) as PnlFromDatabase[];
+    const results = (await query) as PnlFromDatabase[];
     return {
       results,
       limit,
@@ -187,7 +186,7 @@ async function handleLimitAndPagination(
     query = query.limit(limit);
   }
 
-  const results = (await query.returning('*')) as PnlFromDatabase[];
+  const results = (await query) as PnlFromDatabase[];
   return {
     results,
   };

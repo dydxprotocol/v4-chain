@@ -18,7 +18,6 @@ export async function up(knex: Knex): Promise<void> {
       table.foreign('subaccountId').references('subaccounts.id');
 
       // Indices
-      table.index(['subaccountId', 'createdAt']);
       table.index(['createdAtHeight']);
     });
 }
