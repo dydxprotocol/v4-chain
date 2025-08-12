@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -206,7 +208,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			)
 
 			// place triggered suborder
-			err := k.HandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
+			err := k.safeHandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
 			if err != nil {
 				// TODO: (anmol) emit indexer event (TWAP error)
 				k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
@@ -397,4 +399,29 @@ func (k Keeper) GenerateSuborder(
 	}
 
 	return &order, true
+}
+
+// safeHandleMsgPlaceOrder safely calls HandleMsgPlaceOrder with panic recovery.
+// This is used in end blockers where panics should be caught and logged rather than
+// causing the entire block to fail.
+func (k Keeper) safeHandleMsgPlaceOrder(
+	ctx sdk.Context,
+	msg *types.MsgPlaceOrder,
+	isStateful bool,
+) (err error) {
+	if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
+		return k.HandleMsgPlaceOrder(ctx, msg, isStateful)
+	}); err != nil {
+		k.Logger(ctx).Error(
+			"failed to handle TWAP suborder placement via HandleMsgPlaceOrder (panic recovered or error)",
+			"cause", err,
+			"orderId", msg.GetOrder().OrderId,
+			"isStateful", isStateful,
+			"stack", fmt.Sprintf("%+v", err),
+		)
+
+		return err
+	}
+
+	return nil
 }
