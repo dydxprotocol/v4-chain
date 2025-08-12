@@ -381,3 +381,15 @@ export interface FundingPaymentsQueryConfig extends QueryConfig {
   [QueryableField.ZERO_PAYMENTS]?: boolean,
   [QueryableField.DISTINCT_FIELDS]?: string[],
 }
+
+export interface PnlQueryConfig extends QueryConfig {
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.CREATED_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_AT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
+  [QueryableField.ZERO_PAYMENTS]?: boolean,
+}
