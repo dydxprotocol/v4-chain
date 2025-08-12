@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"math/big"
-	"runtime/debug"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
