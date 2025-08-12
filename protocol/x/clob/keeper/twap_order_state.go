@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -411,10 +412,16 @@ func (k Keeper) safeHandleMsgPlaceOrder(
 	if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
 		return k.HandleMsgPlaceOrder(ctx, msg, isStateful)
 	}); err != nil {
+		var orderId any
+		if msg != nil {
+			orderId = msg.Order.OrderId
+		}
 		k.Logger(ctx).Error(
-			"error recovered in HandleMsgPlaceOrder for twap suborder",
-			"error", err,
-			"order", msg.Order,
+			"failed to handle TWAP suborder placement via HandleMsgPlaceOrder (panic recovered or error)",
+			"cause", err,
+			"orderId", orderId,
+			"isStateful", isStateful,
+			"stack", fmt.Sprintf("%+v", err),
 		)
 
 		err = errorsmod.Wrapf(
