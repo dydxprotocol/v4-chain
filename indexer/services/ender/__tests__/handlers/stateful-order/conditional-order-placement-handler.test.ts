@@ -164,6 +164,9 @@ describe('conditionalOrderPlacementHandler', () => {
       builderAddress: null,
       feePpm: null,
       orderRouterAddress: '',
+      duration: null,
+      interval: null,
+      priceTolerance: null,
     });
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
@@ -229,6 +232,9 @@ describe('conditionalOrderPlacementHandler', () => {
       builderAddress: null,
       feePpm: null,
       orderRouterAddress: '',
+      duration: null,
+      interval: null,
+      priceTolerance: null,
     });
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
