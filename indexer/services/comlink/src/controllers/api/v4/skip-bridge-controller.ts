@@ -992,16 +992,16 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    await dbHelpers.clearData()
-    await TurnkeyUsersTable.create({
-      suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
-      svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
-      evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
-      smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
-      salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
-      dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-      created_at: new Date().toISOString(),
-    })
+    // await dbHelpers.clearData()
+    // await TurnkeyUsersTable.create({
+    //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
+    //   svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
+    //   evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
+    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
+    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
+    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+    //   created_at: new Date().toISOString(),
+    // })
 
     const start: number = Date.now();
     try {
