@@ -1,4 +1,5 @@
 import * as Knex from 'knex';
+
 import { formatAlterTableEnumSql } from '../helpers';
 
 export async function up(knex: Knex): Promise<void> {
