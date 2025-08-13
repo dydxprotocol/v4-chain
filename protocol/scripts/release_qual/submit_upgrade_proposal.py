@@ -151,7 +151,7 @@ def main():
             }
         }],
         "metadata": "",
-        "deposit": "10000000000000000000000adv4tnt",
+        "deposit": "20000000adv4tnt",
         "title": f"Software Upgrade to {upgrade_name}",
         "summary": f"Upgrade the chain to {upgrade_name}"
     }
