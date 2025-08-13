@@ -7,6 +7,8 @@ export enum TradeType {
   LIQUIDATED = 'LIQUIDATED',
   // DELEVERAGED is the trade type for a fill with a deleveraged taker order.
   DELEVERAGED = 'DELEVERAGED',
+  // TWAP_SUBORDER is the trade type for a fill with a twap suborder.
+  TWAP_SUBORDER = 'TWAP_SUBORDER',
 }
 
 export function fillTypeToTradeType(fillType: FillType): TradeType {
@@ -17,6 +19,8 @@ export function fillTypeToTradeType(fillType: FillType): TradeType {
       return TradeType.LIQUIDATED;
     case FillType.DELEVERAGED:
       return TradeType.DELEVERAGED;
+    case FillType.TWAP_SUBORDER:
+      return TradeType.TWAP_SUBORDER;
     default:
       throw new Error(`Unknown fill type: ${fillType}`);
   }
