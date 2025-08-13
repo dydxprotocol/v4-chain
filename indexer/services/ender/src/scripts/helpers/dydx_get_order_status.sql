@@ -29,8 +29,8 @@ RETURNS text AS $$
 BEGIN
     IF total_filled >= size THEN
         RETURN 'FILLED';
-    /** Order flag of 64 is a stateful term order */
-    ELSIF order_flags = 64 THEN /** 1. Stateful Order */
+    /** Order flag of 64 is a stateful long term order and 256 is a twap suborder */
+    ELSIF order_flags = constants.order_flag_long_term() OR order_flags = constants.order_flag_twap_suborder() THEN
         RETURN 'OPEN';
     ELSIF time_in_force = 'FOK' THEN /** 2. Short-term FOK */
         RETURN 'FILLED';

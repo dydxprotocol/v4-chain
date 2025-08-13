@@ -1,11 +1,15 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -195,7 +199,6 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 		case parentTwapCancelled:
 			// no-op after trigger key has been deleted
 		case parentTwapCompleted:
-			// TODO: (anmol) emit indexer event (TWAP completion)?
 			k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 		case createSuborder:
 			// decrement remaining legs
@@ -210,9 +213,20 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			// place triggered suborder
 			err := k.safeHandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
 			if err != nil {
-				// TODO: (anmol) emit indexer event (TWAP error)
 				k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 				k.DeleteSuborderFromTriggerStore(ctx, triggerKey)
+
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewStatefulOrderRemovalEvent(
+							op.twapOrderPlacement.Order.GetOrderId(),
+							getTwapOrderRemovalReason(err),
+						),
+					),
+				)
 			}
 		default:
 			k.Logger(ctx).Error(
@@ -348,7 +362,6 @@ func (k Keeper) calculateSuborderQuantums(
 	// Round down to nearest multiple of StepBaseQuantums
 	quantumsByStepBaseQuantums := lib.BigDivFloor(suborderQuantums, lib.BigU(clobPair.StepBaseQuantums))
 	if quantumsByStepBaseQuantums.Uint64() == 0 {
-		// TODO: (anmol) cancel parent twap on order gen failure
 		return 0
 	}
 
@@ -357,6 +370,17 @@ func (k Keeper) calculateSuborderQuantums(
 		lib.BigU(clobPair.StepBaseQuantums),
 	)
 	return suborderQuantumsRounded.Uint64()
+}
+
+func getTwapOrderRemovalReason(err error) indexershared.OrderRemovalReason {
+	reason := indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED
+	if errors.Is(err, types.ErrStatefulOrderCollateralizationCheckFailed) {
+		reason = indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
+	} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+		reason = indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
+	}
+
+	return reason
 }
 
 // GenerateSuborder generates a suborder when it has been triggered via the
