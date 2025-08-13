@@ -123,6 +123,19 @@ func OrderConditionTypeToIndexerOrderConditionType(
 	return v1types.IndexerOrder_ConditionType(orderConditionType)
 }
 
+func OrderTwapParametersToIndexerOrderTwapParameters(
+	orderTwapParameters *clobtypes.TwapParameters,
+) *v1types.TwapParameters {
+	if orderTwapParameters == nil {
+		return nil
+	}
+	return &v1types.TwapParameters{
+		Duration:       orderTwapParameters.Duration,
+		Interval:       orderTwapParameters.Interval,
+		PriceTolerance: orderTwapParameters.PriceTolerance,
+	}
+}
+
 func OrderToIndexerOrder(
 	order clobtypes.Order,
 ) v1types.IndexerOrder {
@@ -179,6 +192,7 @@ func orderToIndexerOrder_GoodTilBlockTime(
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
 		BuilderCodeParams:               OrderBuilderCodeParamsToIndexerOrderBuilderCodeParams(order.BuilderCodeParameters),
 		OrderRouterAddress:              order.GetOrderRouterAddress(),
+		TwapParameters:                  OrderTwapParametersToIndexerOrderTwapParameters(order.TwapParameters),
 	}
 }
 
