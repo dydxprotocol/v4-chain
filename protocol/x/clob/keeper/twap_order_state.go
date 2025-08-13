@@ -1,11 +1,7 @@
 package keeper
 
 import (
-<<<<<<< HEAD
-=======
 	"errors"
-	"fmt"
->>>>>>> 78947304 ([CT-1361] Add Support for TWAP Events in the Indexer (#2815))
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
