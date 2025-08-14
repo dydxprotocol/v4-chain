@@ -1117,7 +1117,7 @@ export const defaultFundingPayment2 = {
   fundingIndex: '5.6',
 };
 
-// ============== Funding Payments ==============
+// ==============  PnL  =================
 
 export const defaultPnl: PnlCreateObject = {
   subaccountId: defaultSubaccountId,
