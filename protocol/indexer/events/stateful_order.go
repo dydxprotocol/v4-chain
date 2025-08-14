@@ -63,3 +63,17 @@ func NewConditionalOrderTriggeredEvent(
 		},
 	}
 }
+
+func NewTwapOrderPlacementEvent(
+	order clobtypes.Order,
+) *StatefulOrderEventV1 {
+	indexerOrder := v1.OrderToIndexerOrder(order)
+	orderPlace := StatefulOrderEventV1_TwapOrderPlacementV1{
+		Order: &indexerOrder,
+	}
+	return &StatefulOrderEventV1{
+		Event: &StatefulOrderEventV1_TwapOrderPlacement{
+			TwapOrderPlacement: &orderPlace,
+		},
+	}
+}

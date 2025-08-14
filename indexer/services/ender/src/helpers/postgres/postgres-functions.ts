@@ -80,7 +80,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_order_fill_handler_per_order.sql',
   'dydx_perpetual_position_and_order_side_matching.sql',
   'dydx_process_trading_reward_event.sql',
-  'dydx_protocol_condition_type_to_order_type.sql',
+  'dydx_protocol_convert_to_order_type.sql',
   'dydx_tendermint_event_to_transaction_index.sql',
   'dydx_trim_scale.sql',
   'dydx_update_perpetual_position_aggregate_fields.sql',
@@ -99,6 +99,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_uuid_from_transfer_parts.sql',
   'dydx_protocol_market_type_to_perpetual_market_type.sql',
   'dydx_protocol_vault_status_to_vault_status.sql',
+  'dydx_order_flags.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [
