@@ -140,7 +140,7 @@ describe('conditionalOrderTriggeredHandler', () => {
     expect(order).toBeDefined();
     expect(order).toEqual(expect.objectContaining({
       status: OrderStatus.OPEN,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     }));
 
@@ -199,7 +199,7 @@ describe('conditionalOrderTriggeredHandler', () => {
     expect(order).toBeDefined();
     expect(order).toEqual(expect.objectContaining({
       status: OrderStatus.OPEN,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     }));
   });

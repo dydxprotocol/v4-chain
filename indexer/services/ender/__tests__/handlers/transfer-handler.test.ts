@@ -93,14 +93,14 @@ describe('transferHandler', () => {
   const defaultSenderSubaccount: SubaccountCreateObject = {
     address: defaultTransferEvent.sender!.subaccountId!.owner,
     subaccountNumber: defaultTransferEvent.sender!.subaccountId!.number,
-    updatedAt: defaultDateTime.toISO(),
+    updatedAt: defaultDateTime.toISO()!,
     updatedAtHeight: defaultPreviousHeight,
   };
 
   const defaultRecipientSubaccount: SubaccountCreateObject = {
     address: defaultTransferEvent.recipient!.subaccountId!.owner,
     subaccountNumber: defaultTransferEvent.recipient!.subaccountId!.number,
-    updatedAt: defaultDateTime.toISO(),
+    updatedAt: defaultDateTime.toISO()!,
     updatedAtHeight: defaultPreviousHeight,
   };
 

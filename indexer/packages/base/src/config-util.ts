@@ -23,12 +23,16 @@
  *
  * The exported config object should then have types on all its properties.
  */
-
 import { Big } from 'big.js';
-import { BigNumber } from 'bignumber.js';
 import _ from 'lodash';
+// eslint-disable-next-line
+export { BigNumber } from 'bignumber.js';
+// eslint-disable-next-line
+import { BigNumber } from 'bignumber.js';
 
+// eslint-disable-next-line
 import { ConfigError } from './errors';
+// eslint-disable-next-line
 import {
   Bigable,
   BigIntable,

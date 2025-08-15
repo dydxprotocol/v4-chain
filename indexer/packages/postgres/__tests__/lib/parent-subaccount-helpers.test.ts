@@ -57,7 +57,7 @@ describe('getSubaccountQueryForParent', () => {
     await Promise.all(childSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
       address,
       subaccountNumber: subaccountNum,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: '1',
     })));
 
@@ -65,7 +65,7 @@ describe('getSubaccountQueryForParent', () => {
     await Promise.all(nonChildSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
       address,
       subaccountNumber: subaccountNum,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: '1',
     })));
 
@@ -73,7 +73,7 @@ describe('getSubaccountQueryForParent', () => {
     await Promise.all([0, 128].map((subaccountNum) => SubaccountTable.create({
       address: differentAddress,
       subaccountNumber: subaccountNum,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: '1',
     })));
 
@@ -132,7 +132,7 @@ describe('getSubaccountQueryForParent', () => {
     await Promise.all(childSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
       address,
       subaccountNumber: subaccountNum,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: '1',
     })));
 

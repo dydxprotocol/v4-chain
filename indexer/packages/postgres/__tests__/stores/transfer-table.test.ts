@@ -64,7 +64,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO()!,
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -110,7 +110,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO()!,
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -137,7 +137,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO()!,
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -166,7 +166,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO()!,
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -344,7 +344,7 @@ describe('Transfer store', () => {
       size: '10',
       eventId: defaultTendermintEventId,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO()!,
       createdAtHeight: createdHeight,
     };
     await expect(TransferTable.create(invalidTfer)).rejects.toBeInstanceOf(CheckViolationError);
@@ -582,7 +582,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId3,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: now.minus({ hours: 2 }).toISO(),
+      createdAt: now.minus({ hours: 2 }).toISO()!,
       createdAtHeight: createdHeight,
     };
 
@@ -593,7 +593,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: now.minus({ hours: 1 }).toISO(),
+      createdAt: now.minus({ hours: 1 }).toISO()!,
       createdAtHeight: createdHeight,
     };
 
