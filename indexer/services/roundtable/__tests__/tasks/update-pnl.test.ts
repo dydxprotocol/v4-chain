@@ -5,9 +5,12 @@ import {
   OraclePriceTable,
   BlockTable,
   PnlTable,
+  PerpetualPositionTable,
   PersistentCacheTable,
   PersistentCacheKeys,
   FundingPaymentsTable,
+  PerpetualPositionStatus,
+  PositionSide,
 } from '@dydxprotocol-indexer/postgres';
 
 import updatePnlTask from '../../src/tasks/update-pnl';
@@ -20,6 +23,12 @@ import {
   defaultTransfer,
   defaultOraclePrice,
   defaultFundingPayment,
+  defaultPerpetualMarket,
+  defaultTendermintEventId,
+  defaultTendermintEventId2,
+  defaultBlock10,
+  defaultPerpetualMarket2,
+  defaultMarket2,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { DateTime } from 'luxon';
 
@@ -219,5 +228,380 @@ describe('update-pnl', () => {
   );
   expect(cache).toBeDefined();
   expect(cache?.value).toBe('2');
+});
+
+it('calculates position effects correctly for open positions in the same subaccount', async () => {
+  // Create blocks for heights 0, 1, 7, and 10
+  await BlockTable.create({
+    blockHeight: '0',
+    time: DateTime.utc(2022, 5, 31).toISO(),
+  });
+  // Height 1 is created by seedData() as defaultBlock
+  await BlockTable.create({
+    blockHeight: '7',
+    time: DateTime.utc(2022, 6, 7).toISO(),
+  });
+  await BlockTable.create(defaultBlock10);
+  
+  // Create oracle prices with increasing prices
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '0',
+    effectiveAt: DateTime.utc(2022, 5, 31).toISO(),
+    price: '10000', // Starting price $10,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '1',
+    effectiveAt: DateTime.utc(2022, 6, 1).toISO(),
+    price: '10000', // Price at height 1: $10,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '7',
+    effectiveAt: DateTime.utc(2022, 6, 7).toISO(),
+    price: '11000', // Price at height 7: $11,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '10',
+    effectiveAt: DateTime.utc(2022, 6, 10).toISO(),
+    price: '12000', // Price at height 10: $12,000
+  });
+  
+  // Create a different oracle price for market2
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '1000', // ETH price at $1000
+    effectiveAt: DateTime.utc(2022, 5, 31).toISO(),
+    effectiveAtHeight: '0',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '1000', // ETH price at $1000
+    effectiveAt: DateTime.utc(2022, 6, 1).toISO(),
+    effectiveAtHeight: '1',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '900', // ETH price decreased to $900
+    effectiveAt: DateTime.utc(2022, 6, 7).toISO(),
+    effectiveAtHeight: '7',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '800', // ETH price decreased to $800
+    effectiveAt: DateTime.utc(2022, 6, 10).toISO(),
+    effectiveAtHeight: '10',
+  });
+  
+  // Create transfers at height 1 for the subaccount
+  await TransferTable.create({
+    ...defaultTransfer,
+    createdAtHeight: '1',
+    createdAt: defaultBlock.time,
+  });
+  
+  // Create LONG position for BTC at height 1
+  await PerpetualPositionTable.create({
+    subaccountId: defaultSubaccountId,
+    perpetualId: defaultPerpetualMarket.id,
+    side: PositionSide.LONG,
+    status: PerpetualPositionStatus.OPEN,
+    size: '2', // 2 BTC long
+    maxSize: '2',
+    entryPrice: '10000', // Entry at $10,000
+    sumOpen: '2',
+    sumClose: '0',
+    createdAt: defaultBlock.time,
+    createdAtHeight: '1',
+    openEventId: defaultTendermintEventId,
+    lastEventId: defaultTendermintEventId,
+    settledFunding: '0',
+  });
+  
+  // Create SHORT position for ETH at height 7
+  await PerpetualPositionTable.create({
+    subaccountId: defaultSubaccountId,
+    perpetualId: defaultPerpetualMarket2.id,
+    side: PositionSide.SHORT,
+    status: PerpetualPositionStatus.OPEN,
+    size: '-5', // 5 ETH short
+    maxSize: '5',
+    entryPrice: '900', // Entry at $900
+    sumOpen: '5',
+    sumClose: '0',
+    createdAt: DateTime.utc(2022, 6, 7).toISO(),
+    createdAtHeight: '7',
+    openEventId: defaultTendermintEventId2,
+    lastEventId: defaultTendermintEventId2,
+    settledFunding: '0',
+  });
+
+    // Create funding payments at heights 1 and 10
+  await FundingPaymentsTable.create({
+    ...defaultFundingPayment,
+    createdAtHeight: '1',
+    createdAt: defaultBlock.time,
+    payment: '2',
+  });
+  
+  await FundingPaymentsTable.create({
+    ...defaultFundingPayment,
+    createdAtHeight: '10',
+    createdAt: defaultBlock10.time,
+    payment: '5',
+  });
+  
+  await updatePnlTask();
+  
+  // Check that PNL entries were created
+  const pnlRecords = await PnlTable.findAll({}, []);
+  
+// Find records at height 10
+const recordsAtHeight10 = pnlRecords.results.filter((r) => r.createdAtHeight === '10');
+expect(recordsAtHeight10.length).toBe(2); // One for each subaccount with transfer history
+ 
+// Find PNL for the subaccount with positions
+const subaccountWithPositionsPnl = recordsAtHeight10.find((r) => r.subaccountId === defaultSubaccountId);
+expect(subaccountWithPositionsPnl).toBeDefined();
+  
+  // Calculate expected position effects
+  // BTC: LONG 2 BTC, entry at $10000, current price $12000
+  // BTC effect = (12000 - 10000) * 2 = $4000
+  
+  // ETH: SHORT 5 ETH, entry at $900, current price $800
+  // ETH effect = (900 - 800) * 5 = $500
+  
+// Total position effect = $4000 + $500 = $4500
+expect(subaccountWithPositionsPnl?.deltaPositionEffects).toBe('4500');
+
+// Total PNL should match position effects + funding
+  expect(subaccountWithPositionsPnl?.totalPnl).toBe('4507'); // 4500 from positions + 2 + 5 funding payments
+
+// Find PNL for the subaccount without positions
+const subaccountWithoutPositionsPnl = recordsAtHeight10.find((r) => r.subaccountId === defaultSubaccountId2);
+expect(subaccountWithoutPositionsPnl).toBeDefined();
+
+// Subaccount without positions should have zero position effects
+expect(subaccountWithoutPositionsPnl?.deltaPositionEffects).toBe('0');
+expect(subaccountWithoutPositionsPnl?.totalPnl).toBe('0');
+  
+  // Verify persistent cache was updated
+  const cache = await PersistentCacheTable.findById(
+    PersistentCacheKeys.PNL_LAST_PROCESSED_HEIGHT
+  );
+  expect(cache).toBeDefined();
+  expect(cache?.value).toBe('10');
+});
+
+it('calculates position effects correctly for closed positions', async () => {
+  // Create blocks for heights 0, 1, 5, 8, and 10
+  await BlockTable.create({
+    blockHeight: '0',
+    time: DateTime.utc(2022, 5, 31).toISO(),
+  });
+  // Height 1 is created by seedData() as defaultBlock
+  await BlockTable.create({
+    blockHeight: '5',
+    time: DateTime.utc(2022, 6, 5).toISO(),
+  });
+  await BlockTable.create({
+    blockHeight: '8',
+    time: DateTime.utc(2022, 6, 8).toISO(),
+  });
+  await BlockTable.create(defaultBlock10);
+  
+  // Create oracle prices with changing prices
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '0',
+    effectiveAt: DateTime.utc(2022, 5, 31).toISO(),
+    price: '10000', // Starting price $10,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '1',
+    effectiveAt: DateTime.utc(2022, 6, 1).toISO(),
+    price: '10000', // Price at height 1: $10,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '5',
+    effectiveAt: DateTime.utc(2022, 6, 5).toISO(),
+    price: '11000', // Price at height 5: $11,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '8',
+    effectiveAt: DateTime.utc(2022, 6, 8).toISO(),
+    price: '9000', // Price at height 8: $9,000
+  });
+  
+  await OraclePriceTable.create({
+    ...defaultOraclePrice,
+    effectiveAtHeight: '10',
+    effectiveAt: DateTime.utc(2022, 6, 10).toISO(),
+    price: '12000', // Price at height 10: $12,000
+  });
+  
+  // Create a different oracle price for market2
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '1000', // ETH price at $1000
+    effectiveAt: DateTime.utc(2022, 5, 31).toISO(),
+    effectiveAtHeight: '0',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '1000', // ETH price at $1000
+    effectiveAt: DateTime.utc(2022, 6, 1).toISO(),
+    effectiveAtHeight: '1',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '1200', // ETH price increased to $1200
+    effectiveAt: DateTime.utc(2022, 6, 5).toISO(),
+    effectiveAtHeight: '5',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '900', // ETH price dropped to $900
+    effectiveAt: DateTime.utc(2022, 6, 8).toISO(),
+    effectiveAtHeight: '8',
+  });
+  
+  await OraclePriceTable.create({
+    marketId: defaultMarket2.id,
+    price: '800', // ETH price decreased to $800
+    effectiveAt: DateTime.utc(2022, 6, 10).toISO(),
+    effectiveAtHeight: '10',
+  });
+  
+  // Create transfers at height 1 for the subaccount
+  await TransferTable.create({
+    ...defaultTransfer,
+    createdAtHeight: '1',
+    createdAt: defaultBlock.time,
+  });
+  
+  // Position 1: Created at height 1, closed at height 8
+  // BTC LONG position opened at height 1 with price $10,000 and closed at height 8 with price $9,500
+  await PerpetualPositionTable.create({
+    subaccountId: defaultSubaccountId,
+    perpetualId: defaultPerpetualMarket.id,
+    side: PositionSide.LONG,
+    status: PerpetualPositionStatus.CLOSED,
+    size: '3', // 3 BTC long
+    maxSize: '3',
+    entryPrice: '10000', // Entry at $10,000
+    exitPrice: '9500', // Exit at $9,500
+    sumOpen: '3',
+    sumClose: '3',
+    createdAt: defaultBlock.time,
+    createdAtHeight: '1',
+    closedAt: DateTime.utc(2022, 6, 8).toISO(),
+    closedAtHeight: '8',
+    openEventId: defaultTendermintEventId,
+    lastEventId: defaultTendermintEventId,
+    settledFunding: '0',
+  });
+  
+  // Position 2: Created at height 5, closed at height 10
+  // ETH SHORT position opened at height 5 with price $1200 and closed at height 10 with price $850
+  await PerpetualPositionTable.create({
+    subaccountId: defaultSubaccountId,
+    perpetualId: defaultPerpetualMarket2.id,
+    side: PositionSide.SHORT,
+    status: PerpetualPositionStatus.CLOSED,
+    size: '-4', // 4 ETH short
+    maxSize: '4',
+    entryPrice: '1200', // Entry at $1,200
+    exitPrice: '850', // Exit at $850
+    sumOpen: '4',
+    sumClose: '4',
+    createdAt: DateTime.utc(2022, 6, 5).toISO(),
+    createdAtHeight: '5',
+    closedAt: defaultBlock10.time,
+    closedAtHeight: '10',
+    openEventId: defaultTendermintEventId2,
+    lastEventId: defaultTendermintEventId2,
+    settledFunding: '0',
+  });
+  
+  // Create funding payments at heights 1 and 10
+  await FundingPaymentsTable.create({
+    ...defaultFundingPayment,
+    createdAtHeight: '1',
+    createdAt: defaultBlock.time,
+    payment: '2',
+  });
+  
+  await FundingPaymentsTable.create({
+    ...defaultFundingPayment,
+    createdAtHeight: '10',
+    createdAt: defaultBlock10.time,
+    payment: '5',
+  });
+  
+  // Run the task - this should process both heights 1 and 10
+  await updatePnlTask();
+  
+  // Check that PNL entries were created
+  const pnlRecords = await PnlTable.findAll({}, []);
+  console.log('PNL Records:', pnlRecords.results);
+  
+  // Find records at height 10
+  const recordsAtHeight10 = pnlRecords.results.filter((r) => r.createdAtHeight === '10');
+  console.log('Records at Height 10:', recordsAtHeight10);
+  
+  expect(recordsAtHeight10.length).toBe(2); // One for each subaccount with transfer history
+  
+  // Find PNL for the subaccount with positions
+  const subaccountWithPositionsPnl = recordsAtHeight10.find((r) => r.subaccountId === defaultSubaccountId);
+  expect(subaccountWithPositionsPnl).toBeDefined();
+  
+  // Calculate expected position effects for closed positions
+  // Position 1: BTC LONG, entry at $10,000, exit at $9,500, size 3
+  // PnL = (9500 - 10000) * 3 = -$1,500 (loss)
+  
+  // Position 2: ETH SHORT, entry at $1,200, exit at $850, size 4
+  // PnL = (1200 - 850) * 4 = $1,400 (profit)
+  
+  // Total position effect = -$1,500 + $1,400 = -$100
+  expect(subaccountWithPositionsPnl?.deltaPositionEffects).toBe('-100');
+  
+  // Total PNL should match position effects + funding
+  // Position effects: -$100
+  // Funding payments: $2 + $5 = $7
+  // Total: -$100 + $7 = -$93
+  expect(subaccountWithPositionsPnl?.totalPnl).toBe('-93');
+  
+  // Find PNL for the subaccount without positions
+  const subaccountWithoutPositionsPnl = recordsAtHeight10.find((r) => r.subaccountId === defaultSubaccountId2);
+  expect(subaccountWithoutPositionsPnl).toBeDefined();
+  
+  // Subaccount without positions should have zero position effects
+  expect(subaccountWithoutPositionsPnl?.deltaPositionEffects).toBe('0');
+  expect(subaccountWithoutPositionsPnl?.totalPnl).toBe('0');
+  
+  // Verify persistent cache was updated
+  const cache = await PersistentCacheTable.findById(
+    PersistentCacheKeys.PNL_LAST_PROCESSED_HEIGHT
+  );
+  expect(cache).toBeDefined();
+  expect(cache?.value).toBe('10');
 });
 });

@@ -30,11 +30,15 @@ async function processPnlUpdate(
     return;
   }
 
+  console.log('Processing PNL update from height', start, 'to height', end);
+
   // Actual logic
-  await Transaction.get(txId)?.raw(sqlContent, {
+  const result = await Transaction.get(txId)?.raw(sqlContent, {
     start: start,
     end: end,
   });
+
+  console.log('SQL execution result:', result);
 
   // Update the persistent cache with the current height
   await PersistentCacheTable.upsert(
@@ -126,6 +130,9 @@ export default async function runTask(): Promise<void> {
     try {
       const lastHeight: string = await getLastProcessedHeight();
       const currentHeight: string = fundingHeights[i];
+
+      console.log(`Processing PNL calculation: ${lastHeight} -> ${currentHeight}`);
+
       logger.info({
         at,
         message: 'Computing profit and loss',
