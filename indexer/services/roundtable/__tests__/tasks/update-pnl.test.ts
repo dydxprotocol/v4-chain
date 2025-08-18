@@ -818,19 +818,15 @@ describe('update-pnl', () => {
     const subaccount1PnlAtHeight5 = recordsAtHeight5.find((r) => r.subaccountId === defaultSubaccountId);
     expect(subaccount1PnlAtHeight5).toBeDefined();
 
-    // Calculate expected position effects for subaccount1 at height 5
+    // At height 5, the position effects are calculated from height 0 to height 5
     // Open position: BTC LONG, entry at $10,000, current price $11,000, size 2
-    // Open PnL = (11000 - 10000) * 2 = $2,000
-
-    // No closed positions yet at height 5
-
-    // Total position effect = $2,000
+    // Position effect = (11000 - 10000) * 2 = $2,000
     expect(subaccount1PnlAtHeight5?.deltaPositionEffects).toBe('2000');
 
     // Funding payment at height 5 = $10
     expect(subaccount1PnlAtHeight5?.deltaFundingPayments).toBe('10');
 
-    // Total PNL = $2,000 + $10 = $2,010
+    // Total PNL at height 5 = $2,000 + $10 = $2,010
     expect(subaccount1PnlAtHeight5?.totalPnl).toBe('2010');
 
     // Find PNL for subaccount2 at height 5
@@ -848,35 +844,40 @@ describe('update-pnl', () => {
     const subaccount1PnlAtHeight10 = recordsAtHeight10.find((r) => r.subaccountId === defaultSubaccountId);
     expect(subaccount1PnlAtHeight10).toBeDefined();
 
-    // Calculate expected position effects for subaccount1 at height 10
-    // Open position: BTC LONG, entry at $10,000, current price $12,000, size 2
-    // Open PnL = (12000 - 10000) * 2 = $4,000
+    // For the BTC LONG position (created at height 1):
+    // - Oracle price at height 5: $11,000
+    // - Oracle price at height 10: $12,000
+    // - Size: 2 BTC
+    // - PNL = (12000 - 11000) * 2 = $2,000
 
-    // Closed position: ETH SHORT, entry at $1,000, exit at $900, size 3
-    // Closed PnL = (1000 - 900) * 3 = $300
+    // For the ETH SHORT position (created at height 1, closed at height 8):
+    // - Oracle price at height 5: $1,200
+    // - Exit price: $900
+    // - Size: -3 (short)
+    // - PNL = (900 - 1200) * -3 = (1200 - 900) * 3 = $900
 
-    // Total position effect at height 10 = $4,000 + $300 = $4,300
-    expect(subaccount1PnlAtHeight10?.deltaPositionEffects).toBe('4300');
+    // Total deltaPositionEffects = $2,000 + $900 = $2,900
+    expect(subaccount1PnlAtHeight10?.deltaPositionEffects).toBe('2900');
 
     // Funding payment at height 10 = $15
     expect(subaccount1PnlAtHeight10?.deltaFundingPayments).toBe('15');
 
-    // Total PNL = Previous PNL + Current Position Effects + Current Funding
-    // Total PNL = $2,010 + $4,300 + $15 = $6,325
-    expect(subaccount1PnlAtHeight10?.totalPnl).toBe('6325');
+    // Total PNL accumulates: previous totalPnl + current deltaPositionEffects + current deltaFundingPayments
+    // Total PNL = $2,010 + $2,900 + $15 = $4,925
+    expect(subaccount1PnlAtHeight10?.totalPnl).toBe('4925');
 
     // Find PNL for subaccount2 at height 10
     const subaccount2PnlAtHeight10 = recordsAtHeight10.find((r) => r.subaccountId === defaultSubaccountId2);
     expect(subaccount2PnlAtHeight10).toBeDefined();
 
-    // Calculate expected position effects for subaccount2 at height 10
-    // Open position: BTC SHORT, entry at $11,000, current price $12,000, size 4
-    // Open PnL = (11000 - 12000) * 4 = -$4,000
+    // At height 5:
+    // No position effects yet
 
-    // Closed position: ETH LONG, entry at $1,200, exit at $800, size 5
-    // Closed PnL = (800 - 1200) * 5 = -$2,000
+    // At height 10:
+    // BTC SHORT: (11000 - 12000) * 4 = -$4,000 (new since height 5)
+    // ETH LONG closed: (800 - 1200) * 5 = -$2,000 (new since height 5)
 
-    // Total position effect = -$4,000 - $2,000 = -$6,000
+    // So deltaPositionEffects = -$4,000 - $2,000 = -$6,000
     expect(subaccount2PnlAtHeight10?.deltaPositionEffects).toBe('-6000');
 
     // Funding payment = $0 (no funding payments for this subaccount)
