@@ -102,7 +102,6 @@ async function getLastProcessedHeight(): Promise<string> {
  * - All funding payments in the period
  * - All previous PNL calculations
  */
-
 export default async function runTask(): Promise<void> {
   const at: string = 'update-pnl#runTask';
   logger.info({ at, message: 'Starting task' });
