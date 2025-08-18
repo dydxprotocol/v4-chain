@@ -31,9 +31,9 @@ import uncrossOrderbookTask from './tasks/uncross-orderbook';
 import updateAffiliateInfoTask from './tasks/update-affiliate-info';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateFundingPaymentsTask from './tasks/update-funding-payments';
+import updatePnlTask from './tasks/update-pnl';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 import updateWalletTotalVolumeTask from './tasks/update-wallet-total-volume';
-import updatePnlTask from './tasks/update-pnl';
 
 process.on('SIGTERM', () => {
   logger.info({
