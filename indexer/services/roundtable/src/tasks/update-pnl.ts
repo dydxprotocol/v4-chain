@@ -15,6 +15,14 @@ import config from '../config';
 
 const defaultLastHeight: string = '0';
 
+/**
+ * Process pnl changes between the specified start and end heights.
+ *
+ * @param txId Transaction ID for database operations
+ * @param start Start block height (exclusive)
+ * @param end End block height (inclusive)
+ * @returns void
+ */
 async function processPnlUpdate(
   txId: number,
   start: string,
@@ -30,15 +38,11 @@ async function processPnlUpdate(
     return;
   }
 
-  console.log('Processing PNL update from height', start, 'to height', end);
-
-  // Actual logic
+  // bind the start height and end height to the sql content
   const result = await Transaction.get(txId)?.raw(sqlContent, {
     start: start,
     end: end,
   });
-
-  console.log('SQL execution result:', result);
 
   // Update the persistent cache with the current height
   await PersistentCacheTable.upsert(
@@ -53,7 +57,7 @@ async function processPnlUpdate(
 }
 
 /**
- * Get from persistent cache table the height where pnl ticks were last processed.
+ * Get from persistent cache table the height where pnls were last calculated.
  * If no last processed height is found, use the default value 0.
  *
  * @returns The last processed height.
@@ -73,23 +77,36 @@ async function getLastProcessedHeight(): Promise<string> {
 }
 
 /**
- * We need to calculate pnl ticks in order [(last_processed, t0), (t0, t1), ..., (tn-1, tn)]
- * where each interval is of 1 hour
- * For each interval, we need to fetch the following information from block height t to
- * block height t+1:
- * 1. all subaccounts with transfer history at block height t
- * 2. all pnl values at block height t-1 for these subaccounts, 0 for new subaccounts
- * 3. all funding payments in this time period
- * 4. all open perpetual positions at block height t
- * 5. all perpetual positions closed from block height t-1 to t
- * 6. all oracle pricing from block height t-1 to t
+ * Updates the PNL (Profit and Loss) table with calculations for all subaccounts with transfer history.
+ * 
+ * The workflow:
+ * 1. Identifies all subaccounts with transfer history up to the specified end height
+ * 2. Calculates position effects in two parts:
+ *    a) Open position PNL:
+ *       - For positions that existed before the start height: Calculates PNL based on price change 
+ *         from oracle price at start height to oracle price at end height
+ *       - For positions created after start height: Calculates PNL based on price change
+ *         from entry price to oracle price at end height
+ *    b) Closed position PNL:
+ *       - For positions closed between start and end height
+ *       - For positions that existed before start height: Uses oracle price at start as reference
+ *       - For positions created after start height: Uses entry price as reference
+ * 3. Sums up funding payments received in the period between start and end height
+ * 4. Calculates total PNL as:
+ *    Previous total PNL + Current period funding payments + Current period position effects
+ * 
+ * The process requires:
+ * - Oracle prices at start and end heights for all relevant markets
+ * - All open and closed perpetual positions
+ * - All funding payments in the period
+ * - All previous PNL calculations
  */
 
 export default async function runTask(): Promise<void> {
   const at: string = 'update-pnl#runTask';
   logger.info({ at, message: 'Starting task' });
 
-  // Load funding payments SQL script.
+  // Load SQL script used for data reading and writing.
   const sqlPath = join(__dirname, '..', 'scripts', 'update_pnl.sql');
   const sqlContent = readFileSync(sqlPath, 'utf8');
 
@@ -97,7 +114,6 @@ export default async function runTask(): Promise<void> {
   const searchUnprocessedFundingPaymentsHeightStart: string = (
     parseInt(await getLastProcessedHeight(), 10) + 1
   ).toString();
-  console.log('Last height:', searchUnprocessedFundingPaymentsHeightStart);
 
   const fundingUpdates = await FundingPaymentsTable.findAll(
     {
@@ -109,7 +125,6 @@ export default async function runTask(): Promise<void> {
       orderBy: [['createdAtHeight', Ordering.ASC]],
     },
   );
-  console.log('all funding payments:', fundingUpdates.results);                             // TO BE DELETED
 
   logger.info({
     at,
@@ -121,17 +136,14 @@ export default async function runTask(): Promise<void> {
     fundingUpdates.results.length,
   );
 
-  // Get unique heights from funding updates.
+  // Get unique heights from funding payments updates.
   const fundingHeights = [...fundingUpdates.results.map((update) => update.createdAtHeight)];
-  console.log('Funding Heights:', fundingHeights);                                          // TO BE DELETED
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
     try {
       const lastHeight: string = await getLastProcessedHeight();
       const currentHeight: string = fundingHeights[i];
-
-      console.log(`Processing PNL calculation: ${lastHeight} -> ${currentHeight}`);
 
       logger.info({
         at,
