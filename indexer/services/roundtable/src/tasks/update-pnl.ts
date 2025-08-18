@@ -39,9 +39,9 @@ async function processPnlUpdate(
   }
 
   // bind the start height and end height to the sql content
-  const result = await Transaction.get(txId)?.raw(sqlContent, {
-    start: start,
-    end: end,
+  await Transaction.get(txId)?.raw(sqlContent, {
+    start,
+    end,
   });
 
   // Update the persistent cache with the current height
@@ -77,13 +77,14 @@ async function getLastProcessedHeight(): Promise<string> {
 }
 
 /**
- * Updates the PNL (Profit and Loss) table with calculations for all subaccounts with transfer history.
- * 
+ * Updates the PNL (Profit and Loss) table with calculations for all subaccounts with transfer
+ * history.
+ *
  * The workflow:
  * 1. Identifies all subaccounts with transfer history up to the specified end height
  * 2. Calculates position effects in two parts:
  *    a) Open position PNL:
- *       - For positions that existed before the start height: Calculates PNL based on price change 
+ *       - For positions that existed before the start height: Calculates PNL based on price change
  *         from oracle price at start height to oracle price at end height
  *       - For positions created after start height: Calculates PNL based on price change
  *         from entry price to oracle price at end height
@@ -94,7 +95,7 @@ async function getLastProcessedHeight(): Promise<string> {
  * 3. Sums up funding payments received in the period between start and end height
  * 4. Calculates total PNL as:
  *    Previous total PNL + Current period funding payments + Current period position effects
- * 
+ *
  * The process requires:
  * - Oracle prices at start and end heights for all relevant markets
  * - All open and closed perpetual positions
