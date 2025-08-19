@@ -472,6 +472,18 @@ export class TurnkeyController extends Controller {
     return new TurnkeyError(`${contextMessage}: ${String(error)}`);
   }
 
+
+  // temporarily disabled
+  // public async setPolicy(subOrgId: string) {
+  //   await this.parentApiClient.createPolicy({
+  //     organizationId: subOrgId,
+  //     policyName: "Bridge4",
+  //     effect: "EFFECT_ALLOW",
+  //     condition: `eth.tx.data[2500..2614] == '227265636569766572223a226e6f626c6531736a7373646e61746b39396a3273646b71677176353561387a7339376663767332636334706c22'`,
+  //     consensus: `approvers.any(user, user.id == '7a2a7eb9-6e51-460e-9198-7fad96c20e2a')`,
+  //     notes: "For go fast transfers over arbitrum",
+  //   })
+  // }
 }
 
 // Validation schemas
@@ -584,6 +596,29 @@ router.post(
     }
   },
 );
+
+// temporarily disabled
+// router.post(
+//   '/setPolicy',
+//   handleValidationErrors,
+//   ExportResponseCodeStats({ controllerName }),
+//   async (req: express.Request, res: express.Response) => {
+//     const controller: TurnkeyController = new TurnkeyController();
+//     try {
+//       await controller.setPolicy('b0ddbb14-f9b0-4be1-9182-3ea790a5830d');
+//       return res.send({ success: true });
+//     } catch (error) {
+//       return handleControllerError(
+//         'TurnkeyController POST /setPolicy',
+//         'Turnkey setPolicy error',
+//         error,
+//         req,
+//         res,
+//       );
+//     }
+//   },
+// )
+
 
 router.post(
   '/uploadAddress',

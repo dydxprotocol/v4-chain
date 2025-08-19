@@ -35,7 +35,7 @@
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "@dydxprotocol/v4-client-js": "^2.3.1",
     "@keplr-wallet/cosmos": "^0.12.122",
-    "@skip-go/client": "^1.4.0",
+    "@skip-go/client": "^1.5.0",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/web3.js": "1.98.4",
     "@tsoa/runtime": "^5.0.0",

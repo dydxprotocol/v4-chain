@@ -298,6 +298,7 @@ async function getSkipCallData(
 
   let data = '';
   let toAddress = '';
+
   response?.msgs?.forEach((msg, index) => {
     if ('evmTx' in msg) {
       logger.info({
@@ -361,7 +362,6 @@ async function getSkipCallData(
       }), // "0x",
     });
   }
-
 
   return callData;
 }
@@ -577,7 +577,7 @@ class BridgeController extends Controller {
     );
     await executeRoute({
       route: path,
-      simulate: false,
+      simulate: false, // turned off for now, otherwise simulation will fail due to race.
       userAddresses,
       getSvmSigner: getSvmSigner(record?.suborg_id || '', fromAddress),
       svmFeePayer: {
@@ -720,8 +720,9 @@ class BridgeController extends Controller {
       },
     });
 
+    const encoded = await kernelClient.account.encodeCalls(callData);
     const userOpHash = await kernelClient.sendUserOperation({
-      callData: await kernelClient.account.encodeCalls(callData),
+      callData: encoded,
     });
     const { receipt } = await kernelClient.waitForUserOperationReceipt({
       hash: userOpHash,
@@ -850,8 +851,9 @@ class BridgeController extends Controller {
     });
 
     try {
+      const encoded = await kernelClient.account.encodeCalls(callData);
       const userOpHash = await kernelClient.sendUserOperation({
-        callData: await kernelClient.account.encodeCalls(callData),
+        callData: encoded,
       });
       logger.info({
         at: `${controllerName}#startEvmBridgePre7702`,
@@ -1002,7 +1004,15 @@ router.post(
     //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
     //   created_at: new Date().toISOString(),
     // })
-
+    // await TurnkeyUsersTable.create({
+    //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
+    //   svm_address: '4565H9rhrLXh9wBPaNGKyj8ANtRajYEvcXZMBdaychLc',
+    //   evm_address: '0x4D1569E34594083cB700336D2FFC1b1191F8Ec7f',
+    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
+    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
+    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+    //   created_at: new Date().toISOString(),
+    // })
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();
@@ -1015,8 +1025,11 @@ router.post(
           addressesToSweep.get(fromAddress) === '' ? undefined : addressesToSweep.get(fromAddress),
         );
       }
+
+      // sending a 200 tells webhook to not retry.
       return res.status(200).send();
     } catch (error) {
+      // will trigger retry with exponential backoff.
       return handleControllerError(
         'BridgeController POST /startBridge',
         'Bridge start error',

@@ -469,7 +469,7 @@ importers:
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
       '@dydxprotocol/v4-client-js': ^2.3.1
       '@keplr-wallet/cosmos': ^0.12.122
-      '@skip-go/client': ^1.4.0
+      '@skip-go/client': ^1.5.0
       '@solana/wallet-adapter-base': ^0.9.27
       '@solana/web3.js': 1.98.4
       '@tsoa/runtime': ^5.0.0
@@ -542,7 +542,7 @@ importers:
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       '@dydxprotocol/v4-client-js': 2.5.0
       '@keplr-wallet/cosmos': 0.12.122
-      '@skip-go/client': 1.5.1_38aa90f16dff32ec20779c440d6ba925
+      '@skip-go/client': 1.5.2_38aa90f16dff32ec20779c440d6ba925
       '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.4
       '@solana/web3.js': 1.98.4_typescript@5.8.3
       '@tsoa/runtime': 5.0.0
@@ -5289,7 +5289,7 @@ packages:
   /@confio/ics23/0.6.8:
     resolution: {integrity: sha512-wB6uo+3A50m0sW/EWcU64xpV/8wShZ6bMTa7pF8eYsTrSkQA7oLUIJcs/wb8g4y2Oyq701BaGiO6n/ak5WXO1w==}
     dependencies:
-      '@noble/hashes': 1.3.0
+      '@noble/hashes': 1.8.0
       protobufjs: 6.11.3
     dev: false
 
@@ -5297,7 +5297,7 @@ packages:
     resolution: {integrity: sha512-5l2xQ2XuAhV/B3kTIMPBcVZ/OQ+9Yyddzw/lIVs4qE5e/oBI0PVNWXw1oyR0wgfGHrMUxgKjsoOOqE2IbXVyCw==}
     dependencies:
       '@cosmjs/crypto': 0.32.1
-      '@cosmjs/encoding': 0.32.1
+      '@cosmjs/encoding': 0.32.3
       '@cosmjs/math': 0.32.1
       '@cosmjs/utils': 0.32.1
     dev: false
@@ -5354,14 +5354,6 @@ packages:
       libsodium-wrappers-sumo: 0.7.13
     dev: false
 
-  /@cosmjs/encoding/0.32.1:
-    resolution: {integrity: sha512-x60Lfds+Eq42rVV29NaoIAson3kBhATBI3zPp7X3GJTryBc5HFHQ6L/976tE1WB2DrvkfUdWS3ayCMVOY/qm1g==}
-    dependencies:
-      base64-js: 1.5.1
-      bech32: 1.1.4
-      readonly-date: 1.0.0
-    dev: false
-
   /@cosmjs/encoding/0.32.3:
     resolution: {integrity: sha512-p4KF7hhv8jBQX3MkB3Defuhz/W0l3PwWVYU2vkVuBJ13bJcXyhU9nJjiMkaIv+XP+W2QgRceqNNgFUC5chNR7w==}
     dependencies:
@@ -5409,7 +5401,7 @@ packages:
     dependencies:
       '@cosmjs/amino': 0.32.1
       '@cosmjs/crypto': 0.32.1
-      '@cosmjs/encoding': 0.32.1
+      '@cosmjs/encoding': 0.32.3
       '@cosmjs/math': 0.32.1
       '@cosmjs/utils': 0.32.1
       cosmjs-types: 0.9.0
@@ -5430,8 +5422,8 @@ packages:
     resolution: {integrity: sha512-thPCLCmnCuZvrsDW4YmsADI/MliOXWuMnflbzX+3OhoTuEav2I4/1aOXY0jdy0bbqL0l1opx+JfmwdWptMgKzg==}
     dependencies:
       '@cosmjs/stream': 0.32.1
-      isomorphic-ws: 4.0.1_ws@7.5.9
-      ws: 7.5.9
+      isomorphic-ws: 4.0.1_ws@7.5.10
+      ws: 7.5.10
       xstream: 11.14.0
     transitivePeerDependencies:
       - bufferutil
@@ -5455,7 +5447,7 @@ packages:
     dependencies:
       '@confio/ics23': 0.6.8
       '@cosmjs/amino': 0.32.1
-      '@cosmjs/encoding': 0.32.1
+      '@cosmjs/encoding': 0.32.3
       '@cosmjs/math': 0.32.1
       '@cosmjs/proto-signing': 0.32.1
       '@cosmjs/stream': 0.32.1
@@ -5502,7 +5494,7 @@ packages:
     resolution: {integrity: sha512-4uGSxB2JejWhwBUgxca4GqcK/BGnCFMIP7ptwEledrC3AY/shPeIYcPXWEBwO7sfwCta8DhAOCLrc9zhVC+VAQ==}
     dependencies:
       '@cosmjs/crypto': 0.32.1
-      '@cosmjs/encoding': 0.32.1
+      '@cosmjs/encoding': 0.32.3
       '@cosmjs/json-rpc': 0.32.1
       '@cosmjs/math': 0.32.1
       '@cosmjs/socket': 0.32.1
@@ -6661,8 +6653,8 @@ packages:
       long: 4.0.0
     dev: false
 
-  /@keplr-wallet/types/0.12.262_starknet@7.6.4:
-    resolution: {integrity: sha512-yGzfAEuAARLVcjRo5KavLT/E/uIe9IQe/1MXZ9FjRMJJ6/yA55EnrV4Q3SJZNhrcN7jtgGMxvYXEsWS5Sztqzg==}
+  /@keplr-wallet/types/0.12.263_starknet@7.6.4:
+    resolution: {integrity: sha512-YUe+I4d/0N95dxRqQN3vdobKjT15FsF2PMTS0+tXoOFHC5X7TOcTLfiAF/u5LbgpdCJjcrsnUNnUgxtsbi5GLw==}
     peerDependencies:
       starknet: ^7
     dependencies:
@@ -6678,10 +6670,10 @@ packages:
       utility-types: 3.11.0
     dev: false
 
-  /@keplr-wallet/unit/0.12.262_starknet@7.6.4:
-    resolution: {integrity: sha512-+vrNR0gPZvgBrHEWZTmaJGqdpbRuiiE+vb2piTkv+k6BDMJzko8KGf9VnZNvIKFz2XvqTbcV3oEe6PBn4ygQqg==}
+  /@keplr-wallet/unit/0.12.263_starknet@7.6.4:
+    resolution: {integrity: sha512-ikntzJM0XH6/uoO9JWa1i5YcovzEmJHuE5PMzy6mqEnlhmNEgAcHyQmf0nm79Blc4XYi7SdZB1L6t4IDgbPUVw==}
     dependencies:
-      '@keplr-wallet/types': 0.12.262_starknet@7.6.4
+      '@keplr-wallet/types': 0.12.263_starknet@7.6.4
       big-integer: 1.6.52
       utility-types: 3.11.0
     transitivePeerDependencies:
@@ -7117,8 +7109,8 @@ packages:
     dependencies:
       '@sinonjs/commons': 1.8.3
 
-  /@skip-go/client/1.5.1_38aa90f16dff32ec20779c440d6ba925:
-    resolution: {integrity: sha512-tf4qs2qpRHuvF5dF0RcRFLTcFx+/Ar9X3GXXy81/WacdPbQ5kGOMqWDsIRlN2LB17xC+Mn5Hcu0ZKYqYA1eNFA==}
+  /@skip-go/client/1.5.2_38aa90f16dff32ec20779c440d6ba925:
+    resolution: {integrity: sha512-MzySsQ3xlo6Nk/SeXrSptAurvpXGEtg3ZcZqC5E/ZswRCJ3EYFyp60S1qAGOFQGSXMNlAhXiFCv01ymXYPee2w==}
     peerDependencies:
       '@solana/web3.js': ^1.95.8
       viem: 2.x
@@ -7129,7 +7121,7 @@ packages:
       '@cosmjs/math': 0.33.1
       '@cosmjs/proto-signing': 0.33.1
       '@cosmjs/stargate': 0.33.1
-      '@keplr-wallet/unit': 0.12.262_starknet@7.6.4
+      '@keplr-wallet/unit': 0.12.263_starknet@7.6.4
       '@solana/wallet-adapter-base': 0.9.27_@solana+web3.js@1.98.4
       '@solana/web3.js': 1.98.4_typescript@5.8.3
       bech32: 2.0.0
@@ -11858,14 +11850,6 @@ packages:
   /fs.realpath/1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  /fsevents/2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-    requiresBuild: true
-    dev: true
-    optional: true
-
   /fsevents/2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -13170,14 +13154,6 @@ packages:
       ws: 7.5.10
     dev: false
 
-  /isomorphic-ws/4.0.1_ws@7.5.9:
-    resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
-    peerDependencies:
-      ws: '*'
-    dependencies:
-      ws: 7.5.9
-    dev: false
-
   /isows/1.0.7_ws@8.18.2:
     resolution: {integrity: sha512-I1fSfDCZL5P0v33sVqeTDSpcstAg/N+wF5HS033mogOVIp4B+oHC7oOCsA3axAbBSGTJ8QubbNmnIRN/h8U7hg==}
     peerDependencies:
@@ -13509,7 +13485,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_5faceb518d942d9e0d26e6d93b1febee
+      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
     transitivePeerDependencies:
       - supports-color
 
@@ -13706,7 +13682,7 @@ packages:
       micromatch: 4.0.5
       walker: 1.0.8
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /jest-leak-detector/28.1.1:
@@ -17354,6 +17330,7 @@ packages:
       typescript: 5.8.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    dev: true
 
   /ts-node/10.8.2_64708740079a51ed2e240ab651df249f:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
@@ -18085,19 +18062,6 @@ packages:
         optional: true
     dev: false
 
-  /ws/7.5.9:
-    resolution: {integrity: sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==}
-    engines: {node: '>=8.3.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: ^5.0.2
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-    dev: false
-
   /ws/8.17.1:
     resolution: {integrity: sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ==}
     engines: {node: '>=10.0.0'}
@@ -18198,7 +18162,7 @@ packages:
   /xstream/11.14.0:
     resolution: {integrity: sha512-1bLb+kKKtKPbgTK6i/BaoAn03g47PpFstlbe1BA+y3pNS/LfvcaghS5BFf9+EE1J+KwSQsEpfJvFN5GqFtiNmw==}
     dependencies:
-      globalthis: 1.0.3
+      globalthis: 1.0.4
       symbol-observable: 2.0.3
     dev: false
 
