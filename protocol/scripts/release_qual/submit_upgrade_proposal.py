@@ -3,10 +3,7 @@
 Submit a software upgrade proposal and auto-vote with test validators.
 """
 
-<<<<<<< HEAD
 import argparse
-=======
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
 import json
 import os
 import subprocess
@@ -16,7 +13,6 @@ import time
 # Test validators
 VALIDATORS = ["alice", "bob", "carl", "dave", "emily", "fiona", "greg", "henry", "ian", "jeff"]
 
-<<<<<<< HEAD
 # Allowed chain IDs for testnet/staging only (blocking mainnet)
 ALLOWED_CHAIN_IDS = [
     "dydxprotocol-testnet",  # Standard testnet/staging chain
@@ -138,46 +134,11 @@ def main():
         except (json.JSONDecodeError, KeyError) as e:
             # Fallback if we can't get current height
             print(f"Could not parse block height, using default. Error: {e}")
-=======
-def run_cmd(cmd):
-    """Run command and return stdout."""
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"Error: {result.stderr}")
-        return None
-    return result.stdout
-
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python submit_upgrade_proposal.py <upgrade_name> [blocks_to_wait]")
-        print("Example: python submit_upgrade_proposal.py v5.0.0 300")
-        print("Default: 300 blocks from now for upgrade and voting period")
-        sys.exit(1)
-    
-    upgrade_name = sys.argv[1]
-    wait_blocks = int(sys.argv[2]) if len(sys.argv) > 2 else 300
-    
-    # Get current block height
-    result = run_cmd(["dydxprotocold", "status"])
-    if result:
-        try:
-            import json as j
-            status = j.loads(result)
-            current_height = int(status['sync_info']['latest_block_height'])
-            upgrade_height = current_height + wait_blocks
-            print(f"Current height: {current_height}, upgrade at: {upgrade_height}")
-        except:
-            # Fallback if we can't get current height
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
             upgrade_height = 1000000
             print(f"Using default upgrade height: {upgrade_height}")
     else:
         upgrade_height = 1000000
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
     # Create proposal.json
     proposal = {
         "messages": [{
@@ -190,7 +151,6 @@ def main():
             }
         }],
         "metadata": "",
-<<<<<<< HEAD
         "deposit": "20000000adv4tnt",
         "title": f"Software Upgrade to {upgrade_name}",
         "summary": f"Upgrade the chain to {upgrade_name}"
@@ -201,53 +161,27 @@ def main():
 
     print(f"Submitting upgrade proposal for {upgrade_name} at height {upgrade_height}...")
 
-=======
-        "deposit": "10000000000000000000000adv4tnt",
-        "title": f"Software Upgrade to {upgrade_name}",
-        "summary": f"Upgrade the chain to {upgrade_name}"
-    }
-    
-    with open("proposal.json", "w") as f:
-        json.dump(proposal, f, indent=2)
-    
-    print(f"Submitting upgrade proposal for {upgrade_name} at height {upgrade_height}...")
-    
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
     # Submit proposal
     cmd = [
         "dydxprotocold", "tx", "gov", "submit-proposal", "proposal.json",
         "--from", "alice",
-<<<<<<< HEAD
         "--chain-id", chain_id,
-=======
-        "--chain-id", "dydxprotocol-testnet",
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
         "--yes",
         "--broadcast-mode", "sync",
         "--gas", "auto",
         "--fees", "5000000000000000adv4tnt",
         "--keyring-backend", "test"
     ]
-<<<<<<< HEAD
 
     result = run_cmd(cmd, node=node)
     if not result:
         os.remove("proposal.json")
         sys.exit(1)
 
-=======
-    
-    result = run_cmd(cmd)
-    if not result:
-        os.remove("proposal.json")
-        sys.exit(1)
-    
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
     # Extract txhash
     for line in result.split('\n'):
         if 'txhash:' in line:
             print(f"Submitted: {line.split('txhash:')[1].strip()}")
-<<<<<<< HEAD
 
     time.sleep(5)
 
@@ -261,58 +195,28 @@ def main():
     proposal_id = proposals['proposals'][-1]['id']
     print(f"Proposal ID: {proposal_id}")
 
-=======
-    
-    time.sleep(5)
-    
-    # Get proposal ID
-    result = run_cmd(["dydxprotocold", "query", "gov", "proposals", "--output", "json"])
-    if not result:
-        os.remove("proposal.json")
-        sys.exit(1)
-    
-    proposals = json.loads(result)
-    proposal_id = proposals['proposals'][-1]['id']
-    print(f"Proposal ID: {proposal_id}")
-    
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
     # Vote
     print(f"Voting with {len(VALIDATORS)} validators...")
     for voter in VALIDATORS:
         cmd = [
             "dydxprotocold", "tx", "gov", "vote", str(proposal_id), "yes",
             "--from", voter,
-<<<<<<< HEAD
             "--chain-id", chain_id,
-=======
-            "--chain-id", "dydxprotocol-testnet",
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
             "--yes",
             "--gas", "auto",
             "--fees", "5000000000000000adv4tnt",
             "--keyring-backend", "test"
         ]
-<<<<<<< HEAD
         result = run_cmd(cmd, node=node)
-=======
-        result = run_cmd(cmd)
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
         if result and 'txhash:' in result:
             print(f"  {voter}: ✓")
         else:
             print(f"  {voter}: ✗")
         time.sleep(1)
-<<<<<<< HEAD
 
     # Clean up
     os.remove("proposal.json")
 
-=======
-    
-    # Clean up
-    os.remove("proposal.json")
-    
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
     # Wait for voting period (same as blocks to upgrade)
     print(f"\nWaiting {wait_blocks} seconds (~{wait_blocks} blocks) for voting period...")
     for i in range(0, wait_blocks, 30):
@@ -320,7 +224,6 @@ def main():
         if remaining > 0:
             print(f"  {remaining}s remaining...")
             time.sleep(min(30, remaining))
-<<<<<<< HEAD
 
     # Check status
     cmd = [
@@ -328,11 +231,6 @@ def main():
         str(proposal_id), "--output", "json"
     ]
     result = run_cmd(cmd, node=node)
-=======
-    
-    # Check status
-    result = run_cmd(["dydxprotocold", "query", "gov", "proposal", str(proposal_id), "--output", "json"])
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
     if result:
         data = json.loads(result)
         status = data['proposal']['status']
@@ -341,8 +239,4 @@ def main():
             print(f"✅ Upgrade to {upgrade_name} approved for height {upgrade_height}")
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     main()
-=======
-    main()
->>>>>>> 5c4ad36cf (Add release qual script for upgrade proposal)
