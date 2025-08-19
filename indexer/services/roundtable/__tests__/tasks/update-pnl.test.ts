@@ -121,7 +121,7 @@ describe('update-pnl', () => {
 
   async function createOraclePrices(
     marketId: number,
-    prices: { [height: string]: { price: string, time: string }},
+    prices: { [height: string]: { price: string, time: string } },
   ) {
     const promises = Object.entries(prices).map(
       ([height, { price, time }]) => OraclePriceTable.create({
@@ -240,7 +240,7 @@ describe('update-pnl', () => {
 
     // Sort records by height
     const sortedRecords = pnlRecords.results.sort((a, b) => parseInt(a.createdAtHeight, 10) -
-    parseInt(b.createdAtHeight, 10));
+      parseInt(b.createdAtHeight, 10));
 
     // We should have records for both heights, 2 heights * 2 subaccounts = 4 records total
     expect(sortedRecords.length).toBe(4);
@@ -287,6 +287,72 @@ describe('update-pnl', () => {
       expect(record.createdAt).toBe(JUNE_5);
     }
 
+    await verifyCache('2');
+  });
+
+  it('correctly sums multiple funding payments for the same subaccount at the same height', async () => {
+    // Create oracle price at height 2
+    await OraclePriceTable.create({
+      ...defaultOraclePrice,
+      effectiveAtHeight: '2',
+      effectiveAt: JUNE_5,
+    });
+
+    // Create oracle prices for the second market
+    await createOraclePrices(defaultMarket2.id, {
+      '0': { price: ETH_PRICES.HEIGHT_0, time: MAY_31 },
+      '1': { price: ETH_PRICES.HEIGHT_1, time: JUNE_1 },
+      '2': { price: ETH_PRICES.HEIGHT_5, time: JUNE_5 },
+    });
+
+    // Create multiple funding payments for the same subaccount at height 2
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      subaccountId: defaultSubaccountId,
+      createdAtHeight: '2',
+      createdAt: JUNE_5,
+      payment: '10',
+      perpetualId: defaultPerpetualMarket.id,
+      ticker: defaultPerpetualMarket.ticker,
+    });
+
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      subaccountId: defaultSubaccountId,
+      createdAtHeight: '2',
+      createdAt: JUNE_5,
+      payment: '5',
+      perpetualId: defaultPerpetualMarket2.id,
+      ticker: defaultPerpetualMarket2.ticker,
+    });
+
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      subaccountId: defaultSubaccountId,
+      createdAtHeight: '2',
+      createdAt: JUNE_5,
+      payment: '3',
+      perpetualId: '3', // A third market
+      ticker: 'ISO-USD',
+    });
+
+    await updatePnlTask();
+
+    const pnlRecords = await PnlTable.findAll({}, []);
+
+    const { recordsAtHeight: recordsAtHeight2, subaccount1Pnl } =
+      findPnlRecords(pnlRecords.results, '2');
+    
+    expect(recordsAtHeight2.length).toBe(2); // One for each subaccount in the transfer
+
+    // Verify the first subaccount has the sum of all three funding payments (10 + 5 + 3 = 18)
+    verifyPnlRecord(subaccount1Pnl, {
+      deltaFundingPayments: '18', // Sum of 10 + 5 + 3
+      deltaPositionEffects: '0', // No position effects in this test
+      totalPnl: '18', // Total equals funding payments
+    });
+
+    // Verify cache was updated
     await verifyCache('2');
   });
 
