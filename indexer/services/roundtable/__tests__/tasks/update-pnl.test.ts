@@ -300,9 +300,9 @@ describe('update-pnl', () => {
 
     // Create oracle prices for the second market
     await createOraclePrices(defaultMarket2.id, {
-      '0': { price: ETH_PRICES.HEIGHT_0, time: MAY_31 },
-      '1': { price: ETH_PRICES.HEIGHT_1, time: JUNE_1 },
-      '2': { price: ETH_PRICES.HEIGHT_5, time: JUNE_5 },
+      0: { price: ETH_PRICES.HEIGHT_0, time: MAY_31 },
+      1: { price: ETH_PRICES.HEIGHT_1, time: JUNE_1 },
+      2: { price: ETH_PRICES.HEIGHT_5, time: JUNE_5 },
     });
 
     // Create multiple funding payments for the same subaccount at height 2
@@ -340,9 +340,8 @@ describe('update-pnl', () => {
 
     const pnlRecords = await PnlTable.findAll({}, []);
 
-    const { recordsAtHeight: recordsAtHeight2, subaccount1Pnl } =
-      findPnlRecords(pnlRecords.results, '2');
-    
+    const { recordsAtHeight: recordsAtHeight2, subaccount1Pnl } = findPnlRecords(pnlRecords.results, '2');
+
     expect(recordsAtHeight2.length).toBe(2); // One for each subaccount in the transfer
 
     // Verify the first subaccount has the sum of all three funding payments (10 + 5 + 3 = 18)
