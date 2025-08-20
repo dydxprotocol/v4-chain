@@ -469,6 +469,11 @@ export const defaultBlock2: BlockCreateObject = {
   time: DateTime.utc(2022, 6, 2).toISO(),
 };
 
+export const defaultBlock10: BlockCreateObject = {
+  blockHeight: '10',
+  time: DateTime.utc(2022, 6, 10).toISO(),
+};
+
 // ============== TendermintEvents ==============
 
 export const defaultTendermintEvent: TendermintEventCreateObject = {
