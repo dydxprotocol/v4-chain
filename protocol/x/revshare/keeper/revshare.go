@@ -272,7 +272,10 @@ func (k Keeper) GetAllRevShares(
 
 	// Check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
-		k.Logger(ctx).Error("Revshares generated: ", revShares)
+		k.Logger(ctx).Error(
+			"Total fees exceed net fees. Total fees: ", totalFeesShared,
+			"Net fees: ", netFees,
+			"Revshares generated: ", revShares)
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 
