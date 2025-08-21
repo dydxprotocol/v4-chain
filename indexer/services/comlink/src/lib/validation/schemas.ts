@@ -8,6 +8,7 @@ import { decode } from 'bech32';
 import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
+import { SigninMethod } from 'src/types';
 
 const addressSchema = {
   isString: true as const,
@@ -291,6 +292,79 @@ const checkBridgeSchema: Record<string, ParamSchema> = {
     optional: true,
   },
 };
+
+
+// Validation schemas
+const signInSchema: Record<string, ParamSchema> = {
+  signinMethod: {
+    in: ['body'],
+    isIn: {
+      options: [[SigninMethod.SOCIAL, SigninMethod.PASSKEY, SigninMethod.EMAIL]],
+    },
+    errorMessage: `Must be one of: ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}, ${SigninMethod.EMAIL}`,
+  },
+  userEmail: {
+    in: ['body'],
+    optional: true,
+    isEmail: true,
+    errorMessage: 'Must be a valid email address',
+  },
+  magicLink: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Magic link must be a string',
+  },
+  targetPublicKey: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Target public key must be a string',
+  },
+  // Passkey params
+  challenge: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Challenge must be a string',
+  },
+  attestation: {
+    in: ['body'],
+    optional: true,
+    isObject: true,
+    errorMessage: 'Attestation must be an object',
+  },
+  provider: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Provider must be a string',
+  },
+  oidcToken: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'OIDC token must be a string',
+  },
+}
+
+const uploadDydxAddressSchema: Record<string, ParamSchema> = {
+  dydxAddress: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'dydxAddress must be a string',
+  },
+  signature: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'signature must be a string',
+  },
+}
+
+
+export const CheckSignInSchema = checkSchema(signInSchema);
+
+export const CheckUploadDydxAddressSchema = checkSchema(uploadDydxAddressSchema);
 
 export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
 
