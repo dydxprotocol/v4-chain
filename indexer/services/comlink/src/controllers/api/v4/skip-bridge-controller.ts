@@ -33,12 +33,21 @@ import {
 } from 'viem/chains';
 
 import config from '../../../config';
+import {
+  chains,
+  getEOAAddressFromSmartAccountAddress,
+  isSupportedEVMChainId,
+  getRPCEndpoint,
+  getAddress,
+  publicClients,
+  alchemyNetworkToChainIdMap,
+  ethDenomByChainId,
+} from '../../../helpers/alchemy-helpers';
+import { getSvmSigner, getSkipCallData, usdcAddressByChainId } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
 import { CheckBridgeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { chains, getEOAAddressFromSmartAccountAddress, isSupportedEVMChainId, getRPCEndpoint, getAddress, publicClients, alchemyNetworkToChainIdMap, ethDenomByChainId } from '../../../helpers/alchemy-helpers';
-import { getSvmSigner, getSkipCallData, usdcAddressByChainId } from '../../../helpers/skip-helper';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
@@ -46,7 +55,7 @@ const controllerName: string = 'bridging-controller';
 const entryPoint = getEntryPoint('0.7');
 
 // set the skip client options to use the skip rpc.
-// for some reason, skip requires you to call this function 
+// for some reason, skip requires you to call this function
 // as initiation even if you're not setting an rpc.
 // Calling route() without this will throw error.
 setClientOptions({
@@ -59,7 +68,8 @@ setClientOptions({
   },
 });
 
-const processingCache: Record<string, boolean> = {};
+// need to add this so that the address that triggered the activity is ignored.
+// const processingCache: Record<string, boolean> = {};
 
 const turnkeySenderClient = new Turnkey({
   apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
@@ -104,9 +114,9 @@ class BridgeController extends Controller {
   @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
-    @Query() chainId: string,
-    // optionally provide the contract and amount, primarily used for solana.
-    @Query() amount?: string,
+      @Query() chainId: string,
+      // optionally provide the contract and amount, primarily used for solana.
+      @Query() amount?: string,
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
       // no sweeping if amount is less than 20, so far we only support usdc on svm.
@@ -235,8 +245,13 @@ class BridgeController extends Controller {
           return Promise.resolve(nacl.sign.detached(data, sponsorKeypair.secretKey));
         },
       },
-      // ADD RETRY LOGIC???
-      onTransactionBroadcast: async ({ chainId: c, txHash }: { chainId: string, txHash: string }) => {
+      onTransactionBroadcast: async (
+        { chainId: c, txHash }: {
+          chainId: string,
+          txHash: string,
+        },
+      // eslint-disable-next-line @typescript-eslint/require-await
+      ) => {
         logger.info({
           message: `Broadcasted on ${c}: ${txHash}`,
           from: fromAddress,
@@ -247,7 +262,14 @@ class BridgeController extends Controller {
           at: new Date().toISOString(),
         });
       },
-      onTransactionCompleted: async ({ chainId: c, txHash, status }: { chainId: string, txHash: string, status?: TransferStatus }) => {
+      onTransactionCompleted: async (
+        { chainId: c, txHash, status }: {
+          chainId: string,
+          txHash: string,
+          status?: TransferStatus,
+        },
+      // eslint-disable-next-line @typescript-eslint/require-await
+      ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
           message: 'Transaction completed',
@@ -256,7 +278,14 @@ class BridgeController extends Controller {
           status,
         });
       },
-      onTransactionTracked: async ({ chainId: c, txHash, explorerLink }: { chainId: string, txHash: string, explorerLink: string }) => {
+      onTransactionTracked: async (
+        { chainId: c, txHash, explorerLink }: {
+          chainId: string,
+          txHash: string,
+          explorerLink: string,
+        },
+      // eslint-disable-next-line @typescript-eslint/require-await
+      ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
           message: 'Transaction tracked',
@@ -265,7 +294,14 @@ class BridgeController extends Controller {
           explorerLink,
         });
       },
-      onTransactionSignRequested: async ({ chainId: c, txIndex, signerAddress }: { chainId: string, txIndex: number, signerAddress?: string }) => {
+      onTransactionSignRequested: async (
+        { chainId: c, txIndex, signerAddress }: {
+          chainId: string,
+          txIndex: number,
+          signerAddress?: string,
+        },
+      // eslint-disable-next-line @typescript-eslint/require-await
+      ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
           message: 'Sign requested',
@@ -323,9 +359,9 @@ class BridgeController extends Controller {
    * This function is used to bridge evm assets that are supported by the skip bridge.
    * This is done by using the eip7702 kernel account with zero dev to sponsor the user operation
    * for ethereum, arbitrum, base, optimism.
-   * 
-   * Avalanche does not support eip 7702 so we need a separate smart contract account from the EOA. 
-   * Then this account is sponsored by zerodev for gas. Right now, this is being done by swapping 
+   *
+   * Avalanche does not support eip 7702 so we need a separate smart contract account from the EOA.
+   * Then this account is sponsored by zerodev for gas. Right now, this is being done by swapping
    * the smart account address for the EOA address and carrying on with the sponsorship from there.
   */
   async startEvmBridge(
@@ -335,11 +371,12 @@ class BridgeController extends Controller {
     chainId: string,
   ): Promise<BridgeResponse> {
     const pre7702 = chainId === avalanche.id.toString();
+    let srcAddress = fromAddress;
     if (pre7702) {
-      // need to swap the smart account address to find what the signing address is for 
+      // need to swap the smart account address to find what the signing address is for
       // avalanche because avalanche does not support pectra (eip7702) yet.
       try {
-        fromAddress = await getEOAAddressFromSmartAccountAddress(fromAddress as Address);
+        srcAddress = await getEOAAddressFromSmartAccountAddress(srcAddress as Address);
       } catch (error) {
         logger.error({
           at: `${controllerName}#startEvmBridgePre7702`,
@@ -348,14 +385,14 @@ class BridgeController extends Controller {
         });
       }
     }
-    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(fromAddress);
+    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(srcAddress);
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
     let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
       callData = await getSkipCallData(
-        fromAddress,
+        srcAddress,
         sourceAssetDenom,
         record.dydx_address,
         amount,
@@ -369,7 +406,7 @@ class BridgeController extends Controller {
       });
       throw error;
     }
-    const account = await this.getKernelAccount(chainId, fromAddress, record.suborg_id);
+    const account = await this.getKernelAccount(chainId, srcAddress, record.suborg_id);
 
     const zerodevPaymaster = createZeroDevPaymasterClient({
       chain: chains[chainId],
@@ -469,7 +506,7 @@ async function parseEvent(e: express.Request): Promise<{
   }
   // validate the addressesToProcess to see if they are indeed turnkey users.
   const addressesToSweep = new Map<string, string>();
-  for (let fromAddress of addressesToProcess.keys()) {
+  for (const fromAddress of addressesToProcess.keys()) {
     // if the chain is solana, then we need to also include the token amount.
     // USDC is the only supported asset for solana so that will be the contract address.
     if (chainId === 'solana') {
@@ -490,10 +527,10 @@ async function parseEvent(e: express.Request): Promise<{
       // add the amount to the map as well.
       addressesToSweep.set(fromAddress, addressesToProcess.get(fromAddress) || '');
     } else {
-      // evm otherwise, check to see if the chain is avalanche, in which case 
+      // evm otherwise, check to see if the chain is avalanche, in which case
       // we need to use the underlying eoa address to find the turnkey user.
-      // this is also the address we need to use to kick off the bridge, but 
-      // this address is hot swapped on the actual bridging fn because we still need 
+      // this is also the address we need to use to kick off the bridge, but
+      // this address is hot swapped on the actual bridging fn because we still need
       // the smart account address for amount validation.
       const checkSummedFromAddress = checksumAddress(fromAddress as Address);
       let record: TurnkeyUserFromDatabase | undefined;

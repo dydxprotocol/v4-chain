@@ -4,10 +4,13 @@ import type { Adapter } from '@solana/wallet-adapter-base';
 import type { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
 import { TurnkeySigner } from '@turnkey/solana';
-import config from '../config';
 import { encodeFunctionData, type Hex } from 'viem';
 import type { SmartAccountImplementation } from 'viem/account-abstraction';
-import { mainnet, arbitrum, avalanche, base, optimism } from 'viem/chains';
+import {
+  mainnet, arbitrum, avalanche, base, optimism,
+} from 'viem/chains';
+
+import config from '../config';
 import { getAddress } from './alchemy-helpers';
 
 const controllerName: string = 'skip-helper';
@@ -38,20 +41,21 @@ export async function getSkipCallData(
   chainId: string,
 ): Promise<Parameters<SmartAccountImplementation['encodeCalls']>[0]> {
   // support for hex amounts.
+  let amountToUse = amount;
   if (amount.startsWith('0x')) {
-    amount = parseInt(amount, 16).toString();
+    amountToUse = parseInt(amount, 16).toString();
   }
   const routeResult = await route({
-    amountIn: amount, // Desired amount in smallest denomination (e.g., uatom)
+    amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
     sourceAssetChainId: chainId,
     destAssetDenom: usdcAddressByChainId['dydx-mainnet-1'],
     destAssetChainId: 'dydx-mainnet-1',
     cumulativeAffiliateFeeBps: '0',
-    smartRelay: true, // skip recommended to enable for better routes and less faults. 
+    smartRelay: true, // skip recommended to enable for better routes and less faults.
     smartSwapOptions: {
       splitRoutes: true,
-      evmSwaps: true, // needed for native eth bridging. 
+      evmSwaps: true, // needed for native eth bridging.
     },
     goFast: true,
   });
@@ -115,7 +119,7 @@ export async function getSkipCallData(
   let data = '';
   let toAddress = '';
 
-  response?.msgs?.forEach((msg: any, index: number) => {
+  response?.msgs?.forEach((msg, index: number) => {
     if ('evmTx' in msg) {
       logger.info({
         at: `${controllerName}#getSkipCallData`,
@@ -139,10 +143,11 @@ export async function getSkipCallData(
     }
   });
 
-
   // need value to be the amount if native asset.
   let value = BigInt(0);
-  if (Object.values(ethDenomByChainId).map((x) => x.toLowerCase()).includes(sourceAssetDenom.toLowerCase())) {
+  if (Object.values(ethDenomByChainId).map(
+    (x) => x.toLowerCase(),
+  ).includes(sourceAssetDenom.toLowerCase())) {
     value = BigInt(amount);
   }
 
@@ -153,7 +158,9 @@ export async function getSkipCallData(
       data: data.startsWith('0x') ? data as Hex : (`0x${data}`) as Hex, // "0x",
     },
   ];
-  if (Object.values(usdcAddressByChainId).map((x) => x.toLowerCase()).includes(sourceAssetDenom.toLowerCase())) {
+  if (Object.values(usdcAddressByChainId).map(
+    (x) => x.toLowerCase(),
+  ).includes(sourceAssetDenom.toLowerCase())) {
     callData.unshift({
       to: usdcAddressByChainId[chainId] as `0x${string}`,
       value: BigInt(0),

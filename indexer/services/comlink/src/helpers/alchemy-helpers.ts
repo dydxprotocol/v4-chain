@@ -3,16 +3,16 @@ import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { decode, encode } from 'bech32';
 import {
   Address, Chain, createPublicClient, http, checksumAddress,
-  PublicClient
+  PublicClient,
 } from 'viem';
 import {
   arbitrum, avalanche, base, mainnet, optimism,
 } from 'viem/chains';
 
 import config from '../config';
-import { decode, encode } from 'bech32';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
@@ -21,7 +21,6 @@ const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [base.id.toString()]: 'wh_8pntnwk3jltyduwe',
   [optimism.id.toString()]: 'wh_99yjvuacl28obf0i',
 };
-
 
 export const alchemyNetworkToChainIdMap: Record<string, string> = {
   ARB_MAINNET: arbitrum.id.toString(),
@@ -56,7 +55,6 @@ export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   });
   return acc;
 }, {} as Record<string, PublicClient>);
-
 
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   try {
@@ -209,15 +207,16 @@ export async function getSmartAccountAddress(address: string): Promise<string> {
   return kernelAddress;
 }
 
-export async function getEOAAddressFromSmartAccountAddress(smartAccountAddress: Address): Promise<Address> {
-  smartAccountAddress = checksumAddress(smartAccountAddress)
-  const record = await findBySmartAccountAddress(smartAccountAddress)
+export async function getEOAAddressFromSmartAccountAddress(
+  smartAccountAddress: Address,
+): Promise<Address> {
+  const smartAccountAddressToUse = checksumAddress(smartAccountAddress);
+  const record = await findBySmartAccountAddress(smartAccountAddressToUse);
   if (!record || !record.evm_address) {
     throw new Error('Failed to find a turnkey user for address');
   }
   return record.evm_address as Address;
 }
-
 
 export enum CosmosPrefix {
   OSMO = 'osmo',
@@ -243,14 +242,12 @@ export function isSupportedEVMChainId(chainId: string): boolean {
   return Object.keys(chains).includes(chainId);
 }
 
-
 export function getRPCEndpoint(chainId: string): string {
   if (!isSupportedEVMChainId(chainId)) {
     throw new Error(`Unsupported chainId: ${chainId}`);
   }
   return `${config.ZERODEV_API_BASE_URL}/${config.ZERODEV_API_KEY}/chain/${chainId}`;
 }
-
 
 // TODO: Verify that this function is 1000% correct. @RUI and @TYLER and @JARED
 export function getAddress(

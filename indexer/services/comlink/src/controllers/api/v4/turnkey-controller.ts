@@ -4,11 +4,13 @@ import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
-import { checkSchema, matchedData } from 'express-validator';
+import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
+import { CheckSignInSchema, CheckUploadDydxAddressSchema } from 'src/lib/validation/schemas';
 import {
   Controller, Post, Route, Body,
 } from 'tsoa';
+import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
@@ -26,8 +28,6 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
-import { Address, checksumAddress, recoverMessageAddress } from 'viem';
-import { CheckSignInSchema, CheckUploadDydxAddressSchema } from 'src/lib/validation/schemas';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -95,7 +95,7 @@ export class TurnkeyController extends Controller {
 
     // Try to find user by the recovered address, falling back to lowercase variant
     const evmAddressChecksum = checksumAddress(recovered);
-    let user = await TurnkeyUsersTable.findByEvmAddress(evmAddressChecksum);
+    const user = await TurnkeyUsersTable.findByEvmAddress(evmAddressChecksum);
     if (!user) {
       throw new TurnkeyError('No user found for recovered EVM address');
     }
@@ -180,7 +180,7 @@ export class TurnkeyController extends Controller {
   /*
    * Returns the suborgId plus salt if the user exists.
    * Additionally will include the dydxAddress if the user has one uploaded already.
-   * 
+   *
    */
   private async getSuborg(p: GetSuborgParams): Promise<TurnkeyCreateSuborgResponse | undefined> {
     if (p.email) {
@@ -290,8 +290,8 @@ export class TurnkeyController extends Controller {
     // parent org api client no longer has permissions to do anything.
     let evmAddress = '';
     let svmAddress = '';
-    // smart account address can be derived offchain before we send any user ops. 
-    // smart account address is needed by the frontend to display the correct 
+    // smart account address can be derived offchain before we send any user ops.
+    // smart account address is needed by the frontend to display the correct
     // deposit address for the avalanche chain since it does not support eip7702.
     let smartAccountAddress = '';
     for (const address of subOrg.wallet?.addresses || []) {
@@ -299,9 +299,9 @@ export class TurnkeyController extends Controller {
         // evm always starts with 0x
         evmAddress = address;
         smartAccountAddress = await getSmartAccountAddress(evmAddress);
-        smartAccountAddress = checksumAddress(smartAccountAddress as Address)
+        smartAccountAddress = checksumAddress(smartAccountAddress as Address);
       } else {
-        // if not evm, then must be svm 
+        // if not evm, then must be svm
         svmAddress = address;
       }
     }
@@ -323,7 +323,7 @@ export class TurnkeyController extends Controller {
     if (evmAddress && svmAddress) {
       // We don't need to wait for it since
       // frontend doesn't really neeed the results???
-      addAddressesToAlchemyWebhook(evmAddress, svmAddress);
+      addAddressesToAlchemyWebhook(evmAddress, svmAddress).catch(() => undefined);
     }
     return {
       subOrgId: subOrg.subOrganizationId,

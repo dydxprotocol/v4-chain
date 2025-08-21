@@ -6,9 +6,9 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { decode } from 'bech32';
 import { body, checkSchema, ParamSchema } from 'express-validator';
+import { SigninMethod } from 'src/types';
 
 import config from '../../config';
-import { SigninMethod } from 'src/types';
 
 const addressSchema = {
   isString: true as const,
@@ -293,7 +293,6 @@ const checkBridgeSchema: Record<string, ParamSchema> = {
   },
 };
 
-
 // Validation schemas
 const signInSchema: Record<string, ParamSchema> = {
   signinMethod: {
@@ -346,7 +345,7 @@ const signInSchema: Record<string, ParamSchema> = {
     isString: true,
     errorMessage: 'OIDC token must be a string',
   },
-}
+};
 
 const uploadDydxAddressSchema: Record<string, ParamSchema> = {
   dydxAddress: {
@@ -359,8 +358,7 @@ const uploadDydxAddressSchema: Record<string, ParamSchema> = {
     isString: true,
     errorMessage: 'signature must be a string',
   },
-}
-
+};
 
 export const CheckSignInSchema = checkSchema(signInSchema);
 
