@@ -1,16 +1,18 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { findByEvmAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
+import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import {
-  Address, Chain, createPublicClient, http,
+  Address, Chain, createPublicClient, http, checksumAddress,
+  PublicClient
 } from 'viem';
 import {
   arbitrum, avalanche, base, mainnet, optimism,
 } from 'viem/chains';
 
 import config from '../config';
+import { decode, encode } from 'bech32';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
@@ -20,22 +22,41 @@ const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [optimism.id.toString()]: 'wh_99yjvuacl28obf0i',
 };
 
+
+export const alchemyNetworkToChainIdMap: Record<string, string> = {
+  ARB_MAINNET: arbitrum.id.toString(),
+  AVAX_MAINNET: avalanche.id.toString(),
+  BASE_MAINNET: base.id.toString(),
+  OPT_MAINNET: optimism.id.toString(),
+  ETH_MAINNET: mainnet.id.toString(),
+  SOLANA_MAINNET: 'solana',
+};
+
+export const ethDenomByChainId: Record<string, string> = {
+  [mainnet.id.toString()]: 'ethereum-native', // eth on ethereum mainnet.
+  [arbitrum.id.toString()]: 'arbitrum-native', // eth on arbitrum.
+  [base.id.toString()]: 'base-native', // eth on base.
+  [optimism.id.toString()]: 'optimism-native', // eth on optimism.
+};
+
 const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
-function getRPCEndpoint(chainId: string): string {
-  if (!Object.keys(chains).includes(chainId)) {
-    throw new Error(`Unsupported chainId: ${chainId}`);
-  }
-  return `${config.ZERODEV_API_BASE_URL}/${config.ZERODEV_API_KEY}/chain/${chainId}`;
-}
-
-const chains: Record<string, Chain> = {
+export const chains: Record<string, Chain> = {
   [mainnet.id.toString()]: mainnet,
   [arbitrum.id.toString()]: arbitrum,
   [avalanche.id.toString()]: avalanche,
   [base.id.toString()]: base,
   [optimism.id.toString()]: optimism,
 };
+
+export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
+  acc[chainId] = createPublicClient({
+    transport: http(getRPCEndpoint(chainId)),
+    chain: chains[chainId],
+  });
+  return acc;
+}, {} as Record<string, PublicClient>);
+
 
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   try {
@@ -186,4 +207,70 @@ export async function getSmartAccountAddress(address: string): Promise<string> {
     index: BigInt(0),
   });
   return kernelAddress;
+}
+
+export async function getEOAAddressFromSmartAccountAddress(smartAccountAddress: Address): Promise<Address> {
+  smartAccountAddress = checksumAddress(smartAccountAddress)
+  const record = await findBySmartAccountAddress(smartAccountAddress)
+  if (!record || !record.evm_address) {
+    throw new Error('Failed to find a turnkey user for address');
+  }
+  return record.evm_address as Address;
+}
+
+
+export enum CosmosPrefix {
+  OSMO = 'osmo',
+  NEUTRON = 'neutron',
+  NOBLE = 'noble',
+}
+
+// Prefix is one of osmosis, neutron, noble. This is how we convert dydx addresses
+// to other chain addresses on cosmos. Address here is dydx address.
+export function toClientAddressWithPrefix(prefix: CosmosPrefix, address: string): string | null {
+  try {
+    const decoded = decode(address);
+    if (decoded.prefix !== 'dydx') {
+      return null;
+    }
+    return encode(prefix, decoded.words);
+  } catch (e) {
+    return null;
+  }
+}
+
+export function isSupportedEVMChainId(chainId: string): boolean {
+  return Object.keys(chains).includes(chainId);
+}
+
+
+export function getRPCEndpoint(chainId: string): string {
+  if (!isSupportedEVMChainId(chainId)) {
+    throw new Error(`Unsupported chainId: ${chainId}`);
+  }
+  return `${config.ZERODEV_API_BASE_URL}/${config.ZERODEV_API_KEY}/chain/${chainId}`;
+}
+
+
+// TODO: Verify that this function is 1000% correct. @RUI and @TYLER and @JARED
+export function getAddress(
+  chainId: string,
+  sourceAddress: string,
+  dydxAddress: string,
+): string {
+  if (isSupportedEVMChainId(chainId) || chainId === 'solana') {
+    return sourceAddress;
+  }
+  switch (chainId) {
+    case 'noble-1':
+      return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress) || '';
+    case 'osmosis-1':
+      return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress) || '';
+    case 'neutron':
+      return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress) || '';
+    case 'dydx-mainnet-1':
+      return dydxAddress;
+    default:
+      throw new Error(`Unsupported chain ID: ${chainId}`);
+  }
 }
