@@ -711,7 +711,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						},
 						{
 							Address:  constants.CarlAccAddress.String(),
-							SharePpm: 100_000, // 20%
+							SharePpm: 100_000, // 10%
 						},
 					},
 				})
@@ -743,7 +743,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
 						QuoteQuantums:     big.NewInt(32_500),
-						RevSharePpm:       100_000, // 20%
+						RevSharePpm:       100_000, // 10%
 					},
 				},
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
