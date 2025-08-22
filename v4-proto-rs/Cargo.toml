@@ -1,6 +1,6 @@
 [package]
 name = "dydx-proto"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "Compiled dYdX protobuf files"
 repository = "https://github.com/dydxprotocol/v4-chain/tree/main/v4-proto-rs"
@@ -23,4 +23,4 @@ tonic = { version = "0.12", default-features = false, features = ["codegen", "pr
 regex = "1.11.1"
 tonic-buf-build = "0.3.0"
 prost-build = "0.13" # keep the version the same as in tonic-buf-build
-tonic-build = "0.12" # keep the version the same as in tonic-buf-build
+tonic-build = "0.13" # keep the version the same as in tonic-buf-build
