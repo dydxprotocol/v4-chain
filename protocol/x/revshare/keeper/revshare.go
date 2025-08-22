@@ -230,7 +230,7 @@ func (k Keeper) GetAllRevShares(
 			netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, revShare.QuoteQuantums)
 		}
 	} else {
-		netFeesSubRevenueShare = new(big.Int).Sub(netFees, affiliateFeesShared)
+		netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, affiliateFeesShared)
 	}
 
 	if netFeesSubRevenueShare.Sign() <= 0 {
