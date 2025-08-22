@@ -94,11 +94,11 @@ describe('PnlTicks store', () => {
 
   async function setupIntervalPnlTicks(): Promise<PnlTicksFromDatabase[]> {
     const currentTime: DateTime = DateTime.utc().startOf('day');
-    const tenMinAgo: string = currentTime.minus({ minute: 10 }).toISO();
-    const almostTenMinAgo: string = currentTime.minus({ second: 603 }).toISO();
-    const twoHoursAgo: string = currentTime.minus({ hour: 2 }).toISO();
-    const twoDaysAgo: string = currentTime.minus({ day: 2 }).toISO();
-    const monthAgo: string = currentTime.minus({ day: 30 }).toISO();
+    const tenMinAgo: string = currentTime.minus({ minute: 10 }).toISO()!;
+    const almostTenMinAgo: string = currentTime.minus({ second: 603 }).toISO()!;
+    const twoHoursAgo: string = currentTime.minus({ hour: 2 }).toISO()!;
+    const twoDaysAgo: string = currentTime.minus({ day: 2 }).toISO()!;
+    const monthAgo: string = currentTime.minus({ day: 30 }).toISO()!;
     await Promise.all([
       BlockTable.create({
         blockHeight: '3',

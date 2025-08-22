@@ -58,10 +58,10 @@ export default async function runTask(): Promise<void> {
       at: 'update-wallet-total-volume#runTask',
       message: `Updating wallet total volume from ${windowStartTime.toISO()} to ${windowEndTime.toISO()}`,
     });
-    await WalletTable.updateTotalVolume(windowStartTime.toISO(), windowEndTime.toISO(), txId);
+    await WalletTable.updateTotalVolume(windowStartTime.toISO()!, windowEndTime.toISO()!, txId);
     await PersistentCacheTable.upsert({
       key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-      value: windowEndTime.toISO(),
+      value: windowEndTime.toISO()!,
     }, { txId });
 
     await Transaction.commit(txId);

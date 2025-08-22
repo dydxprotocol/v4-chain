@@ -182,7 +182,7 @@ describe('ComplianceV2Controller', () => {
         });
       });
 
-      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO()!;
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.CLOSE_ONLY,
@@ -208,7 +208,7 @@ describe('ComplianceV2Controller', () => {
           });
         });
 
-        const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+        const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO()!;
         await ComplianceStatusTable.create({
           address: testConstants.defaultAddress,
           status: ComplianceStatus.CLOSE_ONLY,
@@ -377,7 +377,7 @@ describe('ComplianceV2Controller', () => {
       verifyADR36AminoMock.mockReturnValue(true);
 
       toBech32Mock.mockReturnValue(testConstants.defaultAddress);
-      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000) as DateTime<true>); // Mock current time
       jest.spyOn(stats, 'increment');
     });
 
@@ -641,7 +641,7 @@ describe('ComplianceV2Controller', () => {
     });
 
     it('should return CLOSE_ONLY for CONNECT action from a restricted country with existing CLOSE_ONLY status', async () => {
-      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO()!;
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.CLOSE_ONLY,

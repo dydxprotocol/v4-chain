@@ -2,36 +2,39 @@
   "name": "@dydxprotocol-indexer/notifications",
   "version": "0.0.1",
   "description": "",
-  "main": "build/src/index.js",
-  "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
-    "@types/jest": "^28.1.4",
-    "jest": "^28.1.2",
-    "typescript": "^4.7.4",
-    "ts-node": "^10.8.2"
-  },
-  "scripts": {
-    "lint": "eslint --ext .ts,.js .",
-    "lint:fix": "eslint --ext .ts,.js . --fix",
-    "build": "rm -rf build/ && tsc",
-    "build:prod": "pnpm run build",
-    "build:watch": "pnpm run build -- --watch",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dydxprotocol/indexer.git"
   },
-  "author": "",
   "license": "AGPL-3.0",
-  "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+  "author": "",
+  "main": "build/src/index.js",
+  "scripts": {
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "test": "pnpm run build && NODE_ENV=test jest build --runInBand --forceExit"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
-    "firebase-admin": "^12.4.0",
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
-    "dotenv-flow": "^3.2.0"
+    "dotenv-flow": "^3.2.0",
+    "firebase-admin": "^12.4.0"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/jest": "^28.1.4",
+    "@types/node": "^18.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "eslint": "^8.39.0",
+    "jest": "^28.1.2",
+    "typescript": "^4.7.4"
   }
 }

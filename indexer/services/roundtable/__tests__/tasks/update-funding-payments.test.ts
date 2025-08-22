@@ -71,7 +71,7 @@ describe('update-funding-payments', () => {
       rate: '0.0004',
       oraclePrice: '10000',
       fundingIndex: '4',
-      effectiveAt: createdDateTime.toISO(),
+      effectiveAt: createdDateTime.toISO()!,
       effectiveAtHeight: '3',
     });
 

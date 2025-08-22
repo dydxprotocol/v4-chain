@@ -1,5 +1,5 @@
 # Dockerfile to containerize services for a cloud provider
-FROM dydxprotocol/indexer-node:16-alpine
+FROM dydxprotocol/indexer-node:18-alpine
 ENV NODE_ENV=development
 ARG service
 
@@ -17,6 +17,7 @@ WORKDIR /home/dydx/app
 
 # Copy pnpm lock and workspace and package.json from base directory
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+RUN npm install -g pnpm@6
 
 # Copy patches
 COPY ./patches ./patches
@@ -51,6 +52,8 @@ RUN mkdir -p ./services/${service}/patches
 COPY ./services/${service}/patches ./services/${service}/patches/
 
 # Copy package dependency patches
+RUN mkdir -p ./packages/dev/patches
+COPY ./packages/dev/patches ./packages/dev/patches/
 RUN mkdir -p ./packages/v4-protos/patches
 COPY ./packages/v4-protos/patches ./packages/v4-protos/patches/
 RUN mkdir -p ./packages/kafka/patches
