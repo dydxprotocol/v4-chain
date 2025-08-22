@@ -19,7 +19,7 @@ fn features_patch(dir: impl AsRef<Path>) -> io::Result<()> {
         let mut contents = fs::read_to_string(&path)?;
 
         contents = Regex::new(regex)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
+            .map_err(io::Error::other)?
             .replace_all(&contents, replacement)
             .to_string();
 
@@ -30,7 +30,7 @@ fn features_patch(dir: impl AsRef<Path>) -> io::Result<()> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    if !std::env::var("V4_PROTO_REBUILD").is_ok() {
+    if std::env::var("V4_PROTO_REBUILD").is_err() {
         return Ok(());
     }
 
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     config.enable_type_names();
     let mut path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").map_err(|e| {
         tonic_buf_build::error::TonicBufBuildError {
-            message: format!("Failed to get CARGO_MANIFEST_DIR: {}", e),
+            message: format!("Failed to get CARGO_MANIFEST_DIR: {e}"),
             cause: None,
         }
     })?);
