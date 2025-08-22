@@ -540,7 +540,6 @@ func (k Keeper) persistMatchedOrders(
 		revSharesForFill = revsharetypes.RevSharesForFill{}
 		log.ErrorLogWithError(ctx, "error getting rev shares for fill", err)
 	}
-	k.Logger(ctx).Info("rev shares for fill", "revSharesForFill", revSharesForFill)
 	if revSharesForFill.AffiliateRevShare != nil {
 		affiliateRevSharesQuoteQuantums = revSharesForFill.AffiliateRevShare.QuoteQuantums
 	}

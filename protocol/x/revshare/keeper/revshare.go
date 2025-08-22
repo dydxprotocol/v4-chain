@@ -220,7 +220,7 @@ func (k Keeper) GetAllRevShares(
 	}
 
 	var orderRouterRevShares []types.RevShare
-	netFeesSubRevenueShare := netFees
+	netFeesSubRevenueShare := new(big.Int).Set(netFees)
 	// No affiliate fees shared, so we can generate order router rev shares
 	// In the case that the taker has an affiliate fee and the maker does not, then no order router fees are generated
 	// for the maker or the taker
