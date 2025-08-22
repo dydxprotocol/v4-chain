@@ -792,7 +792,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "Valid taker order router rev share with unconditional rev share and maker fee rebate and maker order router rev share",
+			name: "Valid taker order router rev share with unconditional rev share and maker fee " +
+				"rebate and maker order router rev share",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
 					{
