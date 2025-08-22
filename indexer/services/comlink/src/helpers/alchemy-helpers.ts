@@ -268,7 +268,7 @@ export function getAddress(
       return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress) || '';
     case 'osmosis-1':
       return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress) || '';
-    case 'neutron':
+    case 'neutron-1':
       return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress) || '';
     case 'dydx-mainnet-1':
       return dydxAddress;
