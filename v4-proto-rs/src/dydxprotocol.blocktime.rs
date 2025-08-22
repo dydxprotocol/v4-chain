@@ -75,6 +75,28 @@ impl ::prost::Name for DowntimeParams {
         "/dydxprotocol.blocktime.DowntimeParams".into()
     }
 }
+/// SynchronyParams defines the parameters for block synchrony.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct SynchronyParams {
+    /// next_block_delay replaces the locally configured timeout_commit in
+    /// CometBFT. It determines the amount of time the CometBFT waits after the
+    /// `CommitTime` (subjective time when +2/3 precommits were received), before
+    /// moving to next height.
+    /// If the application sends next_block_delay = 0 to the consensus engine, the
+    /// latter defaults back to using timeout_commit.
+    #[prost(message, optional, tag = "1")]
+    pub next_block_delay: ::core::option::Option<::prost_types::Duration>,
+}
+impl ::prost::Name for SynchronyParams {
+    const NAME: &'static str = "SynchronyParams";
+    const PACKAGE: &'static str = "dydxprotocol.blocktime";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.blocktime.SynchronyParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.blocktime.SynchronyParams".into()
+    }
+}
 /// GenesisState defines the blocktime module's genesis state.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GenesisState {
@@ -89,6 +111,35 @@ impl ::prost::Name for GenesisState {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.blocktime.GenesisState".into()
+    }
+}
+/// QuerySynchronyParamsRequest is a request type for the SynchronyParams
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct QuerySynchronyParamsRequest {}
+impl ::prost::Name for QuerySynchronyParamsRequest {
+    const NAME: &'static str = "QuerySynchronyParamsRequest";
+    const PACKAGE: &'static str = "dydxprotocol.blocktime";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.blocktime.QuerySynchronyParamsRequest".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.blocktime.QuerySynchronyParamsRequest".into()
+    }
+}
+/// QuerySynchronyParamsResponse is a response type for the SynchronyParams
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct QuerySynchronyParamsResponse {
+    #[prost(message, optional, tag = "1")]
+    pub params: ::core::option::Option<SynchronyParams>,
+}
+impl ::prost::Name for QuerySynchronyParamsResponse {
+    const NAME: &'static str = "QuerySynchronyParamsResponse";
+    const PACKAGE: &'static str = "dydxprotocol.blocktime";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.blocktime.QuerySynchronyParamsResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.blocktime.QuerySynchronyParamsResponse".into()
     }
 }
 /// QueryDowntimeParamsRequest is a request type for the DowntimeParams
@@ -358,6 +409,33 @@ pub mod query_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        /// Queries the SynchronyParams.
+        pub async fn synchrony_params(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QuerySynchronyParamsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::QuerySynchronyParamsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.blocktime.Query/SynchronyParams",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("dydxprotocol.blocktime.Query", "SynchronyParams"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// MsgUpdateDowntimeParams is the Msg/UpdateDowntimeParams request type.
@@ -391,6 +469,39 @@ impl ::prost::Name for MsgUpdateDowntimeParamsResponse {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse".into()
+    }
+}
+/// MsgUpdateSynchronyParams is the Msg/UpdateSynchronyParams request type.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgUpdateSynchronyParams {
+    #[prost(string, tag = "1")]
+    pub authority: ::prost::alloc::string::String,
+    /// Defines the parameters to update. All parameters must be supplied.
+    #[prost(message, optional, tag = "2")]
+    pub params: ::core::option::Option<SynchronyParams>,
+}
+impl ::prost::Name for MsgUpdateSynchronyParams {
+    const NAME: &'static str = "MsgUpdateSynchronyParams";
+    const PACKAGE: &'static str = "dydxprotocol.blocktime";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.blocktime.MsgUpdateSynchronyParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.blocktime.MsgUpdateSynchronyParams".into()
+    }
+}
+/// MsgUpdateSynchronyParamsResponse is the Msg/UpdateSynchronyParams response
+/// type.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct MsgUpdateSynchronyParamsResponse {}
+impl ::prost::Name for MsgUpdateSynchronyParamsResponse {
+    const NAME: &'static str = "MsgUpdateSynchronyParamsResponse";
+    const PACKAGE: &'static str = "dydxprotocol.blocktime";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.blocktime.MsgUpdateSynchronyParamsResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.blocktime.MsgUpdateSynchronyParamsResponse".into()
     }
 }
 /// Generated client implementations.
@@ -510,6 +621,36 @@ pub mod msg_client {
             req.extensions_mut()
                 .insert(
                     GrpcMethod::new("dydxprotocol.blocktime.Msg", "UpdateDowntimeParams"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// UpdateSynchronyParams updates the SynchronyParams in state.
+        pub async fn update_synchrony_params(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgUpdateSynchronyParams>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgUpdateSynchronyParamsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.blocktime.Msg/UpdateSynchronyParams",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "dydxprotocol.blocktime.Msg",
+                        "UpdateSynchronyParams",
+                    ),
                 );
             self.inner.unary(req, path, codec).await
         }
