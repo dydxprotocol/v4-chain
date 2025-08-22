@@ -4,6 +4,7 @@ import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/sr
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import { decode, encode } from 'bech32';
+import express from 'express';
 import {
   Address, Chain, createPublicClient, http, checksumAddress,
   PublicClient,
@@ -13,6 +14,7 @@ import {
 } from 'viem/chains';
 
 import config from '../config';
+import { create4xxResponse } from '../lib/helpers';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
@@ -113,6 +115,9 @@ export async function registerAddressWithAlchemyWebhook(
   address: string,
   webhookId: string,
 ): Promise<void> {
+  if (!config.ALCHEMY_AUTH_TOKEN) {
+    throw new Error('ALCHEMY_AUTH_TOKEN is not set: cannot register address with Alchemy webhook');
+  }
   const webhookUrl = 'https://dashboard.alchemy.com/api/update-webhook-addresses';
   const addressesToAdd: string[] = [address];
   if (webhookId === evmChainIdToAlchemyWebhookId[avalanche.id.toString()]) {
@@ -270,4 +275,17 @@ export function getAddress(
     default:
       throw new Error(`Unsupported chain ID: ${chainId}`);
   }
+}
+
+// middleware to verify alchemy webhook signature
+export function verifyAlchemyWebhook(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+) {
+  const token = req.header('x-alchemy-signature') || '';
+  if (!token || token !== config.ALCHEMY_AUTH_TOKEN) {
+    return create4xxResponse(res, 'unauthorized webhook', 401);
+  }
+  return next();
 }

@@ -42,6 +42,7 @@ import {
   publicClients,
   alchemyNetworkToChainIdMap,
   ethDenomByChainId,
+  verifyAlchemyWebhook,
 } from '../../../helpers/alchemy-helpers';
 import { getSvmSigner, getSkipCallData, usdcAddressByChainId } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
@@ -228,8 +229,16 @@ class BridgeController extends Controller {
 
     // find the suborgId for the user
     const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(fromAddress);
+    if (!record) {
+      throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
+    }
     // Replace with your own private key
     const solanaSponsorPrivateKey = config.SOLANA_SPONSOR_PRIVATE_KEY;
+    if (!solanaSponsorPrivateKey) {
+      throw new Error(
+        'Missing required environment variable: SOLANA_SPONSOR_PRIVATE_KEY',
+      );
+    }
     const sponsorKeypair = Keypair.fromSecretKey(
       bs58.decode(solanaSponsorPrivateKey),
     );
@@ -383,6 +392,7 @@ class BridgeController extends Controller {
           message: 'Failed to get EOA address from smart account address',
           error,
         });
+        throw new Error(`Cannot proceed with bridge, cannot get EOA address from smart account address : ${error.message}`);
       }
     }
     const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(srcAddress);
@@ -560,6 +570,7 @@ async function parseEvent(e: express.Request): Promise<{
 router.post(
   '/startBridge',
   ...CheckBridgeSchema,
+  verifyAlchemyWebhook,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {

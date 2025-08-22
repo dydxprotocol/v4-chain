@@ -1,12 +1,11 @@
 import { randomBytes } from 'crypto';
 
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
-import { CheckSignInSchema, CheckUploadDydxAddressSchema } from 'src/lib/validation/schemas';
 import {
   Controller, Post, Route, Body,
 } from 'tsoa';
@@ -19,6 +18,7 @@ import { isValidEmail } from '../../../helpers/utility/validation';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { CheckSignInSchema, CheckUploadDydxAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -76,8 +76,8 @@ export class TurnkeyController extends Controller {
     }
   }
 
-  @Post('/uploadDydxAddress')
-  async uploadDydxAddress(
+  @Post('/uploadAddress')
+  async uploadAddress(
     @Body() body: { dydxAddress: string, signature: string },
   ): Promise<{ success: boolean }> {
     const { dydxAddress, signature } = body;
@@ -323,7 +323,15 @@ export class TurnkeyController extends Controller {
     if (evmAddress && svmAddress) {
       // We don't need to wait for it since
       // frontend doesn't really neeed the results???
-      addAddressesToAlchemyWebhook(evmAddress, svmAddress).catch(() => undefined);
+      addAddressesToAlchemyWebhook(evmAddress, svmAddress).catch((error) => {
+        logger.error({
+          message: 'Failed to add addresses to alchemy webhook',
+          error,
+          at: new Date().toISOString(),
+          evmAddress,
+          svmAddress,
+        });
+      });
     }
     return {
       subOrgId: subOrg.subOrganizationId,
@@ -350,13 +358,23 @@ export class TurnkeyController extends Controller {
       });
     }
 
+    // Validate magic link template if provided
+    const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink;
+    if (magicLinkTemplate) {
+      try {
+        // eslint-disable-next-line no-new
+        new URL(magicLinkTemplate.replace('%s', 'test'));
+      } catch {
+        throw new Error('Invalid magic link template URL');
+      }
+    }
     const emailAuthResponse = await this.parentApiClient.emailAuth({
       email: userEmail,
       targetPublicKey,
       emailCustomization: {
         appName: 'dydx',
         logoUrl: 'https://cdn.prod.website-files.com/649ca755d082f1dfc4ed62a4/6870a124cba22652a69c409d_icon%20(1).png',
-        magicLinkTemplate: `${config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink}=%s`,
+        magicLinkTemplate: magicLinkTemplate ? `${magicLinkTemplate}=%s` : undefined,
       },
       invalidateExisting: true,
       organizationId: suborg.subOrgId,
@@ -529,19 +547,19 @@ router.post(
     try {
       const body = matchedData(req) as { dydxAddress: string, signature: string };
       const controller: TurnkeyController = new TurnkeyController();
-      const response = await controller.uploadDydxAddress(body);
+      const response = await controller.uploadAddress(body);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'TurnkeyController POST /uploadDydxAddress',
-        'Turnkey uploadDydxAddress error',
+        'TurnkeyController POST /uploadAddress',
+        'Turnkey uploadAddress error',
         error,
         req,
         res,
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.post_uploadDydxAddress.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.post_uploadAddress.timing`,
         Date.now() - start,
       );
     }

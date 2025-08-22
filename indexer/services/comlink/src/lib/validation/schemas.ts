@@ -6,9 +6,9 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { decode } from 'bech32';
 import { body, checkSchema, ParamSchema } from 'express-validator';
-import { SigninMethod } from 'src/types';
 
 import config from '../../config';
+import { SigninMethod } from '../../types';
 
 const addressSchema = {
   isString: true as const,
