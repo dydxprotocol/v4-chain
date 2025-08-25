@@ -3117,9 +3117,7 @@ fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
 
 ```json
 {
-  "toAddress": "string",
-  "amount": "string",
-  "sourceAssetDenom": "string"
+  "success": true
 }
 ```
 
@@ -3769,9 +3767,9 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
-## UploadDydxAddress
+## UploadAddress
 
-<a id="opIdUploadDydxAddress"></a>
+<a id="opIdUploadAddress"></a>
 
 > Code samples
 
@@ -3786,7 +3784,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
-r = requests.post(f'{baseURL}/turnkey/uploadDydxAddress', headers = headers)
+r = requests.post(f'{baseURL}/turnkey/uploadAddress', headers = headers)
 
 print(r.json())
 
@@ -3806,7 +3804,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/turnkey/uploadDydxAddress`,
+fetch(`${baseURL}/turnkey/uploadAddress`,
 {
   method: 'POST',
   body: inputBody,
@@ -3820,7 +3818,7 @@ fetch(`${baseURL}/turnkey/uploadDydxAddress`,
 
 ```
 
-`POST /turnkey/uploadDydxAddress`
+`POST /turnkey/uploadAddress`
 
 > Body parameter
 
@@ -6227,9 +6225,7 @@ or
 
 ```json
 {
-  "toAddress": "string",
-  "amount": "string",
-  "sourceAssetDenom": "string"
+  "success": true
 }
 
 ```
@@ -6238,9 +6234,7 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|toAddress|string|true|none|none|
-|amount|string|true|none|none|
-|sourceAssetDenom|string|true|none|none|
+|success|boolean|true|none|none|
 
 ## TraderSearchResponseObject
 

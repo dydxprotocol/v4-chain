@@ -1295,20 +1295,12 @@
       },
       "BridgeResponse": {
         "properties": {
-          "toAddress": {
-            "type": "string"
-          },
-          "amount": {
-            "type": "string"
-          },
-          "sourceAssetDenom": {
-            "type": "string"
+          "success": {
+            "type": "boolean"
           }
         },
         "required": [
-          "toAddress",
-          "amount",
-          "sourceAssetDenom"
+          "success"
         ],
         "type": "object",
         "additionalProperties": false
@@ -3893,9 +3885,9 @@
         ]
       }
     },
-    "/turnkey/uploadDydxAddress": {
+    "/turnkey/uploadAddress": {
       "post": {
-        "operationId": "UploadDydxAddress",
+        "operationId": "UploadAddress",
         "responses": {
           "200": {
             "description": "Ok",
