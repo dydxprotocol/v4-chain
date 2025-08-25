@@ -66,7 +66,8 @@ export const configSchema = {
   VAULT_LATEST_PNL_TICK_WINDOW_HOURS: parseInteger({ default: 1 }),
   VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS: parseInteger({ default: 250_000 }),
   VAULT_CACHE_TTL_MS: parseInteger({ default: 120_000 }), // 2 minutes
-
+  // Alchemy webhook config
+  ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
   // Cache-Control directives
   CACHE_CONTROL_DIRECTIVE_ADDRESSES: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_AFFILIATES: parseString({ default: 'public, max-age=10' }),

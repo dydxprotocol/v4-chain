@@ -29,12 +29,7 @@ export function rateLimiterMiddleware(
     const ipAddr: string | undefined = getIpAddr(req);
 
     if (ipAddr === undefined) {
-      logger.error({
-        at: 'rate-limit',
-        message: 'Cannot get IP address from headers',
-        headers: req.headers,
-      });
-      return create4xxResponse(res, 'Too many requests', 429);
+      return next();
     }
 
     const pointCost: number = getPointCost(ipAddr);

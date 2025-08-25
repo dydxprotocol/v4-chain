@@ -1315,6 +1315,18 @@
         "type": "object",
         "additionalProperties": false
       },
+      "BridgeResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -1613,6 +1625,104 @@
         "required": [
           "transfersSubset",
           "totalNetTransfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TurnkeyAuthResponse": {
+        "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "apiKeyId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "salt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "salt"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SigninMethod": {
+        "enum": [
+          "email",
+          "social",
+          "passkey"
+        ],
+        "type": "string"
+      },
+      "SignInRequest": {
+        "properties": {
+          "signinMethod": {
+            "$ref": "#/components/schemas/SigninMethod"
+          },
+          "userEmail": {
+            "type": "string"
+          },
+          "targetPublicKey": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "oidcToken": {
+            "type": "string"
+          },
+          "challenge": {
+            "type": "string"
+          },
+          "attestation": {
+            "properties": {
+              "transports": {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "AUTHENTICATOR_TRANSPORT_BLE",
+                    "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                    "AUTHENTICATOR_TRANSPORT_NFC",
+                    "AUTHENTICATOR_TRANSPORT_USB",
+                    "AUTHENTICATOR_TRANSPORT_HYBRID"
+                  ]
+                },
+                "type": "array"
+              },
+              "attestationObject": {
+                "type": "string"
+              },
+              "clientDataJson": {
+                "type": "string"
+              },
+              "credentialId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transports",
+              "attestationObject",
+              "clientDataJson",
+              "credentialId"
+            ],
+            "type": "object"
+          },
+          "magicLink": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "signinMethod"
         ],
         "type": "object",
         "additionalProperties": false
@@ -3409,6 +3519,50 @@
         ]
       }
     },
+    "/bridging/sweep": {
+      "post": {
+        "operationId": "Sweep",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BridgeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fromAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chainId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "amount",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/trader/search": {
       "get": {
         "operationId": "SearchTrader",
@@ -3760,6 +3914,84 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/uploadAddress": {
+      "post": {
+        "operationId": "UploadAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "signature": {
+                    "type": "string"
+                  },
+                  "dydxAddress": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "signature",
+                  "dydxAddress"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/turnkey/signin": {
+      "post": {
+        "operationId": "SignIn",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnkeyAuthResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/vault/v1/megavault/historicalPnl": {
