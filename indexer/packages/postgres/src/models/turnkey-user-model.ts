@@ -51,17 +51,17 @@ export default class TurnkeyUserModel extends BaseModel {
 
   suborg_id!: string;
 
-  email?: string | null;
+  email?: string | undefined;
 
   svm_address!: string;
 
   evm_address!: string;
 
-  smart_account_address?: string | null;
+  smart_account_address?: string | undefined;
 
   salt!: string;
 
-  dydx_address?: string | null;
+  dydx_address?: string | undefined;
 
   created_at!: string;
 }
