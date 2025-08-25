@@ -297,7 +297,7 @@ describe('TurnkeyController', () => {
     it('should upload the dydx address', async () => {
       const newDydxAddress = 'dydx1234567890123456789012345678901234567891';
       const signature = await generatedEvmWallet.signMessage({ message: newDydxAddress });
-      const response = await controller.uploadDydxAddress({
+      const response = await controller.uploadAddress({
         dydxAddress: newDydxAddress,
         signature,
       });

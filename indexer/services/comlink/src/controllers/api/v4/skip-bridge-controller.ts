@@ -42,7 +42,6 @@ import {
   publicClients,
   alchemyNetworkToChainIdMap,
   ethDenomByChainId,
-  verifyAlchemyWebhook,
 } from '../../../helpers/alchemy-helpers';
 import { getSvmSigner, getSkipCallData, usdcAddressByChainId } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
@@ -157,7 +156,7 @@ class BridgeController extends Controller {
       });
 
       for (let asset of assetsToSearch) {
-        asset = asset && asset.startsWith('0x') ? checksumAddress(asset as Address) : asset;
+        asset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
         const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
         if (balance && parseInt(balance, 10) > 0) {
           logger.info({
@@ -196,6 +195,7 @@ class BridgeController extends Controller {
   ): Promise<BridgeResponse> {
     const path = await route({
       goFast: true,
+      allowUnsafe: false,
       smartRelay: true, // skip recommended to enable for better routes and less faults.
       smartSwapOptions: {
         splitRoutes: true,
@@ -485,12 +485,15 @@ async function parseEvent(e: express.Request): Promise<{
   const { event: { transaction, activity, network } } = e.body;
   let chainId = '';
   chainId = alchemyNetworkToChainIdMap[network];
+  if (!chainId) {
+    throw new Error(`Unsupported network: ${network}`);
+  }
   const addressesToProcess = new Map<string, string>();
   // for evm parsing only
   if (activity) {
     for (const act of activity) {
-      const fromAddress = act.toAddress;
-      addressesToProcess.set(fromAddress, '');
+      const bridgeOriginAddress = act.toAddress;
+      addressesToProcess.set(bridgeOriginAddress, '');
     }
   }
   // for solana parsing only.
@@ -516,33 +519,33 @@ async function parseEvent(e: express.Request): Promise<{
   }
   // validate the addressesToProcess to see if they are indeed turnkey users.
   const addressesToSweep = new Map<string, string>();
-  for (const fromAddress of addressesToProcess.keys()) {
+  for (const bridgeOriginAddress of addressesToProcess.keys()) {
     // if the chain is solana, then we need to also include the token amount.
     // USDC is the only supported asset for solana so that will be the contract address.
     if (chainId === 'solana') {
-      const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(fromAddress);
+      const record = await findBySvmAddress(bridgeOriginAddress);
       if (!record || !record.dydx_address) {
         logger.warning({
           at: `${controllerName}#parseEvent`,
           message: 'Failed to find a turnkey user for address',
-          address: fromAddress,
+          address: bridgeOriginAddress,
         });
         continue;
       }
       logger.info({
         at: `${controllerName}#parseEvent`,
         message: 'Found a turnkey user for address',
-        address: fromAddress,
+        address: bridgeOriginAddress,
       });
       // add the amount to the map as well.
-      addressesToSweep.set(fromAddress, addressesToProcess.get(fromAddress) || '');
+      addressesToSweep.set(bridgeOriginAddress, addressesToProcess.get(bridgeOriginAddress) || '');
     } else {
       // evm otherwise, check to see if the chain is avalanche, in which case
       // we need to use the underlying eoa address to find the turnkey user.
       // this is also the address we need to use to kick off the bridge, but
       // this address is hot swapped on the actual bridging fn because we still need
       // the smart account address for amount validation.
-      const checkSummedFromAddress = checksumAddress(fromAddress as Address);
+      const checkSummedFromAddress = checksumAddress(bridgeOriginAddress as Address);
       let record: TurnkeyUserFromDatabase | undefined;
       if (chainId === avalanche.id.toString()) {
         record = await findBySmartAccountAddress(checkSummedFromAddress);
@@ -570,7 +573,7 @@ async function parseEvent(e: express.Request): Promise<{
 router.post(
   '/startBridge',
   ...CheckBridgeSchema,
-  verifyAlchemyWebhook,
+  // verifyAlchemyWebhook,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {

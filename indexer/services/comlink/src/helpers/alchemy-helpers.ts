@@ -231,15 +231,15 @@ export enum CosmosPrefix {
 
 // Prefix is one of osmosis, neutron, noble. This is how we convert dydx addresses
 // to other chain addresses on cosmos. Address here is dydx address.
-export function toClientAddressWithPrefix(prefix: CosmosPrefix, address: string): string | null {
+export function toClientAddressWithPrefix(prefix: CosmosPrefix, address: string): string {
   try {
     const decoded = decode(address);
     if (decoded.prefix !== 'dydx') {
-      return null;
+      throw new Error('Incoming address is not a dydx address');
     }
     return encode(prefix, decoded.words);
   } catch (e) {
-    return null;
+    throw new Error('Failed to convert dydx address to client address');
   }
 }
 
@@ -265,7 +265,7 @@ export function getAddress(
   }
   switch (chainId) {
     case 'noble-1':
-      return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress) || '';
+      return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress);
     case 'osmosis-1':
       return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress) || '';
     case 'neutron-1':

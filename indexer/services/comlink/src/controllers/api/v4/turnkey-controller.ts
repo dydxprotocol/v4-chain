@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto';
 
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
@@ -64,6 +64,7 @@ export class TurnkeyController extends Controller {
         defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
       }).apiClient();
     }
+    // bridge sender client is used to kick off bridging transactions.
     if (bridgeSenderTurnkeyClient) {
       this.bridgeSenderApiClient = bridgeSenderTurnkeyClient;
     } else {
@@ -157,7 +158,7 @@ export class TurnkeyController extends Controller {
       }
     } else if (signinMethod === SigninMethod.PASSKEY) {
       if (!challenge || !attestation) {
-        throw new Error('challenge and attestation are required for passkey signin');
+        throw new Error('Passkey signin requires challenge and attestation. Passkey signing is currently not supported.');
       }
       try {
         const resp = await this.passkeySignin(challenge, 'Passkey', attestation);
@@ -321,17 +322,7 @@ export class TurnkeyController extends Controller {
 
     // need to also add the svm and evm addresses to the alchemy hook
     if (evmAddress && svmAddress) {
-      // We don't need to wait for it since
-      // frontend doesn't really neeed the results???
-      addAddressesToAlchemyWebhook(evmAddress, svmAddress).catch((error) => {
-        logger.error({
-          message: 'Failed to add addresses to alchemy webhook',
-          error,
-          at: new Date().toISOString(),
-          evmAddress,
-          svmAddress,
-        });
-      });
+      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
     }
     return {
       subOrgId: subOrg.subOrganizationId,

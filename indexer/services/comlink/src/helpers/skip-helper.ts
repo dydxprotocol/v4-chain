@@ -57,6 +57,7 @@ export async function getSkipCallData(
       splitRoutes: true,
       evmSwaps: true, // needed for native eth bridging.
     },
+    allowUnsafe: false,
     goFast: true,
   });
   logger.info({
@@ -128,18 +129,6 @@ export async function getSkipCallData(
       });
       data = msg.evmTx.data || '';
       toAddress = msg.evmTx.to || '';
-    } else if ('svmTx' in msg) {
-      logger.info({
-        at: `${controllerName}#getSkipCallData`,
-        message: `Message ${index + 1} SVM Transaction`,
-        svmTx: msg.svmTx,
-      });
-    } else if ('multiChainMsg' in msg) {
-      logger.info({
-        at: `${controllerName}#getSkipCallData`,
-        message: `Message ${index + 1} Multi-Chain Message`,
-        multiChainMsg: msg.multiChainMsg,
-      });
     }
   });
 
