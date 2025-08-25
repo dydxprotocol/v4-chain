@@ -1123,16 +1123,16 @@ export const defaultPnl: PnlCreateObject = {
   subaccountId: defaultSubaccountId,
   createdAt: defaultBlock.time,
   createdAtHeight: defaultBlock.blockHeight,
-  deltaFundingPayments: '10.5',
-  deltaPositionEffects: '20.75',
+  equity: '10031.25',
+  netTransfers: '10000.00',
   totalPnl: '31.25',
 };
 
 export const defaultPnl2: PnlCreateObject = {
   subaccountId: defaultSubaccountId,
-  createdAt: '2020-01-01T00:00:00.000Z',
+  createdAt: DateTime.utc(2022, 6, 5).toISO(),
   createdAtHeight: '5',
-  deltaFundingPayments: '5.25',
-  deltaPositionEffects: '7.75',
+  equity: '10013.00',
+  netTransfers: '10000.00',
   totalPnl: '13.00',
 };

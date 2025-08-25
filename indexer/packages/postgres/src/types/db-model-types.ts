@@ -347,8 +347,8 @@ export interface PnlFromDatabase {
   subaccountId: string,
   createdAt: IsoString,
   createdAtHeight: string,
-  deltaFundingPayments: string,
-  deltaPositionEffects: string,
+  equity: string,
+  netTransfers: string,
   totalPnl: string,
 }
 

@@ -7,8 +7,8 @@ export async function up(knex: Knex): Promise<void> {
       table.uuid('subaccountId').notNullable();
       table.timestamp('createdAt').notNullable();
       table.bigInteger('createdAtHeight').notNullable();
-      table.decimal('deltaFundingPayments', null).notNullable();
-      table.decimal('deltaPositionEffects', null).notNullable();
+      table.decimal('equity', null).notNullable();
+      table.decimal('netTransfers', null).notNullable();
       table.decimal('totalPnl', null).notNullable();
 
       // Primary key
