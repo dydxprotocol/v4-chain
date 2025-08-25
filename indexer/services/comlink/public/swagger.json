@@ -565,7 +565,8 @@
           "LIQUIDATED",
           "LIQUIDATION",
           "DELEVERAGED",
-          "OFFSETTING"
+          "OFFSETTING",
+          "TWAP_SUBORDER"
         ],
         "type": "string"
       },
@@ -628,6 +629,12 @@
             "type": "string"
           },
           "builderAddress": {
+            "type": "string"
+          },
+          "orderRouterAddress": {
+            "type": "string"
+          },
+          "orderRouterFee": {
             "type": "string"
           }
         },
@@ -1013,7 +1020,8 @@
           "FILLED",
           "CANCELED",
           "BEST_EFFORT_CANCELED",
-          "UNTRIGGERED"
+          "UNTRIGGERED",
+          "ERROR"
         ],
         "type": "string"
       },
@@ -1041,7 +1049,9 @@
           "STOP_MARKET",
           "TRAILING_STOP",
           "TAKE_PROFIT",
-          "TAKE_PROFIT_MARKET"
+          "TAKE_PROFIT_MARKET",
+          "TWAP",
+          "TWAP_SUBORDER"
         ],
         "type": "string"
       },
@@ -1099,6 +1109,18 @@
             "type": "string"
           },
           "feePpm": {
+            "type": "string"
+          },
+          "orderRouterAddress": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "interval": {
+            "type": "string"
+          },
+          "priceTolerance": {
             "type": "string"
           },
           "timeInForce": {
@@ -1293,6 +1315,18 @@
         "type": "object",
         "additionalProperties": false
       },
+      "BridgeResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -1365,7 +1399,8 @@
         "enum": [
           "LIMIT",
           "LIQUIDATED",
-          "DELEVERAGED"
+          "DELEVERAGED",
+          "TWAP_SUBORDER"
         ],
         "type": "string"
       },
@@ -1596,6 +1631,9 @@
       },
       "TurnkeyAuthResponse": {
         "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
           "organizationId": {
             "type": "string"
           },
@@ -3321,6 +3359,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ]
       }
@@ -3468,6 +3514,50 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/bridging/sweep": {
+      "post": {
+        "operationId": "Sweep",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BridgeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fromAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chainId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "amount",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ]
@@ -3824,6 +3914,55 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/uploadAddress": {
+      "post": {
+        "operationId": "UploadAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "signature": {
+                    "type": "string"
+                  },
+                  "dydxAddress": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "signature",
+                  "dydxAddress"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
       }
     },
     "/turnkey/signin": {

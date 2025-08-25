@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
   DEFAULT_POSTGRES_OPTIONS,
   IsoString,
@@ -31,10 +31,13 @@ import {
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
-import { PnlTicksRequest, HistoricalPnlResponse, ParentSubaccountPnlTicksRequest } from '../../../types';
+import { HistoricalPnlResponse, ParentSubaccountPnlTicksRequest, PnlTicksRequest } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'historical-pnl-controller';
+const historicalPnlCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_HISTORICAL_PNL,
+);
 
 @Route('historical-pnl')
 class HistoricalPnlController extends Controller {
@@ -177,6 +180,7 @@ class HistoricalPnlController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  historicalPnlCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   ...CheckPaginationSchema,
@@ -230,6 +234,7 @@ router.get(
 router.get(
   '/parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  historicalPnlCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   ...CheckPaginationSchema,

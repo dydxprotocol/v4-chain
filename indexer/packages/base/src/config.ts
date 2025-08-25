@@ -47,6 +47,9 @@ export const baseConfigSchema = {
   // ZeroDev RPC for skip bridge.
   ZERODEV_API_KEY: parseString({ default: '' }),
   ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
+  SOLANA_SPONSOR_PRIVATE_KEY: parseString({ default: '', requireInEnv: [NodeEnv.PRODUCTION, NodeEnv.STAGING] }),
+
+  BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

@@ -29,7 +29,24 @@ BEGIN
     perpetual_market_record."marketType" = dydx_protocol_market_type_to_perpetual_market_type(event_data->'marketType');
     perpetual_market_record."baseOpenInterest" = 0;
 
-    INSERT INTO perpetual_markets VALUES (perpetual_market_record.*) RETURNING * INTO perpetual_market_record;
+    INSERT INTO perpetual_markets (
+        "id", "clobPairId", "ticker", "marketId", "status", "priceChange24H",
+        "trades24H", "volume24H", "nextFundingRate", "openInterest",
+        "quantumConversionExponent", "atomicResolution", "subticksPerTick",
+        "stepBaseQuantums", "liquidityTierId", "marketType", "baseOpenInterest"
+    ) VALUES (
+        perpetual_market_record."id", perpetual_market_record."clobPairId", perpetual_market_record."ticker",
+        perpetual_market_record."marketId", perpetual_market_record."status", perpetual_market_record."priceChange24H",
+        perpetual_market_record."trades24H", perpetual_market_record."volume24H", perpetual_market_record."nextFundingRate",
+        perpetual_market_record."openInterest", perpetual_market_record."quantumConversionExponent",
+        perpetual_market_record."atomicResolution", perpetual_market_record."subticksPerTick",
+        perpetual_market_record."stepBaseQuantums", perpetual_market_record."liquidityTierId",
+        perpetual_market_record."marketType", perpetual_market_record."baseOpenInterest"
+    ) RETURNING "id", "clobPairId", "ticker", "marketId", "status", "priceChange24H",
+        "trades24H", "volume24H", "nextFundingRate", "openInterest",
+        "quantumConversionExponent", "atomicResolution", "subticksPerTick",
+        "stepBaseQuantums", "liquidityTierId", "marketType", "baseOpenInterest"
+    INTO perpetual_market_record;
 
     RETURN jsonb_build_object(
             'perpetual_market',

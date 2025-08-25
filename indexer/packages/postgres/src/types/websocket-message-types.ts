@@ -127,6 +127,10 @@ export interface OrderSubaccountMessageContents {
   // This will only be set for stateful orders
   createdAtHeight?: string,
   clientMetadata?: string,
+  // This will only be set for twap orders
+  duration?: string,
+  interval?: string,
+  priceTolerance?: string,
 }
 
 export interface FillSubaccountMessageContents {

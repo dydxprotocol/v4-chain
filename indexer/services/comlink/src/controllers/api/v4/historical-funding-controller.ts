@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
   DEFAULT_POSTGRES_OPTIONS,
   FundingIndexUpdatesColumns,
@@ -33,6 +33,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'historical-funding-controller';
+const historicalFundingCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_HISTORICAL_FUNDING,
+);
 
 @Route('historicalFunding')
 class HistoricalFundingController extends Controller {
@@ -80,6 +83,7 @@ class HistoricalFundingController extends Controller {
 router.get(
   '/:ticker',
   rateLimiterMiddleware(getReqRateLimiter),
+  historicalFundingCacheControlMiddleware,
   ...CheckLimitSchema,
   ...CheckTickerParamSchema,
   ...CheckEffectiveBeforeOrAtSchema,

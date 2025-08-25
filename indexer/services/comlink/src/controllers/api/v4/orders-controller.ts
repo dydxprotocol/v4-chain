@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
@@ -63,6 +63,7 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'orders-controller';
+const ordersCacheControlMiddleware = cacheControlMiddleware(config.CACHE_CONTROL_DIRECTIVE_ORDERS);
 
 /**
  * Lists orders for a set of subaccounts based on various filters.
@@ -336,6 +337,7 @@ class OrdersController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  ordersCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitSchema,
   ...CheckTickerOptionalQuerySchema,
@@ -463,6 +465,7 @@ router.get(
 router.get(
   '/parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  ordersCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitSchema,
   ...CheckTickerOptionalQuerySchema,
@@ -589,6 +592,7 @@ router.get(
 
 router.get(
   '/:orderId',
+  ordersCacheControlMiddleware,
   ...checkSchema({
     orderId: {
       in: ['params'],

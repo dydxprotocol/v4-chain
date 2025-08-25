@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   AssetColumns,
   AssetFromDatabase,
@@ -56,6 +56,9 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'transfers-controller';
+const transfersCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_TRANSFERS,
+);
 
 @Route('transfers')
 class TransfersController extends Controller {
@@ -295,6 +298,7 @@ class TransfersController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  transfersCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...CheckPaginationSchema,
@@ -344,6 +348,7 @@ router.get(
 router.get(
   '/parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  transfersCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...CheckPaginationSchema,
@@ -396,6 +401,7 @@ router.get(
 router.get(
   '/between',
   rateLimiterMiddleware(getReqRateLimiter),
+  transfersCacheControlMiddleware,
   ...CheckTransferBetweenSchema,
   handleValidationErrors,
   complianceAndGeoCheck,

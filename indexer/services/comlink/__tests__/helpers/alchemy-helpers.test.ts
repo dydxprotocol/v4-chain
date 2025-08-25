@@ -234,7 +234,7 @@ describe('alchemy-helpers', () => {
       const calls = mockFetch.mock.calls;
       calls.forEach((call) => {
         const body = JSON.parse(call[1]!.body as string);
-        expect(body.webhook_id).not.toBe('wh_solana');
+        expect(body.webhook_id).not.toBe('wh_vv1go1c7wy53q6zy');
       });
     });
 

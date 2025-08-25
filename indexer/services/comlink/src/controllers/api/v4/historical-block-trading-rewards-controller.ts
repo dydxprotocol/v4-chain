@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   IsoString,
   Ordering,
@@ -25,6 +25,9 @@ import { HistoricalBlockTradingRewardRequest as HistoricalBlockTradingRewardsReq
 
 const router: express.Router = express.Router();
 const controllerName: string = 'historical-block-trading-rewards-controller';
+const historicalBlockTradingRewardsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_HISTORICAL_TRADING_REWARDS,
+);
 
 @Route('historicalBlockTradingRewards')
 class HistoricalBlockTradingRewardsController extends Controller {
@@ -55,6 +58,7 @@ class HistoricalBlockTradingRewardsController extends Controller {
 router.get(
   '/:address',
   rateLimiterMiddleware(getReqRateLimiter),
+  historicalBlockTradingRewardsCacheControlMiddleware,
   ...CheckHistoricalBlockTradingRewardsSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),

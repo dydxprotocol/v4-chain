@@ -2,6 +2,7 @@ package msgs
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
@@ -37,5 +38,11 @@ var (
 		// MsgUpdateParams is deprecated since v6.x and replaced by MsgUpdateDefaultQuotingParams.
 		// nolint:staticcheck
 		"/dydxprotocol.vault.MsgUpdateParams": &vaulttypes.MsgUpdateParams{},
+
+		// Disable MsgVerifyInvariant in the crisis module, since:
+		// 1. We currently do not rely on crisis module for any invariant assertion.
+		// 2. MsgVerifyInvariant can potentially be abused to consume massive compute.
+		"/cosmos.crisis.v1beta1.MsgVerifyInvariant":         &crisis.MsgVerifyInvariant{},
+		"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse": nil,
 	}
 )

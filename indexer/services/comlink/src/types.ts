@@ -181,6 +181,8 @@ export interface FillResponseObject {
   subaccountNumber: number,
   builderFee?: string,
   builderAddress?: string,
+  orderRouterAddress?: string,
+  orderRouterFee?: string,
 }
 
 /* ------- TRANSFER TYPES ------- */
@@ -509,7 +511,9 @@ export interface TradeRequest extends LimitAndCreatedBeforeRequest, PaginationRe
   ticker: string,
 }
 
-export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {}
+export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {
+  market?: string,
+}
 
 export interface PnlTicksRequest
   extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {}
@@ -789,6 +793,7 @@ export interface FundingPaymentResponse extends PaginationResponse {
 
 /* ------- TURNKEY TYPES ------- */
 export interface TurnkeyAuthResponse {
+  dydxAddress?: string,
   organizationId?: string,
   apiKeyId?: string,
   userId?: string,
@@ -800,6 +805,7 @@ export interface TurnkeyCreateSuborgResponse {
   subOrgId: string,
   apiKeyId?: string,
   userId?: string,
+  dydxAddress?: string,
   salt: string,
 }
 

@@ -386,7 +386,17 @@ func TestPlaceOrder_Success(t *testing.T) {
 					),
 				).Return().Once()
 			} else if tc.StatefulOrderPlacement.IsTwapOrder() {
-				// TODO: (anmol) handle indexer event here
+				indexerEventManager.On(
+					"AddTxnEvent",
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewTwapOrderPlacementEvent(
+							tc.StatefulOrderPlacement,
+						),
+					),
+				).Return().Once()
 			} else {
 				indexerEventManager.On(
 					"AddTxnEvent",

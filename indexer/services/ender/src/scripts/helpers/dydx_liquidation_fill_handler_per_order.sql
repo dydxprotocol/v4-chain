@@ -25,6 +25,8 @@ DECLARE
     total_filled numeric;
     maker_price numeric;
     event_id bytea;
+    order_router_address text;
+    order_router_fee numeric;
 /**
   Parameters:
     - field: the field storing the order to process.
@@ -92,6 +94,9 @@ BEGIN
                                   power(10, perpetual_market_record."quantumConversionExponent" +
                                             asset_record."atomicResolution" -
                                             perpetual_market_record."atomicResolution")::numeric);
+    order_router_fee = dydx_trim_scale(dydx_get_order_router_fee(fill_liquidity, event_data) *
+                                    power(10, asset_record."atomicResolution")::numeric);
+    order_router_address = dydx_get_order_router_address(fill_liquidity, event_data);
 
     IF field = 'makerOrder' THEN
         order_uuid = dydx_uuid_from_order_id(order_->'orderId');
@@ -123,29 +128,47 @@ BEGIN
         order_record."clientMetadata" = order_client_metadata;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
+        order_record."orderRouterAddress" = order_->'orderRouterAddress'::text;
 
         IF FOUND THEN
-            order_record."totalFilled" = total_filled;
-            order_record."status" = dydx_get_order_status(total_filled, order_record.size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
+            IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+                order_record."price" = dydx_get_weighted_average(order_record."price", order_record."totalFilled", maker_price, fill_amount);
+                order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
 
-            UPDATE orders
-            SET
-                "side" = order_record."side",
-                "size" = order_record."size",
-                "totalFilled" = order_record."totalFilled",
-                "price" = order_record."price",
-                "status" = order_record."status",
-                "orderFlags" = order_record."orderFlags",
-                "goodTilBlock" = order_record."goodTilBlock",
-                "goodTilBlockTime" = order_record."goodTilBlockTime",
-                "timeInForce" = order_record."timeInForce",
-                "reduceOnly" = order_record."reduceOnly",
-                "clientMetadata" = order_record."clientMetadata",
-                "updatedAt" = order_record."updatedAt",
-                "updatedAtHeight" = order_record."updatedAtHeight",
-                "builderAddress" = order_record."builderAddress",
-                "feePpm" = order_record."feePpm"
-            WHERE id = order_uuid;
+                order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", 'NOT_CANCELED', jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
+                UPDATE orders
+                SET
+                    "status" = order_record."status",
+                    "price" = order_record."price",
+                    "updatedAt" = order_record."updatedAt",
+                    "updatedAtHeight" = order_record."updatedAtHeight",
+                    "totalFilled" = order_record."totalFilled" -- keep track of fill amount for the parent order
+                WHERE "id" = order_uuid;
+            
+            ELSE
+                order_record."totalFilled" = total_filled;
+                order_record."status" = dydx_get_order_status(total_filled, order_record.size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
+
+                UPDATE orders
+                SET
+                    "side" = order_record."side",
+                    "size" = order_record."size",
+                    "totalFilled" = order_record."totalFilled",
+                    "price" = order_record."price",
+                    "status" = order_record."status",
+                    "orderFlags" = order_record."orderFlags",
+                    "goodTilBlock" = order_record."goodTilBlock",
+                    "goodTilBlockTime" = order_record."goodTilBlockTime",
+                    "timeInForce" = order_record."timeInForce",
+                    "reduceOnly" = order_record."reduceOnly",
+                    "clientMetadata" = order_record."clientMetadata",
+                    "updatedAt" = order_record."updatedAt",
+                    "updatedAtHeight" = order_record."updatedAtHeight",
+                    "builderAddress" = order_record."builderAddress",
+                    "feePpm" = order_record."feePpm",
+                    "orderRouterAddress" = order_record."orderRouterAddress"
+                WHERE id = order_uuid;
+            END IF;
         ELSE
             order_record."id" = order_uuid;
             order_record."subaccountId" = subaccount_uuid;
@@ -157,11 +180,33 @@ BEGIN
             order_record."totalFilled" = fill_amount;
             order_record."status" = dydx_get_order_status(fill_amount, order_size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
             order_record."createdAtHeight" = block_height;
+
+            IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
+                -- This is a handled case but is not expected for twap. Parent orders should always exist
+                RAISE WARNING 'Twap suborders should always have a parent order. Order UUID: %', order_uuid;
+                order_record."orderFlags" = constants.order_flag_twap(); -- Twap suborders should be mapped to their parent order.
+                order_record."type" = 'TWAP';
+                order_record."price" = maker_price;
+            END IF;
+            
+            order_record."duration" = NULL;
+            order_record."interval" = NULL;
+            order_record."priceTolerance" = NULL;
+            
             INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
              "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
-             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm")
-            VALUES (order_record.*);
+             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm", 
+             "orderRouterAddress", "duration", "interval", "priceTolerance")
+            VALUES (
+                order_record."id", order_record."subaccountId", order_record."clientId", order_record."clobPairId",
+                order_record."side", order_record."size", order_record."totalFilled", order_record."price", order_record."type",
+                order_record."status", order_record."timeInForce", order_record."reduceOnly", order_record."orderFlags",
+                order_record."goodTilBlock", order_record."goodTilBlockTime", order_record."createdAtHeight",
+                order_record."clientMetadata", order_record."triggerPrice", order_record."updatedAt", order_record."updatedAtHeight",
+                order_record."builderAddress", order_record."feePpm", order_record."orderRouterAddress", order_record."duration",
+                order_record."interval", order_record."priceTolerance"
+            );
         END IF;
     END IF;
 
@@ -170,7 +215,8 @@ BEGIN
             block_height, transaction_index, event_index);
     INSERT INTO fills
     ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
-     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress")
+     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress",
+     "orderRouterFee", "orderRouterAddress")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -189,7 +235,9 @@ BEGIN
             fee,
             affiliate_rev_share,
             NULLIF(builder_fee, 0),
-            NULLIF(builder_address, ''))
+            NULLIF(builder_address, ''),
+            NULLIF(order_router_fee, 0),
+            NULLIF(order_router_address, ''))
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */

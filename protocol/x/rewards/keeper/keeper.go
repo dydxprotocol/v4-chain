@@ -211,7 +211,7 @@ func (k Keeper) AddRewardSharesForFill(
 			fill.TakerAddr,
 			takerWeight,
 		); err != nil {
-			log.ErrorLogWithError(
+			log.InfoLog(
 				ctx,
 				"Failed to add rewards share to address",
 				err,
@@ -244,7 +244,7 @@ func (k Keeper) AddRewardSharesForFill(
 			fill.MakerAddr,
 			makerWeight,
 		); err != nil {
-			log.ErrorLogWithError(
+			log.InfoLog(
 				ctx,
 				"Failed to add rewards share to address",
 				err,

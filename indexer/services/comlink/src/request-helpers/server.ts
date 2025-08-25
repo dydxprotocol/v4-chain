@@ -2,7 +2,6 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import express, { Express } from 'express';
 import requestId from 'express-request-id';
-import nocache from 'nocache';
 import responseTime from 'response-time';
 import swaggerUi from 'swagger-ui-express';
 
@@ -29,8 +28,6 @@ export default function server(
   };
 
   app.use(cors(corsOptions));
-
-  app.use(nocache());
 
   app.get('/health', (_req: express.Request, res: express.Response) => {
     res.json({ ok: true });

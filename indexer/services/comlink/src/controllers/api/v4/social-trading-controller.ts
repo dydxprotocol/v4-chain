@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
   SubaccountFromDatabase,
   SubaccountTable,
@@ -17,7 +17,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
-import { handleControllerError, checkIfValidDydxAddress } from '../../../lib/helpers';
+import { checkIfValidDydxAddress, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -26,6 +26,9 @@ import { TraderSearchRequest, TraderSearchResponse } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'social-trading-controller';
+const socialTradingCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_SOCIAL_TRADING,
+);
 
 @Route('trader')
 class SocialTradingController extends Controller {
@@ -70,6 +73,7 @@ class SocialTradingController extends Controller {
 
 router.get('/search',
   rateLimiterMiddleware(getReqRateLimiter),
+  socialTradingCacheControlMiddleware,
   ...checkSchema({
     searchParam: {
       in: 'query',

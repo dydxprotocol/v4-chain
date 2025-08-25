@@ -1,0 +1,9 @@
+# Compiled binary from deserialize_proto.go
+deserialize_proto
+
+# Test JSON files (optional - remove this line if you want to track test files)
+test_events.json
+
+# Any other temporary files
+*.tmp
+*.log

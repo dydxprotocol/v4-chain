@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -53,10 +52,6 @@ var (
 		"/cosmos.bank.v1beta1.Supply":               nil,
 
 		// consensus
-
-		// crisis
-		"/cosmos.crisis.v1beta1.MsgVerifyInvariant":         &crisis.MsgVerifyInvariant{},
-		"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse": nil,
 
 		// crypto
 		"/cosmos.crypto.ed25519.PrivKey":            nil,

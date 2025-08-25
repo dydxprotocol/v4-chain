@@ -4,19 +4,21 @@ import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
-import { checkSchema, matchedData } from 'express-validator';
+import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
 import {
   Controller, Post, Route, Body,
 } from 'tsoa';
+import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
+import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../../../helpers/alchemy-helpers';
 import { isValidEmail } from '../../../helpers/utility/validation';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { CheckSignInSchema, CheckUploadDydxAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -62,6 +64,7 @@ export class TurnkeyController extends Controller {
         defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
       }).apiClient();
     }
+    // bridge sender client is used to kick off bridging transactions.
     if (bridgeSenderTurnkeyClient) {
       this.bridgeSenderApiClient = bridgeSenderTurnkeyClient;
     } else {
@@ -72,6 +75,35 @@ export class TurnkeyController extends Controller {
         defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
       }).apiClient();
     }
+  }
+
+  @Post('/uploadAddress')
+  async uploadAddress(
+    @Body() body: { dydxAddress: string, signature: string },
+  ): Promise<{ success: boolean }> {
+    const { dydxAddress, signature } = body;
+    if (!dydxAddress || !signature) {
+      throw new TurnkeyError('dydxAddress and signature are required');
+    }
+
+    // Recover the signer from the signed dydxAddress message
+    let recovered: Address;
+    try {
+      recovered = await recoverMessageAddress({ message: dydxAddress, signature: signature as `0x${string}` });
+    } catch (err) {
+      throw this.wrapTurnkeyError(err, 'Failed to recover address from signature');
+    }
+
+    // Try to find user by the recovered address, falling back to lowercase variant
+    const evmAddressChecksum = checksumAddress(recovered);
+    const user = await TurnkeyUsersTable.findByEvmAddress(evmAddressChecksum);
+    if (!user) {
+      throw new TurnkeyError('No user found for recovered EVM address');
+    }
+
+    await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
+
+    return { success: true };
   }
 
   @Post('/signin')
@@ -104,6 +136,7 @@ export class TurnkeyController extends Controller {
           userId: resp.userId,
           organizationId: resp.subOrgId,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
 
       } catch (error) {
@@ -118,19 +151,21 @@ export class TurnkeyController extends Controller {
         return {
           session: resp.session,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
       } catch (error) {
         throw this.wrapTurnkeyError(error, 'Social signin failed');
       }
     } else if (signinMethod === SigninMethod.PASSKEY) {
       if (!challenge || !attestation) {
-        throw new Error('challenge and attestation are required for passkey signin');
+        throw new Error('Passkey signin requires challenge and attestation. Passkey signing is currently not supported.');
       }
       try {
         const resp = await this.passkeySignin(challenge, 'Passkey', attestation);
         return {
           organizationId: resp.organizationId,
           salt: resp.salt,
+          dydxAddress: resp.dydxAddress || '',
         };
       } catch (error) {
         throw this.wrapTurnkeyError(error, 'Passkey signin failed');
@@ -143,7 +178,11 @@ export class TurnkeyController extends Controller {
     return randomBytes(16).toString('hex');
   }
 
-  // returns the suborgId plus salt if the user exists.
+  /*
+   * Returns the suborgId plus salt if the user exists.
+   * Additionally will include the dydxAddress if the user has one uploaded already.
+   *
+   */
   private async getSuborg(p: GetSuborgParams): Promise<TurnkeyCreateSuborgResponse | undefined> {
     if (p.email) {
       const user = await TurnkeyUsersTable.findByEmail(p.email);
@@ -152,6 +191,7 @@ export class TurnkeyController extends Controller {
         return {
           subOrgId: user.suborg_id,
           salt: user.salt,
+          dydxAddress: user.dydx_address || '',
         };
       }
       return undefined;
@@ -176,6 +216,7 @@ export class TurnkeyController extends Controller {
         return {
           subOrgId: user?.suborg_id || '',
           salt: user?.salt || '',
+          dydxAddress: user?.dydx_address || '',
         };
       }
     }
@@ -250,10 +291,16 @@ export class TurnkeyController extends Controller {
     // parent org api client no longer has permissions to do anything.
     let evmAddress = '';
     let svmAddress = '';
+    // smart account address can be derived offchain before we send any user ops.
+    // smart account address is needed by the frontend to display the correct
+    // deposit address for the avalanche chain since it does not support eip7702.
+    let smartAccountAddress = '';
     for (const address of subOrg.wallet?.addresses || []) {
       if (address.startsWith('0x')) {
         // evm always starts with 0x
         evmAddress = address;
+        smartAccountAddress = await getSmartAccountAddress(evmAddress);
+        smartAccountAddress = checksumAddress(smartAccountAddress as Address);
       } else {
         // if not evm, then must be svm
         svmAddress = address;
@@ -268,6 +315,7 @@ export class TurnkeyController extends Controller {
       email: params.email,
       svm_address: svmAddress,
       evm_address: evmAddress,
+      smart_account_address: smartAccountAddress,
       salt,
       created_at: new Date().toISOString(),
     });
@@ -301,22 +349,34 @@ export class TurnkeyController extends Controller {
       });
     }
 
+    // Validate magic link template if provided
+    const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink;
+    if (magicLinkTemplate) {
+      try {
+        // eslint-disable-next-line no-new
+        new URL(magicLinkTemplate.replace('%s', 'test'));
+      } catch {
+        throw new Error('Invalid magic link template URL');
+      }
+    }
     const emailAuthResponse = await this.parentApiClient.emailAuth({
       email: userEmail,
       targetPublicKey,
       emailCustomization: {
         appName: 'dydx',
         logoUrl: 'https://cdn.prod.website-files.com/649ca755d082f1dfc4ed62a4/6870a124cba22652a69c409d_icon%20(1).png',
-        magicLinkTemplate: `${config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink}=%s`,
+        magicLinkTemplate: magicLinkTemplate ? `${magicLinkTemplate}=%s` : undefined,
       },
       invalidateExisting: true,
       organizationId: suborg.subOrgId,
     });
+
     return {
       subOrgId: suborg.subOrgId,
       apiKeyId: emailAuthResponse.activity.result.emailAuthResult?.apiKeyId,
       userId: emailAuthResponse.activity.result.emailAuthResult?.userId,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -346,6 +406,7 @@ export class TurnkeyController extends Controller {
     return {
       session: oauthLoginResponse.activity.result.oauthLoginResult?.session,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -371,6 +432,7 @@ export class TurnkeyController extends Controller {
     return {
       organizationId: suborg.subOrgId,
       salt: suborg.salt,
+      dydxAddress: suborg.dydxAddress || '',
     };
   }
 
@@ -419,68 +481,13 @@ export class TurnkeyController extends Controller {
     }
     return new TurnkeyError(`${contextMessage}: ${String(error)}`);
   }
-
 }
-
-// Validation schemas
-const SignInValidationSchema = checkSchema({
-  signinMethod: {
-    in: ['body'],
-    isIn: {
-      options: [[SigninMethod.SOCIAL, SigninMethod.PASSKEY, SigninMethod.EMAIL]],
-    },
-    errorMessage: `Must be one of: ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}, ${SigninMethod.EMAIL}`,
-  },
-  userEmail: {
-    in: ['body'],
-    optional: true,
-    isEmail: true,
-    errorMessage: 'Must be a valid email address',
-  },
-  magicLink: {
-    in: ['body'],
-    optional: true,
-    isString: true,
-    errorMessage: 'Magic link must be a string',
-  },
-  targetPublicKey: {
-    in: ['body'],
-    optional: true,
-    isString: true,
-    errorMessage: 'Target public key must be a string',
-  },
-  // Passkey params
-  challenge: {
-    in: ['body'],
-    optional: true,
-    isString: true,
-    errorMessage: 'Challenge must be a string',
-  },
-  attestation: {
-    in: ['body'],
-    optional: true,
-    isObject: true,
-    errorMessage: 'Attestation must be an object',
-  },
-  provider: {
-    in: ['body'],
-    optional: true,
-    isString: true,
-    errorMessage: 'Provider must be a string',
-  },
-  oidcToken: {
-    in: ['body'],
-    optional: true,
-    isString: true,
-    errorMessage: 'OIDC token must be a string',
-  },
-});
 
 // Express route
 router.post(
   '/signin',
   rateLimiterMiddleware(getReqRateLimiter),
-  ...SignInValidationSchema,
+  ...CheckSignInSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
@@ -514,6 +521,36 @@ router.post(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.post_signin.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/uploadAddress',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckUploadDydxAddressSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const body = matchedData(req) as { dydxAddress: string, signature: string };
+      const controller: TurnkeyController = new TurnkeyController();
+      const response = await controller.uploadAddress(body);
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController POST /uploadAddress',
+        'Turnkey uploadAddress error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.post_uploadAddress.timing`,
         Date.now() - start,
       );
     }

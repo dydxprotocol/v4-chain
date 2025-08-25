@@ -5,6 +5,7 @@ import {
   ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
   ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   AssetCreateEventV1,
@@ -311,6 +312,7 @@ export const defaultMakerOrder: IndexerOrder = {
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+  orderRouterAddress: '',
 };
 export const defaultTakerOrder: IndexerOrder = {
   orderId: defaultOrderId2,
@@ -323,6 +325,7 @@ export const defaultTakerOrder: IndexerOrder = {
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+  orderRouterAddress: '',
 };
 export const defaultVaultOrder: IndexerOrder = {
   ...defaultMakerOrder,
@@ -359,6 +362,10 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultOrder: OrderFillEventWithOrder = {
   makerOrder: defaultMakerOrder,
@@ -373,6 +380,10 @@ export const defaultOrder: OrderFillEventWithOrder = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
@@ -387,6 +398,10 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 export const defaultLiquidation: OrderFillEventWithLiquidation = {
   makerOrder: defaultMakerOrder,
@@ -401,6 +416,10 @@ export const defaultLiquidation: OrderFillEventWithLiquidation = {
   takerBuilderFee: Long.fromValue(0, true),
   makerBuilderAddress: testConstants.noBuilderAddress,
   takerBuilderAddress: testConstants.noBuilderAddress,
+  makerOrderRouterFee: Long.fromValue(0, true),
+  takerOrderRouterFee: Long.fromValue(0, true),
+  makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+  takerOrderRouterAddress: testConstants.noOrderRouterAddress,
 };
 
 export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
@@ -537,6 +556,23 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
         orderFlags: ORDER_FLAG_LONG_TERM,
       },
       goodTilBlockTime: 123,
+    },
+  },
+};
+export const defaultTwapOrderPlacementEvent: StatefulOrderEventV1 = {
+  twapOrderPlacement: {
+    order: {
+      ...defaultMakerOrder,
+      orderId: {
+        ...defaultMakerOrder.orderId!,
+        orderFlags: ORDER_FLAG_TWAP,
+      },
+      goodTilBlockTime: 123,
+      twapParameters: {
+        duration: 3000,
+        interval: 300,
+        priceTolerance: 0,
+      },
     },
   },
 };

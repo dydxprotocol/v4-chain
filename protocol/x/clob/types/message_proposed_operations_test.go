@@ -94,7 +94,7 @@ func TestValidateBasic(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("order removals for invalid reduce-only orders are not allowed"),
+			expectedError: nil,
 		},
 	}
 

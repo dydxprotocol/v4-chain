@@ -1,11 +1,11 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
-  TradingRewardAggregationTable,
-  TradingRewardAggregationPeriod,
   IsoString,
-  TradingRewardAggregationFromDatabase,
-  TradingRewardAggregationColumns,
   Ordering,
+  TradingRewardAggregationColumns,
+  TradingRewardAggregationFromDatabase,
+  TradingRewardAggregationPeriod,
+  TradingRewardAggregationTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
@@ -26,6 +26,9 @@ import { HistoricalTradingRewardAggregationRequest, HistoricalTradingRewardAggre
 
 const router: express.Router = express.Router();
 const controllerName: string = 'historical-trading-reward-aggregations-controller';
+const historicalTradingRewardAggregationsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_HISTORICAL_TRADING_REWARDS,
+);
 
 @Route('historicalTradingRewardAggregations')
 class HistoricalTradingRewardAggregationsController extends Controller {
@@ -57,6 +60,7 @@ class HistoricalTradingRewardAggregationsController extends Controller {
 router.get(
   '/:address',
   rateLimiterMiddleware(getReqRateLimiter),
+  historicalTradingRewardAggregationsCacheControlMiddleware,
   ...CheckHistoricalBlockTradingRewardsSchema,
   ...checkSchema({
     period: {

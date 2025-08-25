@@ -85,6 +85,8 @@ var (
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// staking
+		"/cosmos.staking.v1beta1.MsgSetProposers":         &staking.MsgSetProposers{},
+		"/cosmos.staking.v1beta1.MsgSetProposersResponse": nil,
 		"/cosmos.staking.v1beta1.MsgUpdateParams":         &staking.MsgUpdateParams{},
 		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse": nil,
 

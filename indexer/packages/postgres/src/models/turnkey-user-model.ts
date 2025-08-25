@@ -24,6 +24,7 @@ export default class TurnkeyUserModel extends BaseModel {
         email: { type: ['string', 'null'] },
         svm_address: { type: 'string' },
         evm_address: { type: 'string' },
+        smart_account_address: { type: ['string', 'null'] },
         salt: { type: 'string' },
         dydx_address: { type: ['string', 'null'] },
         created_at: { type: 'string' },
@@ -38,26 +39,29 @@ export default class TurnkeyUserModel extends BaseModel {
   static get sqlToJsonConversions() {
     return {
       suborg_id: 'string',
-      email: 'string',
+      email: 'stringOrNull',
       svm_address: 'string',
       evm_address: 'string',
+      smart_account_address: 'stringOrNull',
       salt: 'string',
-      dydx_address: 'string',
+      dydx_address: 'stringOrNull',
       created_at: 'string',
     };
   }
 
   suborg_id!: string;
 
-  email?: string;
+  email?: string | undefined;
 
   svm_address!: string;
 
   evm_address!: string;
 
+  smart_account_address?: string | undefined;
+
   salt!: string;
 
-  dydx_address?: string;
+  dydx_address?: string | undefined;
 
   created_at!: string;
 }

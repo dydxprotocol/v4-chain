@@ -1292,7 +1292,9 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string",
+      "orderRouterFee": "string"
     }
   ]
 }
@@ -1394,7 +1396,9 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string",
+      "orderRouterFee": "string"
     }
   ]
 }
@@ -2295,6 +2299,8 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 
 > Example responses
 
@@ -2321,6 +2327,10 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
     "triggerPrice": "string",
     "builderAddress": "string",
     "feePpm": "string",
+    "orderRouterAddress": "string",
+    "duration": "string",
+    "interval": "string",
+    "priceTolerance": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2363,6 +2373,10 @@ Status Code **200**
 |» triggerPrice|string|false|none|none|
 |» builderAddress|string|false|none|none|
 |» feePpm|string|false|none|none|
+|» orderRouterAddress|string|false|none|none|
+|» duration|string|false|none|none|
+|» interval|string|false|none|none|
+|» priceTolerance|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2401,6 +2415,8 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -2409,6 +2425,7 @@ Status Code **200**
 |*anonymous*|CANCELED|
 |*anonymous*|BEST_EFFORT_CANCELED|
 |*anonymous*|UNTRIGGERED|
+|*anonymous*|ERROR|
 |*anonymous*|BEST_EFFORT_OPENED|
 
 <aside class="success">
@@ -2495,6 +2512,8 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 
 > Example responses
 
@@ -2521,6 +2540,10 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
     "triggerPrice": "string",
     "builderAddress": "string",
     "feePpm": "string",
+    "orderRouterAddress": "string",
+    "duration": "string",
+    "interval": "string",
+    "priceTolerance": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2563,6 +2586,10 @@ Status Code **200**
 |» triggerPrice|string|false|none|none|
 |» builderAddress|string|false|none|none|
 |» feePpm|string|false|none|none|
+|» orderRouterAddress|string|false|none|none|
+|» duration|string|false|none|none|
+|» interval|string|false|none|none|
+|» priceTolerance|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2601,6 +2628,8 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
+|type|TWAP|
+|type|TWAP_SUBORDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -2609,6 +2638,7 @@ Status Code **200**
 |*anonymous*|CANCELED|
 |*anonymous*|BEST_EFFORT_CANCELED|
 |*anonymous*|UNTRIGGERED|
+|*anonymous*|ERROR|
 |*anonymous*|BEST_EFFORT_OPENED|
 
 <aside class="success">
@@ -2693,6 +2723,10 @@ fetch(`${baseURL}/orders/{orderId}`,
   "triggerPrice": "string",
   "builderAddress": "string",
   "feePpm": "string",
+  "orderRouterAddress": "string",
+  "duration": "string",
+  "interval": "string",
+  "priceTolerance": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -2767,6 +2801,7 @@ fetch(`${baseURL}/perpetualMarkets`,
 |---|---|---|---|---|
 |limit|query|number(double)|false|none|
 |ticker|query|string|false|none|
+|market|query|string|false|none|
 
 > Example responses
 
@@ -3048,6 +3083,84 @@ fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&paren
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[PerpetualPositionResponse](#schemaperpetualpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## Sweep
+
+<a id="opIdSweep"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/bridging/sweep', params={
+  'fromAddress': 'string',  'chainId': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /bridging/sweep`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|fromAddress|query|string|true|none|
+|chainId|query|string|true|none|
+|amount|query|string|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[BridgeResponse](#schemabridgeresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -3689,6 +3802,104 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## UploadAddress
+
+<a id="opIdUploadAddress"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/uploadAddress', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signature": "string",
+  "dydxAddress": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/uploadAddress`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/uploadAddress`
+
+> Body parameter
+
+```json
+{
+  "signature": "string",
+  "dydxAddress": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|true|none|
+|» signature|body|string|true|none|
+|» dydxAddress|body|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|Inline|
+
+### Response Schema
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» success|boolean|true|none|none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SignIn
 
 <a id="opIdSignIn"></a>
@@ -3789,6 +4000,7 @@ fetch(`${baseURL}/turnkey/signin`,
 
 ```json
 {
+  "dydxAddress": "string",
   "organizationId": "string",
   "apiKeyId": "string",
   "userId": "string",
@@ -5076,6 +5288,7 @@ This operation does not require authentication
 |*anonymous*|LIQUIDATION|
 |*anonymous*|DELEVERAGED|
 |*anonymous*|OFFSETTING|
+|*anonymous*|TWAP_SUBORDER|
 
 ## MarketType
 
@@ -5127,7 +5340,9 @@ This operation does not require authentication
   "clientMetadata": "string",
   "subaccountNumber": 0,
   "builderFee": "string",
-  "builderAddress": "string"
+  "builderAddress": "string",
+  "orderRouterAddress": "string",
+  "orderRouterFee": "string"
 }
 
 ```
@@ -5153,6 +5368,8 @@ This operation does not require authentication
 |subaccountNumber|integer(int32)|true|none|none|
 |builderFee|string|false|none|none|
 |builderAddress|string|false|none|none|
+|orderRouterAddress|string|false|none|none|
+|orderRouterFee|string|false|none|none|
 
 ## FillResponse
 
@@ -5184,7 +5401,9 @@ This operation does not require authentication
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string",
+      "orderRouterFee": "string"
     }
   ]
 }
@@ -5665,6 +5884,7 @@ This operation does not require authentication
 |*anonymous*|CANCELED|
 |*anonymous*|BEST_EFFORT_CANCELED|
 |*anonymous*|UNTRIGGERED|
+|*anonymous*|ERROR|
 
 ## BestEffortOpenedStatus
 
@@ -5745,6 +5965,8 @@ or
 |*anonymous*|TRAILING_STOP|
 |*anonymous*|TAKE_PROFIT|
 |*anonymous*|TAKE_PROFIT_MARKET|
+|*anonymous*|TWAP|
+|*anonymous*|TWAP_SUBORDER|
 
 ## OrderResponseObject
 
@@ -5773,6 +5995,10 @@ or
   "triggerPrice": "string",
   "builderAddress": "string",
   "feePpm": "string",
+  "orderRouterAddress": "string",
+  "duration": "string",
+  "interval": "string",
+  "priceTolerance": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -5806,6 +6032,10 @@ or
 |triggerPrice|string|false|none|none|
 |builderAddress|string|false|none|none|
 |feePpm|string|false|none|none|
+|orderRouterAddress|string|false|none|none|
+|duration|string|false|none|none|
+|interval|string|false|none|none|
+|priceTolerance|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
@@ -6039,6 +6269,26 @@ or
 |---|---|---|---|---|
 |positions|[[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)]|true|none|none|
 
+## BridgeResponse
+
+<a id="schemabridgeresponse"></a>
+<a id="schema_BridgeResponse"></a>
+<a id="tocSbridgeresponse"></a>
+<a id="tocsbridgeresponse"></a>
+
+```json
+{
+  "success": true
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|success|boolean|true|none|none|
+
 ## TraderSearchResponseObject
 
 <a id="schematradersearchresponseobject"></a>
@@ -6187,6 +6437,7 @@ or
 |*anonymous*|LIMIT|
 |*anonymous*|LIQUIDATED|
 |*anonymous*|DELEVERAGED|
+|*anonymous*|TWAP_SUBORDER|
 
 ## TradeResponseObject
 
@@ -6472,6 +6723,7 @@ or
 
 ```json
 {
+  "dydxAddress": "string",
   "organizationId": "string",
   "apiKeyId": "string",
   "userId": "string",
@@ -6485,6 +6737,7 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|dydxAddress|string|false|none|none|
 |organizationId|string|false|none|none|
 |apiKeyId|string|false|none|none|
 |userId|string|false|none|none|

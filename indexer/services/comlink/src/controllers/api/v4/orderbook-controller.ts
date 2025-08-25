@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import { PerpetualMarketFromDatabase, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, OrderbookLevelsCache } from '@dydxprotocol-indexer/redis';
 import express from 'express';
@@ -20,6 +20,9 @@ import { MarketType, OrderbookRequest, OrderbookResponseObject } from '../../../
 
 const router: express.Router = express.Router();
 const controllerName: string = 'orderbook-controller';
+const orderbookCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_ORDERBOOK,
+);
 
 @Route('orderbooks')
 class OrderbookController extends Controller {
@@ -53,6 +56,7 @@ class OrderbookController extends Controller {
 router.get(
   '/perpetualMarket/:ticker',
   rateLimiterMiddleware(getReqRateLimiter),
+  orderbookCacheControlMiddleware,
   ...checkSchema({
     ticker: {
       in: ['params'],

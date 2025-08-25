@@ -1,4 +1,8 @@
-import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
+import {
+  logger,
+  stats,
+  TooManyRequestsError,
+} from '@dydxprotocol-indexer/base';
 import {
   ComplianceClientResponse,
   INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
@@ -15,8 +19,8 @@ import {
 
 import {
   getReqRateLimiter,
-  screenProviderLimiter,
   screenProviderGlobalLimiter,
+  screenProviderLimiter,
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';

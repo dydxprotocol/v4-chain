@@ -1,12 +1,12 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
-  IsoString,
-  Ordering,
   FundingPaymentsFromDatabase,
-  SubaccountTable,
-  QueryableField,
   FundingPaymentsQueryConfig,
   FundingPaymentsTable,
+  IsoString,
+  Ordering,
+  QueryableField,
+  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
@@ -18,15 +18,15 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import {
-  handleControllerError,
   getChildSubaccountNums,
+  handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
-  CheckParentSubaccountSchema,
-  CheckPaginationSchema,
-  CheckSubaccountSchema,
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  CheckPaginationSchema,
+  CheckParentSubaccountSchema,
+  CheckSubaccountSchema,
   CheckTickerOptionalQuerySchema,
   CheckZeroPaymentsOptionalParamSchema,
 } from '../../../lib/validation/schemas';
@@ -34,12 +34,15 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { fundingPaymentsToResponseObject } from '../../../request-helpers/request-transformer';
 import {
-  FundingPaymentResponseObject,
   FundingPaymentResponse,
+  FundingPaymentResponseObject,
 } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'funding-payments-controller';
+const fundingPaymentsCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_FUNDING,
+);
 
 @Route('fundingPayments')
 export class FundingPaymentController extends Controller {
@@ -160,6 +163,7 @@ export class FundingPaymentController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  fundingPaymentsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   ...CheckPaginationSchema,
@@ -215,6 +219,7 @@ router.get(
 router.get(
   '/parentSubaccount',
   rateLimiterMiddleware(getReqRateLimiter),
+  fundingPaymentsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   ...CheckPaginationSchema,

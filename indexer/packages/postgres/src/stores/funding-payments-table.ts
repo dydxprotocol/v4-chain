@@ -1,7 +1,11 @@
+import Big from 'big.js';
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
+import {
+  setupBaseQuery,
+  verifyAllRequiredFields,
+} from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import FundingPaymentsModel from '../models/funding-payments-model';
@@ -151,6 +155,34 @@ export async function findById(
     .where(FundingPaymentsColumns.ticker, ticker)
     .first()
     .returning('*');
+}
+
+export async function getNetFundingPaymentsBetweenBlockHeightsForSubaccount(
+  subaccountId: string,
+  createdAfterHeight: string,
+  createdBeforeOrAtHeight: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<Big> {
+  const baseQuery: QueryBuilder<FundingPaymentsModel> = setupBaseQuery<FundingPaymentsModel>(
+    FundingPaymentsModel,
+    options,
+  );
+
+  const result = await baseQuery
+    .sum(FundingPaymentsColumns.payment)
+    .where(FundingPaymentsColumns.subaccountId, subaccountId)
+    .where(FundingPaymentsColumns.createdAtHeight, '>', createdAfterHeight)
+    .where(FundingPaymentsColumns.createdAtHeight, '<=', createdBeforeOrAtHeight);
+
+  type SumResult = { sum: string | null };
+  const sumResult = result[0] as unknown as SumResult;
+
+  // If no results or null payment, return 0
+  if (result.length === 0 || sumResult.sum === null) {
+    return new Big(0);
+  }
+
+  return new Big(sumResult.sum);
 }
 
 /**

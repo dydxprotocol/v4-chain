@@ -384,35 +384,36 @@ func (k Keeper) PersistOrderRemovalToState(
 			types.ErrInvalidOrderRemovalReason,
 			"Order removal reason fully filled should not be part of the operations queue.",
 		)
-	// TODO - uncomment when reduce only orders are enabled. Order Removals of this type will fail ValidateBasic.
-	// case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
-	// 	if !orderToRemove.IsReduceOnly() {
-	// 		return errorsmod.Wrapf(
-	// 			types.ErrInvalidOrderRemoval,
-	// 			"Order Removal (%+v) invalid. Order must be reduce only.",
-	// 			orderRemoval,
-	// 		)
-	// 	}
+	case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+		if !orderToRemove.IsReduceOnly() {
+			return errorsmod.Wrapf(
+				types.ErrInvalidOrderRemoval,
+				"Order Removal (%+v) invalid. Order must be reduce only.",
+				orderRemoval,
+			)
+		}
 
-	// 	// The reduce-only order must increase or change the side of the position to trigger removal.
-	// 	currentPositionSize := k.GetStatePosition(
-	// 		ctx,
-	// 		orderIdToRemove.SubaccountId,
-	// 		orderToRemove.GetClobPairId(),
-	// 	)
-	// 	orderQuantumsToFill := orderToRemove.GetBigQuantums()
+		currentPositionSize := k.GetStatePosition(
+			ctx,
+			orderIdToRemove.SubaccountId,
+			orderToRemove.GetClobPairId(),
+		)
 
-	// 	orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
+		// If the position is not fully closed, check that the order fill would increase the position size or change side.
+		if currentPositionSize.Sign() != 0 {
+			orderQuantumsToFill := orderToRemove.GetBigQuantums()
+			orderFillWouldIncreasePositionSize := orderQuantumsToFill.Sign() == currentPositionSize.Sign()
 
-	// 	newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
-	// 	orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
-	// 	if !orderFillWouldIncreasePositionSize && !orderChangedSide {
-	// 		return errorsmod.Wrapf(
-	// 			types.ErrInvalidOrderRemoval,
-	// 			"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
-	// 			orderRemoval,
-	// 		)
-	// 	}
+			newPositionSize := new(big.Int).Add(currentPositionSize, orderQuantumsToFill)
+			orderChangedSide := currentPositionSize.Sign()*newPositionSize.Sign() == -1
+			if !orderFillWouldIncreasePositionSize && !orderChangedSide {
+				return errorsmod.Wrapf(
+					types.ErrInvalidOrderRemoval,
+					"Order Removal (%+v) invalid. Order fill must increase position size or change side.",
+					orderRemoval,
+				)
+			}
+		}
 	case types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
 		// TODO(CLOB-877)
 		k.statUnverifiedOrderRemoval(ctx, orderRemoval)
@@ -544,6 +545,8 @@ func (k Keeper) PersistMatchOrdersToState(
 					totalFilledMaker,
 					totalFilledTaker,
 					affiliateRevSharesQuoteQuantums,
+					matchWithOrders.MakerOrderRouterFee,
+					matchWithOrders.TakerOrderRouterFee,
 				),
 			),
 		)
@@ -653,6 +656,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 					matchWithOrders.MakerBuilderFee,
 					totalFilledMaker,
 					affiliateRevSharesQuoteQuantums,
+					matchWithOrders.MakerOrderRouterFee,
 				),
 			),
 		)
