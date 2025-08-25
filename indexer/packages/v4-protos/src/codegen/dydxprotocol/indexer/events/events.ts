@@ -431,6 +431,18 @@ export interface OrderFillEventV1 {
   /** builder address for taker */
 
   takerBuilderAddress: string;
+  /** fee for maker order router in USDC quantums */
+
+  makerOrderRouterFee: Long;
+  /** fee for taker order router in USDC quantums */
+
+  takerOrderRouterFee: Long;
+  /** order router address for maker */
+
+  makerOrderRouterAddress: string;
+  /** order router address for taker */
+
+  takerOrderRouterAddress: string;
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
@@ -475,6 +487,18 @@ export interface OrderFillEventV1SDKType {
   /** builder address for taker */
 
   taker_builder_address: string;
+  /** fee for maker order router in USDC quantums */
+
+  maker_order_router_fee: Long;
+  /** fee for taker order router in USDC quantums */
+
+  taker_order_router_fee: Long;
+  /** order router address for maker */
+
+  maker_order_router_address: string;
+  /** order router address for taker */
+
+  taker_order_router_address: string;
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -657,6 +681,7 @@ export interface StatefulOrderEventV1 {
   conditionalOrderTriggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1;
   longTermOrderPlacement?: StatefulOrderEventV1_LongTermOrderPlacementV1;
   orderReplacement?: StatefulOrderEventV1_LongTermOrderReplacementV1;
+  twapOrderPlacement?: StatefulOrderEventV1_TwapOrderPlacementV1;
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
@@ -673,6 +698,7 @@ export interface StatefulOrderEventV1SDKType {
   conditional_order_triggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType;
   long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
   order_replacement?: StatefulOrderEventV1_LongTermOrderReplacementV1SDKType;
+  twap_order_placement?: StatefulOrderEventV1_TwapOrderPlacementV1SDKType;
 }
 /**
  * A stateful order placement contains an order.
@@ -762,6 +788,16 @@ export interface StatefulOrderEventV1_LongTermOrderReplacementV1 {
 export interface StatefulOrderEventV1_LongTermOrderReplacementV1SDKType {
   /** vault replaces orders with a different order ID */
   old_order_id?: IndexerOrderIdSDKType;
+  order?: IndexerOrderSDKType;
+}
+/** A twap order placement contains an order. */
+
+export interface StatefulOrderEventV1_TwapOrderPlacementV1 {
+  order?: IndexerOrder;
+}
+/** A twap order placement contains an order. */
+
+export interface StatefulOrderEventV1_TwapOrderPlacementV1SDKType {
   order?: IndexerOrderSDKType;
 }
 /**
@@ -2474,7 +2510,11 @@ function createBaseOrderFillEventV1(): OrderFillEventV1 {
     makerBuilderFee: Long.UZERO,
     takerBuilderFee: Long.UZERO,
     makerBuilderAddress: "",
-    takerBuilderAddress: ""
+    takerBuilderAddress: "",
+    makerOrderRouterFee: Long.UZERO,
+    takerOrderRouterFee: Long.UZERO,
+    makerOrderRouterAddress: "",
+    takerOrderRouterAddress: ""
   };
 }
 
@@ -2530,6 +2570,22 @@ export const OrderFillEventV1 = {
 
     if (message.takerBuilderAddress !== "") {
       writer.uint32(106).string(message.takerBuilderAddress);
+    }
+
+    if (!message.makerOrderRouterFee.isZero()) {
+      writer.uint32(112).uint64(message.makerOrderRouterFee);
+    }
+
+    if (!message.takerOrderRouterFee.isZero()) {
+      writer.uint32(120).uint64(message.takerOrderRouterFee);
+    }
+
+    if (message.makerOrderRouterAddress !== "") {
+      writer.uint32(130).string(message.makerOrderRouterAddress);
+    }
+
+    if (message.takerOrderRouterAddress !== "") {
+      writer.uint32(138).string(message.takerOrderRouterAddress);
     }
 
     return writer;
@@ -2596,6 +2652,22 @@ export const OrderFillEventV1 = {
           message.takerBuilderAddress = reader.string();
           break;
 
+        case 14:
+          message.makerOrderRouterFee = (reader.uint64() as Long);
+          break;
+
+        case 15:
+          message.takerOrderRouterFee = (reader.uint64() as Long);
+          break;
+
+        case 16:
+          message.makerOrderRouterAddress = reader.string();
+          break;
+
+        case 17:
+          message.takerOrderRouterAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2620,6 +2692,10 @@ export const OrderFillEventV1 = {
     message.takerBuilderFee = object.takerBuilderFee !== undefined && object.takerBuilderFee !== null ? Long.fromValue(object.takerBuilderFee) : Long.UZERO;
     message.makerBuilderAddress = object.makerBuilderAddress ?? "";
     message.takerBuilderAddress = object.takerBuilderAddress ?? "";
+    message.makerOrderRouterFee = object.makerOrderRouterFee !== undefined && object.makerOrderRouterFee !== null ? Long.fromValue(object.makerOrderRouterFee) : Long.UZERO;
+    message.takerOrderRouterFee = object.takerOrderRouterFee !== undefined && object.takerOrderRouterFee !== null ? Long.fromValue(object.takerOrderRouterFee) : Long.UZERO;
+    message.makerOrderRouterAddress = object.makerOrderRouterAddress ?? "";
+    message.takerOrderRouterAddress = object.takerOrderRouterAddress ?? "";
     return message;
   }
 
@@ -2897,7 +2973,8 @@ function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
     conditionalOrderPlacement: undefined,
     conditionalOrderTriggered: undefined,
     longTermOrderPlacement: undefined,
-    orderReplacement: undefined
+    orderReplacement: undefined,
+    twapOrderPlacement: undefined
   };
 }
 
@@ -2925,6 +3002,10 @@ export const StatefulOrderEventV1 = {
 
     if (message.orderReplacement !== undefined) {
       StatefulOrderEventV1_LongTermOrderReplacementV1.encode(message.orderReplacement, writer.uint32(66).fork()).ldelim();
+    }
+
+    if (message.twapOrderPlacement !== undefined) {
+      StatefulOrderEventV1_TwapOrderPlacementV1.encode(message.twapOrderPlacement, writer.uint32(74).fork()).ldelim();
     }
 
     return writer;
@@ -2963,6 +3044,10 @@ export const StatefulOrderEventV1 = {
           message.orderReplacement = StatefulOrderEventV1_LongTermOrderReplacementV1.decode(reader, reader.uint32());
           break;
 
+        case 9:
+          message.twapOrderPlacement = StatefulOrderEventV1_TwapOrderPlacementV1.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2980,6 +3065,7 @@ export const StatefulOrderEventV1 = {
     message.conditionalOrderTriggered = object.conditionalOrderTriggered !== undefined && object.conditionalOrderTriggered !== null ? StatefulOrderEventV1_ConditionalOrderTriggeredV1.fromPartial(object.conditionalOrderTriggered) : undefined;
     message.longTermOrderPlacement = object.longTermOrderPlacement !== undefined && object.longTermOrderPlacement !== null ? StatefulOrderEventV1_LongTermOrderPlacementV1.fromPartial(object.longTermOrderPlacement) : undefined;
     message.orderReplacement = object.orderReplacement !== undefined && object.orderReplacement !== null ? StatefulOrderEventV1_LongTermOrderReplacementV1.fromPartial(object.orderReplacement) : undefined;
+    message.twapOrderPlacement = object.twapOrderPlacement !== undefined && object.twapOrderPlacement !== null ? StatefulOrderEventV1_TwapOrderPlacementV1.fromPartial(object.twapOrderPlacement) : undefined;
     return message;
   }
 
@@ -3269,6 +3355,51 @@ export const StatefulOrderEventV1_LongTermOrderReplacementV1 = {
   fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderReplacementV1>): StatefulOrderEventV1_LongTermOrderReplacementV1 {
     const message = createBaseStatefulOrderEventV1_LongTermOrderReplacementV1();
     message.oldOrderId = object.oldOrderId !== undefined && object.oldOrderId !== null ? IndexerOrderId.fromPartial(object.oldOrderId) : undefined;
+    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseStatefulOrderEventV1_TwapOrderPlacementV1(): StatefulOrderEventV1_TwapOrderPlacementV1 {
+  return {
+    order: undefined
+  };
+}
+
+export const StatefulOrderEventV1_TwapOrderPlacementV1 = {
+  encode(message: StatefulOrderEventV1_TwapOrderPlacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.order !== undefined) {
+      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_TwapOrderPlacementV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStatefulOrderEventV1_TwapOrderPlacementV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.order = IndexerOrder.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StatefulOrderEventV1_TwapOrderPlacementV1>): StatefulOrderEventV1_TwapOrderPlacementV1 {
+    const message = createBaseStatefulOrderEventV1_TwapOrderPlacementV1();
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     return message;
   }

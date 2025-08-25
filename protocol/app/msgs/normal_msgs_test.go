@@ -33,10 +33,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 
 		// consensus
 
-		// crisis
-		"/cosmos.crisis.v1beta1.MsgVerifyInvariant",
-		"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse",
-
 		// crypto
 		"/cosmos.crypto.ed25519.PrivKey",
 		"/cosmos.crypto.ed25519.PubKey",

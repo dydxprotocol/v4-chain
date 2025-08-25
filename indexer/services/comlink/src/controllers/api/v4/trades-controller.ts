@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   IsoString,
   FillTable,
@@ -38,6 +38,7 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'trades-controller';
+const tradesCacheControlMiddleware = cacheControlMiddleware(config.CACHE_CONTROL_DIRECTIVE_TRADES);
 
 @Route('trades')
 class TradesController extends Controller {
@@ -90,6 +91,7 @@ class TradesController extends Controller {
 router.get(
   '/perpetualMarket/:ticker',
   rateLimiterMiddleware(getReqRateLimiter),
+  tradesCacheControlMiddleware,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...CheckPaginationSchema,
   ...checkSchema({

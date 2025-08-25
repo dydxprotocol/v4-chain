@@ -300,12 +300,7 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	// Ensure that the stateful order count is accurately represented in the memstore on restart.
 	statefulOrders := k.GetAllStatefulOrders(ctx)
 	for _, order := range statefulOrders {
-		subaccountId := order.GetSubaccountId()
-		k.SetStatefulOrderCount(
-			ctx,
-			subaccountId,
-			k.GetStatefulOrderCount(ctx, subaccountId)+1,
-		)
+		k.CheckAndIncrementStatefulOrderCount(ctx, order.GetOrderId())
 	}
 }
 

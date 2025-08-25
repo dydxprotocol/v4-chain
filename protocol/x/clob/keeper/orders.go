@@ -187,13 +187,6 @@ func (k Keeper) PlaceShortTermOrder(
 	order.OrderId.MustBeShortTermOrder()
 	orderLabels := order.GetOrderLabels()
 
-	if _, err := k.revshareKeeper.GetOrderRouterRevShare(
-		ctx,
-		order.GetOrderRouterAddress(),
-	); err != nil {
-		return 0, 0, err
-	}
-
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -741,11 +734,11 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 
 		// Fetch the highest priority order we are trying to cancel from state.
-		statefulOrderPlacement, orderToCancelExists := k.GetLongTermOrderPlacement(ctx, orderIdToCancel)
+		existingStatefulOrder, orderToCancelExists := k.getOrderFromStore(ctx, orderIdToCancel)
 
 		// The order we are cancelling must exist in uncommitted or committed state.
 		if !orderToCancelExists {
-			statefulOrderPlacement, orderToCancelExists = k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
+			statefulOrderPlacement, orderToCancelExists := k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
 
 			if !orderToCancelExists {
 				return errorsmod.Wrapf(
@@ -754,10 +747,10 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 					orderIdToCancel,
 				)
 			}
+
+			existingStatefulOrder = statefulOrderPlacement.Order
 		}
 
-		// Highest priority stateful matching order to cancel.
-		existingStatefulOrder := statefulOrderPlacement.Order
 		// Return an error if cancellation's GTBT is less than stateful order's GTBT.
 		if cancelGoodTilBlockTime < existingStatefulOrder.GetGoodTilBlockTime() {
 			return errorsmod.Wrapf(
@@ -765,7 +758,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 				"cancellation goodTilBlockTime less than stateful order goodTilBlockTime."+
 					" cancellation %+v, order %+v",
 				msgCancelOrder,
-				statefulOrderPlacement,
+				existingStatefulOrder,
 			)
 		}
 	} else {
@@ -774,6 +767,15 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 	}
 	return nil
+}
+
+func (k Keeper) getOrderFromStore(ctx sdk.Context, orderId types.OrderId) (types.Order, bool) {
+	if orderId.IsTwapOrder() {
+		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, orderId)
+		return twapOrderPlacement.Order, found
+	}
+	longTermOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
+	return longTermOrderPlacement.Order, found
 }
 
 // validateGoodTilBlock validates that the good til block (GTB) is within valid bounds, specifically
@@ -942,36 +944,53 @@ func (k Keeper) PerformStatefulOrderValidation(
 			)
 		}
 
-		// If the stateful order already exists in state, validate
-		// that the new stateful order has a higher priority than the existing order.
-		statefulOrderPlacement, found = k.GetLongTermOrderPlacement(ctx, order.OrderId)
-
-		// If this is a pre-existing stateful order, then we expect it to exist in state.
-		// Panic if the order is not in state, as this indicates an application error.
-		if isPreexistingStatefulOrder && !found {
-			panic(
-				fmt.Sprintf(
-					"PerformStatefulOrderValidation: Expected pre-existing stateful order to exist in state "+
-						"order: (%+v).",
+		if order.OrderId.IsTwapOrder() {
+			twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, order.OrderId)
+			if found {
+				existingOrder := twapOrderPlacement.Order
+				return errorsmod.Wrapf(
+					types.ErrStatefulOrderAlreadyExists,
+					"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
+						"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
+						"Existing order: (%+v). New order: (%+v).",
+					existingOrder.GetGoodTilBlockTime(),
+					goodTilBlockTimeUnix,
+					existingOrder,
 					order,
-				),
-			)
-		}
+				)
+			}
+		} else {
+			// If the stateful order already exists in state, validate
+			// that the new stateful order has a higher priority than the existing order.
+			statefulOrderPlacement, found = k.GetLongTermOrderPlacement(ctx, order.OrderId)
 
-		// If this is not pre-existing stateful order, then we expect it does not exist in state.
-		// TODO(DEC-1238): Support stateful order replacements.
-		if !isPreexistingStatefulOrder && found {
-			existingOrder := statefulOrderPlacement.GetOrder()
-			return errorsmod.Wrapf(
-				types.ErrStatefulOrderAlreadyExists,
-				"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
-					"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
-					"Existing order: (%+v). New order: (%+v).",
-				existingOrder.GetGoodTilBlockTime(),
-				goodTilBlockTimeUnix,
-				existingOrder,
-				order,
-			)
+			// If this is a pre-existing stateful order, then we expect it to exist in state.
+			// Panic if the order is not in state, as this indicates an application error.
+			if isPreexistingStatefulOrder && !found {
+				panic(
+					fmt.Sprintf(
+						"PerformStatefulOrderValidation: Expected pre-existing stateful order to exist in state "+
+							"order: (%+v).",
+						order,
+					),
+				)
+			}
+
+			// If this is not pre-existing stateful order, then we expect it does not exist in state.
+			// TODO(DEC-1238): Support stateful order replacements.
+			if !isPreexistingStatefulOrder && found {
+				existingOrder := statefulOrderPlacement.GetOrder()
+				return errorsmod.Wrapf(
+					types.ErrStatefulOrderAlreadyExists,
+					"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
+						"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
+						"Existing order: (%+v). New order: (%+v).",
+					existingOrder.GetGoodTilBlockTime(),
+					goodTilBlockTimeUnix,
+					existingOrder,
+					order,
+				)
+			}
 		}
 
 		if order.IsConditionalOrder() {
@@ -1257,33 +1276,6 @@ func (k Keeper) InitStatefulOrders(
 			telemetry.IncrCounter(1, types.ModuleName, metrics.PlaceOrder, metrics.Hydrate, metrics.Matched)
 		}
 	}
-}
-
-// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks
-// adjusted by a given directional price tolerance in ppm, rounded to the nearest multiple
-// of SubticksPerTick. A positive price tolerance increases the price, while a negative price
-// tolerance decreases it.
-//
-// For example:
-//   - price tolerance = 500_000 means 50% higher than oracle price
-//   - price tolerance = -500_000 means 50% lower than oracle price
-func (k Keeper) GetOraclePriceAdjustedByPercentageSubticks(
-	ctx sdk.Context,
-	clobPair types.ClobPair,
-	directionalPriceTolerancePpm int32,
-) uint64 {
-	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-	adjustment := int32(1_000_000) + directionalPriceTolerancePpm
-
-	adjustedPrice := lib.BigRatMulPpm(oraclePriceSubticksRat, uint32(adjustment))
-	// Round to the nearest multiple of SubticksPerTick
-	roundedSubticks := lib.BigRatRoundToMultiple(
-		adjustedPrice,
-		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
-		directionalPriceTolerancePpm >= 0, // round up for positive adjustments, down for negative
-	)
-
-	return roundedSubticks.Uint64()
 }
 
 // sendOffchainMessagesWithTxHash sends all the `Message` in the offchainUpdates passed in along with

@@ -77,6 +77,11 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   triggerPrice?: string,
   builderAddress?: string,
   feePpm?: string,
+  orderRouterAddress?: string,
+  // these fields only exist for twap orders
+  duration?: string,
+  interval?: string,
+  priceTolerance?: string,
 }
 
 export interface PerpetualMarketFromDatabase {
@@ -120,6 +125,8 @@ export interface FillFromDatabase {
   affiliateRevShare: string,
   builderAddress?: string,
   builderFee?: string,
+  orderRouterAddress?: string,
+  orderRouterFee?: string,
 }
 
 export interface BlockFromDatabase {

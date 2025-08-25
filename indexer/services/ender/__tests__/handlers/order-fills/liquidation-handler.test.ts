@@ -63,7 +63,12 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
-import { ORDER_FLAG_SHORT_TERM, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_TWAP_SUBORDER,
+  ORDER_FLAG_TWAP,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import { defaultLiquidation, defaultLiquidationEvent, defaultPreviousHeight } from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
@@ -996,6 +1001,158 @@ describe('LiquidationHandler', () => {
     ]);
   });
 
+  it('LiquidationOrderFillEvent for TWAP suborder handles fills correctly', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const makerQuantums: number = 100;
+    const makerSubticks: number = 1_000_000;
+
+    const makerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: makerQuantums,
+      subticks: makerSubticks,
+      goodTilOneof: { goodTilBlock: 10 },
+      clobPairId: defaultClobPairId,
+      orderFlags: ORDER_FLAG_TWAP_SUBORDER.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+      reduceOnly: false,
+      clientMetadata: 0,
+    });
+
+    const takerSubticks: number = 150_000;
+    const takerQuantums: number = 10;
+    const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
+      subaccountId: defaultSubaccountId2,
+      clobPairId: defaultClobPairId,
+      perpetualId: defaultPerpetualPosition.perpetualId,
+      quantums: takerQuantums,
+      isBuy: false,
+      subticks: takerSubticks,
+    });
+
+    const fillAmount: number = 10;
+    const orderFillEvent: OrderFillEventV1 = createLiquidationOrderFillEvent(
+      makerOrderProto,
+      liquidationOrder,
+      fillAmount,
+      fillAmount,
+    );
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    // create initial PerpetualPositions
+    await Promise.all([
+      PerpetualPositionTable.create(defaultPerpetualPosition),
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        subaccountId: testConstants.defaultSubaccountId2,
+      }),
+    ]);
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const makerOrderSize: string = '0.00000001'; // quantums in human = 1e2 * 1e-10 = 1e-8
+    const makerPrice: string = '100'; // quote currency / base currency = 1e6 * 1e-8 * 1e-6 / 1e-10 = 1e2
+    const totalFilled: string = '0.000000001'; // fillAmount in human = 1e1 * 1e-10 = 1e-9
+    await expectOrderInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '0',
+      size: makerOrderSize,
+      totalFilled,
+      price: makerPrice,
+      status: OrderStatus.OPEN, // orderSize > totalFilled so status is open
+      clobPairId: defaultClobPairId,
+      side: makerOrderProto.side === IndexerOrder_Side.SIDE_BUY ? OrderSide.BUY : OrderSide.SELL,
+      orderFlags: ORDER_FLAG_TWAP.toString(),
+      timeInForce: TimeInForce.GTT,
+      reduceOnly: false,
+      goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
+      clientMetadata: makerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+      orderType: OrderType.TWAP,
+    });
+
+    const eventId: Buffer = TendermintEventTable.createEventId(
+      defaultHeight,
+      transactionIndex,
+      eventIndex,
+    );
+
+    const quoteAmount: string = '0.0000001'; // quote amount is price * fillAmount = 1e2 * 1e-9 = 1e-7
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '0',
+      liquidity: Liquidity.MAKER,
+      size: totalFilled,
+      price: makerPrice,
+      quoteAmount,
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIQUIDATION,
+      clobPairId: defaultClobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
+      orderFlags: ORDER_FLAG_TWAP.toString(),
+      clientMetadata: makerOrderProto.clientMetadata.toString(),
+      fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+    });
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId2,
+      clientId: '0',
+      liquidity: Liquidity.TAKER,
+      size: totalFilled,
+      price: makerPrice,
+      quoteAmount,
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIQUIDATED,
+      clobPairId: defaultClobPairId,
+      side: liquidationOrderToOrderSide(liquidationOrder),
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      clientMetadata: null,
+      fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+      hasOrderId: false,
+    });
+
+    await Promise.all([
+      expectDefaultOrderFillAndPositionSubaccountKafkaMessages(
+        producerSendMock,
+        eventId,
+        ORDER_FLAG_TWAP,
+      ),
+      expectDefaultTradeKafkaMessageFromTakerFillId(
+        producerSendMock,
+        eventId,
+      ),
+      expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid({
+          ...makerOrderProto.orderId!,
+          orderFlags: ORDER_FLAG_TWAP,
+        }),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectTimingStats(),
+    ]);
+  });
+
   it('LiquidationOrderFillEvent fails liquidationOrder validation', async () => {
     const makerQuantums: number = 10_000_000;
     const makerSubticks: number = 100_000_000;
@@ -1206,6 +1363,10 @@ function createLiquidationOrderFillEvent(
     takerBuilderFee: Long.fromValue(0, false),
     makerBuilderAddress: testConstants.noBuilderAddress,
     takerBuilderAddress: testConstants.noBuilderAddress,
+    makerOrderRouterFee: Long.fromValue(0, true),
+    takerOrderRouterFee: Long.fromValue(0, true),
+    makerOrderRouterAddress: testConstants.noOrderRouterAddress,
+    takerOrderRouterAddress: testConstants.noOrderRouterAddress,
   } as OrderFillEventV1;
 }
 

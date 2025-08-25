@@ -1,3 +1,4 @@
+import { producer } from '@dydxprotocol-indexer/kafka';
 import {
   dbHelpers,
   OrderCreateObject,
@@ -18,6 +19,11 @@ import {
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
+import { updateBlockCache } from '../../../src/caches/block-cache';
+import config from '../../../src/config';
+import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
+import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-order/stateful-order-removal-handler';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
@@ -28,18 +34,13 @@ import {
   defaultTime,
   defaultTxHash,
 } from '../../helpers/constants';
-import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
-import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-order/stateful-order-removal-handler';
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
-import { producer } from '@dydxprotocol-indexer/kafka';
-import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
+import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
+import { ORDER_FLAG_TWAP, ORDER_FLAG_TWAP_SUBORDER } from '@dydxprotocol-indexer/v4-proto-parser';
 
 describe('statefulOrderRemovalHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -74,6 +75,26 @@ describe('statefulOrderRemovalHandler', () => {
       reason,
     },
   };
+
+  const defaultStatefulTwapOrderEvent: StatefulOrderEventV1 = {
+    orderRemoval: {
+      removedOrderId: {
+        ...defaultOrderId,
+        orderFlags: ORDER_FLAG_TWAP,
+      },
+      reason,
+    },
+  };
+
+  const defaultStatefulTwapSuborderEvent: StatefulOrderEventV1 = {
+    orderRemoval: {
+      removedOrderId: {
+        ...defaultOrderId,
+        orderFlags: ORDER_FLAG_TWAP_SUBORDER,
+      },
+      reason,
+    },
+  };
   const defaultStatefulVaultOrderEvent: StatefulOrderEventV1 = {
     orderRemoval: {
       removedOrderId: {
@@ -87,6 +108,10 @@ describe('statefulOrderRemovalHandler', () => {
     },
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrderId);
+  const twapOrderId: string = OrderTable.orderIdToUuid({
+    ...defaultOrderId,
+    orderFlags: ORDER_FLAG_TWAP,
+  });
   const vaultOrderId: string = OrderTable.orderIdToUuid(
     defaultStatefulVaultOrderEvent.orderRemoval!.removedOrderId!,
   );
@@ -160,6 +185,92 @@ describe('statefulOrderRemovalHandler', () => {
     expectVulcanKafkaMessage({
       producerSendMock,
       orderId: defaultOrderId,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
+    });
+  });
+
+  it.each([
+    ['transaction event', 0],
+    ['block event', -1],
+  ])('successfully does not cancel parent twap on suborder removal (as %s)', async (
+    _name: string,
+    transactionIndex: number,
+  ) => {
+    // Create Parent TWAP Order
+    await OrderTable.create({
+      ...testConstants.defaultOrder,
+      orderFlags: '128',
+      clientId: '0',
+    });
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      defaultStatefulTwapSuborderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const twapOrder: OrderFromDatabase | undefined = await OrderTable.findById(twapOrderId);
+    expect(twapOrder).toBeDefined();
+    expect(twapOrder).toEqual(expect.objectContaining({
+      status: OrderStatus.OPEN,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    }));
+
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderRemove: {
+        removedOrderId: defaultStatefulTwapSuborderEvent.orderRemoval!.removedOrderId!,
+        reason,
+        removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultStatefulTwapSuborderEvent.orderRemoval!.removedOrderId!,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
+    });
+  });
+
+  it.each([
+    ['transaction event', 0],
+    ['block event', -1],
+  ])('successfully cancels and removes twap order (as %s)', async (
+    _name: string,
+    transactionIndex: number,
+  ) => {
+    // Create Parent TWAP Order
+    await OrderTable.create({
+      ...testConstants.defaultOrder,
+      orderFlags: '128',
+      clientId: '0',
+    });
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      defaultStatefulTwapOrderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const twapOrder: OrderFromDatabase | undefined = await OrderTable.findById(twapOrderId);
+    expect(twapOrder).toBeDefined();
+    expect(twapOrder).toEqual(expect.objectContaining({
+      status: OrderStatus.CANCELED,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    }));
+
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderRemove: {
+        removedOrderId: defaultStatefulTwapOrderEvent.orderRemoval!.removedOrderId!,
+        reason,
+        removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultStatefulTwapOrderEvent.orderRemoval!.removedOrderId!,
       offchainUpdate: expectedOffchainUpdate,
       headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
     });

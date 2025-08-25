@@ -181,6 +181,8 @@ export interface FillResponseObject {
   subaccountNumber: number,
   builderFee?: string,
   builderAddress?: string,
+  orderRouterAddress?: string,
+  orderRouterFee?: string,
 }
 
 /* ------- TRANSFER TYPES ------- */
@@ -509,7 +511,9 @@ export interface TradeRequest extends LimitAndCreatedBeforeRequest, PaginationRe
   ticker: string,
 }
 
-export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {}
+export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {
+  market?: string,
+}
 
 export interface PnlTicksRequest
   extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {}

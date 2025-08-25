@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   SubaccountTable,
   IsoString,
@@ -50,6 +50,7 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'fills-controller';
+const fillsCacheControlMiddleware = cacheControlMiddleware(config.CACHE_CONTROL_DIRECTIVE_FILLS);
 
 @Route('fills')
 class FillsController extends Controller {
@@ -183,6 +184,7 @@ class FillsController extends Controller {
 router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
+  fillsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...CheckPaginationSchema,
@@ -264,6 +266,7 @@ router.get(
 router.get(
   '/parentSubaccountNumber',
   rateLimiterMiddleware(getReqRateLimiter),
+  fillsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...CheckPaginationSchema,
