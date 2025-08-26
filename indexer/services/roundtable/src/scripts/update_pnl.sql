@@ -34,11 +34,16 @@ all_relevant_subaccounts AS (
     UNION
     SELECT "subaccountId" as "id" FROM transfer_aggregated
 ),
+end_time AS (
+    SELECT "createdAt" as timestamp_at_end
+    FROM funding_payments
+    WHERE "createdAtHeight" = :end
+    LIMIT 1
+),
 funding_data AS (
     SELECT 
         "subaccountId",
         "createdAtHeight",
-        "createdAt",
         "payment",
         "size" * "oraclePrice" as position_value
     FROM funding_payments
@@ -48,7 +53,6 @@ funding_data AS (
 funding_aggregated AS (
     SELECT 
         "subaccountId",
-        MAX(CASE WHEN "createdAtHeight" = :end THEN "createdAt" END) as end_timestamp,
         SUM(CASE 
             WHEN "createdAtHeight" > :start AND "createdAtHeight" <= :end 
             THEN "payment" ELSE 0 
@@ -72,7 +76,7 @@ trade_cash_flows AS (
 )
 SELECT 
     s."id" as "subaccountId",
-    fa.end_timestamp as "createdAt",
+    et.timestamp_at_end as "createdAt",
     :end as "createdAtHeight",
     -- Calculate equity = totalPnl + netTransfers
     COALESCE(pp.prev_total_pnl, 0) + 
@@ -89,6 +93,7 @@ SELECT
     (COALESCE(fa.position_value_end, 0) - COALESCE(fa.position_value_start, 0)) +
     COALESCE(tcf.net_cash_flow, 0) as "totalPnl"
 FROM all_relevant_subaccounts s
+CROSS JOIN end_time et
 LEFT JOIN previous_pnl pp ON s."id" = pp."subaccountId"
 LEFT JOIN funding_aggregated fa ON s."id" = fa."subaccountId"
 LEFT JOIN trade_cash_flows tcf ON s."id" = tcf."subaccountId"

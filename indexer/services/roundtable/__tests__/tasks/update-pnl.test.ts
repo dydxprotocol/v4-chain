@@ -167,24 +167,24 @@ it('calculates initial PNL state with transfers and checks multiple heights', as
     oraclePrice: '11000', // Position value: 2 * 11000 = 22000
   });
   
-  // For the second subaccount (defaultSubaccountId2)
-  await FundingPaymentsTable.create({
-    ...defaultFundingPayment2, // This uses defaultSubaccountId2
-    createdAtHeight: '1',
-    createdAt: JUNE_1,
-    payment: '0',
-    size: '0',      // Explicitly set to 0 (no position)
-    oraclePrice: '10000',
-  });
+//   // For the second subaccount (defaultSubaccountId2)
+//   await FundingPaymentsTable.create({
+//     ...defaultFundingPayment2, // This uses defaultSubaccountId2
+//     createdAtHeight: '1',
+//     createdAt: JUNE_1,
+//     payment: '0',
+//     size: '0',      // Explicitly set to 0 (no position)
+//     oraclePrice: '10000',
+//   });
   
-  await FundingPaymentsTable.create({
-    ...defaultFundingPayment2,
-    createdAtHeight: '2',
-    createdAt: JUNE_2,
-    payment: '0',
-    size: '0',      // Explicitly set to 0 (no position)
-    oraclePrice: '11000',
-  });
+//   await FundingPaymentsTable.create({
+//     ...defaultFundingPayment2,
+//     createdAtHeight: '2',
+//     createdAt: JUNE_2,
+//     payment: '0',
+//     size: '0',      // Explicitly set to 0 (no position)
+//     oraclePrice: '11000',
+//   });
   
   // Create a transfer at height 1 (between subaccounts)
   await TransferTable.create({
@@ -321,6 +321,7 @@ it('correctly sums funding payments across multiple positions', async () => {
     createdAtHeight: '1',
     createdAt: JUNE_1,
     clobPairId: '1', // BTC market
+    eventId: defaultTendermintEventId,
   });
   
   // ETH position
@@ -334,7 +335,7 @@ it('correctly sums funding payments across multiple positions', async () => {
     createdAtHeight: '1',
     createdAt: JUNE_1,
     clobPairId: '2', // ETH market
-    orderId: defaultOrderId, // Reusing the same order ID for simplicity
+    eventId: defaultTendermintEventId2,
   });
   
   // Run the PNL update task
@@ -346,9 +347,7 @@ it('correctly sums funding payments across multiple positions', async () => {
   // Look at height 1
   const { subaccount1Pnl: subaccount1PnlAtHeight1 } = 
     findPnlRecords(pnlRecords.results, '1');
-  
-  console.log('Subaccount1 PNL at Height 1:', subaccount1PnlAtHeight1);
-  
+    
   // At height 1:
   // - BTC: Buy -$20,000, Position +$20,000, Funding +$10
   // - ETH: Buy -$3,000, Position +$3,000, Funding +$5
