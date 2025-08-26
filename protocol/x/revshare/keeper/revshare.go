@@ -220,7 +220,7 @@ func (k Keeper) GetAllRevShares(
 	}
 
 	var orderRouterRevShares []types.RevShare
-	netFeesSubRevenueShare := netFees
+	netFeesSubRevenueShare := new(big.Int).Set(netFees)
 	// No affiliate fees shared, so we can generate order router rev shares
 	// In the case that the taker has an affiliate fee and the maker does not, then no order router fees are generated
 	// for the maker or the taker
@@ -230,7 +230,7 @@ func (k Keeper) GetAllRevShares(
 			netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, revShare.QuoteQuantums)
 		}
 	} else {
-		netFeesSubRevenueShare = new(big.Int).Sub(netFees, affiliateFeesShared)
+		netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, affiliateFeesShared)
 	}
 
 	if netFeesSubRevenueShare.Sign() <= 0 {
@@ -269,8 +269,13 @@ func (k Keeper) GetAllRevShares(
 		// Add the rev share ppm to the total for the fee source
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
+
 	// Check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
+		k.Logger(ctx).Error(
+			"Total fees exceed net fees. Total fees: ", totalFeesShared,
+			"Net fees: ", netFees,
+			"Revshares generated: ", revShares)
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 

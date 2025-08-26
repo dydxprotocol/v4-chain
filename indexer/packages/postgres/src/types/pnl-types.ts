@@ -2,8 +2,8 @@ export enum PnlColumns {
   subaccountId = 'subaccountId',
   createdAt = 'createdAt',
   createdAtHeight = 'createdAtHeight',
-  deltaFundingPayments = 'deltaFundingPayments',
-  deltaPositionEffects = 'deltaPositionEffects',
+  equity = 'equity',
+  netTransfers = 'netTransfers',
   totalPnl = 'totalPnl',
 }
 
@@ -11,7 +11,7 @@ export interface PnlCreateObject {
   subaccountId: string,
   createdAt: string,
   createdAtHeight: string,
-  deltaFundingPayments: string,
-  deltaPositionEffects: string,
+  equity: string,
+  netTransfers: string,
   totalPnl: string,
 }

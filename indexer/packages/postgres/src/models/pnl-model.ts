@@ -40,16 +40,16 @@ export default class PnlModel extends Model {
         'subaccountId',
         'createdAt',
         'createdAtHeight',
-        'deltaFundingPayments',
-        'deltaPositionEffects',
+        'equity',
+        'netTransfers',
         'totalPnl',
       ],
       properties: {
         subaccountId: { type: 'string', format: 'uuid' },
         createdAt: { type: 'string', format: 'date-time' },
         createdAtHeight: { type: 'string', pattern: IntegerPattern },
-        deltaFundingPayments: { type: 'string', pattern: NumericPattern },
-        deltaPositionEffects: { type: 'string', pattern: NumericPattern },
+        equity: { type: 'string', pattern: NumericPattern },
+        netTransfers: { type: 'string', pattern: NumericPattern },
         totalPnl: { type: 'string', pattern: NumericPattern },
       },
     };
@@ -58,7 +58,7 @@ export default class PnlModel extends Model {
   subaccountId!: string;
   createdAt!: IsoString;
   createdAtHeight!: string;
-  deltaFundingPayments!: string;
-  deltaPositionEffects!: string;
+  equity!: string;
+  netTransfers!: string;
   totalPnl!: string;
 }
