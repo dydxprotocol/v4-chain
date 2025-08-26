@@ -360,9 +360,18 @@ const uploadDydxAddressSchema: Record<string, ParamSchema> = {
   },
 };
 
+const getDepositAddressSchema: Record<string, ParamSchema> = {
+  dydxAddress: {
+    in: ['body'],
+    ...addressSchema,
+  },
+};
+
 export const CheckSignInSchema = checkSchema(signInSchema);
 
 export const CheckUploadDydxAddressSchema = checkSchema(uploadDydxAddressSchema);
+
+export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
 
 export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
 

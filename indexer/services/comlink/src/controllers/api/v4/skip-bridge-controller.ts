@@ -1,5 +1,7 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
+import {
+  findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
+} from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import {
   route, executeRoute, setClientOptions, balances, TransferStatus,
@@ -45,7 +47,7 @@ import {
 } from '../../../helpers/alchemy-helpers';
 import { getSvmSigner, getSkipCallData, usdcAddressByChainId } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
-import { CheckBridgeSchema } from '../../../lib/validation/schemas';
+import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 
@@ -114,9 +116,9 @@ class BridgeController extends Controller {
   @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
-      @Query() chainId: string,
-      // optionally provide the contract and amount, primarily used for solana.
-      @Query() amount?: string,
+    @Query() chainId: string,
+    // optionally provide the contract and amount, primarily used for solana.
+    @Query() amount?: string,
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
       // no sweeping if amount is less than 20, so far we only support usdc on svm.
@@ -259,7 +261,7 @@ class BridgeController extends Controller {
           chainId: string,
           txHash: string,
         },
-      // eslint-disable-next-line @typescript-eslint/require-await
+        // eslint-disable-next-line @typescript-eslint/require-await
       ) => {
         logger.info({
           message: `Broadcasted on ${c}: ${txHash}`,
@@ -277,7 +279,7 @@ class BridgeController extends Controller {
           txHash: string,
           status?: TransferStatus,
         },
-      // eslint-disable-next-line @typescript-eslint/require-await
+        // eslint-disable-next-line @typescript-eslint/require-await
       ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
@@ -293,7 +295,7 @@ class BridgeController extends Controller {
           txHash: string,
           explorerLink: string,
         },
-      // eslint-disable-next-line @typescript-eslint/require-await
+        // eslint-disable-next-line @typescript-eslint/require-await
       ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
@@ -309,7 +311,7 @@ class BridgeController extends Controller {
           txIndex: number,
           signerAddress?: string,
         },
-      // eslint-disable-next-line @typescript-eslint/require-await
+        // eslint-disable-next-line @typescript-eslint/require-await
       ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
@@ -570,6 +572,56 @@ async function parseEvent(e: express.Request): Promise<{
   };
 }
 
+router.get(
+  '/getDepositAddress',
+  ...CheckGetDepositAddressSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const { dydxAddress } = req.body;
+      await dbHelpers.clearData();
+      await TurnkeyUsersTable.create({
+        suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
+        svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
+        evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
+        smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
+        salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
+        dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+        created_at: new Date().toISOString(),
+      });
+      const record: TurnkeyUserFromDatabase | undefined = await findByDydxAddress(dydxAddress);
+
+      if (!record) {
+        return res.status(404).json({
+          error: 'User not found',
+          message: `No user found with dydx address: ${dydxAddress}`,
+        });
+      }
+
+      return res.status(200).json({
+        evmAddress: record.evm_address,
+        avalancheAddress: record.smart_account_address,
+        svmAddress: record.svm_address,
+      });
+    } catch (error) {
+      return handleControllerError(
+        'BridgeController GET /getDepositAddress',
+        'Get deposit address error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_deposit_address.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
 router.post(
   '/startBridge',
   ...CheckBridgeSchema,
@@ -577,16 +629,6 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    // await dbHelpers.clearData()
-    // await TurnkeyUsersTable.create({
-    //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
-    //   svm_address: '47txAQxyvGnE9NRnU8vLycRkWmA9apFAJEhYbrfAAhr1',
-    //   evm_address: '0x5e13Bcf654A28639366f3bB515F13B840fE9e8D9',
-    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
-    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
-    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-    //   created_at: new Date().toISOString(),
-    // })
     // // await TurnkeyUsersTable.create({
     // //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
     // //   svm_address: '4565H9rhrLXh9wBPaNGKyj8ANtRajYEvcXZMBdaychLc',

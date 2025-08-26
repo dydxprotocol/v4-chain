@@ -50,6 +50,19 @@ export async function findBySmartAccountAddress(
     .first();
 }
 
+export async function findByDydxAddress(
+  dydxAddress: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const baseQuery: QueryBuilder<TurnkeyUserModel> = setupBaseQuery<TurnkeyUserModel>(
+    TurnkeyUserModel,
+    options,
+  );
+  return baseQuery
+    .where(TurnkeyUserColumns.dydx_address, dydxAddress)
+    .first();
+}
+
 export async function findByEmail(
   email: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
