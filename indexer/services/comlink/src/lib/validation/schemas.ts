@@ -362,7 +362,7 @@ const uploadDydxAddressSchema: Record<string, ParamSchema> = {
 
 const getDepositAddressSchema: Record<string, ParamSchema> = {
   dydxAddress: {
-    in: ['body'],
+    in: ['params'],
     ...addressSchema,
   },
 };
