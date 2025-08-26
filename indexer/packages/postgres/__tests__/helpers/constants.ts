@@ -47,6 +47,7 @@ import {
   PerpetualMarketType,
   PerpetualPositionCreateObject,
   PerpetualPositionStatus,
+  PnlCreateObject,
   PnlTicksCreateObject,
   PositionSide,
   SubaccountCreateObject,
@@ -1114,4 +1115,24 @@ export const defaultFundingPayment2 = {
   rate: '0.0002',
   payment: '-1.2',
   fundingIndex: '5.6',
+};
+
+// ==============  PnL  =================
+
+export const defaultPnl: PnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  createdAt: defaultBlock.time,
+  createdAtHeight: defaultBlock.blockHeight,
+  equity: '10031.25',
+  netTransfers: '10000.00',
+  totalPnl: '31.25',
+};
+
+export const defaultPnl2: PnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  createdAt: DateTime.utc(2022, 6, 5).toISO(),
+  createdAtHeight: '5',
+  equity: '10013.00',
+  netTransfers: '10000.00',
+  totalPnl: '13.00',
 };
