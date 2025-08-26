@@ -77,30 +77,34 @@ async function getLastProcessedHeight(): Promise<string> {
 }
 
 /**
- * Updates the PNL (Profit and Loss) table with calculations for all subaccounts with transfer
- * history.
- *
- * The workflow:
- * 1. Identifies all subaccounts with transfer history up to the specified end height
- * 2. Calculates position effects in two parts:
- *    a) Open position PNL:
- *       - For positions that existed before the start height: Calculates PNL based on price change
- *         from oracle price at start height to oracle price at end height
- *       - For positions created after start height: Calculates PNL based on price change
- *         from entry price to oracle price at end height
- *    b) Closed position PNL:
- *       - For positions closed between start and end height
- *       - For positions that existed before start height: Uses oracle price at start as reference
- *       - For positions created after start height: Uses entry price as reference
- * 3. Sums up funding payments received in the period between start and end height
- * 4. Calculates total PNL as:
- *    Previous total PNL + Current period funding payments + Current period position effects
- *
- * The process requires:
- * - Oracle prices at start and end heights for all relevant markets
- * - All open and closed perpetual positions
- * - All funding payments in the period
- * - All previous PNL calculations
+ * Updates the PNL (Profit and Loss) table with comprehensive financial metrics for all relevant subaccounts.
+ * 
+ * The SQL script calculates:
+ * 
+ * 1. Net Transfers: Tracks the cumulative balance of all incoming and outgoing transfers
+ *    - Outgoing transfers reduce the balance
+ *    - Incoming transfers increase the balance
+ *    - Preserves previous net transfer balance from last calculation
+ * 
+ * 2. Total PNL: Tracks the profit and loss from all trading activities
+ *    - Includes funding payments received in the period
+ *    - Captures changes in position value (mark-to-market)
+ *    - Includes cash flows from trading activities (buy/sell)
+ *    - Preserves previous PNL from last calculation
+ * 
+ * 3. Equity: Represents the total account value
+ *    - Sum of total PNL and net transfers
+ * 
+ * The process:
+ * 1. Identifies all subaccounts with either previous PNL records or transfer activity
+ * 2. Aggregates transfers (incoming and outgoing) for each subaccount
+ * 3. Collects funding data and calculates position values at start and end points
+ * 4. Calculates net cash flows from trades (buys and sells)
+ * 5. Combines all financial data to produce comprehensive PNL metrics
+ * 
+ * This function determines the heights to process based on funding payment events,
+ * ensuring PNL is calculated at each height where funding payments occurred,
+ * and maintains continuity with previous calculations.
  */
 export default async function runTask(): Promise<void> {
   const at: string = 'update-pnl#runTask';

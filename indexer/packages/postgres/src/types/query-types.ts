@@ -391,5 +391,4 @@ export interface PnlQueryConfig extends QueryConfig {
   [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string,
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
-  [QueryableField.ZERO_PAYMENTS]?: boolean,
 }

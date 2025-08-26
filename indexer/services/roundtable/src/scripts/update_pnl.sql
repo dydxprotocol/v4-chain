@@ -1,124 +1,96 @@
 INSERT INTO pnl (
-    "subaccountId", 
+    "subaccountId",
     "createdAt", 
-    "createdAtHeight", 
-    "deltaFundingPayments", 
-    "deltaPositionEffects", 
+    "createdAtHeight",
+    "equity",
+    "netTransfers",
     "totalPnl"
 )
-WITH subaccounts_with_transfers AS (
-    SELECT "id" FROM subaccounts
-    WHERE "id" IN (
-        SELECT "senderSubaccountId" FROM transfers
-        WHERE "createdAtHeight" <= :end
-        UNION
-        SELECT "recipientSubaccountId" FROM transfers
-        WHERE "createdAtHeight" <= :end
-    )
-),
-end_timestamp AS (
-    -- Get timestamp from oracle prices at the latest height <= end
-    SELECT "effectiveAt"
-    FROM oracle_prices
-    WHERE "effectiveAtHeight" = (
-        SELECT MAX("effectiveAtHeight")
-        FROM oracle_prices
-        WHERE "effectiveAtHeight" <= :end
-    )
-    LIMIT 1
-),
-latest_oracle_prices AS (
-    SELECT 
-        "marketId",
-        'start' as price_type,
-        "price",
-        "effectiveAtHeight"
-    FROM oracle_prices op1
-    WHERE "effectiveAtHeight" = (
-        SELECT MAX("effectiveAtHeight")
-        FROM oracle_prices op2
-        WHERE op2."marketId" = op1."marketId"
-          AND "effectiveAtHeight" <= :start
-    )
-    UNION ALL
-    SELECT 
-        "marketId",
-        'end' as price_type,
-        "price",
-        "effectiveAtHeight"
-    FROM oracle_prices op1
-    WHERE "effectiveAtHeight" = (
-        SELECT MAX("effectiveAtHeight")
-        FROM oracle_prices op2
-        WHERE op2."marketId" = op1."marketId"
-          AND "effectiveAtHeight" <= :end
-    )
-),
-open_position_pnl AS (
-    SELECT 
-        pp."subaccountId",
-        SUM((op_end."price" - 
-             CASE 
-                 WHEN pp."createdAtHeight" <= :start THEN op_start."price"
-                 ELSE pp."entryPrice"
-             END
-            ) * pp."size"
-        ) as open_pnl
-    FROM perpetual_positions pp
-    JOIN perpetual_markets pm ON pp."perpetualId" = pm."id"
-    JOIN latest_oracle_prices op_end ON pm."marketId" = op_end."marketId" 
-        AND op_end.price_type = 'end'
-    LEFT JOIN latest_oracle_prices op_start ON pm."marketId" = op_start."marketId" 
-        AND op_start.price_type = 'start'
-        AND pp."createdAtHeight" <= :start
-    WHERE pp."status" = 'OPEN'
-      AND pp."createdAtHeight" <= :end
-    GROUP BY pp."subaccountId"
-),
-closed_position_pnl AS (
-    SELECT 
-        pp."subaccountId",
-        SUM((pp."exitPrice" - 
-             CASE 
-                 WHEN pp."createdAtHeight" <= :start THEN op_start."price"
-                 ELSE pp."entryPrice"
-             END
-            ) * pp."size"
-        ) as closed_pnl
-    FROM perpetual_positions pp
-    JOIN perpetual_markets pm ON pp."perpetualId" = pm."id"
-    LEFT JOIN latest_oracle_prices op_start ON pm."marketId" = op_start."marketId" 
-        AND op_start.price_type = 'start'
-        AND pp."createdAtHeight" <= :start
-    WHERE pp."status" IN ('CLOSED', 'LIQUIDATED')
-      AND pp."closedAtHeight" > :start 
-      AND pp."closedAtHeight" <= :end
-    GROUP BY pp."subaccountId"
-),
-funding_payments_sum AS (
+WITH previous_pnl AS (
     SELECT 
         "subaccountId",
-        SUM("payment") as total_funding_payments
+        "totalPnl" as prev_total_pnl,
+        "netTransfers" as prev_net_transfers
+    FROM pnl
+    WHERE "createdAtHeight" = :start
+),
+transfer_aggregated AS (
+    SELECT 
+        "subaccountId",
+        SUM(transfer_amount) as transfer_delta
+    FROM (
+        SELECT "senderSubaccountId" as "subaccountId", -"size" as transfer_amount
+        FROM transfers
+        WHERE "createdAtHeight" > :start AND "createdAtHeight" <= :end
+        UNION ALL
+        SELECT "recipientSubaccountId" as "subaccountId", "size" as transfer_amount
+        FROM transfers  
+        WHERE "createdAtHeight" > :start AND "createdAtHeight" <= :end
+    ) transfer_data
+    GROUP BY "subaccountId"
+),
+all_relevant_subaccounts AS (
+    SELECT "subaccountId" as "id" FROM previous_pnl
+    UNION
+    SELECT "subaccountId" as "id" FROM transfer_aggregated
+),
+funding_data AS (
+    SELECT 
+        "subaccountId",
+        "createdAtHeight",
+        "createdAt",
+        "payment",
+        "size" * "oraclePrice" as position_value
     FROM funding_payments
+    WHERE "createdAtHeight" IN (:start, :end)
+       OR ("createdAtHeight" > :start AND "createdAtHeight" <= :end)
+),
+funding_aggregated AS (
+    SELECT 
+        "subaccountId",
+        MAX(CASE WHEN "createdAtHeight" = :end THEN "createdAt" END) as end_timestamp,
+        SUM(CASE 
+            WHEN "createdAtHeight" > :start AND "createdAtHeight" <= :end 
+            THEN "payment" ELSE 0 
+        END) as total_funding_payments,
+        SUM(CASE WHEN "createdAtHeight" = :start THEN position_value ELSE 0 END) as position_value_start,
+        SUM(CASE WHEN "createdAtHeight" = :end THEN position_value ELSE 0 END) as position_value_end
+    FROM funding_data
+    GROUP BY "subaccountId"
+),
+trade_cash_flows AS (
+    SELECT 
+        "subaccountId",
+        SUM(CASE 
+            WHEN "side" = 'SELL' THEN "quoteAmount"
+            WHEN "side" = 'BUY' THEN -"quoteAmount"
+        END) as net_cash_flow
+    FROM fills
     WHERE "createdAtHeight" > :start 
       AND "createdAtHeight" <= :end
     GROUP BY "subaccountId"
 )
 SELECT 
     s."id" as "subaccountId",
-    et."effectiveAt" as "createdAt",
+    fa.end_timestamp as "createdAt",
     :end as "createdAtHeight",
-    COALESCE(fp.total_funding_payments, 0) as "deltaFundingPayments",
-    COALESCE(open_pnl.open_pnl, 0) + COALESCE(closed_pnl.closed_pnl, 0) as "deltaPositionEffects",
-    COALESCE(p."totalPnl", 0) + 
-    COALESCE(fp.total_funding_payments, 0) + 
-    COALESCE(open_pnl.open_pnl, 0) + 
-    COALESCE(closed_pnl.closed_pnl, 0) as "totalPnl"
-FROM subaccounts_with_transfers s
-CROSS JOIN end_timestamp et
-LEFT JOIN pnl p ON s."id" = p."subaccountId" 
-    AND p."createdAtHeight" = :start
-LEFT JOIN funding_payments_sum fp ON s."id" = fp."subaccountId"
-LEFT JOIN open_position_pnl open_pnl ON s."id" = open_pnl."subaccountId"
-LEFT JOIN closed_position_pnl closed_pnl ON s."id" = closed_pnl."subaccountId"
+    -- Calculate equity = totalPnl + netTransfers
+    COALESCE(pp.prev_total_pnl, 0) + 
+    COALESCE(fa.total_funding_payments, 0) + 
+    (COALESCE(fa.position_value_end, 0) - COALESCE(fa.position_value_start, 0)) +
+    COALESCE(tcf.net_cash_flow, 0) +
+    COALESCE(pp.prev_net_transfers, 0) + 
+    COALESCE(ta.transfer_delta, 0) as "equity",
+    -- Calculate netTransfers = previous + new transfers
+    COALESCE(pp.prev_net_transfers, 0) + COALESCE(ta.transfer_delta, 0) as "netTransfers",
+    -- Calculate totalPnl = previous + funding + position effects  
+    COALESCE(pp.prev_total_pnl, 0) + 
+    COALESCE(fa.total_funding_payments, 0) + 
+    (COALESCE(fa.position_value_end, 0) - COALESCE(fa.position_value_start, 0)) +
+    COALESCE(tcf.net_cash_flow, 0) as "totalPnl"
+FROM all_relevant_subaccounts s
+LEFT JOIN previous_pnl pp ON s."id" = pp."subaccountId"
+LEFT JOIN funding_aggregated fa ON s."id" = fa."subaccountId"
+LEFT JOIN trade_cash_flows tcf ON s."id" = tcf."subaccountId"
+LEFT JOIN transfer_aggregated ta ON s."id" = ta."subaccountId"
 ORDER BY s."id";
