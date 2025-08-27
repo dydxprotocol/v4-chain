@@ -38,6 +38,9 @@ export interface BazookaEventJson {
   // Run knex migrations
   migrate: boolean,
 
+  // Rollback the latest batch of knex migrations
+  rollback: boolean,
+
   // Clearing data inside the database, but not deleting the tables and schemas
   clear_db: boolean,
 
@@ -75,8 +78,13 @@ export async function handler(
   startBugsnag();
 
   if (config.PREVENT_BREAKING_CHANGES_WITHOUT_FORCE && event.force !== true) {
-    if (event.clear_db === true || event.reset_db === true ||
-       event.clear_kafka_topics === true || event.clear_redis === true) {
+    if (
+      event.rollback === true ||
+      event.clear_db === true ||
+      event.reset_db === true ||
+      event.clear_kafka_topics === true ||
+      event.clear_redis === true
+    ) {
       logger.error({
         at: 'index#handler',
         message: 'Cannot run bazooka without force flag set to "true" because' +
@@ -96,6 +104,18 @@ export async function handler(
     logger.info({
       at: 'index#handler',
       message: 'Successfully reset database',
+    });
+  }
+
+  if (event.rollback) {
+    logger.info({
+      at: 'index#handler',
+      message: 'Rolling back latest batch of database migrations',
+    });
+    await dbHelpers.rollback();
+    logger.info({
+      at: 'index#handler',
+      message: 'Successfully rolled back latest batch of database migrations',
     });
   }
 
