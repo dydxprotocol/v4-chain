@@ -38,6 +38,8 @@ async function processPnlUpdate(
     return;
   }
 
+  console.log(`Processing PNL update from ${start} to ${end}`);
+
   // bind the start height and end height to the sql content
   await Transaction.get(txId)?.raw(sqlContent, {
     start,
@@ -53,6 +55,7 @@ async function processPnlUpdate(
     { txId },
   );
 
+  console.log(`Cache updated, new last processed height: ${end}`);
   stats.gauge(`${config.SERVICE_NAME}.update_pnl.last_processed_height`, parseInt(end, 10));
 }
 
@@ -118,6 +121,7 @@ export default async function runTask(): Promise<void> {
   const searchUnprocessedFundingPaymentsHeightStart: string = (
     parseInt(await getLastProcessedHeight(), 10) + 1
   ).toString();
+  console.log('Searching for funding from height:', searchUnprocessedFundingPaymentsHeightStart);
 
   const fundingUpdates = await FundingPaymentsTable.findAll(
     {
@@ -142,11 +146,14 @@ export default async function runTask(): Promise<void> {
 
   // Get unique heights from funding payments updates.
   const fundingHeights = [...fundingUpdates.results.map((update) => update.createdAtHeight)];
+  console.log('fundingHeights that would be processed:', fundingHeights);
+
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
     try {
       const lastHeight: string = await getLastProcessedHeight();
+      console.log('Last processed height from cache:', lastHeight);
       const currentHeight: string = fundingHeights[i];
 
       logger.info({
