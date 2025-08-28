@@ -1,5 +1,5 @@
-import { NonNegativeNumericPattern } from '../lib/validators';
 import BaseModel from './base-model';
+import { NonNegativeNumericPattern } from '../lib/validators';
 
 export default class AffiliateReferredUsersModel extends BaseModel {
   static get tableName() {

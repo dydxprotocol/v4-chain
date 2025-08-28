@@ -40,6 +40,7 @@
     "@types/luxon": "3.0.0",
     "@types/node": "^18.0.3",
     "@types/redis": "2.8.27",
+    "eslint": "^8.39.0",
     "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "tsconfig-paths": "^4.0.0",

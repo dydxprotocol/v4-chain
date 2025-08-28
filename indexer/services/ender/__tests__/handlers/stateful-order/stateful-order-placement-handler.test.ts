@@ -217,7 +217,7 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: testOrder.builderCodeParams?.builderAddress ?? null,
       feePpm: testOrder.builderCodeParams?.feePpm.toString() ?? null,
@@ -273,7 +273,7 @@ describe('statefulOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(testOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
@@ -301,7 +301,7 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: testOrder.builderCodeParams?.builderAddress ?? null,
       feePpm: testOrder.builderCodeParams?.feePpm.toString() ?? null,
@@ -341,7 +341,7 @@ describe('statefulOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
@@ -369,7 +369,7 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
       feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),

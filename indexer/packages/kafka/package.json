@@ -38,6 +38,7 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "^18.0.3",
     "@types/uuid": "^8.3.4",
+    "eslint": "^8.39.0",
     "jest": "^28.1.2",
     "typescript": "^4.7.4"
   }

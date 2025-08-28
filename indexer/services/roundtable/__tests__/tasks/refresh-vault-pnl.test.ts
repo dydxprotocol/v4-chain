@@ -107,7 +107,7 @@ describe('refresh-vault-pnl', () => {
   });
 
   async function setupPnlTick(): Promise<PnlTicksFromDatabase> {
-    const twoHoursAgo: string = currentTime.minus({ hour: 2 }).toISO();
+    const twoHoursAgo: string = currentTime.minus({ hour: 2 }).toISO()!;
     await Promise.all([
       BlockTable.create({
         blockHeight: '6',

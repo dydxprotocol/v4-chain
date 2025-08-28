@@ -1,7 +1,7 @@
+import { requestId } from '@dydxprotocol-indexer/base';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express, { Express } from 'express';
-import expressRequestId from 'express-request-id';
 import nocache from 'nocache';
 import responseTime from 'response-time';
 
@@ -13,7 +13,7 @@ export default function server(): Express {
 
   app.use(responseTime({ suffix: false }));
 
-  app.use(expressRequestId());
+  app.use(requestId());
 
   app.use(resBodyCapture);
 

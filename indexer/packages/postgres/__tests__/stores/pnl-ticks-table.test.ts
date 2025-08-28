@@ -237,7 +237,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1092',
-        createdAt: DateTime.utc().minus({ hours: 1 }).toISO(),
+        createdAt: DateTime.utc().minus({ hours: 1 }).toISO()!,
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: defaultBlock.blockHeight,
@@ -246,7 +246,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1097',
-        createdAt: DateTime.utc().minus({ hours: 3 }).toISO(),
+        createdAt: DateTime.utc().minus({ hours: 3 }).toISO()!,
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '3',
@@ -255,7 +255,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1011',
-        createdAt: DateTime.utc().minus({ hours: 11 }).toISO(),
+        createdAt: DateTime.utc().minus({ hours: 11 }).toISO()!,
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '5',
@@ -264,7 +264,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1014',
-        createdAt: DateTime.utc().minus({ hours: 9 }).toISO(),
+        createdAt: DateTime.utc().minus({ hours: 9 }).toISO()!,
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '5',
@@ -282,7 +282,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId2,
         equity: '200',
-        createdAt: DateTime.utc().minus({ hours: 9 }).toISO(),
+        createdAt: DateTime.utc().minus({ hours: 9 }).toISO()!,
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '5',
@@ -427,7 +427,7 @@ describe('PnlTicks store', () => {
     await PnlTicksTable.create({
       subaccountId: vaultSubaccountId,
       equity: '100',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       totalPnl: '100',
       netTransfers: '50',
       blockHeight: '9',
@@ -525,92 +525,92 @@ async function setupRankedPnlTicksData() {
       equity: '1100',
       totalPnl: '1200',
       netTransfers: '50',
-      createdAt: now.toISO(),
+      createdAt: now.toISO()!,
       blockHeight: '9',
-      blockTime: now.toISO(),
+      blockTime: now.toISO()!,
     },
     {
       subaccountId: defaultSubaccountId,
       equity: '1090',
       totalPnl: '1190',
       netTransfers: '50',
-      createdAt: oneDayAgo.toISO(),
+      createdAt: oneDayAgo.toISO()!,
       blockHeight: '7',
-      blockTime: oneDayAgo.toISO(),
+      blockTime: oneDayAgo.toISO()!,
     },
     {
       subaccountId: defaultSubaccountId,
       equity: '1080',
       totalPnl: '1180',
       netTransfers: '50',
-      createdAt: sevenDaysAgo.toISO(),
+      createdAt: sevenDaysAgo.toISO()!,
       blockHeight: '5',
-      blockTime: sevenDaysAgo.toISO(),
+      blockTime: sevenDaysAgo.toISO()!,
     },
     {
       subaccountId: defaultSubaccountId,
       equity: '1070',
       totalPnl: '1170',
       netTransfers: '50',
-      createdAt: thirtyDaysAgo.toISO(),
+      createdAt: thirtyDaysAgo.toISO()!,
       blockHeight: '3',
-      blockTime: thirtyDaysAgo.toISO(),
+      blockTime: thirtyDaysAgo.toISO()!,
     },
     {
       subaccountId: defaultSubaccountId,
       equity: '1060',
       totalPnl: '1160',
       netTransfers: '50',
-      createdAt: oneYearAgo.toISO(),
+      createdAt: oneYearAgo.toISO()!,
       blockHeight: '1',
-      blockTime: oneYearAgo.toISO(),
+      blockTime: oneYearAgo.toISO()!,
     },
     {
       subaccountId: defaultSubaccountIdWithAlternateAddress,
       equity: '200',
-      createdAt: now.toISO(),
+      createdAt: now.toISO()!,
       totalPnl: '300',
       netTransfers: '50',
       blockHeight: '9',
-      blockTime: now.toISO(),
+      blockTime: now.toISO()!,
     },
     {
       subaccountId: defaultSubaccountIdWithAlternateAddress,
       equity: '210',
-      createdAt: oneDayAgo.toISO(),
+      createdAt: oneDayAgo.toISO()!,
       totalPnl: '310',
       netTransfers: '50',
       blockHeight: '7',
-      blockTime: oneDayAgo.toISO(),
+      blockTime: oneDayAgo.toISO()!,
     },
     {
       subaccountId: defaultSubaccountIdWithAlternateAddress,
       equity: '220',
       totalPnl: '320',
       netTransfers: '50',
-      createdAt: sevenDaysAgo.toISO(),
+      createdAt: sevenDaysAgo.toISO()!,
       blockHeight: '5',
-      blockTime: sevenDaysAgo.toISO(),
+      blockTime: sevenDaysAgo.toISO()!,
     },
     {
       subaccountId: defaultSubaccountIdWithAlternateAddress,
       equity: '230',
       totalPnl: '330',
       netTransfers: '50',
-      createdAt: thirtyDaysAgo.toISO(),
+      createdAt: thirtyDaysAgo.toISO()!,
       blockHeight: '3',
-      blockTime: thirtyDaysAgo.toISO(),
+      blockTime: thirtyDaysAgo.toISO()!,
     },
   ]);
 }
 
 async function setupIntervalPnlTicks(): Promise<PnlTicksFromDatabase[]> {
   const currentTime: DateTime = DateTime.utc().startOf('day');
-  const tenMinAgo: string = currentTime.minus({ minute: 10 }).toISO();
-  const almostTenMinAgo: string = currentTime.minus({ second: 603 }).toISO();
-  const twoHoursAgo: string = currentTime.minus({ hour: 2 }).toISO();
-  const twoDaysAgo: string = currentTime.minus({ day: 2 }).toISO();
-  const monthAgo: string = currentTime.minus({ day: 30 }).toISO();
+  const tenMinAgo: string = currentTime.minus({ minute: 10 }).toISO()!;
+  const almostTenMinAgo: string = currentTime.minus({ second: 603 }).toISO()!;
+  const twoHoursAgo: string = currentTime.minus({ hour: 2 }).toISO()!;
+  const twoDaysAgo: string = currentTime.minus({ day: 2 }).toISO()!;
+  const monthAgo: string = currentTime.minus({ day: 30 }).toISO()!;
   await Promise.all([
     BlockTable.create({
       blockHeight: '3',

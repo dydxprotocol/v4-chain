@@ -20,9 +20,9 @@ export function expectEqual(expectedObject: any, retrievedObject: any) {
           expect(expectedObject[key]).toEqual(JSON.stringify(retrievedObject[key]));
         } if (key === 'unfillableAt') {
           expect(
-            DateTime.fromISO(expectedObject[key]).toISO(),
+            DateTime.fromISO(expectedObject[key]).toISO()!,
           ).toEqual(
-            DateTime.fromISO(retrievedObject[key]).toISO(),
+            DateTime.fromISO(retrievedObject[key]).toISO()!,
           );
         } else {
           expect(expectedObject[key]).toEqual(retrievedObject[key]);

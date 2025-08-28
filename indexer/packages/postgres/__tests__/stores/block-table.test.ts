@@ -9,12 +9,12 @@ import { DateTime } from 'luxon';
 
 const testBlock1 = {
   blockHeight: '1',
-  time: DateTime.utc(2025, 3, 5).toISO(),
+  time: DateTime.utc(2025, 3, 5).toISO()!,
 };
 
 const testBlock2 = {
   blockHeight: '2',
-  time: DateTime.utc(2025, 3, 6).toISO(),
+  time: DateTime.utc(2025, 3, 6).toISO()!,
 };
 
 describe('Block store', () => {
@@ -109,7 +109,7 @@ describe('Block store', () => {
     ]);
 
     const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
-      DateTime.utc(2025, 3, 5).toISO(),
+      DateTime.utc(2025, 3, 5).toISO()!,
     );
 
     expect(block).toBeDefined();
@@ -123,7 +123,7 @@ describe('Block store', () => {
     ]);
 
     const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
-      DateTime.utc(2025, 3, 6).toISO(),
+      DateTime.utc(2025, 3, 6).toISO()!,
     );
 
     expect(block).toBeDefined();
@@ -137,7 +137,7 @@ describe('Block store', () => {
     ]);
 
     const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
-      DateTime.utc(2025, 3, 7).toISO(),
+      DateTime.utc(2025, 3, 7).toISO()!,
     );
 
     expect(block).toBeUndefined();

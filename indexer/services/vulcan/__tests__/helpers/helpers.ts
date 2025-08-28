@@ -1,18 +1,18 @@
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import {
-  redisTestConstants,
-  OrderbookLevelsCache,
   CanceledOrdersCache,
   CanceledOrderStatus,
+  OrderbookLevelsCache,
+  redisTestConstants,
 } from '@dydxprotocol-indexer/redis';
 import { OffChainUpdateV1 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
+import { defaultKafkaHeaders } from './constants';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxRecordHeaderKeys } from '../../src/lib/types';
-import { defaultKafkaHeaders } from './constants';
 
 export async function handleInitialOrderPlace(
   orderPlace: redisTestConstants.OffChainUpdateOrderPlaceUpdateMessage,

@@ -147,7 +147,7 @@ describe('OrderHandler', () => {
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
-    createdAt: DateTime.utc().toISO(),
+    createdAt: DateTime.utc().toISO()!,
     createdAtHeight: '10',
     openEventId: testConstants.defaultTendermintEventId4,
     lastEventId: testConstants.defaultTendermintEventId4,
@@ -323,7 +323,7 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -343,7 +343,7 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -362,7 +362,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: makerOrderProto.orderId!.clobPairId.toString(),
@@ -381,7 +381,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -554,7 +554,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO()!,
           updatedAtHeight: '0',
         }),
         // taker order
@@ -574,7 +574,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO()!,
           updatedAtHeight: '0',
         }),
       ]);
@@ -663,7 +663,7 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -683,7 +683,7 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -703,7 +703,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -722,7 +722,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -842,7 +842,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO()!,
           updatedAtHeight: '0',
         }),
         // taker order
@@ -862,7 +862,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO()!,
           updatedAtHeight: '0',
         }),
       ]);
@@ -949,7 +949,7 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -969,7 +969,7 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -989,7 +989,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -1008,7 +1008,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -1170,7 +1170,7 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1191,7 +1191,7 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1212,7 +1212,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: defaultClobPairId,
@@ -1231,7 +1231,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: defaultClobPairId,
@@ -1376,7 +1376,7 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1396,7 +1396,7 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1416,7 +1416,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
@@ -1435,7 +1435,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
@@ -2274,7 +2274,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
@@ -2296,7 +2296,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,

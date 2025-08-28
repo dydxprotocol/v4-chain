@@ -19,10 +19,10 @@ import _ from 'lodash';
 import * as pg from 'pg';
 
 import config from '../config';
+import { Handler } from './handler';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent, FundingEventMessage } from '../lib/types';
-import { Handler } from './handler';
 
 export class FundingHandler extends Handler<FundingEventMessage> {
   eventType: string = 'FundingEvent';

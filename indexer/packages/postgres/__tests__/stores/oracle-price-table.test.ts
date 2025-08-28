@@ -51,7 +51,7 @@ describe('Oracle price store', () => {
     const oraclePrice2: OraclePriceCreateObject = {
       marketId: defaultMarket.id,
       price: '10000.05',
-      effectiveAt: createdDateTime.toISO(),
+      effectiveAt: createdDateTime.toISO()!,
       effectiveAtHeight: updatedHeight,
     };
     await Promise.all([
@@ -236,10 +236,10 @@ describe('Oracle price store', () => {
   });
 
   it('Successfully finds the latest price and the price 24h ago', async () => {
-    const now: string = DateTime.local().toISO();
-    const lessThan24HAgo: string = DateTime.local().minus({ hour: 23 }).toISO();
-    const moreThan24HAgo: string = DateTime.local().minus({ hour: 24, minute: 5 }).toISO();
-    const wayMoreThan24HAgo: string = DateTime.local().minus({ hour: 25 }).toISO();
+    const now: string = DateTime.local().toISO()!;
+    const lessThan24HAgo: string = DateTime.local().minus({ hour: 23 }).toISO()!;
+    const moreThan24HAgo: string = DateTime.local().minus({ hour: 24, minute: 5 }).toISO()!;
+    const wayMoreThan24HAgo: string = DateTime.local().minus({ hour: 25 }).toISO()!;
 
     const oraclePrice3: OraclePriceCreateObject = {
       ...defaultOraclePrice,
@@ -328,9 +328,9 @@ describe('Oracle price store', () => {
   });
 
   it('Successfully finds latest prices by dateTime using LEFT JOIN LATERAL', async () => {
-    const now: string = DateTime.utc().toISO();
-    const yesterday: string = DateTime.utc().minus({ days: 1 }).toISO();
-    const twoDaysAgo: string = DateTime.utc().minus({ days: 2 }).toISO();
+    const now: string = DateTime.utc().toISO()!;
+    const yesterday: string = DateTime.utc().minus({ days: 1 }).toISO()!;
+    const twoDaysAgo: string = DateTime.utc().minus({ days: 2 }).toISO()!;
 
     const recentPrice: OraclePriceCreateObject = {
       ...defaultOraclePrice,

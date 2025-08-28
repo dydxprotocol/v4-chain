@@ -282,7 +282,7 @@ describe('kafka-publisher', () => {
       quoteAmount: '200000',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: testConstants.createdDateTime.toISO(),
+      createdAt: testConstants.createdDateTime.toISO()!,
       createdAtHeight: testConstants.createdHeight,
       clientMetadata: '0',
       fee: '1.1',
@@ -308,7 +308,7 @@ describe('kafka-publisher', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO()!,
       createdAtHeight: '1',
     };
     it('successfully aggregates all fill events per order id and sorts messages', async () => {

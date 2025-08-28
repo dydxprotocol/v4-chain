@@ -196,7 +196,7 @@ describe('Fill store', () => {
 
     const { results: fills } = await FillTable.findAll(
       {
-        createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO(),
+        createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO()!,
       },
       [],
       { readReplica: true },
@@ -239,7 +239,7 @@ describe('Fill store', () => {
 
     const { results: fills } = await FillTable.findAll(
       {
-        createdOnOrAfter: createdDateTime.minus({ seconds: deltaSeconds }).toISO(),
+        createdOnOrAfter: createdDateTime.minus({ seconds: deltaSeconds }).toISO()!,
       },
       [],
       { readReplica: true },
@@ -636,7 +636,7 @@ describe('Fill store', () => {
       await Promise.all(childSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
         address,
         subaccountNumber: subaccountNum,
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: '1',
       })));
 
@@ -673,7 +673,7 @@ describe('Fill store', () => {
       await SubaccountTable.create({
         address,
         subaccountNumber: 2, // not a child subaccount
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: '1',
       });
       await FillTable.create({
@@ -728,7 +728,7 @@ describe('Fill store', () => {
       await Promise.all(childSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
         address,
         subaccountNumber: subaccountNum,
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: '1',
       })));
 

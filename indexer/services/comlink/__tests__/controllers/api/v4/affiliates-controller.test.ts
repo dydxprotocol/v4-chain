@@ -218,7 +218,7 @@ describe('affiliates-controller#V4', () => {
       fromFixedLengthMock.mockResolvedValue({} as ExtendedSecp256k1Signature);
       verifyADR36AminoMock.mockReturnValue(true);
       toBech32Mock.mockReturnValue(testConstants.defaultAddress);
-      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000) as DateTime<true>); // Mock current time
       jest.spyOn(stats, 'increment');
     });
 
@@ -306,7 +306,7 @@ describe('affiliates-controller#V4', () => {
       verifySignatureMock.mockResolvedValue(true);
       fromFixedLengthMock.mockResolvedValue({} as ExtendedSecp256k1Signature);
       verifyADR36AminoMock.mockReturnValue(true);
-      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000) as DateTime<true>); // Mock current time
       jest.spyOn(stats, 'increment');
       await sendRequest({
         type: RequestMethod.POST,

@@ -47,8 +47,8 @@ describe('update-close-only-status', () => {
   it('updates CLOSE_ONLY addresses older than 7 days to BLOCKED', async () => {
     config.CLOSE_ONLY_TO_BLOCKED_DAYS = 7;
     // Seed database with CLOSE_ONLY compliance status older than 7 days
-    const oldUpdatedAt = DateTime.utc().minus({ days: 8 }).toISO();
-    const newTs = DateTime.utc().toISO();
+    const oldUpdatedAt = DateTime.utc().minus({ days: 8 }).toISO()!;
+    const newTs = DateTime.utc().toISO()!;
     await Promise.all([
       ComplianceStatusTable.create({
         address: testConstants.blockedAddress,

@@ -7,5 +7,5 @@
     // Include e.g. configuration files.
     "./.*.js",
     "./*.js"
-  ]
+  ],
 }

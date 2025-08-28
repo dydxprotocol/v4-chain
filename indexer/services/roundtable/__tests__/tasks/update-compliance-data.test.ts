@@ -264,7 +264,7 @@ describe('update-compliance-data', () => {
   it('succeeds with an active address to update but doesnt update existing CLOSE_ONLY position', async () => {
     // Seed database with compliance data older than the age threshold for active addresses
     await setupComplianceData(config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS * 2);
-    const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+    const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO()!;
     await ComplianceStatusTable.create({
       address: testConstants.defaultAddress,
       status: ComplianceStatus.CLOSE_ONLY,
@@ -410,7 +410,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO()!,
     });
 
     const riskScores: string[] = ['75.00', '50.00'];
@@ -493,7 +493,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO()!,
     });
 
     const addressWithComplianceError: string = 'dydx1gem4xs643fjhaqvphrvv0adpg4435j7xx9pp4z';
@@ -502,7 +502,7 @@ describe('update-compliance-data', () => {
       address: addressWithComplianceError,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO()!,
     });
 
     const riskScores: string[] = ['75.00', '50.00'];
@@ -603,7 +603,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO()!,
     });
 
     const riskScores: string[] = ['75.00', '50.00'];
@@ -746,7 +746,7 @@ async function setupComplianceData(
 ): Promise<void> {
   const oldUpdatedAt: string = DateTime.utc().minus(
     { seconds: deltaSeconds },
-  ).toUTC().toISO();
+  ).toUTC().toISO()!;
   await ComplianceTable.create({
     ...complianceCreate,
     updatedAt: oldUpdatedAt,
@@ -774,7 +774,7 @@ async function setupSubaccounts(
 ): Promise<void> {
   const newUpdatedAt: string = DateTime.utc().minus({
     seconds: deltaSeconds,
-  }).toUTC().toISO();
+  }).toUTC().toISO()!;
   await Promise.all(subaccountIds.map(
     (subaccountId: string) => {
       return SubaccountTable.update(

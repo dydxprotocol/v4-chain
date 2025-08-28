@@ -1,5 +1,5 @@
 # Dockerfile to containerize services locally
-FROM dydxprotocol/indexer-node:16-alpine-m1
+FROM dydxprotocol/indexer-node:18-alpine-m1
 ENV NODE_ENV=development
 ARG service
 
@@ -9,9 +9,6 @@ RUN mkdir -p /home/dydx/app
 RUN chown dydx -R /home/dydx/app
 
 WORKDIR /home/dydx/app
-
-# Copy pnpm lock and workspace and package.json from base directory
-COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
 
 # Copy patches
 COPY ./patches ./patches
@@ -46,6 +43,8 @@ RUN mkdir -p ./services/${service}/patches
 COPY ./services/${service}/patches ./services/${service}/patches/
 
 # Copy package dependency patches
+RUN mkdir -p ./packages/dev/patches
+COPY ./packages/dev/patches ./packages/dev/patches/
 RUN mkdir -p ./packages/v4-protos/patches
 COPY ./packages/v4-protos/patches ./packages/v4-protos/patches/
 RUN mkdir -p ./packages/kafka/patches
@@ -57,6 +56,8 @@ COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 RUN chown dydx -R /home/dydx/app
 
 USER dydx
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+RUN npm install -g pnpm@6
 RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
 WORKDIR /home/dydx/app/services/$service

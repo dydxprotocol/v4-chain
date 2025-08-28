@@ -90,32 +90,32 @@ describe('CandleTable', () => {
     const candleMinuteResThreeHoursAgo = {
       ...defaultCandle,
       resolution: CandleResolution.ONE_MINUTE,
-      startedAt: latestBlockTime.minus({ hours: 3 }).toISO(),
+      startedAt: latestBlockTime.minus({ hours: 3 }).toISO()!,
     };
     const candleFiveMinuteResTwoHoursAgo = {
       ...defaultCandle,
       resolution: CandleResolution.FIVE_MINUTES,
-      startedAt: latestBlockTime.minus({ hours: 2 }).toISO(),
+      startedAt: latestBlockTime.minus({ hours: 2 }).toISO()!,
     };
     const candleHourResThreeDaysAgo = {
       ...defaultCandle,
       resolution: CandleResolution.FOUR_HOURS,
-      startedAt: latestBlockTime.minus({ days: 3 }).toISO(),
+      startedAt: latestBlockTime.minus({ days: 3 }).toISO()!,
     };
     const candleDayResOneDayAgo = {
       ...defaultCandle,
       resolution: CandleResolution.ONE_DAY,
-      startedAt: latestBlockTime.minus({ days: 1 }).toISO(),
+      startedAt: latestBlockTime.minus({ days: 1 }).toISO()!,
     };
     await Promise.all([
       // Create two blocks with block time 1 second apart.
       BlockTable.create({
         blockHeight: '1',
-        time: latestBlockTime.minus({ seconds: 1 }).toISO(),
+        time: latestBlockTime.minus({ seconds: 1 }).toISO()!,
       }),
       BlockTable.create({
         blockHeight: '2',
-        time: latestBlockTime.toISO(),
+        time: latestBlockTime.toISO()!,
       }),
       // Create candles.
       CandleTable.create(candleMinuteResThreeHoursAgo), // should not be part of candles map
@@ -126,7 +126,7 @@ describe('CandleTable', () => {
 
     const candlesMap: CandlesMap = await CandleTable.findCandlesMap(
       [defaultCandle.ticker],
-      latestBlockTime.toISO(),
+      latestBlockTime.toISO()!,
     );
 
     expect(Object.keys(candlesMap)).toEqual([defaultCandle.ticker]);
@@ -145,29 +145,29 @@ describe('CandleTable', () => {
     const now: DateTime = DateTime.utc();
     const candle23HoursAgo = {
       ...defaultCandle,
-      startedAt: now.minus({ hours: 23 }).toISO(),
+      startedAt: now.minus({ hours: 23 }).toISO()!,
     };
     const candle25HoursAgo = {
       ...defaultCandle,
-      startedAt: now.minus({ hours: 25 }).toISO(),
+      startedAt: now.minus({ hours: 25 }).toISO()!,
     };
     const candle6DaysAgo = {
       ...defaultCandle,
-      startedAt: now.minus({ days: 6 }).toISO(),
+      startedAt: now.minus({ days: 6 }).toISO()!,
     };
     const candle8DaysAgo = {
       ...defaultCandle,
-      startedAt: now.minus({ days: 8 }).toISO(),
+      startedAt: now.minus({ days: 8 }).toISO()!,
     };
     const otherTickerCandle23HoursAgo = {
       ...defaultCandle,
       ticker: defaultPerpetualMarket2.ticker,
-      startedAt: now.minus({ hours: 23 }).toISO(),
+      startedAt: now.minus({ hours: 23 }).toISO()!,
     };
     const otherTickerCandle6DaysAgo = {
       ...defaultCandle,
       ticker: defaultPerpetualMarket2.ticker,
-      startedAt: now.minus({ days: 6 }).toISO(),
+      startedAt: now.minus({ days: 6 }).toISO()!,
     };
 
     await Promise.all([

@@ -56,7 +56,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       // use wallet2 to not create duplicate
@@ -178,7 +178,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       await WalletTable.create(defaultWallet);
@@ -456,7 +456,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       await WalletTable.create(defaultWallet);
@@ -602,7 +602,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       await WalletTable.create(defaultWallet);
@@ -742,7 +742,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       const transfer3: TransferCreateObject = {
@@ -752,7 +752,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId3,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       await WalletTable.create(defaultWallet);
@@ -805,7 +805,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       const transferToNonParent: TransferCreateObject = {
@@ -815,7 +815,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId3,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         createdAtHeight: testConstants.createdHeight,
       };
       const depositToChildSA: TransferCreateObject = {
@@ -825,7 +825,7 @@ describe('transfers-controller#V4', () => {
         size: '10',
         eventId: defaultTendermintEventId4,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: createdDateTime.toISO(),
+        createdAt: createdDateTime.toISO()!,
         createdAtHeight: createdHeight,
       };
       const withdrawFromChildSA: TransferCreateObject = {
@@ -835,7 +835,7 @@ describe('transfers-controller#V4', () => {
         size: '10',
         eventId: defaultTendermintEventId4,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: createdDateTime.toISO(),
+        createdAt: createdDateTime.toISO()!,
         createdAtHeight: createdHeight,
       };
       await WalletTable.create(defaultWallet);
@@ -1029,7 +1029,7 @@ describe('transfers-controller#V4', () => {
     const secondTransfer: TransferCreateObject = {
       ...testConstants.defaultTransfer,
       size: '5',
-      createdAt: testConstants.createdDateTime.plus({ minutes: 1 }).toISO(),
+      createdAt: testConstants.createdDateTime.plus({ minutes: 1 }).toISO()!,
       createdAtHeight: testConstants.createdHeight + 1,
       eventId: testConstants.defaultTendermintEventId2,
     };

@@ -72,8 +72,8 @@ export class AggregateTradingReward {
       at: 'aggregate-trading-rewards#runTask',
       message: 'Generated interval to aggregate trading rewards',
       period: this.period,
-      start: interval.start.toISO(),
-      end: interval.end.toISO(),
+      start: interval.start!.toISO()!,
+      end: interval.end!.toISO()!,
     });
 
     const intervalTradingRewardsByAddress:
@@ -85,7 +85,7 @@ export class AggregateTradingReward {
     );
     await this.updateTradingRewardsAggregation(interval, intervalTradingRewardsByAddress);
     await this.setProcessedTime(
-      interval.end.toISO(),
+      interval.end!.toISO()!,
     );
   }
 
@@ -165,7 +165,7 @@ export class AggregateTradingReward {
       });
       const nextStartTime: DateTime = await this.getNextIntervalStartWhenCacheEmpty();
       await this.setProcessedTime(
-        nextStartTime.toISO(),
+        nextStartTime.toISO()!,
       );
 
       return this.generateInterval(nextStartTime, latestBlock);
@@ -251,8 +251,8 @@ export class AggregateTradingReward {
     interval: Interval,
   ): Promise<IntervalTradingRewardsByAddress> {
     const tradingRewards: TradingRewardFromDatabase[] = await TradingRewardTable.findAll({
-      blockTimeAfterOrAt: interval.start.toISO(),
-      blockTimeBefore: interval.end.toISO(),
+      blockTimeAfterOrAt: interval.start!.toISO()!,
+      blockTimeBefore: interval.end!.toISO()!,
     }, []);
 
     const tradingRewardsByAddress: _.Dictionary<TradingRewardFromDatabase[]> = _.groupBy(
@@ -286,7 +286,7 @@ export class AggregateTradingReward {
 
     // If interval.end is the end of this.period, then we need to set the endedAt and endedAtHeight
     // for all the aggregation objects.
-    if (this.isEndofPeriod(interval.end)) {
+    if (this.isEndofPeriod(interval.end!)) {
       aggregationUpdateAndCreateObjects = await this.addEndedAtAndEndedAtHeightUpdates(
         aggregationUpdateAndCreateObjects,
         interval,
@@ -302,8 +302,8 @@ export class AggregateTradingReward {
         at: 'aggregate-trading-rewards#updateTradingRewardsAggregation',
         message: 'Updated trading rewards aggregation',
         period: this.period,
-        start: interval.start.toISO(),
-        end: interval.end.toISO(),
+        start: interval.start!.toISO()!,
+        end: interval.end!.toISO()!,
       });
     } catch (error) {
       await Transaction.rollback(txId);
@@ -312,8 +312,8 @@ export class AggregateTradingReward {
         message: 'Failed to update trading rewards aggregation',
         period: this.period,
         error: error.message,
-        start: interval.start.toISO(),
-        end: interval.end.toISO(),
+        start: interval.start!.toISO()!,
+        end: interval.end!.toISO()!,
       });
       throw error;
     }
@@ -377,7 +377,7 @@ export class AggregateTradingReward {
   }
 
   private getStartedAt(interval: Interval): IsoString {
-    return interval.start.startOf(this.getDateTimeUnit()).toISO();
+    return interval.start!.startOf(this.getDateTimeUnit()).toISO()!;
   }
 
   private async getNextBlock(time: IsoString): Promise<string> {
@@ -399,7 +399,7 @@ export class AggregateTradingReward {
   }
 
   private isEndofPeriod(endTime: DateTime): boolean {
-    return endTime.startOf(this.getDateTimeUnit()).toISO() === endTime.toISO();
+    return endTime.startOf(this.getDateTimeUnit()).toISO() === endTime.toISO()!;
   }
 
   private async addEndedAtAndEndedAtHeightUpdates(
@@ -408,7 +408,7 @@ export class AggregateTradingReward {
   ): Promise<AggregationUpdateAndCreateObjects> {
     const startedAt: string = this.getStartedAt(interval);
     const startedAtHeight: string = await this.getNextBlock(startedAt);
-    const endedAt: IsoString = interval.end.toISO();
+    const endedAt: IsoString = interval.end!.toISO()!;
     // endedAtHeight is the first block created before endedAt
     const endedAtHeight: string = Big(await this.getNextBlock(endedAt)).minus(1).toFixed();
 

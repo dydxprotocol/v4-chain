@@ -47,16 +47,16 @@ describe('aggregate-trading-rewards', () => {
   const endedAt2: DateTime = startedAt2.plus({ month: 1 });
   const defaultMonthlyTradingRewardAggregation: TradingRewardAggregationCreateObject = {
     address: testConstants.defaultAddress,
-    startedAt: startedAt.toISO(),
+    startedAt: startedAt.toISO()!,
     startedAtHeight: testConstants.defaultBlock.blockHeight,
-    endedAt: startedAt2.toISO(),
+    endedAt: startedAt2.toISO()!,
     endedAtHeight: '10000', // ignored field for the purposes of this test
     period: TradingRewardAggregationPeriod.MONTHLY,
     amount: testConversionHelpers.convertToDenomScale('10'),
   };
   const defaultMonthlyTradingRewardAggregation2: TradingRewardAggregationCreateObject = {
     address: testConstants.defaultAddress,
-    startedAt: startedAt2.toISO(),
+    startedAt: startedAt2.toISO()!,
     startedAtHeight: testConstants.defaultBlock2.blockHeight,
     period: TradingRewardAggregationPeriod.MONTHLY,
     amount: testConversionHelpers.convertToDenomScale('10'),
@@ -155,7 +155,7 @@ describe('aggregate-trading-rewards', () => {
         await Promise.all([
           TradingRewardTable.create({
             address: testConstants.defaultAddress,
-            blockTime: startedAt.plus({ minutes: 2, seconds: 20 }).toISO(), // random constants
+            blockTime: startedAt.plus({ minutes: 2, seconds: 20 }).toISO()!, // random constants
             blockHeight: '1',
             amount: '10',
           }),
@@ -210,13 +210,13 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationTable.create(defaultMonthlyTradingRewardAggregation),
           TradingRewardAggregationTable.create({
             ...defaultMonthlyTradingRewardAggregation2,
-            endedAt: endedAt2.toISO(),
+            endedAt: endedAt2.toISO()!,
             endedAtHeight: '10000', // ignored field for the purposes of this test
           }),
           createBlockWithTime(endedAt2.plus({ seconds: 59 })),
           AggregateTradingRewardsProcessedCache.setProcessedTime(
             TradingRewardAggregationPeriod.MONTHLY,
-            endedAt2.toISO(),
+            endedAt2.toISO()!,
             redisClient,
           ),
         ]);
@@ -238,13 +238,13 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationTable.create(defaultMonthlyTradingRewardAggregation),
           TradingRewardAggregationTable.create({
             ...defaultMonthlyTradingRewardAggregation2,
-            endedAt: endedAt2.toISO(),
+            endedAt: endedAt2.toISO()!,
             endedAtHeight: '10000', // ignored field for the purposes of this test
           }),
           createBlockWithTime(endedAt2.plus({ seconds: 61 })),
           AggregateTradingRewardsProcessedCache.setProcessedTime(
             TradingRewardAggregationPeriod.MONTHLY,
-            endedAt2.toISO(),
+            endedAt2.toISO()!,
             redisClient,
           ),
         ]);
@@ -266,13 +266,13 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationTable.create(defaultMonthlyTradingRewardAggregation),
           TradingRewardAggregationTable.create({
             ...defaultMonthlyTradingRewardAggregation2,
-            endedAt: endedAt2.toISO(),
+            endedAt: endedAt2.toISO()!,
             endedAtHeight: '10000', // ignored field for the purposes of this test
           }),
           createBlockWithTime(endedAt2.plus({ minutes: 61 })),
           AggregateTradingRewardsProcessedCache.setProcessedTime(
             TradingRewardAggregationPeriod.MONTHLY,
-            endedAt2.toISO(),
+            endedAt2.toISO()!,
             redisClient,
           ),
         ]);
@@ -297,13 +297,13 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationTable.create(defaultMonthlyTradingRewardAggregation),
           TradingRewardAggregationTable.create({
             ...defaultMonthlyTradingRewardAggregation2,
-            endedAt: endedAt2.toISO(),
+            endedAt: endedAt2.toISO()!,
             endedAtHeight: '10000', // ignored field for the purposes of this test
           }),
           createBlockWithTime(endedAt2.plus({ hours: 25 })),
           AggregateTradingRewardsProcessedCache.setProcessedTime(
             TradingRewardAggregationPeriod.MONTHLY,
-            endedAt2.plus({ hours: 23, minutes: 55 }).toISO(),
+            endedAt2.plus({ hours: 23, minutes: 55 }).toISO()!,
             redisClient,
           ),
         ]);
@@ -344,9 +344,9 @@ describe('aggregate-trading-rewards', () => {
       ]);
     });
 
-    const thirdBlockTime: IsoString = startedAt.plus({ seconds: 30 }).toISO();
-    const fourthBlockTime: IsoString = startedAt.plus({ hours: 23, seconds: 30 }).toISO();
-    const fifthBlockTime: IsoString = startedAt.plus({ day: 1, seconds: 30 }).toISO();
+    const thirdBlockTime: IsoString = startedAt.plus({ seconds: 30 }).toISO()!;
+    const fourthBlockTime: IsoString = startedAt.plus({ hours: 23, seconds: 30 }).toISO()!;
+    const fifthBlockTime: IsoString = startedAt.plus({ day: 1, seconds: 30 }).toISO()!;
     const defaultTradingReward: TradingRewardCreateObject = {
       address: testConstants.defaultAddress,
       blockTime: thirdBlockTime,
@@ -365,7 +365,7 @@ describe('aggregate-trading-rewards', () => {
         '3',
       ),
       address: testConstants.defaultAddress,
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO()!,
       startedAtHeight: '3',
       period: TradingRewardAggregationPeriod.DAILY,
       amount: testConversionHelpers.convertToDenomScale('10'),
@@ -382,12 +382,12 @@ describe('aggregate-trading-rewards', () => {
         TradingRewardTable.create(defaultTradingReward),
         AggregateTradingRewardsProcessedCache.setProcessedTime(
           TradingRewardAggregationPeriod.DAILY,
-          intervalToBeProcessed.start.toISO(),
+          intervalToBeProcessed.start!.toISO()!,
           redisClient,
         ),
         TradingRewardAggregationTable.create({
           ...defaultCreatedTradingRewardAggregation,
-          startedAt: intervalToBeProcessed.start.minus({ days: 1 }).toISO(),
+          startedAt: intervalToBeProcessed.start!.minus({ days: 1 }).toISO()!,
           startedAtHeight: '1',
         }),
       ]);
@@ -399,7 +399,7 @@ describe('aggregate-trading-rewards', () => {
 
       await expectAggregateTradingRewardsProcessedCache(
         TradingRewardAggregationPeriod.DAILY,
-        intervalToBeProcessed.end.toISO(),
+        intervalToBeProcessed.end!.toISO()!,
       );
       await validateNumberOfAggregations(2);
       await validateAggregationWithExpectedValue(defaultCreatedTradingRewardAggregation);
@@ -411,7 +411,7 @@ describe('aggregate-trading-rewards', () => {
         TradingRewardAggregationTable.create(defaultCreatedTradingRewardAggregation),
         AggregateTradingRewardsProcessedCache.setProcessedTime(
           TradingRewardAggregationPeriod.DAILY,
-          intervalToBeProcessed.start.toISO(),
+          intervalToBeProcessed.start!.toISO()!,
           redisClient,
         ),
       ]);
@@ -423,7 +423,7 @@ describe('aggregate-trading-rewards', () => {
 
       await expectAggregateTradingRewardsProcessedCache(
         TradingRewardAggregationPeriod.DAILY,
-        intervalToBeProcessed.end.toISO(),
+        intervalToBeProcessed.end!.toISO()!,
       );
       await validateNumberOfAggregations(1);
       await validateAggregationWithExpectedValue({
@@ -441,7 +441,7 @@ describe('aggregate-trading-rewards', () => {
         }),
         AggregateTradingRewardsProcessedCache.setProcessedTime(
           TradingRewardAggregationPeriod.DAILY,
-          startedAt.plus({ hours: 23 }).toISO(),
+          startedAt.plus({ hours: 23 }).toISO()!,
           redisClient,
         ),
       ]);
@@ -453,12 +453,12 @@ describe('aggregate-trading-rewards', () => {
 
       await expectAggregateTradingRewardsProcessedCache(
         TradingRewardAggregationPeriod.DAILY,
-        startedAt.plus({ days: 1 }).toISO(),
+        startedAt.plus({ days: 1 }).toISO()!,
       );
       await validateNumberOfAggregations(1);
       await validateAggregationWithExpectedValue({
         ...defaultCreatedTradingRewardAggregation,
-        endedAt: startedAt.plus({ days: 1 }).toISO(),
+        endedAt: startedAt.plus({ days: 1 }).toISO()!,
         endedAtHeight: '4',
       });
     });
@@ -473,7 +473,7 @@ describe('aggregate-trading-rewards', () => {
         TradingRewardAggregationTable.create(defaultCreatedTradingRewardAggregation),
         AggregateTradingRewardsProcessedCache.setProcessedTime(
           TradingRewardAggregationPeriod.DAILY,
-          startedAt.plus({ hours: 23 }).toISO(),
+          startedAt.plus({ hours: 23 }).toISO()!,
           redisClient,
         ),
       ]);
@@ -485,12 +485,12 @@ describe('aggregate-trading-rewards', () => {
 
       await expectAggregateTradingRewardsProcessedCache(
         TradingRewardAggregationPeriod.DAILY,
-        startedAt.plus({ days: 1 }).toISO(),
+        startedAt.plus({ days: 1 }).toISO()!,
       );
       await validateNumberOfAggregations(1);
       await validateAggregationWithExpectedValue({
         ...defaultCreatedTradingRewardAggregation,
-        endedAt: startedAt.plus({ days: 1 }).toISO(),
+        endedAt: startedAt.plus({ days: 1 }).toISO()!,
         endedAtHeight: '4',
         amount: testConversionHelpers.convertToDenomScale('20'),
       });
@@ -501,7 +501,7 @@ describe('aggregate-trading-rewards', () => {
         TradingRewardAggregationTable.create(defaultCreatedTradingRewardAggregation),
         AggregateTradingRewardsProcessedCache.setProcessedTime(
           TradingRewardAggregationPeriod.DAILY,
-          startedAt.plus({ hours: 23 }).toISO(),
+          startedAt.plus({ hours: 23 }).toISO()!,
           redisClient,
         ),
       ]);
@@ -513,12 +513,12 @@ describe('aggregate-trading-rewards', () => {
 
       await expectAggregateTradingRewardsProcessedCache(
         TradingRewardAggregationPeriod.DAILY,
-        startedAt.plus({ days: 1 }).toISO(),
+        startedAt.plus({ days: 1 }).toISO()!,
       );
       await validateNumberOfAggregations(1);
       await validateAggregationWithExpectedValue({
         ...defaultCreatedTradingRewardAggregation,
-        endedAt: startedAt.plus({ days: 1 }).toISO(),
+        endedAt: startedAt.plus({ days: 1 }).toISO()!,
         endedAtHeight: '4',
         amount: testConversionHelpers.convertToDenomScale('10'),
       });
@@ -529,7 +529,7 @@ describe('aggregate-trading-rewards', () => {
 async function createBlockWithTime(time: DateTime): Promise<void> {
   await BlockTable.create({
     blockHeight: '3',
-    time: time.toISO(),
+    time: time.toISO()!,
   });
 }
 

@@ -2,9 +2,9 @@ import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
 import { IndexerTendermintEvent, TradingRewardsEventV1, AddressTradingReward } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { TradingRewardsHandler } from '../handlers/trading-rewards-handler';
-import { Validator } from './validator';
 
 export class TradingRewardsValidator extends Validator<TradingRewardsEventV1> {
   public validate(): void {

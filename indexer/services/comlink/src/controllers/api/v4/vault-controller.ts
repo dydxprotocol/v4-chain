@@ -732,7 +732,7 @@ function filterOutIntervalTicks(
     const blockTime: DateTime = DateTime.fromISO(pnlTick.blockTime).toUTC();
 
     const startOfInterval: DateTime = blockTime.toUTC().startOf(resolution);
-    const startOfIntervalStr: string = startOfInterval.toISO();
+    const startOfIntervalStr: string = startOfInterval.toISO()!;
     const tickForInterval: PnlTicksFromDatabase | undefined = ticksPerInterval.get(
       startOfIntervalStr,
     );

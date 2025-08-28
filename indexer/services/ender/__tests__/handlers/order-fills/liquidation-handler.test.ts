@@ -146,7 +146,7 @@ describe('LiquidationHandler', () => {
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
-    createdAt: DateTime.utc().toISO(),
+    createdAt: DateTime.utc().toISO()!,
     createdAtHeight: '1',
     openEventId: testConstants.defaultTendermintEventId4,
     lastEventId: testConstants.defaultTendermintEventId4,
@@ -312,7 +312,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -338,7 +338,7 @@ describe('LiquidationHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIQUIDATION,
         clobPairId: makerOrderProto.orderId!.clobPairId.toString(),
@@ -357,7 +357,7 @@ describe('LiquidationHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIQUIDATED,
         clobPairId: liquidationOrder.clobPairId.toString(),
@@ -468,7 +468,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
-        updatedAt: DateTime.fromMillis(0).toISO(),
+        updatedAt: DateTime.fromMillis(0).toISO()!,
         updatedAtHeight: '0',
       };
 
@@ -551,7 +551,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -571,7 +571,7 @@ describe('LiquidationHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIQUIDATION,
         clobPairId: defaultClobPairId,
@@ -590,7 +590,7 @@ describe('LiquidationHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIQUIDATED,
         clobPairId: liquidationOrder.clobPairId.toString(),
@@ -688,7 +688,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
-        updatedAt: DateTime.fromMillis(0).toISO(),
+        updatedAt: DateTime.fromMillis(0).toISO()!,
         updatedAtHeight: '0',
       };
 
@@ -771,7 +771,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO()!,
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -791,7 +791,7 @@ describe('LiquidationHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIQUIDATION,
         clobPairId: defaultClobPairId,
@@ -810,7 +810,7 @@ describe('LiquidationHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO()!,
         createdAtHeight: defaultHeight,
         type: FillType.LIQUIDATED,
         clobPairId: liquidationOrder.clobPairId.toString(),
@@ -930,7 +930,7 @@ describe('LiquidationHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO()!,
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -951,7 +951,7 @@ describe('LiquidationHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIQUIDATION,
       clobPairId: defaultClobPairId,
@@ -970,7 +970,7 @@ describe('LiquidationHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO()!,
       createdAtHeight: defaultHeight,
       type: FillType.LIQUIDATED,
       clobPairId: defaultClobPairId,

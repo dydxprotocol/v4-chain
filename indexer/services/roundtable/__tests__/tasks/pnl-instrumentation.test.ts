@@ -51,11 +51,11 @@ describe('pnl-instrumentation', () => {
       async () => Promise.resolve({
         subaccount1: {
           ...testConstants.defaultPnlTick,
-          blockTime: DateTime.utc().minus({ hours: 1 }).toISO(),
+          blockTime: DateTime.utc().minus({ hours: 1 }).toISO()!,
         },
         subaccount2: {
           ...testConstants.defaultPnlTick,
-          blockTime: DateTime.utc().minus({ hours: 1 }).toISO(),
+          blockTime: DateTime.utc().minus({ hours: 1 }).toISO()!,
         },
       }),
     );
@@ -82,11 +82,11 @@ describe('pnl-instrumentation', () => {
       async () => Promise.resolve({
         subaccount1: {
           ...testConstants.defaultPnlTick,
-          blockTime: DateTime.utc().minus({ hours: 3 }).toISO(),
+          blockTime: DateTime.utc().minus({ hours: 3 }).toISO()!,
         },
         subaccount2: {
           ...testConstants.defaultPnlTick,
-          blockTime: DateTime.utc().minus({ hours: 3 }).toISO(),
+          blockTime: DateTime.utc().minus({ hours: 3 }).toISO()!,
         },
       }),
     );
@@ -118,13 +118,13 @@ describe('pnl-instrumentation', () => {
       async () => Promise.resolve({
         subaccount1: {
           ...testConstants.defaultPnlTick,
-          blockTime: DateTime.utc().minus({ hours: 1 }).toISO(),
+          blockTime: DateTime.utc().minus({ hours: 1 }).toISO()!,
         },
       }),
     );
 
     jest.spyOn(TransferTable, 'getLastTransferTimeForSubaccounts').mockResolvedValue({
-      subaccount2: DateTime.utc().minus({ hours: 3 }).toISO(),
+      subaccount2: DateTime.utc().minus({ hours: 3 }).toISO()!,
     });
 
     await runTask();

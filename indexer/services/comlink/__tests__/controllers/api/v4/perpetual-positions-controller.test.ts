@@ -86,7 +86,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = 10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('-50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
@@ -138,7 +138,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = -10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
@@ -188,7 +188,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = 10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('-50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
@@ -299,7 +299,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = 10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('-50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
@@ -330,7 +330,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = -10 * (1-1.5)
         unrealizedPnl: getFixedRepresentation('5'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.isolatedSubaccount.subaccountNumber,
@@ -390,7 +390,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = 10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('-50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
@@ -417,7 +417,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = -10 * (1-1.5)
         unrealizedPnl: getFixedRepresentation('5'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO()!,
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         subaccountNumber: testConstants.isolatedSubaccount.subaccountNumber,

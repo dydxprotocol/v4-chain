@@ -45,6 +45,7 @@ import {
 import Long from 'long';
 import { DateTime } from 'luxon';
 
+import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
 import { SubaccountUpdate } from '../../src/lib/translated-types';
 import {
@@ -54,7 +55,6 @@ import {
   OrderFillEventWithOrder,
   SingleTradeMessage,
 } from '../../src/lib/types';
-import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,

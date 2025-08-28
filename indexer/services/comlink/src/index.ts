@@ -1,9 +1,9 @@
 import {
   logger,
-  wrapBackgroundTask,
   startBugsnag,
+  wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
-import { perpetualMarketRefresher, liquidityTierRefresher } from '@dydxprotocol-indexer/postgres';
+import { liquidityTierRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import { startVaultStartPnlCache } from './caches/vault-start-pnl';
 import config from './config';

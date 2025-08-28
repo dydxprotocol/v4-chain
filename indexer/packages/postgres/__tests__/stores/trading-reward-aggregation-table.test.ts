@@ -62,7 +62,7 @@ describe('TradingRewardAggregation store', () => {
     await Promise.all([
       BlockTable.create({
         blockHeight: '100',
-        time: createdDateTime.toISO(),
+        time: createdDateTime.toISO()!,
       }),
     ]);
 
@@ -138,11 +138,11 @@ describe('TradingRewardAggregation store', () => {
     await Promise.all([
       BlockTable.create({
         blockHeight: '100',
-        time: createdDateTime.toISO(),
+        time: createdDateTime.toISO()!,
       }),
       BlockTable.create({
         blockHeight: '101',
-        time: createdDateTime.toISO(),
+        time: createdDateTime.toISO()!,
       }),
     ]);
 
