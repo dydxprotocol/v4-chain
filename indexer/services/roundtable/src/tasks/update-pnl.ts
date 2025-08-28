@@ -38,8 +38,6 @@ async function processPnlUpdate(
     return;
   }
 
-  console.log(`Processing PNL update from ${start} to ${end}`);
-
   // bind the start height and end height to the sql content
   await Transaction.get(txId)?.raw(sqlContent, {
     start,
@@ -55,7 +53,6 @@ async function processPnlUpdate(
     { txId },
   );
 
-  console.log(`Cache updated, new last processed height: ${end}`);
   stats.gauge(`${config.SERVICE_NAME}.update_pnl.last_processed_height`, parseInt(end, 10));
 }
 
@@ -80,31 +77,31 @@ async function getLastProcessedHeight(): Promise<string> {
 }
 
 /**
- * Updates the PNL (Profit and Loss) table with comprehensive financial metrics for all relevant subaccounts.
- * 
+ * Updates the PNL (Profit and Loss) table with comprehensive metrics for all relevant subaccounts.
+ *
  * The SQL script calculates:
- * 
+ *
  * 1. Net Transfers: Tracks the cumulative balance of all incoming and outgoing transfers
  *    - Outgoing transfers reduce the balance
  *    - Incoming transfers increase the balance
  *    - Preserves previous net transfer balance from last calculation
- * 
+ *
  * 2. Total PNL: Tracks the profit and loss from all trading activities
  *    - Includes funding payments received in the period
  *    - Captures changes in position value (mark-to-market)
  *    - Includes cash flows from trading activities (buy/sell)
  *    - Preserves previous PNL from last calculation
- * 
+ *
  * 3. Equity: Represents the total account value
  *    - Sum of total PNL and net transfers
- * 
+ *
  * The process:
  * 1. Identifies all subaccounts with either previous PNL records or transfer activity
  * 2. Aggregates transfers (incoming and outgoing) for each subaccount
  * 3. Collects funding data and calculates position values at start and end points
  * 4. Calculates net cash flows from trades (buys and sells)
  * 5. Combines all financial data to produce comprehensive PNL metrics
- * 
+ *
  * This function determines the heights to process based on funding payment events,
  * ensuring PNL is calculated at each height where funding payments occurred,
  * and maintains continuity with previous calculations.
@@ -121,7 +118,6 @@ export default async function runTask(): Promise<void> {
   const searchUnprocessedFundingPaymentsHeightStart: string = (
     parseInt(await getLastProcessedHeight(), 10) + 1
   ).toString();
-  console.log('Searching for funding from height:', searchUnprocessedFundingPaymentsHeightStart);
 
   const fundingUpdates = await FundingPaymentsTable.findAll(
     {
@@ -146,14 +142,11 @@ export default async function runTask(): Promise<void> {
 
   // Get unique heights from funding payments updates.
   const fundingHeights = [...fundingUpdates.results.map((update) => update.createdAtHeight)];
-  console.log('fundingHeights that would be processed:', fundingHeights);
-
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
     try {
       const lastHeight: string = await getLastProcessedHeight();
-      console.log('Last processed height from cache:', lastHeight);
       const currentHeight: string = fundingHeights[i];
 
       logger.info({
