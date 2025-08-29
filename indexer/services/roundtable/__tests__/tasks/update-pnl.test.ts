@@ -140,7 +140,6 @@ describe('update-pnl', () => {
   }
 
   it('calculates initial PNL state with transfers and checks multiple heights', async () => {
-    // Create funding payments for both subaccounts at both heights
     await FundingPaymentsTable.create({
       ...defaultFundingPayment,
       createdAtHeight: '1',
@@ -845,5 +844,44 @@ describe('update-pnl', () => {
 
     // Verify cache was updated to the latest height
     await verifyCache('15');
+  });
+
+  it('is idempotent and only processes new heights', async () => {
+    // Seed a minimal funding payment at height 1
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      createdAtHeight: '1',
+      createdAt: JUNE_1,
+      payment: '10',
+      size: '1',
+      oraclePrice: '10000',
+    });
+
+    await updatePnlTask();
+    const first = await PnlTable.findAll({}, []);
+    const initialCount = first.results.length;
+    await verifyCache('1');
+
+    // Re-run with no new data: expect no changes
+    await updatePnlTask();
+    const second = await PnlTable.findAll({}, []);
+    expect(second.results.length).toBe(initialCount);
+    await verifyCache('1');
+
+    // Add a new payment at a later height (3) and re-run
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      createdAtHeight: '3',
+      createdAt: DateTime.utc(2022, 6, 3).toISO(),
+      payment: '20',
+      size: '1',
+      oraclePrice: '10100',
+    });
+    await updatePnlTask();
+    const third = await PnlTable.findAll({}, []);
+    expect(third.results.length).toBeGreaterThan(initialCount);
+    const { subaccount1Pnl: h3 } = findPnlRecords(third.results, '3');
+    expect(h3).toBeDefined();
+    await verifyCache('3');
   });
 });
