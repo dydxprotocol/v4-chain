@@ -15,7 +15,6 @@ import {
   defaultAsset3,
   defaultBlock,
   defaultBlock2,
-  defaultBlock3,
   defaultLiquidityTier,
   defaultLiquidityTier2,
   defaultMarket,
@@ -30,8 +29,6 @@ import {
   defaultTendermintEvent2,
   defaultTendermintEvent3,
   defaultTendermintEvent4,
-  defaultTendermintEvent5,
-  defaultTendermintEvent6,
   defaultFirebaseNotificationToken,
   defaultWallet,
   isolatedMarket,
@@ -86,15 +83,12 @@ export async function seedData() {
   await Promise.all([
     BlockTable.create(defaultBlock),
     BlockTable.create(defaultBlock2),
-    BlockTable.create(defaultBlock3),
   ]);
   await Promise.all([
     TendermintEventTable.create(defaultTendermintEvent),
     TendermintEventTable.create(defaultTendermintEvent2),
     TendermintEventTable.create(defaultTendermintEvent3),
     TendermintEventTable.create(defaultTendermintEvent4),
-    TendermintEventTable.create(defaultTendermintEvent5),
-    TendermintEventTable.create(defaultTendermintEvent6),
   ]);
   await Promise.all([
     AssetTable.create(defaultAsset),

@@ -10,6 +10,8 @@ import {
   FillTable,
   OrderSide,
   OrderTable,
+  TendermintEventTable,
+  TendermintEventCreateObject,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 import updatePnlTask from '../../src/tasks/update-pnl';
@@ -24,8 +26,6 @@ import {
   defaultTendermintEventId2,
   defaultTendermintEventId3,
   defaultTendermintEventId4,
-  defaultTendermintEventId5,
-  defaultTendermintEventId6,
   defaultFill,
   defaultOrder,
   defaultPerpetualMarket2,
@@ -36,6 +36,9 @@ describe('update-pnl', () => {
   const JUNE_1 = DateTime.utc(2022, 6, 1).toISO();
   const JUNE_2 = DateTime.utc(2022, 6, 2).toISO();
 
+  let defaultTendermintEventId5: Buffer;
+  let defaultTendermintEventId6: Buffer;
+
   beforeAll(async () => {
     await dbHelpers.migrate();
   });
@@ -45,59 +48,32 @@ describe('update-pnl', () => {
     await testMocks.seedData();
 
     // Create common blocks used by all tests
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '0',
-      time: DateTime.utc(2022, 5, 31).toISO(),
-    });
+    const blockHeights: string[] = ['0', '3', '4', '5', '6', '7', '8', '9', '10', '12', '15'];
 
-    await BlockTable.create({
+    await Promise.all(blockHeights.map((height) => BlockTable.create({
       ...defaultBlock,
-      blockHeight: '4',
-      time: DateTime.utc(2022, 6, 4).toISO(),
-    });
+      blockHeight: height,
+    }),
+    ));
 
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '5',
-      time: DateTime.utc(2022, 6, 5).toISO(),
-    });
+    // Create events to be used for fills
+    const defaultTendermintEvent5: TendermintEventCreateObject = {
+      blockHeight: '3',
+      transactionIndex: 0,
+      eventIndex: 0,
+    };
+    const defaultTendermintEvent6: TendermintEventCreateObject = {
+      blockHeight: '3',
+      transactionIndex: 1,
+      eventIndex: 1,
+    };
 
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '7',
-      time: DateTime.utc(2022, 6, 7).toISO(),
-    });
-
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '8',
-      time: DateTime.utc(2022, 6, 8).toISO(),
-    });
-
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '9',
-      time: DateTime.utc(2022, 6, 9).toISO(),
-    });
-
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '10',
-      time: DateTime.utc(2022, 6, 10).toISO(),
-    });
-
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '12',
-      time: DateTime.utc(2022, 6, 12).toISO(),
-    });
-
-    await BlockTable.create({
-      ...defaultBlock,
-      blockHeight: '15',
-      time: DateTime.utc(2022, 6, 15).toISO(),
-    });
+    defaultTendermintEventId5 = await TendermintEventTable.createEventId('3', 0, 0);
+    defaultTendermintEventId6 = await TendermintEventTable.createEventId('3', 1, 1);
+    await Promise.all([
+      TendermintEventTable.create(defaultTendermintEvent5),
+      TendermintEventTable.create(defaultTendermintEvent6),
+    ]);
 
     // Create order for the fills
     await OrderTable.create(defaultOrder);
@@ -831,7 +807,7 @@ describe('update-pnl', () => {
       quoteAmount: '2750', // Total $2,750
       createdAtHeight: '12',
       createdAt: DateTime.utc(2022, 6, 12).toISO(),
-      eventId: defaultTendermintEventId4, // Using a different event ID
+      eventId: defaultTendermintEventId4,
     });
 
     // Run the PNL update task
