@@ -38,11 +38,12 @@ async function processPnlUpdate(
     return;
   }
 
-  // bind the start height and end height to the sql content
-  await Transaction.get(txId)?.raw(sqlContent, {
-    start,
-    end,
-  });
+  // Bind the start and end heights to the SQL content and execute within the tx.
+  const tx = Transaction.get(txId);
+  if (!tx) {
+    throw new Error(`Transaction ${txId} not found`);
+  }
+  await tx.raw(sqlContent, { start, end });
 
   // Update the persistent cache with the current height
   await PersistentCacheTable.upsert(

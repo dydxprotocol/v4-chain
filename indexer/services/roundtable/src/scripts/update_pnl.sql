@@ -35,10 +35,9 @@ all_relevant_subaccounts AS (
     SELECT "subaccountId" as "id" FROM transfer_aggregated
 ),
 end_time AS (
-    SELECT "createdAt" as timestamp_at_end
-    FROM funding_payments
-    WHERE "createdAtHeight" = :end
-    LIMIT 1
+   SELECT MAX("createdAt") AS timestamp_at_end
+   FROM funding_payments
+   WHERE "createdAtHeight" = :end
 ),
 funding_data AS (
     SELECT 
