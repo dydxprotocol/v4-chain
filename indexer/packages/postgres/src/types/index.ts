@@ -36,4 +36,5 @@ export * from './firebase-notification-token-types';
 export * from './vault-types';
 export * from './funding-payments-types';
 export * from './turnkey-user-types';
+export * from './permission-approval-types';
 export { PositionSide } from './position-types';

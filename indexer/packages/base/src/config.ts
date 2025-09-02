@@ -48,8 +48,11 @@ export const baseConfigSchema = {
   ZERODEV_API_KEY: parseString({ default: '' }),
   ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
   SOLANA_SPONSOR_PRIVATE_KEY: parseString({ default: '' }),
+  SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
 
   BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
+  MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
+  MASTER_SIGNER_PRIVATE: parseString({ default: '' }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

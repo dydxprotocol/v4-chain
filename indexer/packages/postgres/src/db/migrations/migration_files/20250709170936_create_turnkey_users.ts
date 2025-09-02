@@ -11,6 +11,7 @@ export async function up(knex: Knex): Promise<void> {
       table.text('salt').notNullable(); // used to generate dydx keypair when combining the onboarding signature
       table.text('dydx_address').nullable().unique();
       table.timestamp('created_at').notNullable();
+      table.text('smart_account_address').nullable().unique();
 
       // Indexes
       table.index(['svm_address'], 'idx_turnkey_users_svm_address');

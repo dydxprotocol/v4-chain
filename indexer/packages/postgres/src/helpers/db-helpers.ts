@@ -12,6 +12,7 @@ const layer2Tables = [
   'funding_payments',
   'subaccounts',
   'turnkey_users',
+  'permission_approval',
 ];
 
 const layer1Tables = [
