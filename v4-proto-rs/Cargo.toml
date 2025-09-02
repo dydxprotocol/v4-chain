@@ -21,6 +21,6 @@ tonic = { version = "0.12", default-features = false, features = ["codegen", "pr
 
 [build-dependencies]
 regex = "1.11.1"
-tonic-buf-build = "0.3.0"
+tonic-buf-build = "0.3.1"
 prost-build = "0.13" # keep the version the same as in tonic-buf-build
 tonic-build = "0.13" # keep the version the same as in tonic-buf-build
