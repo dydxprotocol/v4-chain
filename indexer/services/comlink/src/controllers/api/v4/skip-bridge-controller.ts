@@ -49,14 +49,12 @@ import {
 } from '../../../helpers/alchemy-helpers';
 import {
   getSvmSigner, getSkipCallData, suborgToApproval,
-  nobleToSolana,
 } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
 import { entryPoint, usdcAddressByChainId } from '../../../lib/smart-contract-constants';
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { PolicyEngine } from './policy-controller';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';

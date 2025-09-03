@@ -342,7 +342,7 @@ const signInSchema: Record<string, ParamSchema> = {
     isString: true,
     errorMessage: 'Target public key must be a string',
     custom: {
-      options: (value: string, { req }:) => {
+      options: (value: string, { req }) => {
         // Require targetPublicKey for EMAIL and SOCIAL signin methods
         const signinMethod = req.body.signinMethod;
         if ((signinMethod === SigninMethod.EMAIL || signinMethod === SigninMethod.SOCIAL) &&

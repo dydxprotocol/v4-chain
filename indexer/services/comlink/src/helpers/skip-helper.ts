@@ -175,7 +175,6 @@ export function getSvmSigner(suborgId: string, signWith: string) {
     organizationId: suborgId,
     client: serverClient.apiClient(),
   });
-  console.log('sign with is ', signWith);
 
   // eslint-disable-next-line @typescript-eslint/require-await
   return async () => ({
@@ -185,16 +184,14 @@ export function getSvmSigner(suborgId: string, signWith: string) {
     },
     signTransaction: async (tx: Transaction) => {
       try {
-        // @ts-ignore
-        return await turnkeySigner.signTransaction(tx, signWith);
+        return turnkeySigner.signTransaction(tx, signWith);
       } catch (error) {
         throw new Error(`Failed to sign transaction with TurnkeySigner: ${error.message}`);
       }
     },
     signAllTransactions: async (txs: (Transaction | VersionedTransaction)[]) => {
       try {
-        // @ts-ignore
-        return await turnkeySigner.signAllTransactions(txs, signWith);
+        return turnkeySigner.signAllTransactions(txs, signWith);
       } catch (error) {
         throw new Error(`Failed to sign transactions with TurnkeySigner: ${error.message}`);
       }

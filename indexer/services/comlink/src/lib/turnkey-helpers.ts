@@ -7,7 +7,7 @@ import { arbitrum } from 'viem/chains';
 
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
-import { PolicyController } from '../controllers/api/v4/policy-controller';
+import { PolicyEngine } from '../controllers/api/v4/policy-engine';
 import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../helpers/alchemy-helpers';
 import {
   CreateSuborgParams,
@@ -176,7 +176,7 @@ export class TurnkeyHelpers {
     }
 
     // configure the call policy for the suborg smart account.
-    const policyController = new PolicyController();
+    const policyController = new PolicyEngine();
     await policyController.configurePolicy(
       subOrg.subOrganizationId,
       arbitrum.id.toString(),
