@@ -22,6 +22,7 @@ import {
   SigninMethod,
   TurnkeyAuthResponse,
 } from '../../../types';
+import { PolicyEngine } from './policy-engine';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -60,6 +61,8 @@ export class TurnkeyController extends Controller {
   private bridgeSenderApiClient: TurnkeyApiClient;
   /** Helper class for Turnkey-specific operations */
   private turnkeyHelpers: TurnkeyHelpers;
+  /** Policy engine for configuring strict policies */
+  private policyEngine: PolicyEngine;
 
   constructor(turnkeyClient?: TurnkeyApiClient, bridgeSenderTurnkeyClient?: TurnkeyApiClient) {
     super();
@@ -88,6 +91,7 @@ export class TurnkeyController extends Controller {
 
     // Initialize the Turnkey helpers with the main API client
     this.turnkeyHelpers = new TurnkeyHelpers(this.turnkeyApiClient, this.bridgeSenderApiClient);
+    this.policyEngine = new PolicyEngine(this.bridgeSenderApiClient);
   }
 
   @Post('/uploadAddress')
@@ -115,6 +119,15 @@ export class TurnkeyController extends Controller {
     }
 
     await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
+
+    // configure the policies now
+    await this.policyEngine.configureSolanaPolicy(dydxAddress, user.suborg_id);
+    // TODO: Add the evm policy configuration here too.
+    //
+    // -------------------------------------------------------------
+
+    // this removes self from root quorum.
+    await this.policyEngine.removeSelfFromRootQuorum(user.suborg_id);
 
     return { success: true };
   }
