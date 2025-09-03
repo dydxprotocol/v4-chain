@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
+// import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -170,9 +170,19 @@ class BridgeController extends Controller {
 
     try {
       if (chainId === 'solana') {
-      // no sweeping if amount is less than 20, so far we only support usdc on svm.
-      // so no need to check for the dollar value here.
-        if (amount && parseInt(amount, 10) >= config.BRIDGE_THRESHOLD_USDC) {
+        // no sweeping if amount is less than threshold, so far we only support usdc on svm.
+        const assets = await balances({
+          chains: {
+            [chainId]: {
+              address: fromAddress,
+              denoms: [usdcAddressByChainId.solana],
+            },
+          },
+        });
+        // get usdc amount and check that the usd amount is greater than the threshold.
+        const usdAmt = assets?.chains?.[chainId]?.denoms?.[usdcAddressByChainId.solana]?.valueUsd;
+        if (amount && parseInt(amount, 10) >= 0 &&
+          usdAmt && parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC) {
           try {
             await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
           } catch (error) {
@@ -188,7 +198,7 @@ class BridgeController extends Controller {
           throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
         }
       } else if (isSupportedEVMChainId(chainId)) {
-      // search for assets that exist on this account on this chain.
+        // search for assets that exist on this account on this chain.
         const usdcToSearch = usdcAddressByChainId[chainId];
         const ethToSearch = ethDenomByChainId[chainId];
 
@@ -209,7 +219,10 @@ class BridgeController extends Controller {
         for (let asset of assetsToSearch) {
           asset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
           const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
-          if (balance && parseInt(balance, 10) > 0) {
+          const usdAmount = assets?.chains?.[chainId]?.denoms?.[asset]?.valueUsd;
+          // To sweep and asset, user needs to have at least BRIDGE_THRESHOLD_USDC in it.
+          if (balance && parseInt(balance, 10) > 0 &&
+            usdAmount && parseFloat(usdAmount) > config.BRIDGE_THRESHOLD_USDC) {
             logger.info({
               at: `${controllerName}#sweep->startEvmBridge`,
               message: 'Bridge token',
