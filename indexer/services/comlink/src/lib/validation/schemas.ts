@@ -307,18 +307,51 @@ const signInSchema: Record<string, ParamSchema> = {
     optional: true,
     isEmail: true,
     errorMessage: 'Must be a valid email address',
+    custom: {
+      options: (value: string, { req }) => {
+        // Require email for EMAIL signin method
+        if (req.body.signinMethod === SigninMethod.EMAIL && !value) {
+          throw new Error('userEmail is required for email signin');
+        }
+        return true;
+      },
+    },
   },
   magicLink: {
     in: ['body'],
     optional: true,
     isString: true,
     errorMessage: 'Magic link must be a string',
+    custom: {
+      options: (value: string) => {
+        // Validate magic link URL format if provided
+        if (value) {
+          try {
+            URL.parse(value.replace('%s', 'test'));
+          } catch {
+            throw new Error('Invalid magic link template URL');
+          }
+        }
+        return true;
+      },
+    },
   },
   targetPublicKey: {
     in: ['body'],
     optional: true,
     isString: true,
     errorMessage: 'Target public key must be a string',
+    custom: {
+      options: (value: string, { req }:) => {
+        // Require targetPublicKey for EMAIL and SOCIAL signin methods
+        const signinMethod = req.body.signinMethod;
+        if ((signinMethod === SigninMethod.EMAIL || signinMethod === SigninMethod.SOCIAL) &&
+          !value) {
+          throw new Error('targetPublicKey is required for email and social signin');
+        }
+        return true;
+      },
+    },
   },
   // Passkey params
   challenge: {

@@ -1,4 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
+import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -8,20 +9,22 @@ import {
 } from '@skip-go/client/cjs';
 import { Keypair } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
+import { TurnkeySigner } from '@turnkey/solana';
 import { createAccount } from '@turnkey/viem';
 import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
+import { deserializePermissionAccount } from '@zerodev/permissions';
+import { toECDSASigner } from '@zerodev/permissions/signers';
 import {
   createKernelAccount, createKernelAccountClient,
   CreateKernelAccountReturnType,
   createZeroDevPaymasterClient, getUserOperationGasPrice,
 } from '@zerodev/sdk';
-import { getEntryPoint, KERNEL_V3_3, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { KERNEL_V3_3, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import bs58 from 'bs58';
 import express from 'express';
 import {
   Controller, Post, Query, Route,
 } from 'tsoa';
-import nacl from 'tweetnacl';
 import {
   Address,
   checksumAddress, http,
@@ -30,8 +33,9 @@ import {
   type EntryPointVersion,
   type SmartAccountImplementation,
 } from 'viem/account-abstraction';
+import { privateKeyToAccount } from 'viem/accounts';
 import {
-  avalanche,
+  arbitrum, avalanche,
 } from 'viem/chains';
 
 import config from '../../../config';
@@ -45,16 +49,18 @@ import {
   alchemyNetworkToChainIdMap,
   ethDenomByChainId,
 } from '../../../helpers/alchemy-helpers';
-import { getSvmSigner, getSkipCallData, usdcAddressByChainId } from '../../../helpers/skip-helper';
+import {
+  getSvmSigner, getSkipCallData, suborgToApproval,
+  nobleToSolana,
+} from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
+import { entryPoint, usdcAddressByChainId } from '../../../lib/smart-contract-constants';
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
-
-const entryPoint = getEntryPoint('0.7');
 
 // set the skip client options to use the skip rpc.
 // for some reason, skip requires you to call this function
@@ -78,6 +84,18 @@ const turnkeySenderClient = new Turnkey({
   apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
   apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
   defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
+});
+
+const turnkeyGasClient = new Turnkey({
+  apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
+  apiPublicKey: config.TURNKEY_API_PUBLIC_KEY as string,
+  apiPrivateKey: config.TURNKEY_API_PRIVATE_KEY as string,
+  defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
+});
+
+const turnkeyGasFeePayer = new TurnkeySigner({
+  organizationId: config.TURNKEY_ORGANIZATION_ID,
+  client: turnkeyGasClient.apiClient(),
 });
 
 interface BridgeResponse {
@@ -116,9 +134,9 @@ class BridgeController extends Controller {
   @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
-      @Query() chainId: string,
-      // optionally provide the contract and amount, primarily used for solana.
-      @Query() amount?: string,
+    @Query() chainId: string,
+    // optionally provide the contract and amount, primarily used for solana.
+    @Query() amount?: string,
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
       // no sweeping if amount is less than 20, so far we only support usdc on svm.
@@ -235,25 +253,22 @@ class BridgeController extends Controller {
       throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
     }
     // Replace with your own private key
-    const solanaSponsorPrivateKey = config.SOLANA_SPONSOR_PRIVATE_KEY;
-    if (!solanaSponsorPrivateKey) {
+    const solanaSponsorPublicKey = config.SOLANA_SPONSOR_PUBLIC_KEY;
+    if (!solanaSponsorPublicKey) {
       throw new Error(
         'Missing required environment variable: SOLANA_SPONSOR_PRIVATE_KEY',
       );
     }
-    const sponsorKeypair = Keypair.fromSecretKey(
-      bs58.decode(solanaSponsorPrivateKey),
-    );
     await executeRoute({
       route: path,
       simulate: false, // turned off for now, otherwise simulation will fail due to race.
       userAddresses,
       getSvmSigner: getSvmSigner(record?.suborg_id || '', fromAddress),
       svmFeePayer: {
-        address: sponsorKeypair.publicKey.toString(), // Replace with the fee payer's Solana address
+        address: solanaSponsorPublicKey, // Replace with the fee payer's Solana address
         signTransaction: (dataToSign: Buffer) => {
           const data = new Uint8Array(dataToSign);
-          return Promise.resolve(nacl.sign.detached(data, sponsorKeypair.secretKey));
+          return turnkeyGasFeePayer.signMessage(data, solanaSponsorPublicKey);
         },
       },
       onTransactionBroadcast: async (
@@ -341,6 +356,21 @@ class BridgeController extends Controller {
       organizationId: suborgId,
       signWith: fromAddress,
     });
+    // use the permissioned master key as a signer.
+    const privateKeyAccount = privateKeyToAccount(config.MASTER_SIGNER_PRIVATE as `0x${string}`);
+    const sessionKeySigner = await toECDSASigner({
+      signer: privateKeyAccount,
+    });
+    if (chainId === arbitrum.id.toString()) {
+      const sessionKeyAccount = await deserializePermissionAccount(
+        publicClients[chainId],
+        entryPoint,
+        KERNEL_V3_3,
+        suborgToApproval.get(suborgId) || '',
+        sessionKeySigner,
+      );
+      return sessionKeyAccount;
+    }
     if (chainId === avalanche.id.toString()) {
       // Construct a validator
       const ecdsaValidator = await signerToEcdsaValidator(publicClients[chainId], {
@@ -418,7 +448,17 @@ class BridgeController extends Controller {
       });
       throw error;
     }
-    const account = await this.getKernelAccount(chainId, srcAddress, record.suborg_id);
+    let account: CreateKernelAccountReturnType<EntryPointVersion>;
+    try {
+      account = await this.getKernelAccount(chainId, srcAddress, record.suborg_id);
+    } catch (error) {
+      logger.error({
+        at: `${controllerName}#startEvmBridge`,
+        message: 'Failed to get kernel account',
+        error,
+      });
+      throw error;
+    }
 
     const zerodevPaymaster = createZeroDevPaymasterClient({
       chain: chains[chainId],
@@ -430,11 +470,7 @@ class BridgeController extends Controller {
       chain: chains[chainId],
       client: publicClients[chainId],
       bundlerTransport: http(getRPCEndpoint(chainId)),
-      paymaster: {
-        getPaymasterData: async (userOperation) => {
-          return zerodevPaymaster.sponsorUserOperation({ userOperation });
-        },
-      },
+      paymaster: zerodevPaymaster,
       userOperation: {
         estimateFeesPerGas: async ({ bundlerClient }) => {
           return getUserOperationGasPrice(bundlerClient);
@@ -473,6 +509,7 @@ class BridgeController extends Controller {
       success: true,
     };
   }
+
 }
 
 /* returns the addresses to sweep and the chainId.
@@ -615,7 +652,6 @@ router.get(
 router.post(
   '/startBridge',
   ...CheckBridgeSchema,
-  // verifyAlchemyWebhook,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
