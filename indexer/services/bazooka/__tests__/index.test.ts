@@ -80,6 +80,7 @@ describe('index', () => {
     it('smoke test', async () => {
       await handler({
         migrate: false,
+        rollback: false,
         clear_db: false,
         reset_db: false,
         create_kafka_topics: false,
@@ -92,6 +93,17 @@ describe('index', () => {
     it.each([
       [{
         migrate: false,
+        rollback: true,
+        clear_db: false,
+        reset_db: false,
+        create_kafka_topics: false,
+        clear_kafka_topics: false,
+        clear_redis: false,
+        force: false,
+      } as APIGatewayEvent & BazookaEventJson],
+      [{
+        migrate: false,
+        rollback: false,
         clear_db: true,
         reset_db: false,
         create_kafka_topics: false,
@@ -101,6 +113,7 @@ describe('index', () => {
       } as APIGatewayEvent & BazookaEventJson],
       [{
         migrate: false,
+        rollback: false,
         clear_db: false,
         reset_db: true,
         create_kafka_topics: false,
@@ -110,6 +123,7 @@ describe('index', () => {
       } as APIGatewayEvent & BazookaEventJson],
       [{
         migrate: false,
+        rollback: false,
         clear_db: false,
         reset_db: false,
         create_kafka_topics: false,
@@ -119,6 +133,7 @@ describe('index', () => {
       } as APIGatewayEvent & BazookaEventJson],
       [{
         migrate: false,
+        rollback: false,
         clear_db: false,
         reset_db: false,
         create_kafka_topics: false,

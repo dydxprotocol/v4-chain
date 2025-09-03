@@ -168,7 +168,7 @@ export async function reset() {
   await rollback();
 }
 
-async function rollback() {
+export async function rollback() {
   await knexPrimary.migrate.rollback({ loadExtensions: ['.js'] });
 }
 
