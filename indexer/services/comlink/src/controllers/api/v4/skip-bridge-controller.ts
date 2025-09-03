@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-// import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
+import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -47,6 +47,7 @@ import {
   alchemyNetworkToChainIdMap,
   ethDenomByChainId,
 } from '../../../helpers/alchemy-helpers';
+import { ProcessingQueue } from '../../../helpers/processing-helper';
 import {
   getSvmSigner, getSkipCallData, suborgToApproval,
 } from '../../../helpers/skip-helper';
@@ -97,6 +98,7 @@ const turnkeyGasFeePayer = new TurnkeySigner({
 
 interface BridgeResponse {
   success: boolean,
+  message?: string,
 }
 
 // Finds the dydx address for a given evm or svm address.
@@ -135,73 +137,109 @@ class BridgeController extends Controller {
       // optionally provide the contract and amount, primarily used for solana.
       @Query() amount?: string,
   ): Promise<BridgeResponse> {
-    if (chainId === 'solana') {
+    const processingQueue = ProcessingQueue.getInstance();
+    const addressKey = `${fromAddress}-${chainId}`;
+
+    // Check if this address is already being processed
+    if (processingQueue.isProcessing(addressKey)) {
+      logger.info({
+        at: `${controllerName}#sweep`,
+        message: 'Address is already being processed, skipping duplicate request',
+        fromAddress,
+        chainId,
+      });
+      return {
+        success: true,
+        message: 'Address is already being processed',
+      };
+    }
+
+    // Add to processing queue
+    if (!processingQueue.addToQueue(addressKey)) {
+      logger.warning({
+        at: `${controllerName}#sweep`,
+        message: 'Failed to add address to processing queue',
+        fromAddress,
+        chainId,
+      });
+      return {
+        success: false,
+        message: 'Address is already being processed',
+      };
+    }
+
+    try {
+      if (chainId === 'solana') {
       // no sweeping if amount is less than 20, so far we only support usdc on svm.
       // so no need to check for the dollar value here.
-      if (amount && parseInt(amount, 10) >= config.BRIDGE_THRESHOLD_USDC) {
-        try {
-          await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
-        } catch (error) {
-          logger.error({
-            at: `${controllerName}#sweep->startSolanaBridge`,
-            message: `Failed to bridge token ${usdcAddressByChainId.solana}`,
-            error,
-          });
-        }
-      } else if (!amount) {
-        throw new Error('Amount is required for solana');
-      } else {
-        throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
-      }
-    } else if (isSupportedEVMChainId(chainId)) {
-      // search for assets that exist on this account on this chain.
-      const usdcToSearch = usdcAddressByChainId[chainId];
-      const ethToSearch = ethDenomByChainId[chainId];
-
-      const assetsToSearch = [usdcToSearch, ethToSearch];
-      const assets = await balances({
-        chains: {
-          [chainId]: {
-            address: fromAddress,
-          },
-        },
-      });
-      logger.info({
-        at: `${controllerName}#sweep->startEvmBridge`,
-        message: 'Assets found',
-        assets,
-      });
-
-      for (let asset of assetsToSearch) {
-        asset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
-        const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
-        if (balance && parseInt(balance, 10) > 0) {
-          logger.info({
-            at: `${controllerName}#sweep->startEvmBridge`,
-            message: 'Bridge token',
-            fromAddress,
-            chainId,
-            asset,
-            balance,
-          });
+        if (amount && parseInt(amount, 10) >= config.BRIDGE_THRESHOLD_USDC) {
           try {
-            await this.startEvmBridge(fromAddress, balance, asset, chainId);
+            await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
           } catch (error) {
             logger.error({
-              at: `${controllerName}#sweep->startEvmBridge`,
-              message: `Failed to bridge token ${asset}`,
+              at: `${controllerName}#sweep->startSolanaBridge`,
+              message: `Failed to bridge token ${usdcAddressByChainId.solana}`,
               error,
             });
           }
+        } else if (!amount) {
+          throw new Error('Amount is required for solana');
+        } else {
+          throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
         }
-      }
-    } else {
-      throw new Error(`Unsupported chainId: ${chainId}`);
-    }
+      } else if (isSupportedEVMChainId(chainId)) {
+      // search for assets that exist on this account on this chain.
+        const usdcToSearch = usdcAddressByChainId[chainId];
+        const ethToSearch = ethDenomByChainId[chainId];
 
-    return {
-      success: true,
-    };
+        const assetsToSearch = [usdcToSearch, ethToSearch];
+        const assets = await balances({
+          chains: {
+            [chainId]: {
+              address: fromAddress,
+            },
+          },
+        });
+        logger.info({
+          at: `${controllerName}#sweep->startEvmBridge`,
+          message: 'Assets found',
+          assets,
+        });
+
+        for (let asset of assetsToSearch) {
+          asset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
+          const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
+          if (balance && parseInt(balance, 10) > 0) {
+            logger.info({
+              at: `${controllerName}#sweep->startEvmBridge`,
+              message: 'Bridge token',
+              fromAddress,
+              chainId,
+              asset,
+              balance,
+            });
+            try {
+              await this.startEvmBridge(fromAddress, balance, asset, chainId);
+            } catch (error) {
+              logger.error({
+                at: `${controllerName}#sweep->startEvmBridge`,
+                message: `Failed to bridge token ${asset}`,
+                error,
+              });
+            }
+          }
+        }
+      } else {
+        throw new Error(`Unsupported chainId: ${chainId}`);
+      }
+
+      return {
+        success: true,
+      };
+    } finally {
+      // Always remove from processing queue when done
+      processingQueue.removeFromQueue(addressKey);
+    }
   }
 
   async startSolanaBridge(
@@ -666,14 +704,32 @@ router.post(
     try {
       const bridgeController = new BridgeController();
       const { addressesToSweep, chainId } = await parseEvent(req);
+      let processedCount = 0;
+      let skippedCount = 0;
+
       // Iterate over the set 'toProcess' and process each item
       for (const fromAddress of addressesToSweep.keys()) {
-        await bridgeController.sweep(
+        const result = await bridgeController.sweep(
           fromAddress,
           chainId,
           addressesToSweep.get(fromAddress) === '' ? undefined : addressesToSweep.get(fromAddress), // amount
         );
+
+        if (result.success && !result.message) {
+          processedCount += 1;
+        } else if (result.message && result.message.includes('already being processed')) {
+          skippedCount += 1;
+        }
       }
+
+      logger.info({
+        at: `${controllerName}#startBridge`,
+        message: 'Bridge processing completed',
+        totalAddresses: addressesToSweep.size,
+        processedCount,
+        skippedCount,
+        chainId,
+      });
 
       // sending a 200 tells webhook to not retry.
       return res.status(200).send();
