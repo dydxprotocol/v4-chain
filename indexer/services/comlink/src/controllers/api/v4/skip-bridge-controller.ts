@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
+// import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -131,9 +131,9 @@ class BridgeController extends Controller {
   @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
-    @Query() chainId: string,
-    // optionally provide the contract and amount, primarily used for solana.
-    @Query() amount?: string,
+      @Query() chainId: string,
+      // optionally provide the contract and amount, primarily used for solana.
+      @Query() amount?: string,
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
       // no sweeping if amount is less than 20, so far we only support usdc on svm.
