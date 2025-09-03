@@ -7,20 +7,19 @@ import { toCallPolicy, CallPolicyVersion } from '@zerodev/permissions/policies';
 import { toECDSASigner } from '@zerodev/permissions/signers';
 import { addressToEmptyAccount, createKernelAccount } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
-import { Controller } from 'tsoa';
+import bs58 from 'bs58';
 import { avalanche } from 'viem/chains';
 
 import config from '../../../config';
 import { abi } from '../../../helpers/abi';
 import { publicClients } from '../../../helpers/alchemy-helpers';
-import { suborgToApproval } from '../../../helpers/skip-helper';
+import { nobleToSolana, suborgToApproval } from '../../../helpers/skip-helper';
 import { entryPoint } from '../../../lib/smart-contract-constants';
 
-export class PolicyController extends Controller {
+export class PolicyEngine {
   private turnkeySenderClient: TurnkeyApiClient;
 
   constructor(turnkeySenderClient?: TurnkeyApiClient) {
-    super();
     if (!turnkeySenderClient) {
       this.turnkeySenderClient = new TurnkeyServerSDK({
         apiBaseUrl: config.TURNKEY_API_BASE_URL,
@@ -115,4 +114,89 @@ export class PolicyController extends Controller {
       throw error;
     }
   }
+
+  async getAPIUserId(suborgId: string): Promise<string> {
+    // query users from turnkey for   the suborg id and find out what the api user's
+    // userId is to configure a policy on it.
+    const users = await this.turnkeySenderClient.getUsers({ organizationId: suborgId });
+    const apiUser = users.users.filter((user) => user.userName === 'API User');
+    if (apiUser.length !== 1) {
+      throw new Error(`Expected 1 API user, got ${apiUser.length}`);
+    }
+    const userId = apiUser[0].userId;
+
+    return userId;
+  }
+
+  async configureSolanaPolicy(dydxAddress: string, suborgId: string) {
+    const userId = await this.getAPIUserId(suborgId);
+    // get noble forwarding address for the dydx user.
+    const nobleForwardingAddress = await getNobleForwardingAddress(dydxAddress);
+    const solanaAddress = nobleToSolana(nobleForwardingAddress);
+
+    const depositForBurnWithCallerHex = 'a7de137255150e76';
+    // left pads it the hex version of the solana address so that total is 32 bytes.
+    const hexData = solanaAddressToPaddedHex(solanaAddress);
+    await this.turnkeySenderClient.createPolicy({
+      organizationId: suborgId,
+      policyName: 'Solana Bridging Policy',
+      condition: `solana.tx.instructions[0].instruction_data_hex[0..16] == '${depositForBurnWithCallerHex}' && solana.tx.instructions[0].instruction_data_hex[40..104] == '${hexData}'`,
+      consensus: `approvers.any(user, user.id == '${userId}')`,
+      effect: 'EFFECT_ALLOW',
+      notes: 'Solana bridge policy',
+    });
+
+    // TODO remove self from root quorum.
+  }
+
+  async removeSelfFromRootQuorum(suborgId: string) {
+    const users = await this.turnkeySenderClient.getUsers({ organizationId: suborgId });
+    const userIds = users.users.filter((user) => user.userName !== 'API User').map((x) => x.userId);
+
+    await this.turnkeySenderClient.updateRootQuorum({
+      organizationId: suborgId,
+      threshold: 1,
+      userIds,
+    });
+  }
+}
+
+async function getNobleForwardingAddress(nobleAddress: string): Promise<string> {
+  const dydxNobleChannel = 33;
+  const endpoint = `https://api.noble.xyz/noble/forwarding/v1/address/channel-${dydxNobleChannel}/${nobleAddress}/`;
+  const response = await fetch(endpoint);
+  const data = await response.json();
+  if (data && !data.address) {
+    throw Error('failed to get a forwarding address');
+  }
+  return data.address;
+}
+
+function solanaAddressToPaddedHex(solanaAddress: string): string {
+  // Remove '0x' if present and ensure lowercase
+  let hex = solanaAddress.startsWith('0x')
+    ? solanaAddress.slice(2)
+    : solanaAddress;
+
+  // If it's a base58 Solana address, decode to bytes and then to hex
+  // Solana addresses are usually base58, not hex
+  // We'll use bs58 to decode
+  // If bs58 is not available, throw an error
+  let bytes: Uint8Array;
+  try {
+    // @ts-ignore
+    bytes = bs58.decode(solanaAddress);
+    hex = Buffer.from(bytes).toString('hex');
+  } catch (e) {
+    // If bs58 is not available or decoding fails, assume it's already hex
+    if (!/^[0-9a-fA-F]+$/.test(hex)) {
+      throw new Error('Invalid Solana address: not base58 or hex');
+    }
+  }
+
+  // Pad to 32 bytes (64 hex chars)
+  if (hex.length > 64) {
+    throw new Error('Hex Solana address is longer than 32 bytes');
+  }
+  return hex.padStart(64, '0');
 }

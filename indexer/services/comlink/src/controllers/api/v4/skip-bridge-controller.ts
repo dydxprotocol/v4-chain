@@ -7,7 +7,6 @@ import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/sr
 import {
   route, executeRoute, setClientOptions, balances, TransferStatus,
 } from '@skip-go/client/cjs';
-import { Keypair } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
 import { TurnkeySigner } from '@turnkey/solana';
 import { createAccount } from '@turnkey/viem';
@@ -20,7 +19,6 @@ import {
   createZeroDevPaymasterClient, getUserOperationGasPrice,
 } from '@zerodev/sdk';
 import { KERNEL_V3_3, KERNEL_V3_1 } from '@zerodev/sdk/constants';
-import bs58 from 'bs58';
 import express from 'express';
 import {
   Controller, Post, Query, Route,
@@ -58,6 +56,7 @@ import { entryPoint, usdcAddressByChainId } from '../../../lib/smart-contract-co
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
+import { PolicyEngine } from './policy-controller';
 
 const router = express.Router();
 const controllerName: string = 'bridging-controller';
@@ -655,15 +654,16 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    // // await TurnkeyUsersTable.create({
-    // //   suborg_id: 'af36ed4b-3001-4cce-8ad1-f5b2fe5d128c',
-    // //   svm_address: '4565H9rhrLXh9wBPaNGKyj8ANtRajYEvcXZMBdaychLc',
-    // //   evm_address: '0x4D1569E34594083cB700336D2FFC1b1191F8Ec7f',
-    // //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
-    // //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
-    // //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-    // //   created_at: new Date().toISOString(),
-    // // })
+    // await dbHelpers.clearData();
+    // await TurnkeyUsersTable.create({
+    //   suborg_id: 'b717b91e-61a4-4707-ba16-a6635ee14143',
+    //   svm_address: 'EWHuLzjV2PMR2w64RLMyEW7tPA7sWHPXRSWbnf2pEscE',
+    //   evm_address: '0x74e7A23338D294b14Fc819Be0a179ed9E2a26ca1',
+    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
+    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
+    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+    //   created_at: new Date().toISOString(),
+    // })
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();
