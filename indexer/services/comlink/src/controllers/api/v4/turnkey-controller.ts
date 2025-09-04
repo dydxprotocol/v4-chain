@@ -94,6 +94,12 @@ export class TurnkeyController extends Controller {
     this.policyEngine = new PolicyEngine(this.bridgeSenderApiClient);
   }
 
+  /**
+   * Uploads the dydx address to the turnkey table.
+   *
+   * Backend won't have this information when we create account for user since you need signature
+   * to derive dydx address. Just wait for fe to uplaod to kick off the policy setup.
+   */
   @Post('/uploadAddress')
   async uploadAddress(
     @Body() body: { dydxAddress: string, signature: string },
