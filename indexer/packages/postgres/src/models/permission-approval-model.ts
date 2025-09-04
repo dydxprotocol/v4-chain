@@ -1,5 +1,5 @@
-import BaseModel from './base-model';
 import { ChainId } from '../types/permission-approval-types';
+import BaseModel from './base-model';
 
 export default class PermissionApprovalModel extends BaseModel {
   static get tableName() {

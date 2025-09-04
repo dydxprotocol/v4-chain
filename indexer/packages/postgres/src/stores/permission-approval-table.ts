@@ -48,7 +48,6 @@ export async function getApprovalForSuborgAndChain(
   return approval?.approval;
 }
 
-
 export async function create(
   permissionApprovalToCreate: PermissionApprovalCreateObject,
   options: Options = { txId: undefined },
@@ -70,7 +69,7 @@ export async function update(
 ): Promise<PermissionApprovalFromDatabase | undefined> {
   const permissionApproval = await PermissionApprovalModel.query(
     Transaction.get(options.txId),
-  ).findById([suborg_id, chain_id])
+  ).findById([suborg_id, chain_id]);
   if (!permissionApproval) {
     return undefined;
   }
