@@ -125,6 +125,7 @@ export async function getSkipCallData(
     value = BigInt(amount);
   }
 
+  // this is the actual call data that is responsible for the bridge.
   const callData = [
     {
       to: (toAddress.startsWith('0x') ? toAddress : (`0x${toAddress}`)) as Hex,
@@ -132,6 +133,7 @@ export async function getSkipCallData(
       data: data.startsWith('0x') ? data as Hex : (`0x${data}`) as Hex, // "0x",
     },
   ];
+  // if it's usdc, we need a swap to eth first, this approves a swap.
   if (Object.values(usdcAddressByChainId).map(
     (x) => x.toLowerCase(),
   ).includes(sourceAssetDenom.toLowerCase())) {
