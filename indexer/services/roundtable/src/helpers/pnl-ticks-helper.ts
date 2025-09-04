@@ -344,7 +344,7 @@ export function getNewPnlTick(
 
   const mostRecentPnlTick: PnlTicksCreateObject | undefined = mostRecentPnlTicks[subaccountId];
 
-  // if there has been a significant chagne in equity or totalPnl, log it for debugging purposes.
+  // if there has been a significant change in equity or totalPnl, log it for debugging purposes.
   if (
     mostRecentPnlTick !== undefined &&
     Big(mostRecentPnlTick.equity).gt(0) &&
