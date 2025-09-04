@@ -3,12 +3,10 @@ import { randomBytes, randomUUID } from 'crypto';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes } from '@turnkey/sdk-server';
 import { Address, checksumAddress } from 'viem';
-import { arbitrum } from 'viem/chains';
 
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
 import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../helpers/alchemy-helpers';
-import { PolicyEngine } from '../helpers/policy-engine';
 import {
   CreateSuborgParams,
   GetSuborgParams,
@@ -178,21 +176,6 @@ export class TurnkeyHelpers {
     } catch (e) {
       throw new Error(`Failed to derive smart account address: ${e}`);
     }
-
-    // configure the call policy for the suborg smart account.
-    const policyController = new PolicyEngine();
-    await policyController.configurePolicy(
-      subOrg.subOrganizationId,
-      arbitrum.id.toString(),
-      evmAddress,
-    );
-
-    // remove sender api from root users.
-    // await this.turnkeySenderClient.updateRootQuorum({
-    //   organizationId: subOrg.subOrganizationId,
-    //   threshold: 1,
-    //   userIds: [subOrg.rootUserIds?.[0] || ''],
-    // });
 
     // generate salt. 256 bit random number
     const salt = TurnkeyHelpers.generateRandomString('hex', 32);

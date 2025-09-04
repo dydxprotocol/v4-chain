@@ -530,6 +530,7 @@ class BridgeController extends Controller {
       },
     });
 
+    // sending the userop to chain via zerodev kernel.
     try {
       const encoded = await kernelClient.account.encodeCalls(callData);
       const userOpHash = await kernelClient.sendUserOperation({

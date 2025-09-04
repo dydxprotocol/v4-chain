@@ -47,18 +47,7 @@ describe('TurnkeyController', () => {
       oauthLogin: jest.fn(),
       getSubOrgIds: jest.fn(),
       getUser: jest.fn(),
-      getUsers: jest.fn().mockResolvedValue({
-        users: [
-          {
-            userId: 'mock-api-user-id',
-            userName: 'API User',
-          },
-          {
-            userId: 'mock-other-user-id',
-            userName: 'Other User',
-          },
-        ],
-      }),
+      getUsers: jest.fn(),
       updateRootQuorum: jest.fn().mockResolvedValue({}),
       createPolicy: jest.fn().mockResolvedValue({}),
     } as unknown as TurnkeyApiClient;
@@ -311,6 +300,11 @@ describe('TurnkeyController', () => {
     it('should upload the dydx address', async () => {
       const newDydxAddress = 'dydx1234567890123456789012345678901234567891';
       const signature = await generatedEvmWallet.signMessage({ message: newDydxAddress });
+      jest.mocked(mockBridgeSenderApiClient.getUsers).mockResolvedValue({
+        users: [
+          { userId: 'user-id-2', userName: 'API User' },
+        ],
+      } as any);
       const response = await controller.uploadAddress({
         dydxAddress: newDydxAddress,
         signature,
