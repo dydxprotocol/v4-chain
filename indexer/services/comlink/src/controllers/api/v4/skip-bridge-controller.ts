@@ -47,7 +47,6 @@ import {
   alchemyNetworkToChainIdMap,
   ethDenomByChainId,
 } from '../../../helpers/alchemy-helpers';
-import { ProcessingQueue } from '../../../helpers/processing-helper';
 import {
   getSvmSigner, getSkipCallData, suborgToApproval,
 } from '../../../helpers/skip-helper';
@@ -148,129 +147,93 @@ class BridgeController extends Controller {
       // optionally provide the contract and amount, primarily used for solana.
       @Query() amount?: string,
   ): Promise<BridgeResponse> {
-    const processingQueue = ProcessingQueue.getInstance();
     const normalizedFromAddress = (isSupportedEVMChainId(chainId) && fromAddress?.startsWith('0x'))
       ? checksumAddress(fromAddress as Address)
       : fromAddress;
-    const addressKey = `${normalizedFromAddress}-${chainId}`;
-
-    // Check if this address is already being processed
-    if (processingQueue.isProcessing(addressKey)) {
-      logger.info({
-        at: `${controllerName}#sweep`,
-        message: 'Address is already being processed, skipping duplicate request',
-        fromAddress,
-        chainId,
-      });
-      return {
-        success: true,
-        message: 'Address is already being processed',
-      };
-    }
-
-    // Add to processing queue
-    if (!processingQueue.addToQueue(addressKey)) {
-      logger.warning({
-        at: `${controllerName}#sweep`,
-        message: 'Failed to add address to processing queue',
-        fromAddress,
-        chainId,
-      });
-      return {
-        success: false,
-        message: 'Address is already being processed',
-      };
-    }
-
-    try {
-      if (chainId === 'solana') {
-        // no sweeping if amount is less than threshold, so far we only support usdc on svm.
-        const assets = await balances({
-          chains: {
-            [chainId]: {
-              address: fromAddress,
-              denoms: [usdcAddressByChainId.solana],
-            },
+    if (chainId === 'solana') {
+      // no sweeping if amount is less than threshold, so far we only support usdc on svm.
+      const assets = await balances({
+        chains: {
+          [chainId]: {
+            address: fromAddress,
+            denoms: [usdcAddressByChainId.solana],
           },
-        });
-        // get usdc amount and check that the usd amount is greater than the threshold.
-        const usdAmt = assets?.chains?.[chainId]?.denoms?.[usdcAddressByChainId.solana]?.valueUsd;
-        if (!amount) {
-          throw new Error('Amount is required for solana');
+        },
+      });
+      // get usdc amount and check that the usd amount is greater than the threshold.
+      const usdAmt = assets?.chains?.[chainId]?.denoms?.[usdcAddressByChainId.solana]?.valueUsd;
+      if (!amount) {
+        throw new Error('Amount is required for solana');
+      }
+      const amountNum = parseInt(amount, 10);
+      if (!Number.isFinite(amountNum) || amountNum <= 0) {
+        throw new Error('Amount must be a positive integer for solana');
+      }
+      if (usdAmt && parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC) {
+        try {
+          await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
+        } catch (error) {
+          logger.error({
+            at: `${controllerName}#sweep->startSolanaBridge`,
+            message: `Failed to bridge token ${usdcAddressByChainId.solana}`,
+            error,
+          });
         }
-        const amountNum = parseInt(amount, 10);
-        if (!Number.isFinite(amountNum) || amountNum <= 0) {
-          throw new Error('Amount must be a positive integer for solana');
-        }
-        if (usdAmt && parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC) {
+      } else {
+        throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
+      }
+    } else if (isSupportedEVMChainId(chainId)) {
+      // search for assets that exist on this account on this chain.
+      const usdcToSearch = usdcAddressByChainId[chainId];
+      const ethToSearch = ethDenomByChainId[chainId];
+
+      const assetsToSearch = [usdcToSearch, ethToSearch];
+      const assets = await balances({
+        chains: {
+          [chainId]: {
+            address: normalizedFromAddress,
+          },
+        },
+      });
+      logger.info({
+        at: `${controllerName}#sweep->startEvmBridge`,
+        message: 'Assets found',
+        assets,
+      });
+
+      for (const asset of assetsToSearch) {
+        const normalizedAsset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
+        const balance = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.amount;
+        const usdAmount = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.valueUsd;
+        // To sweep and asset, user needs to have at least BRIDGE_THRESHOLD_USDC in it.
+        if (balance && parseInt(balance, 10) > 0 &&
+          usdAmount && parseFloat(usdAmount) > config.BRIDGE_THRESHOLD_USDC) {
+          logger.info({
+            at: `${controllerName}#sweep->startEvmBridge`,
+            message: 'Bridge token',
+            fromAddress: normalizedFromAddress,
+            chainId,
+            asset: normalizedAsset,
+            balance,
+          });
           try {
-            await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
+            await this.startEvmBridge(normalizedFromAddress, balance, normalizedAsset, chainId);
           } catch (error) {
             logger.error({
-              at: `${controllerName}#sweep->startSolanaBridge`,
-              message: `Failed to bridge token ${usdcAddressByChainId.solana}`,
+              at: `${controllerName}#sweep->startEvmBridge`,
+              message: `Failed to bridge token ${normalizedAsset}`,
               error,
             });
           }
-        } else {
-          throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
         }
-      } else if (isSupportedEVMChainId(chainId)) {
-        // search for assets that exist on this account on this chain.
-        const usdcToSearch = usdcAddressByChainId[chainId];
-        const ethToSearch = ethDenomByChainId[chainId];
-
-        const assetsToSearch = [usdcToSearch, ethToSearch];
-        const assets = await balances({
-          chains: {
-            [chainId]: {
-              address: normalizedFromAddress,
-            },
-          },
-        });
-        logger.info({
-          at: `${controllerName}#sweep->startEvmBridge`,
-          message: 'Assets found',
-          assets,
-        });
-
-        for (const asset of assetsToSearch) {
-          const normalizedAsset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
-          const balance = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.amount;
-          const usdAmount = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.valueUsd;
-          // To sweep and asset, user needs to have at least BRIDGE_THRESHOLD_USDC in it.
-          if (balance && parseInt(balance, 10) > 0 &&
-            usdAmount && parseFloat(usdAmount) > config.BRIDGE_THRESHOLD_USDC) {
-            logger.info({
-              at: `${controllerName}#sweep->startEvmBridge`,
-              message: 'Bridge token',
-              fromAddress: normalizedFromAddress,
-              chainId,
-              asset: normalizedAsset,
-              balance,
-            });
-            try {
-              await this.startEvmBridge(normalizedFromAddress, balance, normalizedAsset, chainId);
-            } catch (error) {
-              logger.error({
-                at: `${controllerName}#sweep->startEvmBridge`,
-                message: `Failed to bridge token ${normalizedAsset}`,
-                error,
-              });
-            }
-          }
-        }
-      } else {
-        throw new Error(`Unsupported chainId: ${chainId}`);
       }
-
-      return {
-        success: true,
-      };
-    } finally {
-      // Always remove from processing queue when done
-      processingQueue.removeFromQueue(addressKey);
+    } else {
+      throw new Error(`Unsupported chainId: ${chainId}`);
     }
+
+    return {
+      success: true,
+    };
   }
 
   async startSolanaBridge(

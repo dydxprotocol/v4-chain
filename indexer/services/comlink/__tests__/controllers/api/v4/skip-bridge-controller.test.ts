@@ -31,7 +31,6 @@ import * as skipClient from '@skip-go/client/cjs';
 import * as zeroDev from '@zerodev/sdk';
 import * as turnkeyViem from '@turnkey/viem';
 
-import { ProcessingQueue } from '../../../../src/helpers/processing-helper';
 import { alchemyNetworkToChainIdMap } from '../../../../src/helpers/alchemy-helpers';
 import * as skipHelpers from '../../../../src/helpers/skip-helper';
 import { RequestMethod } from '../../../../src/types';
@@ -51,8 +50,6 @@ describe('skip-bridge-controller#V4', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
-    // Ensure processing queue is cleared between tests
-    ProcessingQueue.getInstance().clearQueue();
   });
 
   describe('GET /getDepositAddress/:dydxAddress', () => {
@@ -263,46 +260,6 @@ describe('skip-bridge-controller#V4', () => {
         zeroDev.createKernelAccountClient as unknown as jest.Mock
       ).mock.results[0].value;
       expect(client.sendUserOperation).toHaveBeenCalledTimes(1);
-      // Ensure queue is cleared
-      expect(ProcessingQueue.getInstance().getQueueSize()).toBe(0);
-    });
-
-    it('should skip processing if address is already in the processing queue', async () => {
-      const addressKey = `${evmFromAddress}-${arbChainId}`;
-      // Pre-populate queue to simulate in-progress processing
-      ProcessingQueue.getInstance().addToQueue(addressKey);
-
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.POST,
-        path: '/v4/bridging/startBridge',
-        expectedStatus: 200,
-        body: {
-          id: 'id',
-          type: 'BLOCK_ACTIVITY',
-          webhookId: 'wh_xxx',
-          event: {
-            network: arbNetwork,
-            activity: [
-              {
-                fromAddress: '0x0000000000000000000000000000000000000000',
-                toAddress: evmFromAddress,
-                asset: 'USDC',
-                value: '100',
-              },
-            ],
-          },
-        },
-      });
-
-      expect(response.status).toBe(200);
-      // When skipped, no user operation should be sent
-      if ((zeroDev.createKernelAccountClient as unknown as jest.Mock).mock.results.length) {
-        const client = (zeroDev.createKernelAccountClient as unknown as jest.Mock).mock.results[0]
-          .value;
-        expect(client.sendUserOperation).not.toHaveBeenCalled();
-      }
-      // Clean up the pre-set queue key
-      ProcessingQueue.getInstance().removeFromQueue(addressKey);
     });
 
     it('should return 500 for unsupported network', async () => {
