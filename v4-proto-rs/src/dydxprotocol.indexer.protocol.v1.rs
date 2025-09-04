@@ -93,15 +93,14 @@ pub struct IndexerOrderId {
     #[prost(fixed32, tag = "2")]
     pub client_id: u32,
     /// order_flags represent order flags for the order. This field is invalid if
-    /// it's greater than 127 (larger than one byte). Each bit in the first byte
-    /// represents a different flag. Currently only two flags are supported.
+    /// it's greater than 257. Each bit represents a different flag.
     ///
-    /// Starting from the bit after the most MSB (note that the MSB is used in
-    /// proto varint encoding, and therefore cannot be used): Bit 1 is set if this
-    /// order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
-    /// order is a Conditional order (0x20, or 32 as a uint8).
-    ///
-    /// If neither bit is set, the order is assumed to be a Short-Term order.
+    /// The following are the valid orderId flags:
+    /// ShortTerm    = uint32(0)
+    /// Conditional  = uint32(32)
+    /// LongTerm     = uint32(64)
+    /// Twap         = uint32(128)
+    /// TwapSuborder = uint32(256) (for internal use only)
     ///
     /// If both bits are set or bits other than the 2nd and 3rd are set, the order
     /// ID is invalid.
@@ -164,6 +163,17 @@ pub struct IndexerOrder {
     /// orderId.ClobPairId`).
     #[prost(uint64, tag = "11")]
     pub conditional_order_trigger_subticks: u64,
+    /// builder_code_params is the metadata for the partner or builder of an order.
+    #[prost(message, optional, tag = "12")]
+    pub builder_code_params: ::core::option::Option<BuilderCodeParameters>,
+    /// order_router_address is the address of the order router that forwarded this
+    /// order.
+    #[prost(string, tag = "13")]
+    pub order_router_address: ::prost::alloc::string::String,
+    /// twap_parameters represent the configuration for a TWAP order. This must be
+    /// set for twap orders and will be ignored for all other order types.
+    #[prost(message, optional, tag = "14")]
+    pub twap_parameters: ::core::option::Option<TwapParameters>,
     /// Information about when the order expires.
     #[prost(oneof = "indexer_order::GoodTilOneof", tags = "5, 6")]
     pub good_til_oneof: ::core::option::Option<indexer_order::GoodTilOneof>,
@@ -346,6 +356,56 @@ impl ::prost::Name for IndexerOrder {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.indexer.protocol.v1.IndexerOrder".into()
+    }
+}
+/// TwapParameters represents the necessary configuration for a TWAP order.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct TwapParameters {
+    /// Duration of the TWAP order execution in seconds. Must be in the range
+    /// \[300 (5 minutes), 86400 (24 hours)\].
+    #[prost(uint32, tag = "1")]
+    pub duration: u32,
+    /// Interval in seconds for each suborder to execute. Must be a
+    /// whole number, a factor of the duration, and in the range
+    /// \[30 (30 seconds), 3600 (1 hour)\].
+    #[prost(uint32, tag = "2")]
+    pub interval: u32,
+    /// Price tolerance in ppm for each suborder. This will be applied to
+    /// the oracle price each time a suborder is triggered. Must be
+    /// be in the range [0, 1_000_000).
+    #[prost(uint32, tag = "3")]
+    pub price_tolerance: u32,
+}
+impl ::prost::Name for TwapParameters {
+    const NAME: &'static str = "TwapParameters";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.protocol.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.protocol.v1.TwapParameters".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.protocol.v1.TwapParameters".into()
+    }
+}
+/// BuilderCodeParameters represents the metadata for the partner or builder of
+/// an order. This allows them to specify a fee for providing there service which
+/// will be paid out in the event of an order fill.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BuilderCodeParameters {
+    /// The address of the builder to which the fee will be paid.
+    #[prost(string, tag = "1")]
+    pub builder_address: ::prost::alloc::string::String,
+    /// The fee enforced on the order in ppm.
+    #[prost(uint32, tag = "2")]
+    pub fee_ppm: u32,
+}
+impl ::prost::Name for BuilderCodeParameters {
+    const NAME: &'static str = "BuilderCodeParameters";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.protocol.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.protocol.v1.BuilderCodeParameters".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.protocol.v1.BuilderCodeParameters".into()
     }
 }
 /// Status of the CLOB.

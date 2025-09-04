@@ -1,9 +1,11 @@
+#![allow(clippy::doc_overindented_list_items)]
+#![allow(clippy::doc_lazy_continuation)]
 /// re-export of cosmos-sdk
 pub use cosmos_sdk_proto;
+use cosmos_sdk_proto::Any;
 
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/_includes.rs"));
 
-use cosmos_sdk_proto::Any;
 use prost::Name;
 
 pub trait ToAny: Name + Sized {

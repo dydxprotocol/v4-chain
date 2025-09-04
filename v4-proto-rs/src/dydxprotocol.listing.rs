@@ -132,7 +132,7 @@ pub mod query_client {
     }
     impl<T> QueryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -153,13 +153,13 @@ pub mod query_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
@@ -354,6 +354,40 @@ impl ::prost::Name for MsgSetListingVaultDepositParamsResponse {
         "/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse".into()
     }
 }
+/// MsgUpgradeIsolatedPerpetualToCross is used to upgrade a market from
+/// isolated margin to cross margin.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgUpgradeIsolatedPerpetualToCross {
+    #[prost(string, tag = "1")]
+    pub authority: ::prost::alloc::string::String,
+    /// ID of the perpetual to be upgraded to CROSS
+    #[prost(uint32, tag = "2")]
+    pub perpetual_id: u32,
+}
+impl ::prost::Name for MsgUpgradeIsolatedPerpetualToCross {
+    const NAME: &'static str = "MsgUpgradeIsolatedPerpetualToCross";
+    const PACKAGE: &'static str = "dydxprotocol.listing";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross".into()
+    }
+}
+/// MsgUpgradeIsolatedPerpetualToCrossResponse defines the
+/// UpgradeIsolatedPerpetualToCross response type.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct MsgUpgradeIsolatedPerpetualToCrossResponse {}
+impl ::prost::Name for MsgUpgradeIsolatedPerpetualToCrossResponse {
+    const NAME: &'static str = "MsgUpgradeIsolatedPerpetualToCrossResponse";
+    const PACKAGE: &'static str = "dydxprotocol.listing";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCrossResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCrossResponse".into()
+    }
+}
 /// Generated client implementations.
 pub mod msg_client {
     #![allow(
@@ -384,7 +418,7 @@ pub mod msg_client {
     }
     impl<T> MsgClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -405,13 +439,13 @@ pub mod msg_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
@@ -530,6 +564,37 @@ pub mod msg_client {
                     GrpcMethod::new(
                         "dydxprotocol.listing.Msg",
                         "SetListingVaultDepositParams",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// UpgradeIsolatedPerpetualToCross upgrades a perpetual from isolated to cross
+        /// margin
+        pub async fn upgrade_isolated_perpetual_to_cross(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgUpgradeIsolatedPerpetualToCross>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgUpgradeIsolatedPerpetualToCrossResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.listing.Msg/UpgradeIsolatedPerpetualToCross",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "dydxprotocol.listing.Msg",
+                        "UpgradeIsolatedPerpetualToCross",
                     ),
                 );
             self.inner.unary(req, path, codec).await

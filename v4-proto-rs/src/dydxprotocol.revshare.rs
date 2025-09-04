@@ -102,6 +102,26 @@ impl ::prost::Name for UnconditionalRevShareConfig {
         "/dydxprotocol.revshare.UnconditionalRevShareConfig".into()
     }
 }
+/// Message to set the order router revenue share
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct OrderRouterRevShare {
+    /// The address of the order router.
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+    /// The share of the revenue to be paid to the order router.
+    #[prost(uint32, tag = "2")]
+    pub share_ppm: u32,
+}
+impl ::prost::Name for OrderRouterRevShare {
+    const NAME: &'static str = "OrderRouterRevShare";
+    const PACKAGE: &'static str = "dydxprotocol.revshare";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.revshare.OrderRouterRevShare".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.revshare.OrderRouterRevShare".into()
+    }
+}
 /// Queries for the default market mapper revenue share params
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct QueryMarketMapperRevenueShareParams {}
@@ -192,6 +212,38 @@ impl ::prost::Name for QueryUnconditionalRevShareConfigResponse {
         "/dydxprotocol.revshare.QueryUnconditionalRevShareConfigResponse".into()
     }
 }
+/// Queries order router rev shares
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryOrderRouterRevShare {
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+}
+impl ::prost::Name for QueryOrderRouterRevShare {
+    const NAME: &'static str = "QueryOrderRouterRevShare";
+    const PACKAGE: &'static str = "dydxprotocol.revshare";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.revshare.QueryOrderRouterRevShare".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.revshare.QueryOrderRouterRevShare".into()
+    }
+}
+/// Response type for QueryOrderRouterRevShare
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryOrderRouterRevShareResponse {
+    #[prost(message, optional, tag = "1")]
+    pub order_router_rev_share: ::core::option::Option<OrderRouterRevShare>,
+}
+impl ::prost::Name for QueryOrderRouterRevShareResponse {
+    const NAME: &'static str = "QueryOrderRouterRevShareResponse";
+    const PACKAGE: &'static str = "dydxprotocol.revshare";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.revshare.QueryOrderRouterRevShareResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.revshare.QueryOrderRouterRevShareResponse".into()
+    }
+}
 /// Generated client implementations.
 pub mod query_client {
     #![allow(
@@ -222,7 +274,7 @@ pub mod query_client {
     }
     impl<T> QueryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -243,13 +295,13 @@ pub mod query_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
@@ -376,6 +428,33 @@ pub mod query_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        /// Queries order router rev share
+        pub async fn order_router_rev_share(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QueryOrderRouterRevShare>,
+        ) -> std::result::Result<
+            tonic::Response<super::QueryOrderRouterRevShareResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.revshare.Query/OrderRouterRevShare",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("dydxprotocol.revshare.Query", "OrderRouterRevShare"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Message to set the market mapper revenue share
@@ -480,6 +559,38 @@ impl ::prost::Name for MsgUpdateUnconditionalRevShareConfigResponse {
         "/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfigResponse".into()
     }
 }
+/// Governance message to create or update the order router revenue share
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgSetOrderRouterRevShare {
+    #[prost(string, tag = "1")]
+    pub authority: ::prost::alloc::string::String,
+    /// The order router rev share to create or update.
+    #[prost(message, optional, tag = "2")]
+    pub order_router_rev_share: ::core::option::Option<OrderRouterRevShare>,
+}
+impl ::prost::Name for MsgSetOrderRouterRevShare {
+    const NAME: &'static str = "MsgSetOrderRouterRevShare";
+    const PACKAGE: &'static str = "dydxprotocol.revshare";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.revshare.MsgSetOrderRouterRevShare".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.revshare.MsgSetOrderRouterRevShare".into()
+    }
+}
+/// Response to MsgSetOrderRouterRevShare
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct MsgSetOrderRouterRevShareResponse {}
+impl ::prost::Name for MsgSetOrderRouterRevShareResponse {
+    const NAME: &'static str = "MsgSetOrderRouterRevShareResponse";
+    const PACKAGE: &'static str = "dydxprotocol.revshare";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.revshare.MsgSetOrderRouterRevShareResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.revshare.MsgSetOrderRouterRevShareResponse".into()
+    }
+}
 /// Generated client implementations.
 pub mod msg_client {
     #![allow(
@@ -510,7 +621,7 @@ pub mod msg_client {
     }
     impl<T> MsgClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -531,13 +642,13 @@ pub mod msg_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
@@ -663,6 +774,36 @@ pub mod msg_client {
                     GrpcMethod::new(
                         "dydxprotocol.revshare.Msg",
                         "UpdateUnconditionalRevShareConfig",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// SetOrderRouterRevShare sets the revenue share for an order router.
+        pub async fn set_order_router_rev_share(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgSetOrderRouterRevShare>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgSetOrderRouterRevShareResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.revshare.Msg/SetOrderRouterRevShare",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "dydxprotocol.revshare.Msg",
+                        "SetOrderRouterRevShare",
                     ),
                 );
             self.inner.unary(req, path, codec).await

@@ -135,6 +135,39 @@ impl ::prost::Name for GenesisState {
         "/dydxprotocol.accountplus.GenesisState".into()
     }
 }
+/// AccountStateRequest is request type for the Query/AccountState RPC method.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AccountStateRequest {
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+}
+impl ::prost::Name for AccountStateRequest {
+    const NAME: &'static str = "AccountStateRequest";
+    const PACKAGE: &'static str = "dydxprotocol.accountplus";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.accountplus.AccountStateRequest".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.accountplus.AccountStateRequest".into()
+    }
+}
+/// AccountStateResponse is response type for the Query/GetAccountState RPC
+/// method.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AccountStateResponse {
+    #[prost(message, optional, tag = "1")]
+    pub account_state: ::core::option::Option<AccountState>,
+}
+impl ::prost::Name for AccountStateResponse {
+    const NAME: &'static str = "AccountStateResponse";
+    const PACKAGE: &'static str = "dydxprotocol.accountplus";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.accountplus.AccountStateResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.accountplus.AccountStateResponse".into()
+    }
+}
 /// QueryParamsRequest is request type for the Query/Params RPC method.
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct QueryParamsRequest {}
@@ -261,7 +294,7 @@ pub mod query_client {
     }
     impl<T> QueryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -282,13 +315,13 @@ pub mod query_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
@@ -403,6 +436,33 @@ pub mod query_client {
                         "dydxprotocol.accountplus.Query",
                         "GetAuthenticators",
                     ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Queries for an account state (timestamp nonce).
+        pub async fn account_state(
+            &mut self,
+            request: impl tonic::IntoRequest<super::AccountStateRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::AccountStateResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.accountplus.Query/AccountState",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("dydxprotocol.accountplus.Query", "AccountState"),
                 );
             self.inner.unary(req, path, codec).await
         }
@@ -561,7 +621,7 @@ pub mod msg_client {
     }
     impl<T> MsgClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -582,13 +642,13 @@ pub mod msg_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
