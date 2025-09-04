@@ -38,6 +38,7 @@ describe('TurnkeyController', () => {
       oauthLogin: jest.fn(),
       getSubOrgIds: jest.fn(),
       getUser: jest.fn(),
+      getUsers: jest.fn(),
       updateRootQuorum: jest.fn(),
     } as unknown as TurnkeyApiClient;
     mockBridgeSenderApiClient = {
@@ -46,7 +47,20 @@ describe('TurnkeyController', () => {
       oauthLogin: jest.fn(),
       getSubOrgIds: jest.fn(),
       getUser: jest.fn(),
-      updateRootQuorum: jest.fn(),
+      getUsers: jest.fn().mockResolvedValue({
+        users: [
+          {
+            userId: 'mock-api-user-id',
+            userName: 'API User',
+          },
+          {
+            userId: 'mock-other-user-id',
+            userName: 'Other User',
+          },
+        ],
+      }),
+      updateRootQuorum: jest.fn().mockResolvedValue({}),
+      createPolicy: jest.fn().mockResolvedValue({}),
     } as unknown as TurnkeyApiClient;
     controller = new TurnkeyController(mockParentApiClient, mockBridgeSenderApiClient);
     await TurnkeyUsersTable.create(mockUser);

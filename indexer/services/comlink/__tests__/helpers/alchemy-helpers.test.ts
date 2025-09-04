@@ -1,5 +1,6 @@
 import { addAddressesToAlchemyWebhook, registerAddressWithAlchemyWebhook } from '../../src/helpers/alchemy-helpers';
 import { dbHelpers, TurnkeyUserCreateObject, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
+import config from '../../src/config';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -25,6 +26,7 @@ jest.mock('viem', () => ({
 jest.mock('../../src/config', () => ({
   ALCHEMY_AUTH_TOKEN: 'test-auth-token',
   ALCHEMY_WEBHOOK_ID: 'test-webhook-id',
+  ALCHEMY_WEBHOOK_UPDATE_URL: 'https://dashboard.alchemy.com/api/update-webhook-addresses',
 }));
 
 describe('alchemy-helpers', () => {
@@ -69,7 +71,7 @@ describe('alchemy-helpers', () => {
       await registerAddressWithAlchemyWebhook(address, webhookId);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://dashboard.alchemy.com/api/update-webhook-addresses',
+        config.ALCHEMY_WEBHOOK_UPDATE_URL,
         {
           method: 'PATCH',
           headers: {
@@ -205,7 +207,7 @@ describe('alchemy-helpers', () => {
       // Should only be called once for Solana
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://dashboard.alchemy.com/api/update-webhook-addresses',
+        config.ALCHEMY_WEBHOOK_UPDATE_URL,
         expect.objectContaining({
           body: JSON.stringify({
             webhook_id: 'wh_vv1go1c7wy53q6zy',
