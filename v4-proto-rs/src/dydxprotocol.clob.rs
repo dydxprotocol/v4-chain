@@ -763,6 +763,10 @@ pub struct Order {
     /// partner or builder of an order specifying the fees charged.
     #[prost(message, optional, tag = "13")]
     pub builder_code_parameters: ::core::option::Option<BuilderCodeParameters>,
+    /// order_router_address is the address of the order router that placed the
+    /// order.
+    #[prost(string, tag = "14")]
+    pub order_router_address: ::prost::alloc::string::String,
     /// Information about when the order expires.
     #[prost(oneof = "order::GoodTilOneof", tags = "5, 6")]
     pub good_til_oneof: ::core::option::Option<order::GoodTilOneof>,
@@ -1889,7 +1893,7 @@ pub mod msg_client {
     }
     impl<T> MsgClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -1910,13 +1914,13 @@ pub mod msg_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
@@ -2857,7 +2861,7 @@ pub mod query_client {
     }
     impl<T> QueryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -2878,13 +2882,13 @@ pub mod query_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))

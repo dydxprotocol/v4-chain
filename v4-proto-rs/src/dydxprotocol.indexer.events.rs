@@ -333,6 +333,18 @@ pub struct OrderFillEventV1 {
     /// builder address for taker
     #[prost(string, tag = "13")]
     pub taker_builder_address: ::prost::alloc::string::String,
+    /// fee for maker order router in USDC quantums
+    #[prost(uint64, tag = "14")]
+    pub maker_order_router_fee: u64,
+    /// fee for taker order router in USDC quantums
+    #[prost(uint64, tag = "15")]
+    pub taker_order_router_fee: u64,
+    /// order router address for maker
+    #[prost(string, tag = "16")]
+    pub maker_order_router_address: ::prost::alloc::string::String,
+    /// order router address for taker
+    #[prost(string, tag = "17")]
+    pub taker_order_router_address: ::prost::alloc::string::String,
     /// The type of order fill this event represents.
     #[prost(oneof = "order_fill_event_v1::TakerOrder", tags = "2, 4")]
     pub taker_order: ::core::option::Option<order_fill_event_v1::TakerOrder>,
@@ -475,7 +487,7 @@ impl ::prost::Name for SubaccountUpdateEventV1 {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StatefulOrderEventV1 {
     /// The type of event that this StatefulOrderEvent contains.
-    #[prost(oneof = "stateful_order_event_v1::Event", tags = "1, 4, 5, 6, 7, 8")]
+    #[prost(oneof = "stateful_order_event_v1::Event", tags = "1, 4, 5, 6, 7, 8, 9")]
     pub event: ::core::option::Option<stateful_order_event_v1::Event>,
 }
 /// Nested message and enum types in `StatefulOrderEventV1`.
@@ -603,6 +615,24 @@ pub mod stateful_order_event_v1 {
                 .into()
         }
     }
+    /// A twap order placement contains an order.
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct TwapOrderPlacementV1 {
+        #[prost(message, optional, tag = "1")]
+        pub order: ::core::option::Option<super::super::protocol::v1::IndexerOrder>,
+    }
+    impl ::prost::Name for TwapOrderPlacementV1 {
+        const NAME: &'static str = "TwapOrderPlacementV1";
+        const PACKAGE: &'static str = "dydxprotocol.indexer.events";
+        fn full_name() -> ::prost::alloc::string::String {
+            "dydxprotocol.indexer.events.StatefulOrderEventV1.TwapOrderPlacementV1"
+                .into()
+        }
+        fn type_url() -> ::prost::alloc::string::String {
+            "/dydxprotocol.indexer.events.StatefulOrderEventV1.TwapOrderPlacementV1"
+                .into()
+        }
+    }
     /// The type of event that this StatefulOrderEvent contains.
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Event {
@@ -619,6 +649,8 @@ pub mod stateful_order_event_v1 {
         LongTermOrderPlacement(LongTermOrderPlacementV1),
         #[prost(message, tag = "8")]
         OrderReplacement(LongTermOrderReplacementV1),
+        #[prost(message, tag = "9")]
+        TwapOrderPlacement(TwapOrderPlacementV1),
     }
 }
 impl ::prost::Name for StatefulOrderEventV1 {
