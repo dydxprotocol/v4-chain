@@ -9,10 +9,24 @@ import {
   PermissionApprovalColumns,
   PermissionApprovalCreateObject,
   PermissionApprovalFromDatabase,
+  ChainId,
 } from '../types';
 
 export async function findBySuborgId(
   suborgId: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<PermissionApprovalFromDatabase[]> {
+  const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
+    PermissionApprovalModel,
+    options,
+  );
+  return baseQuery
+    .where(PermissionApprovalColumns.suborg_id, suborgId);
+}
+
+export async function findBySuborgIdAndChainId(
+  suborgId: string,
+  chainId: ChainId,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PermissionApprovalFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
@@ -21,88 +35,19 @@ export async function findBySuborgId(
   );
   return baseQuery
     .where(PermissionApprovalColumns.suborg_id, suborgId)
+    .where(PermissionApprovalColumns.chain_id, chainId)
     .first();
 }
 
-export async function getArbitrumApprovalForSuborg(
+export async function getApprovalForSuborgAndChain(
   suborgId: string,
+  chainId: ChainId,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string | undefined> {
-  const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
-    PermissionApprovalModel,
-    options,
-  );
-  const result = await baseQuery
-    .select(PermissionApprovalColumns.arbitrum_approval)
-    .where(PermissionApprovalColumns.suborg_id, suborgId)
-    .first();
-
-  return result?.arbitrum_approval;
+  const approval = await findBySuborgIdAndChainId(suborgId, chainId, options);
+  return approval?.approval;
 }
 
-export async function getBaseApprovalForSuborg(
-  suborgId: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<string | undefined> {
-  const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
-    PermissionApprovalModel,
-    options,
-  );
-  const result = await baseQuery
-    .select(PermissionApprovalColumns.base_approval)
-    .where(PermissionApprovalColumns.suborg_id, suborgId)
-    .first();
-
-  return result?.base_approval;
-}
-
-export async function getAvalancheApprovalForSuborg(
-  suborgId: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<string | undefined> {
-  const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
-    PermissionApprovalModel,
-    options,
-  );
-  const result = await baseQuery
-    .select(PermissionApprovalColumns.avalanche_approval)
-    .where(PermissionApprovalColumns.suborg_id, suborgId)
-    .first();
-
-  return result?.avalanche_approval;
-}
-
-export async function getOptimismApprovalForSuborg(
-  suborgId: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<string | undefined> {
-  const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
-    PermissionApprovalModel,
-    options,
-  );
-  const result = await baseQuery
-    .select(PermissionApprovalColumns.optimism_approval)
-    .where(PermissionApprovalColumns.suborg_id, suborgId)
-    .first();
-
-  return result?.optimism_approval;
-}
-
-export async function getEthereumApprovalForSuborg(
-  suborgId: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<string | undefined> {
-  const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
-    PermissionApprovalModel,
-    options,
-  );
-  const result = await baseQuery
-    .select(PermissionApprovalColumns.ethereum_approval)
-    .where(PermissionApprovalColumns.suborg_id, suborgId)
-    .first();
-
-  return result?.ethereum_approval;
-}
 
 export async function create(
   permissionApprovalToCreate: PermissionApprovalCreateObject,
@@ -117,13 +62,15 @@ export async function update(
   {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     suborg_id,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    chain_id,
     ...fields
   }: PermissionApprovalCreateObject,
   options: Options = { txId: undefined },
 ): Promise<PermissionApprovalFromDatabase | undefined> {
   const permissionApproval = await PermissionApprovalModel.query(
     Transaction.get(options.txId),
-  ).findById(suborg_id);
+  ).findById([suborg_id, chain_id])
   if (!permissionApproval) {
     return undefined;
   }
@@ -131,7 +78,16 @@ export async function update(
   const updatedPermissionApproval = await permissionApproval
     .$query()
     .patch(fields)
-    .returning('*');
-  // The objection types mistakenly think the query returns an array of PermissionApproval.
-  return updatedPermissionApproval as unknown as (PermissionApprovalFromDatabase | undefined);
+    .returning('*').first();
+  return updatedPermissionApproval;
+}
+
+export async function upsert(
+  permissionApprovalToUpsert: PermissionApprovalCreateObject,
+  options: Options = { txId: undefined },
+): Promise<PermissionApprovalFromDatabase> {
+  const result = await PermissionApprovalModel.query(
+    Transaction.get(options.txId),
+  ).upsert(permissionApprovalToUpsert).returning('*').first();
+  return result;
 }

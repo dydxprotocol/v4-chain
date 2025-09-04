@@ -1,4 +1,5 @@
 import BaseModel from './base-model';
+import { ChainId } from '../types/permission-approval-types';
 
 export default class PermissionApprovalModel extends BaseModel {
   static get tableName() {
@@ -6,7 +7,7 @@ export default class PermissionApprovalModel extends BaseModel {
   }
 
   static get idColumn() {
-    return 'suborg_id';
+    return ['suborg_id', 'chain_id'];
   }
 
   static get jsonSchema() {
@@ -14,14 +15,13 @@ export default class PermissionApprovalModel extends BaseModel {
       type: 'object',
       required: [
         'suborg_id',
+        'chain_id',
+        'approval',
       ],
       properties: {
         suborg_id: { type: 'string' },
-        arbitrum_approval: { type: ['string', 'null'] },
-        base_approval: { type: ['string', 'null'] },
-        avalanche_approval: { type: ['string', 'null'] },
-        optimism_approval: { type: ['string', 'null'] },
-        ethereum_approval: { type: ['string', 'null'] },
+        chain_id: { type: 'string', enum: ['arbitrum', 'base', 'avalanche', 'optimism', 'ethereum'] },
+        approval: { type: 'string' },
       },
     };
   }
@@ -33,23 +33,14 @@ export default class PermissionApprovalModel extends BaseModel {
   static get sqlToJsonConversions() {
     return {
       suborg_id: 'string',
-      arbitrum_approval: 'stringOrNull',
-      base_approval: 'stringOrNull',
-      avalanche_approval: 'stringOrNull',
-      optimism_approval: 'stringOrNull',
-      ethereum_approval: 'stringOrNull',
+      chain_id: 'string',
+      approval: 'string',
     };
   }
 
   suborg_id!: string;
 
-  arbitrum_approval?: string | undefined;
+  chain_id!: ChainId;
 
-  base_approval?: string | undefined;
-
-  avalanche_approval?: string | undefined;
-
-  optimism_approval?: string | undefined;
-
-  ethereum_approval?: string | undefined;
+  approval!: string;
 }

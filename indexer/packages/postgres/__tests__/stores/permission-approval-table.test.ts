@@ -1,5 +1,6 @@
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import * as PermissionApprovalTable from '../../src/stores/permission-approval-table';
+import { ChainId } from '../../src/types/permission-approval-types';
 
 describe('PermissionApproval store', () => {
   beforeAll(async () => {
@@ -14,257 +15,207 @@ describe('PermissionApproval store', () => {
     await teardown();
   });
 
-  const defaultPermissionApproval1 = {
-    suborg_id: 'suborg-1',
-    arbitrum_approval: '0x1234567890abcdef1234567890abcdef12345678',
-    base_approval: '0x2345678901bcdef12345678901bcdef123456789',
-    avalanche_approval: '0x3456789012cdef123456789012cdef1234567890',
-    optimism_approval: '0x4567890123def1234567890123def12345678901',
-    ethereum_approval: '0x567890123def1234567890123def123456789012',
-  };
+  const defaultPermissionApprovals = [
+    {
+      suborg_id: 'suborg-1',
+      chain_id: ChainId.ARBITRUM,
+      approval: '0x1234567890abcdef1234567890abcdef12345678',
+    },
+    {
+      suborg_id: 'suborg-1',
+      chain_id: ChainId.BASE,
+      approval: '0x2345678901bcdef12345678901bcdef123456789',
+    },
+    {
+      suborg_id: 'suborg-1',
+      chain_id: ChainId.AVALANCHE,
+      approval: '0x3456789012cdef123456789012cdef1234567890',
+    },
+    {
+      suborg_id: 'suborg-1',
+      chain_id: ChainId.OPTIMISM,
+      approval: '0x4567890123def1234567890123def12345678901',
+    },
+    {
+      suborg_id: 'suborg-1',
+      chain_id: ChainId.ETHEREUM,
+      approval: '0x567890123def1234567890123def123456789012',
+    },
+  ];
 
-  const defaultPermissionApproval2 = {
-    suborg_id: 'suborg-2',
-    arbitrum_approval: '0xabcdef1234567890abcdef1234567890abcdef12',
-    base_approval: '0xbcdef12345678901bcdef12345678901bcdef123',
-    avalanche_approval: '0xcdef123456789012cdef123456789012cdef1234',
-    optimism_approval: '0xdef1234567890123def1234567890123def12345',
-    ethereum_approval: '0xef12345678901234ef12345678901234ef123456',
-  };
+  const suborg2Approvals = [
+    {
+      suborg_id: 'suborg-2',
+      chain_id: ChainId.ARBITRUM,
+      approval: '0xabcdef1234567890abcdef1234567890abcdef12',
+    },
+    {
+      suborg_id: 'suborg-2',
+      chain_id: ChainId.BASE,
+      approval: '0xbcdef12345678901bcdef12345678901bcdef123',
+    },
+  ];
 
-  const partialPermissionApproval = {
-    suborg_id: 'suborg-3',
-    arbitrum_approval: '0x1111111111111111111111111111111111111111',
-    ethereum_approval: '0x2222222222222222222222222222222222222222',
-    // base_approval, avalanche_approval, optimism_approval are undefined
-  };
+  const partialPermissionApprovals = [
+    {
+      suborg_id: 'suborg-3',
+      chain_id: ChainId.ARBITRUM,
+      approval: '0x1111111111111111111111111111111111111111',
+    },
+    {
+      suborg_id: 'suborg-3',
+      chain_id: ChainId.ETHEREUM,
+      approval: '0x2222222222222222222222222222222222222222',
+    },
+  ];
 
   describe('create', () => {
     it('Successfully creates a PermissionApproval', async () => {
-      const createdApproval = await PermissionApprovalTable.create(defaultPermissionApproval1);
-      expect(createdApproval).toEqual(expect.objectContaining(defaultPermissionApproval1));
+      const createdApproval = await PermissionApprovalTable.create(defaultPermissionApprovals[0]);
+      expect(createdApproval).toEqual(expect.objectContaining(defaultPermissionApprovals[0]));
     });
 
-    it('Successfully creates a PermissionApproval with partial data', async () => {
-      const createdApproval = await PermissionApprovalTable.create(partialPermissionApproval);
-      expect(createdApproval).toEqual(expect.objectContaining({
-        ...partialPermissionApproval,
-        base_approval: null,
-        avalanche_approval: null,
-        optimism_approval: null,
-      }));
+    it('Successfully creates multiple PermissionApprovals for same suborg', async () => {
+      for (const approval of defaultPermissionApprovals) {
+        const createdApproval = await PermissionApprovalTable.create(approval);
+        expect(createdApproval).toEqual(expect.objectContaining(approval));
+      }
     });
   });
 
   describe('findBySuborgId', () => {
-    it('Successfully finds a PermissionApproval by suborg_id', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
-      await PermissionApprovalTable.create(defaultPermissionApproval2);
+    it('Successfully finds all PermissionApprovals by suborg_id', async () => {
+      for (const approval of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
+      for (const approval of suborg2Approvals) {
+        await PermissionApprovalTable.create(approval);
+      }
 
-      const approval = await PermissionApprovalTable.findBySuborgId(
-        defaultPermissionApproval1.suborg_id,
-      );
+      const approvals = await PermissionApprovalTable.findBySuborgId('suborg-1');
 
-      expect(approval).toEqual(expect.objectContaining(defaultPermissionApproval1));
+      expect(approvals).toHaveLength(5);
+      expect(approvals).toEqual(expect.arrayContaining(defaultPermissionApprovals));
     });
 
-    it('Returns undefined when PermissionApproval not found by suborg_id', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
+    it('Returns empty array when PermissionApproval not found by suborg_id', async () => {
+      for (const approval of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
 
-      const approval = await PermissionApprovalTable.findBySuborgId(
+      const approvals = await PermissionApprovalTable.findBySuborgId('nonexistent-suborg');
+
+      expect(approvals).toEqual([]);
+    });
+  });
+
+  describe('findBySuborgIdAndChainId', () => {
+    it('Successfully finds a PermissionApproval by suborg_id and chain_id', async () => {
+      for (const approval of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
+
+      const approval = await PermissionApprovalTable.findBySuborgIdAndChainId(
+        'suborg-1',
+        ChainId.ARBITRUM,
+      );
+
+      expect(approval).toEqual(expect.objectContaining(defaultPermissionApprovals[0]));
+    });
+
+    it('Returns undefined when PermissionApproval not found by suborg_id and chain_id', async () => {
+      for (const approval of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
+
+      const approval = await PermissionApprovalTable.findBySuborgIdAndChainId(
         'nonexistent-suborg',
+        ChainId.ARBITRUM,
       );
 
       expect(approval).toBeUndefined();
     });
   });
 
-  describe('getArbitrumApprovalForSuborg', () => {
-    it('Successfully gets arbitrum approval for existing suborg', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
+  describe('getApprovalForSuborgAndChain', () => {
+    it('Successfully gets approval for existing suborg and chain', async () => {
+      const arbitrumApproval = defaultPermissionApprovals[0];
+      await PermissionApprovalTable.create(arbitrumApproval);
 
-      const approval = await PermissionApprovalTable.getArbitrumApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
+      const approval = await PermissionApprovalTable.getApprovalForSuborgAndChain(
+        arbitrumApproval.suborg_id,
+        ChainId.ARBITRUM,
       );
 
-      expect(approval).toBe(defaultPermissionApproval1.arbitrum_approval);
+      expect(approval).toBe(arbitrumApproval.approval);
     });
 
     it('Returns undefined when suborg does not exist', async () => {
-      const approval = await PermissionApprovalTable.getArbitrumApprovalForSuborg('nonexistent-suborg');
+      const approval = await PermissionApprovalTable.getApprovalForSuborgAndChain(
+        'nonexistent-suborg',
+        ChainId.ARBITRUM,
+      );
 
       expect(approval).toBeUndefined();
     });
 
-    it('Returns undefined when arbitrum_approval is null', async () => {
-      const approvalWithNullArbitrum = {
-        suborg_id: 'suborg-null-arbitrum',
-        base_approval: '0x1234567890abcdef1234567890abcdef12345678',
+    it('Returns undefined when chain approval does not exist for suborg', async () => {
+      // Create only base approval for this suborg
+      const baseApproval = {
+        suborg_id: 'suborg-no-arbitrum',
+        chain_id: ChainId.BASE,
+        approval: '0x1234567890abcdef1234567890abcdef12345678',
       };
-      await PermissionApprovalTable.create(approvalWithNullArbitrum);
+      await PermissionApprovalTable.create(baseApproval);
 
-      const approval = await PermissionApprovalTable.getArbitrumApprovalForSuborg(
-        approvalWithNullArbitrum.suborg_id,
+      const approval = await PermissionApprovalTable.getApprovalForSuborgAndChain(
+        baseApproval.suborg_id,
+        ChainId.ARBITRUM,
       );
-
-      expect(approval).toBeNull();
-    });
-  });
-
-  describe('getBaseApprovalForSuborg', () => {
-    it('Successfully gets base approval for existing suborg', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
-
-      const approval = await PermissionApprovalTable.getBaseApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-
-      expect(approval).toBe(defaultPermissionApproval1.base_approval);
-    });
-
-    it('Returns undefined when suborg does not exist', async () => {
-      const approval = await PermissionApprovalTable.getBaseApprovalForSuborg('nonexistent-suborg');
 
       expect(approval).toBeUndefined();
     });
 
-    it('Returns undefined when base_approval is null', async () => {
-      const approvalWithNullBase = {
-        suborg_id: 'suborg-null-base',
-        arbitrum_approval: '0x1234567890abcdef1234567890abcdef12345678',
-      };
-      await PermissionApprovalTable.create(approvalWithNullBase);
+    it('Successfully gets approvals for different chains', async () => {
+      for (const approvalData of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approvalData);
+      }
 
-      const approval = await PermissionApprovalTable.getBaseApprovalForSuborg(
-        approvalWithNullBase.suborg_id,
-      );
+      const arbitrumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.ARBITRUM);
+      const baseApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.BASE);
+      const avalancheApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.AVALANCHE);
+      const optimismApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.OPTIMISM);
+      const ethereumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.ETHEREUM);
 
-      expect(approval).toBeNull();
-    });
-  });
-
-  describe('getAvalancheApprovalForSuborg', () => {
-    it('Successfully gets avalanche approval for existing suborg', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
-
-      const approval = await PermissionApprovalTable.getAvalancheApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-
-      expect(approval).toBe(defaultPermissionApproval1.avalanche_approval);
-    });
-
-    it('Returns undefined when suborg does not exist', async () => {
-      const approval = await PermissionApprovalTable.getAvalancheApprovalForSuborg('nonexistent-suborg');
-
-      expect(approval).toBeUndefined();
-    });
-
-    it('Returns undefined when avalanche_approval is null', async () => {
-      const approvalWithNullAvalanche = {
-        suborg_id: 'suborg-null-avalanche',
-        arbitrum_approval: '0x1234567890abcdef1234567890abcdef12345678',
-      };
-      await PermissionApprovalTable.create(approvalWithNullAvalanche);
-
-      const approval = await PermissionApprovalTable.getAvalancheApprovalForSuborg(
-        approvalWithNullAvalanche.suborg_id,
-      );
-
-      expect(approval).toBeNull();
-    });
-  });
-
-  describe('getOptimismApprovalForSuborg', () => {
-    it('Successfully gets optimism approval for existing suborg', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
-
-      const approval = await PermissionApprovalTable.getOptimismApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-
-      expect(approval).toBe(defaultPermissionApproval1.optimism_approval);
-    });
-
-    it('Returns undefined when suborg does not exist', async () => {
-      const approval = await PermissionApprovalTable.getOptimismApprovalForSuborg('nonexistent-suborg');
-
-      expect(approval).toBeUndefined();
-    });
-
-    it('Returns undefined when optimism_approval is null', async () => {
-      const approvalWithNullOptimism = {
-        suborg_id: 'suborg-null-optimism',
-        arbitrum_approval: '0x1234567890abcdef1234567890abcdef12345678',
-      };
-      await PermissionApprovalTable.create(approvalWithNullOptimism);
-
-      const approval = await PermissionApprovalTable.getOptimismApprovalForSuborg(
-        approvalWithNullOptimism.suborg_id,
-      );
-
-      expect(approval).toBeNull();
-    });
-  });
-
-  describe('getEthereumApprovalForSuborg', () => {
-    it('Successfully gets ethereum approval for existing suborg', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
-
-      const approval = await PermissionApprovalTable.getEthereumApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-
-      expect(approval).toBe(defaultPermissionApproval1.ethereum_approval);
-    });
-
-    it('Returns undefined when suborg does not exist', async () => {
-      const approval = await PermissionApprovalTable.getEthereumApprovalForSuborg('nonexistent-suborg');
-
-      expect(approval).toBeUndefined();
-    });
-
-    it('Returns undefined when ethereum_approval is null', async () => {
-      const approvalWithNullEthereum = {
-        suborg_id: 'suborg-null-ethereum',
-        arbitrum_approval: '0x1234567890abcdef1234567890abcdef12345678',
-      };
-      await PermissionApprovalTable.create(approvalWithNullEthereum);
-
-      const approval = await PermissionApprovalTable.getEthereumApprovalForSuborg(
-        approvalWithNullEthereum.suborg_id,
-      );
-
-      expect(approval).toBeNull();
+      expect(arbitrumApproval).toBe(defaultPermissionApprovals[0].approval);
+      expect(baseApproval).toBe(defaultPermissionApprovals[1].approval);
+      expect(avalancheApproval).toBe(defaultPermissionApprovals[2].approval);
+      expect(optimismApproval).toBe(defaultPermissionApprovals[3].approval);
+      expect(ethereumApproval).toBe(defaultPermissionApprovals[4].approval);
     });
   });
 
   describe('update', () => {
     it('Successfully updates a PermissionApproval', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
+      const originalApproval = defaultPermissionApprovals[0];
+      await PermissionApprovalTable.create(originalApproval);
 
       const updatedFields = {
-        suborg_id: defaultPermissionApproval1.suborg_id,
-        arbitrum_approval: '0xnewArbitrumApproval123456789012345678901',
-        base_approval: '0xnewBaseApproval1234567890123456789012345',
+        suborg_id: originalApproval.suborg_id,
+        chain_id: originalApproval.chain_id,
+        approval: '0xnewArbitrumApproval123456789012345678901',
       };
 
       const updatedApproval = await PermissionApprovalTable.update(updatedFields);
 
-      expect(updatedApproval).toEqual(expect.objectContaining({
-        suborg_id: defaultPermissionApproval1.suborg_id,
-        arbitrum_approval: updatedFields.arbitrum_approval,
-        base_approval: updatedFields.base_approval,
-        avalanche_approval: defaultPermissionApproval1.avalanche_approval,
-        optimism_approval: defaultPermissionApproval1.optimism_approval,
-        ethereum_approval: defaultPermissionApproval1.ethereum_approval,
-      }));
+      expect(updatedApproval).toEqual(expect.objectContaining(updatedFields));
     });
 
     it('Returns undefined when trying to update non-existent PermissionApproval', async () => {
       const updatedFields = {
         suborg_id: 'nonexistent-suborg',
-        arbitrum_approval: '0xnewApproval123456789012345678901234567',
+        chain_id: ChainId.ARBITRUM,
+        approval: '0xnewApproval123456789012345678901234567',
       };
 
       const result = await PermissionApprovalTable.update(updatedFields);
@@ -273,18 +224,49 @@ describe('PermissionApproval store', () => {
     });
   });
 
+  describe('upsert', () => {
+    it('Successfully creates a new PermissionApproval via upsert', async () => {
+      const newApproval = {
+        suborg_id: 'new-suborg',
+        chain_id: ChainId.ARBITRUM,
+        approval: '0xnewApproval123456789012345678901234567',
+      };
+
+      const result = await PermissionApprovalTable.upsert(newApproval);
+
+      expect(result).toEqual(expect.objectContaining(newApproval));
+    });
+
+    it('Successfully updates existing PermissionApproval via upsert', async () => {
+      const originalApproval = defaultPermissionApprovals[0];
+      await PermissionApprovalTable.create(originalApproval);
+
+      const updatedApproval = {
+        suborg_id: originalApproval.suborg_id,
+        chain_id: originalApproval.chain_id,
+        approval: '0xupdatedApproval123456789012345678901234567',
+      };
+
+      const result = await PermissionApprovalTable.upsert(updatedApproval);
+
+      expect(result).toEqual(expect.objectContaining(updatedApproval));
+    });
+  });
+
   describe('Edge cases', () => {
     it('Handles empty string suborg_id searches', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
+      for (const approval of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
 
-      const approval = await PermissionApprovalTable.findBySuborgId('');
-      const arbitrumApproval = await PermissionApprovalTable.getArbitrumApprovalForSuborg('');
-      const baseApproval = await PermissionApprovalTable.getBaseApprovalForSuborg('');
-      const avalancheApproval = await PermissionApprovalTable.getAvalancheApprovalForSuborg('');
-      const optimismApproval = await PermissionApprovalTable.getOptimismApprovalForSuborg('');
-      const ethereumApproval = await PermissionApprovalTable.getEthereumApprovalForSuborg('');
+      const approvals = await PermissionApprovalTable.findBySuborgId('');
+      const arbitrumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('', ChainId.ARBITRUM);
+      const baseApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('', ChainId.BASE);
+      const avalancheApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('', ChainId.AVALANCHE);
+      const optimismApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('', ChainId.OPTIMISM);
+      const ethereumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('', ChainId.ETHEREUM);
 
-      expect(approval).toBeUndefined();
+      expect(approvals).toEqual([]);
       expect(arbitrumApproval).toBeUndefined();
       expect(baseApproval).toBeUndefined();
       expect(avalancheApproval).toBeUndefined();
@@ -295,63 +277,76 @@ describe('PermissionApproval store', () => {
     it('Handles special characters in suborg_id', async () => {
       const specialSuborgApproval = {
         suborg_id: 'suborg-with-special-chars-!@#$%^&*()',
-        arbitrum_approval: '0x1234567890abcdef1234567890abcdef12345678',
+        chain_id: ChainId.ARBITRUM,
+        approval: '0x1234567890abcdef1234567890abcdef12345678',
       };
 
       await PermissionApprovalTable.create(specialSuborgApproval);
 
-      const approval = await PermissionApprovalTable.findBySuborgId(
+      const approvals = await PermissionApprovalTable.findBySuborgId(
         specialSuborgApproval.suborg_id,
       );
-      const arbitrumApproval = await PermissionApprovalTable.getArbitrumApprovalForSuborg(
+      const arbitrumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain(
         specialSuborgApproval.suborg_id,
+        ChainId.ARBITRUM,
       );
 
-      expect(approval).toEqual(expect.objectContaining(specialSuborgApproval));
-      expect(arbitrumApproval).toBe(specialSuborgApproval.arbitrum_approval);
+      expect(approvals).toHaveLength(1);
+      expect(approvals[0]).toEqual(expect.objectContaining(specialSuborgApproval));
+      expect(arbitrumApproval).toBe(specialSuborgApproval.approval);
     });
 
     it('Handles very long approval addresses', async () => {
       const longApprovalAddress = `0x${'a'.repeat(64)}`; // Very long hex address
       const longApprovalData = {
         suborg_id: 'suborg-long-approval',
-        arbitrum_approval: longApprovalAddress,
+        chain_id: ChainId.ARBITRUM,
+        approval: longApprovalAddress,
       };
 
       await PermissionApprovalTable.create(longApprovalData);
 
-      const approval = await PermissionApprovalTable.getArbitrumApprovalForSuborg(
+      const approval = await PermissionApprovalTable.getApprovalForSuborgAndChain(
         longApprovalData.suborg_id,
+        ChainId.ARBITRUM,
       );
 
       expect(approval).toBe(longApprovalAddress);
     });
 
     it('Handles multiple chain approvals for same suborg', async () => {
-      await PermissionApprovalTable.create(defaultPermissionApproval1);
+      for (const approval of defaultPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
 
-      // Get all approvals for the same suborg
-      const arbitrumApproval = await PermissionApprovalTable.getArbitrumApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-      const baseApproval = await PermissionApprovalTable.getBaseApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-      const avalancheApproval = await PermissionApprovalTable.getAvalancheApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-      const optimismApproval = await PermissionApprovalTable.getOptimismApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
-      const ethereumApproval = await PermissionApprovalTable.getEthereumApprovalForSuborg(
-        defaultPermissionApproval1.suborg_id,
-      );
+      // Get all approvals for the same suborg using the generic function
+      const arbitrumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.ARBITRUM);
+      const baseApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.BASE);
+      const avalancheApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.AVALANCHE);
+      const optimismApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.OPTIMISM);
+      const ethereumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-1', ChainId.ETHEREUM);
 
-      expect(arbitrumApproval).toBe(defaultPermissionApproval1.arbitrum_approval);
-      expect(baseApproval).toBe(defaultPermissionApproval1.base_approval);
-      expect(avalancheApproval).toBe(defaultPermissionApproval1.avalanche_approval);
-      expect(optimismApproval).toBe(defaultPermissionApproval1.optimism_approval);
-      expect(ethereumApproval).toBe(defaultPermissionApproval1.ethereum_approval);
+      expect(arbitrumApproval).toBe(defaultPermissionApprovals[0].approval);
+      expect(baseApproval).toBe(defaultPermissionApprovals[1].approval);
+      expect(avalancheApproval).toBe(defaultPermissionApprovals[2].approval);
+      expect(optimismApproval).toBe(defaultPermissionApprovals[3].approval);
+      expect(ethereumApproval).toBe(defaultPermissionApprovals[4].approval);
+    });
+
+    it('Handles partial approvals for suborg (only some chains)', async () => {
+      for (const approval of partialPermissionApprovals) {
+        await PermissionApprovalTable.create(approval);
+      }
+
+      const approvals = await PermissionApprovalTable.findBySuborgId('suborg-3');
+      const arbitrumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-3', ChainId.ARBITRUM);
+      const baseApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-3', ChainId.BASE);
+      const ethereumApproval = await PermissionApprovalTable.getApprovalForSuborgAndChain('suborg-3', ChainId.ETHEREUM);
+
+      expect(approvals).toHaveLength(2);
+      expect(arbitrumApproval).toBe(partialPermissionApprovals[0].approval);
+      expect(baseApproval).toBeUndefined(); // No base approval for this suborg
+      expect(ethereumApproval).toBe(partialPermissionApprovals[1].approval);
     });
   });
 });
