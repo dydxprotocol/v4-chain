@@ -321,6 +321,18 @@ pub struct OrderFillEventV1 {
     /// rev share for affiliates in USDC quantums.
     #[prost(uint64, tag = "9")]
     pub affiliate_rev_share: u64,
+    /// fee for maker builder in USDC quantums.
+    #[prost(uint64, tag = "10")]
+    pub maker_builder_fee: u64,
+    /// fee for taker builder in USDC quantums.
+    #[prost(uint64, tag = "11")]
+    pub taker_builder_fee: u64,
+    /// builder address for maker
+    #[prost(string, tag = "12")]
+    pub maker_builder_address: ::prost::alloc::string::String,
+    /// builder address for taker
+    #[prost(string, tag = "13")]
+    pub taker_builder_address: ::prost::alloc::string::String,
     /// The type of order fill this event represents.
     #[prost(oneof = "order_fill_event_v1::TakerOrder", tags = "2, 4")]
     pub taker_order: ::core::option::Option<order_fill_event_v1::TakerOrder>,
@@ -721,6 +733,7 @@ impl ::prost::Name for PerpetualMarketCreateEventV1 {
 }
 /// PerpetualMarketCreateEventV2 message contains all the information about a
 /// new Perpetual Market on the dYdX chain.
+/// Deprecated. Use PerpetualMarketCreateEventV3 for the most up to date message
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PerpetualMarketCreateEventV2 {
     /// Unique Perpetual id.
@@ -781,6 +794,73 @@ impl ::prost::Name for PerpetualMarketCreateEventV2 {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.indexer.events.PerpetualMarketCreateEventV2".into()
+    }
+}
+/// PerpetualMarketCreateEventV3 message contains all the information about a
+/// new Perpetual Market on the dYdX chain.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PerpetualMarketCreateEventV3 {
+    /// Unique Perpetual id.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "1")]
+    pub id: u32,
+    /// Unique clob pair Id associated with this perpetual market
+    /// Defined in clob.clob_pair
+    #[prost(uint32, tag = "2")]
+    pub clob_pair_id: u32,
+    /// The name of the `Perpetual` (e.g. `BTC-USD`).
+    /// Defined in perpetuals.perpetual
+    #[prost(string, tag = "3")]
+    pub ticker: ::prost::alloc::string::String,
+    /// Unique id of market param associated with this perpetual market.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "4")]
+    pub market_id: u32,
+    /// Status of the CLOB
+    #[prost(enumeration = "super::protocol::v1::ClobPairStatus", tag = "5")]
+    pub status: i32,
+    /// `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+    /// per Subtick.
+    /// Defined in clob.clob_pair
+    #[prost(sint32, tag = "6")]
+    pub quantum_conversion_exponent: i32,
+    /// The exponent for converting an atomic amount (`size = 1`)
+    /// to a full coin. For example, if `AtomicResolution = -8`
+    /// then a `PerpetualPosition` with `size = 1e8` is equivalent to
+    /// a position size of one full coin.
+    /// Defined in perpetuals.perpetual
+    #[prost(sint32, tag = "7")]
+    pub atomic_resolution: i32,
+    /// Defines the tick size of the orderbook by defining how many subticks
+    /// are in one tick. That is, the subticks of any valid order must be a
+    /// multiple of this value. Generally this value should start `>= 100`to
+    /// allow room for decreasing it.
+    /// Defined in clob.clob_pair
+    #[prost(uint32, tag = "8")]
+    pub subticks_per_tick: u32,
+    /// Minimum increment in the size of orders on the CLOB, in base quantums.
+    /// Defined in clob.clob_pair
+    #[prost(uint64, tag = "9")]
+    pub step_base_quantums: u64,
+    /// The liquidity_tier that this perpetual is associated with.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "10")]
+    pub liquidity_tier: u32,
+    /// Market type of the perpetual.
+    #[prost(enumeration = "super::protocol::v1::PerpetualMarketType", tag = "11")]
+    pub market_type: i32,
+    /// Default 8hr funding rate in parts-per-million.
+    #[prost(int32, tag = "12")]
+    pub default_funding8hr_ppm: i32,
+}
+impl ::prost::Name for PerpetualMarketCreateEventV3 {
+    const NAME: &'static str = "PerpetualMarketCreateEventV3";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.events";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.events.PerpetualMarketCreateEventV3".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.events.PerpetualMarketCreateEventV3".into()
     }
 }
 /// LiquidityTierUpsertEventV1 message contains all the information to
@@ -860,6 +940,8 @@ impl ::prost::Name for UpdateClobPairEventV1 {
 }
 /// UpdatePerpetualEventV1 message contains all the information about an update
 /// to a perpetual on the dYdX chain.
+/// Deprecated. See UpdatePerpetualEventV2 for the most up to date message
+/// for the event to update a perpetual.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdatePerpetualEventV1 {
     /// Unique Perpetual id.
@@ -894,6 +976,92 @@ impl ::prost::Name for UpdatePerpetualEventV1 {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.indexer.events.UpdatePerpetualEventV1".into()
+    }
+}
+/// UpdatePerpetualEventV2 message contains all the information about an update
+/// to a perpetual on the dYdX chain.
+/// Deprecated. Use UpdatePerpetualEventV3.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdatePerpetualEventV2 {
+    /// Unique Perpetual id.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "1")]
+    pub id: u32,
+    /// The name of the `Perpetual` (e.g. `BTC-USD`).
+    /// Defined in perpetuals.perpetual
+    #[prost(string, tag = "2")]
+    pub ticker: ::prost::alloc::string::String,
+    /// Unique id of market param associated with this perpetual market.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "3")]
+    pub market_id: u32,
+    /// The exponent for converting an atomic amount (`size = 1`)
+    /// to a full coin. For example, if `AtomicResolution = -8`
+    /// then a `PerpetualPosition` with `size = 1e8` is equivalent to
+    /// a position size of one full coin.
+    /// Defined in perpetuals.perpetual
+    #[prost(sint32, tag = "4")]
+    pub atomic_resolution: i32,
+    /// The liquidity_tier that this perpetual is associated with.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "5")]
+    pub liquidity_tier: u32,
+    /// Market type of the perpetual.
+    #[prost(enumeration = "super::protocol::v1::PerpetualMarketType", tag = "6")]
+    pub market_type: i32,
+}
+impl ::prost::Name for UpdatePerpetualEventV2 {
+    const NAME: &'static str = "UpdatePerpetualEventV2";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.events";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.events.UpdatePerpetualEventV2".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.events.UpdatePerpetualEventV2".into()
+    }
+}
+/// UpdatePerpetualEventV3 message contains all the information about an update
+/// to a perpetual on the dYdX chain.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdatePerpetualEventV3 {
+    /// Unique Perpetual id.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "1")]
+    pub id: u32,
+    /// The name of the `Perpetual` (e.g. `BTC-USD`).
+    /// Defined in perpetuals.perpetual
+    #[prost(string, tag = "2")]
+    pub ticker: ::prost::alloc::string::String,
+    /// Unique id of market param associated with this perpetual market.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "3")]
+    pub market_id: u32,
+    /// The exponent for converting an atomic amount (`size = 1`)
+    /// to a full coin. For example, if `AtomicResolution = -8`
+    /// then a `PerpetualPosition` with `size = 1e8` is equivalent to
+    /// a position size of one full coin.
+    /// Defined in perpetuals.perpetual
+    #[prost(sint32, tag = "4")]
+    pub atomic_resolution: i32,
+    /// The liquidity_tier that this perpetual is associated with.
+    /// Defined in perpetuals.perpetual
+    #[prost(uint32, tag = "5")]
+    pub liquidity_tier: u32,
+    /// Market type of the perpetual.
+    #[prost(enumeration = "super::protocol::v1::PerpetualMarketType", tag = "6")]
+    pub market_type: i32,
+    /// Default 8hr funding rate in parts-per-million.
+    #[prost(int32, tag = "7")]
+    pub default_funding8hr_ppm: i32,
+}
+impl ::prost::Name for UpdatePerpetualEventV3 {
+    const NAME: &'static str = "UpdatePerpetualEventV3";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.events";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.events.UpdatePerpetualEventV3".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.events.UpdatePerpetualEventV3".into()
     }
 }
 /// TradingRewardsEventV1 is communicates all trading rewards for all accounts
