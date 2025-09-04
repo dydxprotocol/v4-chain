@@ -31,6 +31,7 @@ import uncrossOrderbookTask from './tasks/uncross-orderbook';
 import updateAffiliateInfoTask from './tasks/update-affiliate-info';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateFundingPaymentsTask from './tasks/update-funding-payments';
+import updatePnlTask from './tasks/update-pnl';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 import updateWalletTotalVolumeTask from './tasks/update-wallet-total-volume';
 
@@ -295,6 +296,17 @@ async function start(): Promise<void> {
       // extended lock multiplier for 12 hours since on the first run,
       // the task takes a while to complete.
       config.UPDATE_FUNDING_PAYMENTS_LOCK_MULTIPLIER,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_UPDATE_PNL) {
+    startLoop(
+      updatePnlTask,
+      'update-pnl',
+      config.LOOPS_INTERVAL_MS_UPDATE_PNL,
+      // extended lock multiplier for 12 hours since on the first run,
+      // the task takes a while to complete.
+      config.UPDATE_PNL_LOCK_MULTIPLIER,
     );
   }
 
