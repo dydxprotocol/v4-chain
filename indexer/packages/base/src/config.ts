@@ -32,28 +32,6 @@ export const baseConfigSchema = {
   }),
   SERVICE_NAME: parseString({ default: '' }),
 
-  TURNKEY_API_BASE_URL: parseString({ default: 'https://api.turnkey.com' }),
-  // API keys for root user on parent org to use to create suborgs.
-  TURNKEY_API_PRIVATE_KEY: parseString({ default: '' }),
-  TURNKEY_API_PUBLIC_KEY: parseString({ default: '' }),
-  // API keys for senders to use to start bridging.
-  TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
-  TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
-  TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
-  TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
-  // Alchemy API key for skip bridge.
-  ALCHEMY_KEY: parseString({ default: '' }),
-  ALCHEMY_API_KEY: parseString({ default: '' }),
-  // ZeroDev RPC for skip bridge.
-  ZERODEV_API_KEY: parseString({ default: '' }),
-  ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
-  SOLANA_SPONSOR_PRIVATE_KEY: parseString({ default: '' }),
-  SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
-
-  BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
-  MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
-  MASTER_SIGNER_PRIVATE: parseString({ default: '' }),
-
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),
   ENABLE_LOGS_IN_TEST: parseBoolean({ default: false }),

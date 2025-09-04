@@ -66,8 +66,6 @@ export const configSchema = {
   VAULT_LATEST_PNL_TICK_WINDOW_HOURS: parseInteger({ default: 1 }),
   VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS: parseInteger({ default: 250_000 }),
   VAULT_CACHE_TTL_MS: parseInteger({ default: 120_000 }), // 2 minutes
-  // Alchemy webhook config
-  ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
   // Cache-Control directives
   CACHE_CONTROL_DIRECTIVE_ADDRESSES: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_AFFILIATES: parseString({ default: 'public, max-age=10' }),
@@ -91,6 +89,32 @@ export const configSchema = {
   CACHE_CONTROL_DIRECTIVE_TRADES: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_TRANSFERS: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_VAULTS: parseString({ default: 'public, max-age=10' }),
+
+  // Turnkey
+
+  TURNKEY_API_BASE_URL: parseString({ default: 'https://api.turnkey.com' }),
+  // API keys for root user on parent org to use to create suborgs.
+  TURNKEY_API_PRIVATE_KEY: parseString({ default: '' }),
+  TURNKEY_API_PUBLIC_KEY: parseString({ default: '' }),
+  // API keys for senders to use to start bridging.
+  TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
+  TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
+  TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
+  TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
+  SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
+  // Alchemy auth token for the skip bridge.
+  ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
+  ALCHEMY_WEBHOOK_UPDATE_URL: parseString({ default: 'https://dashboard.alchemy.com/api/update-webhook-addresses' }),
+  // ZeroDev RPC for skip bridge.
+  ZERODEV_API_KEY: parseString({ default: '' }),
+  ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
+  BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
+  // on-chain signer to kick off the skip bridge.
+  MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
+  MASTER_SIGNER_PRIVATE: parseString({ default: '' }),
+  // if policy approvals are enabled. feature wip
+  APPROVAL_ENABLED: parseBoolean({ default: false }),
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
