@@ -74,9 +74,6 @@ setClientOptions({
   },
 });
 
-// need to add this so that the address that triggered the activity is ignored.
-// const processingCache: Record<string, boolean> = {};
-
 const turnkeySenderClient = new Turnkey({
   apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
   apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
@@ -122,10 +119,10 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
       message: 'Looking up in turnkey table for evm address',
       address,
     });
-    const normalizedAddress = (address && address.startsWith('0x'))
+    const normalizedEvmAddress = (address && address.startsWith('0x'))
       ? checksumAddress(address as Address)
       : address;
-    const record = await findByEvmAddress(normalizedAddress);
+    const record = await findByEvmAddress(normalizedEvmAddress);
     dydxAddress = record?.dydx_address || '';
   } else if (chainId === 'solana') {
     // look up in turnkey table

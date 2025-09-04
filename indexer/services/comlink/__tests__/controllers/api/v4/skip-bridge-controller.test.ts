@@ -5,6 +5,35 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
 import request from 'supertest';
+
+jest.mock('@skip-go/client/cjs', () => ({
+  __esModule: true,
+  balances: jest.fn(),
+  route: jest.fn(),
+  executeRoute: jest.fn(),
+  setClientOptions: jest.fn(),
+  TransferStatus: {},
+}));
+jest.mock('@zerodev/sdk', () => ({
+  __esModule: true,
+  createKernelAccount: jest.fn(),
+  createZeroDevPaymasterClient: jest.fn(),
+  getUserOperationGasPrice: jest.fn(),
+  createKernelAccountClient: jest.fn(),
+  KERNEL_V3_3: 'KERNEL_V3_3',
+  KERNEL_V3_1: 'KERNEL_V3_1',
+}));
+jest.mock('@turnkey/viem', () => ({
+  __esModule: true,
+  createAccount: jest.fn(),
+}));
+import * as skipClient from '@skip-go/client/cjs';
+import * as zeroDev from '@zerodev/sdk';
+import * as turnkeyViem from '@turnkey/viem';
+
+import { ProcessingQueue } from '../../../../src/helpers/processing-helper';
+import { alchemyNetworkToChainIdMap } from '../../../../src/helpers/alchemy-helpers';
+import * as skipHelpers from '../../../../src/helpers/skip-helper';
 import { RequestMethod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
 
@@ -22,6 +51,8 @@ describe('skip-bridge-controller#V4', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    // Ensure processing queue is cleared between tests
+    ProcessingQueue.getInstance().clearQueue();
   });
 
   describe('GET /getDepositAddress/:dydxAddress', () => {
@@ -146,6 +177,155 @@ describe('skip-bridge-controller#V4', () => {
         expect(response.body.avalancheAddress).toBeNull();
         expect(response.body.svmAddress).toBe(userWithNulls.svm_address);
       });
+    });
+  });
+
+  describe('POST /startBridge', () => {
+    const arbNetwork = 'ARB_MAINNET';
+    const arbChainId = alchemyNetworkToChainIdMap[arbNetwork];
+    const evmFromAddress = '0x1111111111111111111111111111111111111111';
+    const dydxAddress = 'dydx1234567890123456789012345678901234567899';
+
+    beforeEach(async () => {
+      // Create a user record needed by sweep/startEvmBridge
+      await TurnkeyUsersTable.create({
+        suborg_id: 'suborg-arb',
+        evm_address: evmFromAddress,
+        svm_address: 'svm1234567890123456789012345678901234567890',
+        dydx_address: dydxAddress,
+        salt: 'salt',
+        created_at: new Date().toISOString(),
+      } as unknown as TurnkeyUserCreateObject);
+
+      // Mock external dependencies used during EVM bridge flow
+      (skipClient.balances as unknown as jest.Mock).mockResolvedValue({
+        chains: {
+          [arbChainId]: {
+            denoms: {
+              // Provide large USD value to pass threshold check
+              '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': { amount: '1000000', valueUsd: '100.0' },
+              // ETH denom can be present or omitted
+            },
+          },
+        },
+      });
+      jest.spyOn(skipHelpers, 'getSkipCallData').mockResolvedValue([] as any);
+
+      // Kernel account and client mocks
+      (turnkeyViem.createAccount as jest.Mock).mockResolvedValue({} as any);
+      (zeroDev.createKernelAccount as jest.Mock).mockResolvedValue({} as any);
+      (zeroDev.createZeroDevPaymasterClient as jest.Mock).mockReturnValue({} as any);
+      (zeroDev.getUserOperationGasPrice as jest.Mock).mockResolvedValue({
+        maxFeePerGas: 1n,
+        maxPriorityFeePerGas: 1n,
+      } as any);
+
+      const mockKernelClient = {
+        account: {
+          encodeCalls: jest.fn().mockResolvedValue('0xdeadbeef'),
+        },
+        sendUserOperation: jest.fn().mockResolvedValue('0xuserophash'),
+        waitForUserOperationReceipt: jest.fn().mockResolvedValue({
+          receipt: { transactionHash: '0xth' },
+        }),
+      };
+      (zeroDev.createKernelAccountClient as jest.Mock).mockReturnValue(mockKernelClient as any);
+    });
+
+    it('should process EVM bridge request and send a user operation', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/bridging/startBridge',
+        expectedStatus: 200,
+        body: {
+          id: 'id',
+          type: 'BLOCK_ACTIVITY',
+          webhookId: 'wh_xxx',
+          event: {
+            network: arbNetwork,
+            activity: [
+              {
+                fromAddress: '0x0000000000000000000000000000000000000000',
+                toAddress: evmFromAddress,
+                asset: 'USDC',
+                value: '100',
+              },
+            ],
+          },
+        },
+      });
+
+      expect(response.status).toBe(200);
+      // Called to build call data for bridging
+      expect(skipHelpers.getSkipCallData).toHaveBeenCalled();
+      // User operation should be sent once
+      const client = (
+        zeroDev.createKernelAccountClient as unknown as jest.Mock
+      ).mock.results[0].value;
+      expect(client.sendUserOperation).toHaveBeenCalledTimes(1);
+      // Ensure queue is cleared
+      expect(ProcessingQueue.getInstance().getQueueSize()).toBe(0);
+    });
+
+    it('should skip processing if address is already in the processing queue', async () => {
+      const addressKey = `${evmFromAddress}-${arbChainId}`;
+      // Pre-populate queue to simulate in-progress processing
+      ProcessingQueue.getInstance().addToQueue(addressKey);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/bridging/startBridge',
+        expectedStatus: 200,
+        body: {
+          id: 'id',
+          type: 'BLOCK_ACTIVITY',
+          webhookId: 'wh_xxx',
+          event: {
+            network: arbNetwork,
+            activity: [
+              {
+                fromAddress: '0x0000000000000000000000000000000000000000',
+                toAddress: evmFromAddress,
+                asset: 'USDC',
+                value: '100',
+              },
+            ],
+          },
+        },
+      });
+
+      expect(response.status).toBe(200);
+      // When skipped, no user operation should be sent
+      if ((zeroDev.createKernelAccountClient as unknown as jest.Mock).mock.results.length) {
+        const client = (zeroDev.createKernelAccountClient as unknown as jest.Mock).mock.results[0]
+          .value;
+        expect(client.sendUserOperation).not.toHaveBeenCalled();
+      }
+      // Clean up the pre-set queue key
+      ProcessingQueue.getInstance().removeFromQueue(addressKey);
+    });
+
+    it('should return 500 for unsupported network', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/bridging/startBridge',
+        expectedStatus: 500,
+        body: {
+          id: 'id',
+          type: 'BLOCK_ACTIVITY',
+          webhookId: 'wh_xxx',
+          event: {
+            network: 'UNSUPPORTED_NETWORK',
+            activity: [
+              {
+                toAddress: evmFromAddress,
+              },
+            ],
+          },
+        },
+      });
+
+      expect(response.body.errors[0].msg).toBe('Internal Server Error');
     });
   });
 });
