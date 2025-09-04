@@ -1,4 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
+import { ChainId, PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import { createAccount } from '@turnkey/viem';
 import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
@@ -14,7 +15,7 @@ import config from '../config';
 import { entryPoint } from '../lib/smart-contract-constants';
 import { abi } from './abi';
 import { publicClients } from './alchemy-helpers';
-import { nobleToSolana, suborgToApproval } from './skip-helper';
+import { nobleToSolana } from './skip-helper';
 
 export class PolicyEngine {
   private turnkeySenderClient: TurnkeyApiClient;
@@ -38,6 +39,11 @@ export class PolicyEngine {
     fromAddress: string,
   ) {
 
+    const pc = publicClients[chainId];
+    if (!pc) {
+      throw new Error(`Public client not found for chainId: ${chainId}`);
+    }
+
     const turnkeyAccount = await createAccount({
       // @ts-ignore
       client: this.turnkeySenderClient,
@@ -49,7 +55,7 @@ export class PolicyEngine {
     if (chainId === avalanche.id.toString()) {
       kernelVersion = KERNEL_V3_1;
       // use this for avalanche to create the ecdsa validator.
-      await signerToEcdsaValidator(publicClients[chainId], {
+      await signerToEcdsaValidator(pc, {
         entryPoint,
         kernelVersion,
         signer: turnkeyAccount,
@@ -62,7 +68,7 @@ export class PolicyEngine {
     const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
 
     try {
-      const permissionPlugin = await toPermissionValidator(publicClients[chainId], {
+      const permissionPlugin = await toPermissionValidator(pc, {
         entryPoint,
         kernelVersion,
         signer: emptySessionKeySigner,
@@ -73,19 +79,19 @@ export class PolicyEngine {
               {
                 target: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
                 abi,
-                valueLimit: BigInt(1000000000000000000),
+                valueLimit: BigInt(1000000000000000000000000000000),
                 functionName: 'approve',
               },
               {
                 target: '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d',
                 abi,
-                valueLimit: BigInt(1000000000000000000),
+                valueLimit: BigInt(1000000000000000000000000000000),
                 functionName: 'submitOrder',
               },
               {
                 target: '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d',
                 abi,
-                valueLimit: BigInt(1000000000000000000),
+                valueLimit: BigInt(1000000000000000000000000000000),
                 functionName: 'swapAndSubmitOrder',
               },
             ],
@@ -93,7 +99,7 @@ export class PolicyEngine {
         ],
       });
 
-      const sessionAccount = await createKernelAccount(publicClients[chainId], {
+      const sessionAccount = await createKernelAccount(pc, {
         entryPoint,
         kernelVersion,
         eip7702Account: turnkeyAccount,
@@ -104,11 +110,13 @@ export class PolicyEngine {
       const approval = await serializePermissionAccount(sessionAccount);
       logger.info({
         at: 'policy-controller#configurePolicy',
-        message: 'Approval obtained',
-        approval,
-        suborgId,
+        message: `Approval obtained for chain ${chainId} and suborg ${suborgId}`,
       });
-      suborgToApproval.set(suborgId, approval);
+      await PermissionApprovalTable.create({
+        suborg_id: suborgId,
+        chain_id: chainId as ChainId,
+        approval,
+      });
     } catch (error) {
       logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring policy', error });
       throw error;
@@ -164,12 +172,26 @@ export class PolicyEngine {
 async function getNobleForwardingAddress(nobleAddress: string): Promise<string> {
   const dydxNobleChannel = 33;
   const endpoint = `https://api.noble.xyz/noble/forwarding/v1/address/channel-${dydxNobleChannel}/${nobleAddress}/`;
-  const response = await fetch(endpoint);
-  const data = await response.json();
-  if (data && !data.address) {
-    throw Error('failed to get a forwarding address');
+
+  const ac = new AbortController();
+  const timeout = setTimeout(() => ac.abort(), 10_000);
+  try {
+    const response = await fetch(endpoint, {
+      signal: ac.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`failed to get a forwarding address: ${response.statusText}`);
+    }
+    const data = await response.json();
+    if (!data || (data && !data.address)) {
+      throw new Error('failed to get a forwarding address');
+    }
+    return data.address;
+  } catch (e) {
+    throw new Error(`failed to get a forwarding address: ${e}`);
+  } finally {
+    clearTimeout(timeout);
   }
-  return data.address;
 }
 
 function solanaAddressToPaddedHex(solanaAddress: string): string {

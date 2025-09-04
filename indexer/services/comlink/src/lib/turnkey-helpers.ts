@@ -163,16 +163,20 @@ export class TurnkeyHelpers {
     // smart account address is needed by the frontend to display the correct
     // deposit address for the avalanche chain since it does not support eip7702.
     let smartAccountAddress = '';
-    for (const address of subOrg.wallet?.addresses || []) {
-      if (address.startsWith('0x')) {
-        // evm always starts with 0x
-        evmAddress = address;
-        smartAccountAddress = await getSmartAccountAddress(evmAddress);
-        smartAccountAddress = checksumAddress(smartAccountAddress as Address);
-      } else {
-        // if not evm, then must be svm
-        svmAddress = address;
+    try {
+      for (const address of subOrg.wallet?.addresses || []) {
+        if (address.startsWith('0x')) {
+          // evm always starts with 0x
+          evmAddress = address;
+          smartAccountAddress = await getSmartAccountAddress(evmAddress);
+          smartAccountAddress = checksumAddress(smartAccountAddress as Address);
+        } else {
+          // if not evm, then must be svm
+          svmAddress = address;
+        }
       }
+    } catch (e) {
+      throw new Error(`Failed to derive smart account address: ${e}`);
     }
 
     // configure the call policy for the suborg smart account.
@@ -244,23 +248,6 @@ export class TurnkeyHelpers {
       organizationId: config.TURNKEY_ORGANIZATION_ID,
       filterType: 'CREDENTIAL_ID',
       filterValue: credentialId,
-    });
-    return response.organizationIds?.[0] || '';
-  }
-
-  /**
-   * Retrieves the sub-organization ID for a user based on their email address.
-   * Makes a remote API call to Turnkey to find the sub-organization.
-   * This function assumes every user has only one suborg if they have an account with us.
-   *
-   * @param email - The user's email address
-   * @returns The sub-organization ID or empty string if not found
-   */
-  private async getSuborgByEmail(email: string): Promise<string> {
-    const response = await this.turnkeyApiClient.getSubOrgIds({
-      organizationId: config.TURNKEY_ORGANIZATION_ID,
-      filterType: 'EMAIL',
-      filterValue: email,
     });
     return response.organizationIds?.[0] || '';
   }
