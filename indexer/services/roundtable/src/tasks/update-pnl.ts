@@ -101,7 +101,9 @@ async function getLastProcessedHeight(): Promise<string> {
  * 2. Aggregates transfers (incoming and outgoing) for each subaccount
  * 3. Collects funding data and calculates position values at start and end points
  * 4. Calculates net cash flows from trades (buys and sells)
- * 5. Combines all financial data to produce comprehensive PNL metrics
+ * 5. Combines data using the recursive formula: PNL(t+1) = PNL(t) + Funding(t→t+1) +
+ *    [Position Value(t+1) - Position Value(t)] + Trade Cash Flow(t→t+1)
+ *    where Trade Cash Flow = Sum(Sell Proceeds) - Sum(Buy Costs)
  *
  * This function determines the heights to process based on funding payment events,
  * ensuring PNL is calculated at each height where funding payments occurred,

@@ -86,7 +86,16 @@ SELECT
     COALESCE(ta.transfer_delta, 0) as "equity",
     -- Calculate netTransfers = previous + new transfers
     COALESCE(pp.prev_net_transfers, 0) + COALESCE(ta.transfer_delta, 0) as "netTransfers",
-    -- Calculate totalPnl = previous + funding + position effects  
+    -- Calculate totalPnl = previous + funding + position effects
+    -- This recursive formula captures all sources of profit and loss:
+    --   1. prev_total_pnl: The previously calculated P&L from the last update (carries forward past performance)
+    --   2. total_funding_payments: Sum of all funding payments/fees received or paid during this period
+    --   3. Position value change: Current mark-to-market value minus previous value 
+    --      * For long positions: positive when price increases, negative when price decreases
+    --      * For short positions: negative when price increases, positive when price decreases
+    --   4. net_cash_flow: Net cash effect of all trades during this period
+    --      * Sell orders generate positive cash flow (receive quote currency)
+    --      * Buy orders generate negative cash flow (spend quote currency)
     COALESCE(pp.prev_total_pnl, 0) + 
     COALESCE(fa.total_funding_payments, 0) + 
     (COALESCE(fa.position_value_end, 0) - COALESCE(fa.position_value_start, 0)) +
