@@ -24,6 +24,8 @@ const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [optimism.id.toString()]: 'wh_99yjvuacl28obf0i',
 };
 
+const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
+
 export const alchemyNetworkToChainIdMap: Record<string, string> = {
   ARB_MAINNET: arbitrum.id.toString(),
   AVAX_MAINNET: avalanche.id.toString(),
@@ -39,8 +41,6 @@ export const ethDenomByChainId: Record<string, string> = {
   [base.id.toString()]: 'base-native', // eth on base.
   [optimism.id.toString()]: 'optimism-native', // eth on optimism.
 };
-
-const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
 
 export const chains: Record<string, Chain> = {
   [mainnet.id.toString()]: mainnet,
@@ -118,14 +118,13 @@ export async function registerAddressWithAlchemyWebhook(
   if (!config.ALCHEMY_AUTH_TOKEN) {
     throw new Error('ALCHEMY_AUTH_TOKEN is not set: cannot register address with Alchemy webhook');
   }
-  const webhookUrl = 'https://dashboard.alchemy.com/api/update-webhook-addresses';
   const addressesToAdd: string[] = [address];
   if (webhookId === evmChainIdToAlchemyWebhookId[avalanche.id.toString()]) {
     // for avalanche, we also should add the smart account address to the webhook.
     const smartAccountAddress = await getSmartAccountAddress(address);
     addressesToAdd.push(smartAccountAddress);
   }
-  const response = await fetch(webhookUrl, {
+  const response = await fetch(config.ALCHEMY_WEBHOOK_UPDATE_URL, {
     method: 'PATCH',
     headers: {
       'X-Alchemy-Token': config.ALCHEMY_AUTH_TOKEN,

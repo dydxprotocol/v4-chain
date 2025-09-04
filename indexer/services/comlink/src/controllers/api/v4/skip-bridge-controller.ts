@@ -300,11 +300,11 @@ class BridgeController extends Controller {
     if (!record) {
       throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
     }
-    // Replace with your own private key
+
     const solanaSponsorPublicKey = config.SOLANA_SPONSOR_PUBLIC_KEY;
     if (!solanaSponsorPublicKey) {
       throw new Error(
-        'Missing required environment variable: SOLANA_SPONSOR_PRIVATE_KEY',
+        'Missing required environment variable: SOLANA_PUBLIC_KEY',
       );
     }
     await executeRoute({
@@ -404,20 +404,24 @@ class BridgeController extends Controller {
       organizationId: suborgId,
       signWith: fromAddress,
     });
-    // use the permissioned master key as a signer.
-    const privateKeyAccount = privateKeyToAccount(config.MASTER_SIGNER_PRIVATE as `0x${string}`);
-    const sessionKeySigner = await toECDSASigner({
-      signer: privateKeyAccount,
-    });
-    if (chainId === arbitrum.id.toString()) {
-      const sessionKeyAccount = await deserializePermissionAccount(
-        publicClients[chainId],
-        entryPoint,
-        KERNEL_V3_3,
-        suborgToApproval.get(suborgId) || '',
-        sessionKeySigner,
-      );
-      return sessionKeyAccount;
+
+    if (config.APPROVAL_ENABLED) {
+      // if smart account approval is enabled, use the session key + approval to sign for txs.
+      // use the permissioned master key as a signer.
+      const privateKeyAccount = privateKeyToAccount(config.MASTER_SIGNER_PRIVATE as `0x${string}`);
+      const sessionKeySigner = await toECDSASigner({
+        signer: privateKeyAccount,
+      });
+      if (chainId === arbitrum.id.toString()) {
+        const sessionKeyAccount = await deserializePermissionAccount(
+          publicClients[chainId],
+          entryPoint,
+          KERNEL_V3_3,
+          suborgToApproval.get(suborgId) || '',
+          sessionKeySigner,
+        );
+        return sessionKeyAccount;
+      }
     }
     if (chainId === avalanche.id.toString()) {
       // Construct a validator
