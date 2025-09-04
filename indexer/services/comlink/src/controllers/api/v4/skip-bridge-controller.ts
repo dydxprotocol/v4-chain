@@ -101,6 +101,17 @@ interface BridgeResponse {
   message?: string,
 }
 
+function formatError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack || error.message;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch (_) {
+    return String(error);
+  }
+}
+
 // Finds the dydx address for a given evm or svm address.
 async function getDydxAddress(address: string, chainId: string): Promise<string> {
   let dydxAddress = '';
@@ -111,7 +122,10 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
       message: 'Looking up in turnkey table for evm address',
       address,
     });
-    const record = await findByEvmAddress(address);
+    const normalizedAddress = (address && address.startsWith('0x'))
+      ? checksumAddress(address as Address)
+      : address;
+    const record = await findByEvmAddress(normalizedAddress);
     dydxAddress = record?.dydx_address || '';
   } else if (chainId === 'solana') {
     // look up in turnkey table
@@ -138,7 +152,10 @@ class BridgeController extends Controller {
       @Query() amount?: string,
   ): Promise<BridgeResponse> {
     const processingQueue = ProcessingQueue.getInstance();
-    const addressKey = `${fromAddress}-${chainId}`;
+    const normalizedFromAddress = (isSupportedEVMChainId(chainId) && fromAddress?.startsWith('0x'))
+      ? checksumAddress(fromAddress as Address)
+      : fromAddress;
+    const addressKey = `${normalizedFromAddress}-${chainId}`;
 
     // Check if this address is already being processed
     if (processingQueue.isProcessing(addressKey)) {
@@ -181,8 +198,14 @@ class BridgeController extends Controller {
         });
         // get usdc amount and check that the usd amount is greater than the threshold.
         const usdAmt = assets?.chains?.[chainId]?.denoms?.[usdcAddressByChainId.solana]?.valueUsd;
-        if (amount && parseInt(amount, 10) >= 0 &&
-          usdAmt && parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC) {
+        if (!amount) {
+          throw new Error('Amount is required for solana');
+        }
+        const amountNum = parseInt(amount, 10);
+        if (!Number.isFinite(amountNum) || amountNum <= 0) {
+          throw new Error('Amount must be a positive integer for solana');
+        }
+        if (usdAmt && parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC) {
           try {
             await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
           } catch (error) {
@@ -192,8 +215,6 @@ class BridgeController extends Controller {
               error,
             });
           }
-        } else if (!amount) {
-          throw new Error('Amount is required for solana');
         } else {
           throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
         }
@@ -206,7 +227,7 @@ class BridgeController extends Controller {
         const assets = await balances({
           chains: {
             [chainId]: {
-              address: fromAddress,
+              address: normalizedFromAddress,
             },
           },
         });
@@ -216,27 +237,27 @@ class BridgeController extends Controller {
           assets,
         });
 
-        for (let asset of assetsToSearch) {
-          asset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
-          const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
-          const usdAmount = assets?.chains?.[chainId]?.denoms?.[asset]?.valueUsd;
+        for (const asset of assetsToSearch) {
+          const normalizedAsset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
+          const balance = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.amount;
+          const usdAmount = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.valueUsd;
           // To sweep and asset, user needs to have at least BRIDGE_THRESHOLD_USDC in it.
           if (balance && parseInt(balance, 10) > 0 &&
             usdAmount && parseFloat(usdAmount) > config.BRIDGE_THRESHOLD_USDC) {
             logger.info({
               at: `${controllerName}#sweep->startEvmBridge`,
               message: 'Bridge token',
-              fromAddress,
+              fromAddress: normalizedFromAddress,
               chainId,
-              asset,
+              asset: normalizedAsset,
               balance,
             });
             try {
-              await this.startEvmBridge(fromAddress, balance, asset, chainId);
+              await this.startEvmBridge(normalizedFromAddress, balance, normalizedAsset, chainId);
             } catch (error) {
               logger.error({
                 at: `${controllerName}#sweep->startEvmBridge`,
-                message: `Failed to bridge token ${asset}`,
+                message: `Failed to bridge token ${normalizedAsset}`,
                 error,
               });
             }
@@ -304,7 +325,7 @@ class BridgeController extends Controller {
     const solanaSponsorPublicKey = config.SOLANA_SPONSOR_PUBLIC_KEY;
     if (!solanaSponsorPublicKey) {
       throw new Error(
-        'Missing required environment variable: SOLANA_PUBLIC_KEY',
+        'Missing required environment variable: SOLANA_SPONSOR_PUBLIC_KEY',
       );
     }
     await executeRoute({
@@ -476,17 +497,24 @@ class BridgeController extends Controller {
           message: 'Failed to get EOA address from smart account address',
           error,
         });
-        throw new Error(`Cannot proceed with bridge, cannot get EOA address from smart account address : ${error.message}`);
+        throw new Error(
+          `Cannot proceed with bridge, cannot get EOA address from smart account address : ${formatError(error)}`,
+        );
       }
     }
-    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(srcAddress);
+    const normalizedSrcAddress = (srcAddress && srcAddress.startsWith('0x'))
+      ? checksumAddress(srcAddress as Address)
+      : srcAddress;
+    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(
+      normalizedSrcAddress,
+    );
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
     let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
       callData = await getSkipCallData(
-        srcAddress,
+        normalizedSrcAddress,
         sourceAssetDenom,
         record.dydx_address,
         amount,
@@ -500,9 +528,12 @@ class BridgeController extends Controller {
       });
       throw error;
     }
+
+    // kernel account is required here. This point onwards is just calling zerodev api to carry out
+    // the user op on chain.
     let account: CreateKernelAccountReturnType<EntryPointVersion>;
     try {
-      account = await this.getKernelAccount(chainId, srcAddress, record.suborg_id);
+      account = await this.getKernelAccount(chainId, normalizedSrcAddress, record.suborg_id);
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridge`,
@@ -556,7 +587,7 @@ class BridgeController extends Controller {
         callData,
         error,
       });
-      throw new Error(`Failed to send user operation, error: ${error}`);
+      throw new Error(`Failed to send user operation, error: ${formatError(error)}`);
     }
     return {
       success: true,
