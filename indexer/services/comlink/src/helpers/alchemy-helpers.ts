@@ -15,6 +15,9 @@ import {
 
 import config from '../config';
 import { create4xxResponse } from '../lib/helpers';
+import {
+  nobleChainId, osmosisChainId, neutronChainId, dydxChainId,
+} from '../lib/smart-contract-constants';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
   [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
@@ -263,13 +266,13 @@ export function getAddress(
     return sourceAddress;
   }
   switch (chainId) {
-    case 'noble-1':
+    case nobleChainId:
       return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress);
-    case 'osmosis-1':
+    case osmosisChainId:
       return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress) || '';
-    case 'neutron-1':
+    case neutronChainId:
       return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress) || '';
-    case 'dydx-mainnet-1':
+    case dydxChainId:
       return dydxAddress;
     default:
       throw new Error(`Unsupported chain ID: ${chainId}`);

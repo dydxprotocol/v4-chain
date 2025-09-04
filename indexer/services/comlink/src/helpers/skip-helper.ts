@@ -11,12 +11,28 @@ import type { SmartAccountImplementation } from 'viem/account-abstraction';
 
 import config from '../config';
 import {
+  dydxChainId,
   ethDenomByChainId, usdcAddressByChainId,
 } from '../lib/smart-contract-constants';
 import { getAddress } from './alchemy-helpers';
 
 export const suborgToApproval = new Map<string, string>();
 
+export async function buildUserAddresses(
+  requiredChainAddresses: string[],
+  sourceAddress: string,
+  dydxAddress: string,
+) {
+  return Promise.all(
+    requiredChainAddresses.map(async (cid: string) => ({
+      chainId: cid,
+      address: await getAddress(cid, sourceAddress, dydxAddress),
+    })),
+  );
+}
+
+const skipMessagesTimeoutSeconds = '60';
+const slippageTolerancePercent = '0';
 // Grabs the raw skip route data to carry out the bridge on our own.
 export async function getSkipCallData(
   sourceAddress: string,
@@ -34,8 +50,8 @@ export async function getSkipCallData(
     amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
     sourceAssetChainId: chainId,
-    destAssetDenom: usdcAddressByChainId['dydx-mainnet-1'],
-    destAssetChainId: 'dydx-mainnet-1',
+    destAssetDenom: usdcAddressByChainId[dydxChainId],
+    destAssetChainId: dydxChainId,
     cumulativeAffiliateFeeBps: '0',
     smartRelay: true, // skip recommended to enable for better routes and less faults.
     smartSwapOptions: {
@@ -61,11 +77,10 @@ export async function getSkipCallData(
     dydxAddress,
   });
 
-  const userAddresses = await Promise.all(
-    routeResult.requiredChainAddresses.map(async (cid: string) => ({
-      chainId: cid,
-      address: await getAddress(cid, sourceAddress, dydxAddress),
-    })),
+  const userAddresses = await buildUserAddresses(
+    routeResult.requiredChainAddresses,
+    sourceAddress,
+    dydxAddress,
   );
 
   let addressList: string[] = [];
@@ -88,9 +103,8 @@ export async function getSkipCallData(
     throw new Error('executeRoute error: invalid address list');
   }
 
-  const timeoutSeconds = '60'; // Set a timeout for the messages request
   const response = await messages({
-    timeoutSeconds,
+    timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
     amountOut: routeResult.estimatedAmountOut || '0',
     sourceAssetChainId: routeResult?.sourceAssetChainId,
@@ -99,7 +113,7 @@ export async function getSkipCallData(
     destAssetDenom: routeResult?.destAssetDenom,
     operations: routeResult?.operations,
     addressList,
-    slippageTolerancePercent: '1',
+    slippageTolerancePercent,
   });
 
   let data = '';

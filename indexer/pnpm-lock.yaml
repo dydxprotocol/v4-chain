@@ -13583,7 +13583,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_5faceb518d942d9e0d26e6d93b1febee
+      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
     transitivePeerDependencies:
       - supports-color
 
@@ -17469,6 +17469,7 @@ packages:
       typescript: 5.8.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    dev: true
 
   /ts-node/10.8.2_64708740079a51ed2e240ab651df249f:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}

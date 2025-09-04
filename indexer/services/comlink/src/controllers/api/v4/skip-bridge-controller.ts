@@ -1,5 +1,6 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 // import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
+import { dbHelpers, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -42,16 +43,16 @@ import {
   getEOAAddressFromSmartAccountAddress,
   isSupportedEVMChainId,
   getRPCEndpoint,
-  getAddress,
   publicClients,
   alchemyNetworkToChainIdMap,
   ethDenomByChainId,
 } from '../../../helpers/alchemy-helpers';
 import {
   getSvmSigner, getSkipCallData, suborgToApproval,
+  buildUserAddresses,
 } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
-import { entryPoint, usdcAddressByChainId } from '../../../lib/smart-contract-constants';
+import { dydxChainId, entryPoint, usdcAddressByChainId } from '../../../lib/smart-contract-constants';
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -118,10 +119,7 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
       message: 'Looking up in turnkey table for evm address',
       address,
     });
-    const normalizedEvmAddress = (address && address.startsWith('0x'))
-      ? checksumAddress(address as Address)
-      : address;
-    const record = await findByEvmAddress(normalizedEvmAddress);
+    const record = await findByEvmAddress(address);
     dydxAddress = record?.dydx_address || '';
   } else if (chainId === 'solana') {
     // look up in turnkey table
@@ -147,9 +145,6 @@ class BridgeController extends Controller {
       // optionally provide the contract and amount, primarily used for solana.
       @Query() amount?: string,
   ): Promise<BridgeResponse> {
-    const normalizedFromAddress = (isSupportedEVMChainId(chainId) && fromAddress?.startsWith('0x'))
-      ? checksumAddress(fromAddress as Address)
-      : fromAddress;
     if (chainId === 'solana') {
       // no sweeping if amount is less than threshold, so far we only support usdc on svm.
       const assets = await balances({
@@ -169,7 +164,7 @@ class BridgeController extends Controller {
       if (!Number.isFinite(amountNum) || amountNum <= 0) {
         throw new Error('Amount must be a positive integer for solana');
       }
-      if (usdAmt && parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC) {
+      if (usdAmt && (parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC)) {
         try {
           await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
         } catch (error) {
@@ -191,7 +186,7 @@ class BridgeController extends Controller {
       const assets = await balances({
         chains: {
           [chainId]: {
-            address: normalizedFromAddress,
+            address: fromAddress,
           },
         },
       });
@@ -202,26 +197,25 @@ class BridgeController extends Controller {
       });
 
       for (const asset of assetsToSearch) {
-        const normalizedAsset = (asset && asset.startsWith('0x')) ? checksumAddress(asset as Address) : asset;
-        const balance = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.amount;
-        const usdAmount = assets?.chains?.[chainId]?.denoms?.[normalizedAsset]?.valueUsd;
+        const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
+        const usdAmount = assets?.chains?.[chainId]?.denoms?.[asset]?.valueUsd;
         // To sweep and asset, user needs to have at least BRIDGE_THRESHOLD_USDC in it.
         if (balance && parseInt(balance, 10) > 0 &&
           usdAmount && parseFloat(usdAmount) > config.BRIDGE_THRESHOLD_USDC) {
           logger.info({
             at: `${controllerName}#sweep->startEvmBridge`,
             message: 'Bridge token',
-            fromAddress: normalizedFromAddress,
+            fromAddress,
             chainId,
-            asset: normalizedAsset,
+            asset,
             balance,
           });
           try {
-            await this.startEvmBridge(normalizedFromAddress, balance, normalizedAsset, chainId);
+            await this.startEvmBridge(fromAddress, balance, asset, chainId);
           } catch (error) {
             logger.error({
               at: `${controllerName}#sweep->startEvmBridge`,
-              message: `Failed to bridge token ${normalizedAsset}`,
+              message: `Failed to bridge token ${asset}`,
               error,
             });
           }
@@ -242,6 +236,11 @@ class BridgeController extends Controller {
     sourceAssetDenom: string,
     chainId: string,
   ): Promise<BridgeResponse> {
+    const dydxAddress = await getDydxAddress(fromAddress, chainId);
+    if (!dydxAddress) {
+      throw new Error('Failed to derive dYdX address');
+    }
+
     const path = await route({
       goFast: true,
       allowUnsafe: false,
@@ -252,16 +251,10 @@ class BridgeController extends Controller {
       amountIn: amount,
       sourceAssetDenom,
       sourceAssetChainId: chainId,
-      destAssetChainId: 'dydx-mainnet-1',
+      destAssetChainId: dydxChainId,
       cumulativeAffiliateFeeBps: '0',
-      destAssetDenom: usdcAddressByChainId['dydx-mainnet-1'],
+      destAssetDenom: usdcAddressByChainId[dydxChainId],
     });
-
-    const dydxAddress = await getDydxAddress(fromAddress, chainId);
-    if (!dydxAddress) {
-      throw new Error('Failed to derive dYdX address');
-    }
-
     if (!path) {
       throw new Error('Failed to create route');
     }
@@ -269,11 +262,8 @@ class BridgeController extends Controller {
     // the end user must be able to sign these intermediate addresses as
     // they are the addresses that the funds will be deposited into in case
     // of a failure.
-    const userAddresses = await Promise.all(
-      path.requiredChainAddresses.map((chain: string) => ({
-        chainId: chain,
-        address: getAddress(chain, fromAddress, dydxAddress),
-      })),
+    const userAddresses = await buildUserAddresses(
+      path.requiredChainAddresses, fromAddress, dydxAddress,
     );
 
     // find the suborgId for the user
@@ -462,11 +452,8 @@ class BridgeController extends Controller {
         );
       }
     }
-    const normalizedSrcAddress = (srcAddress && srcAddress.startsWith('0x'))
-      ? checksumAddress(srcAddress as Address)
-      : srcAddress;
     const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(
-      normalizedSrcAddress,
+      srcAddress,
     );
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
@@ -474,7 +461,7 @@ class BridgeController extends Controller {
     let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
       callData = await getSkipCallData(
-        normalizedSrcAddress,
+        srcAddress,
         sourceAssetDenom,
         record.dydx_address,
         amount,
@@ -493,7 +480,7 @@ class BridgeController extends Controller {
     // the user op on chain.
     let account: CreateKernelAccountReturnType<EntryPointVersion>;
     try {
-      account = await this.getKernelAccount(chainId, normalizedSrcAddress, record.suborg_id);
+      account = await this.getKernelAccount(chainId, srcAddress, record.suborg_id);
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridge`,
@@ -699,6 +686,15 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
+    await dbHelpers.clearData();
+    await TurnkeyUsersTable.create({
+      suborg_id: 'test-org',
+      svm_address: 'SVM123456789',
+      evm_address: '0x1234567890abcdef1234567890abcdef12345678',
+      salt: 'test-salt',
+      dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+      created_at: new Date().toISOString(),
+    });
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();

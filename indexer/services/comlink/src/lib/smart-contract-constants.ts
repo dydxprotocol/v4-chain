@@ -7,6 +7,8 @@ import {
 
 export const entryPoint = getEntryPoint('0.7');
 
+export const dydxChainId = 'dydx-mainnet-1';
+
 export const usdcAddressByChainId: Record<string, string> = {
   [mainnet.id.toString()]: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // usdc on ethereum mainnet.
   [arbitrum.id.toString()]: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // usdc on arbitrum.
@@ -14,7 +16,7 @@ export const usdcAddressByChainId: Record<string, string> = {
   [base.id.toString()]: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // usdc on base.
   [optimism.id.toString()]: '0x0b2c639c533813f4aa9d7837caf62653d097ff85', // usdc on optimism.
   solana: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // usdc on solana.
-  'dydx-mainnet-1': 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5', // usdc on dydx.
+  [dydxChainId]: 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5', // usdc on dydx.
 };
 
 export const ethDenomByChainId: Record<string, string> = {
@@ -25,3 +27,7 @@ export const ethDenomByChainId: Record<string, string> = {
 };
 
 export const ARBITRUM_GO_FAST_HANDLER_SMART_CONTRACT = '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d';
+
+export const nobleChainId = 'noble-1';
+export const osmosisChainId = 'osmosis-1';
+export const neutronChainId = 'neutron-1';
