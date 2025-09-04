@@ -1319,6 +1319,9 @@
         "properties": {
           "success": {
             "type": "boolean"
+          },
+          "message": {
+            "type": "string"
           }
         },
         "required": [
@@ -1665,24 +1668,31 @@
         "type": "string"
       },
       "SignInRequest": {
+        "description": "Request interface for user sign-in operations",
         "properties": {
           "signinMethod": {
-            "$ref": "#/components/schemas/SigninMethod"
+            "$ref": "#/components/schemas/SigninMethod",
+            "description": "The authentication method to use (EMAIL, SOCIAL, or PASSKEY)"
           },
           "userEmail": {
-            "type": "string"
+            "type": "string",
+            "description": "User's email address (required for EMAIL signin method)"
           },
           "targetPublicKey": {
-            "type": "string"
+            "type": "string",
+            "description": "Target public key for authentication (required for EMAIL and SOCIAL signin methods)"
           },
           "provider": {
-            "type": "string"
+            "type": "string",
+            "description": "OAuth provider name (required for SOCIAL signin method)"
           },
           "oidcToken": {
-            "type": "string"
+            "type": "string",
+            "description": "OIDC token from OAuth provider (required for SOCIAL signin method)"
           },
           "challenge": {
-            "type": "string"
+            "type": "string",
+            "description": "Challenge string for passkey authentication (required for PASSKEY signin method)"
           },
           "attestation": {
             "properties": {
@@ -1715,10 +1725,12 @@
               "clientDataJson",
               "credentialId"
             ],
-            "type": "object"
+            "type": "object",
+            "description": "Attestation object for passkey authentication (required for PASSKEY signin method)"
           },
           "magicLink": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional magic link template URL for email authentication"
           }
         },
         "required": [

@@ -3152,7 +3152,8 @@ fetch(`${baseURL}/bridging/sweep?fromAddress=string&chainId=string`,
 
 ```json
 {
-  "success": true
+  "success": true,
+  "message": "string"
 }
 ```
 
@@ -6278,7 +6279,8 @@ or
 
 ```json
 {
-  "success": true
+  "success": true,
+  "message": "string"
 }
 
 ```
@@ -6288,6 +6290,7 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |success|boolean|true|none|none|
+|message|string|false|none|none|
 
 ## TraderSearchResponseObject
 
@@ -6798,22 +6801,24 @@ or
 
 ```
 
+Request interface for user sign-in operations
+
 ### Properties
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|signinMethod|[SigninMethod](#schemasigninmethod)|true|none|none|
-|userEmail|string|false|none|none|
-|targetPublicKey|string|false|none|none|
-|provider|string|false|none|none|
-|oidcToken|string|false|none|none|
-|challenge|string|false|none|none|
-|attestation|object|false|none|none|
+|signinMethod|[SigninMethod](#schemasigninmethod)|true|none|The authentication method to use (EMAIL, SOCIAL, or PASSKEY)|
+|userEmail|string|false|none|User's email address (required for EMAIL signin method)|
+|targetPublicKey|string|false|none|Target public key for authentication (required for EMAIL and SOCIAL signin methods)|
+|provider|string|false|none|OAuth provider name (required for SOCIAL signin method)|
+|oidcToken|string|false|none|OIDC token from OAuth provider (required for SOCIAL signin method)|
+|challenge|string|false|none|Challenge string for passkey authentication (required for PASSKEY signin method)|
+|attestation|object|false|none|Attestation object for passkey authentication (required for PASSKEY signin method)|
 |» transports|[string]|true|none|none|
 |» attestationObject|string|true|none|none|
 |» clientDataJson|string|true|none|none|
 |» credentialId|string|true|none|none|
-|magicLink|string|false|none|none|
+|magicLink|string|false|none|Optional magic link template URL for email authentication|
 
 ## MegavaultHistoricalPnlResponse
 
