@@ -10,11 +10,11 @@ import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import bs58 from 'bs58';
 import { avalanche } from 'viem/chains';
 
-import config from '../../../config';
-import { abi } from '../../../helpers/abi';
-import { publicClients } from '../../../helpers/alchemy-helpers';
-import { nobleToSolana, suborgToApproval } from '../../../helpers/skip-helper';
-import { entryPoint } from '../../../lib/smart-contract-constants';
+import config from '../config';
+import { entryPoint } from '../lib/smart-contract-constants';
+import { abi } from './abi';
+import { publicClients } from './alchemy-helpers';
+import { nobleToSolana, suborgToApproval } from './skip-helper';
 
 export class PolicyEngine {
   private turnkeySenderClient: TurnkeyApiClient;

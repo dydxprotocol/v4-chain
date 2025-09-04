@@ -11,6 +11,7 @@ import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { PolicyEngine } from '../../../helpers/policy-engine';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -22,7 +23,6 @@ import {
   SigninMethod,
   TurnkeyAuthResponse,
 } from '../../../types';
-import { PolicyEngine } from './policy-engine';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
 /* eslint-disable @typescript-eslint/no-explicit-any */

@@ -7,8 +7,8 @@ import { arbitrum } from 'viem/chains';
 
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
-import { PolicyEngine } from '../controllers/api/v4/policy-engine';
 import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../helpers/alchemy-helpers';
+import { PolicyEngine } from '../helpers/policy-engine';
 import {
   CreateSuborgParams,
   GetSuborgParams,
