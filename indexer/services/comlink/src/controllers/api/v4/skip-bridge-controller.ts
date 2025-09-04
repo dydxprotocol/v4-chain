@@ -739,16 +739,6 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    // await dbHelpers.clearData();
-    // await TurnkeyUsersTable.create({
-    //   suborg_id: 'b717b91e-61a4-4707-ba16-a6635ee14143',
-    //   svm_address: 'EWHuLzjV2PMR2w64RLMyEW7tPA7sWHPXRSWbnf2pEscE',
-    //   evm_address: '0x74e7A23338D294b14Fc819Be0a179ed9E2a26ca1',
-    //   smart_account_address: '0xd2A6baf165CF630B39A74ad2Ef1b5A917f74ABE0',
-    //   salt: '112dca5a557c8f0f103cd88ad32c178e5bc1bd5e62cbaa1b5936d01a4538bc80',
-    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-    //   created_at: new Date().toISOString(),
-    // })
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();
