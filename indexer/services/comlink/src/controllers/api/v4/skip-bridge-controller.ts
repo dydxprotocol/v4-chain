@@ -1,6 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 // import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
-import { dbHelpers, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -45,14 +44,16 @@ import {
   getRPCEndpoint,
   publicClients,
   alchemyNetworkToChainIdMap,
-  ethDenomByChainId,
 } from '../../../helpers/alchemy-helpers';
 import {
   getSvmSigner, getSkipCallData, suborgToApproval,
   buildUserAddresses,
 } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
-import { dydxChainId, entryPoint, usdcAddressByChainId } from '../../../lib/smart-contract-constants';
+import {
+  dydxChainId, entryPoint, usdcAddressByChainId, ethDenomByChainId,
+  SOLANA_USDC_QUANTUM,
+} from '../../../lib/smart-contract-constants';
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -146,25 +147,12 @@ class BridgeController extends Controller {
       @Query() amount?: string,
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
-      // no sweeping if amount is less than threshold, so far we only support usdc on svm.
-      const assets = await balances({
-        chains: {
-          [chainId]: {
-            address: fromAddress,
-            denoms: [usdcAddressByChainId.solana],
-          },
-        },
-      });
-      // get usdc amount and check that the usd amount is greater than the threshold.
-      const usdAmt = assets?.chains?.[chainId]?.denoms?.[usdcAddressByChainId.solana]?.valueUsd;
       if (!amount) {
         throw new Error('Amount is required for solana');
       }
-      const amountNum = parseInt(amount, 10);
-      if (!Number.isFinite(amountNum) || amountNum <= 0) {
-        throw new Error('Amount must be a positive integer for solana');
-      }
-      if (usdAmt && (parseFloat(usdAmt) >= config.BRIDGE_THRESHOLD_USDC)) {
+      // get usdc amount and check that the usd amount is greater than the threshold.
+      const usdAmt = BigInt(amount) / BigInt(SOLANA_USDC_QUANTUM);
+      if (usdAmt && (usdAmt >= config.BRIDGE_THRESHOLD_USDC)) {
         try {
           await this.startSolanaBridge(fromAddress, amount, usdcAddressByChainId.solana, chainId);
         } catch (error) {
@@ -175,7 +163,18 @@ class BridgeController extends Controller {
           });
         }
       } else {
-        throw new Error(`Amount must be greater than ${config.BRIDGE_THRESHOLD_USDC} to start auto bridge`);
+        logger.info({
+          at: `${controllerName}#sweep->startSolanaBridge`,
+          message: 'Amount is less than threshold, skipping bridge',
+          address: fromAddress,
+          chainId,
+          usdAmt,
+          amount,
+          threshold: config.BRIDGE_THRESHOLD_USDC,
+        });
+        return {
+          success: false,
+        };
       }
     } else if (isSupportedEVMChainId(chainId)) {
       // search for assets that exist on this account on this chain.
@@ -219,6 +218,17 @@ class BridgeController extends Controller {
               error,
             });
           }
+        } else {
+          logger.info({
+            at: `${controllerName}#sweep->startEvmBridge`,
+            message: 'Amount is less than threshold, skipping bridge',
+            address: fromAddress,
+            chainId,
+            asset,
+            balance,
+            usdAmount,
+            threshold: config.BRIDGE_THRESHOLD_USDC,
+          });
         }
       }
     } else {
@@ -686,15 +696,15 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    await dbHelpers.clearData();
-    await TurnkeyUsersTable.create({
-      suborg_id: 'test-org',
-      svm_address: 'SVM123456789',
-      evm_address: '0x1234567890abcdef1234567890abcdef12345678',
-      salt: 'test-salt',
-      dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
-      created_at: new Date().toISOString(),
-    });
+    // await dbHelpers.clearData();
+    // await TurnkeyUsersTable.create({
+    //   suborg_id: 'd3b19985-bfa1-4fe1-8fbe-8345ccd2d45d',
+    //   svm_address: '6Mcr6rmzgcFCmMfb583p2xsfFkdrYQf3mLGKLAHdqeNq',
+    //   evm_address: '0x91Ce4Dcf7080e7f80CDF137aEd4BdF78453195FD',
+    //   salt: 'test-salt',
+    //   dydx_address: 'dydx1sjssdnatk99j2sdkqgqv55a8zs97fcvstzreex',
+    //   created_at: new Date().toISOString(),
+    // });
     const start: number = Date.now();
     try {
       const bridgeController = new BridgeController();

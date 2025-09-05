@@ -38,13 +38,6 @@ export const alchemyNetworkToChainIdMap: Record<string, string> = {
   SOLANA_MAINNET: 'solana',
 };
 
-export const ethDenomByChainId: Record<string, string> = {
-  [mainnet.id.toString()]: 'ethereum-native', // eth on ethereum mainnet.
-  [arbitrum.id.toString()]: 'arbitrum-native', // eth on arbitrum.
-  [base.id.toString()]: 'base-native', // eth on base.
-  [optimism.id.toString()]: 'optimism-native', // eth on optimism.
-};
-
 export const chains: Record<string, Chain> = {
   [mainnet.id.toString()]: mainnet,
   [arbitrum.id.toString()]: arbitrum,
