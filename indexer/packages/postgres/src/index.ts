@@ -56,6 +56,7 @@ export * as FundingPaymentsTable from './stores/funding-payments-table';
 export * as TurnkeyUsersTable from './stores/turnkey-users-table';
 export * as VaultPnlTicksView from './stores/vault-pnl-ticks-view';
 export * as PermissionApprovalTable from './stores/permission-approval-table';
+export * as PnlTable from './stores/pnl-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
