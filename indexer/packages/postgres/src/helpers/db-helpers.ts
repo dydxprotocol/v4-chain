@@ -11,6 +11,8 @@ const layer2Tables = [
   'leaderboard_pnl',
   'funding_payments',
   'subaccounts',
+  'turnkey_users',
+  'permission_approval',
 ];
 
 const layer1Tables = [

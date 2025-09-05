@@ -90,6 +90,7 @@ export enum QueryableField {
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
   REASON = 'reason',
   USERNAME = 'username',
+  EMAIL = 'email',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
   AFFILIATE_ADDRESS = 'affiliateAddress',
@@ -100,6 +101,10 @@ export enum QueryableField {
   PARENT_SUBACCOUNT = 'parentSubaccount',
   DISTINCT_FIELDS = 'distinctFields',
   ZERO_PAYMENTS = 'zeroPayments',
+  SUBORG_ID = 'suborg_id',
+  SVM_ADDRESS = 'svm_address',
+  EVM_ADDRESS = 'evm_address',
+  DYDX_ADDRESS = 'dydx_address',
 }
 
 export interface QueryConfig {

@@ -8,6 +8,7 @@ import { decode } from 'bech32';
 import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
+import { SigninMethod } from '../../types';
 
 const addressSchema = {
   isString: true as const,
@@ -204,6 +205,208 @@ const checkZeroPaymentsOptionalParamSchema: ParamSchema = {
   optional: true,
   isBoolean: true,
 };
+
+const checkBridgeSchema: Record<string, ParamSchema> = {
+  // Validate the event object structure
+  event: {
+    in: 'body',
+    isObject: true,
+    errorMessage: 'Event must be an object',
+  },
+  // for solana
+  'event.transaction': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.transaction must be an array',
+  },
+  'event.transaction.*.meta': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.transaction.transaction must be an array',
+  },
+  'event.transaction.*.meta.*.post_token_balances': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.transaction.meta.post_token_balances must be an array',
+  },
+  'event.transaction.*.meta.*.post_token_balances.*.amount': {
+    in: 'body',
+    optional: true,
+    isString: true,
+    errorMessage: 'Event.transaction.meta.post_token_balances.amount must be a string',
+  },
+  // for evm
+  'event.activity': {
+    in: 'body',
+    optional: true,
+    isArray: true,
+    errorMessage: 'Event.activity must be an array',
+  },
+  'event.activity.*.fromAddress': {
+    in: 'body',
+    optional: true,
+    isString: true,
+    errorMessage: 'Activity fromAddress must be a string',
+  },
+  'event.activity.*.toAddress': {
+    in: 'body',
+    isString: true,
+    optional: true,
+    errorMessage: 'Activity toAddress must be a string',
+  },
+  'event.activity.*.asset': {
+    in: 'body',
+    isString: true,
+    optional: true,
+    errorMessage: 'Activity asset must be a string',
+  },
+  'event.activity.*.value': {
+    in: 'body',
+    isNumeric: true,
+    optional: true,
+    errorMessage: 'Activity value must be a number',
+  },
+  'event.network': {
+    in: 'body',
+    isString: true,
+    optional: true,
+    errorMessage: 'Event network must be a string',
+  },
+  // Webhook metadata
+  id: {
+    in: 'body',
+    isString: true,
+    optional: true,
+  },
+  type: {
+    in: 'body',
+    isString: true,
+    optional: true,
+  },
+  webhookId: {
+    in: 'body',
+    isString: true,
+    optional: true,
+  },
+};
+
+// Validation schemas
+const signInSchema: Record<string, ParamSchema> = {
+  signinMethod: {
+    in: ['body'],
+    isIn: {
+      options: [[SigninMethod.SOCIAL, SigninMethod.PASSKEY, SigninMethod.EMAIL]],
+    },
+    errorMessage: `Must be one of: ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}, ${SigninMethod.EMAIL}`,
+  },
+  userEmail: {
+    in: ['body'],
+    optional: true,
+    isEmail: true,
+    errorMessage: 'Must be a valid email address',
+    custom: {
+      options: (value: string, { req }) => {
+        // Require email for EMAIL signin method
+        if (req.body.signinMethod === SigninMethod.EMAIL && !value) {
+          throw new Error('userEmail is required for email signin');
+        }
+        return true;
+      },
+    },
+  },
+  magicLink: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Magic link must be a string',
+    custom: {
+      options: (value: string) => {
+        // Validate magic link URL format if provided
+        if (value) {
+          try {
+            URL.parse(value.replace('%s', 'test'));
+          } catch {
+            throw new Error('Invalid magic link template URL');
+          }
+        }
+        return true;
+      },
+    },
+  },
+  targetPublicKey: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Target public key must be a string',
+    custom: {
+      options: (value: string, { req }) => {
+        // Require targetPublicKey for EMAIL and SOCIAL signin methods
+        const signinMethod = req.body.signinMethod;
+        if ((signinMethod === SigninMethod.EMAIL || signinMethod === SigninMethod.SOCIAL) &&
+          !value) {
+          throw new Error('targetPublicKey is required for email and social signin');
+        }
+        return true;
+      },
+    },
+  },
+  // Passkey params
+  challenge: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Challenge must be a string',
+  },
+  attestation: {
+    in: ['body'],
+    optional: true,
+    isObject: true,
+    errorMessage: 'Attestation must be an object',
+  },
+  provider: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Provider must be a string',
+  },
+  oidcToken: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'OIDC token must be a string',
+  },
+};
+
+const uploadDydxAddressSchema: Record<string, ParamSchema> = {
+  dydxAddress: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'dydxAddress must be a string',
+  },
+  signature: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'signature must be a string',
+  },
+};
+
+const getDepositAddressSchema: Record<string, ParamSchema> = {
+  dydxAddress: {
+    in: ['params'],
+    ...addressSchema,
+  },
+};
+
+export const CheckSignInSchema = checkSchema(signInSchema);
+
+export const CheckUploadDydxAddressSchema = checkSchema(uploadDydxAddressSchema);
+
+export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
+
+export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
 
 export const CheckZeroPaymentsOptionalParamSchema = checkSchema({
   showZeroPayments: checkZeroPaymentsOptionalParamSchema,

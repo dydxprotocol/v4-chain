@@ -1315,6 +1315,21 @@
         "type": "object",
         "additionalProperties": false
       },
+      "BridgeResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -1613,6 +1628,113 @@
         "required": [
           "transfersSubset",
           "totalNetTransfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TurnkeyAuthResponse": {
+        "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "apiKeyId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "salt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "salt"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SigninMethod": {
+        "enum": [
+          "email",
+          "social",
+          "passkey"
+        ],
+        "type": "string"
+      },
+      "SignInRequest": {
+        "description": "Request interface for user sign-in operations",
+        "properties": {
+          "signinMethod": {
+            "$ref": "#/components/schemas/SigninMethod",
+            "description": "The authentication method to use (EMAIL, SOCIAL, or PASSKEY)"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "User's email address (required for EMAIL signin method)"
+          },
+          "targetPublicKey": {
+            "type": "string",
+            "description": "Target public key for authentication (required for EMAIL and SOCIAL signin methods)"
+          },
+          "provider": {
+            "type": "string",
+            "description": "OAuth provider name (required for SOCIAL signin method)"
+          },
+          "oidcToken": {
+            "type": "string",
+            "description": "OIDC token from OAuth provider (required for SOCIAL signin method)"
+          },
+          "challenge": {
+            "type": "string",
+            "description": "Challenge string for passkey authentication (required for PASSKEY signin method)"
+          },
+          "attestation": {
+            "properties": {
+              "transports": {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "AUTHENTICATOR_TRANSPORT_BLE",
+                    "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                    "AUTHENTICATOR_TRANSPORT_NFC",
+                    "AUTHENTICATOR_TRANSPORT_USB",
+                    "AUTHENTICATOR_TRANSPORT_HYBRID"
+                  ]
+                },
+                "type": "array"
+              },
+              "attestationObject": {
+                "type": "string"
+              },
+              "clientDataJson": {
+                "type": "string"
+              },
+              "credentialId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transports",
+              "attestationObject",
+              "clientDataJson",
+              "credentialId"
+            ],
+            "type": "object",
+            "description": "Attestation object for passkey authentication (required for PASSKEY signin method)"
+          },
+          "magicLink": {
+            "type": "string",
+            "description": "Optional magic link template URL for email authentication"
+          }
+        },
+        "required": [
+          "signinMethod"
         ],
         "type": "object",
         "additionalProperties": false
@@ -3409,6 +3531,50 @@
         ]
       }
     },
+    "/bridging/sweep": {
+      "post": {
+        "operationId": "Sweep",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BridgeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fromAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chainId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "amount",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/trader/search": {
       "get": {
         "operationId": "SearchTrader",
@@ -3760,6 +3926,85 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/uploadAddress": {
+      "post": {
+        "operationId": "UploadAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Uploads the dydx address to the turnkey table.\n\nBackend won't have this information when we create account for user since you need signature\nto derive dydx address. Just wait for fe to uplaod to kick off the policy setup.",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "signature": {
+                    "type": "string"
+                  },
+                  "dydxAddress": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "signature",
+                  "dydxAddress"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/turnkey/signin": {
+      "post": {
+        "operationId": "SignIn",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnkeyAuthResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/vault/v1/megavault/historicalPnl": {
