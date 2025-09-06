@@ -262,9 +262,9 @@ export function getAddress(
     case nobleChainId:
       return toClientAddressWithPrefix(CosmosPrefix.NOBLE, dydxAddress);
     case osmosisChainId:
-      return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress) || '';
+      return toClientAddressWithPrefix(CosmosPrefix.OSMO, dydxAddress);
     case neutronChainId:
-      return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress) || '';
+      return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress);
     case dydxChainId:
       return dydxAddress;
     default:
