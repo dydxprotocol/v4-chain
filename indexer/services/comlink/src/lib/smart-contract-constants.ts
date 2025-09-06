@@ -12,9 +12,9 @@ export const dydxChainId = 'dydx-mainnet-1';
 export const usdcAddressByChainId: Record<string, string> = {
   [mainnet.id.toString()]: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // usdc on ethereum mainnet.
   [arbitrum.id.toString()]: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // usdc on arbitrum.
-  [avalanche.id.toString()]: '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e', // usdc on avalanche.
-  [base.id.toString()]: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // usdc on base.
-  [optimism.id.toString()]: '0x0b2c639c533813f4aa9d7837caf62653d097ff85', // usdc on optimism.
+  [avalanche.id.toString()]: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', // usdc on avalanche.
+  [base.id.toString()]: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // usdc on base.
+  [optimism.id.toString()]: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // usdc on optimism.
   solana: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // usdc on solana.
   [dydxChainId]: 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5', // usdc on dydx.
 };

@@ -1,5 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { ChainId, PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
+import { PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import { createAccount } from '@turnkey/viem';
 import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
@@ -9,10 +9,13 @@ import { toECDSASigner } from '@zerodev/permissions/signers';
 import { addressToEmptyAccount, createKernelAccount } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import bs58 from 'bs58';
-import { avalanche } from 'viem/chains';
+import { LocalAccount } from 'viem';
+import {
+  avalanche, optimism, base, arbitrum,
+} from 'viem/chains';
 
 import config from '../config';
-import { arbitrumCallPolicy } from '../lib/call-policies';
+import { avalancheCallPolicy, chainIdToCallPolicy } from '../lib/call-policies';
 import { entryPoint } from '../lib/smart-contract-constants';
 import { publicClients } from './alchemy-helpers';
 import { nobleToSolana } from './skip-helper';
@@ -35,14 +38,8 @@ export class PolicyEngine {
 
   async configurePolicy(
     suborgId: string, // sender api must have access to this.
-    chainId: string,
     fromAddress: string,
   ) {
-
-    const pc = publicClients[chainId];
-    if (!pc) {
-      throw new Error(`Public client not found for chainId: ${chainId}`);
-    }
 
     const turnkeyAccount = await createAccount({
       // @ts-ignore
@@ -51,54 +48,31 @@ export class PolicyEngine {
       signWith: fromAddress,
     });
 
-    let kernelVersion = KERNEL_V3_3;
-    if (chainId === avalanche.id.toString()) {
-      kernelVersion = KERNEL_V3_1;
-      // use this for avalanche to create the ecdsa validator.
-      await signerToEcdsaValidator(pc, {
-        entryPoint,
-        kernelVersion,
-        signer: turnkeyAccount,
-      });
+    const chains = [arbitrum.id.toString(), base.id.toString(), optimism.id.toString()];
+    for (const chain of chains) {
+      try {
+        const approval = await getApprovalFor7702Evm(turnkeyAccount, chain);
+        logger.info({
+          at: 'policy-controller#configurePolicy',
+          message: `Approval obtained for chain ${chain} and suborg ${suborgId}`,
+        });
+        await PermissionApprovalTable.create({
+          suborg_id: suborgId,
+          chain_id: chain,
+          approval,
+        });
+      } catch (error) {
+        logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring policy', error });
+        throw error;
+      }
     }
 
-    // Create an "empty account" as the signer -- you only need the public
-    // key (address) to do this.
-    const emptyAccount = addressToEmptyAccount(config.MASTER_SIGNER_PUBLIC as `0x${string}`);
-    const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
-
-    try {
-      const permissionPlugin = await toPermissionValidator(pc, {
-        entryPoint,
-        kernelVersion,
-        signer: emptySessionKeySigner,
-        policies: [
-          toCallPolicy(arbitrumCallPolicy),
-        ],
-      });
-
-      const sessionAccount = await createKernelAccount(pc, {
-        entryPoint,
-        kernelVersion,
-        eip7702Account: turnkeyAccount,
-        plugins: {
-          regular: permissionPlugin,
-        },
-      });
-      const approval = await serializePermissionAccount(sessionAccount);
-      logger.info({
-        at: 'policy-controller#configurePolicy',
-        message: `Approval obtained for chain ${chainId} and suborg ${suborgId}`,
-      });
-      await PermissionApprovalTable.create({
-        suborg_id: suborgId,
-        chain_id: chainId as ChainId,
-        approval,
-      });
-    } catch (error) {
-      logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring policy', error });
-      throw error;
-    }
+    const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount);
+    await PermissionApprovalTable.create({
+      suborg_id: suborgId,
+      chain_id: avalanche.id.toString(),
+      approval: avalancheApproval,
+    });
   }
 
   async getAPIUserId(suborgId: string): Promise<string> {
@@ -199,4 +173,62 @@ function solanaAddressToPaddedHex(solanaAddress: string): string {
     throw new Error('Hex Solana address is longer than 32 bytes');
   }
   return hex.padStart(64, '0');
+}
+
+async function getApprovalForAvalanche(turnkeyAccount: LocalAccount) {
+  const ecdsaValidator = await signerToEcdsaValidator(publicClients[avalanche.id.toString()], {
+    entryPoint,
+    signer: turnkeyAccount,
+    kernelVersion: KERNEL_V3_1,
+  });
+
+  // Create an "empty account" as the signer -- you only need the public
+  // key (address) to do this.
+  const emptyAccount = addressToEmptyAccount(config.MASTER_SIGNER_PUBLIC as `0x${string}`);
+  const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
+
+  const permissionPlugin = await toPermissionValidator(publicClients[avalanche.id.toString()], {
+    entryPoint,
+    signer: emptySessionKeySigner,
+    policies: [
+      toCallPolicy(avalancheCallPolicy),
+    ],
+    kernelVersion: KERNEL_V3_1,
+  });
+
+  const sessionKeyAccount = await createKernelAccount(publicClients[avalanche.id.toString()], {
+    entryPoint,
+    plugins: {
+      sudo: ecdsaValidator,
+      regular: permissionPlugin,
+    },
+    kernelVersion: KERNEL_V3_1,
+  });
+
+  return serializePermissionAccount(sessionKeyAccount);
+}
+
+async function getApprovalFor7702Evm(turnkeyAccount: LocalAccount, chainId: string) {
+
+  const kernelVersion = KERNEL_V3_3;
+  const emptyAccount = addressToEmptyAccount(config.MASTER_SIGNER_PUBLIC as `0x${string}`);
+  const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
+  const permissionPlugin = await toPermissionValidator(publicClients[chainId], {
+    entryPoint,
+    kernelVersion,
+    signer: emptySessionKeySigner,
+    policies: [
+      toCallPolicy(chainIdToCallPolicy[chainId]),
+    ],
+  });
+
+  const sessionAccount = await createKernelAccount(publicClients[chainId], {
+    entryPoint,
+    kernelVersion,
+    eip7702Account: turnkeyAccount,
+    plugins: {
+      regular: permissionPlugin,
+    },
+  });
+  return serializePermissionAccount(sessionAccount);
 }

@@ -1,5 +1,8 @@
 import { CallPolicyVersion, type CallPolicyParams } from '@zerodev/permissions/policies';
 import type { Abi } from 'viem';
+import {
+  arbitrum, avalanche, base, optimism,
+} from 'viem/chains';
 
 export const abi = [
   {
@@ -213,22 +216,29 @@ export const avalancheCallPolicy: CallPolicyParams<Abi, `0x${string}`> = {
   policyVersion: CallPolicyVersion.V0_0_4,
   permissions: [
     {
-      target: '0x0b2c639c533813f4aa9d7837caf62653d097ff85' as `0x${string}`,
+      target: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E' as `0x${string}`,
       abi,
       valueLimit: BigInt(1000000000000000000000000000000),
       functionName: 'approve',
     },
     {
-      target: '0x9c540EdC86613b22968Da784b2d42AC79965af91' as `0x${string}`,
+      target: '0xb7B287F15e5edDFEfF2b05ef1BE7F7cc73197AaA' as `0x${string}`,
       abi,
       valueLimit: BigInt(1000000000000000000000000000000),
       functionName: 'submitOrder',
     },
     {
-      target: '0x9c540EdC86613b22968Da784b2d42AC79965af91' as `0x${string}`,
+      target: '0xb7B287F15e5edDFEfF2b05ef1BE7F7cc73197AaA' as `0x${string}`,
       abi,
       valueLimit: BigInt(1000000000000000000000000000000),
       functionName: 'swapAndSubmitOrder',
     },
   ],
+} as const;
+
+export const chainIdToCallPolicy: Record<string, CallPolicyParams<Abi, `0x${string}`>> = {
+  [arbitrum.id.toString()]: arbitrumCallPolicy,
+  [base.id.toString()]: baseCallPolicy,
+  [optimism.id.toString()]: optimismCallPolicy,
+  [avalanche.id.toString()]: avalancheCallPolicy,
 } as const;

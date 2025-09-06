@@ -16,8 +16,6 @@ import {
 } from '../lib/smart-contract-constants';
 import { getAddress } from './alchemy-helpers';
 
-export const suborgToApproval = new Map<string, string>();
-
 export async function buildUserAddresses(
   requiredChainAddresses: string[],
   sourceAddress: string,
