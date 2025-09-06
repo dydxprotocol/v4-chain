@@ -9,7 +9,6 @@ import {
   PermissionApprovalColumns,
   PermissionApprovalCreateObject,
   PermissionApprovalFromDatabase,
-  ChainId,
 } from '../types';
 
 export async function findBySuborgId(
@@ -26,7 +25,7 @@ export async function findBySuborgId(
 
 export async function findBySuborgIdAndChainId(
   suborgId: string,
-  chainId: ChainId,
+  chainId: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PermissionApprovalFromDatabase | undefined> {
   const baseQuery: QueryBuilder<PermissionApprovalModel> = setupBaseQuery<PermissionApprovalModel>(
@@ -41,7 +40,7 @@ export async function findBySuborgIdAndChainId(
 
 export async function getApprovalForSuborgAndChain(
   suborgId: string,
-  chainId: ChainId,
+  chainId: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string | undefined> {
   const approval = await findBySuborgIdAndChainId(suborgId, chainId, options);

@@ -1,4 +1,3 @@
-import { ChainId } from '../types/permission-approval-types';
 import BaseModel from './base-model';
 
 export default class PermissionApprovalModel extends BaseModel {
@@ -20,7 +19,7 @@ export default class PermissionApprovalModel extends BaseModel {
       ],
       properties: {
         suborg_id: { type: 'string' },
-        chain_id: { type: 'string', enum: ['arbitrum', 'base', 'avalanche', 'optimism', 'ethereum'] },
+        chain_id: { type: 'string' },
         approval: { type: 'string' },
       },
     };
@@ -40,7 +39,7 @@ export default class PermissionApprovalModel extends BaseModel {
 
   suborg_id!: string;
 
-  chain_id!: ChainId;
+  chain_id!: string;
 
   approval!: string;
 }
