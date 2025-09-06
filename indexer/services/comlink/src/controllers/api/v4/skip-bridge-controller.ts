@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { PermissionApprovalTable, TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
+import { PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -21,7 +21,7 @@ import {
 import { KERNEL_V3_3, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import express from 'express';
 import {
-  Controller, Post, Query, Route,
+  Controller, Query, Route,
 } from 'tsoa';
 import {
   Address,
@@ -45,7 +45,6 @@ import {
   publicClients,
   alchemyNetworkToChainIdMap,
 } from '../../../helpers/alchemy-helpers';
-import { PolicyEngine } from '../../../helpers/policy-engine';
 import {
   getSvmSigner, getSkipCallData,
   buildUserAddresses,
