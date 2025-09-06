@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-// import { TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
+import { PermissionApprovalTable, TurnkeyUsersTable, dbHelpers } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -33,7 +33,7 @@ import {
 } from 'viem/account-abstraction';
 import { privateKeyToAccount } from 'viem/accounts';
 import {
-  arbitrum, avalanche,
+  avalanche,
 } from 'viem/chains';
 
 import config from '../../../config';
@@ -45,8 +45,9 @@ import {
   publicClients,
   alchemyNetworkToChainIdMap,
 } from '../../../helpers/alchemy-helpers';
+import { PolicyEngine } from '../../../helpers/policy-engine';
 import {
-  getSvmSigner, getSkipCallData, suborgToApproval,
+  getSvmSigner, getSkipCallData,
   buildUserAddresses,
 } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
@@ -139,7 +140,6 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
 
 @Route('bridging')
 class BridgeController extends Controller {
-  @Post('/sweep')
   async sweep(
     @Query() fromAddress: string,
       @Query() chainId: string,
@@ -393,16 +393,23 @@ class BridgeController extends Controller {
       const sessionKeySigner = await toECDSASigner({
         signer: privateKeyAccount,
       });
-      if (chainId === arbitrum.id.toString()) {
-        const sessionKeyAccount = await deserializePermissionAccount(
-          publicClients[chainId],
-          entryPoint,
-          KERNEL_V3_3,
-          suborgToApproval.get(suborgId) || '',
-          sessionKeySigner,
-        );
-        return sessionKeyAccount;
+      let kernelVersion = KERNEL_V3_3;
+      if (chainId === avalanche.id.toString()) {
+        kernelVersion = KERNEL_V3_1;
       }
+
+      const row = await PermissionApprovalTable.findBySuborgIdAndChainId(suborgId, chainId);
+      if (!row) {
+        throw new Error(`No approval found for suborg ${suborgId} and chain ${chainId}`);
+      }
+      const sessionKeyAccount = await deserializePermissionAccount(
+        publicClients[chainId],
+        entryPoint,
+        kernelVersion,
+        row?.approval || '',
+        sessionKeySigner,
+      );
+      return sessionKeyAccount;
     }
     if (chainId === avalanche.id.toString()) {
       // Construct a validator
@@ -569,14 +576,16 @@ async function parseEvent(e: express.Request): Promise<{
     throw new Error(`Unsupported network: ${network}`);
   }
   const addressesToProcess = new Map<string, string>();
-  // for evm parsing only
+  // for evm parsing only. Activity will be filled by the webhook if
+  // we're parsing a evm transaction.
   if (activity) {
     for (const act of activity) {
       const bridgeOriginAddress = act.toAddress;
       addressesToProcess.set(bridgeOriginAddress, '');
     }
   }
-  // for solana parsing only.
+  // for solana parsing only. Transaction will be filled by the webhook if
+  // we're parsing a solana transaction.
   if (transaction) {
     for (const tx of transaction) {
       if (!tx.meta) {
