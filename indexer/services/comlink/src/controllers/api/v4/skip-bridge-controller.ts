@@ -15,7 +15,7 @@ import {
 } from '@zerodev/sdk';
 import express from 'express';
 import {
-  Controller, Query, Route,
+  Controller, Route,
 } from 'tsoa';
 import {
   Address,
@@ -126,10 +126,10 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
 @Route('bridging')
 class BridgeController extends Controller {
   async sweep(
-    @Query() fromAddress: string,
-      @Query() chainId: string,
-      // optionally provide the contract and amount, primarily used for solana.
-      @Query() amount?: string,
+    fromAddress: string,
+    chainId: string,
+    // optionally provide the contract and amount, primarily used for solana.
+    amount?: string,
   ): Promise<BridgeResponse> {
     if (chainId === 'solana') {
       if (!amount) {
