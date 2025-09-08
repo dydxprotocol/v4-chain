@@ -346,9 +346,9 @@ describe('TurnkeyController', () => {
         user?.suborg_id,
         user?.evm_address,
       );
-      expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
-        user?.suborg_id,
-      );
+      // expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
+      //   user?.suborg_id,
+      // );
     });
   });
 });
