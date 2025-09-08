@@ -163,6 +163,7 @@ export async function getSkipCallData(
     },
   ];
 
+  // swap eth to usdc.
   if (Object.values(usdcAddressByChainId).map(
     (x) => x.toLowerCase(),
   ).includes(sourceAssetDenom.toLowerCase())) {
