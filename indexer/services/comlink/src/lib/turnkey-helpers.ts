@@ -88,6 +88,11 @@ export class TurnkeyHelpers {
   /**
    * Creates a new Turnkey sub-organization and adds the user to the database.
    * Returns the suborgId plus salt.
+   *
+   * This sets up the suborg within turnkey for the user. Then upon the user
+   * signs in, fe will update the dydx address in the database, then delete the
+   * dydx user from the user's wallet. Up until that point, there will not be
+   * any funds in the user wallet.
    */
   async createSuborg(params: CreateSuborgParams): Promise<TurnkeyCreateSuborgResponse> {
     // v1OauthProviderParams and v1AuthenticatorParamsV2 are types from @turnkey/sdk-server

@@ -1,5 +1,4 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
 import {
   findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
 } from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
@@ -9,16 +8,11 @@ import {
 } from '@skip-go/client/cjs';
 import { Turnkey } from '@turnkey/sdk-server';
 import { TurnkeySigner } from '@turnkey/solana';
-import { createAccount } from '@turnkey/viem';
-import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
-import { deserializePermissionAccount } from '@zerodev/permissions';
-import { toECDSASigner } from '@zerodev/permissions/signers';
 import {
-  createKernelAccount, createKernelAccountClient,
+  createKernelAccountClient,
   CreateKernelAccountReturnType,
   createZeroDevPaymasterClient, getUserOperationGasPrice,
 } from '@zerodev/sdk';
-import { KERNEL_V3_3, KERNEL_V3_1 } from '@zerodev/sdk/constants';
 import express from 'express';
 import {
   Controller, Query, Route,
@@ -31,7 +25,6 @@ import {
   type EntryPointVersion,
   type SmartAccountImplementation,
 } from 'viem/account-abstraction';
-import { privateKeyToAccount } from 'viem/accounts';
 import {
   avalanche,
 } from 'viem/chains';
@@ -46,12 +39,12 @@ import {
   alchemyNetworkToChainIdMap,
 } from '../../../helpers/alchemy-helpers';
 import {
-  getSvmSigner, getSkipCallData,
+  getSvmSigner, getSkipCallData, getKernelAccount,
   buildUserAddresses,
 } from '../../../helpers/skip-helper';
 import { handleControllerError } from '../../../lib/helpers';
 import {
-  dydxChainId, entryPoint, usdcAddressByChainId, ethDenomByChainId,
+  dydxChainId, usdcAddressByChainId, ethDenomByChainId,
   SOLANA_USDC_QUANTUM,
 } from '../../../lib/smart-contract-constants';
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
@@ -73,13 +66,6 @@ setClientOptions({
       },
     },
   },
-});
-
-const turnkeySenderClient = new Turnkey({
-  apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
-  apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
-  apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
-  defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
 });
 
 const turnkeyGasClient = new Turnkey({
@@ -187,11 +173,6 @@ class BridgeController extends Controller {
             address: fromAddress,
           },
         },
-      });
-      logger.info({
-        at: `${controllerName}#sweep->startEvmBridge`,
-        message: 'Assets found',
-        assets,
       });
 
       for (const asset of assetsToSearch) {
@@ -371,70 +352,6 @@ class BridgeController extends Controller {
     };
   }
 
-  async getKernelAccount(
-    chainId: string,
-    fromAddress: string,
-    suborgId: string,
-  ): Promise<CreateKernelAccountReturnType<EntryPointVersion>> {
-    // Initialize a Turnkey-powered Viem Account
-    // needs to sign with eoa address.
-    const turnkeyAccount = await createAccount({
-      // @ts-ignore
-      client: turnkeySenderClient.apiClient(),
-      organizationId: suborgId,
-      signWith: fromAddress,
-    });
-
-    if (config.APPROVAL_ENABLED) {
-      // if smart account approval is enabled, use the session key + approval to sign for txs.
-      // use the permissioned master key as a signer.
-      const privateKeyAccount = privateKeyToAccount(config.MASTER_SIGNER_PRIVATE as `0x${string}`);
-      const sessionKeySigner = await toECDSASigner({
-        signer: privateKeyAccount,
-      });
-      let kernelVersion = KERNEL_V3_3;
-      if (chainId === avalanche.id.toString()) {
-        kernelVersion = KERNEL_V3_1;
-      }
-
-      const row = await PermissionApprovalTable.findBySuborgIdAndChainId(suborgId, chainId);
-      if (!row) {
-        throw new Error(`No approval found for suborg ${suborgId} and chain ${chainId}`);
-      }
-      const sessionKeyAccount = await deserializePermissionAccount(
-        publicClients[chainId],
-        entryPoint,
-        kernelVersion,
-        row?.approval || '',
-        sessionKeySigner,
-      );
-      return sessionKeyAccount;
-    }
-    if (chainId === avalanche.id.toString()) {
-      // Construct a validator
-      const ecdsaValidator = await signerToEcdsaValidator(publicClients[chainId], {
-        signer: turnkeyAccount,
-        entryPoint,
-        kernelVersion: KERNEL_V3_1,
-      });
-
-      // kernel account
-      const account = await createKernelAccount(publicClients[chainId], {
-        entryPoint,
-        plugins: {
-          sudo: ecdsaValidator,
-        },
-        kernelVersion: KERNEL_V3_1,
-      });
-      return account;
-    }
-    return createKernelAccount(publicClients[chainId], {
-      entryPoint,
-      eip7702Account: turnkeyAccount,
-      kernelVersion: KERNEL_V3_3,
-    });
-  }
-
   /*
    * This function is used to bridge evm assets that are supported by the skip bridge.
    * This is done by using the eip7702 kernel account with zero dev to sponsor the user operation
@@ -496,7 +413,7 @@ class BridgeController extends Controller {
     // the user op on chain.
     let account: CreateKernelAccountReturnType<EntryPointVersion>;
     try {
-      account = await this.getKernelAccount(chainId, srcAddress, record.suborg_id);
+      account = await getKernelAccount(chainId, srcAddress, record.suborg_id);
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridge`,
@@ -556,7 +473,6 @@ class BridgeController extends Controller {
       success: true,
     };
   }
-
 }
 
 /* returns the addresses to sweep and the chainId.

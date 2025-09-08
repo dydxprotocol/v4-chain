@@ -1,20 +1,37 @@
 import { logger } from '@dydxprotocol-indexer/base';
+import { PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
 import { route, messages } from '@skip-go/client/cjs';
 import type { Adapter } from '@solana/wallet-adapter-base';
 import type { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
 import { TurnkeySigner } from '@turnkey/solana';
+import { createAccount } from '@turnkey/viem';
+import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
+import { deserializePermissionAccount } from '@zerodev/permissions';
+import { toECDSASigner } from '@zerodev/permissions/signers';
+import { createKernelAccount, CreateKernelAccountReturnType } from '@zerodev/sdk';
+import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import { decode, fromWords } from 'bech32';
 import bs58 from 'bs58';
 import { encodeFunctionData, type Hex } from 'viem';
-import type { SmartAccountImplementation } from 'viem/account-abstraction';
+import type { EntryPointVersion, SmartAccountImplementation } from 'viem/account-abstraction';
+import { privateKeyToAccount } from 'viem/accounts';
+import { avalanche } from 'viem/chains';
 
 import config from '../config';
 import {
   dydxChainId,
+  entryPoint,
   ethDenomByChainId, usdcAddressByChainId,
 } from '../lib/smart-contract-constants';
-import { getAddress } from './alchemy-helpers';
+import { getAddress, publicClients } from './alchemy-helpers';
+
+const turnkeySenderClient = new Turnkey({
+  apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
+  apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
+  apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
+  defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
+});
 
 export async function buildUserAddresses(
   requiredChainAddresses: string[],
@@ -241,4 +258,68 @@ export function nobleToSolana(nobleAddress: string): string {
 
   // Base58-encode for Solana pubkey string
   return bs58.encode(solanaBytes);
+}
+
+export async function getKernelAccount(
+  chainId: string,
+  fromAddress: string,
+  suborgId: string,
+): Promise<CreateKernelAccountReturnType<EntryPointVersion>> {
+  // Initialize a Turnkey-powered Viem Account
+  // needs to sign with eoa address.
+  const turnkeyAccount = await createAccount({
+    // @ts-ignore
+    client: turnkeySenderClient.apiClient(),
+    organizationId: suborgId,
+    signWith: fromAddress,
+  });
+
+  if (config.APPROVAL_ENABLED) {
+    // if smart account approval is enabled, use the session key + approval to sign for txs.
+    // use the permissioned master key as a signer.
+    const privateKeyAccount = privateKeyToAccount(config.MASTER_SIGNER_PRIVATE as `0x${string}`);
+    const sessionKeySigner = await toECDSASigner({
+      signer: privateKeyAccount,
+    });
+    let kernelVersion = KERNEL_V3_3;
+    if (chainId === avalanche.id.toString()) {
+      kernelVersion = KERNEL_V3_1;
+    }
+
+    const row = await PermissionApprovalTable.findBySuborgIdAndChainId(suborgId, chainId);
+    if (!row) {
+      throw new Error(`No approval found for suborg ${suborgId} and chain ${chainId}`);
+    }
+    const sessionKeyAccount = await deserializePermissionAccount(
+      publicClients[chainId],
+      entryPoint,
+      kernelVersion,
+      row?.approval || '',
+      sessionKeySigner,
+    );
+    return sessionKeyAccount;
+  }
+  if (chainId === avalanche.id.toString()) {
+    // Construct a validator
+    const ecdsaValidator = await signerToEcdsaValidator(publicClients[chainId], {
+      signer: turnkeyAccount,
+      entryPoint,
+      kernelVersion: KERNEL_V3_1,
+    });
+
+    // kernel account
+    const account = await createKernelAccount(publicClients[chainId], {
+      entryPoint,
+      plugins: {
+        sudo: ecdsaValidator,
+      },
+      kernelVersion: KERNEL_V3_1,
+    });
+    return account;
+  }
+  return createKernelAccount(publicClients[chainId], {
+    entryPoint,
+    eip7702Account: turnkeyAccount,
+    kernelVersion: KERNEL_V3_3,
+  });
 }
