@@ -35,4 +35,10 @@ export * from './affiliate-info-types';
 export * from './firebase-notification-token-types';
 export * from './vault-types';
 export * from './funding-payments-types';
+<<<<<<< HEAD
+=======
+export * from './turnkey-user-types';
+export * from './permission-approval-types';
+export * from './pnl-types';
+>>>>>>> bf95b5d9 (Turnkey + Autobridge integration (#3065))
 export { PositionSide } from './position-types';

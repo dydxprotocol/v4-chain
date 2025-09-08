@@ -53,7 +53,13 @@ export * as FirebaseNotificationTokenTable from './stores/firebase-notification-
 export * as AffiliateInfoTable from './stores/affiliate-info-table';
 export * as VaultTable from './stores/vault-table';
 export * as FundingPaymentsTable from './stores/funding-payments-table';
+export * as TurnkeyUsersTable from './stores/turnkey-users-table';
 export * as VaultPnlTicksView from './stores/vault-pnl-ticks-view';
+<<<<<<< HEAD
+=======
+export * as PermissionApprovalTable from './stores/permission-approval-table';
+export * as PnlTable from './stores/pnl-table';
+>>>>>>> bf95b5d9 (Turnkey + Autobridge integration (#3065))
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
