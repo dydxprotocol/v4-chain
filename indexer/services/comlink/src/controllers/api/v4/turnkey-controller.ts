@@ -187,7 +187,7 @@ export class TurnkeyController extends Controller {
       }
     } else if (signinMethod === SigninMethod.PASSKEY) {
       if (!challenge || !attestation) {
-        throw new Error('Passkey signin requires challenge and attestation. Passkey signing is currently not supported.');
+        throw new Error('Passkey signin requires challenge and attestation.');
       }
       try {
         const resp = await this.turnkeyHelpers.passkeySignin(challenge, 'Passkey', attestation);
