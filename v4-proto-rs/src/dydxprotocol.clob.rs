@@ -524,15 +524,14 @@ pub struct OrderId {
     #[prost(fixed32, tag = "2")]
     pub client_id: u32,
     /// order_flags represent order flags for the order. This field is invalid if
-    /// it's greater than 127 (larger than one byte). Each bit in the first byte
-    /// represents a different flag. Currently only two flags are supported.
+    /// it's greater than 257. Each bit represents a different flag.
     ///
-    /// Starting from the bit after the most MSB (note that the MSB is used in
-    /// proto varint encoding, and therefore cannot be used): Bit 1 is set if this
-    /// order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
-    /// order is a Conditional order (0x20, or 32 as a uint8).
-    ///
-    /// If neither bit is set, the order is assumed to be a Short-Term order.
+    /// The following are the valid orderId flags:
+    /// ShortTerm    = uint32(0)
+    /// Conditional  = uint32(32)
+    /// LongTerm     = uint32(64)
+    /// Twap         = uint32(128)
+    /// TwapSuborder = uint32(256) (for internal use only)
     ///
     /// If both bits are set or bits other than the 2nd and 3rd are set, the order
     /// ID is invalid.
@@ -662,6 +661,31 @@ impl ::prost::Name for LongTermOrderPlacement {
         "/dydxprotocol.clob.LongTermOrderPlacement".into()
     }
 }
+/// TwapOrderPlacement represents the placement of a TWAP order in
+/// the TWAP Order State. It will store the original parent TWAP order as
+/// well as maintain the state of the remaining legs and quantums
+/// to be executed.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TwapOrderPlacement {
+    #[prost(message, optional, tag = "1")]
+    pub order: ::core::option::Option<Order>,
+    /// The number of legs remaining to be executed.
+    #[prost(uint32, tag = "2")]
+    pub remaining_legs: u32,
+    /// The number of quantums remaining to be executed.
+    #[prost(uint64, tag = "3")]
+    pub remaining_quantums: u64,
+}
+impl ::prost::Name for TwapOrderPlacement {
+    const NAME: &'static str = "TwapOrderPlacement";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.TwapOrderPlacement".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.TwapOrderPlacement".into()
+    }
+}
 /// ConditionalOrderPlacement represents the placement of a conditional order in
 /// state. It stores the stateful order itself, the `BlockHeight` and
 /// `TransactionIndex` at which the order was placed and triggered.
@@ -731,6 +755,18 @@ pub struct Order {
     /// orderId.ClobPairId`).
     #[prost(uint64, tag = "11")]
     pub conditional_order_trigger_subticks: u64,
+    /// twap_parameters represent the configuration for a TWAP order. This must be
+    /// set for twap orders and will be ignored for all other order types.
+    #[prost(message, optional, tag = "12")]
+    pub twap_parameters: ::core::option::Option<TwapParameters>,
+    /// builder_code_parameters is the metadata for the
+    /// partner or builder of an order specifying the fees charged.
+    #[prost(message, optional, tag = "13")]
+    pub builder_code_parameters: ::core::option::Option<BuilderCodeParameters>,
+    /// order_router_address is the address of the order router that placed the
+    /// order.
+    #[prost(string, tag = "14")]
+    pub order_router_address: ::prost::alloc::string::String,
     /// Information about when the order expires.
     #[prost(oneof = "order::GoodTilOneof", tags = "5, 6")]
     pub good_til_oneof: ::core::option::Option<order::GoodTilOneof>,
@@ -912,6 +948,56 @@ impl ::prost::Name for Order {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.clob.Order".into()
+    }
+}
+/// TwapParameters represents the necessary configuration for a TWAP order.
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct TwapParameters {
+    /// Duration of the TWAP order execution in seconds. Must be in the range
+    /// \[300 (5 minutes), 86400 (24 hours)\].
+    #[prost(uint32, tag = "1")]
+    pub duration: u32,
+    /// Interval in seconds for each suborder to execute. Must be a
+    /// whole number, a factor of the duration, and in the range
+    /// \[30 (30 seconds), 3600 (1 hour)\].
+    #[prost(uint32, tag = "2")]
+    pub interval: u32,
+    /// Price tolerance in ppm for each suborder. This will be applied to
+    /// the oracle price each time a suborder is triggered. Must be
+    /// be in the range [0, 1_000_000).
+    #[prost(uint32, tag = "3")]
+    pub price_tolerance: u32,
+}
+impl ::prost::Name for TwapParameters {
+    const NAME: &'static str = "TwapParameters";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.TwapParameters".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.TwapParameters".into()
+    }
+}
+/// BuilderCodeParameters represents the metadata for the partner or builder of
+/// an order. This allows them to specify a fee for providing there service which
+/// will be paid out in the event of an order fill.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BuilderCodeParameters {
+    /// The address of the builder to which the fee will be paid.
+    #[prost(string, tag = "1")]
+    pub builder_address: ::prost::alloc::string::String,
+    /// The fee enforced on the order in ppm.
+    #[prost(uint32, tag = "2")]
+    pub fee_ppm: u32,
+}
+impl ::prost::Name for BuilderCodeParameters {
+    const NAME: &'static str = "BuilderCodeParameters";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.BuilderCodeParameters".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.BuilderCodeParameters".into()
     }
 }
 /// TransactionOrdering represents a unique location in the block where a
@@ -1807,7 +1893,7 @@ pub mod msg_client {
     }
     impl<T> MsgClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -1828,13 +1914,13 @@ pub mod msg_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
@@ -2506,6 +2592,35 @@ impl ::prost::Name for QueryLiquidationsConfigurationResponse {
         "/dydxprotocol.clob.QueryLiquidationsConfigurationResponse".into()
     }
 }
+/// QueryNextClobPairIdRequest is a request message for the next clob pair id
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct QueryNextClobPairIdRequest {}
+impl ::prost::Name for QueryNextClobPairIdRequest {
+    const NAME: &'static str = "QueryNextClobPairIdRequest";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.QueryNextClobPairIdRequest".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.QueryNextClobPairIdRequest".into()
+    }
+}
+/// QueryNextClobPairIdResponse is a response message for the next clob pair id
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct QueryNextClobPairIdResponse {
+    #[prost(uint32, tag = "1")]
+    pub next_clob_pair_id: u32,
+}
+impl ::prost::Name for QueryNextClobPairIdResponse {
+    const NAME: &'static str = "QueryNextClobPairIdResponse";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.QueryNextClobPairIdResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.QueryNextClobPairIdResponse".into()
+    }
+}
 /// StreamOrderbookUpdatesRequest is a request message for the
 /// StreamOrderbookUpdates method.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -2516,6 +2631,14 @@ pub struct StreamOrderbookUpdatesRequest {
     /// Subaccount ids to stream subaccount updates for.
     #[prost(message, repeated, tag = "2")]
     pub subaccount_ids: ::prost::alloc::vec::Vec<super::subaccounts::SubaccountId>,
+    /// Market ids for price updates.
+    #[prost(uint32, repeated, tag = "3")]
+    pub market_ids: ::prost::alloc::vec::Vec<u32>,
+    /// Filter order updates by subaccount IDs.
+    /// If true, the orderbook updates only include orders from provided subaccount
+    /// IDs.
+    #[prost(bool, tag = "4")]
+    pub filter_orders_by_subaccount_id: bool,
 }
 impl ::prost::Name for StreamOrderbookUpdatesRequest {
     const NAME: &'static str = "StreamOrderbookUpdatesRequest";
@@ -2557,7 +2680,7 @@ pub struct StreamUpdate {
     pub exec_mode: u32,
     /// Contains one of an StreamOrderbookUpdate,
     /// StreamOrderbookFill, StreamTakerOrderStatus.
-    #[prost(oneof = "stream_update::UpdateMessage", tags = "3, 4, 5, 6")]
+    #[prost(oneof = "stream_update::UpdateMessage", tags = "3, 4, 5, 6, 7")]
     pub update_message: ::core::option::Option<stream_update::UpdateMessage>,
 }
 /// Nested message and enum types in `StreamUpdate`.
@@ -2574,6 +2697,8 @@ pub mod stream_update {
         TakerOrder(super::StreamTakerOrder),
         #[prost(message, tag = "6")]
         SubaccountUpdate(super::super::subaccounts::StreamSubaccountUpdate),
+        #[prost(message, tag = "7")]
+        PriceUpdate(super::super::prices::StreamPriceUpdate),
     }
 }
 impl ::prost::Name for StreamUpdate {
@@ -2736,7 +2861,7 @@ pub mod query_client {
     }
     impl<T> QueryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -2757,13 +2882,13 @@ pub mod query_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
@@ -3000,6 +3125,31 @@ pub mod query_client {
                 .insert(GrpcMethod::new("dydxprotocol.clob.Query", "StatefulOrder"));
             self.inner.unary(req, path, codec).await
         }
+        /// Queries the next clob pair id.
+        pub async fn next_clob_pair_id(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QueryNextClobPairIdRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::QueryNextClobPairIdResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.clob.Query/NextClobPairId",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("dydxprotocol.clob.Query", "NextClobPairId"));
+            self.inner.unary(req, path, codec).await
+        }
         /// Streams orderbook updates. Updates contain orderbook data
         /// such as order placements, updates, and fills.
         pub async fn stream_orderbook_updates(
@@ -3036,7 +3186,7 @@ pub mod query_client {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StagedFinalizeBlockEvent {
     /// Contains one of StreamOrderbookFill, StreamSubaccountUpdate.
-    #[prost(oneof = "staged_finalize_block_event::Event", tags = "1, 2, 3")]
+    #[prost(oneof = "staged_finalize_block_event::Event", tags = "1, 2, 3, 4")]
     pub event: ::core::option::Option<staged_finalize_block_event::Event>,
 }
 /// Nested message and enum types in `StagedFinalizeBlockEvent`.
@@ -3050,6 +3200,8 @@ pub mod staged_finalize_block_event {
         SubaccountUpdate(super::super::subaccounts::StreamSubaccountUpdate),
         #[prost(message, tag = "3")]
         OrderbookUpdate(super::StreamOrderbookUpdate),
+        #[prost(message, tag = "4")]
+        PriceUpdate(super::super::prices::StreamPriceUpdate),
     }
 }
 impl ::prost::Name for StagedFinalizeBlockEvent {

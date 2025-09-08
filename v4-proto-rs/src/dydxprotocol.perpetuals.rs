@@ -44,7 +44,7 @@ pub struct PerpetualParams {
     /// a position size of one full coin.
     #[prost(sint32, tag = "4")]
     pub atomic_resolution: i32,
-    /// The default funding payment if there is no price premium. In
+    /// The default (8hr) funding payment if there is no price premium. In
     /// parts-per-million.
     #[prost(sint32, tag = "5")]
     pub default_funding_ppm: i32,
@@ -451,6 +451,35 @@ impl ::prost::Name for QueryParamsResponse {
         "/dydxprotocol.perpetuals.QueryParamsResponse".into()
     }
 }
+/// QueryNextPerpetualIdRequest is the request type for the NextPerpetualId RPC
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct QueryNextPerpetualIdRequest {}
+impl ::prost::Name for QueryNextPerpetualIdRequest {
+    const NAME: &'static str = "QueryNextPerpetualIdRequest";
+    const PACKAGE: &'static str = "dydxprotocol.perpetuals";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.perpetuals.QueryNextPerpetualIdRequest".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.perpetuals.QueryNextPerpetualIdRequest".into()
+    }
+}
+/// QueryNextPerpetualIdResponse is the response type for the NextPerpetualId RPC
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct QueryNextPerpetualIdResponse {
+    #[prost(uint32, tag = "1")]
+    pub next_perpetual_id: u32,
+}
+impl ::prost::Name for QueryNextPerpetualIdResponse {
+    const NAME: &'static str = "QueryNextPerpetualIdResponse";
+    const PACKAGE: &'static str = "dydxprotocol.perpetuals";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.perpetuals.QueryNextPerpetualIdResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.perpetuals.QueryNextPerpetualIdResponse".into()
+    }
+}
 /// Generated client implementations.
 pub mod query_client {
     #![allow(
@@ -481,7 +510,7 @@ pub mod query_client {
     }
     impl<T> QueryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -502,13 +531,13 @@ pub mod query_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
@@ -700,6 +729,33 @@ pub mod query_client {
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("dydxprotocol.perpetuals.Query", "Params"));
+            self.inner.unary(req, path, codec).await
+        }
+        /// Queries the next perpetual id.
+        pub async fn next_perpetual_id(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QueryNextPerpetualIdRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::QueryNextPerpetualIdResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/dydxprotocol.perpetuals.Query/NextPerpetualId",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("dydxprotocol.perpetuals.Query", "NextPerpetualId"),
+                );
             self.inner.unary(req, path, codec).await
         }
     }
@@ -920,7 +976,7 @@ pub mod msg_client {
     }
     impl<T> MsgClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -941,13 +997,13 @@ pub mod msg_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
