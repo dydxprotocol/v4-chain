@@ -12,6 +12,7 @@ import {
   OrderTable,
   TendermintEventTable,
   TendermintEventCreateObject,
+  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 import updatePnlTask from '../../src/tasks/update-pnl';
@@ -29,6 +30,9 @@ import {
   defaultFill,
   defaultOrder,
   defaultPerpetualMarket2,
+  defaultWalletAddress,
+  defaultDeposit,
+  defaultWithdrawal,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('update-pnl', () => {
@@ -883,5 +887,91 @@ describe('update-pnl', () => {
     const { subaccount1Pnl: h3 } = findPnlRecords(third.results, '3');
     expect(h3).toBeDefined();
     await verifyCache('3');
+  });
+
+  it('handles external transfers correctly by filtering out NULL subaccountIds', async () => {
+    // Create funding payments to trigger PNL calculation
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      createdAtHeight: '5',
+      createdAt: DateTime.utc(2022, 6, 5).toISO(),
+      payment: '10',
+      size: '1',
+      oraclePrice: '10000',
+    });
+
+    await WalletTable.create({
+      address: defaultWalletAddress,
+      totalTradingRewards: '0',
+      totalVolume: '0',
+    });
+
+    await Promise.all([
+      TransferTable.create({
+        ...defaultDeposit, // External deposit
+        size: '2000',
+        createdAtHeight: '3',
+        createdAt: DateTime.utc(2022, 6, 3).toISO(),
+        eventId: defaultTendermintEventId2,
+      }),
+      TransferTable.create({
+        ...defaultWithdrawal, // External withdrawal
+        size: '500',
+        createdAtHeight: '4',
+        createdAt: DateTime.utc(2022, 6, 4).toISO(),
+        eventId: defaultTendermintEventId3,
+      }),
+    ]);
+
+    // Create a fill to have some activity
+    await FillTable.create({
+      ...defaultFill,
+      subaccountId: defaultSubaccountId,
+      side: OrderSide.BUY,
+      size: '1',
+      price: '10000',
+      quoteAmount: '10000',
+      createdAtHeight: '2',
+      createdAt: DateTime.utc(2022, 6, 2).toISO(),
+      eventId: defaultTendermintEventId5,
+    });
+
+    // Run the PNL update task
+    await updatePnlTask();
+
+    // Check that PNL entries were created
+    const pnlRecords = await PnlTable.findAll({}, []);
+
+    // Check PNL for the accounts
+    const { subaccount1Pnl, subaccount2Pnl } = findPnlRecords(pnlRecords.results, '5');
+
+    // Subaccount1 should have:
+    // - The common transfer: +30000 (already exists in beforeEach)
+    // - External deposit: +2000
+    // - External withdrawal: -500 (from defaultSubaccountId)
+    // - Funding payment: +10
+    verifyPnlRecord(subaccount1Pnl, {
+      netTransfers: '31500', // 30000 + 2000 - 500
+      totalPnl: '10',  // Funding payment
+      equity: '31510',  // 31500 + 10
+    });
+
+    // Subaccount2 should have:
+    // - The common transfer: -30000 (already exists in beforeEach)
+    verifyPnlRecord(subaccount2Pnl, {
+      netTransfers: '-30000', // -30000
+      totalPnl: '0',  // No trading activity
+      equity: '-30000',  // -30000 + 0
+    });
+
+    // Verify we didn't create any PNL records with NULL subaccountId
+    const nullSubaccountRecords = pnlRecords.results.filter((r) => r.subaccountId === null);
+    expect(nullSubaccountRecords.length).toBe(0);
+
+    // Verify there are only 2 PNL records (one for each subaccount)
+    expect(pnlRecords.results.length).toBe(2);
+
+    // Verify cache was updated to the latest height
+    await verifyCache('5');
   });
 });
