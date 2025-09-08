@@ -130,7 +130,8 @@ export class TurnkeyController extends Controller {
     await this.policyEngine.configureSolanaPolicy(dydxAddress, user.suborg_id);
     await this.policyEngine.configurePolicy(user.suborg_id, user.evm_address);
     // this removes self from root quorum.
-    await this.policyEngine.removeSelfFromRootQuorum(user.suborg_id);
+    // Add back once policy configuration is ready.
+    // await this.policyEngine.removeSelfFromRootQuorum(user.suborg_id);
 
     return { success: true };
   }
