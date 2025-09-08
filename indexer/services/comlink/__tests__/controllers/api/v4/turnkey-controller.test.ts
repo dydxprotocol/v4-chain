@@ -3,10 +3,18 @@ import { TurnkeyApiClient } from '@turnkey/sdk-server';
 import { TurnkeyController } from '../../../../src/controllers/api/v4/turnkey-controller';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { SigninMethod } from '../../../../src/types';
+import { PolicyEngine } from '../../../../src/helpers/policy-engine';
+
+jest.mock('../../../../src/config', () => ({
+  ...jest.requireActual('../../../../src/config'),
+  MASTER_SIGNER_PUBLIC: '0x1234567890123456789012345678901234567890',
+  INDEXER_INTERNAL_IPS: '127.0.0.1',
+}));
 
 describe('TurnkeyController', () => {
   let mockParentApiClient: TurnkeyApiClient;
   let mockBridgeSenderApiClient: TurnkeyApiClient;
+  let mockPolicyEngine: jest.Mocked<PolicyEngine>;
   let controller: TurnkeyController;
   const mockUser: TurnkeyUserCreateObject = {
     suborg_id: 'test-suborg-id',
@@ -51,7 +59,20 @@ describe('TurnkeyController', () => {
       updateRootQuorum: jest.fn().mockResolvedValue({}),
       createPolicy: jest.fn().mockResolvedValue({}),
     } as unknown as TurnkeyApiClient;
+
+    // Create mock PolicyEngine
+    mockPolicyEngine = {
+      configurePolicy: jest.fn().mockResolvedValue(undefined),
+      configureSolanaPolicy: jest.fn().mockResolvedValue(undefined),
+      removeSelfFromRootQuorum: jest.fn().mockResolvedValue(undefined),
+      getAPIUserId: jest.fn().mockResolvedValue('mock-api-user-id'),
+    } as unknown as jest.Mocked<PolicyEngine>;
+
     controller = new TurnkeyController(mockParentApiClient, mockBridgeSenderApiClient);
+
+    // Replace the private policyEngine property with our mock
+    (controller as any).policyEngine = mockPolicyEngine;
+
     await TurnkeyUsersTable.create(mockUser);
     await TurnkeyUsersTable.create(mockUser2);
   });
@@ -315,6 +336,19 @@ describe('TurnkeyController', () => {
       // verify the dydx address is updated in the database
       const user = await TurnkeyUsersTable.findByEmail('test3@example.com');
       expect(user?.dydx_address).toEqual('dydx1234567890123456789012345678901234567891');
+
+      // verify that PolicyEngine methods were called
+      expect(mockPolicyEngine.configureSolanaPolicy).toHaveBeenCalledWith(
+        newDydxAddress,
+        user?.suborg_id,
+      );
+      expect(mockPolicyEngine.configurePolicy).toHaveBeenCalledWith(
+        user?.suborg_id,
+        user?.evm_address,
+      );
+      expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
+        user?.suborg_id,
+      );
     });
   });
 });

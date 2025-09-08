@@ -1315,21 +1315,6 @@
         "type": "object",
         "additionalProperties": false
       },
-      "BridgeResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "success"
-        ],
-        "type": "object",
-        "additionalProperties": false
-      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -3526,50 +3511,6 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
-            }
-          }
-        ]
-      }
-    },
-    "/bridging/sweep": {
-      "post": {
-        "operationId": "Sweep",
-        "responses": {
-          "200": {
-            "description": "Ok",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BridgeResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "fromAddress",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "chainId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "amount",
-            "required": false,
-            "schema": {
-              "type": "string"
             }
           }
         ]
