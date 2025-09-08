@@ -90,7 +90,7 @@ export class PolicyEngine {
 
   async configureSolanaPolicy(dydxAddress: string, suborgId: string) {
     const userId = await this.getAPIUserId(suborgId);
-    // get noble forwarding address for the dydx user.
+    // Get noble forwarding address for the dydx user.
     const nobleForwardingAddress = await getNobleForwardingAddress(dydxAddress);
     const solanaAddress = nobleToSolana(nobleForwardingAddress);
 
@@ -105,8 +105,6 @@ export class PolicyEngine {
       effect: 'EFFECT_ALLOW',
       notes: 'Solana bridge policy',
     });
-
-    // TODO remove self from root quorum.
   }
 
   async removeSelfFromRootQuorum(suborgId: string) {
