@@ -117,7 +117,7 @@ export class TurnkeyController extends Controller {
       throw TurnkeyHelpers.wrapTurnkeyError(err, 'Failed to recover address from signature');
     }
 
-    // Try to find user by the recovered address, falling back to lowercase variant
+    // Try to find user by the recovered address, falling back to lowercase variant.
     const evmAddressChecksum = checksumAddress(recovered);
     const user = await TurnkeyUsersTable.findByEvmAddress(evmAddressChecksum);
     if (!user) {
