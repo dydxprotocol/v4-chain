@@ -3724,6 +3724,228 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## UploadAddress
+
+<a id="opIdUploadAddress"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/uploadAddress', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signature": "string",
+  "dydxAddress": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/uploadAddress`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/uploadAddress`
+
+Uploads the dydx address to the turnkey table.
+
+Backend won't have this information when we create account for user since you need signature
+to derive dydx address. Just wait for fe to uplaod to kick off the policy setup.
+
+> Body parameter
+
+```json
+{
+  "signature": "string",
+  "dydxAddress": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|true|none|
+|» signature|body|string|true|none|
+|» dydxAddress|body|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|Inline|
+
+### Response Schema
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» success|boolean|true|none|none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## SignIn
+
+<a id="opIdSignIn"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/signin', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  },
+  "magicLink": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/signin`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/signin`
+
+> Body parameter
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  },
+  "magicLink": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[SignInRequest](#schemasigninrequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "dydxAddress": "string",
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
+  "salt": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TurnkeyAuthResponse](#schematurnkeyauthresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetMegavaultHistoricalPnl
 
 <a id="opIdGetMegavaultHistoricalPnl"></a>
@@ -6398,6 +6620,109 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## TurnkeyAuthResponse
+
+<a id="schematurnkeyauthresponse"></a>
+<a id="schema_TurnkeyAuthResponse"></a>
+<a id="tocSturnkeyauthresponse"></a>
+<a id="tocsturnkeyauthresponse"></a>
+
+```json
+{
+  "dydxAddress": "string",
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
+  "salt": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|dydxAddress|string|false|none|none|
+|organizationId|string|false|none|none|
+|apiKeyId|string|false|none|none|
+|userId|string|false|none|none|
+|session|string|false|none|none|
+|salt|string|true|none|none|
+
+## SigninMethod
+
+<a id="schemasigninmethod"></a>
+<a id="schema_SigninMethod"></a>
+<a id="tocSsigninmethod"></a>
+<a id="tocssigninmethod"></a>
+
+```json
+"email"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|email|
+|*anonymous*|social|
+|*anonymous*|passkey|
+
+## SignInRequest
+
+<a id="schemasigninrequest"></a>
+<a id="schema_SignInRequest"></a>
+<a id="tocSsigninrequest"></a>
+<a id="tocssigninrequest"></a>
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  },
+  "magicLink": "string"
+}
+
+```
+
+Request interface for user sign-in operations
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|signinMethod|[SigninMethod](#schemasigninmethod)|true|none|The authentication method to use (EMAIL, SOCIAL, or PASSKEY)|
+|userEmail|string|false|none|User's email address (required for EMAIL signin method)|
+|targetPublicKey|string|false|none|Target public key for authentication (required for EMAIL and SOCIAL signin methods)|
+|provider|string|false|none|OAuth provider name (required for SOCIAL signin method)|
+|oidcToken|string|false|none|OIDC token from OAuth provider (required for SOCIAL signin method)|
+|challenge|string|false|none|Challenge string for passkey authentication (required for PASSKEY signin method)|
+|attestation|object|false|none|Attestation object for passkey authentication (required for PASSKEY signin method)|
+|» transports|[string]|true|none|none|
+|» attestationObject|string|true|none|none|
+|» clientDataJson|string|true|none|none|
+|» credentialId|string|true|none|none|
+|magicLink|string|false|none|Optional magic link template URL for email authentication|
 
 ## MegavaultHistoricalPnlResponse
 
