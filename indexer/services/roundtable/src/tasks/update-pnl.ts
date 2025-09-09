@@ -126,6 +126,7 @@ export default async function runTask(): Promise<void> {
     {
       createdOnOrAfterHeight: searchUnprocessedFundingPaymentsHeightStart,
       distinctFields: ['createdAtHeight'],
+      zeroPayments: true,
     },
     [],
     {
@@ -137,6 +138,13 @@ export default async function runTask(): Promise<void> {
     at,
     message: `Found ${fundingUpdates.results.length} funding periods to process.`,
   });
+  // Log the results to help diagnose the issue
+logger.info({
+  at: 'update-pnl#runTask',
+  message: 'Found funding updates',
+  updateCount: fundingUpdates.results.length,
+  heights: fundingUpdates.results.map(update => update.createdAtHeight),
+});
 
   stats.gauge(
     `${config.SERVICE_NAME}.update_pnl.num_funding_index_updates_to_process`,
@@ -145,6 +153,12 @@ export default async function runTask(): Promise<void> {
 
   // Get unique heights from funding payments updates.
   const fundingHeights = [...fundingUpdates.results.map((update) => update.createdAtHeight)];
+
+  logger.info({
+  at: 'update-pnl#runTask',
+  message: 'Heights to process',
+  heights: fundingHeights,
+});
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
