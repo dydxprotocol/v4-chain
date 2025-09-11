@@ -113,7 +113,7 @@ export const configSchema = {
   MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
   MASTER_SIGNER_PRIVATE: parseString({ default: '' }),
   // if policy approvals are enabled. feature wip
-  APPROVAL_ENABLED: parseBoolean({ default: false }),
+  APPROVAL_ENABLED: parseBoolean({ default: true }),
 
 };
 

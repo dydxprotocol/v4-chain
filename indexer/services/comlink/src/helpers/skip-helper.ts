@@ -232,6 +232,44 @@ export function getSvmSigner(suborgId: string, signWith: string) {
 }
 
 /**
+ * Convert a Noble bech32 address to a hex address.
+ * Rule: prepend with 0s so that the end result is 32 bytes.
+ */
+export function nobleToHex(addr: string): string {
+  // decode bech32
+  const decoded = decode(addr);
+
+  if (decoded.prefix !== 'noble' && decoded.prefix !== 'dydx') {
+    throw new Error(`Invalid HRP: expected "noble", got "${decoded.prefix}"`);
+  }
+
+  // convert back from words to bytes
+  const addrBytes = Buffer.from(fromWords(decoded.words));
+
+  if (addrBytes.length !== 20) {
+    throw new Error(`Invalid address length: expected 20, got ${addrBytes.length}`);
+  }
+
+  // left-pad to 32 bytes (as in your original hex form)
+  const padded = Buffer.concat([Buffer.alloc(12, 0), addrBytes]); // 12 zeros + 20 bytes
+
+  return `0x${padded.toString('hex')}`;
+}
+
+/**
+ * Convert a string to its hex representation then left pads 277 bytes of 0s.
+ * @param s - The string to convert.
+ * @returns The hex representation of the string.
+ */
+export function encodeToHexAndPad(s: string): string {
+  // 277 is the offset for destination call data in the skip go fast smart contract call.
+  const offset = 277;
+  const hex = Buffer.from(s).toString('hex');
+  const padded = Buffer.concat([Buffer.alloc(offset, 0), Buffer.from(hex, 'hex')]);
+  return `0x${padded.toString('hex')}`;
+}
+
+/**
  * Convert a Noble bech32 address (20-byte payload) to a Solana base58 pubkey.
  * Rule: prepend 12 zero bytes to the 20-byte payload → 32 bytes → base58.
  */
@@ -295,7 +333,7 @@ export async function getKernelAccount(
       publicClients[chainId],
       entryPoint,
       kernelVersion,
-      row?.approval || '',
+      row.approval,
       sessionKeySigner,
     );
     return sessionKeyAccount;
@@ -323,4 +361,30 @@ export async function getKernelAccount(
     eip7702Account: turnkeyAccount,
     kernelVersion: KERNEL_V3_3,
   });
+}
+
+// for a dydx address, this returns the noble forwarding address of the dydx address.
+export async function getNobleForwardingAddress(dydxAddress: string): Promise<string> {
+  const dydxNobleChannel = 33;
+  const endpoint = `https://api.noble.xyz/noble/forwarding/v1/address/channel-${dydxNobleChannel}/${dydxAddress}/`;
+
+  const ac = new AbortController();
+  const timeout = setTimeout(() => ac.abort(), 10_000);
+  try {
+    const response = await fetch(endpoint, {
+      signal: ac.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`failed to get a forwarding address: ${response.statusText}`);
+    }
+    const data = await response.json();
+    if (!data || (data && !data.address)) {
+      throw new Error('failed to get a forwarding address');
+    }
+    return data.address;
+  } catch (e) {
+    throw new Error(`failed to get a forwarding address: ${e}`);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
