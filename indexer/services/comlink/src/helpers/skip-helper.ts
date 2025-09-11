@@ -45,7 +45,7 @@ export async function buildUserAddresses(
     })),
   );
 }
-
+const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
 const skipMessagesTimeoutSeconds = '60';
 const slippageTolerancePercent = '0';
 // Grabs the raw skip route data to carry out the bridge on our own.
@@ -366,7 +366,7 @@ export async function getKernelAccount(
 // for a dydx address, this returns the noble forwarding address of the dydx address.
 export async function getNobleForwardingAddress(dydxAddress: string): Promise<string> {
   const dydxNobleChannel = 33;
-  const endpoint = `https://api.noble.xyz/noble/forwarding/v1/address/channel-${dydxNobleChannel}/${dydxAddress}/`;
+  const endpoint = `${nobleForwardingModule}-${dydxNobleChannel}/${dydxAddress}/`;
 
   const ac = new AbortController();
   const timeout = setTimeout(() => ac.abort(), 10_000);
