@@ -103,6 +103,7 @@ export const configSchema = {
   TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
   // Alchemy auth token for the skip bridge.
   ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
   ALCHEMY_WEBHOOK_UPDATE_URL: parseString({ default: 'https://dashboard.alchemy.com/api/update-webhook-addresses' }),

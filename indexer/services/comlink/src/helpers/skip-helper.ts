@@ -47,7 +47,7 @@ export async function buildUserAddresses(
 }
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
 const skipMessagesTimeoutSeconds = '60';
-const slippageTolerancePercent = '0';
+const slippageTolerancePercent = config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE;
 // Grabs the raw skip route data to carry out the bridge on our own.
 export async function getSkipCallData(
   sourceAddress: string,
