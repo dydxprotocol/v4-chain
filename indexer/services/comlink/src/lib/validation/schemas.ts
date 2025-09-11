@@ -322,19 +322,6 @@ const signInSchema: Record<string, ParamSchema> = {
     optional: true,
     isString: true,
     errorMessage: 'Magic link must be a string',
-    custom: {
-      options: (value: string) => {
-        // Validate magic link URL format if provided
-        if (value) {
-          try {
-            URL.parse(value.replace('%s', 'test'));
-          } catch {
-            throw new Error('Invalid magic link template URL');
-          }
-        }
-        return true;
-      },
-    },
   },
   targetPublicKey: {
     in: ['body'],

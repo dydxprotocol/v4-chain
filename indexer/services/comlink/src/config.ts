@@ -1,5 +1,6 @@
 import {
   baseConfigSchema,
+  parseBigInt,
   parseBoolean,
   parseInteger,
   parseSchema,
@@ -102,6 +103,7 @@ export const configSchema = {
   TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
   // Alchemy auth token for the skip bridge.
   ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
   ALCHEMY_WEBHOOK_UPDATE_URL: parseString({ default: 'https://dashboard.alchemy.com/api/update-webhook-addresses' }),
@@ -109,11 +111,12 @@ export const configSchema = {
   ZERODEV_API_KEY: parseString({ default: '' }),
   ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
   BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
+  CALL_POLICY_VALUE_LIMIT: parseBigInt({ default: BigInt(100_000_000_000) }),
   // on-chain signer to kick off the skip bridge.
   MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
   MASTER_SIGNER_PRIVATE: parseString({ default: '' }),
-  // if policy approvals are enabled. feature wip
-  APPROVAL_ENABLED: parseBoolean({ default: false }),
+  // if policy approvals are enabled.
+  APPROVAL_ENABLED: parseBoolean({ default: true }),
 
 };
 

@@ -132,4 +132,90 @@ export const abi = [
       },
     ],
   },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'inputToken',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'inputAmount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'bytes',
+        name: 'swapCalldata',
+        type: 'bytes',
+      },
+      {
+        internalType: 'uint32',
+        name: 'destinationDomain',
+        type: 'uint32',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'mintRecipient',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'burnToken',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'feeAmount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'destinationCaller',
+        type: 'bytes32',
+      },
+    ],
+    name: 'swapAndRequestCCTPTransferWithCaller',
+    outputs: [],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'transferAmount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint32',
+        name: 'destinationDomain',
+        type: 'uint32',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'mintRecipient',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'burnToken',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'feeAmount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'destinationCaller',
+        type: 'bytes32',
+      },
+    ],
+    name: 'requestCCTPTransferWithCaller',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
 ] as const;

@@ -271,6 +271,7 @@ class BridgeController extends Controller {
     await executeRoute({
       route: path,
       simulate: false, // turned off for now, otherwise simulation will fail due to race.
+      slippageTolerancePercent: config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE,
       userAddresses,
       getSvmSigner: getSvmSigner(record?.suborg_id || '', fromAddress),
       svmFeePayer: {
