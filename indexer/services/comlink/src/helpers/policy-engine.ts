@@ -11,14 +11,14 @@ import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import bs58 from 'bs58';
 import { LocalAccount } from 'viem';
 import {
-  avalanche, optimism, base, arbitrum,
+  avalanche, optimism, base, arbitrum, mainnet,
 } from 'viem/chains';
 
 import config from '../config';
-import { avalancheCallPolicy, chainIdToCallPolicy } from '../lib/call-policies';
+import { callPolicyByChainId } from '../lib/call-policies';
 import { entryPoint } from '../lib/smart-contract-constants';
 import { publicClients } from './alchemy-helpers';
-import { nobleToSolana } from './skip-helper';
+import { getNobleForwardingAddress, nobleToSolana } from './skip-helper';
 
 export class PolicyEngine {
   private turnkeySenderClient: TurnkeyApiClient;
@@ -39,6 +39,7 @@ export class PolicyEngine {
   async configurePolicy(
     suborgId: string, // sender api must have access to this.
     fromAddress: string,
+    dydxAddress: string,
   ) {
 
     const turnkeyAccount = await createAccount({
@@ -48,10 +49,12 @@ export class PolicyEngine {
       signWith: fromAddress,
     });
 
-    const chains = [arbitrum.id.toString(), base.id.toString(), optimism.id.toString()];
+    const chains = [
+      arbitrum.id.toString(), mainnet.id.toString(), optimism.id.toString(), base.id.toString(),
+    ];
     for (const chain of chains) {
       try {
-        const approval = await getApprovalFor7702Evm(turnkeyAccount, chain);
+        const approval = await getApprovalFor7702Evm(turnkeyAccount, chain, dydxAddress);
         logger.info({
           at: 'policy-controller#configurePolicy',
           message: `Approval obtained for chain ${chain} and suborg ${suborgId}`,
@@ -67,7 +70,7 @@ export class PolicyEngine {
       }
     }
 
-    const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount);
+    const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount, dydxAddress);
     await PermissionApprovalTable.create({
       suborg_id: suborgId,
       chain_id: avalanche.id.toString(),
@@ -119,31 +122,6 @@ export class PolicyEngine {
   }
 }
 
-async function getNobleForwardingAddress(nobleAddress: string): Promise<string> {
-  const dydxNobleChannel = 33;
-  const endpoint = `https://api.noble.xyz/noble/forwarding/v1/address/channel-${dydxNobleChannel}/${nobleAddress}/`;
-
-  const ac = new AbortController();
-  const timeout = setTimeout(() => ac.abort(), 10_000);
-  try {
-    const response = await fetch(endpoint, {
-      signal: ac.signal,
-    });
-    if (!response.ok) {
-      throw new Error(`failed to get a forwarding address: ${response.statusText}`);
-    }
-    const data = await response.json();
-    if (!data || (data && !data.address)) {
-      throw new Error('failed to get a forwarding address');
-    }
-    return data.address;
-  } catch (e) {
-    throw new Error(`failed to get a forwarding address: ${e}`);
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 function solanaAddressToPaddedHex(solanaAddress: string): string {
   // Remove '0x' if present and ensure lowercase
   let hex = solanaAddress.startsWith('0x')
@@ -173,7 +151,7 @@ function solanaAddressToPaddedHex(solanaAddress: string): string {
   return hex.padStart(64, '0');
 }
 
-async function getApprovalForAvalanche(turnkeyAccount: LocalAccount) {
+async function getApprovalForAvalanche(turnkeyAccount: LocalAccount, dydxAddress: string) {
   const ecdsaValidator = await signerToEcdsaValidator(publicClients[avalanche.id.toString()], {
     entryPoint,
     signer: turnkeyAccount,
@@ -189,7 +167,7 @@ async function getApprovalForAvalanche(turnkeyAccount: LocalAccount) {
     entryPoint,
     signer: emptySessionKeySigner,
     policies: [
-      toCallPolicy(avalancheCallPolicy),
+      toCallPolicy(await callPolicyByChainId[avalanche.id.toString()](dydxAddress)),
     ],
     kernelVersion: KERNEL_V3_1,
   });
@@ -206,8 +184,12 @@ async function getApprovalForAvalanche(turnkeyAccount: LocalAccount) {
   return serializePermissionAccount(sessionKeyAccount);
 }
 
-async function getApprovalFor7702Evm(turnkeyAccount: LocalAccount, chainId: string) {
-
+async function getApprovalFor7702Evm(
+  turnkeyAccount: LocalAccount,
+  chainId: string,
+  dydxAddress: string,
+) {
+  const callPolicy = await callPolicyByChainId[chainId](dydxAddress);
   const kernelVersion = KERNEL_V3_3;
   const emptyAccount = addressToEmptyAccount(config.MASTER_SIGNER_PUBLIC as `0x${string}`);
   const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
@@ -216,7 +198,9 @@ async function getApprovalFor7702Evm(turnkeyAccount: LocalAccount, chainId: stri
     kernelVersion,
     signer: emptySessionKeySigner,
     policies: [
-      toCallPolicy(chainIdToCallPolicy[chainId]),
+      toCallPolicy(
+        callPolicy,
+      ),
     ],
   });
 
