@@ -1,5 +1,6 @@
 import {
   baseConfigSchema,
+  parseBigInt,
   parseBoolean,
   parseInteger,
   parseSchema,
@@ -109,6 +110,7 @@ export const configSchema = {
   ZERODEV_API_KEY: parseString({ default: '' }),
   ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
   BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
+  CALL_POLICY_VALUE_LIMIT: parseBigInt({ default: BigInt(100_000_000_000) }),
   // on-chain signer to kick off the skip bridge.
   MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
   MASTER_SIGNER_PRIVATE: parseString({ default: '' }),

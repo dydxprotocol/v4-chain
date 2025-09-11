@@ -4,6 +4,7 @@ import {
   arbitrum, avalanche, base, mainnet, optimism,
 } from 'viem/chains';
 
+import config from '../config';
 import { encodeToHexAndPad, getNobleForwardingAddress, nobleToHex } from '../helpers/skip-helper';
 import { abi } from './bridge-abi';
 import { usdcAddressByChainId } from './smart-contract-constants';
@@ -17,7 +18,7 @@ const goFastHandlerProxyByChainId: Record<string, string> = {
 };
 
 // this value limit is set to restrict usdc transfers less than 100k.
-const valueLimit = BigInt(100_000_000_000);
+const valueLimit = config.CALL_POLICY_VALUE_LIMIT;
 
 /**
  * Construct the policy for the given chainId and dydxAddress. Consolidates call policy construction
