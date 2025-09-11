@@ -23,7 +23,7 @@ const valueLimit = config.CALL_POLICY_VALUE_LIMIT;
 /**
  * Construct the policy for the given chainId and dydxAddress. Consolidates call policy construction
  * for avax, arbitrum, base, optimism. Ethereum is not supported because it also uses a different
- * smart contract address for slow bridges.
+ * smart contract address for slow bridges. Used to give us permission to kick off the bridge.
  *
  * @param dydxAddress
  * @param chainId - one of arbitrum, base, optimism, avalanche.
