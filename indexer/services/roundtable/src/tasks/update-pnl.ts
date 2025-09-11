@@ -126,6 +126,7 @@ export default async function runTask(): Promise<void> {
     {
       createdOnOrAfterHeight: searchUnprocessedFundingPaymentsHeightStart,
       distinctFields: ['createdAtHeight'],
+      zeroPayments: true,
     },
     [],
     {
