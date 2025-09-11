@@ -112,7 +112,7 @@ export const configSchema = {
   // on-chain signer to kick off the skip bridge.
   MASTER_SIGNER_PUBLIC: parseString({ default: '' }),
   MASTER_SIGNER_PRIVATE: parseString({ default: '' }),
-  // if policy approvals are enabled. feature wip
+  // if policy approvals are enabled.
   APPROVAL_ENABLED: parseBoolean({ default: true }),
 
 };
