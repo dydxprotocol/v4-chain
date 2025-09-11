@@ -36,10 +36,16 @@ jest.mock('@turnkey/viem', () => ({
   __esModule: true,
   createAccount: jest.fn(),
 }));
+jest.mock('viem/accounts', () => ({
+  __esModule: true,
+  privateKeyToAccount: jest.fn(),
+}));
 import * as skipClient from '@skip-go/client/cjs';
 import * as zeroDev from '@zerodev/sdk';
 import * as turnkeyViem from '@turnkey/viem';
 import * as zerodevPermissions from '@zerodev/permissions';
+import * as zerodevPermissionsSigners from '@zerodev/permissions/signers';
+import { privateKeyToAccount } from 'viem/accounts';
 
 import { alchemyNetworkToChainIdMap } from '../../../../src/helpers/alchemy-helpers';
 import * as skipHelpers from '../../../../src/helpers/skip-helper';
@@ -242,6 +248,18 @@ describe('skip-bridge-controller#V4', () => {
       (zerodevPermissions.deserializePermissionAccount as jest.Mock).mockResolvedValue({
         address: '0xmockaccount',
         source: 'mock',
+      } as any);
+      // Mock toECDSASigner to return a mock signer
+      (zerodevPermissionsSigners.toECDSASigner as jest.Mock).mockResolvedValue({
+        sign: jest.fn().mockResolvedValue('0xsigned'),
+        getAddress: jest.fn().mockReturnValue('0xsigner'),
+      } as any);
+
+      // Mock privateKeyToAccount to return a mock account
+      (privateKeyToAccount as jest.Mock).mockReturnValue({
+        address: '0xprivatekeyaccount',
+        privateKey: new Uint8Array(32),
+        publicKey: new Uint8Array(64),
       } as any);
     });
 
