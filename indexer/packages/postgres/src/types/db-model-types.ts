@@ -343,6 +343,15 @@ export interface FundingPaymentsFromDatabase {
   fundingIndex: string,
 }
 
+export interface PnlFromDatabase {
+  subaccountId: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
+  equity: string,
+  netTransfers: string,
+  totalPnl: string,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

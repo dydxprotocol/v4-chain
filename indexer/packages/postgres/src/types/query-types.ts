@@ -381,8 +381,6 @@ export interface FundingPaymentsQueryConfig extends QueryConfig {
   [QueryableField.ZERO_PAYMENTS]?: boolean,
   [QueryableField.DISTINCT_FIELDS]?: string[],
 }
-<<<<<<< HEAD
-=======
 
 export interface PnlQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_ID]?: string[],
@@ -394,4 +392,3 @@ export interface PnlQueryConfig extends QueryConfig {
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
 }
->>>>>>> 3d1a0b8d (New PnL job to compute recursively based on latest PnL values (#3046))
