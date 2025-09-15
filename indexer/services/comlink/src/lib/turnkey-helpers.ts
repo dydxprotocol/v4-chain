@@ -140,7 +140,7 @@ export class TurnkeyHelpers {
       ],
       rootQuorumThreshold: 1,
       wallet: {
-        walletName: 'Default ETH Wallet',
+        walletName: 'User Wallet',
         accounts: [
           {
             curve: 'CURVE_SECP256K1',
