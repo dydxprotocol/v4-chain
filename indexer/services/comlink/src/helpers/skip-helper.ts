@@ -24,10 +24,10 @@ import {
 } from '../lib/smart-contract-constants';
 import { getAddress, publicClients } from './alchemy-helpers';
 
-const turnkeySenderClient = new Turnkey({
+const turnkeyClient = new Turnkey({
   apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
-  apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY as string,
-  apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY as string,
+  apiPublicKey: config.TURNKEY_API_PUBLIC_KEY as string,
+  apiPrivateKey: config.TURNKEY_API_PRIVATE_KEY as string,
   defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
 });
 
@@ -303,13 +303,11 @@ export async function getKernelAccount(
   fromAddress: string,
   suborgId: string,
 ): Promise<CreateKernelAccountReturnType<EntryPointVersion>> {
-  // Initialize a Turnkey-powered Viem Account
-  // needs to sign with eoa address.
+  // Initialize the turnkey delegated signer account.
   const turnkeyAccount = await createAccount({
     // @ts-ignore
-    client: turnkeySenderClient.apiClient(),
-    organizationId: suborgId,
-    signWith: fromAddress,
+    client: turnkeyClient.apiClient(),
+    signWith: config.APPROVAL_SIGNER_PUBLIC_ADDRESS,
   });
   // if smart account approval is enabled, use the session key + approval to sign for txs.
   // use the permissioned master key as  a signer.
