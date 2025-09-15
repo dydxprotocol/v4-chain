@@ -69,7 +69,7 @@ trade_cash_flows AS (
         SUM(CASE 
             WHEN "side" = 'SELL' THEN "quoteAmount"
             WHEN "side" = 'BUY' THEN -"quoteAmount"
-        END) as net_cash_flow
+        END) - SUM("fee"::numeric) as net_cash_flow
     FROM fills
     WHERE "createdAtHeight" > :start 
       AND "createdAtHeight" <= :end
