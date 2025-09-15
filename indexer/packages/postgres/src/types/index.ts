@@ -35,5 +35,7 @@ export * from './affiliate-info-types';
 export * from './firebase-notification-token-types';
 export * from './vault-types';
 export * from './funding-payments-types';
+export * from './turnkey-user-types';
+export * from './permission-approval-types';
 export * from './pnl-types';
 export { PositionSide } from './position-types';
