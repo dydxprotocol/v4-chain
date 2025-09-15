@@ -22,10 +22,12 @@ transfer_aggregated AS (
         SELECT "senderSubaccountId" as "subaccountId", -"size" as transfer_amount
         FROM transfers
         WHERE "createdAtHeight" > :start AND "createdAtHeight" <= :end
+          AND "senderSubaccountId" IS NOT NULL
         UNION ALL
         SELECT "recipientSubaccountId" as "subaccountId", "size" as transfer_amount
         FROM transfers  
         WHERE "createdAtHeight" > :start AND "createdAtHeight" <= :end
+          AND "recipientSubaccountId" IS NOT NULL
     ) transfer_data
     GROUP BY "subaccountId"
 ),
@@ -67,7 +69,7 @@ trade_cash_flows AS (
         SUM(CASE 
             WHEN "side" = 'SELL' THEN "quoteAmount"
             WHEN "side" = 'BUY' THEN -"quoteAmount"
-        END) as net_cash_flow
+        END) - SUM("fee"::numeric) as net_cash_flow
     FROM fills
     WHERE "createdAtHeight" > :start 
       AND "createdAtHeight" <= :end

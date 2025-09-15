@@ -12,6 +12,7 @@ import {
   OrderTable,
   TendermintEventTable,
   TendermintEventCreateObject,
+  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 import updatePnlTask from '../../src/tasks/update-pnl';
@@ -29,6 +30,9 @@ import {
   defaultFill,
   defaultOrder,
   defaultPerpetualMarket2,
+  defaultWalletAddress,
+  defaultDeposit,
+  defaultWithdrawal,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('update-pnl', () => {
@@ -185,8 +189,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight1, {
       netTransfers: '30000',
-      totalPnl: '10',
-      equity: '30010',
+      totalPnl: '8.9', // 10 funding payment - 1.1 fee
+      equity: '30008.9',
     });
 
     verifyPnlRecord(subaccount2PnlAtHeight1, {
@@ -200,8 +204,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight2, {
       netTransfers: '30000',
-      totalPnl: '2015',
-      equity: '32015',
+      totalPnl: '2013.9', // 2015 previous value - 1.1 fee
+      equity: '32013.9',
     });
 
     verifyPnlRecord(subaccount2PnlAtHeight2, {
@@ -278,8 +282,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight1, {
       netTransfers: '30000',
-      totalPnl: '15', // 10 + 5
-      equity: '30015', // 30000 + 15
+      totalPnl: '12.8', // 10 + 5 - 2.2 fees (two fills at 1.1 each)
+      equity: '30012.8',
     });
 
     // Verify cache was updated
@@ -343,8 +347,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight5, {
       netTransfers: '30000',
-      totalPnl: '3010',
-      equity: '33010',
+      totalPnl: '3008.9',
+      equity: '33008.9',
     });
 
     // Check block 10
@@ -352,8 +356,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight10, {
       netTransfers: '30000',
-      totalPnl: '4512',
-      equity: '34512',
+      totalPnl: '4509.8',
+      equity: '34509.8',
     });
 
     // Verify cache was updated to the latest height
@@ -417,8 +421,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight5, {
       netTransfers: '30000',
-      totalPnl: '-2008',
-      equity: '27992',
+      totalPnl: '-2009.1', // -2008 previous value - 1.1 fee
+      equity: '27990.9',
     });
 
     // Check block 10
@@ -426,8 +430,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight10, {
       netTransfers: '30000',
-      totalPnl: '1194',
-      equity: '31194',
+      totalPnl: '1191.8', // 1194 previous value - 2.2 fees (two fills)
+      equity: '31191.8',
     });
 
     // Verify cache was updated to the latest height
@@ -502,8 +506,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight5, {
       netTransfers: '50000',
-      totalPnl: '1515',
-      equity: '51515',
+      totalPnl: '1513.9',
+      equity: '51513.9',
     });
 
     // Check block 10
@@ -511,8 +515,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight10, {
       netTransfers: '50000',
-      totalPnl: '1203',
-      equity: '51203',
+      totalPnl: '1200.8',
+      equity: '51200.8',
     });
 
     // Verify cache was updated to the latest height
@@ -624,8 +628,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight5, {
       netTransfers: '30000',
-      totalPnl: '703',
-      equity: '30703',
+      totalPnl: '699.7',
+      equity: '30699.7',
     });
 
     // Check block 10
@@ -633,8 +637,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight10, {
       netTransfers: '30000',
-      totalPnl: '1054',
-      equity: '31054',
+      totalPnl: '1048.5',
+      equity: '31048.5',
     });
 
     // Verify cache was updated to the latest height
@@ -820,8 +824,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight5, {
       netTransfers: '60000',
-      totalPnl: '1919',
-      equity: '61919',
+      totalPnl: '1916.8',
+      equity: '61916.8',
     });
 
     // Check block 10
@@ -829,8 +833,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight10, {
       netTransfers: '55000',
-      totalPnl: '1920',
-      equity: '56920',
+      totalPnl: '1915.6',
+      equity: '56915.6',
     });
 
     // Check block 15
@@ -838,8 +842,8 @@ describe('update-pnl', () => {
 
     verifyPnlRecord(subaccount1PnlAtHeight15, {
       netTransfers: '70000',
-      totalPnl: '2081',
-      equity: '72081',
+      totalPnl: '2074.4',
+      equity: '72074.4',
     });
 
     // Verify cache was updated to the latest height
@@ -883,5 +887,91 @@ describe('update-pnl', () => {
     const { subaccount1Pnl: h3 } = findPnlRecords(third.results, '3');
     expect(h3).toBeDefined();
     await verifyCache('3');
+  });
+
+  it('handles external transfers correctly by filtering out NULL subaccountIds', async () => {
+    // Create funding payments to trigger PNL calculation
+    await FundingPaymentsTable.create({
+      ...defaultFundingPayment,
+      createdAtHeight: '5',
+      createdAt: DateTime.utc(2022, 6, 5).toISO(),
+      payment: '10',
+      size: '1',
+      oraclePrice: '10000',
+    });
+
+    await WalletTable.create({
+      address: defaultWalletAddress,
+      totalTradingRewards: '0',
+      totalVolume: '0',
+    });
+
+    await Promise.all([
+      TransferTable.create({
+        ...defaultDeposit, // External deposit
+        size: '2000',
+        createdAtHeight: '3',
+        createdAt: DateTime.utc(2022, 6, 3).toISO(),
+        eventId: defaultTendermintEventId2,
+      }),
+      TransferTable.create({
+        ...defaultWithdrawal, // External withdrawal
+        size: '500',
+        createdAtHeight: '4',
+        createdAt: DateTime.utc(2022, 6, 4).toISO(),
+        eventId: defaultTendermintEventId3,
+      }),
+    ]);
+
+    // Create a fill to have some activity
+    await FillTable.create({
+      ...defaultFill,
+      subaccountId: defaultSubaccountId,
+      side: OrderSide.BUY,
+      size: '1',
+      price: '10000',
+      quoteAmount: '10000',
+      createdAtHeight: '2',
+      createdAt: DateTime.utc(2022, 6, 2).toISO(),
+      eventId: defaultTendermintEventId5,
+    });
+
+    // Run the PNL update task
+    await updatePnlTask();
+
+    // Check that PNL entries were created
+    const pnlRecords = await PnlTable.findAll({}, []);
+
+    // Check PNL for the accounts
+    const { subaccount1Pnl, subaccount2Pnl } = findPnlRecords(pnlRecords.results, '5');
+
+    // Subaccount1 should have:
+    // - The common transfer: +30000 (already exists in beforeEach)
+    // - External deposit: +2000
+    // - External withdrawal: -500 (from defaultSubaccountId)
+    // - Funding payment: +10
+    verifyPnlRecord(subaccount1Pnl, {
+      netTransfers: '31500', // 30000 + 2000 - 500
+      totalPnl: '8.9',  // 10 funding - 1.1 fee
+      equity: '31508.9',  // 31500 + 8.9
+    });
+
+    // Subaccount2 should have:
+    // - The common transfer: -30000 (already exists in beforeEach)
+    verifyPnlRecord(subaccount2Pnl, {
+      netTransfers: '-30000', // -30000
+      totalPnl: '0',  // No trading activity
+      equity: '-30000',  // -30000 + 0
+    });
+
+    // Verify we didn't create any PNL records with NULL subaccountId
+    const nullSubaccountRecords = pnlRecords.results.filter((r) => r.subaccountId === null);
+    expect(nullSubaccountRecords.length).toBe(0);
+
+    // Verify there are only 2 PNL records (one for each subaccount)
+    expect(pnlRecords.results.length).toBe(2);
+
+    // Verify cache was updated to the latest height
+    await verifyCache('5');
   });
 });
