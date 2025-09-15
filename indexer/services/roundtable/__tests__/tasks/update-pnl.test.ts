@@ -283,7 +283,7 @@ describe('update-pnl', () => {
     verifyPnlRecord(subaccount1PnlAtHeight1, {
       netTransfers: '30000',
       totalPnl: '12.8', // 10 + 5 - 2.2 fees (two fills at 1.1 each)
-      equity: '30012.8', 
+      equity: '30012.8',
     });
 
     // Verify cache was updated
