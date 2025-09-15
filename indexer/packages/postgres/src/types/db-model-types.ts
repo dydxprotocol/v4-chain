@@ -343,8 +343,6 @@ export interface FundingPaymentsFromDatabase {
   fundingIndex: string,
 }
 
-<<<<<<< HEAD
-=======
 export interface TurnkeyUserFromDatabase {
   suborg_id: string,
   username?: string,
@@ -366,7 +364,6 @@ export interface PnlFromDatabase {
   totalPnl: string,
 }
 
->>>>>>> bf95b5d9 (Turnkey + Autobridge integration (#3065))
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
