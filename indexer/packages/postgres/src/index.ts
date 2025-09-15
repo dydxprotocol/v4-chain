@@ -54,6 +54,7 @@ export * as AffiliateInfoTable from './stores/affiliate-info-table';
 export * as VaultTable from './stores/vault-table';
 export * as FundingPaymentsTable from './stores/funding-payments-table';
 export * as VaultPnlTicksView from './stores/vault-pnl-ticks-view';
+export * as PnlTable from './stores/pnl-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
