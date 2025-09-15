@@ -46,6 +46,7 @@ import { handleControllerError } from '../../../lib/helpers';
 import {
   dydxChainId, usdcAddressByChainId, ethDenomByChainId,
   SOLANA_USDC_QUANTUM,
+  ETH_USDC_QUANTUM,
 } from '../../../lib/smart-contract-constants';
 import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -177,10 +178,26 @@ class BridgeController extends Controller {
 
       for (const asset of assetsToSearch) {
         const balance = assets?.chains?.[chainId]?.denoms?.[asset]?.amount;
-        const usdAmount = assets?.chains?.[chainId]?.denoms?.[asset]?.valueUsd;
+        if (!balance) {
+          logger.info({
+            at: `${controllerName}#sweep->startEvmBridge`,
+            message: 'Balance is not found, skipping bridge',
+            address: fromAddress,
+            chainId,
+            asset,
+          });
+          continue;
+        }
+        let usdAmount: bigint;
+        if (asset === usdcToSearch) {
+          usdAmount = BigInt(balance) / BigInt(ETH_USDC_QUANTUM);
+        } else {
+          const valueUsd = assets?.chains?.[chainId]?.denoms?.[asset]?.valueUsd || '0';
+          usdAmount = BigInt(Math.floor(parseFloat(valueUsd)));
+        }
         // To sweep and asset, user needs to have at least BRIDGE_THRESHOLD_USDC in it.
         if (balance && parseInt(balance, 10) > 0 &&
-          usdAmount && parseFloat(usdAmount) > config.BRIDGE_THRESHOLD_USDC) {
+          usdAmount && usdAmount >= BigInt(config.BRIDGE_THRESHOLD_USDC)) {
           logger.info({
             at: `${controllerName}#sweep->startEvmBridge`,
             message: 'Bridge token',
