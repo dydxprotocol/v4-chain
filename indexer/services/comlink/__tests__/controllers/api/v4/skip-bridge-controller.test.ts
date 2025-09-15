@@ -216,7 +216,7 @@ describe('skip-bridge-controller#V4', () => {
           [arbChainId]: {
             denoms: {
               // Provide large USD value to pass threshold check
-              '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': { amount: '1000000', valueUsd: '100.0' },
+              '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': { amount: '100000000', valueUsd: '100.0' },
               // ETH denom can be present or omitted
             },
           },
@@ -285,7 +285,7 @@ describe('skip-bridge-controller#V4', () => {
                 fromAddress: '0x0000000000000000000000000000000000000000',
                 toAddress: evmFromAddress,
                 asset: 'USDC',
-                value: '100',
+                value: '100000000',
               },
             ],
           },

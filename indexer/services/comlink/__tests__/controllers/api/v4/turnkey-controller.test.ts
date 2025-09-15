@@ -338,18 +338,14 @@ describe('TurnkeyController', () => {
       expect(user?.dydx_address).toEqual('dydx1234567890123456789012345678901234567891');
 
       // verify that PolicyEngine methods were called
-      expect(mockPolicyEngine.configureSolanaPolicy).toHaveBeenCalledWith(
-        newDydxAddress,
-        user?.suborg_id,
-      );
       expect(mockPolicyEngine.configurePolicy).toHaveBeenCalledWith(
         user?.suborg_id,
         user?.evm_address,
         user?.dydx_address,
       );
-      // expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
-      //   user?.suborg_id,
-      // );
+      expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
+        user?.suborg_id,
+      );
     });
   });
 });
