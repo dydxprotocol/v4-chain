@@ -285,7 +285,7 @@ describe('skip-bridge-controller#V4', () => {
                 fromAddress: '0x0000000000000000000000000000000000000000',
                 toAddress: evmFromAddress,
                 asset: 'USDC',
-                value: '100000000',
+                value: '100',
               },
             ],
           },
