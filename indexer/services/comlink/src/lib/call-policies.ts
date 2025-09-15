@@ -1,244 +1,220 @@
-import { CallPolicyVersion, type CallPolicyParams } from '@zerodev/permissions/policies';
+import { CallPolicyVersion, ParamCondition, type CallPolicyParams } from '@zerodev/permissions/policies';
 import type { Abi } from 'viem';
 import {
-  arbitrum, avalanche, base, optimism,
+  arbitrum, avalanche, base, mainnet, optimism,
 } from 'viem/chains';
 
-export const abi = [
-  {
-    inputs: [
-      {
-        internalType: 'bytes32',
-        name: 'sender',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'bytes32',
-        name: 'recipient',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'uint256',
-        name: 'amountIn',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'amountOut',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint32',
-        name: 'destinationDomain',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint64',
-        name: 'timeoutTimestamp',
-        type: 'uint64',
-      },
-      {
-        internalType: 'bytes',
-        name: 'data',
-        type: 'bytes',
-      },
-    ],
-    name: 'submitOrder',
-    outputs: [
-      {
-        internalType: 'bytes32',
-        name: '',
-        type: 'bytes32',
-      },
-    ],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'tokenIn',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: 'swapAmountIn',
-        type: 'uint256',
-      },
-      {
-        internalType: 'bytes',
-        name: 'swapCalldata',
-        type: 'bytes',
-      },
-      {
-        internalType: 'uint256',
-        name: 'executionFeeAmount',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'solverFeeBPS',
-        type: 'uint256',
-      },
-      {
-        internalType: 'bytes32',
-        name: 'sender',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'bytes32',
-        name: 'recipient',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'uint32',
-        name: 'destinationDomain',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint64',
-        name: 'timeoutTimestamp',
-        type: 'uint64',
-      },
-      {
-        internalType: 'bytes',
-        name: 'destinationCalldata',
-        type: 'bytes',
-      },
-    ],
-    name: 'swapAndSubmitOrder',
-    outputs: [
-      {
-        internalType: 'bytes32',
-        name: '',
-        type: 'bytes32',
-      },
-    ],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    type: 'function',
-    name: 'approve',
-    stateMutability: 'nonpayable',
-    inputs: [
-      {
-        name: 'spender',
-        type: 'address',
-      },
-      {
-        name: 'amount',
-        type: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        type: 'bool',
-      },
-    ],
-  },
-] as const;
+import config from '../config';
+import { encodeToHexAndPad, getNobleForwardingAddress, nobleToHex } from '../helpers/skip-helper';
+import { abi } from './bridge-abi';
+import { usdcAddressByChainId } from './smart-contract-constants';
 
-export const arbitrumCallPolicy: CallPolicyParams<Abi, `0x${string}`> = {
-  policyVersion: CallPolicyVersion.V0_0_4,
-  permissions: [
-    {
-      target: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'approve',
-    },
-    {
-      target: '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'submitOrder',
-    },
-    {
-      target: '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'swapAndSubmitOrder',
-    },
-  ],
-} as const;
+const goFastHandlerProxyByChainId: Record<string, string> = {
+  [arbitrum.id.toString()]: '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d',
+  [base.id.toString()]: '0x9335C0c0CBc0317291fd48c00b2f71C8b39DA6F8',
+  [optimism.id.toString()]: '0x9c540EdC86613b22968Da784b2d42AC79965af91',
+  [avalanche.id.toString()]: '0xb7B287F15e5edDFEfF2b05ef1BE7F7cc73197AaA',
+  [mainnet.id.toString()]: '0xa11CC0eFb1B3AcD95a2B8cd316E8c132E16048b5',
+};
 
-export const baseCallPolicy: CallPolicyParams<Abi, `0x${string}`> = {
-  policyVersion: CallPolicyVersion.V0_0_4,
-  permissions: [
-    {
-      target: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'approve',
-    },
-    {
-      target: '0x9335C0c0CBc0317291fd48c00b2f71C8b39DA6F8' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'submitOrder',
-    },
-    {
-      target: '0x9335C0c0CBc0317291fd48c00b2f71C8b39DA6F8' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'swapAndSubmitOrder',
-    },
-  ],
-} as const;
+// this value limit is set to restrict usdc transfers less than 100k.
+const valueLimit = config.CALL_POLICY_VALUE_LIMIT;
 
-export const optimismCallPolicy: CallPolicyParams<Abi, `0x${string}`> = {
-  policyVersion: CallPolicyVersion.V0_0_4,
-  permissions: [
-    {
-      target: '0x0b2c639c533813f4aa9d7837caf62653d097ff85' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'approve',
-    },
-    {
-      target: '0x9c540EdC86613b22968Da784b2d42AC79965af91' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'submitOrder',
-    },
-    {
-      target: '0x9c540EdC86613b22968Da784b2d42AC79965af91' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'swapAndSubmitOrder',
-    },
-  ],
-} as const;
+/**
+ * Construct the policy for the given chainId and dydxAddress. Consolidates call policy construction
+ * for avax, arbitrum, base, optimism. Ethereum is not supported because it also uses a different
+ * smart contract address for slow bridges. Used to give us permission to kick off the bridge.
+ *
+ * @param dydxAddress
+ * @param chainId - one of arbitrum, base, optimism, avalanche.
+ * @returns the policy for the given chainId and dydxAddress.
+ */
+function constructPolicy(chainId: string): (dydxAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>> {
+  const goFastHandlerProxy = goFastHandlerProxyByChainId[chainId] as `0x${string}`;
+  return (dydxAddress: string) => Promise.resolve({
+    policyVersion: CallPolicyVersion.V0_0_5,
+    permissions: [
+      {
+        target: usdcAddressByChainId[chainId] as `0x${string}`, // usdc on chainId
+        abi,
+        valueLimit,
+        functionName: 'approve',
+        args: [
+          {
+            condition: ParamCondition.EQUAL,
+            value: goFastHandlerProxy,
+          },
+          null,
+        ],
+      },
+      {
+        target: goFastHandlerProxy,
+        abi,
+        valueLimit,
+        functionName: 'submitOrder',
+        args: [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            condition: ParamCondition.SLICE_EQUAL,
+            value: encodeToHexAndPad(dydxAddress),
+            start: 277,
+            length: 42,
+          },
+        ],
+      },
+      {
+        target: goFastHandlerProxy,
+        abi,
+        valueLimit,
+        functionName: 'swapAndSubmitOrder',
+        args: [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            condition: ParamCondition.SLICE_EQUAL,
+            value: encodeToHexAndPad(dydxAddress),
+            start: 277,
+            length: 42,
+          },
+        ],
+      },
+    ],
+  });
+}
 
-export const avalancheCallPolicy: CallPolicyParams<Abi, `0x${string}`> = {
-  policyVersion: CallPolicyVersion.V0_0_4,
-  permissions: [
-    {
-      target: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'approve',
-    },
-    {
-      target: '0xb7B287F15e5edDFEfF2b05ef1BE7F7cc73197AaA' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'submitOrder',
-    },
-    {
-      target: '0xb7B287F15e5edDFEfF2b05ef1BE7F7cc73197AaA' as `0x${string}`,
-      abi,
-      valueLimit: BigInt(1000000000000000000000000000000),
-      functionName: 'swapAndSubmitOrder',
-    },
-  ],
-} as const;
+export async function getEthereumCallPolicy(dydxAddress: string): Promise<CallPolicyParams<Abi, `0x${string}`>> {
+  const ethCCTPRelayerProxy = '0xf33e750336e9C0D4E2f4c0D450d753030693CC71';
+  const goFastHandlerProxy = goFastHandlerProxyByChainId[mainnet.id.toString()] as `0x${string}`;
+  // get the noble forwarding address.
+  // cctp mints to a noble forwarding address which forwards to the dydx address.
+  const nobleForwardingAddress = await getNobleForwardingAddress(dydxAddress);
+  const nobleForwardingAddressEvm = nobleToHex(nobleForwardingAddress);
+  // for go fast
+  const destinationCallataAddr = encodeToHexAndPad(dydxAddress);
+  return {
+    policyVersion: CallPolicyVersion.V0_0_5,
+    permissions: [
+      // slow deposits, via CCTP Relayer. USDC Bridge
+      {
+        target: ethCCTPRelayerProxy,
+        abi,
+        valueLimit,
+        functionName: 'requestCCTPTransferWithCaller', // for usdc bridges
+        args: [
+          null,
+          null,
+          {
+            // mint recipient is the noble forwarding address.
+            condition: ParamCondition.EQUAL,
+            value: nobleForwardingAddressEvm,
+          },
+          null,
+          null,
+          null,
+        ],
+      },
+      // slow deposits, via CCTP Relayer. ETH Bridge
+      {
+        target: ethCCTPRelayerProxy,
+        abi,
+        valueLimit,
+        functionName: 'swapAndRequestCCTPTransferWithCaller', // for eth bridges
+        args: [
+          null,
+          null,
+          null,
+          null,
+          {
+            // mint recipient is the noble forwarding address.
+            condition: ParamCondition.EQUAL,
+            value: nobleForwardingAddressEvm,
+          },
+          null,
+          null,
+          null,
+        ],
+      },
+      // allow skip.go bridge smart contract permissions.
+      {
+        target: usdcAddressByChainId[mainnet.id.toString()] as `0x${string}`, // usdc on ethereum
+        abi,
+        valueLimit,
+        functionName: 'approve',
+        args: [
+          {
+            condition: ParamCondition.ONE_OF,
+            value: [
+              ethCCTPRelayerProxy,
+              goFastHandlerProxy,
+            ],
+          },
+          null,
+        ],
+      },
+      // skip go fast bridges.
+      {
+        target: goFastHandlerProxy,
+        abi,
+        valueLimit,
+        functionName: 'submitOrder',
+        args: [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            condition: ParamCondition.SLICE_EQUAL,
+            value: destinationCallataAddr,
+            start: 277,
+            length: 42,
+          },
+        ],
+      },
+      {
+        target: goFastHandlerProxy,
+        abi,
+        valueLimit,
+        functionName: 'swapAndSubmitOrder',
+        args: [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            condition: ParamCondition.SLICE_EQUAL,
+            value: destinationCallataAddr,
+            start: 277,
+            length: 42,
+          },
+        ],
+      },
+    ],
+  };
+}
 
-export const chainIdToCallPolicy: Record<string, CallPolicyParams<Abi, `0x${string}`>> = {
-  [arbitrum.id.toString()]: arbitrumCallPolicy,
-  [base.id.toString()]: baseCallPolicy,
-  [optimism.id.toString()]: optimismCallPolicy,
-  [avalanche.id.toString()]: avalancheCallPolicy,
-} as const;
+export const callPolicyByChainId: Record<string, (dydxAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>>> = {
+  [mainnet.id.toString()]: getEthereumCallPolicy,
+  [arbitrum.id.toString()]: constructPolicy(arbitrum.id.toString()),
+  [avalanche.id.toString()]: constructPolicy(avalanche.id.toString()),
+  [optimism.id.toString()]: constructPolicy(optimism.id.toString()),
+  [base.id.toString()]: constructPolicy(base.id.toString()),
+};

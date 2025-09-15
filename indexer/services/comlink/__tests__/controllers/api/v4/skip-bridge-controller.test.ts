@@ -1,5 +1,6 @@
 import {
   dbHelpers,
+  PermissionApprovalTable,
   TurnkeyUserCreateObject,
   TurnkeyUsersTable,
 } from '@dydxprotocol-indexer/postgres';
@@ -23,13 +24,28 @@ jest.mock('@zerodev/sdk', () => ({
   KERNEL_V3_3: 'KERNEL_V3_3',
   KERNEL_V3_1: 'KERNEL_V3_1',
 }));
+jest.mock('@zerodev/permissions/signers', () => ({
+  __esModule: true,
+  toECDSASigner: jest.fn(),
+}));
+jest.mock('@zerodev/permissions', () => ({
+  __esModule: true,
+  deserializePermissionAccount: jest.fn(),
+}));
 jest.mock('@turnkey/viem', () => ({
   __esModule: true,
   createAccount: jest.fn(),
 }));
+jest.mock('viem/accounts', () => ({
+  __esModule: true,
+  privateKeyToAccount: jest.fn(),
+}));
 import * as skipClient from '@skip-go/client/cjs';
 import * as zeroDev from '@zerodev/sdk';
 import * as turnkeyViem from '@turnkey/viem';
+import * as zerodevPermissions from '@zerodev/permissions';
+import * as zerodevPermissionsSigners from '@zerodev/permissions/signers';
+import { privateKeyToAccount } from 'viem/accounts';
 
 import { alchemyNetworkToChainIdMap } from '../../../../src/helpers/alchemy-helpers';
 import * as skipHelpers from '../../../../src/helpers/skip-helper';
@@ -227,9 +243,33 @@ describe('skip-bridge-controller#V4', () => {
         }),
       };
       (zeroDev.createKernelAccountClient as jest.Mock).mockReturnValue(mockKernelClient as any);
+
+      // Mock deserializePermissionAccount to return a mock account
+      (zerodevPermissions.deserializePermissionAccount as jest.Mock).mockResolvedValue({
+        address: '0xmockaccount',
+        source: 'mock',
+      } as any);
+      // Mock toECDSASigner to return a mock signer
+      (zerodevPermissionsSigners.toECDSASigner as jest.Mock).mockResolvedValue({
+        sign: jest.fn().mockResolvedValue('0xsigned'),
+        getAddress: jest.fn().mockReturnValue('0xsigner'),
+      } as any);
+
+      // Mock privateKeyToAccount to return a mock account
+      (privateKeyToAccount as jest.Mock).mockReturnValue({
+        address: '0xprivatekeyaccount',
+        privateKey: new Uint8Array(32),
+        publicKey: new Uint8Array(64),
+      } as any);
     });
 
     it('should process EVM bridge request and send a user operation', async () => {
+      await PermissionApprovalTable.create({
+        suborg_id: 'suborg-arb',
+        chain_id: arbChainId,
+        approval: '0xapproval',
+      });
+
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: '/v4/bridging/startBridge',
@@ -256,6 +296,7 @@ describe('skip-bridge-controller#V4', () => {
       // Called to build call data for bridging
       expect(skipHelpers.getSkipCallData).toHaveBeenCalled();
       // User operation should be sent once
+      expect(zeroDev.createKernelAccountClient).toHaveBeenCalledTimes(1);
       const client = (
         zeroDev.createKernelAccountClient as unknown as jest.Mock
       ).mock.results[0].value;

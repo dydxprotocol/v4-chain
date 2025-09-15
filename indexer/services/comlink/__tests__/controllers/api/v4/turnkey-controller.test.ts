@@ -345,6 +345,7 @@ describe('TurnkeyController', () => {
       expect(mockPolicyEngine.configurePolicy).toHaveBeenCalledWith(
         user?.suborg_id,
         user?.evm_address,
+        user?.dydx_address,
       );
       // expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
       //   user?.suborg_id,
