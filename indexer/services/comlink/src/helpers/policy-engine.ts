@@ -160,7 +160,7 @@ async function getApprovalForAvalanche(turnkeyAccount: LocalAccount, dydxAddress
 
   // Create an "empty account" as the signer -- you only need the public
   // key (address) to do this.
-  const emptyAccount = addressToEmptyAccount(config.MASTER_SIGNER_PUBLIC as `0x${string}`);
+  const emptyAccount = addressToEmptyAccount(config.APPROVAL_SIGNER_PUBLIC_ADDRESS as `0x${string}`);
   const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
 
   const permissionPlugin = await toPermissionValidator(publicClients[avalanche.id.toString()], {
@@ -191,7 +191,7 @@ async function getApprovalFor7702Evm(
 ) {
   const callPolicy = await callPolicyByChainId[chainId](dydxAddress);
   const kernelVersion = KERNEL_V3_3;
-  const emptyAccount = addressToEmptyAccount(config.MASTER_SIGNER_PUBLIC as `0x${string}`);
+  const emptyAccount = addressToEmptyAccount(config.APPROVAL_SIGNER_PUBLIC_ADDRESS as `0x${string}`);
   const emptySessionKeySigner = await toECDSASigner({ signer: emptyAccount });
   const permissionPlugin = await toPermissionValidator(publicClients[chainId], {
     entryPoint,
