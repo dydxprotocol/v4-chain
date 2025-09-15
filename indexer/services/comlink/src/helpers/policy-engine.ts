@@ -54,6 +54,14 @@ export class PolicyEngine {
     ];
     for (const chain of chains) {
       try {
+        const exists = await PermissionApprovalTable.findBySuborgIdAndChainId(suborgId, chain);
+        if (exists) {
+          logger.info({
+            at: 'policy-controller#configurePolicy',
+            message: `Policy already exists for chain ${chain} and suborg ${suborgId}, skipping`,
+          });
+          continue;
+        }
         const approval = await getApprovalFor7702Evm(turnkeyAccount, chain, dydxAddress);
         logger.info({
           at: 'policy-controller#configurePolicy',
@@ -65,21 +73,43 @@ export class PolicyEngine {
           approval,
         });
       } catch (error) {
-        logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring policy', error });
+        logger.error({ at: 'policy-controller#configurePolicy', message: `Error configuring policy for chain ${chain}`, error });
         throw error;
       }
     }
 
-    const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount, dydxAddress);
-    await PermissionApprovalTable.create({
-      suborg_id: suborgId,
-      chain_id: avalanche.id.toString(),
-      approval: avalancheApproval,
-    });
+    try {
+      const exists = await PermissionApprovalTable.findBySuborgIdAndChainId(
+        suborgId,
+        avalanche.id.toString(),
+      );
+      if (!exists) {
+        const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount, dydxAddress);
+        await PermissionApprovalTable.create({
+          suborg_id: suborgId,
+          chain_id: avalanche.id.toString(),
+          approval: avalancheApproval,
+        });
+      } else {
+        logger.info({
+          at: 'policy-controller#configurePolicy',
+          message: `Policy already exists for chain ${avalanche.id.toString()} and suborg ${suborgId}, skipping`,
+        });
+      }
+    } catch (error) {
+      logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring avalanche policy', error });
+    }
+
+    // configuring solana policy
+    try {
+      await this.configureSolanaPolicy(dydxAddress, suborgId);
+    } catch (error) {
+      logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring solana policy', error });
+    }
   }
 
   async getAPIUserId(suborgId: string): Promise<string> {
-    // query users from turnkey for   the suborg id and find out what the api user's
+    // query users from turnkey for the suborg id and find out what the api user's
     // userId is to configure a policy on it.
     const users = await this.turnkeySenderClient.getUsers({ organizationId: suborgId });
     const apiUser = users.users.filter((user) => user.userName === 'API User');
