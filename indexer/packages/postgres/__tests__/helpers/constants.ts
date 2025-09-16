@@ -63,6 +63,7 @@ import {
   PersistentCacheCreateObject,
   VaultCreateObject,
   VaultStatus,
+  AffiliateRefereeStatsCreateObject,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 
@@ -73,6 +74,7 @@ export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const defaultAddress2: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf';
 export const defaultAddress3: string = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
+export const defaultAddress4: string = 'dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 // Vault address for vault id 0 was generated using
 // script protocol/scripts/vault/get_vault.go
@@ -1023,6 +1025,50 @@ export const defaultKV: PersistentCacheCreateObject = {
 export const defaultKV2: PersistentCacheCreateObject = {
   key: 'otherKey',
   value: 'otherValue',
+};
+
+// ============== Affiliate Per-referee Stats Data ==============
+
+export const affiliateStatDefaultAddrReferredByAddr2: AffiliateRefereeStatsCreateObject = {
+  affiliateAddress: defaultAddress2,
+  refereeAddress: defaultAddress,
+  affiliateEarnings: '12.5',
+  referredMakerTrades: 10,
+  referredTakerTrades: 20,
+  referredLiquidationFees: '30.5',
+  referredMakerFees: '2',
+  referredTakerFees: '20',
+  referredMakerRebates: '-5.5',
+  referralBlockHeight: '1',
+  referredTotalVolume: '12345.6',
+};
+
+export const affiliateStatAddr3ReferredByAddr2: AffiliateRefereeStatsCreateObject = {
+  affiliateAddress: defaultAddress2,
+  refereeAddress: defaultAddress3,
+  affiliateEarnings: '22.5',
+  referredMakerTrades: 20,
+  referredTakerTrades: 40,
+  referredLiquidationFees: '0',
+  referredMakerFees: '0',
+  referredTakerFees: '40.5',
+  referredMakerRebates: '0',
+  referralBlockHeight: '2',
+  referredTotalVolume: '23456.7',
+};
+
+export const affiliateStatAddr4ReferredByAddr: AffiliateRefereeStatsCreateObject = {
+  affiliateAddress: defaultAddress,
+  refereeAddress: defaultAddress4,
+  affiliateEarnings: '52.5',
+  referredMakerTrades: 20,
+  referredTakerTrades: 40,
+  referredLiquidationFees: '0',
+  referredMakerFees: '5.5',
+  referredTakerFees: '60.5',
+  referredMakerRebates: '0',
+  referralBlockHeight: '2',
+  referredTotalVolume: '123456.7',
 };
 
 // ============== Affiliate Info Data ==============

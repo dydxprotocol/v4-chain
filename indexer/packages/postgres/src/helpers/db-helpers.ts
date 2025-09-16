@@ -35,6 +35,7 @@ const layer1Tables = [
   'persistent_cache',
   'affiliate_info',
   'vaults',
+  'affiliate_referee_stats',
 ];
 
 /**
