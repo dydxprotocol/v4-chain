@@ -70,6 +70,7 @@ export const configSchema = {
   // Cache-Control directives
   CACHE_CONTROL_DIRECTIVE_ADDRESSES: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_AFFILIATES: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_AFFILIATES_METADATA: parseString({ default: 'no-cache' }),
   CACHE_CONTROL_DIRECTIVE_ASSET_POSITIONS: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_CANDLES: parseString({ default: 'public, max-age=1' }),
   // omit compliance
