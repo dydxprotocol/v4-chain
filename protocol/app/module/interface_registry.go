@@ -98,6 +98,9 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 				"dydxprotocol.vault.MsgWithdrawFromMegavault": getLegacyMsgSignerFn(
 					[]string{"subaccount_id", "owner"},
 				),
+				"dydxprotocol.clob.MsgUpdateLeverage": getLegacyMsgSignerFn(
+					[]string{"subaccount_id", "owner"},
+				),
 				"dydxprotocol.listing.MsgCreateMarketPermissionless": getLegacyMsgSignerFn(
 					[]string{"subaccount_id", "owner"},
 				),

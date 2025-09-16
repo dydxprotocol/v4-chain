@@ -67,6 +67,11 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/clob/next_clob_pair_id";
   }
 
+  // Queries leverage for a subaccount.
+  rpc Leverage(QueryLeverageRequest) returns (QueryLeverageResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/leverage/{subaccount_id.owner}/{subaccount_id.number}";
+  }
+
   // GRPC Streams
 
   // Streams orderbook updates. Updates contain orderbook data
@@ -174,6 +179,18 @@ message QueryNextClobPairIdRequest {}
 
 // QueryNextClobPairIdResponse is a response message for the next clob pair id
 message QueryNextClobPairIdResponse { uint32 next_clob_pair_id = 1; }
+
+// QueryLeverageRequest is a request message for Leverage.
+message QueryLeverageRequest {
+  // Subaccount to query leverage for.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
+}
+
+// QueryLeverageResponse is a response message that contains the leverage map.
+message QueryLeverageResponse {
+  // Map of perpetual ID to leverage amount.
+  map<uint32, uint32> perpetual_leverage = 1;
+}
 
 // StreamOrderbookUpdatesRequest is a request message for the
 // StreamOrderbookUpdates method.

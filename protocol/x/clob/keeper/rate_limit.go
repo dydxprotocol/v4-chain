@@ -95,6 +95,18 @@ func (k *Keeper) RateLimitBatchCancel(ctx sdk.Context, msg *types.MsgBatchCancel
 	return k.placeCancelOrderRateLimiter.RateLimit(ctx, msg)
 }
 
+// RateLimitUpdateLeverage passes update leverage messages to `updateLeverageRateLimiter`.
+func (k *Keeper) RateLimitUpdateLeverage(ctx sdk.Context, msg *types.MsgUpdateLeverage) error {
+	// Only rate limit during `CheckTx`.
+	if !k.ShouldRateLimit(ctx) {
+		return nil
+	}
+
+	// Use the subaccount owner address as the rate limiting key
+	return k.updateLeverageRateLimiter.RateLimit(ctx, msg.SubaccountId.Owner)
+}
+
 func (k *Keeper) PruneRateLimits(ctx sdk.Context) {
 	k.placeCancelOrderRateLimiter.PruneRateLimits(ctx)
+	k.updateLeverageRateLimiter.PruneRateLimits(ctx)
 }
