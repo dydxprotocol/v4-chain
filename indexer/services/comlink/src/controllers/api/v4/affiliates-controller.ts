@@ -44,6 +44,9 @@ const controllerName: string = 'affiliates-controller';
 const affiliatesCacheControlMiddleware = cacheControlMiddleware(
   config.CACHE_CONTROL_DIRECTIVE_AFFILIATES,
 );
+const affiliatesMetadataCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_AFFILIATES_METADATA,
+);
 
 // TODO(OTE-731): replace api stubs with real logic
 @Route('affiliates')
@@ -280,7 +283,7 @@ class AffiliatesController extends Controller {
 router.get(
   '/metadata',
   rateLimiterMiddleware(getReqRateLimiter),
-  affiliatesCacheControlMiddleware,
+  affiliatesMetadataCacheControlMiddleware,
   ...checkSchema({
     address: {
       in: ['query'],
