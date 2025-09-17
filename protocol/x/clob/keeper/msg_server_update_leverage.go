@@ -8,7 +8,10 @@ import (
 )
 
 // UpdateLeverage handles MsgUpdateLeverage
-func (k msgServer) UpdateLeverage(goCtx context.Context, msg *types.MsgUpdateLeverage) (*types.MsgUpdateLeverageResponse, error) {
+func (k msgServer) UpdateLeverage(
+	goCtx context.Context,
+	msg *types.MsgUpdateLeverage,
+) (*types.MsgUpdateLeverageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Convert from LeverageEntry slice to map

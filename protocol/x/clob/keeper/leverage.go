@@ -52,7 +52,11 @@ func (k Keeper) GetLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId)
 }
 
 // UpdateLeverage updates leverage for specific perpetuals for a subaccount.
-func (k Keeper) UpdateLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId, perpetualLeverage map[uint32]uint32) error {
+func (k Keeper) UpdateLeverage(
+	ctx sdk.Context,
+	subaccountId *satypes.SubaccountId,
+	perpetualLeverage map[uint32]uint32,
+) error {
 	// Validate leverage against maximum allowed for each perpetual
 	for perpetualId, leverage := range perpetualLeverage {
 		maxLeverage, err := k.GetMaxLeverageForPerpetual(ctx, perpetualId)

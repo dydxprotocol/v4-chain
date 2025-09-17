@@ -18,8 +18,6 @@ func CmdUpdateLeverage() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-leverage [address] [subaccount-number] [leverage-map]",
 		Short: "Update leverage for perpetuals",
-		Long: `Update leverage for perpetuals. The leverage-map should be a JSON string with perpetual IDs as keys and leverage amounts as values.
-Example: '{"0": 5, "1": 10}' sets leverage of 5 for perpetual 0 and leverage of 10 for perpetual 1.`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
