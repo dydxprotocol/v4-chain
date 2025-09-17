@@ -141,12 +141,12 @@ describe('alchemy-helpers', () => {
 
       // Should be called for each EVM chain + Solana
       const expectedWebhookIds = [
-        'wh_ys5e0lhw2iaq0wge', // mainnet
+        'wh_ctbkt6y9hez91xr2', // mainnet
         'wh_arbitrum',          // arbitrum
         'wh_avalanche',         // avalanche
         'wh_base',              // base
         'wh_optimism',          // optimism
-        'wh_vv1go1c7wy53q6zy',            // solana
+        'wh_eqxyotjv478gscpo',            // solana
       ];
 
       expect(mockFetch).toHaveBeenCalledTimes(expectedWebhookIds.length);
@@ -210,7 +210,7 @@ describe('alchemy-helpers', () => {
         config.ALCHEMY_WEBHOOK_UPDATE_URL,
         expect.objectContaining({
           body: JSON.stringify({
-            webhook_id: 'wh_vv1go1c7wy53q6zy',
+            webhook_id: 'wh_eqxyotjv478gscpo',
             addresses_to_add: [svmAddress],
             addresses_to_remove: [],
           }),
@@ -236,7 +236,7 @@ describe('alchemy-helpers', () => {
       const calls = mockFetch.mock.calls;
       calls.forEach((call) => {
         const body = JSON.parse(call[1]!.body as string);
-        expect(body.webhook_id).not.toBe('wh_vv1go1c7wy53q6zy');
+        expect(body.webhook_id).not.toBe('wh_eqxyotjv478gscpo');
       });
     });
 

@@ -123,6 +123,9 @@ export class TurnkeyController extends Controller {
     if (!user) {
       throw new TurnkeyError('No user found for recovered EVM address');
     }
+    if (user.dydx_address) {
+      throw new TurnkeyError('Dydx address already uploaded');
+    }
 
     await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
 
@@ -203,7 +206,6 @@ export class TurnkeyController extends Controller {
   }
 }
 
-// Express route
 router.post(
   '/signin',
   rateLimiterMiddleware(getReqRateLimiter),
