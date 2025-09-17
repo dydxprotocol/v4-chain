@@ -20,14 +20,14 @@ import {
 } from '../lib/smart-contract-constants';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
-  [mainnet.id.toString()]: 'wh_ys5e0lhw2iaq0wge',
-  [arbitrum.id.toString()]: 'wh_fvxtvyg2uxh0ylba',
-  [avalanche.id.toString()]: 'wh_ycy4khfozgyuir3u',
-  [base.id.toString()]: 'wh_8pntnwk3jltyduwe',
-  [optimism.id.toString()]: 'wh_99yjvuacl28obf0i',
+  [mainnet.id.toString()]: 'wh_ctbkt6y9hez91xr2',
+  [arbitrum.id.toString()]: 'wh_ltwqwcsrx1b8lgry',
+  [avalanche.id.toString()]: 'wh_52wz9dbxywxov2dm',
+  [base.id.toString()]: 'wh_lpjn5gnwj0ll0gap',
+  [optimism.id.toString()]: 'wh_7eo900bsg8rkvo6z',
 };
 
-const solanaAlchemyWebhookId = 'wh_vv1go1c7wy53q6zy';
+const solanaAlchemyWebhookId = 'wh_eqxyotjv478gscpo';
 
 export const alchemyNetworkToChainIdMap: Record<string, string> = {
   ARB_MAINNET: arbitrum.id.toString(),
@@ -114,11 +114,13 @@ export async function registerAddressWithAlchemyWebhook(
   if (!config.ALCHEMY_AUTH_TOKEN) {
     throw new Error('ALCHEMY_AUTH_TOKEN is not set: cannot register address with Alchemy webhook');
   }
-  const addressesToAdd: string[] = [address];
+  const addressesToAdd: string[] = [];
   if (webhookId === evmChainIdToAlchemyWebhookId[avalanche.id.toString()]) {
     // for avalanche, we also should add the smart account address to the webhook.
     const smartAccountAddress = await getSmartAccountAddress(address);
     addressesToAdd.push(smartAccountAddress);
+  } else {
+    addressesToAdd.push(address);
   }
   const response = await fetch(config.ALCHEMY_WEBHOOK_UPDATE_URL, {
     method: 'PATCH',
