@@ -18,7 +18,7 @@ func CmdUpdateLeverage() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-leverage [address] [subaccount-number] [leverage-map]",
 		Short: "Update leverage for perpetuals",
-		Args: cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

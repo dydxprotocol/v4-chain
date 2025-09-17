@@ -81,6 +81,9 @@ const (
 
 	// NextClobPairIDKey is the key to retrieve the next ClobPair ID to be used.
 	NextClobPairIDKey = "NextClobPairID"
+
+	// LeverageKeyPrefix is the prefix for leverage storage
+	LeverageKeyPrefix = "Leverage:"
 )
 
 // Memstore

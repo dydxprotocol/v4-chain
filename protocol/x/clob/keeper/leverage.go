@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/json"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,14 +26,11 @@ func (k Keeper) SetLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId,
 	store := k.getLeverageStore(ctx)
 	key := leverageKey(subaccountId)
 
-	// Create a new leverage object
-	leverage := types.Leverage{
-		SubaccountId:      subaccountId,
-		PerpetualLeverage: leverageMap,
+	// Marshal and store the map using JSON
+	b, err := json.Marshal(leverageMap)
+	if err != nil {
+		panic(err)
 	}
-
-	// Marshal and store
-	b := k.cdc.MustMarshal(&leverage)
 	store.Set(key, b)
 }
 
@@ -45,10 +44,12 @@ func (k Keeper) GetLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId)
 		return nil, false
 	}
 
-	var leverage types.Leverage
-	k.cdc.MustUnmarshal(b, &leverage)
+	var leverageMap map[uint32]uint32
+	if err := json.Unmarshal(b, &leverageMap); err != nil {
+		panic(err)
+	}
 
-	return leverage.PerpetualLeverage, true
+	return leverageMap, true
 }
 
 // UpdateLeverage updates leverage for specific perpetuals for a subaccount.
@@ -94,22 +95,6 @@ func (k Keeper) UpdateLeverage(
 	// Store updated leverage
 	k.SetLeverage(ctx, subaccountId, existingLeverage)
 	return nil
-}
-
-// GetAllLeverage returns all leverage data.
-func (k Keeper) GetAllLeverage(ctx sdk.Context) []types.Leverage {
-	store := k.getLeverageStore(ctx)
-	iterator := store.Iterator(nil, nil)
-	defer iterator.Close()
-
-	var leverageList []types.Leverage
-	for ; iterator.Valid(); iterator.Next() {
-		var leverage types.Leverage
-		k.cdc.MustUnmarshal(iterator.Value(), &leverage)
-		leverageList = append(leverageList, leverage)
-	}
-
-	return leverageList
 }
 
 // GetMaxLeverageForPerpetual calculates the maximum leverage allowed for a perpetual
