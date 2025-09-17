@@ -132,6 +132,8 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/dydxprotocol.clob.MsgCancelOrderResponse",
 		"/dydxprotocol.clob.MsgPlaceOrder",
 		"/dydxprotocol.clob.MsgPlaceOrderResponse",
+		"/dydxprotocol.clob.MsgUpdateLeverage",
+		"/dydxprotocol.clob.MsgUpdateLeverageResponse",
 
 		// listing
 		"/dydxprotocol.listing.MsgCreateMarketPermissionless",
