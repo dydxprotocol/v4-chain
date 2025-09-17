@@ -80,12 +80,14 @@ message MsgUpdateAffiliateProgramParametersRequest {
   // Updated affiliate program parameters information
   AffiliateTiers tiers = 2;
   // Maximum commission per referred user in a 30d rolling window in revenue
-  uint32 maximum_30d_commission_per_referred = 3 [(gogoproto.nullable) = true];
+  uint32 maximum_30d_commission_per_referred = 3
+      [ (gogoproto.nullable) = true ];
   // Referee minimum fee tier index
-  uint32 referee_minimum_fee_tier_idx = 4 [(gogoproto.nullable) = true];
+  uint32 referee_minimum_fee_tier_idx = 4 [ (gogoproto.nullable) = true ];
   // Maximum attributable revenue per affiliate in a 30d rolling window in
   // revenue
-  uint32 maximum_30d_attributable_revenue_per_affiliate = 5 [(gogoproto.nullable) = true];
+  uint32 maximum_30d_attributable_revenue_per_affiliate = 5
+      [ (gogoproto.nullable) = true ];
   // Affiliate whitelist
   AffiliateOverrides affiliate_overrides = 6;
 }
