@@ -19,6 +19,9 @@ service Msg {
   // UpdateAffiliateWhitelist updates affiliate whitelist
   rpc UpdateAffiliateWhitelist(MsgUpdateAffiliateWhitelist)
       returns (MsgUpdateAffiliateWhitelistResponse);
+
+  rpc UpdateAffiliateProgramParameters(MsgUpdateAffiliateProgramParameters)
+      returns (MsgUpdateAffiliateProgramParametersResponse);
 }
 
 // Message to register a referee-affiliate relationship
@@ -59,3 +62,27 @@ message MsgUpdateAffiliateWhitelist {
 
 // Response to MsgUpdateAffiliateWhitelist
 message MsgUpdateAffiliateWhitelistResponse {}
+
+message AffiliateOverrides {
+  repeated string overrides = 1;
+}
+
+message MsgUpdateAffiliateProgramParameters {
+  option (cosmos.msg.v1.signer) = "authority";
+  // Authority sending this message. Will be sent by gov
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // Updated affiliate program parameters information
+  AffiliateTiers tiers = 2 [ (gogoproto.nullable) = false ];
+
+  optional uint32 maximum_30d_commission = 3;
+
+  optional uint32 referee_minimum_fee_tier_idx = 4;
+
+  optional uint32 affiliate_maximum_30d_commission = 5;
+
+  optional uint32 maximum_30d_attributable_revenue_per_affiliate = 6;
+
+  optional AffiliateOverrides affiliate_overrides = 7;
+}
+
+message MsgUpdateAffiliateProgramParametersResponse {}
