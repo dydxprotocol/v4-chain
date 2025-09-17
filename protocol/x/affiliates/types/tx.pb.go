@@ -292,8 +292,11 @@ func (m *MsgUpdateAffiliateWhitelistResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateAffiliateWhitelistResponse proto.InternalMessageInfo
 
+// AffiliateWhitelist defines the affiliate whitelist.
 type AffiliateOverrides struct {
-	Overrides []string `protobuf:"bytes,1,rep,name=overrides,proto3" json:"overrides,omitempty"`
+	// List of unique whitelisted addresses.
+	// These are automatically put at the maximum affiliate tier
+	Addresses []string `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
 }
 
 func (m *AffiliateOverrides) Reset()         { *m = AffiliateOverrides{} }
@@ -329,52 +332,46 @@ func (m *AffiliateOverrides) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AffiliateOverrides proto.InternalMessageInfo
 
-func (m *AffiliateOverrides) GetOverrides() []string {
+func (m *AffiliateOverrides) GetAddresses() []string {
 	if m != nil {
-		return m.Overrides
+		return m.Addresses
 	}
 	return nil
 }
 
-type MsgUpdateAffiliateProgramParameters struct {
+// Message to update affiliate program parameters
+type MsgUpdateAffiliateProgramParametersRequest struct {
 	// Authority sending this message. Will be sent by gov
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// Updated affiliate program parameters information
-	Tiers AffiliateTiers `protobuf:"bytes,2,opt,name=tiers,proto3" json:"tiers"`
-	// Types that are valid to be assigned to XMaximum_30DCommission:
-	//
-	//	*MsgUpdateAffiliateProgramParameters_Maximum_30DCommission
-	XMaximum_30DCommission isMsgUpdateAffiliateProgramParameters_XMaximum_30DCommission `protobuf_oneof:"_maximum_30d_commission"`
-	// Types that are valid to be assigned to XRefereeMinimumFeeTierIdx:
-	//
-	//	*MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx
-	XRefereeMinimumFeeTierIdx isMsgUpdateAffiliateProgramParameters_XRefereeMinimumFeeTierIdx `protobuf_oneof:"_referee_minimum_fee_tier_idx"`
-	// Types that are valid to be assigned to XAffiliateMaximum_30DCommission:
-	//
-	//	*MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission
-	XAffiliateMaximum_30DCommission isMsgUpdateAffiliateProgramParameters_XAffiliateMaximum_30DCommission `protobuf_oneof:"_affiliate_maximum_30d_commission"`
-	// Types that are valid to be assigned to XMaximum_30DAttributableRevenuePerAffiliate:
-	//
-	//	*MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate
-	XMaximum_30DAttributableRevenuePerAffiliate isMsgUpdateAffiliateProgramParameters_XMaximum_30DAttributableRevenuePerAffiliate `protobuf_oneof:"_maximum_30d_attributable_revenue_per_affiliate"`
-	// Types that are valid to be assigned to XAffiliateOverrides:
-	//
-	//	*MsgUpdateAffiliateProgramParameters_AffiliateOverrides
-	XAffiliateOverrides isMsgUpdateAffiliateProgramParameters_XAffiliateOverrides `protobuf_oneof:"_affiliate_overrides"`
+	Tiers *AffiliateTiers `protobuf:"bytes,2,opt,name=tiers,proto3" json:"tiers,omitempty"`
+	// Maximum commission per referred user in a 30d rolling window in revenue
+	Maximum_30DCommissionPerReferred uint32 `protobuf:"varint,3,opt,name=maximum_30d_commission_per_referred,json=maximum30dCommissionPerReferred,proto3" json:"maximum_30d_commission_per_referred,omitempty"`
+	// Referee minimum fee tier index
+	RefereeMinimumFeeTierIdx uint32 `protobuf:"varint,4,opt,name=referee_minimum_fee_tier_idx,json=refereeMinimumFeeTierIdx,proto3" json:"referee_minimum_fee_tier_idx,omitempty"`
+	// Maximum attributable revenue per affiliate in a 30d rolling window in
+	// revenue
+	Maximum_30DAttributableRevenuePerAffiliate uint32 `protobuf:"varint,5,opt,name=maximum_30d_attributable_revenue_per_affiliate,json=maximum30dAttributableRevenuePerAffiliate,proto3" json:"maximum_30d_attributable_revenue_per_affiliate,omitempty"`
+	// Affiliate whitelist
+	AffiliateOverrides *AffiliateOverrides `protobuf:"bytes,6,opt,name=affiliate_overrides,json=affiliateOverrides,proto3" json:"affiliate_overrides,omitempty"`
 }
 
-func (m *MsgUpdateAffiliateProgramParameters) Reset()         { *m = MsgUpdateAffiliateProgramParameters{} }
-func (m *MsgUpdateAffiliateProgramParameters) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateAffiliateProgramParameters) ProtoMessage()    {}
-func (*MsgUpdateAffiliateProgramParameters) Descriptor() ([]byte, []int) {
+func (m *MsgUpdateAffiliateProgramParametersRequest) Reset() {
+	*m = MsgUpdateAffiliateProgramParametersRequest{}
+}
+func (m *MsgUpdateAffiliateProgramParametersRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateAffiliateProgramParametersRequest) ProtoMessage() {}
+func (*MsgUpdateAffiliateProgramParametersRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_41c2f092a0ec6d7f, []int{7}
 }
-func (m *MsgUpdateAffiliateProgramParameters) XXX_Unmarshal(b []byte) error {
+func (m *MsgUpdateAffiliateProgramParametersRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdateAffiliateProgramParameters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateAffiliateProgramParametersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdateAffiliateProgramParameters.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateAffiliateProgramParametersRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -384,162 +381,61 @@ func (m *MsgUpdateAffiliateProgramParameters) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdateAffiliateProgramParameters) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateAffiliateProgramParameters.Merge(m, src)
+func (m *MsgUpdateAffiliateProgramParametersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAffiliateProgramParametersRequest.Merge(m, src)
 }
-func (m *MsgUpdateAffiliateProgramParameters) XXX_Size() int {
+func (m *MsgUpdateAffiliateProgramParametersRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdateAffiliateProgramParameters) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateAffiliateProgramParameters.DiscardUnknown(m)
+func (m *MsgUpdateAffiliateProgramParametersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAffiliateProgramParametersRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdateAffiliateProgramParameters proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateAffiliateProgramParametersRequest proto.InternalMessageInfo
 
-type isMsgUpdateAffiliateProgramParameters_XMaximum_30DCommission interface {
-	isMsgUpdateAffiliateProgramParameters_XMaximum_30DCommission()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-type isMsgUpdateAffiliateProgramParameters_XRefereeMinimumFeeTierIdx interface {
-	isMsgUpdateAffiliateProgramParameters_XRefereeMinimumFeeTierIdx()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-type isMsgUpdateAffiliateProgramParameters_XAffiliateMaximum_30DCommission interface {
-	isMsgUpdateAffiliateProgramParameters_XAffiliateMaximum_30DCommission()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-type isMsgUpdateAffiliateProgramParameters_XMaximum_30DAttributableRevenuePerAffiliate interface {
-	isMsgUpdateAffiliateProgramParameters_XMaximum_30DAttributableRevenuePerAffiliate()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-type isMsgUpdateAffiliateProgramParameters_XAffiliateOverrides interface {
-	isMsgUpdateAffiliateProgramParameters_XAffiliateOverrides()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type MsgUpdateAffiliateProgramParameters_Maximum_30DCommission struct {
-	Maximum_30DCommission uint32 `protobuf:"varint,3,opt,name=maximum_30d_commission,json=maximum30dCommission,proto3,oneof" json:"maximum_30d_commission,omitempty"`
-}
-type MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx struct {
-	RefereeMinimumFeeTierIdx uint32 `protobuf:"varint,4,opt,name=referee_minimum_fee_tier_idx,json=refereeMinimumFeeTierIdx,proto3,oneof" json:"referee_minimum_fee_tier_idx,omitempty"`
-}
-type MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission struct {
-	AffiliateMaximum_30DCommission uint32 `protobuf:"varint,5,opt,name=affiliate_maximum_30d_commission,json=affiliateMaximum30dCommission,proto3,oneof" json:"affiliate_maximum_30d_commission,omitempty"`
-}
-type MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate struct {
-	Maximum_30DAttributableRevenuePerAffiliate uint32 `protobuf:"varint,6,opt,name=maximum_30d_attributable_revenue_per_affiliate,json=maximum30dAttributableRevenuePerAffiliate,proto3,oneof" json:"maximum_30d_attributable_revenue_per_affiliate,omitempty"`
-}
-type MsgUpdateAffiliateProgramParameters_AffiliateOverrides struct {
-	AffiliateOverrides *AffiliateOverrides `protobuf:"bytes,7,opt,name=affiliate_overrides,json=affiliateOverrides,proto3,oneof" json:"affiliate_overrides,omitempty"`
-}
-
-func (*MsgUpdateAffiliateProgramParameters_Maximum_30DCommission) isMsgUpdateAffiliateProgramParameters_XMaximum_30DCommission() {
-}
-func (*MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx) isMsgUpdateAffiliateProgramParameters_XRefereeMinimumFeeTierIdx() {
-}
-func (*MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission) isMsgUpdateAffiliateProgramParameters_XAffiliateMaximum_30DCommission() {
-}
-func (*MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate) isMsgUpdateAffiliateProgramParameters_XMaximum_30DAttributableRevenuePerAffiliate() {
-}
-func (*MsgUpdateAffiliateProgramParameters_AffiliateOverrides) isMsgUpdateAffiliateProgramParameters_XAffiliateOverrides() {
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetXMaximum_30DCommission() isMsgUpdateAffiliateProgramParameters_XMaximum_30DCommission {
-	if m != nil {
-		return m.XMaximum_30DCommission
-	}
-	return nil
-}
-func (m *MsgUpdateAffiliateProgramParameters) GetXRefereeMinimumFeeTierIdx() isMsgUpdateAffiliateProgramParameters_XRefereeMinimumFeeTierIdx {
-	if m != nil {
-		return m.XRefereeMinimumFeeTierIdx
-	}
-	return nil
-}
-func (m *MsgUpdateAffiliateProgramParameters) GetXAffiliateMaximum_30DCommission() isMsgUpdateAffiliateProgramParameters_XAffiliateMaximum_30DCommission {
-	if m != nil {
-		return m.XAffiliateMaximum_30DCommission
-	}
-	return nil
-}
-func (m *MsgUpdateAffiliateProgramParameters) GetXMaximum_30DAttributableRevenuePerAffiliate() isMsgUpdateAffiliateProgramParameters_XMaximum_30DAttributableRevenuePerAffiliate {
-	if m != nil {
-		return m.XMaximum_30DAttributableRevenuePerAffiliate
-	}
-	return nil
-}
-func (m *MsgUpdateAffiliateProgramParameters) GetXAffiliateOverrides() isMsgUpdateAffiliateProgramParameters_XAffiliateOverrides {
-	if m != nil {
-		return m.XAffiliateOverrides
-	}
-	return nil
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetAuthority() string {
+func (m *MsgUpdateAffiliateProgramParametersRequest) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-func (m *MsgUpdateAffiliateProgramParameters) GetTiers() AffiliateTiers {
+func (m *MsgUpdateAffiliateProgramParametersRequest) GetTiers() *AffiliateTiers {
 	if m != nil {
 		return m.Tiers
-	}
-	return AffiliateTiers{}
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetMaximum_30DCommission() uint32 {
-	if x, ok := m.GetXMaximum_30DCommission().(*MsgUpdateAffiliateProgramParameters_Maximum_30DCommission); ok {
-		return x.Maximum_30DCommission
-	}
-	return 0
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetRefereeMinimumFeeTierIdx() uint32 {
-	if x, ok := m.GetXRefereeMinimumFeeTierIdx().(*MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx); ok {
-		return x.RefereeMinimumFeeTierIdx
-	}
-	return 0
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetAffiliateMaximum_30DCommission() uint32 {
-	if x, ok := m.GetXAffiliateMaximum_30DCommission().(*MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission); ok {
-		return x.AffiliateMaximum_30DCommission
-	}
-	return 0
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetMaximum_30DAttributableRevenuePerAffiliate() uint32 {
-	if x, ok := m.GetXMaximum_30DAttributableRevenuePerAffiliate().(*MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate); ok {
-		return x.Maximum_30DAttributableRevenuePerAffiliate
-	}
-	return 0
-}
-
-func (m *MsgUpdateAffiliateProgramParameters) GetAffiliateOverrides() *AffiliateOverrides {
-	if x, ok := m.GetXAffiliateOverrides().(*MsgUpdateAffiliateProgramParameters_AffiliateOverrides); ok {
-		return x.AffiliateOverrides
 	}
 	return nil
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*MsgUpdateAffiliateProgramParameters) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*MsgUpdateAffiliateProgramParameters_Maximum_30DCommission)(nil),
-		(*MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx)(nil),
-		(*MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission)(nil),
-		(*MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate)(nil),
-		(*MsgUpdateAffiliateProgramParameters_AffiliateOverrides)(nil),
+func (m *MsgUpdateAffiliateProgramParametersRequest) GetMaximum_30DCommissionPerReferred() uint32 {
+	if m != nil {
+		return m.Maximum_30DCommissionPerReferred
 	}
+	return 0
 }
 
+func (m *MsgUpdateAffiliateProgramParametersRequest) GetRefereeMinimumFeeTierIdx() uint32 {
+	if m != nil {
+		return m.RefereeMinimumFeeTierIdx
+	}
+	return 0
+}
+
+func (m *MsgUpdateAffiliateProgramParametersRequest) GetMaximum_30DAttributableRevenuePerAffiliate() uint32 {
+	if m != nil {
+		return m.Maximum_30DAttributableRevenuePerAffiliate
+	}
+	return 0
+}
+
+func (m *MsgUpdateAffiliateProgramParametersRequest) GetAffiliateOverrides() *AffiliateOverrides {
+	if m != nil {
+		return m.AffiliateOverrides
+	}
+	return nil
+}
+
+// Response to MsgUpdateAffiliateProgramParameters
 type MsgUpdateAffiliateProgramParametersResponse struct {
 }
 
@@ -588,61 +484,59 @@ func init() {
 	proto.RegisterType((*MsgUpdateAffiliateWhitelist)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist")
 	proto.RegisterType((*MsgUpdateAffiliateWhitelistResponse)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse")
 	proto.RegisterType((*AffiliateOverrides)(nil), "dydxprotocol.affiliates.AffiliateOverrides")
-	proto.RegisterType((*MsgUpdateAffiliateProgramParameters)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateProgramParameters")
+	proto.RegisterType((*MsgUpdateAffiliateProgramParametersRequest)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersRequest")
 	proto.RegisterType((*MsgUpdateAffiliateProgramParametersResponse)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/affiliates/tx.proto", fileDescriptor_41c2f092a0ec6d7f) }
 
 var fileDescriptor_41c2f092a0ec6d7f = []byte{
-	// 751 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xbf, 0x4f, 0xdb, 0x5a,
-	0x14, 0xce, 0x25, 0x01, 0x94, 0xf3, 0xf4, 0x9e, 0xf4, 0xfc, 0x22, 0x62, 0xf2, 0x20, 0x09, 0x41,
-	0x55, 0xd3, 0xa2, 0xc4, 0x10, 0x68, 0xd5, 0x22, 0x16, 0x4c, 0x55, 0x51, 0xa9, 0x11, 0xc8, 0xfd,
-	0x25, 0x75, 0xb1, 0x9c, 0xf8, 0xc6, 0xb9, 0x52, 0x1c, 0x47, 0xf7, 0xde, 0xa4, 0xc9, 0xca, 0xc4,
-	0x54, 0x75, 0xec, 0xc8, 0xc4, 0xdc, 0xa1, 0xea, 0xda, 0x95, 0x11, 0x75, 0xea, 0x54, 0x55, 0x30,
-	0xb4, 0xff, 0x41, 0xd7, 0x2a, 0xfe, 0x19, 0x9a, 0x98, 0x10, 0x3a, 0x74, 0xb2, 0x7d, 0xce, 0xf7,
-	0x7d, 0xe7, 0x3b, 0xf7, 0x9e, 0x7b, 0x65, 0xc8, 0xea, 0x3d, 0xbd, 0xdb, 0xa2, 0x16, 0xb7, 0xaa,
-	0x56, 0x43, 0xd2, 0x6a, 0x35, 0xd2, 0x20, 0x1a, 0xc7, 0x4c, 0xe2, 0xdd, 0xa2, 0x1d, 0x16, 0x92,
-	0x83, 0x88, 0x62, 0x80, 0x48, 0xcd, 0x57, 0x2d, 0x66, 0x5a, 0x4c, 0xb5, 0x73, 0x92, 0xf3, 0xe1,
-	0x70, 0x52, 0x09, 0xc3, 0x32, 0x2c, 0x27, 0xde, 0x7f, 0x73, 0xa3, 0xf9, 0xb0, 0x5a, 0xc1, 0xab,
-	0x8b, 0x4c, 0x3a, 0x6a, 0x92, 0xc9, 0x0c, 0xa9, 0xb3, 0xd6, 0x7f, 0x38, 0x89, 0xdc, 0x5b, 0x04,
-	0x89, 0x32, 0x33, 0x14, 0x6c, 0x10, 0xc6, 0x31, 0xdd, 0xf6, 0x88, 0x42, 0x09, 0x66, 0x29, 0xae,
-	0x61, 0x8a, 0xb1, 0x88, 0xb2, 0x28, 0x1f, 0x97, 0xc5, 0x4f, 0xef, 0x0b, 0x09, 0xd7, 0xd4, 0xb6,
-	0xae, 0x53, 0xcc, 0xd8, 0x13, 0x4e, 0x49, 0xd3, 0x50, 0x3c, 0xa0, 0x70, 0x17, 0xe2, 0x7e, 0x65,
-	0x71, 0x6a, 0x0c, 0x2b, 0x80, 0x6e, 0x26, 0x0e, 0x8f, 0x32, 0x91, 0xef, 0x47, 0x99, 0xc8, 0xc1,
-	0xb7, 0x77, 0xb7, 0x3d, 0xb5, 0x5c, 0x1a, 0x16, 0x46, 0x39, 0x53, 0x30, 0x6b, 0x59, 0x4d, 0x86,
-	0x73, 0xc7, 0x08, 0x92, 0x65, 0x66, 0x3c, 0x6b, 0xe9, 0x1a, 0xc7, 0x7e, 0xfa, 0x29, 0xc1, 0x94,
-	0xd9, 0x4e, 0xda, 0xbc, 0x6e, 0x51, 0xc2, 0x7b, 0x63, 0xfd, 0x07, 0x50, 0x61, 0x07, 0xa6, 0x79,
-	0x5f, 0xc0, 0x76, 0xff, 0x57, 0xe9, 0x66, 0x31, 0x64, 0xaf, 0x8a, 0x17, 0xeb, 0xc9, 0xb1, 0x93,
-	0x2f, 0x99, 0x88, 0xe2, 0x70, 0x37, 0xff, 0xe9, 0xb7, 0x11, 0x88, 0xe6, 0x96, 0x20, 0x13, 0xe2,
-	0xd3, 0xef, 0xe5, 0x03, 0x82, 0xff, 0x87, 0x31, 0x2f, 0xea, 0x84, 0xe3, 0x06, 0x61, 0xfc, 0xda,
-	0xfd, 0xec, 0x41, 0xfc, 0x95, 0x27, 0xe2, 0xf6, 0xb4, 0x32, 0xbe, 0x27, 0xbf, 0xae, 0xdb, 0x57,
-	0xa0, 0x31, 0xd4, 0xdb, 0x0d, 0x58, 0xbe, 0xc4, 0xb7, 0xdf, 0x5f, 0x09, 0x04, 0x3f, 0xbb, 0xd7,
-	0xc1, 0x94, 0x12, 0x1d, 0x33, 0x61, 0x01, 0xe2, 0x96, 0xf7, 0x21, 0xa2, 0x6c, 0x34, 0x1f, 0x57,
-	0x82, 0x40, 0xee, 0xc7, 0xf4, 0x28, 0xed, 0x7d, 0x6a, 0x19, 0x54, 0x33, 0xf7, 0x35, 0xaa, 0x99,
-	0x98, 0xff, 0xe9, 0xbd, 0x16, 0xee, 0xc3, 0x9c, 0xa9, 0x75, 0x89, 0xd9, 0x36, 0xd5, 0xf5, 0x55,
-	0x5d, 0xad, 0x5a, 0xa6, 0x49, 0x18, 0x23, 0x56, 0x53, 0x8c, 0x66, 0x51, 0xfe, 0xef, 0xdd, 0x88,
-	0x92, 0x70, 0xf3, 0xeb, 0xab, 0xfa, 0x8e, 0x9f, 0x3d, 0x44, 0x48, 0xd8, 0x81, 0x05, 0x77, 0xd4,
-	0x55, 0x93, 0x34, 0x6d, 0x89, 0x1a, 0xc6, 0x6a, 0x5f, 0x57, 0x25, 0x7a, 0x57, 0x8c, 0xd9, 0x02,
-	0x48, 0x11, 0x5d, 0x54, 0xd9, 0x01, 0x3d, 0xc4, 0xb6, 0x8f, 0x47, 0x7a, 0xb7, 0x2f, 0xf2, 0x18,
-	0xb2, 0xbe, 0x53, 0x35, 0xc4, 0xc9, 0xb4, 0x2d, 0x34, 0xa5, 0x2c, 0xfa, 0xc8, 0x72, 0x88, 0xa5,
-	0x1a, 0x14, 0x07, 0x35, 0x34, 0xce, 0x29, 0xa9, 0xb4, 0xb9, 0x56, 0x69, 0x60, 0x95, 0xe2, 0x0e,
-	0x6e, 0xb6, 0xb1, 0xda, 0xc2, 0x54, 0x0d, 0x4e, 0xf9, 0x8c, 0xad, 0x1d, 0x55, 0x6e, 0x05, 0x5d,
-	0x6e, 0x0f, 0xb0, 0x14, 0x87, 0xb4, 0x3f, 0x70, 0x7e, 0xfb, 0x75, 0x34, 0xf8, 0x2f, 0x70, 0x1d,
-	0x8c, 0xc0, 0xec, 0x55, 0x07, 0xd4, 0x1f, 0xa1, 0xdd, 0x98, 0x22, 0x68, 0x43, 0xd1, 0x43, 0x84,
-	0x7e, 0x1d, 0x54, 0x79, 0x1e, 0x92, 0x21, 0xeb, 0x23, 0x67, 0x60, 0x51, 0xbd, 0x6c, 0x27, 0xe4,
-	0x65, 0x58, 0x52, 0xc7, 0xad, 0xb2, 0xbc, 0x06, 0x92, 0x3a, 0xd9, 0xe2, 0xc9, 0x73, 0x90, 0x50,
-	0x47, 0xac, 0x43, 0xae, 0x00, 0x2b, 0x57, 0x18, 0x7c, 0xef, 0x70, 0x95, 0x3e, 0xc6, 0x20, 0x5a,
-	0x66, 0x86, 0xd0, 0x83, 0x7f, 0x87, 0xef, 0xf1, 0x42, 0xe8, 0x6a, 0x8e, 0xba, 0x5c, 0x53, 0x77,
-	0x26, 0x82, 0x7b, 0x16, 0x84, 0x03, 0x04, 0x89, 0x91, 0x17, 0xf1, 0xea, 0x65, 0x7a, 0xa3, 0x18,
-	0xa9, 0x7b, 0x93, 0x32, 0x7c, 0x13, 0xaf, 0x11, 0x88, 0xa1, 0x37, 0xe8, 0xc6, 0x04, 0xb2, 0x3e,
-	0x2b, 0xb5, 0x75, 0x1d, 0x96, 0x6f, 0xe8, 0x18, 0x41, 0x76, 0xec, 0xf5, 0x35, 0x49, 0x89, 0x21,
-	0x76, 0xea, 0xc1, 0xef, 0xb0, 0x3d, 0xa3, 0xf2, 0xf3, 0x93, 0xb3, 0x34, 0x3a, 0x3d, 0x4b, 0xa3,
-	0xaf, 0x67, 0x69, 0xf4, 0xe6, 0x3c, 0x1d, 0x39, 0x3d, 0x4f, 0x47, 0x3e, 0x9f, 0xa7, 0x23, 0x2f,
-	0xb7, 0x0c, 0xc2, 0xeb, 0xed, 0x4a, 0xb1, 0x6a, 0x99, 0xd2, 0x85, 0xbf, 0x8d, 0xce, 0x46, 0xa1,
-	0x5a, 0xd7, 0x48, 0x53, 0xf2, 0x23, 0xdd, 0x0b, 0x7f, 0x3b, 0xbd, 0x16, 0x66, 0x95, 0x19, 0x3b,
-	0xb9, 0xfe, 0x33, 0x00, 0x00, 0xff, 0xff, 0xcb, 0xd1, 0x37, 0xff, 0x15, 0x09, 0x00, 0x00,
+	// 711 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0xcf, 0x6b, 0x13, 0x41,
+	0x14, 0xce, 0xd8, 0xb4, 0xd2, 0x11, 0x05, 0xd7, 0x40, 0xd7, 0x58, 0x36, 0x31, 0x45, 0xac, 0x2d,
+	0xc9, 0xd6, 0xb6, 0x8a, 0x94, 0x7a, 0xe8, 0x0f, 0x04, 0xc1, 0xd0, 0xb0, 0xfe, 0x02, 0x11, 0x96,
+	0x4d, 0xf6, 0x65, 0x33, 0x90, 0xcd, 0xc4, 0x99, 0x49, 0x4c, 0xae, 0x3d, 0x79, 0x12, 0x0f, 0x1e,
+	0x3c, 0xf6, 0xe4, 0x4d, 0xf0, 0x20, 0xfe, 0x09, 0xd2, 0x63, 0xf1, 0xe4, 0x49, 0xa4, 0x3d, 0xe8,
+	0x9f, 0x21, 0xd9, 0x1f, 0xb3, 0x29, 0xc9, 0x36, 0x4d, 0x7b, 0xca, 0xe6, 0xbd, 0xef, 0xfb, 0xde,
+	0xf7, 0x66, 0xde, 0xbe, 0x04, 0x67, 0xed, 0xae, 0xdd, 0x69, 0x32, 0x2a, 0x68, 0x85, 0xd6, 0x75,
+	0xab, 0x5a, 0x25, 0x75, 0x62, 0x09, 0xe0, 0xba, 0xe8, 0x14, 0xbc, 0xb0, 0x32, 0xd3, 0x8f, 0x28,
+	0x44, 0x88, 0xf4, 0xf5, 0x0a, 0xe5, 0x2e, 0xe5, 0xa6, 0x97, 0xd3, 0xfd, 0x2f, 0x3e, 0x27, 0x9d,
+	0x72, 0xa8, 0x43, 0xfd, 0x78, 0xef, 0x29, 0x88, 0xce, 0xc7, 0xd5, 0x8a, 0x1e, 0x03, 0xe4, 0x8c,
+	0xaf, 0xa6, 0xbb, 0xdc, 0xd1, 0xdb, 0x77, 0x7b, 0x1f, 0x7e, 0x22, 0xf7, 0x09, 0xe1, 0x54, 0x91,
+	0x3b, 0x06, 0x38, 0x84, 0x0b, 0x60, 0x1b, 0x21, 0x51, 0x59, 0xc6, 0x17, 0x19, 0x54, 0x81, 0x01,
+	0xa8, 0x28, 0x8b, 0xe6, 0xa7, 0x37, 0xd5, 0x9f, 0xdf, 0xf2, 0xa9, 0xc0, 0xd4, 0x86, 0x6d, 0x33,
+	0xe0, 0xfc, 0xa9, 0x60, 0xa4, 0xe1, 0x18, 0x21, 0x50, 0xb9, 0x8f, 0xa7, 0x65, 0x65, 0xf5, 0xc2,
+	0x08, 0x56, 0x04, 0x5d, 0x4b, 0xbd, 0xdb, 0xcb, 0x24, 0xfe, 0xed, 0x65, 0x12, 0xbb, 0x7f, 0xbf,
+	0x2e, 0x84, 0x6a, 0x39, 0x0d, 0xcf, 0x0e, 0x73, 0x66, 0x00, 0x6f, 0xd2, 0x06, 0x87, 0xdc, 0x67,
+	0x84, 0x67, 0x8a, 0xdc, 0x79, 0xde, 0xb4, 0x2d, 0x01, 0x32, 0xfd, 0x8c, 0x00, 0xe3, 0x9e, 0x93,
+	0x96, 0xa8, 0x51, 0x46, 0x44, 0x77, 0xa4, 0xff, 0x08, 0xaa, 0x6c, 0xe1, 0x49, 0xd1, 0x13, 0xf0,
+	0xdc, 0x5f, 0x5a, 0xbe, 0x5d, 0x88, 0xb9, 0xab, 0xc2, 0xf1, 0x7a, 0x9b, 0xc9, 0xfd, 0xdf, 0x99,
+	0x84, 0xe1, 0x73, 0xd7, 0xae, 0xf4, 0xda, 0x88, 0x44, 0x73, 0x37, 0x71, 0x26, 0xc6, 0xa7, 0xec,
+	0xe5, 0x3b, 0xc2, 0x37, 0x06, 0x31, 0x2f, 0x6b, 0x44, 0x40, 0x9d, 0x70, 0x71, 0xe6, 0x7e, 0x76,
+	0xf0, 0xf4, 0xdb, 0x50, 0x24, 0xe8, 0x69, 0x71, 0x74, 0x4f, 0xb2, 0x6e, 0xd0, 0x57, 0xa4, 0x31,
+	0xd0, 0xdb, 0x2d, 0x3c, 0x77, 0x82, 0x6f, 0xd9, 0xdf, 0x13, 0xac, 0xc8, 0xec, 0x4e, 0x1b, 0x18,
+	0x23, 0x36, 0xf8, 0xb7, 0xe4, 0x3b, 0x07, 0xae, 0xa2, 0xec, 0xc4, 0x88, 0xae, 0x42, 0x68, 0xee,
+	0x63, 0x12, 0x2f, 0x0c, 0x56, 0x2d, 0x31, 0xea, 0x30, 0xcb, 0x2d, 0x59, 0xcc, 0x72, 0x41, 0x78,
+	0xa7, 0xfb, 0xa6, 0x05, 0xe7, 0x38, 0xbc, 0x87, 0x67, 0x1b, 0x86, 0x60, 0x0c, 0x14, 0x03, 0xcf,
+	0xb9, 0x56, 0x87, 0xb8, 0x2d, 0xd7, 0x5c, 0x59, 0xb2, 0xcd, 0x0a, 0x75, 0x5d, 0xc2, 0x39, 0xa1,
+	0x0d, 0xb3, 0x09, 0xcc, 0xf4, 0xa6, 0x9c, 0x81, 0xad, 0x4e, 0x64, 0xd1, 0xfc, 0x65, 0xef, 0xa0,
+	0x91, 0x91, 0x09, 0x08, 0x2b, 0x4b, 0xf6, 0x96, 0x84, 0x97, 0x80, 0x19, 0x01, 0x58, 0xd9, 0xc6,
+	0xb3, 0xc1, 0xeb, 0x61, 0xba, 0xa4, 0xe1, 0x69, 0x57, 0x01, 0xcc, 0x5e, 0x41, 0x93, 0xd8, 0x1d,
+	0x35, 0xd9, 0x27, 0xa6, 0x06, 0xc8, 0xa2, 0x0f, 0x7c, 0x04, 0x9e, 0xbd, 0xc7, 0x76, 0x47, 0x71,
+	0x70, 0xa1, 0xdf, 0x99, 0x25, 0x04, 0x23, 0xe5, 0x96, 0xb0, 0xca, 0x75, 0x30, 0x19, 0xb4, 0xa1,
+	0xd1, 0x02, 0xcf, 0x63, 0xf4, 0x32, 0x4f, 0xf6, 0xe9, 0xde, 0x89, 0x4c, 0x6e, 0xf4, 0x31, 0x0d,
+	0x9f, 0x58, 0xea, 0x5f, 0x22, 0xaf, 0xf1, 0x35, 0xa9, 0x61, 0xd2, 0xf0, 0xde, 0xd5, 0xa9, 0xd3,
+	0x0e, 0xa2, 0x1c, 0x15, 0x43, 0xb1, 0x06, 0x62, 0x03, 0xb3, 0x98, 0xc7, 0x8b, 0xa7, 0x9a, 0x0a,
+	0x7f, 0x26, 0x97, 0x7f, 0x24, 0xf1, 0x44, 0x91, 0x3b, 0x4a, 0x17, 0x5f, 0x1d, 0x5c, 0x7f, 0xf9,
+	0x58, 0x73, 0xc3, 0x76, 0x52, 0xfa, 0xde, 0x58, 0xf0, 0xd0, 0x82, 0xb2, 0x8b, 0x70, 0x6a, 0xe8,
+	0xfe, 0x5a, 0x3a, 0x49, 0x6f, 0x18, 0x23, 0xfd, 0x60, 0x5c, 0x86, 0x34, 0xf1, 0x1e, 0x61, 0x35,
+	0x76, 0xf1, 0xac, 0x8e, 0x21, 0x2b, 0x59, 0xe9, 0xf5, 0xb3, 0xb0, 0xa4, 0xa1, 0x2f, 0x08, 0x67,
+	0x47, 0xdd, 0xa2, 0xb2, 0x35, 0x46, 0x89, 0xb8, 0xcd, 0x90, 0xde, 0x3e, 0x9f, 0x88, 0xef, 0x77,
+	0xf3, 0xc5, 0xfe, 0xa1, 0x86, 0x0e, 0x0e, 0x35, 0xf4, 0xe7, 0x50, 0x43, 0x1f, 0x8e, 0xb4, 0xc4,
+	0xc1, 0x91, 0x96, 0xf8, 0x75, 0xa4, 0x25, 0x5e, 0xad, 0x3b, 0x44, 0xd4, 0x5a, 0xe5, 0x42, 0x85,
+	0xba, 0xfa, 0xb1, 0xdf, 0xea, 0xf6, 0x6a, 0xbe, 0x52, 0xb3, 0x48, 0x43, 0x97, 0x91, 0xce, 0xb1,
+	0xff, 0x0a, 0xdd, 0x26, 0xf0, 0xf2, 0x94, 0x97, 0x5c, 0xf9, 0x1f, 0x00, 0x00, 0xff, 0xff, 0x01,
+	0x4b, 0xb0, 0xa6, 0x53, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -663,7 +557,7 @@ type MsgClient interface {
 	UpdateAffiliateTiers(ctx context.Context, in *MsgUpdateAffiliateTiers, opts ...grpc.CallOption) (*MsgUpdateAffiliateTiersResponse, error)
 	// UpdateAffiliateWhitelist updates affiliate whitelist
 	UpdateAffiliateWhitelist(ctx context.Context, in *MsgUpdateAffiliateWhitelist, opts ...grpc.CallOption) (*MsgUpdateAffiliateWhitelistResponse, error)
-	UpdateAffiliateProgramParameters(ctx context.Context, in *MsgUpdateAffiliateProgramParameters, opts ...grpc.CallOption) (*MsgUpdateAffiliateProgramParametersResponse, error)
+	UpdateAffiliateProgramParameters(ctx context.Context, in *MsgUpdateAffiliateProgramParametersRequest, opts ...grpc.CallOption) (*MsgUpdateAffiliateProgramParametersResponse, error)
 }
 
 type msgClient struct {
@@ -701,7 +595,7 @@ func (c *msgClient) UpdateAffiliateWhitelist(ctx context.Context, in *MsgUpdateA
 	return out, nil
 }
 
-func (c *msgClient) UpdateAffiliateProgramParameters(ctx context.Context, in *MsgUpdateAffiliateProgramParameters, opts ...grpc.CallOption) (*MsgUpdateAffiliateProgramParametersResponse, error) {
+func (c *msgClient) UpdateAffiliateProgramParameters(ctx context.Context, in *MsgUpdateAffiliateProgramParametersRequest, opts ...grpc.CallOption) (*MsgUpdateAffiliateProgramParametersResponse, error) {
 	out := new(MsgUpdateAffiliateProgramParametersResponse)
 	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Msg/UpdateAffiliateProgramParameters", in, out, opts...)
 	if err != nil {
@@ -718,7 +612,7 @@ type MsgServer interface {
 	UpdateAffiliateTiers(context.Context, *MsgUpdateAffiliateTiers) (*MsgUpdateAffiliateTiersResponse, error)
 	// UpdateAffiliateWhitelist updates affiliate whitelist
 	UpdateAffiliateWhitelist(context.Context, *MsgUpdateAffiliateWhitelist) (*MsgUpdateAffiliateWhitelistResponse, error)
-	UpdateAffiliateProgramParameters(context.Context, *MsgUpdateAffiliateProgramParameters) (*MsgUpdateAffiliateProgramParametersResponse, error)
+	UpdateAffiliateProgramParameters(context.Context, *MsgUpdateAffiliateProgramParametersRequest) (*MsgUpdateAffiliateProgramParametersResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -734,7 +628,7 @@ func (*UnimplementedMsgServer) UpdateAffiliateTiers(ctx context.Context, req *Ms
 func (*UnimplementedMsgServer) UpdateAffiliateWhitelist(ctx context.Context, req *MsgUpdateAffiliateWhitelist) (*MsgUpdateAffiliateWhitelistResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAffiliateWhitelist not implemented")
 }
-func (*UnimplementedMsgServer) UpdateAffiliateProgramParameters(ctx context.Context, req *MsgUpdateAffiliateProgramParameters) (*MsgUpdateAffiliateProgramParametersResponse, error) {
+func (*UnimplementedMsgServer) UpdateAffiliateProgramParameters(ctx context.Context, req *MsgUpdateAffiliateProgramParametersRequest) (*MsgUpdateAffiliateProgramParametersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAffiliateProgramParameters not implemented")
 }
 
@@ -797,7 +691,7 @@ func _Msg_UpdateAffiliateWhitelist_Handler(srv interface{}, ctx context.Context,
 }
 
 func _Msg_UpdateAffiliateProgramParameters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateAffiliateProgramParameters)
+	in := new(MsgUpdateAffiliateProgramParametersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -809,7 +703,7 @@ func _Msg_UpdateAffiliateProgramParameters_Handler(srv interface{}, ctx context.
 		FullMethod: "/dydxprotocol.affiliates.Msg/UpdateAffiliateProgramParameters",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateAffiliateProgramParameters(ctx, req.(*MsgUpdateAffiliateProgramParameters))
+		return srv.(MsgServer).UpdateAffiliateProgramParameters(ctx, req.(*MsgUpdateAffiliateProgramParametersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1045,11 +939,11 @@ func (m *AffiliateOverrides) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Overrides) > 0 {
-		for iNdEx := len(m.Overrides) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Overrides[iNdEx])
-			copy(dAtA[i:], m.Overrides[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.Overrides[iNdEx])))
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Addresses[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1057,7 +951,7 @@ func (m *AffiliateOverrides) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdateAffiliateProgramParameters) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateAffiliateProgramParametersRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1067,136 +961,16 @@ func (m *MsgUpdateAffiliateProgramParameters) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdateAffiliateProgramParameters) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateAffiliateProgramParametersRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdateAffiliateProgramParameters) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateAffiliateProgramParametersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.XAffiliateOverrides != nil {
-		{
-			size := m.XAffiliateOverrides.Size()
-			i -= size
-			if _, err := m.XAffiliateOverrides.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	if m.XMaximum_30DAttributableRevenuePerAffiliate != nil {
-		{
-			size := m.XMaximum_30DAttributableRevenuePerAffiliate.Size()
-			i -= size
-			if _, err := m.XMaximum_30DAttributableRevenuePerAffiliate.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	if m.XAffiliateMaximum_30DCommission != nil {
-		{
-			size := m.XAffiliateMaximum_30DCommission.Size()
-			i -= size
-			if _, err := m.XAffiliateMaximum_30DCommission.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	if m.XRefereeMinimumFeeTierIdx != nil {
-		{
-			size := m.XRefereeMinimumFeeTierIdx.Size()
-			i -= size
-			if _, err := m.XRefereeMinimumFeeTierIdx.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	if m.XMaximum_30DCommission != nil {
-		{
-			size := m.XMaximum_30DCommission.Size()
-			i -= size
-			if _, err := m.XMaximum_30DCommission.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
-	{
-		size, err := m.Tiers.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Authority) > 0 {
-		i -= len(m.Authority)
-		copy(dAtA[i:], m.Authority)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_Maximum_30DCommission) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_Maximum_30DCommission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintTx(dAtA, i, uint64(m.Maximum_30DCommission))
-	i--
-	dAtA[i] = 0x18
-	return len(dAtA) - i, nil
-}
-func (m *MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintTx(dAtA, i, uint64(m.RefereeMinimumFeeTierIdx))
-	i--
-	dAtA[i] = 0x20
-	return len(dAtA) - i, nil
-}
-func (m *MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintTx(dAtA, i, uint64(m.AffiliateMaximum_30DCommission))
-	i--
-	dAtA[i] = 0x28
-	return len(dAtA) - i, nil
-}
-func (m *MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintTx(dAtA, i, uint64(m.Maximum_30DAttributableRevenuePerAffiliate))
-	i--
-	dAtA[i] = 0x30
-	return len(dAtA) - i, nil
-}
-func (m *MsgUpdateAffiliateProgramParameters_AffiliateOverrides) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_AffiliateOverrides) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
 	if m.AffiliateOverrides != nil {
 		{
 			size, err := m.AffiliateOverrides.MarshalToSizedBuffer(dAtA[:i])
@@ -1207,10 +981,45 @@ func (m *MsgUpdateAffiliateProgramParameters_AffiliateOverrides) MarshalToSizedB
 			i = encodeVarintTx(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x32
+	}
+	if m.Maximum_30DAttributableRevenuePerAffiliate != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Maximum_30DAttributableRevenuePerAffiliate))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.RefereeMinimumFeeTierIdx != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.RefereeMinimumFeeTierIdx))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Maximum_30DCommissionPerReferred != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Maximum_30DCommissionPerReferred))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Tiers != nil {
+		{
+			size, err := m.Tiers.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
+
 func (m *MsgUpdateAffiliateProgramParametersResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1325,8 +1134,8 @@ func (m *AffiliateOverrides) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Overrides) > 0 {
-		for _, s := range m.Overrides {
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
 			l = len(s)
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -1334,7 +1143,7 @@ func (m *AffiliateOverrides) Size() (n int) {
 	return n
 }
 
-func (m *MsgUpdateAffiliateProgramParameters) Size() (n int) {
+func (m *MsgUpdateAffiliateProgramParametersRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1344,74 +1153,26 @@ func (m *MsgUpdateAffiliateProgramParameters) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.Tiers.Size()
-	n += 1 + l + sovTx(uint64(l))
-	if m.XMaximum_30DCommission != nil {
-		n += m.XMaximum_30DCommission.Size()
+	if m.Tiers != nil {
+		l = m.Tiers.Size()
+		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.XRefereeMinimumFeeTierIdx != nil {
-		n += m.XRefereeMinimumFeeTierIdx.Size()
+	if m.Maximum_30DCommissionPerReferred != 0 {
+		n += 1 + sovTx(uint64(m.Maximum_30DCommissionPerReferred))
 	}
-	if m.XAffiliateMaximum_30DCommission != nil {
-		n += m.XAffiliateMaximum_30DCommission.Size()
+	if m.RefereeMinimumFeeTierIdx != 0 {
+		n += 1 + sovTx(uint64(m.RefereeMinimumFeeTierIdx))
 	}
-	if m.XMaximum_30DAttributableRevenuePerAffiliate != nil {
-		n += m.XMaximum_30DAttributableRevenuePerAffiliate.Size()
+	if m.Maximum_30DAttributableRevenuePerAffiliate != 0 {
+		n += 1 + sovTx(uint64(m.Maximum_30DAttributableRevenuePerAffiliate))
 	}
-	if m.XAffiliateOverrides != nil {
-		n += m.XAffiliateOverrides.Size()
-	}
-	return n
-}
-
-func (m *MsgUpdateAffiliateProgramParameters_Maximum_30DCommission) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovTx(uint64(m.Maximum_30DCommission))
-	return n
-}
-func (m *MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovTx(uint64(m.RefereeMinimumFeeTierIdx))
-	return n
-}
-func (m *MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovTx(uint64(m.AffiliateMaximum_30DCommission))
-	return n
-}
-func (m *MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovTx(uint64(m.Maximum_30DAttributableRevenuePerAffiliate))
-	return n
-}
-func (m *MsgUpdateAffiliateProgramParameters_AffiliateOverrides) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
 	if m.AffiliateOverrides != nil {
 		l = m.AffiliateOverrides.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
+
 func (m *MsgUpdateAffiliateProgramParametersResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1952,7 +1713,7 @@ func (m *AffiliateOverrides) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Overrides", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1980,7 +1741,7 @@ func (m *AffiliateOverrides) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Overrides = append(m.Overrides, string(dAtA[iNdEx:postIndex]))
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2003,7 +1764,7 @@ func (m *AffiliateOverrides) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateAffiliateProgramParametersRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2026,10 +1787,10 @@ func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateAffiliateProgramParameters: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateAffiliateProgramParametersRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateAffiliateProgramParameters: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateAffiliateProgramParametersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2093,15 +1854,18 @@ func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+			if m.Tiers == nil {
+				m.Tiers = &AffiliateTiers{}
+			}
 			if err := m.Tiers.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Maximum_30DCommission", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Maximum_30DCommissionPerReferred", wireType)
 			}
-			var v uint32
+			m.Maximum_30DCommissionPerReferred = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2111,17 +1875,16 @@ func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.Maximum_30DCommissionPerReferred |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XMaximum_30DCommission = &MsgUpdateAffiliateProgramParameters_Maximum_30DCommission{v}
 		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RefereeMinimumFeeTierIdx", wireType)
 			}
-			var v uint32
+			m.RefereeMinimumFeeTierIdx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2131,37 +1894,16 @@ func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.RefereeMinimumFeeTierIdx |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XRefereeMinimumFeeTierIdx = &MsgUpdateAffiliateProgramParameters_RefereeMinimumFeeTierIdx{v}
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AffiliateMaximum_30DCommission", wireType)
-			}
-			var v uint32
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.XAffiliateMaximum_30DCommission = &MsgUpdateAffiliateProgramParameters_AffiliateMaximum_30DCommission{v}
-		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Maximum_30DAttributableRevenuePerAffiliate", wireType)
 			}
-			var v uint32
+			m.Maximum_30DAttributableRevenuePerAffiliate = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2171,13 +1913,12 @@ func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.Maximum_30DAttributableRevenuePerAffiliate |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XMaximum_30DAttributableRevenuePerAffiliate = &MsgUpdateAffiliateProgramParameters_Maximum_30DAttributableRevenuePerAffiliate{v}
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AffiliateOverrides", wireType)
 			}
@@ -2206,11 +1947,12 @@ func (m *MsgUpdateAffiliateProgramParameters) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &AffiliateOverrides{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if m.AffiliateOverrides == nil {
+				m.AffiliateOverrides = &AffiliateOverrides{}
+			}
+			if err := m.AffiliateOverrides.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.XAffiliateOverrides = &MsgUpdateAffiliateProgramParameters_AffiliateOverrides{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

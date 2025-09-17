@@ -20,7 +20,8 @@ service Msg {
   rpc UpdateAffiliateWhitelist(MsgUpdateAffiliateWhitelist)
       returns (MsgUpdateAffiliateWhitelistResponse);
 
-  rpc UpdateAffiliateProgramParameters(MsgUpdateAffiliateProgramParameters)
+  rpc UpdateAffiliateProgramParameters(
+      MsgUpdateAffiliateProgramParametersRequest)
       returns (MsgUpdateAffiliateProgramParametersResponse);
 }
 
@@ -63,26 +64,31 @@ message MsgUpdateAffiliateWhitelist {
 // Response to MsgUpdateAffiliateWhitelist
 message MsgUpdateAffiliateWhitelistResponse {}
 
+// AffiliateWhitelist defines the affiliate whitelist.
 message AffiliateOverrides {
-  repeated string overrides = 1;
+  // List of unique whitelisted addresses.
+  // These are automatically put at the maximum affiliate tier
+  repeated string addresses = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
-message MsgUpdateAffiliateProgramParameters {
+// Message to update affiliate program parameters
+message MsgUpdateAffiliateProgramParametersRequest {
   option (cosmos.msg.v1.signer) = "authority";
   // Authority sending this message. Will be sent by gov
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // Updated affiliate program parameters information
-  AffiliateTiers tiers = 2 [ (gogoproto.nullable) = false ];
-
-  optional uint32 maximum_30d_commission = 3;
-
-  optional uint32 referee_minimum_fee_tier_idx = 4;
-
-  optional uint32 affiliate_maximum_30d_commission = 5;
-
-  optional uint32 maximum_30d_attributable_revenue_per_affiliate = 6;
-
-  optional AffiliateOverrides affiliate_overrides = 7;
+  AffiliateTiers tiers = 2;
+  // Maximum commission per referred user in a 30d rolling window in revenue
+  uint32 maximum_30d_commission_per_referred = 3 [(gogoproto.nullable) = true];
+  // Referee minimum fee tier index
+  uint32 referee_minimum_fee_tier_idx = 4 [(gogoproto.nullable) = true];
+  // Maximum attributable revenue per affiliate in a 30d rolling window in
+  // revenue
+  uint32 maximum_30d_attributable_revenue_per_affiliate = 5 [(gogoproto.nullable) = true];
+  // Affiliate whitelist
+  AffiliateOverrides affiliate_overrides = 6;
 }
 
+// Response to MsgUpdateAffiliateProgramParameters
 message MsgUpdateAffiliateProgramParametersResponse {}
