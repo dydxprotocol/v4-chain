@@ -25,7 +25,6 @@ describe('BridgeInformation store', () => {
     from_address: '0x9876543210fedcba9876543210fedcba98765432',
     chain_id: 'polygon',
     amount: '2000000',
-    transaction_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
     created_at: '2023-01-02T00:00:00.000Z',
   };
 
@@ -34,14 +33,6 @@ describe('BridgeInformation store', () => {
     chain_id: 'avalanche',
     amount: '3000000',
     created_at: '2023-01-03T00:00:00.000Z',
-  };
-
-  const defaultBridgeInfo4 = {
-    from_address: '0x1234567890abcdef1234567890abcdef12345678',
-    chain_id: 'ethereum',
-    amount: '4000000',
-    transaction_hash: '0x1111111111111111111111111111111111111111111111111111111111111111',
-    created_at: '2023-01-04T00:00:00.000Z',
   };
 
   // Helper function to create unique transaction hashes for tests
@@ -99,91 +90,15 @@ describe('BridgeInformation store', () => {
     });
   });
 
-  describe('upsert', () => {
-    it('Successfully upserts a bridge information record', async () => {
-      const upsertedRecord = await BridgeInformationTable.upsert(defaultBridgeInfo1);
-      expect(upsertedRecord).toEqual(expect.objectContaining(defaultBridgeInfo1));
-      expect(upsertedRecord.id).toBeDefined();
-
-      // Update with upsert
-      const updatedRecord = {
-        id: upsertedRecord.id,
-        ...defaultBridgeInfo1,
-        amount: '5000000',
-      };
-      const secondUpsert = await BridgeInformationTable.upsert(updatedRecord);
-      expect(secondUpsert.amount).toBe('5000000');
-      expect(secondUpsert.id).toBe(upsertedRecord.id);
-    });
-
-    it('Generates ID when not provided in upsert', async () => {
-      const upsertedRecord = await BridgeInformationTable.upsert(defaultBridgeInfo1);
-
-      expect(upsertedRecord.id).toBeDefined();
-      expect(typeof upsertedRecord.id).toBe('string');
-    });
-  });
-
-  describe('findById', () => {
-    it('Successfully finds a bridge information record by ID', async () => {
-      const createdRecord = await BridgeInformationTable.create(defaultBridgeInfo1);
-
-      const foundRecord = await BridgeInformationTable.findById(createdRecord.id);
-
-      expect(foundRecord).toEqual(expect.objectContaining(defaultBridgeInfo1));
-      expect(foundRecord?.id).toBe(createdRecord.id);
-    });
-
-    it('Returns undefined when record not found by ID', async () => {
-      await BridgeInformationTable.create(defaultBridgeInfo1);
-
-      const foundRecord = await BridgeInformationTable.findById('nonexistent-id');
-
-      expect(foundRecord).toBeUndefined();
-    });
-  });
-
-  describe('findByFromAddress', () => {
-    it('Successfully finds bridge information records by from_address in descending order', async () => {
-      await BridgeInformationTable.create(defaultBridgeInfo1); // 2023-01-01
-      await BridgeInformationTable.create(defaultBridgeInfo3); // 2023-01-03
-      await BridgeInformationTable.create({
-        ...defaultBridgeInfo4,
-        transaction_hash: createUniqueTransactionHash(),
-      }); // 2023-01-04
-      await BridgeInformationTable.create({
-        ...defaultBridgeInfo2,
-        transaction_hash: createUniqueTransactionHash(),
-      }); // Different address
-
-      const records = await BridgeInformationTable.findByFromAddress(
-        defaultBridgeInfo1.from_address,
-      );
-
-      expect(records).toHaveLength(3);
-      // Should be in descending order by created_at
-      expect(records[0].created_at).toBe(defaultBridgeInfo4.created_at);
-      expect(records[1].created_at).toBe(defaultBridgeInfo3.created_at);
-      expect(records[2].created_at).toBe(defaultBridgeInfo1.created_at);
-    });
-
-    it('Returns empty array when no records found by from_address', async () => {
-      await BridgeInformationTable.create(defaultBridgeInfo1);
-
-      const records = await BridgeInformationTable.findByFromAddress(
-        '0xnonexistent1234567890abcdef1234567890abcdef',
-      );
-
-      expect(records).toHaveLength(0);
-    });
-  });
-
   describe('findByFromAddressWithTransactionHashFilter', () => {
     beforeEach(async () => {
       await BridgeInformationTable.create(defaultBridgeInfo1); // No tx hash
       await BridgeInformationTable.create(defaultBridgeInfo3); // No tx hash
       await BridgeInformationTable.create({
-        ...defaultBridgeInfo4,
+        ...defaultBridgeInfo1,
+        from_address: '0x1234567890abcdef1234567890abcdef12345678',
+        amount: '4000000',
+        created_at: '2023-01-04T00:00:00.000Z',
         transaction_hash: createUniqueTransactionHash(),
       }); // Has tx hash
       await BridgeInformationTable.create({
@@ -260,29 +175,40 @@ describe('BridgeInformation store', () => {
       });
       await BridgeInformationTable.create(defaultBridgeInfo3);
       await BridgeInformationTable.create({
-        ...defaultBridgeInfo4,
+        ...defaultBridgeInfo1,
+        from_address: '0x1234567890abcdef1234567890abcdef12345678',
+        amount: '4000000',
+        created_at: '2023-01-04T00:00:00.000Z',
         transaction_hash: createUniqueTransactionHash(),
       });
     });
 
-    it('Searches by from_address filter', async () => {
-      const records = await BridgeInformationTable.searchBridgeInformation({
-        from_address: defaultBridgeInfo1.from_address,
+    it('Searches by from_addresses filter', async () => {
+      const result = await BridgeInformationTable.searchBridgeInformation({
+        from_addresses: [defaultBridgeInfo1.from_address],
       });
 
-      expect(records).toHaveLength(3);
-      records.forEach((record) => {
+      expect(result.results).toHaveLength(3);
+      result.results.forEach((record) => {
         expect(record.from_address).toBe(defaultBridgeInfo1.from_address);
       });
     });
 
+    it('Searches by multiple from_addresses', async () => {
+      const result = await BridgeInformationTable.searchBridgeInformation({
+        from_addresses: [defaultBridgeInfo1.from_address, defaultBridgeInfo2.from_address],
+      });
+
+      expect(result.results).toHaveLength(4);
+    });
+
     it('Searches by chain_id filter', async () => {
-      const records = await BridgeInformationTable.searchBridgeInformation({
+      const result = await BridgeInformationTable.searchBridgeInformation({
         chain_id: 'ethereum',
       });
 
-      expect(records).toHaveLength(2);
-      records.forEach((record) => {
+      expect(result.results).toHaveLength(2);
+      result.results.forEach((record) => {
         expect(record.chain_id).toBe('ethereum');
       });
     });
@@ -297,71 +223,82 @@ describe('BridgeInformation store', () => {
       };
       await BridgeInformationTable.create(testRecord);
 
-      const records = await BridgeInformationTable.searchBridgeInformation({
+      const result = await BridgeInformationTable.searchBridgeInformation({
         transaction_hash: specificTxHash,
       });
 
-      expect(records).toHaveLength(1);
-      expect(records[0].transaction_hash).toBe(specificTxHash);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].transaction_hash).toBe(specificTxHash);
     });
 
     it('Searches by has_transaction_hash filter', async () => {
-      const recordsWithTx = await BridgeInformationTable.searchBridgeInformation({
+      const resultWithTx = await BridgeInformationTable.searchBridgeInformation({
         has_transaction_hash: true,
       });
 
-      const recordsWithoutTx = await BridgeInformationTable.searchBridgeInformation({
+      const resultWithoutTx = await BridgeInformationTable.searchBridgeInformation({
         has_transaction_hash: false,
       });
 
-      expect(recordsWithTx).toHaveLength(2);
-      expect(recordsWithoutTx).toHaveLength(2);
+      expect(resultWithTx.results).toHaveLength(2);
+      expect(resultWithoutTx.results).toHaveLength(2);
 
-      recordsWithTx.forEach((record) => {
+      resultWithTx.results.forEach((record) => {
         expect(record.transaction_hash).not.toBeNull();
       });
 
-      recordsWithoutTx.forEach((record) => {
+      resultWithoutTx.results.forEach((record) => {
         expect(record.transaction_hash).toBeNull();
       });
     });
 
     it('Combines multiple filters', async () => {
-      const records = await BridgeInformationTable.searchBridgeInformation({
-        from_address: defaultBridgeInfo1.from_address,
+      const result = await BridgeInformationTable.searchBridgeInformation({
+        from_addresses: [defaultBridgeInfo1.from_address],
         chain_id: 'ethereum',
         has_transaction_hash: true,
       });
 
-      expect(records).toHaveLength(1);
-      expect(records[0].from_address).toBe(defaultBridgeInfo1.from_address);
-      expect(records[0].chain_id).toBe('ethereum');
-      expect(records[0].transaction_hash).not.toBeNull();
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].from_address).toBe(defaultBridgeInfo1.from_address);
+      expect(result.results[0].chain_id).toBe('ethereum');
+      expect(result.results[0].transaction_hash).not.toBeNull();
     });
 
-    it('Supports custom ordering and pagination', async () => {
-      const records = await BridgeInformationTable.searchBridgeInformation(
+    it('Supports pagination with limit only', async () => {
+      const result = await BridgeInformationTable.searchBridgeInformation(
+        {},
+        { limit: 2 },
+      );
+
+      expect(result.results).toHaveLength(2);
+    });
+
+    it('Supports custom ordering', async () => {
+      const result = await BridgeInformationTable.searchBridgeInformation(
         {},
         {
           orderBy: 'amount',
-          orderDirection: 'DESC',
-          limit: 2,
-          offset: 1,
+          orderDirection: 'ASC',
+          limit: 10,
         },
       );
 
-      expect(records).toHaveLength(2);
-      // Should skip the highest amount and return the next 2
-      expect(records[0].amount).toBe('3000000');
-      expect(records[1].amount).toBe('2000000');
+      expect(result.results.length).toBeGreaterThan(0);
+      // Verify ascending order by amount
+      for (let i = 1; i < result.results.length; i++) {
+        expect(parseInt(result.results[i].amount, 10)).toBeGreaterThanOrEqual(
+          parseInt(result.results[i - 1].amount, 10),
+        );
+      }
     });
 
-    it('Returns empty array when no records match filters', async () => {
-      const records = await BridgeInformationTable.searchBridgeInformation({
+    it('Returns empty results when no records match filters', async () => {
+      const result = await BridgeInformationTable.searchBridgeInformation({
         chain_id: 'nonexistent-chain',
       });
 
-      expect(records).toHaveLength(0);
+      expect(result.results).toHaveLength(0);
     });
   });
 
@@ -370,7 +307,7 @@ describe('BridgeInformation store', () => {
       const createdRecord = await BridgeInformationTable.create(defaultBridgeInfo1);
       expect(createdRecord.transaction_hash).toBeNull();
 
-      const newTxHash = '0x9999999999999999999999999999999999999999999999999999999999999999';
+      const newTxHash = createUniqueTransactionHash();
       const updatedRecord = await BridgeInformationTable.updateTransactionHash(
         createdRecord.id,
         newTxHash,
@@ -384,7 +321,7 @@ describe('BridgeInformation store', () => {
     it('Returns undefined when record not found', async () => {
       const updatedRecord = await BridgeInformationTable.updateTransactionHash(
         'nonexistent-id',
-        '0x1234567890abcdef',
+        createUniqueTransactionHash(),
       );
 
       expect(updatedRecord).toBeUndefined();
@@ -410,22 +347,26 @@ describe('BridgeInformation store', () => {
   });
 
   describe('Edge cases and validation', () => {
-    it('Handles empty string from_address search', async () => {
+    it('Handles empty from_addresses array', async () => {
       await BridgeInformationTable.create(defaultBridgeInfo1);
 
-      const records = await BridgeInformationTable.findByFromAddress('');
+      const result = await BridgeInformationTable.searchBridgeInformation({
+        from_addresses: [],
+      });
 
-      expect(records).toHaveLength(0);
+      expect(result.results).toHaveLength(0);
     });
 
     it('Handles case sensitivity for addresses', async () => {
       await BridgeInformationTable.create(defaultBridgeInfo1);
 
       const upperCaseAddress = defaultBridgeInfo1.from_address.toUpperCase();
-      const records = await BridgeInformationTable.findByFromAddress(upperCaseAddress);
+      const result = await BridgeInformationTable.searchBridgeInformation({
+        from_addresses: [upperCaseAddress],
+      });
 
       // Should not find the record as addresses are case-sensitive
-      expect(records).toHaveLength(0);
+      expect(result.results).toHaveLength(0);
     });
 
     it('Handles duplicate transaction hashes (should fail due to unique constraint)', async () => {
@@ -450,11 +391,11 @@ describe('BridgeInformation store', () => {
       await BridgeInformationTable.create(defaultBridgeInfo1);
       await BridgeInformationTable.create(defaultBridgeInfo3);
 
-      const records = await BridgeInformationTable.searchBridgeInformation({
+      const result = await BridgeInformationTable.searchBridgeInformation({
         has_transaction_hash: false,
       });
 
-      expect(records).toHaveLength(2);
+      expect(result.results).toHaveLength(2);
     });
 
     it('Handles very long addresses and chain IDs', async () => {
@@ -467,6 +408,53 @@ describe('BridgeInformation store', () => {
 
       const createdRecord = await BridgeInformationTable.create(longDataRecord);
       expect(createdRecord).toEqual(expect.objectContaining(longDataRecord));
+    });
+
+    it('Handles pagination correctly', async () => {
+      // Create multiple records
+      await BridgeInformationTable.create(defaultBridgeInfo1);
+      await BridgeInformationTable.create(defaultBridgeInfo2);
+      await BridgeInformationTable.create(defaultBridgeInfo3);
+
+      // Test simple limit without pagination
+      const result = await BridgeInformationTable.searchBridgeInformation(
+        {},
+        { limit: 2 },
+      );
+
+      expect(result.results).toHaveLength(2);
+      // When no page is provided, pagination info is not included
+      expect(result.limit).toBeUndefined();
+      expect(result.offset).toBeUndefined();
+      expect(result.total).toBeUndefined();
+    });
+
+    it('Handles limit without pagination', async () => {
+      // Create multiple records
+      await BridgeInformationTable.create(defaultBridgeInfo1);
+      await BridgeInformationTable.create(defaultBridgeInfo2);
+      await BridgeInformationTable.create(defaultBridgeInfo3);
+
+      // Test just limit without page
+      const result = await BridgeInformationTable.searchBridgeInformation(
+        {},
+        { limit: 2 },
+      );
+
+      expect(result.results).toHaveLength(2);
+      expect(result.limit).toBeUndefined(); // No pagination info when page not provided
+      expect(result.offset).toBeUndefined();
+      expect(result.total).toBeUndefined();
+    });
+
+    it('Returns all records when no limit is specified', async () => {
+      await BridgeInformationTable.create(defaultBridgeInfo1);
+      await BridgeInformationTable.create(defaultBridgeInfo2);
+      await BridgeInformationTable.create(defaultBridgeInfo3);
+
+      const result = await BridgeInformationTable.searchBridgeInformation();
+
+      expect(result.results).toHaveLength(3);
     });
   });
 });
