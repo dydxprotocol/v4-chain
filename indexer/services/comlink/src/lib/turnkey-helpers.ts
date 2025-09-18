@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'crypto';
 
+import { logger } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes } from '@turnkey/sdk-server';
 import { Address, checksumAddress } from 'viem';
@@ -309,6 +310,9 @@ export class TurnkeyHelpers {
     oidcToken: string,
     targetPublicKey: string,
   ) {
+    // Extract email from Google OIDC token if available
+    const extractedEmail = extractEmailFromOidcToken(oidcToken, provider);
+
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       oidcToken,
     });
@@ -317,6 +321,7 @@ export class TurnkeyHelpers {
       suborg = await this.createSuborg({
         providerName: provider,
         oidcToken,
+        email: extractedEmail, // Include extracted email when creating suborg
       });
     }
 
@@ -358,5 +363,72 @@ export class TurnkeyHelpers {
       dydxAddress: suborg.dydxAddress || '',
     };
   }
+}
 
+/**
+ * Extracts email from Google OIDC token payload
+ * @param oidcToken - The OIDC token from Google
+ * @param providerName - The OAuth provider name
+ * @returns The email address if found and provider is Google/Apple, otherwise undefined
+ */
+export function extractEmailFromOidcToken(
+  oidcToken: string,
+  providerName: string,
+): string | undefined {
+  // Only extract email from Google tokens
+  if (providerName.toLowerCase() !== 'google' && providerName.toLowerCase() !== 'apple') {
+    return undefined;
+  }
+
+  try {
+    // JWT tokens have 3 parts separated by dots: header.payload.signature
+    const parts = oidcToken.split('.');
+    if (parts.length !== 3) {
+      logger.warning({
+        at: 'TurnkeyHelpers#extractEmailFromOidcToken',
+        message: 'Invalid JWT format - expected 3 parts',
+        partsLength: parts.length,
+      });
+      return undefined;
+    }
+
+    // Decode the payload (second part)
+    const payload = parts[1];
+
+    // Add padding if needed for base64 decoding
+    const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+
+    // Decode base64url to string
+    const decodedPayload = Buffer.from(paddedPayload, 'base64').toString('utf8');
+
+    // Parse JSON payload
+    const tokenPayload = JSON.parse(decodedPayload);
+
+    // Extract email from Google token payload
+    const email = tokenPayload.email;
+
+    if (email && typeof email === 'string') {
+      logger.info({
+        at: 'TurnkeyHelpers#extractEmailFromOidcToken',
+        message: 'Successfully extracted email from Google OIDC token',
+        hasEmail: true,
+      });
+      return email;
+    }
+
+    logger.warning({
+      at: 'TurnkeyHelpers#extractEmailFromOidcToken',
+      message: 'Email not found in Google OIDC token payload',
+      hasEmailField: !!tokenPayload.email,
+    });
+    return undefined;
+
+  } catch (error) {
+    logger.error({
+      at: 'TurnkeyHelpers#extractEmailFromOidcToken',
+      message: 'Failed to decode OIDC token',
+      error: error.message || error,
+    });
+    return undefined;
+  }
 }
