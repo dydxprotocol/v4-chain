@@ -108,61 +108,64 @@ describe('BridgeInformation store', () => {
     });
 
     it('Successfully finds records with transaction hash', async () => {
-      const records = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
+      const result = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
         defaultBridgeInfo1.from_address,
         true, // hasTransactionHash = true
       );
 
-      expect(records).toHaveLength(1);
-      expect(records[0].transaction_hash).not.toBeNull();
-      expect(records[0].transaction_hash).toBeDefined();
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].transaction_hash).not.toBeNull();
+      expect(result.results[0].transaction_hash).toBeDefined();
     });
 
     it('Successfully finds records without transaction hash', async () => {
-      const records = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
+      const result = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
         defaultBridgeInfo1.from_address,
         false, // hasTransactionHash = false
       );
 
-      expect(records).toHaveLength(2);
-      records.forEach((record) => {
+      expect(result.results).toHaveLength(2);
+      result.results.forEach((record) => {
         expect(record.transaction_hash).toBeNull();
       });
       // Should be in descending order
-      expect(records[0].created_at).toBe(defaultBridgeInfo3.created_at);
-      expect(records[1].created_at).toBe(defaultBridgeInfo1.created_at);
+      expect(result.results[0].created_at).toBe(defaultBridgeInfo3.created_at);
+      expect(result.results[1].created_at).toBe(defaultBridgeInfo1.created_at);
     });
 
-    it('Supports pagination with limit and offset', async () => {
-      const records = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
+    it('Supports pagination with limit and page', async () => {
+      const result = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
         defaultBridgeInfo1.from_address,
         false,
-        { limit: 1, offset: 0 },
+        { limit: 1, page: 1 },
       );
 
-      expect(records).toHaveLength(1);
-      expect(records[0].created_at).toBe(defaultBridgeInfo3.created_at);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].created_at).toBe(defaultBridgeInfo3.created_at);
+      expect(result.limit).toBe(1);
+      expect(result.offset).toBe(0); // page 1 with limit 1 = offset 0
 
-      const nextRecords = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
+      const nextResult = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
         defaultBridgeInfo1.from_address,
         false,
-        { limit: 1, offset: 1 },
+        { limit: 1, page: 2 },
       );
 
-      expect(nextRecords).toHaveLength(1);
-      expect(nextRecords[0].created_at).toBe(defaultBridgeInfo1.created_at);
+      expect(nextResult.results).toHaveLength(1);
+      expect(nextResult.results[0].created_at).toBe(defaultBridgeInfo1.created_at);
+      expect(nextResult.offset).toBe(1); // page 2 with limit 1 = offset 1
     });
 
     it('Supports custom ordering by amount', async () => {
-      const records = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
+      const result = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
         defaultBridgeInfo1.from_address,
         false,
         { orderBy: 'amount', orderDirection: 'ASC' },
       );
 
-      expect(records).toHaveLength(2);
-      expect(records[0].amount).toBe(defaultBridgeInfo1.amount); // 1000000
-      expect(records[1].amount).toBe(defaultBridgeInfo3.amount); // 3000000
+      expect(result.results).toHaveLength(2);
+      expect(result.results[0].amount).toBe(defaultBridgeInfo1.amount); // 1000000
+      expect(result.results[1].amount).toBe(defaultBridgeInfo3.amount); // 3000000
     });
   });
 

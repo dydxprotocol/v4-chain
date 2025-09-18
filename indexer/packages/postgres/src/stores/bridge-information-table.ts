@@ -20,7 +20,7 @@ export async function findByFromAddressWithTransactionHashFilter(
   hasTransactionHash: boolean,
   queryOptions: BridgeInformationQueryOptions = {},
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<BridgeInformationFromDatabase[]> {
+): Promise<PaginationFromDatabase<BridgeInformationFromDatabase>> {
   const baseQuery: QueryBuilder<BridgeInformationModel> = setupBaseQuery<BridgeInformationModel>(
     BridgeInformationModel,
     options,
@@ -40,15 +40,7 @@ export async function findByFromAddressWithTransactionHashFilter(
   const orderDirection = queryOptions.orderDirection || 'DESC';
   query = query.orderBy(BridgeInformationColumns[orderBy], orderDirection);
 
-  // Apply pagination
-  if (queryOptions.limit) {
-    query = query.limit(queryOptions.limit);
-  }
-  if (queryOptions.offset) {
-    query = query.offset(queryOptions.offset);
-  }
-
-  return query;
+  return handleLimitAndPagination(query, queryOptions.limit, queryOptions.page);
 }
 
 export async function searchBridgeInformation(
@@ -89,7 +81,7 @@ export async function searchBridgeInformation(
   const orderDirection = queryOptions.orderDirection || 'DESC';
   query = query.orderBy(BridgeInformationColumns[orderBy], orderDirection);
 
-  return handleLimitAndPagination(query, queryOptions.limit, queryOptions.offset);
+  return handleLimitAndPagination(query, queryOptions.limit, queryOptions.page);
 }
 
 export async function create(

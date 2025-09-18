@@ -28,5 +28,5 @@ export interface BridgeInformationQueryOptions {
   orderBy?: 'created_at' | 'amount',
   orderDirection?: 'ASC' | 'DESC',
   limit?: number,
-  offset?: number,
+  page?: number,
 }
