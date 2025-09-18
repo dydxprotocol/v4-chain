@@ -13,7 +13,6 @@ export default class BridgeInformationModel extends BaseModel {
     return {
       type: 'object',
       required: [
-        'id',
         'from_address',
         'chain_id',
         'amount',

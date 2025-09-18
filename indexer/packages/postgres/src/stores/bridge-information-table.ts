@@ -1,4 +1,5 @@
 import { QueryBuilder } from 'objection';
+import { v4 as uuidv4 } from 'uuid';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery } from '../helpers/stores-helpers';
@@ -125,18 +126,30 @@ export async function create(
   bridgeInformationToCreate: BridgeInformationCreateObject,
   options: Options = { txId: undefined },
 ): Promise<BridgeInformationFromDatabase> {
+  // Generate UUID if id is not provided
+  const createObject = { ...bridgeInformationToCreate };
+  if (!createObject.id) {
+    createObject.id = uuidv4();
+  }
+
   return BridgeInformationModel.query(
     Transaction.get(options.txId),
-  ).insert(bridgeInformationToCreate).returning('*');
+  ).insert(createObject).returning('*');
 }
 
 export async function upsert(
   bridgeInformationToUpsert: BridgeInformationCreateObject,
   options: Options = { txId: undefined },
 ): Promise<BridgeInformationFromDatabase> {
+  // Generate UUID if id is not provided
+  const upsertObject = { ...bridgeInformationToUpsert };
+  if (!upsertObject.id) {
+    upsertObject.id = uuidv4();
+  }
+
   const bridgeInformationRecords: BridgeInformationModel[] = await BridgeInformationModel.query(
     Transaction.get(options.txId),
-  ).upsert(bridgeInformationToUpsert).returning('*');
+  ).upsert(upsertObject).returning('*');
   if (bridgeInformationRecords.length === 0) {
     throw new Error('Upsert failed to return records');
   }

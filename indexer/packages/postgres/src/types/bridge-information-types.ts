@@ -1,5 +1,5 @@
 export interface BridgeInformationCreateObject {
-  id: string,
+  id?: string,
   from_address: string,
   chain_id: string,
   amount: string,

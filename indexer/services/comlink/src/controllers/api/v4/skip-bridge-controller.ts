@@ -1,8 +1,10 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
-  findByEvmAddress, findBySmartAccountAddress, findBySvmAddress, findByDydxAddress,
-} from '@dydxprotocol-indexer/postgres/build/src/stores/turnkey-users-table';
-import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
+  BridgeInformationTable,
+  TurnkeyUsersTable,
+  TurnkeyUserFromDatabase,
+  BridgeInformationCreateObject,
+} from '@dydxprotocol-indexer/postgres';
 import {
   route, executeRoute, setClientOptions, balances, TransferStatus,
 } from '@skip-go/client/cjs';
@@ -107,7 +109,7 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
       message: 'Looking up in turnkey table for evm address',
       address,
     });
-    const record = await findByEvmAddress(address);
+    const record = await TurnkeyUsersTable.findByEvmAddress(address);
     dydxAddress = record?.dydx_address || '';
   } else if (chainId === 'solana') {
     // look up in turnkey table
@@ -116,7 +118,7 @@ async function getDydxAddress(address: string, chainId: string): Promise<string>
       message: 'Looking up in turnkey table for svm address',
       address,
     });
-    const record = await findBySvmAddress(address);
+    const record = await TurnkeyUsersTable.findBySvmAddress(address);
     dydxAddress = record?.dydx_address || '';
   } else {
     throw new Error(`Unsupported chainId: ${chainId}`);
@@ -274,7 +276,9 @@ class BridgeController extends Controller {
     );
 
     // find the suborgId for the user
-    const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(fromAddress);
+    const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findBySvmAddress(
+      fromAddress,
+    );
     if (!record) {
       throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
     }
@@ -403,7 +407,7 @@ class BridgeController extends Controller {
         );
       }
     }
-    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(
+    const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findByEvmAddress(
       srcAddress,
     );
     if (!record || !record.dydx_address) {
@@ -459,6 +463,35 @@ class BridgeController extends Controller {
       },
     });
 
+    // Create bridge information record before sending the transaction
+    const bridgeRecord: BridgeInformationCreateObject = {
+      from_address: fromAddress,
+      chain_id: chainId,
+      amount,
+      created_at: new Date().toISOString(),
+    };
+
+    let bridgeRecordId: string | undefined;
+    try {
+      const createdRecord = await BridgeInformationTable.create(bridgeRecord);
+      bridgeRecordId = createdRecord.id;
+      logger.info({
+        at: `${controllerName}#startEvmBridge`,
+        message: 'Bridge information record created',
+        bridgeRecordId,
+        fromAddress,
+        chainId,
+        amount,
+      });
+    } catch (error) {
+      logger.error({
+        at: `${controllerName}#startEvmBridge`,
+        message: 'Failed to create bridge information record',
+        error,
+      });
+      // Continue with bridge operation even if tracking fails
+    }
+
     // sending the userop to chain via zerodev kernel.
     try {
       const encoded = await kernelClient.account.encodeCalls(callData);
@@ -470,6 +503,7 @@ class BridgeController extends Controller {
         message: 'UserOp sent',
         userOpHash,
       });
+      // track the transaction hash in the bridge information table
       const { receipt } = await kernelClient.waitForUserOperationReceipt({
         hash: userOpHash,
       });
@@ -478,6 +512,31 @@ class BridgeController extends Controller {
         message: 'UserOp completed',
         transactionHash: receipt.transactionHash,
       });
+
+      // Update bridge information record with transaction hash
+      if (bridgeRecordId) {
+        try {
+          await BridgeInformationTable.updateTransactionHash(
+            bridgeRecordId,
+            receipt.transactionHash,
+          );
+          logger.info({
+            at: `${controllerName}#startEvmBridge`,
+            message: 'Bridge information record updated with transaction hash',
+            bridgeRecordId,
+            transactionHash: receipt.transactionHash,
+          });
+        } catch (error) {
+          logger.error({
+            at: `${controllerName}#startEvmBridge`,
+            message: 'Failed to update bridge information record with transaction hash',
+            bridgeRecordId,
+            transactionHash: receipt.transactionHash,
+            error,
+          });
+          // Don't throw error here as the bridge operation was successful
+        }
+      }
     } catch (error) {
       logger.error({
         at: `${controllerName}#startEvmBridge`,
@@ -545,7 +604,7 @@ async function parseEvent(e: express.Request): Promise<{
     // if the chain is solana, then we need to also include the token amount.
     // USDC is the only supported asset for solana so that will be the contract address.
     if (chainId === 'solana') {
-      const record = await findBySvmAddress(bridgeOriginAddress);
+      const record = await TurnkeyUsersTable.findBySvmAddress(bridgeOriginAddress);
       if (!record || !record.dydx_address) {
         logger.warning({
           at: `${controllerName}#parseEvent`,
@@ -570,9 +629,9 @@ async function parseEvent(e: express.Request): Promise<{
       const checkSummedFromAddress = checksumAddress(bridgeOriginAddress as Address);
       let record: TurnkeyUserFromDatabase | undefined;
       if (chainId === avalanche.id.toString()) {
-        record = await findBySmartAccountAddress(checkSummedFromAddress);
+        record = await TurnkeyUsersTable.findBySmartAccountAddress(checkSummedFromAddress);
       } else {
-        record = await findByEvmAddress(checkSummedFromAddress);
+        record = await TurnkeyUsersTable.findByEvmAddress(checkSummedFromAddress);
       }
       if (!record || !record.dydx_address) {
         logger.warning({
@@ -601,7 +660,9 @@ router.get(
     const start: number = Date.now();
     try {
       const { dydxAddress } = req.params;
-      const record: TurnkeyUserFromDatabase | undefined = await findByDydxAddress(dydxAddress);
+      const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findByDydxAddress(
+        dydxAddress,
+      );
 
       if (!record) {
         return res.status(404).json({
