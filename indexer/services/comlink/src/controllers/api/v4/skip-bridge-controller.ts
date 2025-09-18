@@ -329,10 +329,14 @@ class BridgeController extends Controller {
       ) => {
         logger.info({
           at: `${controllerName}#startSolanaBridge`,
-          message: 'Transaction completed',
+          message: 'Bridge transaction completed',
+          fromAddress,
           chainId: c,
-          txHash,
+          amount,
+          sourceAssetDenom,
+          transactionHash: txHash,
           status,
+          completedAt: new Date().toISOString(),
         });
       },
       onTransactionTracked: async (
@@ -341,15 +345,40 @@ class BridgeController extends Controller {
           txHash: string,
           explorerLink: string,
         },
-        // eslint-disable-next-line @typescript-eslint/require-await
       ) => {
-        logger.info({
-          at: `${controllerName}#startSolanaBridge`,
-          message: 'Transaction tracked',
-          chainId: c,
-          txHash,
-          explorerLink,
-        });
+        try {
+          const bridgeRecord = {
+            from_address: fromAddress,
+            chain_id: c,
+            amount,
+            transaction_hash: txHash,
+            created_at: new Date().toISOString(),
+          };
+
+          await BridgeInformationTable.create(bridgeRecord);
+
+          logger.info({
+            at: `${controllerName}#startSolanaBridge`,
+            message: 'Bridge transaction tracked',
+            fromAddress,
+            chainId: c,
+            amount,
+            sourceAssetDenom,
+            transactionHash: txHash,
+            explorerLink,
+            trackedAt: new Date().toISOString(),
+          });
+        } catch (error) {
+          logger.error({
+            at: `${controllerName}#startSolanaBridge`,
+            message: 'Failed to create bridge information record on tracked',
+            fromAddress,
+            chainId: c,
+            amount,
+            error: error.message || error,
+          });
+          // Don't throw error to avoid breaking the bridge flow
+        }
       },
       onTransactionSignRequested: async (
         { chainId: c, txIndex, signerAddress }: {
