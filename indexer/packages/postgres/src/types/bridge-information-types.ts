@@ -17,10 +17,11 @@ export enum BridgeInformationColumns {
 }
 
 export interface BridgeInformationQueryFilters {
-  from_address?: string,
+  from_addresses?: string[],
   chain_id?: string,
   transaction_hash?: string,
   has_transaction_hash?: boolean, // true for NOT NULL, false for NULL
+  sinceDate?: string,
 }
 
 export interface BridgeInformationQueryOptions {

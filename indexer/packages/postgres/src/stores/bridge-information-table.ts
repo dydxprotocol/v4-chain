@@ -12,33 +12,8 @@ import {
   BridgeInformationQueryFilters,
   BridgeInformationQueryOptions,
   Options,
+  PaginationFromDatabase,
 } from '../types';
-
-export async function findById(
-  id: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<BridgeInformationFromDatabase | undefined> {
-  const baseQuery: QueryBuilder<BridgeInformationModel> = setupBaseQuery<BridgeInformationModel>(
-    BridgeInformationModel,
-    options,
-  );
-  return baseQuery
-    .where(BridgeInformationColumns.id, id)
-    .first();
-}
-
-export async function findByFromAddress(
-  fromAddress: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<BridgeInformationFromDatabase[]> {
-  const baseQuery: QueryBuilder<BridgeInformationModel> = setupBaseQuery<BridgeInformationModel>(
-    BridgeInformationModel,
-    options,
-  );
-  return baseQuery
-    .where(BridgeInformationColumns.from_address, fromAddress)
-    .orderBy(BridgeInformationColumns.created_at, 'desc');
-}
 
 export async function findByFromAddressWithTransactionHashFilter(
   fromAddress: string,
@@ -80,7 +55,7 @@ export async function searchBridgeInformation(
   filters: BridgeInformationQueryFilters = {},
   queryOptions: BridgeInformationQueryOptions = {},
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<BridgeInformationFromDatabase[]> {
+): Promise<PaginationFromDatabase<BridgeInformationFromDatabase>> {
   const baseQuery: QueryBuilder<BridgeInformationModel> = setupBaseQuery<BridgeInformationModel>(
     BridgeInformationModel,
     options,
@@ -89,14 +64,17 @@ export async function searchBridgeInformation(
   let query = baseQuery;
 
   // Apply filters
-  if (filters.from_address) {
-    query = query.where(BridgeInformationColumns.from_address, filters.from_address);
+  if (filters.from_addresses) {
+    query = query.whereIn(BridgeInformationColumns.from_address, filters.from_addresses);
   }
   if (filters.chain_id) {
     query = query.where(BridgeInformationColumns.chain_id, filters.chain_id);
   }
   if (filters.transaction_hash) {
     query = query.where(BridgeInformationColumns.transaction_hash, filters.transaction_hash);
+  }
+  if (filters.sinceDate) {
+    query = query.where(BridgeInformationColumns.created_at, '>=', filters.sinceDate);
   }
   if (filters.has_transaction_hash !== undefined) {
     if (filters.has_transaction_hash) {
@@ -111,15 +89,7 @@ export async function searchBridgeInformation(
   const orderDirection = queryOptions.orderDirection || 'DESC';
   query = query.orderBy(BridgeInformationColumns[orderBy], orderDirection);
 
-  // Apply pagination
-  if (queryOptions.limit) {
-    query = query.limit(queryOptions.limit);
-  }
-  if (queryOptions.offset) {
-    query = query.offset(queryOptions.offset);
-  }
-
-  return query;
+  return handleLimitAndPagination(query, queryOptions.limit, queryOptions.offset);
 }
 
 export async function create(
@@ -135,25 +105,6 @@ export async function create(
   return BridgeInformationModel.query(
     Transaction.get(options.txId),
   ).insert(createObject).returning('*');
-}
-
-export async function upsert(
-  bridgeInformationToUpsert: BridgeInformationCreateObject,
-  options: Options = { txId: undefined },
-): Promise<BridgeInformationFromDatabase> {
-  // Generate UUID if id is not provided
-  const upsertObject = { ...bridgeInformationToUpsert };
-  if (!upsertObject.id) {
-    upsertObject.id = uuidv4();
-  }
-
-  const bridgeInformationRecords: BridgeInformationModel[] = await BridgeInformationModel.query(
-    Transaction.get(options.txId),
-  ).upsert(upsertObject).returning('*');
-  if (bridgeInformationRecords.length === 0) {
-    throw new Error('Upsert failed to return records');
-  }
-  return bridgeInformationRecords[0];
 }
 
 export async function updateTransactionHash(
@@ -176,4 +127,61 @@ export async function updateTransactionHash(
   }).returning('*');
 
   return updated as unknown as BridgeInformationFromDatabase | undefined;
+}
+
+/**
+ * Handles pagination and limit logic for funding payment queries
+ * @param baseQuery The base query to apply pagination to
+ * @param limit Maximum number of funding payments to return
+ * @param page Page number
+ * @returns Promise<PaginationFromDatabase<FundingPaymentsFromDatabase>>
+ */
+async function handleLimitAndPagination(
+  baseQuery: QueryBuilder<BridgeInformationModel>,
+  limit?: number,
+  page?: number,
+): Promise<PaginationFromDatabase<BridgeInformationFromDatabase>> {
+  let query = baseQuery;
+
+  /**
+   * If a query is made using a page number, then the limit property is used as 'page limit'
+   */
+  if (page !== undefined && limit !== undefined) {
+    /**
+     * We make sure that the page number is always >= 1
+     */
+    const currentPage: number = Math.max(1, page);
+    const offset: number = (currentPage - 1) * limit;
+
+    /**
+     * Ensure sorting is applied to maintain consistent pagination results.
+     * Also a casting of the ts type is required since the infer of the type
+     * obtained from the count is not performed.
+     */
+    const count: { count?: string } = (await query
+      .clone()
+      .clearOrder()
+      .count({ count: '*' })
+      .first()) as unknown as { count?: string };
+
+    query = query.offset(offset).limit(limit);
+
+    const results = (await query.returning('*')) as BridgeInformationFromDatabase[];
+    return {
+      results,
+      limit,
+      offset,
+      total: parseInt(count.count ?? '0', 10),
+    };
+  }
+
+  // If no pagination, just apply the limit
+  if (limit !== undefined) {
+    query = query.limit(limit);
+  }
+
+  const results = (await query.returning('*')) as BridgeInformationFromDatabase[];
+  return {
+    results,
+  };
 }
