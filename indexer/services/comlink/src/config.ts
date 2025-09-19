@@ -125,6 +125,8 @@ export const configSchema = {
   BASE_WEBHOOK_ID: parseString({ default: 'wh_lpjn5gnwj0ll0gap' }),
   OPTIMISM_WEBHOOK_ID: parseString({ default: 'wh_7eo900bsg8rkvo6z' }),
   SOLANA_WEBHOOK_ID: parseString({ default: 'wh_eqxyotjv478gscpo' }),
+  // minimum threshold we need to hit for go fast to be free.
+  ETHEREUM_GO_FAST_FREE_MINIMUM: parseInteger({ default: 100 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
