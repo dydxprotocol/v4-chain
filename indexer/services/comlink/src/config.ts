@@ -118,6 +118,13 @@ export const configSchema = {
   // if policy approvals are enabled.
   APPROVAL_ENABLED: parseBoolean({ default: true }),
 
+  // webhook ids, defaults to the production webhook id.
+  ETHEREUM_WEBHOOK_ID: parseString({ default: 'wh_ctbkt6y9hez91xr2' }),
+  ARBITRUM_WEBHOOK_ID: parseString({ default: 'wh_ltwqwcsrx1b8lgry' }),
+  AVALANCHE_WEBHOOK_ID: parseString({ default: 'wh_52wz9dbxywxov2dm' }),
+  BASE_WEBHOOK_ID: parseString({ default: 'wh_lpjn5gnwj0ll0gap' }),
+  OPTIMISM_WEBHOOK_ID: parseString({ default: 'wh_7eo900bsg8rkvo6z' }),
+  SOLANA_WEBHOOK_ID: parseString({ default: 'wh_eqxyotjv478gscpo' }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
