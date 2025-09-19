@@ -122,11 +122,10 @@ export async function updateTransactionHash(
 }
 
 /**
- * Handles pagination and limit logic for funding payment queries
- * @param baseQuery The base query to apply pagination to
- * @param limit Maximum number of funding payments to return
+ * Handles pagination and limit logic for bridge information queries
+ * @param limit Maximum number of bridge information to return
  * @param page Page number
- * @returns Promise<PaginationFromDatabase<FundingPaymentsFromDatabase>>
+ * @returns Promise<PaginationFromDatabase<BridgeInformationFromDatabase>>
  */
 async function handleLimitAndPagination(
   baseQuery: QueryBuilder<BridgeInformationModel>,
