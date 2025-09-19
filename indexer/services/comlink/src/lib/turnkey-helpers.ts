@@ -1,7 +1,9 @@
 import { randomBytes, randomUUID } from 'crypto';
 
+import { logger } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes } from '@turnkey/sdk-server';
+import { decodeJwt } from 'jose';
 import { Address, checksumAddress } from 'viem';
 
 import config from '../config';
@@ -20,11 +22,9 @@ import { TurnkeyError } from './errors';
  */
 export class TurnkeyHelpers {
   private turnkeyApiClient: TurnkeyApiClient;
-  private turnkeySenderClient: TurnkeyApiClient;
 
-  constructor(turnkeyApiClient: TurnkeyApiClient, turnkeySenderClient: TurnkeyApiClient) {
+  constructor(turnkeyApiClient: TurnkeyApiClient) {
     this.turnkeyApiClient = turnkeyApiClient;
-    this.turnkeySenderClient = turnkeySenderClient;
   }
 
   /**
@@ -309,6 +309,9 @@ export class TurnkeyHelpers {
     oidcToken: string,
     targetPublicKey: string,
   ) {
+    // Extract email from Google OIDC token if available
+    const extractedEmail = extractEmailFromOidcToken(oidcToken, provider);
+
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       oidcToken,
     });
@@ -317,6 +320,7 @@ export class TurnkeyHelpers {
       suborg = await this.createSuborg({
         providerName: provider,
         oidcToken,
+        email: extractedEmail, // Include extracted email when creating suborg
       });
     }
 
@@ -358,5 +362,47 @@ export class TurnkeyHelpers {
       dydxAddress: suborg.dydxAddress || '',
     };
   }
+}
 
+/**
+ * Extracts email from Google OIDC token payload
+ * @param oidcToken - The OIDC token from Google
+ * @param providerName - The OAuth provider name
+ * @returns The email address if found and provider is Google/Apple, otherwise undefined
+ */
+export function extractEmailFromOidcToken(
+  oidcToken: string,
+  providerName: string,
+): string | undefined {
+  // Only extract email from Google/Apple tokens
+  if (providerName.toLowerCase() !== 'google' && providerName.toLowerCase() !== 'apple') {
+    return undefined;
+  }
+
+  try {
+    // Use jose library to decode JWT token without verification
+    // We don't verify the signature since we just need to extract the email claim
+    const payload = decodeJwt(oidcToken);
+
+    // Extract email from token payload
+    const email = payload.email;
+
+    if (!email || typeof email !== 'string') {
+      logger.warning({
+        at: 'TurnkeyHelpers#extractEmailFromOidcToken',
+        message: 'Email not found in OIDC token payload',
+        hasEmailField: !!payload.email,
+      });
+      return undefined;
+    }
+
+    return email;
+  } catch (error) {
+    logger.error({
+      at: 'TurnkeyHelpers#extractEmailFromOidcToken',
+      message: 'Failed to decode OIDC token',
+      error: error instanceof Error ? error.message : error,
+    });
+    return undefined;
+  }
 }
