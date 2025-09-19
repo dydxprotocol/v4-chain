@@ -3,6 +3,8 @@ import {
   PermissionApprovalTable,
   TurnkeyUserCreateObject,
   TurnkeyUsersTable,
+  BridgeInformationTable,
+  BridgeInformationCreateObject,
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
 import request from 'supertest';
@@ -189,6 +191,382 @@ describe('skip-bridge-controller#V4', () => {
         expect(response.body.evmAddress).toBe(userWithNulls.evm_address);
         expect(response.body.avalancheAddress).toBeNull();
         expect(response.body.svmAddress).toBe(userWithNulls.svm_address);
+      });
+    });
+  });
+
+  describe('GET /getDeposits/:dydxAddress', () => {
+    const testDydxAddress = 'dydx13s025jax0dzw4kuan9hc7e2qkkmcuaz6y93hky';
+    const invalidDydxAddress = 'invalid-address';
+
+    const mockTurnkeyUser: TurnkeyUserCreateObject = {
+      suborg_id: 'test-suborg-deposits',
+      svm_address: 'svm1234567890123456789012345678901234567890',
+      evm_address: '0x1234567890123456789012345678901234567890',
+      smart_account_address: '0x9876543210987654321098765432109876543210',
+      salt: 'test-salt-deposits',
+      dydx_address: testDydxAddress,
+      created_at: new Date().toISOString(),
+    };
+
+    const mockBridgeInfo1: BridgeInformationCreateObject = {
+      from_address: mockTurnkeyUser.evm_address,
+      chain_id: 'ethereum',
+      amount: '1000000',
+      transaction_hash: '0xabc123',
+      created_at: '2025-09-18T10:00:00.000Z',
+    };
+
+    const mockBridgeInfo2: BridgeInformationCreateObject = {
+      from_address: mockTurnkeyUser.smart_account_address!,
+      chain_id: 'polygon',
+      amount: '2000000',
+      transaction_hash: '0xdef456',
+      created_at: '2025-09-18T12:00:00.000Z',
+    };
+
+    const mockBridgeInfo3: BridgeInformationCreateObject = {
+      from_address: mockTurnkeyUser.svm_address,
+      chain_id: 'solana',
+      amount: '3000000',
+      created_at: '2025-09-17T08:00:00.000Z', // Before today
+    };
+
+    describe('Success cases', () => {
+      beforeEach(async () => {
+        await TurnkeyUsersTable.create(mockTurnkeyUser);
+        await BridgeInformationTable.create(mockBridgeInfo1);
+        await BridgeInformationTable.create(mockBridgeInfo2);
+        await BridgeInformationTable.create(mockBridgeInfo3);
+      });
+
+      it('should return all deposits for existing user without date filter', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits).toBeDefined();
+        expect(response.body.deposits.results).toHaveLength(3);
+        expect(response.body.total).toBe(3);
+
+        // Verify all user's addresses are included
+        const fromAddresses = response.body.deposits.results.map((d: any) => d.from_address);
+        expect(fromAddresses).toContain(mockTurnkeyUser.evm_address);
+        expect(fromAddresses).toContain(mockTurnkeyUser.smart_account_address);
+        expect(fromAddresses).toContain(mockTurnkeyUser.svm_address);
+      });
+
+      it('should filter deposits by createdOnOrAfter date', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=2025-09-18T00:00:00.000Z`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(2);
+        expect(response.body.since).toBe('2025-09-18T00:00:00.000Z');
+        expect(response.body.total).toBe(2);
+
+        // Should only include deposits from today (mockBridgeInfo1 and mockBridgeInfo2)
+        const amounts = response.body.deposits.results.map((d: any) => d.amount);
+        expect(amounts).toContain('1000000');
+        expect(amounts).toContain('2000000');
+        expect(amounts).not.toContain('3000000'); // This one is from yesterday
+      });
+
+      it('should support pagination with limit and page', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?limit=2&page=1`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(2);
+        expect(response.body.deposits.limit).toBe(2);
+        expect(response.body.deposits.offset).toBe(0);
+        expect(response.body.deposits.total).toBe(3);
+
+        // Test page 2
+        const page2Response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?limit=2&page=2`,
+          expectedStatus: 200,
+        });
+
+        expect(page2Response.body.deposits.results).toHaveLength(1);
+        expect(page2Response.body.deposits.offset).toBe(2);
+      });
+
+      it('should support limit without pagination', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?limit=2`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(2);
+        expect(response.body.deposits.limit).toBeUndefined();
+        expect(response.body.deposits.offset).toBeUndefined();
+        expect(response.body.deposits.total).toBeUndefined();
+      });
+
+      it('should combine date filter and pagination', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=2025-09-18T00:00:00.000Z&limit=1&page=1`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(1);
+        expect(response.body.since).toBe('2025-09-18T00:00:00.000Z');
+        expect(response.body.deposits.total).toBe(2); // Only 2 records match the date filter
+      });
+    });
+
+    describe('Error cases', () => {
+      it('should return 404 for non-existent user', async () => {
+        const nonExistentAddress = 'dydx1nonexistentaddress123456789012345678';
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${nonExistentAddress}`,
+          expectedStatus: 404,
+        });
+
+        expect(response.body).toEqual({
+          error: 'User not found',
+          message: `No user found with dydx address: ${nonExistentAddress}`,
+        });
+      });
+
+      it('should return 404 for user without smart_account_address', async () => {
+        const userWithoutSmartAccount = {
+          ...mockTurnkeyUser,
+          dydx_address: 'dydx1testwithoutsmartaccount123456789012345',
+          smart_account_address: undefined,
+        };
+        await TurnkeyUsersTable.create(userWithoutSmartAccount);
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${userWithoutSmartAccount.dydx_address}`,
+          expectedStatus: 404,
+        });
+
+        expect(response.body).toEqual({
+          error: 'User not found',
+          message: `No user found with dydx address: ${userWithoutSmartAccount.dydx_address}`,
+        });
+      });
+
+      it('should return 400 for invalid dydx address format', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${invalidDydxAddress}`,
+          expectedStatus: 400,
+        });
+
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].msg).toContain('address must be a valid dydx address');
+      });
+
+      it('should return 400 for invalid date format', async () => {
+        await TurnkeyUsersTable.create(mockTurnkeyUser);
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=invalid-date`,
+          expectedStatus: 400,
+        });
+
+        expect(response.body.errors).toBeDefined();
+      });
+
+      it('should return 400 for invalid pagination parameters', async () => {
+        await TurnkeyUsersTable.create(mockTurnkeyUser);
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?limit=invalid&page=invalid`,
+          expectedStatus: 400,
+        });
+
+        expect(response.body.errors).toBeDefined();
+      });
+    });
+
+    describe('Response format validation', () => {
+      beforeEach(async () => {
+        await TurnkeyUsersTable.create(mockTurnkeyUser);
+        await BridgeInformationTable.create(mockBridgeInfo1);
+      });
+
+      it('should return response with correct structure', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        // Verify response structure
+        expect(response.body).toHaveProperty('deposits');
+        expect(response.body).toHaveProperty('total');
+        expect(response.body.deposits).toHaveProperty('results');
+        expect(Array.isArray(response.body.deposits.results)).toBe(true);
+
+        // Verify deposit record structure
+        const deposit = response.body.deposits.results[0];
+        expect(deposit).toHaveProperty('id');
+        expect(deposit).toHaveProperty('from_address');
+        expect(deposit).toHaveProperty('chain_id');
+        expect(deposit).toHaveProperty('amount');
+        expect(deposit).toHaveProperty('transaction_hash');
+        expect(deposit).toHaveProperty('created_at');
+
+        // Verify field types
+        expect(typeof deposit.id).toBe('string');
+        expect(typeof deposit.from_address).toBe('string');
+        expect(typeof deposit.chain_id).toBe('string');
+        expect(typeof deposit.amount).toBe('string');
+        expect(typeof deposit.created_at).toBe('string');
+      });
+
+      it('should include since field when date filter is provided', async () => {
+        const sinceDate = '2025-09-18T00:00:00.000Z';
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=${sinceDate}`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.since).toBe(sinceDate);
+      });
+
+      it('should not include since field when no date filter is provided', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.since).toBeUndefined();
+      });
+
+      it('should return deposits in descending order by created_at', async () => {
+        // Create additional record with later timestamp
+        await BridgeInformationTable.create({
+          ...mockBridgeInfo2,
+          created_at: '2025-09-18T15:00:00.000Z',
+        });
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        const results = response.body.deposits.results;
+        expect(results).toHaveLength(2);
+
+        // Should be in descending order (newest first)
+        expect(new Date(results[0].created_at).getTime()).toBeGreaterThan(
+          new Date(results[1].created_at).getTime(),
+        );
+      });
+    });
+
+    describe('Edge cases', () => {
+      beforeEach(async () => {
+        await TurnkeyUsersTable.create(mockTurnkeyUser);
+      });
+
+      it('should return empty results when user has no deposits', async () => {
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(0);
+        expect(response.body.total).toBe(0);
+      });
+
+      it('should return empty results when date filter excludes all deposits', async () => {
+        await BridgeInformationTable.create(mockBridgeInfo3); // From 2025-09-17
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=2025-09-19T00:00:00.000Z`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(0);
+        expect(response.body.total).toBe(0);
+        expect(response.body.since).toBe('2025-09-19T00:00:00.000Z');
+      });
+
+      it('should handle deposits with null transaction_hash', async () => {
+        const bridgeInfoWithoutTx = {
+          ...mockBridgeInfo1,
+          transaction_hash: undefined,
+        };
+        await BridgeInformationTable.create(bridgeInfoWithoutTx);
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(1);
+        expect(response.body.deposits.results[0].transaction_hash).toBeNull();
+      });
+
+      it('should handle very old date filter', async () => {
+        await BridgeInformationTable.create(mockBridgeInfo1);
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=2020-01-01T00:00:00.000Z`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(1);
+        expect(response.body.since).toBe('2020-01-01T00:00:00.000Z');
+      });
+
+      it('should handle future date filter', async () => {
+        await BridgeInformationTable.create(mockBridgeInfo1);
+
+        const response: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}?createdOnOrAfter=2030-01-01T00:00:00.000Z`,
+          expectedStatus: 200,
+        });
+
+        expect(response.body.deposits.results).toHaveLength(0);
+        expect(response.body.total).toBe(0);
+      });
+    });
+
+    describe('Performance and stats', () => {
+      beforeEach(async () => {
+        await TurnkeyUsersTable.create(mockTurnkeyUser);
+      });
+
+      it('should record timing stats', async () => {
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/bridging/getDeposits/${testDydxAddress}`,
+          expectedStatus: 200,
+        });
+
+        expect(stats.timing).toHaveBeenCalledWith(
+          expect.stringContaining('bridging-controller.get_deposit_address.timing'),
+          expect.any(Number),
+        );
       });
     });
   });

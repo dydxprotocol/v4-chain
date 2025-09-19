@@ -4,6 +4,7 @@ import {
   TurnkeyUsersTable,
   TurnkeyUserFromDatabase,
   BridgeInformationCreateObject,
+  IsoString,
 } from '@dydxprotocol-indexer/postgres';
 import {
   route, executeRoute, setClientOptions, balances, TransferStatus,
@@ -16,6 +17,7 @@ import {
   createZeroDevPaymasterClient, getUserOperationGasPrice,
 } from '@zerodev/sdk';
 import express from 'express';
+import { matchedData } from 'express-validator';
 import {
   Controller, Route,
 } from 'tsoa';
@@ -50,7 +52,11 @@ import {
   SOLANA_USDC_QUANTUM,
   ETH_USDC_QUANTUM,
 } from '../../../lib/smart-contract-constants';
-import { CheckBridgeSchema, CheckGetDepositAddressSchema } from '../../../lib/validation/schemas';
+import {
+  CheckBridgeSchema,
+  CheckGetDepositAddressSchema,
+  CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema, CheckPaginationSchema,
+} from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 
@@ -779,4 +785,71 @@ router.post(
   },
 );
 
+router.get(
+  '/getDeposits/:dydxAddress',
+  ...CheckGetDepositAddressSchema,
+  ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  ...CheckPaginationSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const { dydxAddress } = req.params;
+      const {
+        limit, page, createdOnOrAfter,
+      } = matchedData(req) as {
+        limit?: number,
+        page?: number,
+        createdOnOrAfter?: IsoString,
+      };
+      const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findByDydxAddress(
+        dydxAddress,
+      );
+
+      if (!record) {
+        return res.status(404).json({
+          error: 'User not found',
+          message: `No user found with dydx address: ${dydxAddress}`,
+        });
+      }
+      if (!record.smart_account_address) {
+        return res.status(404).json({
+          error: 'User not found',
+          message: `No user found with dydx address: ${dydxAddress}`,
+        });
+      }
+
+      const deposits = await BridgeInformationTable.searchBridgeInformation(
+        {
+          from_addresses: [record.evm_address, record.smart_account_address, record.svm_address],
+          sinceDate: createdOnOrAfter,
+        },
+        {
+          limit,
+          page,
+        },
+      );
+
+      return res.status(200).json({
+        deposits,
+        ...(createdOnOrAfter && { since: createdOnOrAfter }),
+        total: deposits.total || deposits.results.length,
+      });
+    } catch (error) {
+      return handleControllerError(
+        'BridgeController GET /getDepositAddress',
+        'Get deposit address error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_deposit_address.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
 export default router;
