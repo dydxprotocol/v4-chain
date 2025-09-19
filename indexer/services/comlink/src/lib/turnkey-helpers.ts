@@ -22,11 +22,9 @@ import { TurnkeyError } from './errors';
  */
 export class TurnkeyHelpers {
   private turnkeyApiClient: TurnkeyApiClient;
-  private turnkeySenderClient: TurnkeyApiClient;
 
-  constructor(turnkeyApiClient: TurnkeyApiClient, turnkeySenderClient: TurnkeyApiClient) {
+  constructor(turnkeyApiClient: TurnkeyApiClient) {
     this.turnkeyApiClient = turnkeyApiClient;
-    this.turnkeySenderClient = turnkeySenderClient;
   }
 
   /**
