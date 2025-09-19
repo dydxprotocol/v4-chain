@@ -1,5 +1,6 @@
 import * as AssetTable from '../../src/stores/asset-table';
 import * as BlockTable from '../../src/stores/block-table';
+import * as BridgeInformationTable from '../../src/stores/bridge-information-table';
 import * as FirebaseNotificationTokenTable from '../../src/stores/firebase-notification-token-table';
 import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
 import * as MarketTable from '../../src/stores/market-table';
@@ -42,6 +43,9 @@ import {
   defaultVault,
   defaultSubaccountUsername2,
   defaultSubaccountUsername,
+  defaultBridgeInformation,
+  defaultBridgeInformation2,
+  defaultBridgeInformation3,
 } from './constants';
 
 export async function seedAdditionalSubaccounts() {
@@ -100,4 +104,12 @@ export async function seedData() {
     FirebaseNotificationTokenTable.create(defaultFirebaseNotificationToken),
   ]);
   await Promise.all([VaultTable.create(defaultVault)]);
+}
+
+export async function seedBridgeInformation() {
+  await Promise.all([
+    BridgeInformationTable.create(defaultBridgeInformation),
+    BridgeInformationTable.create(defaultBridgeInformation2),
+    BridgeInformationTable.create(defaultBridgeInformation3),
+  ]);
 }
