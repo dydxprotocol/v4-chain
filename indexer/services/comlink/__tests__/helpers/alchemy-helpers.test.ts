@@ -27,6 +27,7 @@ jest.mock('../../src/config', () => ({
   ALCHEMY_AUTH_TOKEN: 'test-auth-token',
   ALCHEMY_WEBHOOK_ID: 'test-webhook-id',
   ALCHEMY_WEBHOOK_UPDATE_URL: 'https://dashboard.alchemy.com/api/update-webhook-addresses',
+  SOLANA_WEBHOOK_ID: 'wh_eqxyotjv478gscpo',
 }));
 
 describe('alchemy-helpers', () => {

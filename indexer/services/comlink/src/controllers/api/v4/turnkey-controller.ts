@@ -90,7 +90,7 @@ export class TurnkeyController extends Controller {
     }
 
     // Initialize the Turnkey helpers with the main API client
-    this.turnkeyHelpers = new TurnkeyHelpers(this.turnkeyApiClient, this.bridgeSenderApiClient);
+    this.turnkeyHelpers = new TurnkeyHelpers(this.turnkeyApiClient);
     this.policyEngine = new PolicyEngine(this.bridgeSenderApiClient);
   }
 

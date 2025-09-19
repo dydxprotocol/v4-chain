@@ -511,6 +511,7 @@ importers:
       express-request-id: ^1.4.0
       express-validator: ^6.14.2
       jest: ^28.1.2
+      jose: 4.15.5
       lodash: ^4.17.21
       luxon: ^3.0.1
       mkdirp: ^3.0.1
@@ -570,6 +571,7 @@ importers:
       express: 4.18.1
       express-request-id: 1.4.1
       express-validator: 6.14.2
+      jose: 4.15.5
       lodash: 4.17.21
       luxon: 3.0.1
       mkdirp: 3.0.1
@@ -14168,6 +14170,10 @@ packages:
   /jmespath/0.16.0:
     resolution: {integrity: sha512-9FzQjJ7MATs1tSpnco1K6ayiYE3figslrXA72G2HQ/n76RzvYlofyi5QM+iX4YRs/pu3yzxlVQSST23+dMDknw==}
     engines: {node: '>= 0.6.0'}
+    dev: false
+
+  /jose/4.15.5:
+    resolution: {integrity: sha512-jc7BFxgKPKi94uOvEmzlSWFFe2+vASyXaKUpdQKatWAESU2MWjDfFf0fdfc83CDKcA5QecabZeNLyfhe3yKNkg==}
     dev: false
 
   /jose/4.15.9:
