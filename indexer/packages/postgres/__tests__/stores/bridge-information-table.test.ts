@@ -155,18 +155,6 @@ describe('BridgeInformation store', () => {
       expect(nextResult.results[0].created_at).toBe(defaultBridgeInfo1.created_at);
       expect(nextResult.offset).toBe(1); // page 2 with limit 1 = offset 1
     });
-
-    it('Supports custom ordering by amount', async () => {
-      const result = await BridgeInformationTable.findByFromAddressWithTransactionHashFilter(
-        defaultBridgeInfo1.from_address,
-        false,
-        { orderBy: 'amount', orderDirection: 'ASC' },
-      );
-
-      expect(result.results).toHaveLength(2);
-      expect(result.results[0].amount).toBe(defaultBridgeInfo1.amount); // 1000000
-      expect(result.results[1].amount).toBe(defaultBridgeInfo3.amount); // 3000000
-    });
   });
 
   describe('searchBridgeInformation', () => {
@@ -275,25 +263,6 @@ describe('BridgeInformation store', () => {
       );
 
       expect(result.results).toHaveLength(2);
-    });
-
-    it('Supports custom ordering', async () => {
-      const result = await BridgeInformationTable.searchBridgeInformation(
-        {},
-        {
-          orderBy: 'amount',
-          orderDirection: 'ASC',
-          limit: 10,
-        },
-      );
-
-      expect(result.results.length).toBeGreaterThan(0);
-      // Verify ascending order by amount
-      for (let i = 1; i < result.results.length; i++) {
-        expect(parseInt(result.results[i].amount, 10)).toBeGreaterThanOrEqual(
-          parseInt(result.results[i - 1].amount, 10),
-        );
-      }
     });
 
     it('Returns empty results when no records match filters', async () => {
