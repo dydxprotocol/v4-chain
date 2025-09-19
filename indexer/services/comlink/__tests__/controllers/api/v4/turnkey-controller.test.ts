@@ -401,10 +401,10 @@ describe('extractEmailFromOidcToken', () => {
 
   it('should handle case insensitive provider names', () => {
     const token = createMockJwtToken(mockGooglePayload);
-    
+
     const upperCaseResult = extractEmailFromOidcToken(token, 'GOOGLE');
     const mixedCaseResult = extractEmailFromOidcToken(token, 'Google');
-    
+
     expect(upperCaseResult).toBe('user@example.com');
     expect(mixedCaseResult).toBe('user@example.com');
   });
@@ -417,8 +417,9 @@ describe('extractEmailFromOidcToken', () => {
   });
 
   it('should return undefined when email is missing from payload', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { email, ...payloadWithoutEmail } = mockGooglePayload;
-    
+
     const token = createMockJwtToken(payloadWithoutEmail);
     const extractedEmail = extractEmailFromOidcToken(token, 'google');
 
@@ -427,7 +428,7 @@ describe('extractEmailFromOidcToken', () => {
 
   it('should return undefined when email is not a string', () => {
     const payloadWithInvalidEmail = { ...mockGooglePayload, email: 123 };
-    
+
     const token = createMockJwtToken(payloadWithInvalidEmail);
     const extractedEmail = extractEmailFromOidcToken(token, 'google');
 
@@ -451,7 +452,7 @@ describe('extractEmailFromOidcToken', () => {
   it('should handle invalid JSON in payload', () => {
     const invalidJsonPayload = Buffer.from('invalid-json').toString('base64url');
     const invalidToken = `header.${invalidJsonPayload}.signature`;
-    
+
     const extractedEmail = extractEmailFromOidcToken(invalidToken, 'google');
 
     expect(extractedEmail).toBeUndefined();
@@ -459,7 +460,7 @@ describe('extractEmailFromOidcToken', () => {
 
   it('should handle empty email string', () => {
     const payloadWithEmptyEmail = { ...mockGooglePayload, email: '' };
-    
+
     const token = createMockJwtToken(payloadWithEmptyEmail);
     const extractedEmail = extractEmailFromOidcToken(token, 'google');
 
@@ -468,7 +469,7 @@ describe('extractEmailFromOidcToken', () => {
 
   it('should handle null email', () => {
     const payloadWithNullEmail = { ...mockGooglePayload, email: null };
-    
+
     const token = createMockJwtToken(payloadWithNullEmail);
     const extractedEmail = extractEmailFromOidcToken(token, 'google');
 
@@ -505,7 +506,7 @@ describe('extractEmailFromOidcToken', () => {
       ...mockGooglePayload,
       email: 'user+test@example-domain.co.uk',
     };
-    
+
     const token = createMockJwtToken(payloadWithSpecialEmail);
     const extractedEmail = extractEmailFromOidcToken(token, 'google');
 
@@ -518,7 +519,7 @@ describe('extractEmailFromOidcToken', () => {
       ...mockGooglePayload,
       email: longEmail,
     };
-    
+
     const token = createMockJwtToken(payloadWithLongEmail);
     const extractedEmail = extractEmailFromOidcToken(token, 'google');
 
