@@ -364,6 +364,15 @@ export interface PnlFromDatabase {
   totalPnl: string,
 }
 
+export interface BridgeInformationFromDatabase {
+  id: string,
+  from_address: string,
+  chain_id: string,
+  amount: string,
+  transaction_hash?: string,
+  created_at: IsoString,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

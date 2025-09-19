@@ -13,6 +13,7 @@ const layer2Tables = [
   'subaccounts',
   'turnkey_users',
   'permission_approval',
+  'bridge_information',
 ];
 
 const layer1Tables = [
