@@ -14,12 +14,13 @@ import { decode, fromWords } from 'bech32';
 import bs58 from 'bs58';
 import { encodeFunctionData, type Hex } from 'viem';
 import type { EntryPointVersion, SmartAccountImplementation } from 'viem/account-abstraction';
-import { avalanche } from 'viem/chains';
+import { avalanche, mainnet } from 'viem/chains';
 
 import config from '../config';
 import {
   dydxChainId,
   entryPoint,
+  ETH_USDC_QUANTUM,
   ethDenomByChainId, usdcAddressByChainId,
 } from '../lib/smart-contract-constants';
 import { getAddress, publicClients } from './alchemy-helpers';
@@ -44,6 +45,7 @@ export async function buildUserAddresses(
   );
 }
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
+const ethereumGoFastFreeMinimumUSDC = config.ETHEREUM_GO_FAST_FREE_MINIMUM * ETH_USDC_QUANTUM;
 const skipMessagesTimeoutSeconds = '60';
 const dydxNobleChannel = 33;
 const slippageTolerancePercent = config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE;
@@ -60,6 +62,12 @@ export async function getSkipCallData(
   if (amount.startsWith('0x')) {
     amountToUse = parseInt(amount, 16).toString();
   }
+
+  let goFast = true;
+  if (chainId === mainnet.id.toString() &&
+    parseInt(amountToUse, 10) < ethereumGoFastFreeMinimumUSDC) {
+    goFast = false;
+  }
   const routeResult = await route({
     amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
@@ -73,7 +81,7 @@ export async function getSkipCallData(
       evmSwaps: true, // needed for native eth bridging.
     },
     allowUnsafe: false,
-    goFast: true,
+    goFast,
   });
   logger.info({
     at: 'skip-helper#getSkipCallData',
