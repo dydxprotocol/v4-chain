@@ -25,7 +25,7 @@ export interface BridgeInformationQueryFilters {
 }
 
 export interface BridgeInformationQueryOptions {
-  orderBy?: 'created_at' | 'amount',
+  orderBy?: 'created_at',
   orderDirection?: 'ASC' | 'DESC',
   limit?: number,
   page?: number,
