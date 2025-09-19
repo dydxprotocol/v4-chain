@@ -4,6 +4,7 @@ import { TurnkeyController } from '../../../../src/controllers/api/v4/turnkey-co
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { SigninMethod } from '../../../../src/types';
 import { PolicyEngine } from '../../../../src/helpers/policy-engine';
+import { extractEmailFromOidcToken } from '../../../../src/lib/turnkey-helpers';
 
 jest.mock('../../../../src/config', () => ({
   ...jest.requireActual('../../../../src/config'),
@@ -347,5 +348,181 @@ describe('TurnkeyController', () => {
         user?.suborg_id,
       );
     });
+  });
+});
+
+describe('extractEmailFromOidcToken', () => {
+  // Helper to create a mock JWT token
+  const createMockJwtToken = (payload: any): string => {
+    const header = { alg: 'RS256', kid: '1670273806824' };
+    const signature = 'mock-signature';
+
+    const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
+    const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const encodedSignature = Buffer.from(signature).toString('base64url');
+
+    return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
+  };
+
+  const mockGooglePayload = {
+    iss: 'accounts.google.com',
+    aud: 'your-client-id.googleusercontent.com',
+    sub: '1234567890',
+    email: 'user@example.com',
+    email_verified: true,
+    name: 'John Doe',
+    iat: 1670273806,
+    exp: 1670277406,
+  };
+
+  const mockApplePayload = {
+    iss: 'https://appleid.apple.com',
+    aud: 'your-client-id',
+    sub: '1234567890',
+    email: 'user@privaterelay.appleid.com',
+    email_verified: true,
+    iat: 1670273806,
+    exp: 1670277406,
+  };
+
+  it('should extract email from valid Google OIDC token', () => {
+    const token = createMockJwtToken(mockGooglePayload);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBe('user@example.com');
+  });
+
+  it('should extract email from valid Apple OIDC token', () => {
+    const token = createMockJwtToken(mockApplePayload);
+    const extractedEmail = extractEmailFromOidcToken(token, 'apple');
+
+    expect(extractedEmail).toBe('user@privaterelay.appleid.com');
+  });
+
+  it('should handle case insensitive provider names', () => {
+    const token = createMockJwtToken(mockGooglePayload);
+
+    const upperCaseResult = extractEmailFromOidcToken(token, 'GOOGLE');
+    const mixedCaseResult = extractEmailFromOidcToken(token, 'Google');
+
+    expect(upperCaseResult).toBe('user@example.com');
+    expect(mixedCaseResult).toBe('user@example.com');
+  });
+
+  it('should return undefined for non-Google/Apple providers', () => {
+    const token = createMockJwtToken(mockGooglePayload);
+    const extractedEmail = extractEmailFromOidcToken(token, 'facebook');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should return undefined when email is missing from payload', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { email, ...payloadWithoutEmail } = mockGooglePayload;
+
+    const token = createMockJwtToken(payloadWithoutEmail);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should return undefined when email is not a string', () => {
+    const payloadWithInvalidEmail = { ...mockGooglePayload, email: 123 };
+
+    const token = createMockJwtToken(payloadWithInvalidEmail);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should handle invalid JWT format (not 3 parts)', () => {
+    const invalidToken = 'invalid.token';
+    const extractedEmail = extractEmailFromOidcToken(invalidToken, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should handle malformed base64 payload', () => {
+    const invalidToken = 'header.invalid-base64-payload.signature';
+    const extractedEmail = extractEmailFromOidcToken(invalidToken, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should handle invalid JSON in payload', () => {
+    const invalidJsonPayload = Buffer.from('invalid-json').toString('base64url');
+    const invalidToken = `header.${invalidJsonPayload}.signature`;
+
+    const extractedEmail = extractEmailFromOidcToken(invalidToken, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should handle empty email string', () => {
+    const payloadWithEmptyEmail = { ...mockGooglePayload, email: '' };
+
+    const token = createMockJwtToken(payloadWithEmptyEmail);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should handle null email', () => {
+    const payloadWithNullEmail = { ...mockGooglePayload, email: null };
+
+    const token = createMockJwtToken(payloadWithNullEmail);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBeUndefined();
+  });
+
+  it('should handle real-world Google token structure', () => {
+    const realWorldPayload = {
+      iss: 'accounts.google.com',
+      azp: 'your-client-id.googleusercontent.com',
+      aud: 'your-client-id.googleusercontent.com',
+      sub: '123456789012345678901',
+      email: 'john.doe@gmail.com',
+      email_verified: true,
+      at_hash: 'abc123def456',
+      name: 'John Doe',
+      picture: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+      given_name: 'John',
+      family_name: 'Doe',
+      locale: 'en',
+      iat: 1670273806,
+      exp: 1670277406,
+      jti: 'abc123def456ghi789',
+    };
+
+    const token = createMockJwtToken(realWorldPayload);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBe('john.doe@gmail.com');
+  });
+
+  it('should handle tokens with special characters in email', () => {
+    const payloadWithSpecialEmail = {
+      ...mockGooglePayload,
+      email: 'user+test@example-domain.co.uk',
+    };
+
+    const token = createMockJwtToken(payloadWithSpecialEmail);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBe('user+test@example-domain.co.uk');
+  });
+
+  it('should handle very long email addresses', () => {
+    const longEmail = 'very.long.email.address.with.many.dots@very-long-domain-name.example.com';
+    const payloadWithLongEmail = {
+      ...mockGooglePayload,
+      email: longEmail,
+    };
+
+    const token = createMockJwtToken(payloadWithLongEmail);
+    const extractedEmail = extractEmailFromOidcToken(token, 'google');
+
+    expect(extractedEmail).toBe(longEmail);
   });
 });

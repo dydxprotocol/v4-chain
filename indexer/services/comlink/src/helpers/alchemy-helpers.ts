@@ -20,14 +20,14 @@ import {
 } from '../lib/smart-contract-constants';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
-  [mainnet.id.toString()]: 'wh_ctbkt6y9hez91xr2',
-  [arbitrum.id.toString()]: 'wh_ltwqwcsrx1b8lgry',
-  [avalanche.id.toString()]: 'wh_52wz9dbxywxov2dm',
-  [base.id.toString()]: 'wh_lpjn5gnwj0ll0gap',
-  [optimism.id.toString()]: 'wh_7eo900bsg8rkvo6z',
+  [mainnet.id.toString()]: config.ETHEREUM_WEBHOOK_ID,
+  [arbitrum.id.toString()]: config.ARBITRUM_WEBHOOK_ID,
+  [avalanche.id.toString()]: config.AVALANCHE_WEBHOOK_ID,
+  [base.id.toString()]: config.BASE_WEBHOOK_ID,
+  [optimism.id.toString()]: config.OPTIMISM_WEBHOOK_ID,
 };
 
-const solanaAlchemyWebhookId = 'wh_eqxyotjv478gscpo';
+const solanaAlchemyWebhookId = config.SOLANA_WEBHOOK_ID;
 
 export const alchemyNetworkToChainIdMap: Record<string, string> = {
   ARB_MAINNET: arbitrum.id.toString(),
