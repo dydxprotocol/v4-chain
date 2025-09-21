@@ -901,6 +901,6 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 
 	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
 	require.NoError(t, err)
-	require.Equal(t, uint32(len(types.DefaultAffiliateTiers.GetTiers())-1), tierLevel)
+	require.Equal(t, uint32(4), tierLevel)
 	require.Equal(t, uint32(200_000), feeSharePpm)
 }
