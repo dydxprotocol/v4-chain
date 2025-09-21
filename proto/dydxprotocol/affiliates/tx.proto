@@ -19,7 +19,7 @@ service Msg {
   // UpdateAffiliateWhitelist updates affiliate whitelist
   rpc UpdateAffiliateWhitelist(MsgUpdateAffiliateWhitelist)
       returns (MsgUpdateAffiliateWhitelistResponse);
-
+  // UpdateAffiliateProgramParameters updates affiliate program parameters
   rpc UpdateAffiliateProgramParameters(
       MsgUpdateAffiliateProgramParametersRequest)
       returns (MsgUpdateAffiliateProgramParametersResponse);
@@ -70,14 +70,11 @@ message MsgUpdateAffiliateProgramParametersRequest {
   // Authority sending this message. Will be sent by gov
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // Updated affiliate program parameters information
-  AffiliateTiers tiers = 2 [ (gogoproto.nullable) = true ];
-
-  // Affiliate whitelist
-  AffiliateOverrides affiliate_overrides = 3 [ (gogoproto.nullable) = true ];
-
   // Affiliate program parameters
-  AffiliateParameters affiliate_parameters = 4 [ (gogoproto.nullable) = true ];
+  AffiliateParameters affiliate_parameters = 2 [ (gogoproto.nullable) = true ];
+
+  // Affiliate Overrides
+  AffiliateOverrides affiliate_overrides = 3 [ (gogoproto.nullable) = true ];
 }
 
 // Response to MsgUpdateAffiliateProgramParameters

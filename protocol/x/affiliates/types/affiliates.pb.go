@@ -237,6 +237,7 @@ func (m *AffiliateWhitelist_Tier) GetTakerFeeSharePpm() uint32 {
 	return 0
 }
 
+// AffiliateParameters defines the parameters for the affiliate program.
 type AffiliateParameters struct {
 	// Maximum commission per referred user in a 30d rolling window in revenue
 	Maximum_30DCommissionPerReferred uint32 `protobuf:"varint,1,opt,name=maximum_30d_commission_per_referred,json=maximum30dCommissionPerReferred,proto3" json:"maximum_30d_commission_per_referred,omitempty"`

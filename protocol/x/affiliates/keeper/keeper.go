@@ -389,20 +389,14 @@ func (k Keeper) UpdateAffiliateProgramParameters(
 ) error {
 	store := ctx.KVStore(k.storeKey)
 
-	if msg.Tiers != nil {
-		affiliateTiers, err := k.cdc.Marshal(msg.GetTiers())
-		if err != nil {
-			return err
-		}
-		store.Set([]byte(types.AffiliateTiersKey), affiliateTiers)
-	}
 	if msg.AffiliateOverrides != nil {
-		affiliateOverrides, err := k.cdc.Marshal(msg.GetAffiliateOverrides())
+		affiliateOverrides, err := k.cdc.Marshal(msg.AffiliateOverrides)
 		if err != nil {
 			return err
 		}
 		store.Set([]byte(types.AffiliateOverridesKey), affiliateOverrides)
 	}
+
 	if msg.AffiliateParameters != nil {
 		affilliateParameters, err := k.cdc.Marshal(msg.GetAffiliateParameters())
 		if err != nil {

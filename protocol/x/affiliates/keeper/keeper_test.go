@@ -853,18 +853,15 @@ func TestUpdateAffiliateTiersParameters(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
+	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+	require.NoError(t, err)
+
+	err = k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
 		Authority: constants.GovAuthority,
 		AffiliateParameters: &types.AffiliateParameters{
 			Maximum_30DAttributableRevenuePerAffiliate: 100,
 			RefereeMinimumFeeTierIdx:                   1,
 			Maximum_30DCommissionPerReferred:           100,
-		},
-		Tiers: &types.DefaultAffiliateTiers,
-		AffiliateOverrides: &types.AffiliateOverrides{
-			Addresses: []string{
-				constants.AliceAccAddress.String(),
-			},
 		},
 	})
 	require.NoError(t, err)
@@ -881,18 +878,18 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
+	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+	require.NoError(t, err)
+
+	err = k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
 		Authority: constants.GovAuthority,
 		AffiliateParameters: &types.AffiliateParameters{
 			Maximum_30DAttributableRevenuePerAffiliate: 100,
 			RefereeMinimumFeeTierIdx:                   1,
 			Maximum_30DCommissionPerReferred:           100,
 		},
-		Tiers: &types.DefaultAffiliateTiers,
 		AffiliateOverrides: &types.AffiliateOverrides{
-			Addresses: []string{
-				constants.AliceAccAddress.String(),
-			},
+			Addresses: []string{constants.AliceAccAddress.String()},
 		},
 	})
 	require.NoError(t, err)

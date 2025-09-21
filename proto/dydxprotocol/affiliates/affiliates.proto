@@ -36,6 +36,7 @@ message AffiliateWhitelist {
   repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];
 }
 
+// AffiliateParameters defines the parameters for the affiliate program.
 message AffiliateParameters {
   // Maximum commission per referred user in a 30d rolling window in revenue
   uint32 maximum_30d_commission_per_referred = 1
