@@ -38,4 +38,5 @@ export * from './funding-payments-types';
 export * from './turnkey-user-types';
 export * from './permission-approval-types';
 export * from './pnl-types';
+export * from './bridge-information-types';
 export { PositionSide } from './position-types';
