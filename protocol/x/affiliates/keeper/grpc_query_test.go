@@ -271,7 +271,23 @@ func TestAffiliateParameters(t *testing.T) {
 			RefereeMinimumFeeTierIdx:                   1,
 			Maximum_30DCommissionPerReferred:           100,
 		},
-		Tiers: &types.DefaultAffiliateTiers,
+	})
+	require.NoError(t, err)
+
+	res, err := k.AffiliateParameters(ctx, req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, &types.AffiliateParametersResponse{Parameters: types.DefaultAffiliateParameters}, res)
+}
+
+func TestAffiliateOverrides(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	req := &types.AffiliateOverridesRequest{}
+	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
+		Authority: constants.GovAuthority,
 		AffiliateOverrides: &types.AffiliateOverrides{
 			Addresses: []string{
 				constants.AliceAccAddress.String(),
@@ -280,8 +296,12 @@ func TestAffiliateParameters(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	res, err := k.AffiliateParameters(ctx, req)
+	res, err := k.AffiliateOverrides(ctx, req)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t, &types.AffiliateParametersResponse{Parameters: types.DefaultAffiliateParameters}, res)
+	require.Equal(t, &types.AffiliateOverridesResponse{Overrides: types.AffiliateOverrides{
+		Addresses: []string{
+			constants.AliceAccAddress.String(),
+		},
+	}}, res)
 }
