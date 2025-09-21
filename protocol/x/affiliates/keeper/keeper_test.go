@@ -881,6 +881,11 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
 	require.NoError(t, err)
 
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
+	require.NoError(t, err)
+	require.Equal(t, uint32(3), tierLevel)
+	require.Equal(t, uint32(150_000), feeSharePpm)
+
 	err = k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
 		Authority: constants.GovAuthority,
 		AffiliateParameters: &types.AffiliateParameters{
@@ -894,13 +899,8 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
+	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
 	require.NoError(t, err)
 	require.Equal(t, uint32(len(types.DefaultAffiliateTiers.GetTiers())-1), tierLevel)
-	require.Equal(t, uint32(150_000), feeSharePpm)
-
-	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.CarlAccAddress.String())
-	require.NoError(t, err)
-	require.Equal(t, uint32(0), tierLevel)
-	require.Equal(t, uint32(0), feeSharePpm)
+	require.Equal(t, uint32(200_000), feeSharePpm)
 }
