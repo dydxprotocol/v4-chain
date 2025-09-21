@@ -847,3 +847,63 @@ func TestGetTierForAffiliateEmptyTiers(t *testing.T) {
 	require.Equal(t, uint32(0), tierLevel)
 	require.Equal(t, uint32(0), feeSharePpm)
 }
+
+func TestUpdateAffiliateTiersParameters(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
+		Authority: constants.GovAuthority,
+		AffiliateParameters: &types.AffiliateParameters{
+			Maximum_30DAttributableRevenuePerAffiliate: 100,
+			RefereeMinimumFeeTierIdx:                   1,
+			Maximum_30DCommissionPerReferred:           100,
+		},
+		Tiers: &types.DefaultAffiliateTiers,
+		AffiliateOverrides: &types.AffiliateOverrides{
+			Addresses: []string{
+				constants.AliceAccAddress.String(),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	affiliateParameters, err := k.GetAffiliateProgramParameters(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint32(100), affiliateParameters.GetMaximum_30DAttributableRevenuePerAffiliate())
+	require.Equal(t, uint32(1), affiliateParameters.GetRefereeMinimumFeeTierIdx())
+	require.Equal(t, uint32(100), affiliateParameters.GetMaximum_30DCommissionPerReferred())
+}
+
+func TestGetTierForAffiliateOverrides(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
+		Authority: constants.GovAuthority,
+		AffiliateParameters: &types.AffiliateParameters{
+			Maximum_30DAttributableRevenuePerAffiliate: 100,
+			RefereeMinimumFeeTierIdx:                   1,
+			Maximum_30DCommissionPerReferred:           100,
+		},
+		Tiers: &types.DefaultAffiliateTiers,
+		AffiliateOverrides: &types.AffiliateOverrides{
+			Addresses: []string{
+				constants.AliceAccAddress.String(),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
+	require.NoError(t, err)
+	require.Equal(t, uint32(len(types.DefaultAffiliateTiers.GetTiers())-1), tierLevel)
+	require.Equal(t, uint32(150_000), feeSharePpm)
+
+	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.CarlAccAddress.String())
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), tierLevel)
+	require.Equal(t, uint32(0), feeSharePpm)
+}

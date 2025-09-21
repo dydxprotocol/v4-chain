@@ -257,3 +257,31 @@ func TestAffiliateWhitelist(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, &types.AffiliateWhitelistResponse{Whitelist: whitelist}, res)
 }
+
+func TestAffiliateParameters(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	req := &types.AffiliateParametersRequest{}
+	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
+		Authority: constants.GovAuthority,
+		AffiliateParameters: &types.AffiliateParameters{
+			Maximum_30DAttributableRevenuePerAffiliate: 100,
+			RefereeMinimumFeeTierIdx:                   1,
+			Maximum_30DCommissionPerReferred:           100,
+		},
+		Tiers: &types.DefaultAffiliateTiers,
+		AffiliateOverrides: &types.AffiliateOverrides{
+			Addresses: []string{
+				constants.AliceAccAddress.String(),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	res, err := k.AffiliateParameters(ctx, req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, &types.AffiliateParametersResponse{Parameters: types.DefaultAffiliateParameters}, res)
+}

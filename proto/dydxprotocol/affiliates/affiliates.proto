@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.affiliates;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types";
@@ -33,4 +34,26 @@ message AffiliateWhitelist {
   }
   // All affiliate whitelist tiers.
   repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];
+}
+
+message AffiliateParameters {
+  // Maximum commission per referred user in a 30d rolling window in revenue
+  uint32 maximum_30d_commission_per_referred = 1
+      [ (gogoproto.nullable) = true ];
+
+  // Referee minimum fee tier index
+  uint32 referee_minimum_fee_tier_idx = 2 [ (gogoproto.nullable) = true ];
+
+  // Maximum attributable revenue per affiliate in a 30d rolling window in
+  // revenue
+  uint32 maximum_30d_attributable_revenue_per_affiliate = 3
+      [ (gogoproto.nullable) = true ];
+}
+
+// AffiliateOverrides defines the affiliate whitelist.
+message AffiliateOverrides {
+  // List of unique whitelisted addresses.
+  // These are automatically put at the maximum affiliate tier
+  repeated string addresses = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }

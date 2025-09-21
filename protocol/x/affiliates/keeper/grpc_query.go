@@ -103,3 +103,27 @@ func (k Keeper) AffiliateWhitelist(c context.Context,
 		Whitelist: affiliateWhitelist,
 	}, nil
 }
+
+func (k Keeper) AffiliateParameters(c context.Context,
+	req *types.AffiliateParametersRequest) (*types.AffiliateParametersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	affiliateParameters, err := k.GetAffiliateProgramParameters(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.AffiliateParametersResponse{Parameters: affiliateParameters}, nil
+}
+
+func (k Keeper) AffiliateOverrides(c context.Context,
+	req *types.AffiliateOverridesRequest) (*types.AffiliateOverridesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	affiliateOverrides, err := k.GetAffiliateOverrides(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.AffiliateOverridesResponse{Overrides: affiliateOverrides}, nil
+}

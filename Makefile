@@ -13,6 +13,14 @@ proto-gen:
 	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./protocol/scripts/protocgen.sh
 
+proto-gen-clean:
+	@echo "Cleaning old artifacts"
+	@rm -rf ./proto/.proto-export
+	@rm -rf ./.proto-export
+	@echo "Generating Protobuf files"
+	@$(protoImage) sh ./protocol/scripts/protocgen.sh
+	@cd proto && make proto-export-v4-proto-js
+
 proto-check-bc-breaking:
 	@rm -rf ./.proto-export
 	@$(protoImage) buf breaking --against .git#branch=$$(git merge-base HEAD origin/main)
