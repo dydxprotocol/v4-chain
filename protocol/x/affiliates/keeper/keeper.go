@@ -245,7 +245,7 @@ func (k Keeper) GetTierForAffiliate(
 	currentTier := uint32(0)
 
 	// Check whether the address is overridden, if it is then set the
-	// affilliate tier to the max
+	// affiliate tier to the max
 	affiliateOverrides, err := k.GetAllAffilliateOverrides(ctx)
 	if err != nil {
 		return 0, 0, err
