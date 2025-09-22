@@ -264,6 +264,54 @@ export interface QueryNextClobPairIdResponseSDKType {
   /** QueryNextClobPairIdResponse is a response message for the next clob pair id */
   next_clob_pair_id: number;
 }
+/** QueryLeverageRequest is a request message for Leverage. */
+
+export interface QueryLeverageRequest {
+  /** The address of the wallet that owns the subaccount. */
+  owner: string;
+  /** The unique number of the subaccount for the owner. */
+
+  number: number;
+}
+/** QueryLeverageRequest is a request message for Leverage. */
+
+export interface QueryLeverageRequestSDKType {
+  /** The address of the wallet that owns the subaccount. */
+  owner: string;
+  /** The unique number of the subaccount for the owner. */
+
+  number: number;
+}
+/** QueryLeverageResponse is a response message that contains the leverage map. */
+
+export interface QueryLeverageResponse {
+  /** List of perpetual leverage settings. */
+  perpetualLeverage: PerpetualLeverageInfo[];
+}
+/** QueryLeverageResponse is a response message that contains the leverage map. */
+
+export interface QueryLeverageResponseSDKType {
+  /** List of perpetual leverage settings. */
+  perpetual_leverage: PerpetualLeverageInfoSDKType[];
+}
+/** PerpetualLeverageInfo represents the leverage setting for a single perpetual. */
+
+export interface PerpetualLeverageInfo {
+  /** The perpetual ID. */
+  perpetualId: number;
+  /** The leverage amount. */
+
+  leverage: number;
+}
+/** PerpetualLeverageInfo represents the leverage setting for a single perpetual. */
+
+export interface PerpetualLeverageInfoSDKType {
+  /** The perpetual ID. */
+  perpetual_id: number;
+  /** The leverage amount. */
+
+  leverage: number;
+}
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
  * StreamOrderbookUpdates method.
@@ -1303,6 +1351,161 @@ export const QueryNextClobPairIdResponse = {
   fromPartial(object: DeepPartial<QueryNextClobPairIdResponse>): QueryNextClobPairIdResponse {
     const message = createBaseQueryNextClobPairIdResponse();
     message.nextClobPairId = object.nextClobPairId ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryLeverageRequest(): QueryLeverageRequest {
+  return {
+    owner: "",
+    number: 0
+  };
+}
+
+export const QueryLeverageRequest = {
+  encode(message: QueryLeverageRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.owner !== "") {
+      writer.uint32(10).string(message.owner);
+    }
+
+    if (message.number !== 0) {
+      writer.uint32(16).uint32(message.number);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryLeverageRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLeverageRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.owner = reader.string();
+          break;
+
+        case 2:
+          message.number = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryLeverageRequest>): QueryLeverageRequest {
+    const message = createBaseQueryLeverageRequest();
+    message.owner = object.owner ?? "";
+    message.number = object.number ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryLeverageResponse(): QueryLeverageResponse {
+  return {
+    perpetualLeverage: []
+  };
+}
+
+export const QueryLeverageResponse = {
+  encode(message: QueryLeverageResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.perpetualLeverage) {
+      PerpetualLeverageInfo.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryLeverageResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLeverageResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualLeverage.push(PerpetualLeverageInfo.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryLeverageResponse>): QueryLeverageResponse {
+    const message = createBaseQueryLeverageResponse();
+    message.perpetualLeverage = object.perpetualLeverage?.map(e => PerpetualLeverageInfo.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBasePerpetualLeverageInfo(): PerpetualLeverageInfo {
+  return {
+    perpetualId: 0,
+    leverage: 0
+  };
+}
+
+export const PerpetualLeverageInfo = {
+  encode(message: PerpetualLeverageInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
+    if (message.leverage !== 0) {
+      writer.uint32(16).uint32(message.leverage);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PerpetualLeverageInfo {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePerpetualLeverageInfo();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 2:
+          message.leverage = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<PerpetualLeverageInfo>): PerpetualLeverageInfo {
+    const message = createBasePerpetualLeverageInfo();
+    message.perpetualId = object.perpetualId ?? 0;
+    message.leverage = object.leverage ?? 0;
     return message;
   }
 

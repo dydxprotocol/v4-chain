@@ -382,6 +382,48 @@ export interface MsgUpdateLiquidationsConfigResponse {}
 /** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type. */
 
 export interface MsgUpdateLiquidationsConfigResponseSDKType {}
+/** LeverageEntry represents a single perpetual leverage setting. */
+
+export interface LeverageEntry {
+  /** The perpetual ID. */
+  perpetualId: number;
+  /** The leverage amount. */
+
+  leverage: number;
+}
+/** LeverageEntry represents a single perpetual leverage setting. */
+
+export interface LeverageEntrySDKType {
+  /** The perpetual ID. */
+  perpetual_id: number;
+  /** The leverage amount. */
+
+  leverage: number;
+}
+/** MsgUpdateLeverage is a request type used for updating leverage for perpetuals. */
+
+export interface MsgUpdateLeverage {
+  /** The subaccount that is updating leverage. */
+  subaccountId?: SubaccountId;
+  /** List of perpetual leverage settings. */
+
+  perpetualLeverage: LeverageEntry[];
+}
+/** MsgUpdateLeverage is a request type used for updating leverage for perpetuals. */
+
+export interface MsgUpdateLeverageSDKType {
+  /** The subaccount that is updating leverage. */
+  subaccount_id?: SubaccountIdSDKType;
+  /** List of perpetual leverage settings. */
+
+  perpetual_leverage: LeverageEntrySDKType[];
+}
+/** MsgUpdateLeverageResponse is a response type used for updating leverage. */
+
+export interface MsgUpdateLeverageResponse {}
+/** MsgUpdateLeverageResponse is a response type used for updating leverage. */
+
+export interface MsgUpdateLeverageResponseSDKType {}
 
 function createBaseMsgCreateClobPair(): MsgCreateClobPair {
   return {
@@ -1332,6 +1374,150 @@ export const MsgUpdateLiquidationsConfigResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateLiquidationsConfigResponse>): MsgUpdateLiquidationsConfigResponse {
     const message = createBaseMsgUpdateLiquidationsConfigResponse();
+    return message;
+  }
+
+};
+
+function createBaseLeverageEntry(): LeverageEntry {
+  return {
+    perpetualId: 0,
+    leverage: 0
+  };
+}
+
+export const LeverageEntry = {
+  encode(message: LeverageEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
+    if (message.leverage !== 0) {
+      writer.uint32(16).uint32(message.leverage);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LeverageEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLeverageEntry();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 2:
+          message.leverage = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LeverageEntry>): LeverageEntry {
+    const message = createBaseLeverageEntry();
+    message.perpetualId = object.perpetualId ?? 0;
+    message.leverage = object.leverage ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateLeverage(): MsgUpdateLeverage {
+  return {
+    subaccountId: undefined,
+    perpetualLeverage: []
+  };
+}
+
+export const MsgUpdateLeverage = {
+  encode(message: MsgUpdateLeverage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
+    }
+
+    for (const v of message.perpetualLeverage) {
+      LeverageEntry.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateLeverage {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateLeverage();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.perpetualLeverage.push(LeverageEntry.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateLeverage>): MsgUpdateLeverage {
+    const message = createBaseMsgUpdateLeverage();
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    message.perpetualLeverage = object.perpetualLeverage?.map(e => LeverageEntry.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateLeverageResponse(): MsgUpdateLeverageResponse {
+  return {};
+}
+
+export const MsgUpdateLeverageResponse = {
+  encode(_: MsgUpdateLeverageResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateLeverageResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateLeverageResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateLeverageResponse>): MsgUpdateLeverageResponse {
+    const message = createBaseMsgUpdateLeverageResponse();
     return message;
   }
 

@@ -69,7 +69,7 @@ service Query {
 
   // Queries leverage for a subaccount.
   rpc Leverage(QueryLeverageRequest) returns (QueryLeverageResponse) {
-    option (google.api.http).get = "/dydxprotocol/clob/leverage/{subaccount_id.owner}/{subaccount_id.number}";
+    option (google.api.http).get = "/dydxprotocol/clob/leverage/{owner}/{number}";
   }
 
   // GRPC Streams
@@ -182,14 +182,24 @@ message QueryNextClobPairIdResponse { uint32 next_clob_pair_id = 1; }
 
 // QueryLeverageRequest is a request message for Leverage.
 message QueryLeverageRequest {
-  // Subaccount to query leverage for.
-  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
+  // The address of the wallet that owns the subaccount.
+  string owner = 1;
+  // The unique number of the subaccount for the owner.
+  uint32 number = 2;
 }
 
 // QueryLeverageResponse is a response message that contains the leverage map.
 message QueryLeverageResponse {
-  // Map of perpetual ID to leverage amount.
-  map<uint32, uint32> perpetual_leverage = 1;
+  // List of perpetual leverage settings.
+  repeated PerpetualLeverageInfo perpetual_leverage = 1;
+}
+
+// PerpetualLeverageInfo represents the leverage setting for a single perpetual.
+message PerpetualLeverageInfo {
+  // The perpetual ID.
+  uint32 perpetual_id = 1;
+  // The leverage amount.
+  uint32 leverage = 2;
 }
 
 // StreamOrderbookUpdatesRequest is a request message for the
