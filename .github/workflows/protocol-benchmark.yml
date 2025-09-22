@@ -27,7 +27,7 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v3
         with:
-          go-version: 1.22
+          go-version: "1.24"
       - name: Prune Docker system to free up space
         run: |
           docker system prune -a --volumes -f
