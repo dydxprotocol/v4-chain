@@ -60,15 +60,6 @@ message UserStats {
 
   // Maker USDC in quantums
   uint64 maker_notional = 2;
-
-  // Taker fee generated in usd
-  uint64 taker_fee_generated = 3;
-
-  // Maker fee generated in usd
-  uint64 maker_fee_generated = 4;
-
-  // Affilliate revenue generated
-  uint64 referred_revenue = 5;
 }
 
 // CachedStakeAmount stores the last calculated total staked amount for address
