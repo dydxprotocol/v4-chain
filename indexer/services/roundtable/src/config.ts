@@ -165,8 +165,10 @@ export const configSchema = {
   UNCROSS_ORDERBOOK_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
   SUBACCOUNT_USERNAME_GENERATOR_LOCK_MULTIPLIER: parseInteger({ default: 5 }),
-  UPDATE_FUNDING_PAYMENTS_LOCK_MULTIPLIER: parseInteger({ default: 720 }),
-  UPDATE_PNL_LOCK_MULTIPLIER: parseInteger({ default: 720 }),
+  // for initial backfill of funding payments that processes from genesis, can configure this to be a higher value
+  UPDATE_FUNDING_PAYMENTS_LOCK_MULTIPLIER: parseInteger({ default: 3 }),
+  // for initial backfill of PNL that processes from genesis, can configure this to be a higher value
+  UPDATE_PNL_LOCK_MULTIPLIER: parseInteger({ default: 3 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
   MAX_CONCURRENT_RUNNING_TASKS: parseInteger({ default: 2 }),
