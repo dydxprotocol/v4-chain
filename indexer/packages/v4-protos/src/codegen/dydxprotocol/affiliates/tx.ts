@@ -1,4 +1,4 @@
-import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType } from "./affiliates";
+import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType, AffiliateParameters, AffiliateParametersSDKType, AffiliateOverrides, AffiliateOverridesSDKType } from "./affiliates";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to register a referee-affiliate relationship */
@@ -73,6 +73,36 @@ export interface MsgUpdateAffiliateWhitelistResponse {}
 /** Response to MsgUpdateAffiliateWhitelist */
 
 export interface MsgUpdateAffiliateWhitelistResponseSDKType {}
+/** Message to update affiliate program parameters */
+
+export interface MsgUpdateAffiliateProgramParametersRequest {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Affiliate program parameters */
+
+  affiliateParameters?: AffiliateParameters;
+  /** Affiliate Overrides */
+
+  affiliateOverrides?: AffiliateOverrides;
+}
+/** Message to update affiliate program parameters */
+
+export interface MsgUpdateAffiliateProgramParametersRequestSDKType {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Affiliate program parameters */
+
+  affiliate_parameters?: AffiliateParametersSDKType;
+  /** Affiliate Overrides */
+
+  affiliate_overrides?: AffiliateOverridesSDKType;
+}
+/** Response to MsgUpdateAffiliateProgramParameters */
+
+export interface MsgUpdateAffiliateProgramParametersResponse {}
+/** Response to MsgUpdateAffiliateProgramParameters */
+
+export interface MsgUpdateAffiliateProgramParametersResponseSDKType {}
 
 function createBaseMsgRegisterAffiliate(): MsgRegisterAffiliate {
   return {
@@ -336,6 +366,105 @@ export const MsgUpdateAffiliateWhitelistResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateAffiliateWhitelistResponse>): MsgUpdateAffiliateWhitelistResponse {
     const message = createBaseMsgUpdateAffiliateWhitelistResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateAffiliateProgramParametersRequest(): MsgUpdateAffiliateProgramParametersRequest {
+  return {
+    authority: "",
+    affiliateParameters: undefined,
+    affiliateOverrides: undefined
+  };
+}
+
+export const MsgUpdateAffiliateProgramParametersRequest = {
+  encode(message: MsgUpdateAffiliateProgramParametersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.affiliateParameters !== undefined) {
+      AffiliateParameters.encode(message.affiliateParameters, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.affiliateOverrides !== undefined) {
+      AffiliateOverrides.encode(message.affiliateOverrides, writer.uint32(26).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateProgramParametersRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateAffiliateProgramParametersRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.affiliateParameters = AffiliateParameters.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.affiliateOverrides = AffiliateOverrides.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateAffiliateProgramParametersRequest>): MsgUpdateAffiliateProgramParametersRequest {
+    const message = createBaseMsgUpdateAffiliateProgramParametersRequest();
+    message.authority = object.authority ?? "";
+    message.affiliateParameters = object.affiliateParameters !== undefined && object.affiliateParameters !== null ? AffiliateParameters.fromPartial(object.affiliateParameters) : undefined;
+    message.affiliateOverrides = object.affiliateOverrides !== undefined && object.affiliateOverrides !== null ? AffiliateOverrides.fromPartial(object.affiliateOverrides) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateAffiliateProgramParametersResponse(): MsgUpdateAffiliateProgramParametersResponse {
+  return {};
+}
+
+export const MsgUpdateAffiliateProgramParametersResponse = {
+  encode(_: MsgUpdateAffiliateProgramParametersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateProgramParametersResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateAffiliateProgramParametersResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateAffiliateProgramParametersResponse>): MsgUpdateAffiliateProgramParametersResponse {
+    const message = createBaseMsgUpdateAffiliateProgramParametersResponse();
     return message;
   }
 
