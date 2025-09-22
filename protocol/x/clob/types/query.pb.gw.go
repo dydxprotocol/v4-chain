@@ -229,10 +229,6 @@ func local_request_Query_NextClobPairId_0(ctx context.Context, marshaler runtime
 
 }
 
-var (
-	filter_Query_Leverage_0 = &utilities.DoubleArray{Encoding: map[string]int{"subaccount_id": 0, "owner": 1, "number": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
-)
-
 func request_Query_Leverage_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryLeverageRequest
 	var metadata runtime.ServerMetadata
@@ -244,33 +240,26 @@ func request_Query_Leverage_0(ctx context.Context, marshaler runtime.Marshaler, 
 		_   = err
 	)
 
-	val, ok = pathParams["subaccount_id.owner"]
+	val, ok = pathParams["owner"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "subaccount_id.owner")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "subaccount_id.owner", val)
+	protoReq.Owner, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "subaccount_id.owner", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner", err)
 	}
 
-	val, ok = pathParams["subaccount_id.number"]
+	val, ok = pathParams["number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "subaccount_id.number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "number")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "subaccount_id.number", val)
+	protoReq.Number, err = runtime.Uint32(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "subaccount_id.number", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_Leverage_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "number", err)
 	}
 
 	msg, err := client.Leverage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -289,33 +278,26 @@ func local_request_Query_Leverage_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["subaccount_id.owner"]
+	val, ok = pathParams["owner"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "subaccount_id.owner")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "subaccount_id.owner", val)
+	protoReq.Owner, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "subaccount_id.owner", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner", err)
 	}
 
-	val, ok = pathParams["subaccount_id.number"]
+	val, ok = pathParams["number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "subaccount_id.number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "number")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "subaccount_id.number", val)
+	protoReq.Number, err = runtime.Uint32(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "subaccount_id.number", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_Leverage_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "number", err)
 	}
 
 	msg, err := server.Leverage(ctx, &protoReq)
@@ -732,7 +714,7 @@ var (
 
 	pattern_Query_NextClobPairId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "clob", "next_clob_pair_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Leverage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"dydxprotocol", "clob", "leverage", "subaccount_id.owner", "subaccount_id.number"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Leverage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"dydxprotocol", "clob", "leverage", "owner", "number"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
