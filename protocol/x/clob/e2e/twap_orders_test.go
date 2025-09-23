@@ -385,7 +385,7 @@ func TestTWAPOrderWithMatchingOrdersWhereTWAPOrderIsMaker(t *testing.T) {
 		},
 	}
 
-	// Place the TWAP order
+	// Place the TWAP order so the first suborder is resting on the book
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 		ctx,
 		tApp.App,
@@ -404,7 +404,7 @@ func TestTWAPOrderWithMatchingOrdersWhereTWAPOrderIsMaker(t *testing.T) {
 
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-	// Place market order first and then TWAP order
+	// Place market order sell order as a taker order
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 		ctx,
 		tApp.App,
