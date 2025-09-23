@@ -364,6 +364,27 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 	}
 }
 
+func BenchmarkGetAdjustedInitialMarginPpm(b *testing.B) {
+	openInterestLowerCap := uint64(1_000_000)
+	openInterestUpperCap := uint64(2_000_000)
+	openInterestMiddle := (openInterestLowerCap + openInterestUpperCap) / 2
+	liquidityTier := &types.LiquidityTier{
+		OpenInterestLowerCap: openInterestLowerCap,
+		OpenInterestUpperCap: openInterestUpperCap,
+		InitialMarginPpm:     200_000, // 20%
+	}
+	oiLower := new(big.Int).SetUint64(openInterestLowerCap)
+	oiUpper := new(big.Int).SetUint64(openInterestUpperCap)
+	oiMiddle := new(big.Int).SetUint64(openInterestMiddle)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = liquidityTier.GetAdjustedInitialMarginPpm(oiLower)
+		_ = liquidityTier.GetAdjustedInitialMarginPpm(oiUpper)
+		_ = liquidityTier.GetAdjustedInitialMarginPpm(oiMiddle)
+	}
+}
+
 func TestGetAdjustedInitialMarginPpm(t *testing.T) {
 	tests := map[string]struct {
 		initialMarginPpm     uint32
