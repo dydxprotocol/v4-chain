@@ -75,34 +75,48 @@ export interface MsgUpdateAffiliateWhitelistResponse {}
 export interface MsgUpdateAffiliateWhitelistResponseSDKType {}
 /** Message to update affiliate program parameters */
 
-export interface MsgUpdateAffiliateProgramParametersRequest {
+export interface MsgUpdateAffiliateParametersRequest {
   /** Authority sending this message. Will be sent by gov */
   authority: string;
   /** Affiliate program parameters */
 
   affiliateParameters?: AffiliateParameters;
-  /** Affiliate Overrides */
-
-  affiliateOverrides?: AffiliateOverrides;
 }
 /** Message to update affiliate program parameters */
 
-export interface MsgUpdateAffiliateProgramParametersRequestSDKType {
+export interface MsgUpdateAffiliateParametersRequestSDKType {
   /** Authority sending this message. Will be sent by gov */
   authority: string;
   /** Affiliate program parameters */
 
   affiliate_parameters?: AffiliateParametersSDKType;
+}
+/** Response to MsgUpdateAffiliateParameters */
+
+export interface MsgUpdateAffiliateParametersResponse {}
+/** Response to MsgUpdateAffiliateParameters */
+
+export interface MsgUpdateAffiliateParametersResponseSDKType {}
+export interface MsgUpdateAffiliateOverrides {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Affiliate Overrides */
+
+  affiliateOverrides?: AffiliateOverrides;
+}
+export interface MsgUpdateAffiliateOverridesSDKType {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
   /** Affiliate Overrides */
 
   affiliate_overrides?: AffiliateOverridesSDKType;
 }
-/** Response to MsgUpdateAffiliateProgramParameters */
+/** Response to MsgUpdateAffiliateOverrides */
 
-export interface MsgUpdateAffiliateProgramParametersResponse {}
-/** Response to MsgUpdateAffiliateProgramParameters */
+export interface MsgUpdateAffiliateOverridesResponse {}
+/** Response to MsgUpdateAffiliateOverrides */
 
-export interface MsgUpdateAffiliateProgramParametersResponseSDKType {}
+export interface MsgUpdateAffiliateOverridesResponseSDKType {}
 
 function createBaseMsgRegisterAffiliate(): MsgRegisterAffiliate {
   return {
@@ -371,16 +385,15 @@ export const MsgUpdateAffiliateWhitelistResponse = {
 
 };
 
-function createBaseMsgUpdateAffiliateProgramParametersRequest(): MsgUpdateAffiliateProgramParametersRequest {
+function createBaseMsgUpdateAffiliateParametersRequest(): MsgUpdateAffiliateParametersRequest {
   return {
     authority: "",
-    affiliateParameters: undefined,
-    affiliateOverrides: undefined
+    affiliateParameters: undefined
   };
 }
 
-export const MsgUpdateAffiliateProgramParametersRequest = {
-  encode(message: MsgUpdateAffiliateProgramParametersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgUpdateAffiliateParametersRequest = {
+  encode(message: MsgUpdateAffiliateParametersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.authority !== "") {
       writer.uint32(10).string(message.authority);
     }
@@ -389,17 +402,13 @@ export const MsgUpdateAffiliateProgramParametersRequest = {
       AffiliateParameters.encode(message.affiliateParameters, writer.uint32(18).fork()).ldelim();
     }
 
-    if (message.affiliateOverrides !== undefined) {
-      AffiliateOverrides.encode(message.affiliateOverrides, writer.uint32(26).fork()).ldelim();
-    }
-
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateProgramParametersRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateParametersRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgUpdateAffiliateProgramParametersRequest();
+    const message = createBaseMsgUpdateAffiliateParametersRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -413,10 +422,6 @@ export const MsgUpdateAffiliateProgramParametersRequest = {
           message.affiliateParameters = AffiliateParameters.decode(reader, reader.uint32());
           break;
 
-        case 3:
-          message.affiliateOverrides = AffiliateOverrides.decode(reader, reader.uint32());
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -426,29 +431,28 @@ export const MsgUpdateAffiliateProgramParametersRequest = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgUpdateAffiliateProgramParametersRequest>): MsgUpdateAffiliateProgramParametersRequest {
-    const message = createBaseMsgUpdateAffiliateProgramParametersRequest();
+  fromPartial(object: DeepPartial<MsgUpdateAffiliateParametersRequest>): MsgUpdateAffiliateParametersRequest {
+    const message = createBaseMsgUpdateAffiliateParametersRequest();
     message.authority = object.authority ?? "";
     message.affiliateParameters = object.affiliateParameters !== undefined && object.affiliateParameters !== null ? AffiliateParameters.fromPartial(object.affiliateParameters) : undefined;
-    message.affiliateOverrides = object.affiliateOverrides !== undefined && object.affiliateOverrides !== null ? AffiliateOverrides.fromPartial(object.affiliateOverrides) : undefined;
     return message;
   }
 
 };
 
-function createBaseMsgUpdateAffiliateProgramParametersResponse(): MsgUpdateAffiliateProgramParametersResponse {
+function createBaseMsgUpdateAffiliateParametersResponse(): MsgUpdateAffiliateParametersResponse {
   return {};
 }
 
-export const MsgUpdateAffiliateProgramParametersResponse = {
-  encode(_: MsgUpdateAffiliateProgramParametersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgUpdateAffiliateParametersResponse = {
+  encode(_: MsgUpdateAffiliateParametersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateProgramParametersResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateParametersResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgUpdateAffiliateProgramParametersResponse();
+    const message = createBaseMsgUpdateAffiliateParametersResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -463,8 +467,97 @@ export const MsgUpdateAffiliateProgramParametersResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgUpdateAffiliateProgramParametersResponse>): MsgUpdateAffiliateProgramParametersResponse {
-    const message = createBaseMsgUpdateAffiliateProgramParametersResponse();
+  fromPartial(_: DeepPartial<MsgUpdateAffiliateParametersResponse>): MsgUpdateAffiliateParametersResponse {
+    const message = createBaseMsgUpdateAffiliateParametersResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateAffiliateOverrides(): MsgUpdateAffiliateOverrides {
+  return {
+    authority: "",
+    affiliateOverrides: undefined
+  };
+}
+
+export const MsgUpdateAffiliateOverrides = {
+  encode(message: MsgUpdateAffiliateOverrides, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.affiliateOverrides !== undefined) {
+      AffiliateOverrides.encode(message.affiliateOverrides, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateOverrides {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateAffiliateOverrides();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.affiliateOverrides = AffiliateOverrides.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateAffiliateOverrides>): MsgUpdateAffiliateOverrides {
+    const message = createBaseMsgUpdateAffiliateOverrides();
+    message.authority = object.authority ?? "";
+    message.affiliateOverrides = object.affiliateOverrides !== undefined && object.affiliateOverrides !== null ? AffiliateOverrides.fromPartial(object.affiliateOverrides) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateAffiliateOverridesResponse(): MsgUpdateAffiliateOverridesResponse {
+  return {};
+}
+
+export const MsgUpdateAffiliateOverridesResponse = {
+  encode(_: MsgUpdateAffiliateOverridesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateOverridesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateAffiliateOverridesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateAffiliateOverridesResponse>): MsgUpdateAffiliateOverridesResponse {
+    const message = createBaseMsgUpdateAffiliateOverridesResponse();
     return message;
   }
 

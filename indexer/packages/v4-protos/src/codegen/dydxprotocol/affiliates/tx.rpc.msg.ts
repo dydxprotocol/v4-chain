@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse, MsgUpdateAffiliateProgramParametersRequest, MsgUpdateAffiliateProgramParametersResponse } from "./tx";
+import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse, MsgUpdateAffiliateParametersRequest, MsgUpdateAffiliateParametersResponse, MsgUpdateAffiliateOverrides, MsgUpdateAffiliateOverridesResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -12,9 +12,12 @@ export interface Msg {
   /** UpdateAffiliateWhitelist updates affiliate whitelist */
 
   updateAffiliateWhitelist(request: MsgUpdateAffiliateWhitelist): Promise<MsgUpdateAffiliateWhitelistResponse>;
-  /** UpdateAffiliateProgramParameters updates affiliate program parameters */
+  /** UpdateAffiliateParameters updates affiliate program parameters */
 
-  updateAffiliateProgramParameters(request: MsgUpdateAffiliateProgramParametersRequest): Promise<MsgUpdateAffiliateProgramParametersResponse>;
+  updateAffiliateParameters(request: MsgUpdateAffiliateParametersRequest): Promise<MsgUpdateAffiliateParametersResponse>;
+  /** UpdateAffiliateOverrides updates affiliate overrides */
+
+  updateAffiliateOverrides(request: MsgUpdateAffiliateOverrides): Promise<MsgUpdateAffiliateOverridesResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -24,7 +27,8 @@ export class MsgClientImpl implements Msg {
     this.registerAffiliate = this.registerAffiliate.bind(this);
     this.updateAffiliateTiers = this.updateAffiliateTiers.bind(this);
     this.updateAffiliateWhitelist = this.updateAffiliateWhitelist.bind(this);
-    this.updateAffiliateProgramParameters = this.updateAffiliateProgramParameters.bind(this);
+    this.updateAffiliateParameters = this.updateAffiliateParameters.bind(this);
+    this.updateAffiliateOverrides = this.updateAffiliateOverrides.bind(this);
   }
 
   registerAffiliate(request: MsgRegisterAffiliate): Promise<MsgRegisterAffiliateResponse> {
@@ -45,10 +49,16 @@ export class MsgClientImpl implements Msg {
     return promise.then(data => MsgUpdateAffiliateWhitelistResponse.decode(new _m0.Reader(data)));
   }
 
-  updateAffiliateProgramParameters(request: MsgUpdateAffiliateProgramParametersRequest): Promise<MsgUpdateAffiliateProgramParametersResponse> {
-    const data = MsgUpdateAffiliateProgramParametersRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateProgramParameters", data);
-    return promise.then(data => MsgUpdateAffiliateProgramParametersResponse.decode(new _m0.Reader(data)));
+  updateAffiliateParameters(request: MsgUpdateAffiliateParametersRequest): Promise<MsgUpdateAffiliateParametersResponse> {
+    const data = MsgUpdateAffiliateParametersRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateParameters", data);
+    return promise.then(data => MsgUpdateAffiliateParametersResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateAffiliateOverrides(request: MsgUpdateAffiliateOverrides): Promise<MsgUpdateAffiliateOverridesResponse> {
+    const data = MsgUpdateAffiliateOverrides.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateOverrides", data);
+    return promise.then(data => MsgUpdateAffiliateOverridesResponse.decode(new _m0.Reader(data)));
   }
 
 }
