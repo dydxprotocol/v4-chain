@@ -385,7 +385,7 @@ func (k Keeper) GetAffiliateWhitelist(ctx sdk.Context) (types.AffiliateWhitelist
 
 func (k Keeper) UpdateAffiliateParameters(
 	ctx sdk.Context,
-	msg *types.MsgUpdateAffiliateParametersRequest,
+	msg *types.MsgUpdateAffiliateParameters,
 ) error {
 	store := ctx.KVStore(k.storeKey)
 

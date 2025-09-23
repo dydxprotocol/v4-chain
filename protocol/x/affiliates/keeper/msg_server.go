@@ -61,7 +61,7 @@ func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
 }
 
 func (k msgServer) UpdateAffiliateParameters(ctx context.Context,
-	msg *types.MsgUpdateAffiliateParametersRequest) (*types.MsgUpdateAffiliateParametersResponse, error) {
+	msg *types.MsgUpdateAffiliateParameters) (*types.MsgUpdateAffiliateParametersResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errors.New("invalid authority")
 	}
@@ -75,7 +75,7 @@ func (k msgServer) UpdateAffiliateParameters(ctx context.Context,
 }
 
 func (k msgServer) UpdateAffiliateOverrides(ctx context.Context,
-	msg *types.MsgUpdateAffiliateOverridesRequest) (*types.MsgUpdateAffiliateOverridesResponse, error) {
+	msg *types.MsgUpdateAffiliateOverrides) (*types.MsgUpdateAffiliateOverridesResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errors.New("invalid authority")
 	}

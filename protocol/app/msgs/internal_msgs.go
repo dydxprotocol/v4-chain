@@ -114,9 +114,9 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":      nil,
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":          &affiliates.MsgUpdateAffiliateWhitelist{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":  nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersRequest":  &affiliates.MsgUpdateAffiliateParametersRequest{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateParameters":         &affiliates.MsgUpdateAffiliateParameters{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse": nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesRequest":   &affiliates.MsgUpdateAffiliateOverridesRequest{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides":          &affiliates.MsgUpdateAffiliateOverrides{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse":  nil,
 
 		// accountplus

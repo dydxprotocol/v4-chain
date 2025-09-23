@@ -853,7 +853,7 @@ func TestUpdateAffiliateParameters(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	err := k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParametersRequest{
+	err := k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 		Authority:           constants.GovAuthority,
 		AffiliateParameters: types.DefaultAffiliateParameters,
 	})

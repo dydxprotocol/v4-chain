@@ -157,7 +157,7 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":      {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":          {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":  {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersRequest":  {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateParameters":         {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse": {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides":          {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse":  {},
