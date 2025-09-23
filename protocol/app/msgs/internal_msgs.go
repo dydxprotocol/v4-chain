@@ -110,10 +110,12 @@ var (
 	// Custom modules
 	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
 		// affiliates
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":             &affiliates.MsgUpdateAffiliateTiers{},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         &affiliates.MsgUpdateAffiliateWhitelist{},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":                     &affiliates.MsgUpdateAffiliateTiers{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":             nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":                 &affiliates.MsgUpdateAffiliateWhitelist{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":         nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersRequest":  &affiliates.MsgUpdateAffiliateProgramParametersRequest{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersResponse": nil,
 
 		// accountplus
 		"/dydxprotocol.accountplus.MsgSetActiveState":         &accountplus.MsgSetActiveState{},
