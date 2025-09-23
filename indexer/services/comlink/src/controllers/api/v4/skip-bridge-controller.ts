@@ -498,35 +498,6 @@ class BridgeController extends Controller {
       },
     });
 
-    // Create bridge information record before sending the transaction
-    const bridgeRecord: BridgeInformationCreateObject = {
-      from_address: fromAddress,
-      chain_id: chainId,
-      amount,
-      created_at: new Date().toISOString(),
-    };
-
-    let bridgeRecordId: string | undefined;
-    try {
-      const createdRecord = await BridgeInformationTable.create(bridgeRecord);
-      bridgeRecordId = createdRecord.id;
-      logger.info({
-        at: `${controllerName}#startEvmBridge`,
-        message: 'Bridge information record created',
-        bridgeRecordId,
-        fromAddress,
-        chainId,
-        amount,
-      });
-    } catch (error) {
-      logger.error({
-        at: `${controllerName}#startEvmBridge`,
-        message: 'Failed to create bridge information record',
-        error,
-      });
-      // Continue with bridge operation even if tracking fails
-    }
-
     // sending the userop to chain via zerodev kernel.
     try {
       const encoded = await kernelClient.account.encodeCalls(callData);
@@ -549,28 +520,31 @@ class BridgeController extends Controller {
       });
 
       // Update bridge information record with transaction hash
-      if (bridgeRecordId) {
-        try {
-          await BridgeInformationTable.updateTransactionHash(
-            bridgeRecordId,
-            receipt.transactionHash,
-          );
-          logger.info({
-            at: `${controllerName}#startEvmBridge`,
-            message: 'Bridge information record updated with transaction hash',
-            bridgeRecordId,
-            transactionHash: receipt.transactionHash,
-          });
-        } catch (error) {
-          logger.error({
-            at: `${controllerName}#startEvmBridge`,
-            message: 'Failed to update bridge information record with transaction hash',
-            bridgeRecordId,
-            transactionHash: receipt.transactionHash,
-            error,
-          });
-          // Don't throw error here as the bridge operation was successful
-        }
+      try {
+        // Create bridge information record before sending the transaction
+        const bridgeRecord: BridgeInformationCreateObject = {
+          from_address: fromAddress,
+          chain_id: chainId,
+          amount,
+          transaction_hash: receipt.transactionHash,
+          created_at: new Date().toISOString(),
+        };
+        await BridgeInformationTable.create(
+          bridgeRecord,
+        );
+        logger.info({
+          at: `${controllerName}#startEvmBridge`,
+          message: 'Bridge information record created',
+          transactionHash: receipt.transactionHash,
+        });
+      } catch (error) {
+        logger.error({
+          at: `${controllerName}#startEvmBridge`,
+          message: 'Failed to create bridge information record',
+          transactionHash: receipt.transactionHash,
+          error,
+        });
+        // Don't throw error here as the bridge operation was successful
       }
     } catch (error) {
       logger.error({
