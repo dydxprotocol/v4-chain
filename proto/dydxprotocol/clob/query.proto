@@ -69,7 +69,8 @@ service Query {
 
   // Queries leverage for a subaccount.
   rpc Leverage(QueryLeverageRequest) returns (QueryLeverageResponse) {
-    option (google.api.http).get = "/dydxprotocol/clob/leverage/{owner}/{number}";
+    option (google.api.http).get =
+        "/dydxprotocol/clob/leverage/{owner}/{number}";
   }
 
   // GRPC Streams

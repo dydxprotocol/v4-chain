@@ -47,7 +47,8 @@ service Msg {
   // UpdateLiquidationsConfig updates the liquidations configuration in state.
   rpc UpdateLiquidationsConfig(MsgUpdateLiquidationsConfig)
       returns (MsgUpdateLiquidationsConfigResponse);
-  // UpdateLeverage allows accounts to update their desired leverage for perpetuals.
+  // UpdateLeverage allows accounts to update their desired leverage for
+  // perpetuals.
   rpc UpdateLeverage(MsgUpdateLeverage) returns (MsgUpdateLeverageResponse);
 }
 
@@ -222,13 +223,14 @@ message LeverageEntry {
   uint32 leverage = 2;
 }
 
-// MsgUpdateLeverage is a request type used for updating leverage for perpetuals.
+// MsgUpdateLeverage is a request type used for updating leverage for
+// perpetuals.
 message MsgUpdateLeverage {
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
   // The subaccount that is updating leverage.
   dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
-  
+
   // List of perpetual leverage settings.
   repeated LeverageEntry perpetual_leverage = 2;
 }
