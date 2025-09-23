@@ -38,6 +38,12 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/affiliates/affiliate_parameters";
   };
+  // Query AffiliateOverrides returns the affiliate overrides.
+  rpc AffiliateOverrides(AffiliateOverridesRequest)
+      returns (AffiliateOverridesResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/affiliate_overrides";
+  };
 }
 
 // AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC

@@ -110,12 +110,14 @@ var (
 	// Custom modules
 	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
 		// affiliates
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":                     &affiliates.MsgUpdateAffiliateTiers{},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":             nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":                 &affiliates.MsgUpdateAffiliateWhitelist{},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":         nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersRequest":  &affiliates.MsgUpdateAffiliateProgramParametersRequest{}, // nolint:lll
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersResponse": nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":              &affiliates.MsgUpdateAffiliateTiers{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":      nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":          &affiliates.MsgUpdateAffiliateWhitelist{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":  nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersRequest":  &affiliates.MsgUpdateAffiliateParametersRequest{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse": nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides":          &affiliates.MsgUpdateAffiliateOverrides{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse":  nil,
 
 		// accountplus
 		"/dydxprotocol.accountplus.MsgSetActiveState":         &accountplus.MsgSetActiveState{},
