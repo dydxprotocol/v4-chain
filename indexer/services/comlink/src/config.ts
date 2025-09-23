@@ -91,6 +91,7 @@ export const configSchema = {
   CACHE_CONTROL_DIRECTIVE_TRADES: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_TRANSFERS: parseString({ default: 'public, max-age=1' }),
   CACHE_CONTROL_DIRECTIVE_VAULTS: parseString({ default: 'public, max-age=10' }),
+  CACHE_CONTROL_DIRECTIVE_PNL: parseString({ default: 'public, max-age=10' }),
 
   // Turnkey
 

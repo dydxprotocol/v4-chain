@@ -150,20 +150,20 @@ async function handleLimitAndPagination(
   let query = baseQuery;
 
   /**
-     * If a query is made using a page number, then the limit property is used as 'page limit'
-     */
+   * If a query is made using a page number, then the limit property is used as 'page limit'
+   */
   if (page !== undefined && limit !== undefined) {
     /**
-         * We make sure that the page number is always >= 1
-         */
+     * We make sure that the page number is always >= 1
+     */
     const currentPage: number = Math.max(1, page);
     const offset: number = (currentPage - 1) * limit;
 
     /**
-         * Ensure sorting is applied to maintain consistent pagination results.
-         * Also a casting of the ts type is required since the infer of the type
-         * obtained from the count is not performed.
-         */
+     * Ensure sorting is applied to maintain consistent pagination results.
+     * Also a casting of the ts type is required since the infer of the type
+     * obtained from the count is not performed.
+     */
     const count: { count?: string } = (await query
       .clone()
       .clearOrder()
@@ -187,6 +187,114 @@ async function handleLimitAndPagination(
   }
 
   const results = (await query) as PnlFromDatabase[];
+  return {
+    results,
+  };
+}
+
+export async function findAllDailyPnl(
+  {
+    limit,
+    subaccountId,
+    createdBeforeOrAtHeight,
+    createdBeforeOrAt,
+    createdOnOrAfterHeight,
+    createdOnOrAfter,
+    page,
+    parentSubaccount,
+  }: PnlQueryConfig,
+  requiredFields: QueryableField[],
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<PaginationFromDatabase<PnlFromDatabase>> {
+  if (parentSubaccount !== undefined && subaccountId !== undefined) {
+    throw new Error('Cannot specify both parentSubaccount and subaccountId');
+  }
+  
+  verifyAllRequiredFields(
+    {
+      limit,
+      subaccountId,
+      createdBeforeOrAtHeight,
+      createdBeforeOrAt,
+      createdOnOrAfterHeight,
+      createdOnOrAfter,
+      page,
+      parentSubaccount,
+    } as QueryConfig,
+    requiredFields,
+  );
+  
+  let baseQuery: QueryBuilder<PnlModel> = setupBaseQuery<PnlModel>(
+    PnlModel,
+    options,
+  );
+  
+  if (subaccountId !== undefined) {
+    baseQuery = baseQuery.whereIn(PnlColumns.subaccountId, subaccountId);
+  } else if (parentSubaccount !== undefined) {
+    baseQuery = baseQuery.whereIn(
+      PnlColumns.subaccountId,
+      getSubaccountQueryForParent(parentSubaccount),
+    );
+  }
+
+  if (createdBeforeOrAtHeight !== undefined) {
+    baseQuery = baseQuery.where(
+      PnlColumns.createdAtHeight,
+      '<=',
+      createdBeforeOrAtHeight,
+    );
+  }
+  
+  if (createdBeforeOrAt !== undefined) {
+    baseQuery = baseQuery.where(PnlColumns.createdAt, '<=', createdBeforeOrAt);
+  }
+  
+  if (createdOnOrAfterHeight !== undefined) {
+    baseQuery = baseQuery.where(
+      PnlColumns.createdAtHeight,
+      '>=',
+      createdOnOrAfterHeight,
+    );
+  }
+  
+  if (createdOnOrAfter !== undefined) {
+    baseQuery = baseQuery.where(PnlColumns.createdAt, '>=', createdOnOrAfter);
+  }
+  
+  baseQuery = baseQuery.orderBy(
+    PnlColumns.subaccountId,
+    Ordering.ASC,
+  ).orderBy(
+    PnlColumns.createdAtHeight,
+    Ordering.DESC,
+  );
+
+  const allRecords: PnlFromDatabase[] = await baseQuery;
+  
+  // Filter to get daily records (every 24th record)
+  const dailyRecords = allRecords.filter((_, index) => index === 0 || index % 24 === 0);
+  
+  // Apply pagination
+  const totalDailyRecords = dailyRecords.length;
+  let results = dailyRecords;
+  if (page !== undefined && limit !== undefined) {
+    // Ensure page is at least 1
+    const currentPage: number = Math.max(1, page);
+    const offset: number = (currentPage - 1) * limit;
+    
+    results = dailyRecords.slice(offset, offset + limit);
+    
+    return {
+      results,
+      limit,
+      offset,
+      total: totalDailyRecords,
+    };
+  } else if (limit !== undefined) {
+    results = dailyRecords.slice(0, limit);
+  }
+  
   return {
     results,
   };

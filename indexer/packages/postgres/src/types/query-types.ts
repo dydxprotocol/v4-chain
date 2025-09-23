@@ -105,6 +105,7 @@ export enum QueryableField {
   SVM_ADDRESS = 'svm_address',
   EVM_ADDRESS = 'evm_address',
   DYDX_ADDRESS = 'dydx_address',
+  DAY = 'day',
 }
 
 export interface QueryConfig {

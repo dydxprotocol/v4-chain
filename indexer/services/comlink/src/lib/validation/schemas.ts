@@ -206,6 +206,12 @@ const checkZeroPaymentsOptionalParamSchema: ParamSchema = {
   isBoolean: true,
 };
 
+const checkDailyOptionalParamSchema: ParamSchema = {
+  in: 'query',
+  optional: true,
+  isBoolean: true,
+};
+
 const checkBridgeSchema: Record<string, ParamSchema> = {
   // Validate the event object structure
   event: {
@@ -397,6 +403,10 @@ export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
 
 export const CheckZeroPaymentsOptionalParamSchema = checkSchema({
   showZeroPayments: checkZeroPaymentsOptionalParamSchema,
+});
+
+export const CheckDailyOptionalSchema = checkSchema({
+  daily: checkDailyOptionalParamSchema,
 });
 
 export const CheckTickerParamSchema = checkSchema({

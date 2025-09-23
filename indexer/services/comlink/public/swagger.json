@@ -1315,6 +1315,61 @@
         "type": "object",
         "additionalProperties": false
       },
+      "PnlResponseObject": {
+        "properties": {
+          "equity": {
+            "type": "string"
+          },
+          "netTransfers": {
+            "type": "string"
+          },
+          "totalPnl": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "equity",
+          "netTransfers",
+          "totalPnl",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PnlResponse": {
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalResults": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "pnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -3511,6 +3566,103 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/pnl": {
+      "get": {
+        "operationId": "GetPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfterHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "daily",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ]

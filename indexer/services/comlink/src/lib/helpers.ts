@@ -25,6 +25,7 @@ import {
   AssetColumns,
   MarketColumns,
   VaultFromDatabase, VaultTable, perpetualMarketRefresher,
+  PnlFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -38,6 +39,7 @@ import {
   subaccountToResponseObject,
 } from '../request-helpers/request-transformer';
 import {
+  AggregatedPnl,
   AggregatedPnlTick,
   AssetById,
   AssetPositionResponseObject,
@@ -734,6 +736,54 @@ export function aggregateHourlyPnlTicks(
     return {
       pnlTick: hourlyPnlTicks.get(hour) as PnlTicksFromDatabase,
       numTicks: (hourlySubaccountIds.get(hour) as Set<string>).size,
+    };
+  });
+}
+
+/**
+ * Aggregates a list of PnL, combining any PnL values for the same hour by summing
+ * the equity, totalPnl, and net transfers.
+ * Returns a map of aggregated pnl and the number of data points is made up of.
+ * @param allPnls
+ * @returns
+ */
+export function aggregateHourlyPnl(
+  allPnls: PnlFromDatabase[],
+): AggregatedPnl[] {
+  const hourlyPnl: Map<string, PnlFromDatabase> = new Map();
+  const hourlySubaccountIds: Map<string, Set<string>> = new Map();
+  for (const pnl of allPnls) {
+    const truncatedTime: string = DateTime.fromISO(pnl.createdAt).startOf('hour').toISO();
+    if (hourlyPnl.has(truncatedTime)) {
+      const subaccountIds: Set<string> = hourlySubaccountIds.get(truncatedTime) as Set<string>;
+      if (subaccountIds.has(pnl.subaccountId)) {
+        continue;
+      }
+      subaccountIds.add(pnl.subaccountId);
+      const aggregatedPnl: PnlFromDatabase = hourlyPnl.get(
+        truncatedTime,
+      ) as PnlFromDatabase;
+      hourlyPnl.set(
+        truncatedTime,
+        {
+          ...aggregatedPnl,
+          equity: (parseFloat(aggregatedPnl.equity) + parseFloat(pnl.equity)).toString(),
+          totalPnl: (parseFloat(aggregatedPnl.totalPnl) + parseFloat(pnl.totalPnl)).toString(),
+          netTransfers: (
+            parseFloat(aggregatedPnl.netTransfers) + parseFloat(pnl.netTransfers)
+          ).toString(),
+        },
+      );
+      hourlySubaccountIds.set(truncatedTime, subaccountIds);
+    } else {
+      hourlyPnl.set(truncatedTime, pnl);
+      hourlySubaccountIds.set(truncatedTime, new Set([pnl.subaccountId]));
+    }
+  }
+  return Array.from(hourlyPnl.keys()).map((hour: string): AggregatedPnl => {
+    return {
+      pnl: hourlyPnl.get(hour) as PnlFromDatabase,
+      numPnls: (hourlySubaccountIds.get(hour) as Set<string>).size,
     };
   });
 }

@@ -18,6 +18,7 @@ import {
   PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PnlFromDatabase,
   PnlTickInterval,
   PnlTicksFromDatabase,
   PositionSide,
@@ -522,6 +523,15 @@ export interface ParentSubaccountPnlTicksRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
 }
 
+export interface PnlRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {
+  daily?: boolean,
+}
+
+export interface ParentSubaccountPnlRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
+}
+
 export interface OrderbookRequest {
   ticker: string,
 }
@@ -827,4 +837,23 @@ export enum SigninMethod {
   EMAIL = 'email',
   SOCIAL = 'social',
   PASSKEY = 'passkey',
+}
+
+/* ------- PNL TYPES ------- */
+
+export interface PnlResponse extends PaginationResponse {
+  pnl: PnlResponseObject[],
+}
+
+export interface PnlResponseObject {
+  equity: string,
+  netTransfers: string,
+  totalPnl: string,
+  createdAt: string,
+  createdAtHeight: string,
+}
+
+export interface AggregatedPnl{
+  pnl: PnlFromDatabase,
+  numPnls: number,
 }
