@@ -114,7 +114,7 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":             nil,
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":                 &affiliates.MsgUpdateAffiliateWhitelist{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":         nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersRequest":  &affiliates.MsgUpdateAffiliateProgramParametersRequest{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersRequest":  &affiliates.MsgUpdateAffiliateProgramParametersRequest{}, // nolint:lll
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateProgramParametersResponse": nil,
 
 		// accountplus
