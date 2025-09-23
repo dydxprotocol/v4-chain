@@ -848,15 +848,12 @@ func TestGetTierForAffiliateEmptyTiers(t *testing.T) {
 	require.Equal(t, uint32(0), feeSharePpm)
 }
 
-func TestUpdateAffiliateTiersParameters(t *testing.T) {
+func TestUpdateAffiliateParameters(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
-	require.NoError(t, err)
-
-	err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParametersRequest{
+	err := k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParametersRequest{
 		Authority:           constants.GovAuthority,
 		AffiliateParameters: types.DefaultAffiliateParameters,
 	})
