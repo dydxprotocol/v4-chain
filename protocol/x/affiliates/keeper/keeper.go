@@ -383,43 +383,43 @@ func (k Keeper) GetAffiliateWhitelist(ctx sdk.Context) (types.AffiliateWhitelist
 	return affiliateWhitelist, nil
 }
 
-func (k Keeper) UpdateAffiliateProgramParameters(
+func (k Keeper) UpdateAffiliateParameters(
 	ctx sdk.Context,
-	msg *types.MsgUpdateAffiliateProgramParametersRequest,
+	msg *types.MsgUpdateAffiliateParametersRequest,
 ) error {
 	store := ctx.KVStore(k.storeKey)
 
-	if msg.AffiliateOverrides != nil {
-		affiliateOverrides, err := k.cdc.Marshal(msg.AffiliateOverrides)
-		if err != nil {
-			return err
-		}
-		store.Set([]byte(types.AffiliateOverridesKey), affiliateOverrides)
+	affiliateParametersBytes, err := k.cdc.Marshal(&msg.AffiliateParameters)
+	if err != nil {
+		return err
 	}
-
-	if msg.AffiliateParameters != nil {
-		affilliateParameters, err := k.cdc.Marshal(msg.GetAffiliateParameters())
-		if err != nil {
-			return err
-		}
-		store.Set([]byte(types.AffiliateParametersKey), affilliateParameters)
-	}
+	store.Set([]byte(types.AffiliateParametersKey), affiliateParametersBytes)
 
 	return nil
 }
 
-func (k Keeper) GetAffiliateProgramParameters(ctx sdk.Context) (types.AffiliateParameters, error) {
+func (k Keeper) GetAffiliateParameters(ctx sdk.Context) (types.AffiliateParameters, error) {
 	store := ctx.KVStore(k.storeKey)
-	affiliateProgramParametersBytes := store.Get([]byte(types.AffiliateParametersKey))
-	if affiliateProgramParametersBytes == nil {
+	affiliateParametersBytes := store.Get([]byte(types.AffiliateParametersKey))
+	if affiliateParametersBytes == nil {
 		return types.AffiliateParameters{}, nil
 	}
-	affiliateProgramParameters := types.AffiliateParameters{}
-	err := k.cdc.Unmarshal(affiliateProgramParametersBytes, &affiliateProgramParameters)
+	affiliateParameters := types.AffiliateParameters{}
+	err := k.cdc.Unmarshal(affiliateParametersBytes, &affiliateParameters)
 	if err != nil {
 		return types.AffiliateParameters{}, err
 	}
-	return affiliateProgramParameters, nil
+	return affiliateParameters, nil
+}
+
+func (k Keeper) SetAffiliateOverrides(ctx sdk.Context, overrides types.AffiliateOverrides) error {
+	store := ctx.KVStore(k.storeKey)
+	affiliateOverridesBytes, err := k.cdc.Marshal(&overrides)
+	if err != nil {
+		return err
+	}
+	store.Set([]byte(types.AffiliateOverridesKey), affiliateOverridesBytes)
+	return nil
 }
 
 func (k Keeper) GetAffiliateOverrides(ctx sdk.Context) (types.AffiliateOverrides, error) {

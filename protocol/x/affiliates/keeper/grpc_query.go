@@ -108,7 +108,7 @@ func (k Keeper) AffiliateParameters(c context.Context,
 	req *types.AffiliateParametersRequest) (*types.AffiliateParametersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	affiliateParameters, err := k.GetAffiliateProgramParameters(ctx)
+	affiliateParameters, err := k.GetAffiliateParameters(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -60,18 +60,32 @@ func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
 	return &types.MsgUpdateAffiliateWhitelistResponse{}, nil
 }
 
-func (k msgServer) UpdateAffiliateProgramParameters(ctx context.Context,
-	msg *types.MsgUpdateAffiliateProgramParametersRequest) (*types.MsgUpdateAffiliateProgramParametersResponse, error) {
+func (k msgServer) UpdateAffiliateParameters(ctx context.Context,
+	msg *types.MsgUpdateAffiliateParametersRequest) (*types.MsgUpdateAffiliateParametersResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errors.New("invalid authority")
 	}
 
-	err := k.Keeper.UpdateAffiliateProgramParameters(sdk.UnwrapSDKContext(ctx), msg)
+	err := k.Keeper.UpdateAffiliateParameters(sdk.UnwrapSDKContext(ctx), msg)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgUpdateAffiliateProgramParametersResponse{}, nil
+	return &types.MsgUpdateAffiliateParametersResponse{}, nil
+}
+
+func (k msgServer) UpdateAffiliateOverrides(ctx context.Context,
+	msg *types.MsgUpdateAffiliateOverridesRequest) (*types.MsgUpdateAffiliateOverridesResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errors.New("invalid authority")
+	}
+
+	err := k.Keeper.SetAffiliateOverrides(sdk.UnwrapSDKContext(ctx), msg.Overrides)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateAffiliateOverridesResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface
