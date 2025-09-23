@@ -44,7 +44,10 @@ export interface Msg {
   /** UpdateLiquidationsConfig updates the liquidations configuration in state. */
 
   updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse>;
-  /** UpdateLeverage allows accounts to update their desired leverage for perpetuals. */
+  /**
+   * UpdateLeverage allows accounts to update their desired leverage for
+   * perpetuals.
+   */
 
   updateLeverage(request: MsgUpdateLeverage): Promise<MsgUpdateLeverageResponse>;
 }

@@ -33,7 +33,8 @@ export interface BlockRateLimitConfiguration {
   /**
    * How many leverage update attempts (successful and failed) are allowed for
    * an account per N blocks. Note that the rate limits are applied in an AND
-   * fashion such that a leverage update must pass all rate limit configurations.
+   * fashion such that a leverage update must pass all rate limit
+   * configurations.
    * 
    * Specifying 0 values disables this rate limit.
    */
@@ -73,7 +74,8 @@ export interface BlockRateLimitConfigurationSDKType {
   /**
    * How many leverage update attempts (successful and failed) are allowed for
    * an account per N blocks. Note that the rate limits are applied in an AND
-   * fashion such that a leverage update must pass all rate limit configurations.
+   * fashion such that a leverage update must pass all rate limit
+   * configurations.
    * 
    * Specifying 0 values disables this rate limit.
    */

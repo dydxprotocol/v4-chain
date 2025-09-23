@@ -400,7 +400,10 @@ export interface LeverageEntrySDKType {
 
   leverage: number;
 }
-/** MsgUpdateLeverage is a request type used for updating leverage for perpetuals. */
+/**
+ * MsgUpdateLeverage is a request type used for updating leverage for
+ * perpetuals.
+ */
 
 export interface MsgUpdateLeverage {
   /** The subaccount that is updating leverage. */
@@ -409,7 +412,10 @@ export interface MsgUpdateLeverage {
 
   perpetualLeverage: LeverageEntry[];
 }
-/** MsgUpdateLeverage is a request type used for updating leverage for perpetuals. */
+/**
+ * MsgUpdateLeverage is a request type used for updating leverage for
+ * perpetuals.
+ */
 
 export interface MsgUpdateLeverageSDKType {
   /** The subaccount that is updating leverage. */

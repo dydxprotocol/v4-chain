@@ -59,7 +59,8 @@ type BlockRateLimitConfiguration struct {
 	MaxShortTermOrdersAndCancelsPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,4,rep,name=max_short_term_orders_and_cancels_per_n_blocks,json=maxShortTermOrdersAndCancelsPerNBlocks,proto3" json:"max_short_term_orders_and_cancels_per_n_blocks"`
 	// How many leverage update attempts (successful and failed) are allowed for
 	// an account per N blocks. Note that the rate limits are applied in an AND
-	// fashion such that a leverage update must pass all rate limit configurations.
+	// fashion such that a leverage update must pass all rate limit
+	// configurations.
 	//
 	// Specifying 0 values disables this rate limit.
 	MaxLeverageUpdatesPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,5,rep,name=max_leverage_updates_per_n_blocks,json=maxLeverageUpdatesPerNBlocks,proto3" json:"max_leverage_updates_per_n_blocks"`

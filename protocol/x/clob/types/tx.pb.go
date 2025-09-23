@@ -1146,7 +1146,8 @@ func (m *LeverageEntry) GetLeverage() uint32 {
 	return 0
 }
 
-// MsgUpdateLeverage is a request type used for updating leverage for perpetuals.
+// MsgUpdateLeverage is a request type used for updating leverage for
+// perpetuals.
 type MsgUpdateLeverage struct {
 	// The subaccount that is updating leverage.
 	SubaccountId *types.SubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
@@ -1385,7 +1386,8 @@ type MsgClient interface {
 	UpdateBlockRateLimitConfiguration(ctx context.Context, in *MsgUpdateBlockRateLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
 	// UpdateLiquidationsConfig updates the liquidations configuration in state.
 	UpdateLiquidationsConfig(ctx context.Context, in *MsgUpdateLiquidationsConfig, opts ...grpc.CallOption) (*MsgUpdateLiquidationsConfigResponse, error)
-	// UpdateLeverage allows accounts to update their desired leverage for perpetuals.
+	// UpdateLeverage allows accounts to update their desired leverage for
+	// perpetuals.
 	UpdateLeverage(ctx context.Context, in *MsgUpdateLeverage, opts ...grpc.CallOption) (*MsgUpdateLeverageResponse, error)
 }
 
@@ -1513,7 +1515,8 @@ type MsgServer interface {
 	UpdateBlockRateLimitConfiguration(context.Context, *MsgUpdateBlockRateLimitConfiguration) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
 	// UpdateLiquidationsConfig updates the liquidations configuration in state.
 	UpdateLiquidationsConfig(context.Context, *MsgUpdateLiquidationsConfig) (*MsgUpdateLiquidationsConfigResponse, error)
-	// UpdateLeverage allows accounts to update their desired leverage for perpetuals.
+	// UpdateLeverage allows accounts to update their desired leverage for
+	// perpetuals.
 	UpdateLeverage(context.Context, *MsgUpdateLeverage) (*MsgUpdateLeverageResponse, error)
 }
 
