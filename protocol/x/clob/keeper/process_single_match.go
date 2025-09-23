@@ -299,25 +299,16 @@ func (k Keeper) ProcessSingleMatch(
 		curMakerPruneableBlockHeight,
 	)
 
+	// Check and update the remaining TWAP quantity for both maker and taker orders.
+	makerOrder := matchWithOrders.MakerOrder.MustGetOrder()
+	if err := k.checkAndUpdateTWAPOrderRemainingQuantity(ctx, makerOrder.OrderId, fillAmount); err != nil {
+		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+	}
+
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
 		takerOrder := matchWithOrders.TakerOrder.MustGetOrder()
-		if takerOrder.OrderId.IsTwapSuborder() {
-			// Get the parent order ID by removing the TWAP suborder flag
-			parentOrderId := types.OrderId{
-				SubaccountId: takerOrder.OrderId.SubaccountId,
-				ClientId:     takerOrder.OrderId.ClientId,
-				OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
-				ClobPairId:   takerOrder.OrderId.ClobPairId,
-			}
-
-			// Update the parent TWAP order state
-			if err := k.UpdateTWAPOrderRemainingQuantityOnFill(
-				ctx,
-				parentOrderId,
-				fillAmount.ToUint64(),
-			); err != nil {
-				return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
-			}
+		if err := k.checkAndUpdateTWAPOrderRemainingQuantity(ctx, takerOrder.OrderId, fillAmount); err != nil {
+			return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 	}
 
@@ -706,4 +697,23 @@ func getUpdatedOrderFillAmount(
 	}
 
 	return satypes.BaseQuantums(bigNewFillAmount.Uint64()), nil
+}
+
+func (k Keeper) checkAndUpdateTWAPOrderRemainingQuantity(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	fillAmount satypes.BaseQuantums,
+) error {
+	if orderId.IsTwapSuborder() {
+		parentOrderId := types.OrderId{
+			SubaccountId: orderId.SubaccountId,
+			ClientId:     orderId.ClientId,
+			OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
+			ClobPairId:   orderId.ClobPairId,
+		}
+		if err := k.UpdateTWAPOrderRemainingQuantityOnFill(ctx, parentOrderId, fillAmount.ToUint64()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
