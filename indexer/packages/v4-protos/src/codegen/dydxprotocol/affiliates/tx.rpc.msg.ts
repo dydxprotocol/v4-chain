@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse, MsgUpdateAffiliateParametersRequest, MsgUpdateAffiliateParametersResponse, MsgUpdateAffiliateOverridesRequest, MsgUpdateAffiliateOverridesResponse } from "./tx";
+import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse, MsgUpdateAffiliateParameters, MsgUpdateAffiliateParametersResponse, MsgUpdateAffiliateOverrides, MsgUpdateAffiliateOverridesResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -14,10 +14,10 @@ export interface Msg {
   updateAffiliateWhitelist(request: MsgUpdateAffiliateWhitelist): Promise<MsgUpdateAffiliateWhitelistResponse>;
   /** UpdateAffiliateParameters updates affiliate program parameters */
 
-  updateAffiliateParameters(request: MsgUpdateAffiliateParametersRequest): Promise<MsgUpdateAffiliateParametersResponse>;
+  updateAffiliateParameters(request: MsgUpdateAffiliateParameters): Promise<MsgUpdateAffiliateParametersResponse>;
   /** UpdateAffiliateOverrides updates affiliate overrides */
 
-  updateAffiliateOverrides(request: MsgUpdateAffiliateOverridesRequest): Promise<MsgUpdateAffiliateOverridesResponse>;
+  updateAffiliateOverrides(request: MsgUpdateAffiliateOverrides): Promise<MsgUpdateAffiliateOverridesResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -49,14 +49,14 @@ export class MsgClientImpl implements Msg {
     return promise.then(data => MsgUpdateAffiliateWhitelistResponse.decode(new _m0.Reader(data)));
   }
 
-  updateAffiliateParameters(request: MsgUpdateAffiliateParametersRequest): Promise<MsgUpdateAffiliateParametersResponse> {
-    const data = MsgUpdateAffiliateParametersRequest.encode(request).finish();
+  updateAffiliateParameters(request: MsgUpdateAffiliateParameters): Promise<MsgUpdateAffiliateParametersResponse> {
+    const data = MsgUpdateAffiliateParameters.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateParameters", data);
     return promise.then(data => MsgUpdateAffiliateParametersResponse.decode(new _m0.Reader(data)));
   }
 
-  updateAffiliateOverrides(request: MsgUpdateAffiliateOverridesRequest): Promise<MsgUpdateAffiliateOverridesResponse> {
-    const data = MsgUpdateAffiliateOverridesRequest.encode(request).finish();
+  updateAffiliateOverrides(request: MsgUpdateAffiliateOverrides): Promise<MsgUpdateAffiliateOverridesResponse> {
+    const data = MsgUpdateAffiliateOverrides.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateOverrides", data);
     return promise.then(data => MsgUpdateAffiliateOverridesResponse.decode(new _m0.Reader(data)));
   }
