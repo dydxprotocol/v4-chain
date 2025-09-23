@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/spf13/cobra"
 )
 
@@ -30,10 +29,8 @@ func CmdQueryLeverage() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryLeverageRequest{
-				SubaccountId: &satypes.SubaccountId{
-					Owner:  address,
-					Number: uint32(subaccountNumber),
-				},
+				Owner:  address,
+				Number: uint32(subaccountNumber),
 			}
 
 			res, err := queryClient.Leverage(context.Background(), params)
