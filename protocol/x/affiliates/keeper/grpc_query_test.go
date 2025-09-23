@@ -264,13 +264,9 @@ func TestAffiliateParameters(t *testing.T) {
 	k := tApp.App.AffiliatesKeeper
 
 	req := &types.AffiliateParametersRequest{}
-	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
-		Authority: constants.GovAuthority,
-		AffiliateParameters: &types.AffiliateParameters{
-			Maximum_30DAttributableRevenuePerAffiliate: 100,
-			RefereeMinimumFeeTierIdx:                   1,
-			Maximum_30DCommissionPerReferred:           100,
-		},
+	err := k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParametersRequest{
+		Authority:           constants.GovAuthority,
+		AffiliateParameters: types.DefaultAffiliateParameters,
 	})
 	require.NoError(t, err)
 
@@ -286,12 +282,9 @@ func TestAffiliateOverrides(t *testing.T) {
 	k := tApp.App.AffiliatesKeeper
 
 	req := &types.AffiliateOverridesRequest{}
-	err := k.UpdateAffiliateProgramParameters(ctx, &types.MsgUpdateAffiliateProgramParametersRequest{
-		Authority: constants.GovAuthority,
-		AffiliateOverrides: &types.AffiliateOverrides{
-			Addresses: []string{
-				constants.AliceAccAddress.String(),
-			},
+	err := k.SetAffiliateOverrides(ctx, types.AffiliateOverrides{
+		Addresses: []string{
+			constants.AliceAccAddress.String(),
 		},
 	})
 	require.NoError(t, err)

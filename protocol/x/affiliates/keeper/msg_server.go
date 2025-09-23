@@ -80,7 +80,7 @@ func (k msgServer) UpdateAffiliateOverrides(ctx context.Context,
 		return nil, errors.New("invalid authority")
 	}
 
-	err := k.Keeper.SetAffiliateOverrides(sdk.UnwrapSDKContext(ctx), msg.Overrides)
+	err := k.Keeper.SetAffiliateOverrides(sdk.UnwrapSDKContext(ctx), msg.AffiliateOverrides)
 	if err != nil {
 		return nil, err
 	}

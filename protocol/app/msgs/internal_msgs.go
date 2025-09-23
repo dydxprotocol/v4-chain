@@ -116,7 +116,7 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":  nil,
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersRequest":  &affiliates.MsgUpdateAffiliateParametersRequest{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse": nil,
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides":          &affiliates.MsgUpdateAffiliateOverrides{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesRequest":   &affiliates.MsgUpdateAffiliateOverridesRequest{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse":  nil,
 
 		// accountplus
