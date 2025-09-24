@@ -184,9 +184,10 @@ export class TurnkeyController extends Controller {
       try {
         const resp = await this.turnkeyHelpers.socialSignin(provider, oidcToken, targetPublicKey);
         return {
+          alreadyExists: resp.alreadyExists,
           session: resp.session,
-          salt: resp.salt,
-          dydxAddress: resp.dydxAddress || '',
+          salt: resp.salt || '',
+          dydxAddress: resp.dydxAddress,
         };
       } catch (error) {
         throw TurnkeyHelpers.wrapTurnkeyError(error, 'Social signin failed');
