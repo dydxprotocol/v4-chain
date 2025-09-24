@@ -309,9 +309,6 @@ export class TurnkeyHelpers {
     oidcToken: string,
     targetPublicKey: string,
   ) {
-    // Extract email from Google OIDC token if available
-    const extractedEmail = extractEmailFromOidcToken(oidcToken, provider);
-
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       oidcToken,
     });
@@ -320,7 +317,6 @@ export class TurnkeyHelpers {
       suborg = await this.createSuborg({
         providerName: provider,
         oidcToken,
-        email: extractedEmail, // Include extracted email when creating suborg
       });
     }
 
