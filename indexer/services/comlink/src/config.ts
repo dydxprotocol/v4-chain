@@ -112,7 +112,7 @@ export const configSchema = {
   ZERODEV_API_KEY: parseString({ default: '' }),
   ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
   BRIDGE_THRESHOLD_USDC: parseInteger({ default: 20 }),
-  CALL_POLICY_VALUE_LIMIT: parseBigInt({ default: BigInt(100_000_000_000) }),
+  CALL_POLICY_VALUE_LIMIT: parseBigInt({ default: BigInt(100_000_000_000_000_000_000) }),
   // on-chain signer to kick off the skip bridge.
   APPROVAL_SIGNER_PUBLIC_ADDRESS: parseString({ default: '0x3FC11ff27e5373c88EA142d2EdF5492d0839980B' }),
   // if policy approvals are enabled.
