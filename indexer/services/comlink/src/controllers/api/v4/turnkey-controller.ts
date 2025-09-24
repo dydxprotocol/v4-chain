@@ -11,6 +11,7 @@ import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
@@ -127,6 +128,9 @@ export class TurnkeyController extends Controller {
       throw new TurnkeyError('Dydx address already uploaded');
     }
 
+    // alchemy webhook upload.
+    await addAddressesToAlchemyWebhook(user.evm_address, user.svm_address);
+
     await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
 
     // configure the policies now
@@ -180,9 +184,10 @@ export class TurnkeyController extends Controller {
       try {
         const resp = await this.turnkeyHelpers.socialSignin(provider, oidcToken, targetPublicKey);
         return {
+          alreadyExists: resp.alreadyExists,
           session: resp.session,
-          salt: resp.salt,
-          dydxAddress: resp.dydxAddress || '',
+          salt: resp.salt || '',
+          dydxAddress: resp.dydxAddress,
         };
       } catch (error) {
         throw TurnkeyHelpers.wrapTurnkeyError(error, 'Social signin failed');

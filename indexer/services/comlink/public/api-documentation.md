@@ -3932,7 +3932,8 @@ fetch(`${baseURL}/turnkey/signin`,
   "apiKeyId": "string",
   "userId": "string",
   "session": "string",
-  "salt": "string"
+  "salt": "string",
+  "alreadyExists": true
 }
 ```
 
@@ -6635,7 +6636,8 @@ or
   "apiKeyId": "string",
   "userId": "string",
   "session": "string",
-  "salt": "string"
+  "salt": "string",
+  "alreadyExists": true
 }
 
 ```
@@ -6650,6 +6652,7 @@ or
 |userId|string|false|none|none|
 |session|string|false|none|none|
 |salt|string|true|none|none|
+|alreadyExists|boolean|false|none|none|
 
 ## SigninMethod
 

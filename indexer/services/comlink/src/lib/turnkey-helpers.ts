@@ -8,7 +8,7 @@ import { Address, checksumAddress } from 'viem';
 
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
-import { addAddressesToAlchemyWebhook, getSmartAccountAddress } from '../helpers/alchemy-helpers';
+import { getSmartAccountAddress } from '../helpers/alchemy-helpers';
 import {
   CreateSuborgParams,
   GetSuborgParams,
@@ -195,10 +195,6 @@ export class TurnkeyHelpers {
       created_at: new Date().toISOString(),
     });
 
-    // need to also add the svm and evm addresses to the alchemy hook
-    if (evmAddress && svmAddress) {
-      await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
-    }
     return {
       subOrgId: subOrg.subOrganizationId,
       salt,
@@ -315,6 +311,17 @@ export class TurnkeyHelpers {
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       oidcToken,
     });
+
+    if (!suborg) {
+      suborg = await this.getSuborg({
+        email: extractedEmail,
+      });
+      if (suborg) {
+        return {
+          alreadyExists: true,
+        };
+      }
+    }
 
     if (!suborg) {
       suborg = await this.createSuborg({
