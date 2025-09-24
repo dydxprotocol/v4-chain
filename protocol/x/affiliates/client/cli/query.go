@@ -26,6 +26,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdQueryAffiliateInfo(),
 		GetCmdQueryReferredBy(),
 		GetCmdQueryAffiliateWhitelist(),
+		GetCmdQueryAffiliateOverrides(),
+		GetCmdQueryAffiliateParameters(),
 	)
 	return cmd
 }
@@ -107,6 +109,46 @@ func GetCmdQueryAffiliateWhitelist() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.AffiliateWhitelist(context.Background(), &types.AffiliateWhitelistRequest{})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	return cmd
+}
+
+func GetCmdQueryAffiliateOverrides() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "affiliate-overrides",
+		Short: "Query affiliate overrides",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AffiliateOverrides(context.Background(), &types.AffiliateOverridesRequest{})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	return cmd
+}
+
+func GetCmdQueryAffiliateParameters() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "affiliate-parameters",
+		Short: "Query affiliate parameters",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AffiliateParameters(context.Background(), &types.AffiliateParametersRequest{})
 			if err != nil {
 				return err
 			}
