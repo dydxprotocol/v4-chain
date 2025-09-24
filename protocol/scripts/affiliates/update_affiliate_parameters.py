@@ -103,9 +103,9 @@ def main():
                         "@type": "/dydxprotocol.affiliates.MsgUpdateAffiliateParameters",
                         "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
                         "affiliate_parameters": {
-                            "maximum_30d_commission_per_referred": str(args.max_30d_commission),
+                            "maximum_30d_commission_per_referred_quote_quantums": str(args.max_30d_commission),
                             "referee_minimum_fee_tier_idx": str(args.referee_min_fee_tier),
-                            "maximum_30d_attributable_revenue_per_affiliate": str(args.max_30d_revenue),
+                            "maximum_30d_attributable_revenue_per_affiliate_quote_quantums": str(args.max_30d_revenue),
                         }
                         }
                     ],
