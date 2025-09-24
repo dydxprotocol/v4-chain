@@ -313,6 +313,17 @@ export class TurnkeyHelpers {
     });
 
     if (!suborg) {
+      suborg = await this.getSuborg({
+        email: extractedEmail,
+      });
+      if (suborg) {
+        return {
+          alreadyExists: true,
+        };
+      }
+    }
+
+    if (!suborg) {
       suborg = await this.createSuborg({
         providerName: provider,
         oidcToken,
