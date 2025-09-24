@@ -20,10 +20,10 @@ service Msg {
   rpc UpdateAffiliateWhitelist(MsgUpdateAffiliateWhitelist)
       returns (MsgUpdateAffiliateWhitelistResponse);
   // UpdateAffiliateParameters updates affiliate program parameters
-  rpc UpdateAffiliateParameters(MsgUpdateAffiliateParametersRequest)
+  rpc UpdateAffiliateParameters(MsgUpdateAffiliateParameters)
       returns (MsgUpdateAffiliateParametersResponse);
   // UpdateAffiliateOverrides updates affiliate overrides
-  rpc UpdateAffiliateOverrides(MsgUpdateAffiliateOverridesRequest)
+  rpc UpdateAffiliateOverrides(MsgUpdateAffiliateOverrides)
       returns (MsgUpdateAffiliateOverridesResponse);
 }
 
@@ -67,7 +67,7 @@ message MsgUpdateAffiliateWhitelist {
 message MsgUpdateAffiliateWhitelistResponse {}
 
 // Message to update affiliate program parameters
-message MsgUpdateAffiliateParametersRequest {
+message MsgUpdateAffiliateParameters {
   option (cosmos.msg.v1.signer) = "authority";
   // Authority sending this message. Will be sent by gov
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
@@ -79,12 +79,13 @@ message MsgUpdateAffiliateParametersRequest {
 // Response to MsgUpdateAffiliateParameters
 message MsgUpdateAffiliateParametersResponse {}
 
-message MsgUpdateAffiliateOverridesRequest {
+// Message to update affiliate overrides
+message MsgUpdateAffiliateOverrides {
   option (cosmos.msg.v1.signer) = "authority";
   // Authority sending this message. Will be sent by gov
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // Affiliate Overrides
+  // Addresses that automatically have the maximum affiliate tier
   AffiliateOverrides affiliate_overrides = 2 [ (gogoproto.nullable) = false ];
 }
 

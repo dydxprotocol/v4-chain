@@ -13,6 +13,10 @@ proto-gen:
 	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./protocol/scripts/protocgen.sh
 
+proto-clean:
+	@rm -rf ./proto/.proto-export
+	@rm -rf ./.proto-export
+
 proto-gen-clean:
 	@echo "Cleaning old artifacts"
 	@rm -rf ./proto/.proto-export
