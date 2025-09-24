@@ -290,7 +290,7 @@ describe('pnl-controller#V4', () => {
       // Create 72 hourly records (3 days)
       for (let i = 0; i < 72; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,

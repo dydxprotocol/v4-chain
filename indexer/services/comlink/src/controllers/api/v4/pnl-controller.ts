@@ -80,7 +80,7 @@ class PnlController extends Controller {
 
     let pnlData: PaginationFromDatabase<PnlFromDatabase>;
 
-    if (daily) {
+    if (daily === true) {
       pnlData = await PnlTable.findAllDailyPnl(
         queryParams,
         [QueryableField.LIMIT],

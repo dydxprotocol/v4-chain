@@ -209,7 +209,7 @@ export async function findAllDailyPnl(
   if (parentSubaccount !== undefined && subaccountId !== undefined) {
     throw new Error('Cannot specify both parentSubaccount and subaccountId');
   }
-  
+
   verifyAllRequiredFields(
     {
       limit,
@@ -223,12 +223,12 @@ export async function findAllDailyPnl(
     } as QueryConfig,
     requiredFields,
   );
-  
+
   let baseQuery: QueryBuilder<PnlModel> = setupBaseQuery<PnlModel>(
     PnlModel,
     options,
   );
-  
+
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(PnlColumns.subaccountId, subaccountId);
   } else if (parentSubaccount !== undefined) {
@@ -245,11 +245,11 @@ export async function findAllDailyPnl(
       createdBeforeOrAtHeight,
     );
   }
-  
+
   if (createdBeforeOrAt !== undefined) {
     baseQuery = baseQuery.where(PnlColumns.createdAt, '<=', createdBeforeOrAt);
   }
-  
+
   if (createdOnOrAfterHeight !== undefined) {
     baseQuery = baseQuery.where(
       PnlColumns.createdAtHeight,
@@ -257,11 +257,11 @@ export async function findAllDailyPnl(
       createdOnOrAfterHeight,
     );
   }
-  
+
   if (createdOnOrAfter !== undefined) {
     baseQuery = baseQuery.where(PnlColumns.createdAt, '>=', createdOnOrAfter);
   }
-  
+
   baseQuery = baseQuery.orderBy(
     PnlColumns.subaccountId,
     Ordering.ASC,
@@ -271,10 +271,10 @@ export async function findAllDailyPnl(
   );
 
   const allRecords: PnlFromDatabase[] = await baseQuery;
-  
+
   // Filter to get daily records (every 24th record)
   const dailyRecords = allRecords.filter((_, index) => index === 0 || index % 24 === 0);
-  
+
   // Apply pagination
   const totalDailyRecords = dailyRecords.length;
   let results = dailyRecords;
@@ -282,9 +282,9 @@ export async function findAllDailyPnl(
     // Ensure page is at least 1
     const currentPage: number = Math.max(1, page);
     const offset: number = (currentPage - 1) * limit;
-    
+
     results = dailyRecords.slice(offset, offset + limit);
-    
+
     return {
       results,
       limit,
@@ -294,7 +294,7 @@ export async function findAllDailyPnl(
   } else if (limit !== undefined) {
     results = dailyRecords.slice(0, limit);
   }
-  
+
   return {
     results,
   };

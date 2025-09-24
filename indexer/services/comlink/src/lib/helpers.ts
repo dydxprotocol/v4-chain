@@ -719,11 +719,9 @@ export function aggregateHourlyPnlTicks(
         truncatedTime,
         {
           ...aggregatedTick,
-          equity: (parseFloat(aggregatedTick.equity) + parseFloat(pnlTick.equity)).toString(),
-          totalPnl: (parseFloat(aggregatedTick.totalPnl) + parseFloat(pnlTick.totalPnl)).toString(),
-          netTransfers: (
-            parseFloat(aggregatedTick.netTransfers) + parseFloat(pnlTick.netTransfers)
-          ).toString(),
+          equity: Big(aggregatedTick.equity).plus(pnlTick.equity).toFixed(),
+          totalPnl: Big(aggregatedTick.totalPnl).plus(pnlTick.totalPnl).toFixed(),
+          netTransfers: Big(aggregatedTick.netTransfers).plus(pnlTick.netTransfers).toFixed(),
         },
       );
       hourlySubaccountIds.set(truncatedTime, subaccountIds);
@@ -767,11 +765,9 @@ export function aggregateHourlyPnl(
         truncatedTime,
         {
           ...aggregatedPnl,
-          equity: (parseFloat(aggregatedPnl.equity) + parseFloat(pnl.equity)).toString(),
-          totalPnl: (parseFloat(aggregatedPnl.totalPnl) + parseFloat(pnl.totalPnl)).toString(),
-          netTransfers: (
-            parseFloat(aggregatedPnl.netTransfers) + parseFloat(pnl.netTransfers)
-          ).toString(),
+          equity: Big(aggregatedPnl.equity).plus(pnl.equity).toFixed(),
+          totalPnl: Big(aggregatedPnl.totalPnl).plus(pnl.totalPnl).toFixed(),
+          netTransfers: Big(aggregatedPnl.netTransfers).plus(pnl.netTransfers).toFixed(),
         },
       );
       hourlySubaccountIds.set(truncatedTime, subaccountIds);
