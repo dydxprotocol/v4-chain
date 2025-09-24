@@ -30,7 +30,7 @@ import {
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { pnlToResponseObject } from '../../../request-helpers/request-transformer';
-import { PnlResponse, PnlRequest } from '../../../types';
+import { PnlResponse } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'pnl-controller';
@@ -67,13 +67,11 @@ class PnlController extends Controller {
     const queryParams = {
       subaccountId: [subaccountId],
       limit,
-      createdBeforeOrAtHeight: createdBeforeOrAtHeight
-        ? createdBeforeOrAtHeight.toString()
-        : undefined,
+      createdBeforeOrAtHeight:
+        createdBeforeOrAtHeight != null ? String(createdBeforeOrAtHeight) : undefined,
       createdBeforeOrAt,
-      createdOnOrAfterHeight: createdOnOrAfterHeight
-        ? createdOnOrAfterHeight.toString()
-        : undefined,
+      createdOnOrAfterHeight:
+        createdOnOrAfterHeight != null ? String(createdOnOrAfterHeight) : undefined,
       createdOnOrAfter,
       page,
     };
@@ -137,7 +135,17 @@ router.get(
       createdOnOrAfter,
       page,
       daily,
-    }: PnlRequest = matchedData(req) as PnlRequest;
+    } = matchedData(req) as {
+      address: string,
+      subaccountNumber: number,
+      limit?: number,
+      createdBeforeOrAtHeight?: number,
+      createdBeforeOrAt?: IsoString,
+      createdOnOrAfterHeight?: number,
+      createdOnOrAfter?: IsoString,
+      page?: number,
+      daily?: boolean,
+    };
 
     try {
       const controllers: PnlController = new PnlController();

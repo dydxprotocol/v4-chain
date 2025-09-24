@@ -137,7 +137,7 @@ describe('Pnl store', () => {
     expect(responsePageAllPages.total).toEqual(2);
   });
 
-  it('Successfully retrieves daily PNL records (every 24th record)', async () => {
+  it('Successfully retrieves daily PNL records', async () => {
   // Create 50 PNL records for the same subaccount with hourly intervals
     const hourlyRecords = [];
     const baseDate = new Date('2023-01-01T00:00:00.000Z');

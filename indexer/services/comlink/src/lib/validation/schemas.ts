@@ -210,6 +210,7 @@ const checkDailyOptionalParamSchema: ParamSchema = {
   in: 'query',
   optional: true,
   isBoolean: true,
+  toBoolean: true,
 };
 
 const checkBridgeSchema: Record<string, ParamSchema> = {

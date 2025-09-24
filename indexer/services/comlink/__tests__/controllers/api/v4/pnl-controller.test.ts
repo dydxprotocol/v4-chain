@@ -360,6 +360,84 @@ describe('pnl-controller#V4', () => {
       expect(dailyPageResponse.body.pageSize).toBe(2);
       expect(dailyPageResponse.body.offset).toBe(0);
     });
+
+    it('Get /pnl with daily=false returns regular hourly records', async () => {
+      await testMocks.seedData();
+
+      // Create hourly records spanning 3 days
+      const baseDate = new Date('2023-01-01T00:00:00.000Z');
+      const hourlyRecords = [];
+
+      // Create 72 hourly records (3 days)
+      for (let i = 0; i < 72; i++) {
+        const date = new Date(baseDate);
+        date.setUTCHours(baseDate.getUTCHours() + i);
+
+        hourlyRecords.push({
+          ...testConstants.defaultPnl,
+          createdAt: date.toISOString(),
+          createdAtHeight: (1000 + i).toString(), // Incrementing heights
+          equity: (1000 + i).toString(), // Different equity values to verify correct records
+        });
+      }
+
+      // Insert all records
+      await Promise.all(
+        hourlyRecords.map((record) => PnlTable.create(record)),
+      );
+
+      // Test with daily=false explicitly
+      const regularResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl?${getQueryString({
+          address: testConstants.defaultAddress,
+          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          daily: 'false',
+          limit: 10,
+        })}`,
+      });
+
+      // Should have 10 records (due to limit)
+      expect(regularResponse.body.pnl).toHaveLength(10);
+
+      // Verify these are hourly records by checking timestamp spacing
+      if (regularResponse.body.pnl.length >= 2) {
+        const timestamps = regularResponse.body.pnl.map(
+          (record: { createdAt: string | number | Date }) => new Date(record.createdAt).getTime(),
+        );
+
+        // Check time gaps between consecutive records (should be ~1h = 3600000ms)
+        for (let i = 0; i < Math.min(3, timestamps.length - 1); i++) {
+          const gap = timestamps[i] - timestamps[i + 1];
+          // Expect gap to be around 1 hour (with some flexibility)
+          expect(gap).toBeGreaterThanOrEqual(3500000); // ~58 minutes
+          expect(gap).toBeLessThanOrEqual(3700000);   // ~62 minutes
+        }
+      }
+    });
+
+    it('Get /pnl with invalid daily parameter returns 400 error', async () => {
+      await testMocks.seedData();
+
+      // Create some test records
+      await PnlTable.create(testConstants.defaultPnl);
+
+      // Test with invalid daily parameter
+      const invalidResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl?${getQueryString({
+          address: testConstants.defaultAddress,
+          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          daily: 'invalid',
+        })}`,
+        expectedStatus: 400,
+      });
+
+      // Check that we get the expected validation error
+      expect(invalidResponse.body.errors).toBeDefined();
+      expect(invalidResponse.body.errors.length).toBeGreaterThan(0);
+      expect(invalidResponse.body.errors[0].param).toBe('daily');
+    });
   });
 
 });

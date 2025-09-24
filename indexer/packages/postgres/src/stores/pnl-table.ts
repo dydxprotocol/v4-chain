@@ -272,8 +272,17 @@ export async function findAllDailyPnl(
 
   const allRecords: PnlFromDatabase[] = await baseQuery;
 
-  // Filter to get daily records (every 24th record)
-  const dailyRecords = allRecords.filter((_, index) => index === 0 || index % 24 === 0);
+  // Filter to get daily records
+  const dailyRecords = Array.from(
+    allRecords.reduce((map, record) => {
+      const key = `${record.subaccountId}|${new Date(record.createdAt).toISOString().slice(0, 10)}`;
+      if (!map.has(key)) {
+        map.set(key, record);
+      }
+      return map;
+    }, new Map<string, PnlFromDatabase>())
+      .values(),
+  );
 
   // Apply pagination
   const totalDailyRecords = dailyRecords.length;

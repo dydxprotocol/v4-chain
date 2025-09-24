@@ -15,8 +15,3 @@ export interface PnlCreateObject {
   netTransfers: string,
   totalPnl: string,
 }
-
-export enum PnlInterval {
-  hour = 'hour',
-  day = 'day',
-}
