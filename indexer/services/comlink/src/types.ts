@@ -799,6 +799,7 @@ export interface TurnkeyAuthResponse {
   userId?: string,
   session?: string,
   salt: string,
+  alreadyExists?: boolean,
 }
 
 export interface TurnkeyCreateSuborgResponse {

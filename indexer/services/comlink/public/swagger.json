@@ -1636,6 +1636,9 @@
           },
           "salt": {
             "type": "string"
+          },
+          "alreadyExists": {
+            "type": "boolean"
           }
         },
         "required": [
