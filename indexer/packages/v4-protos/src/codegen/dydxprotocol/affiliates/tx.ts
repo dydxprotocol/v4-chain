@@ -97,17 +97,21 @@ export interface MsgUpdateAffiliateParametersResponse {}
 /** Response to MsgUpdateAffiliateParameters */
 
 export interface MsgUpdateAffiliateParametersResponseSDKType {}
+/** Message to update affiliate overrides */
+
 export interface MsgUpdateAffiliateOverrides {
   /** Authority sending this message. Will be sent by gov */
   authority: string;
-  /** Affiliate Overrides */
+  /** Addresses that automatically have the maximum affiliate tier */
 
   affiliateOverrides?: AffiliateOverrides;
 }
+/** Message to update affiliate overrides */
+
 export interface MsgUpdateAffiliateOverridesSDKType {
   /** Authority sending this message. Will be sent by gov */
   authority: string;
-  /** Affiliate Overrides */
+  /** Addresses that automatically have the maximum affiliate tier */
 
   affiliate_overrides?: AffiliateOverridesSDKType;
 }

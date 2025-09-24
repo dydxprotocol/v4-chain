@@ -384,10 +384,11 @@ func (m *MsgUpdateAffiliateParametersResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateAffiliateParametersResponse proto.InternalMessageInfo
 
+// Message to update affiliate overrides
 type MsgUpdateAffiliateOverrides struct {
 	// Authority sending this message. Will be sent by gov
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// Affiliate Overrides
+	// Addresses that automatically have the maximum affiliate tier
 	AffiliateOverrides AffiliateOverrides `protobuf:"bytes,2,opt,name=affiliate_overrides,json=affiliateOverrides,proto3" json:"affiliate_overrides"`
 }
 
