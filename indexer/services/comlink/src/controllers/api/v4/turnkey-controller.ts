@@ -11,6 +11,7 @@ import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
@@ -126,6 +127,9 @@ export class TurnkeyController extends Controller {
     if (user.dydx_address) {
       throw new TurnkeyError('Dydx address already uploaded');
     }
+
+    // alchemy webhook upload.
+    await addAddressesToAlchemyWebhook(user.evm_address, user.svm_address);
 
     await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
 
