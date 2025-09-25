@@ -665,7 +665,7 @@ describe('pnl-controller#V4', () => {
       expect(responseHeight.body.pnl.length).toBeGreaterThanOrEqual(1);
       expect(responseHeight.body.pnl.every(
         (record: any) => parseInt(record.createdAtHeight, 10) >= 1000 &&
-        parseInt(record.createdAtHeigh, 10) <= 2000,
+        parseInt(record.createdAtHeight, 10) <= 2000,
       )).toBe(true);
     });
 

@@ -719,9 +719,9 @@ export function aggregateHourlyPnlTicks(
         truncatedTime,
         {
           ...aggregatedTick,
-          equity: Big(aggregatedTick.equity).plus(pnlTick.equity).toFixed(),
-          totalPnl: Big(aggregatedTick.totalPnl).plus(pnlTick.totalPnl).toFixed(),
-          netTransfers: Big(aggregatedTick.netTransfers).plus(pnlTick.netTransfers).toFixed(),
+          equity: Big(aggregatedTick.equity).plus(pnlTick.equity).toString(),
+          totalPnl: Big(aggregatedTick.totalPnl).plus(pnlTick.totalPnl).toString(),
+          netTransfers: Big(aggregatedTick.netTransfers).plus(pnlTick.netTransfers).toString(),
         },
       );
       hourlySubaccountIds.set(truncatedTime, subaccountIds);
@@ -772,9 +772,9 @@ export function aggregatePnl(
         truncatedTime,
         {
           ...aggregatedPnl,
-          equity: Big(aggregatedPnl.equity).plus(pnl.equity).toFixed(),
-          totalPnl: Big(aggregatedPnl.totalPnl).plus(pnl.totalPnl).toFixed(),
-          netTransfers: Big(aggregatedPnl.netTransfers).plus(pnl.netTransfers).toFixed(),
+          equity: Big(aggregatedPnl.equity).plus(pnl.equity).toString(),
+          totalPnl: Big(aggregatedPnl.totalPnl).plus(pnl.totalPnl).toString(),
+          netTransfers: Big(aggregatedPnl.netTransfers).plus(pnl.netTransfers).toString(),
         },
       );
       timeGroupedSubaccountIds.set(truncatedTime, subaccountIds);
