@@ -82,6 +82,7 @@ export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): 
             chainId,
             webhookId,
           });
+          throw new Error(`Failed to register EVM address with webhook for chain ${chainId} after retries`);
         }
       }
     }
@@ -103,6 +104,7 @@ export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): 
       evmAddress: evm,
       svmAddress: svm,
     });
+    throw new Error(`Failed to add addresses to Solana Alchemy webhook: ${error}`);
   }
 }
 
