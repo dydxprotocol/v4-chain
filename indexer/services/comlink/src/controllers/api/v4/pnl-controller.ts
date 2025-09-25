@@ -8,7 +8,7 @@ import {
   QueryableField,
   SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
-import * as PnlTable from '@dydxprotocol-indexer/postgres/build/src/stores/pnl-table';
+import { PnlTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import {

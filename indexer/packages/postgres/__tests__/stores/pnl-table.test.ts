@@ -226,8 +226,7 @@ describe('Pnl store', () => {
 
     // Test 5: Test with date range filter
     const middleDate = new Date(baseDate);
-    middleDate.setHours(baseDate.getHours() + 25); // Just after the first day
-
+    middleDate.setUTCHours(baseDate.getUTCHours() + 25); // Just after the first day
     const dailyWithDateFilter = await PnlTable.findAllDailyPnl(
       {
         subaccountId: [defaultSubaccountId],

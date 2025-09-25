@@ -262,49 +262,26 @@ export async function findAllDailyPnl(
     baseQuery = baseQuery.where(PnlColumns.createdAt, '>=', createdOnOrAfter);
   }
 
-  baseQuery = baseQuery.orderBy(
-    PnlColumns.subaccountId,
-    Ordering.ASC,
-  ).orderBy(
-    PnlColumns.createdAtHeight,
-    Ordering.DESC,
-  );
+  // Create a CTE (Common Table Expression) to rank records within each day for each subaccount
+  const dailyRankQuery = baseQuery.clone()
+    .select('*')
+    .select(
+      PnlModel.knex().raw(
+        `ROW_NUMBER() OVER (
+        PARTITION BY "${PnlColumns.subaccountId}", DATE_TRUNC('day', "${PnlColumns.createdAt}" AT TIME ZONE 'UTC')
+        ORDER BY "${PnlColumns.createdAtHeight}" DESC
+      ) as row_num`,
+      ),
+    );
 
-  const allRecords: PnlFromDatabase[] = await baseQuery;
+  // Create the outer query that selects only the top-ranked record for each day
+  const finalQuery = PnlModel.query(Transaction.get(options.txId))
+    .with('daily_ranked_pnl', dailyRankQuery)
+    .from('daily_ranked_pnl')
+    .where('row_num', 1)
+    .orderBy(PnlColumns.subaccountId, Ordering.ASC)
+    .orderBy(PnlColumns.createdAtHeight, Ordering.DESC);
 
-  // Filter to get daily records
-  const dailyRecords = Array.from(
-    allRecords.reduce((map, record) => {
-      const key = `${record.subaccountId}|${new Date(record.createdAt).toISOString().slice(0, 10)}`;
-      if (!map.has(key)) {
-        map.set(key, record);
-      }
-      return map;
-    }, new Map<string, PnlFromDatabase>())
-      .values(),
-  );
-
-  // Apply pagination
-  const totalDailyRecords = dailyRecords.length;
-  let results = dailyRecords;
-  if (page !== undefined && limit !== undefined) {
-    // Ensure page is at least 1
-    const currentPage: number = Math.max(1, page);
-    const offset: number = (currentPage - 1) * limit;
-
-    results = dailyRecords.slice(offset, offset + limit);
-
-    return {
-      results,
-      limit,
-      offset,
-      total: totalDailyRecords,
-    };
-  } else if (limit !== undefined) {
-    results = dailyRecords.slice(0, limit);
-  }
-
-  return {
-    results,
-  };
+  // Apply pagination if needed
+  return handleLimitAndPagination(finalQuery, limit, page);
 }
