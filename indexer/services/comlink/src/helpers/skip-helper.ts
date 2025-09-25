@@ -63,11 +63,6 @@ export async function getSkipCallData(
     amountToUse = parseInt(amount, 16).toString();
   }
 
-  let goFast = true;
-  if (chainId === mainnet.id.toString() &&
-    parseInt(amountToUse, 10) < ethereumGoFastFreeMinimumUSDC) {
-    goFast = false;
-  }
   const routeResult = await route({
     amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
@@ -81,7 +76,7 @@ export async function getSkipCallData(
       evmSwaps: true, // needed for native eth bridging.
     },
     allowUnsafe: false,
-    goFast,
+    goFast: true,
   });
   logger.info({
     at: 'skip-helper#getSkipCallData',
