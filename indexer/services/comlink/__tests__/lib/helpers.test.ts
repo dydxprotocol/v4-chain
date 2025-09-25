@@ -31,6 +31,7 @@ import {
   PnlTicksFromDatabase,
   PnlTicksTable,
   AssetFromDatabase,
+  PnlFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import {
   adjustUSDCAssetPosition,
@@ -46,6 +47,7 @@ import {
   getChildSubaccountNums,
   aggregateHourlyPnlTicks,
   getSubaccountResponse,
+  aggregateHourlyPnl,
 } from '../../src/lib/helpers';
 import _ from 'lodash';
 import Big from 'big.js';
@@ -59,6 +61,7 @@ import {
   defaultTendermintEventId3,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import {
+  AggregatedPnl,
   AggregatedPnlTick, AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject,
 } from '../../src/types';
 import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
@@ -952,6 +955,147 @@ describe('helpers', () => {
           }),
         ]),
       );
+    });
+  });
+
+  describe('aggregateHourlyPnl', () => {
+    it('aggregates single pnl record', () => {
+      const pnl: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+      };
+
+      const aggregatedPnls: AggregatedPnl[] = aggregateHourlyPnl([pnl]);
+
+      expect(
+        aggregatedPnls,
+      ).toEqual(
+        [expect.objectContaining(
+          {
+            pnl: expect.objectContaining(testConstants.defaultPnl),
+            numPnls: 1,
+          },
+        )],
+      );
+    });
+
+    it('aggregates multiple pnl records in same hour and de-dupes records', () => {
+      const pnl: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+      };
+
+      const pnl2: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+      };
+
+      const createdAtHeight2: string = '80';
+      const createdAt2: string = DateTime.fromISO(pnl.createdAt).plus({ hour: 1 }).toISO();
+      const pnl3: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        createdAtHeight: createdAtHeight2,
+        createdAt: createdAt2,
+      };
+
+      const createdAtHeight3: string = '81';
+      const createdAt3: string = DateTime.fromISO(pnl.createdAt).plus({ minute: 61 }).toISO();
+      const pnl4: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '1',
+        totalPnl: '2',
+        netTransfers: '3',
+        createdAtHeight: createdAtHeight3,
+        createdAt: createdAt3,
+      };
+
+      const createdAtHeight4: string = '82';
+      const createdAt4: string = DateTime.fromISO(pnl.createdAt).startOf('hour').plus({ minute: 63 }).toISO();
+      // should be de-duped
+      const pnl5: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '1',
+        totalPnl: '2',
+        netTransfers: '3',
+        createdAtHeight: createdAtHeight4,
+        createdAt: createdAt4,
+      };
+
+      const aggregatedPnls: AggregatedPnl[] = aggregateHourlyPnl(
+        [pnl, pnl2, pnl3, pnl4, pnl5],
+      );
+
+      expect(aggregatedPnls).toEqual(
+        expect.arrayContaining([
+        // Combined pnl at initial hour
+          expect.objectContaining({
+            pnl: expect.objectContaining({
+              equity: (parseFloat(testConstants.defaultPnl.equity) +
+              parseFloat(pnl2.equity)).toString(),
+              totalPnl: (parseFloat(testConstants.defaultPnl.totalPnl) +
+              parseFloat(pnl2.totalPnl)).toString(),
+              netTransfers: (parseFloat(testConstants.defaultPnl.netTransfers) +
+              parseFloat(pnl2.netTransfers)).toString(),
+            }),
+            numPnls: 2,
+          }),
+          // Combined pnl at initial hour + 1 hour and initial hour + 1 hour, 1 minute
+          expect.objectContaining({
+            pnl: expect.objectContaining({
+              equity: (parseFloat(pnl3.equity) +
+              parseFloat(pnl4.equity)).toString(),
+              totalPnl: (parseFloat(pnl3.totalPnl) +
+              parseFloat(pnl4.totalPnl)).toString(),
+              netTransfers: (parseFloat(pnl3.netTransfers) +
+              parseFloat(pnl4.netTransfers)).toString(),
+            }),
+            numPnls: 2,
+          }),
+        ]),
+      );
+    });
+
+    it('properly aggregates across subaccounts with different values', () => {
+    // First subaccount
+      const pnl1: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId,
+        equity: '1000',
+        totalPnl: '100',
+        netTransfers: '900',
+        createdAt: '2023-01-01T12:00:00.000Z',
+      };
+
+      // Second subaccount, same hour
+      const pnl2: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '2000',
+        totalPnl: '200',
+        netTransfers: '1800',
+        createdAt: '2023-01-01T12:30:00.000Z',
+      };
+
+      // Third subaccount, same hour (should be aggregated)
+      const pnl3: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: 'subaccount3',
+        equity: '3000',
+        totalPnl: '300',
+        netTransfers: '2700',
+        createdAt: '2023-01-01T12:45:00.000Z',
+      };
+
+      const aggregatedPnls: AggregatedPnl[] = aggregateHourlyPnl([pnl1, pnl2, pnl3]);
+
+      expect(aggregatedPnls.length).toBe(1);
+      expect(aggregatedPnls[0].numPnls).toBe(3);
+      expect(aggregatedPnls[0].pnl).toMatchObject({
+        equity: '6000',  // 1000 + 2000 + 3000
+        totalPnl: '600', // 100 + 200 + 300
+        netTransfers: '5400', // 900 + 1800 + 2700
+        createdAt: '2023-01-01T12:00:00.000Z', // truncated to hour start
+      });
     });
   });
 });

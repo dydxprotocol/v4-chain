@@ -263,10 +263,11 @@ export async function findAllDailyPnl(
   }
 
   // Create a CTE (Common Table Expression) to rank records within each day for each subaccount
+  const knex = baseQuery.modelClass().knex();
   const dailyRankQuery = baseQuery.clone()
     .select('*')
     .select(
-      PnlModel.knex().raw(
+      knex.raw(
         `ROW_NUMBER() OVER (
         PARTITION BY "${PnlColumns.subaccountId}", DATE_TRUNC('day', "${PnlColumns.createdAt}" AT TIME ZONE 'UTC')
         ORDER BY "${PnlColumns.createdAtHeight}" DESC

@@ -8,9 +8,11 @@ import {
   QueryableField,
   SubaccountTable,
   PnlTable,
+  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
+import _ from 'lodash';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -19,12 +21,13 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { handleControllerError } from '../../../lib/helpers';
+import { aggregateHourlyPnl, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckDailyOptionalSchema,
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   CheckPaginationSchema,
+  CheckParentSubaccountSchema,
   CheckSubaccountSchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -110,6 +113,81 @@ class PnlController extends Controller {
       offset,
     };
   }
+
+  @Get('/parentSubaccountNumber')
+  async getPnlForParentSubaccount(
+    @Query() address: string,
+      @Query() parentSubaccountNumber: number,
+      @Query() limit?: number,
+      @Query() createdBeforeOrAtHeight?: number,
+      @Query() createdBeforeOrAt?: IsoString,
+      @Query() createdOnOrAfterHeight?: number,
+      @Query() createdOnOrAfter?: IsoString,
+      @Query() daily?: boolean,
+  ): Promise<PnlResponse> {
+    const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
+
+    const queryParams = {
+      parentSubaccount: {
+        address,
+        subaccountNumber: parentSubaccountNumber,
+      },
+      limit,
+      createdBeforeOrAtHeight:
+    createdBeforeOrAtHeight != null ? String(createdBeforeOrAtHeight) : undefined,
+      createdBeforeOrAt,
+      createdOnOrAfterHeight:
+    createdOnOrAfterHeight != null ? String(createdOnOrAfterHeight) : undefined,
+      createdOnOrAfter,
+    };
+
+    const [subaccounts, pnlData]: [
+      SubaccountFromDatabase[],
+      PaginationFromDatabase<PnlFromDatabase>,
+    ] = await Promise.all([
+      // Query to find all subaccounts
+      SubaccountTable.findAll(
+        {
+          id: childSubaccountIds,
+        },
+        [QueryableField.ID],
+      ),
+
+      daily === true
+        ? PnlTable.findAllDailyPnl(
+          queryParams,
+          [QueryableField.LIMIT],
+          DEFAULT_POSTGRES_OPTIONS,
+        )
+        : PnlTable.findAll(
+          queryParams,
+          [QueryableField.LIMIT],
+          {
+            ...DEFAULT_POSTGRES_OPTIONS,
+            orderBy: [[QueryableField.CREATED_AT_HEIGHT, Ordering.DESC]],
+          },
+        ),
+    ]);
+
+    if (subaccounts.length === 0) {
+      throw new NotFoundError(
+        `No subaccounts found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
+      );
+    }
+
+    // Aggregate PNL records for all subaccounts
+    const aggregatedPnl: PnlFromDatabase[] = _.map(
+      aggregateHourlyPnl(pnlData.results),
+      'pnl',
+    );
+
+    return {
+      pnl: aggregatedPnl.map(
+        (pnl: PnlFromDatabase) => {
+          return pnlToResponseObject(pnl);
+        }),
+    };
+  }
 }
 
 router.get(
@@ -173,6 +251,72 @@ router.get(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_pnl.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.get(
+  '/parentSubaccountNumber',
+  rateLimiterMiddleware(getReqRateLimiter),
+  pnlCacheControlMiddleware,
+  ...CheckParentSubaccountSchema,
+  ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  ...CheckDailyOptionalSchema,
+  handleValidationErrors,
+  complianceAndGeoCheck,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    const {
+      address,
+      parentSubaccountNumber,
+      limit,
+      createdBeforeOrAtHeight,
+      createdBeforeOrAt,
+      createdOnOrAfterHeight,
+      createdOnOrAfter,
+      daily,
+    } = matchedData(req) as {
+      address: string,
+      parentSubaccountNumber: number,
+      limit?: number,
+      createdBeforeOrAtHeight?: number,
+      createdBeforeOrAt?: IsoString,
+      createdOnOrAfterHeight?: number,
+      createdOnOrAfter?: IsoString,
+      daily?: boolean,
+    };
+
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const parentSubaccountNum: number = +parentSubaccountNumber;
+
+    try {
+      const controllers: PnlController = new PnlController();
+      const response: PnlResponse = await controllers.getPnlForParentSubaccount(
+        address,
+        parentSubaccountNum,
+        limit,
+        createdBeforeOrAtHeight,
+        createdBeforeOrAt,
+        createdOnOrAfterHeight,
+        createdOnOrAfter,
+        daily,
+      );
+
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'PnlController GET /parentSubaccountNumber',
+        'Pnl error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_pnl_parent_subaccount.timing`,
         Date.now() - start,
       );
     }

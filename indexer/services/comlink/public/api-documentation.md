@@ -3183,6 +3183,100 @@ fetch(`${baseURL}/pnl?address=string&subaccountNumber=0.1`,
 This operation does not require authentication
 </aside>
 
+## GetPnlForParentSubaccount
+
+<a id="opIdGetPnlForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/pnl/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/pnl/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /pnl/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|createdOnOrAfterHeight|query|number(double)|false|none|
+|createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
+|daily|query|boolean|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "pnl": [
+    {
+      "equity": "string",
+      "netTransfers": "string",
+      "totalPnl": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[PnlResponse](#schemapnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SearchTrader
 
 <a id="opIdSearchTrader"></a>
