@@ -749,7 +749,7 @@ describe('pnl-controller#V4', () => {
       // Create 5 hourly records for first subaccount
       for (let i = 0; i < 5; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,
@@ -764,7 +764,7 @@ describe('pnl-controller#V4', () => {
       // Create 5 hourly records for second subaccount (same hours)
       for (let i = 0; i < 5; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,
