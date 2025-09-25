@@ -275,7 +275,7 @@ export async function findAllDailyPnl(
     );
 
   // Create the outer query that selects only the top-ranked record for each day
-  const finalQuery = PnlModel.query(Transaction.get(options.txId))
+  const finalQuery = setupBaseQuery<PnlModel>(PnlModel, options)
     .with('daily_ranked_pnl', dailyRankQuery)
     .from('daily_ranked_pnl')
     .where('row_num', 1)
