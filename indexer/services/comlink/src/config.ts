@@ -129,6 +129,10 @@ export const configSchema = {
   SOLANA_WEBHOOK_ID: parseString({ default: 'wh_eqxyotjv478gscpo' }),
   // minimum threshold we need to hit for go fast to be free.
   ETHEREUM_GO_FAST_FREE_MINIMUM: parseInteger({ default: 100 }),
+
+  // Amplitude configuration
+  AMPLITUDE_API_KEY: parseString({ default: '' }),
+  AMPLITUDE_SERVER_URL: parseString({ default: 'https://api.eu.amplitude.com/2/httpapi' }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

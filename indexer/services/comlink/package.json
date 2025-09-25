@@ -21,6 +21,7 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
+    "@amplitude/analytics-node": "^1.5.11",
     "@bugsnag/core": "^7.18.0",
     "@bugsnag/js": "^7.18.0",
     "@bugsnag/node": "^7.18.0",
