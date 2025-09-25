@@ -300,7 +300,7 @@ describe('alchemy-helpers', () => {
       // Note: This tests the retry logic through the main function
       await addAddressesToAlchemyWebhook(evmAddress, '');
 
-      // Should be called multiple times due to retries for the first chain, then continue with others
+      // Should be called multiple times due to retries for the first chain, then continue
       expect(mockFetch).toHaveBeenCalledTimes(7); // 3 attempts for first chain + 4 more chains
     });
   });
@@ -329,7 +329,7 @@ describe('alchemy-helpers', () => {
       } as Response);
 
       await expect(addAddressesToAlchemyWebhook(malformedAddress, '')).rejects.toThrow(
-        'EVM address does not exist in the database: invalid-address'
+        'EVM address does not exist in the database: invalid-address',
       );
 
       // Should not make any webhook calls
