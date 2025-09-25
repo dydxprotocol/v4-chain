@@ -47,7 +47,7 @@ import {
   getChildSubaccountNums,
   aggregateHourlyPnlTicks,
   getSubaccountResponse,
-  aggregateHourlyPnl,
+  aggregatePnl,
 } from '../../src/lib/helpers';
 import _ from 'lodash';
 import Big from 'big.js';
@@ -958,13 +958,13 @@ describe('helpers', () => {
     });
   });
 
-  describe('aggregateHourlyPnl', () => {
+  describe('aggregatePnl', () => {
     it('aggregates single pnl record', () => {
       const pnl: PnlFromDatabase = {
         ...testConstants.defaultPnl,
       };
 
-      const aggregatedPnls: AggregatedPnl[] = aggregateHourlyPnl([pnl]);
+      const aggregatedPnls: AggregatedPnl[] = aggregatePnl([pnl]);
 
       expect(
         aggregatedPnls,
@@ -1021,7 +1021,7 @@ describe('helpers', () => {
         createdAt: createdAt4,
       };
 
-      const aggregatedPnls: AggregatedPnl[] = aggregateHourlyPnl(
+      const aggregatedPnls: AggregatedPnl[] = aggregatePnl(
         [pnl, pnl2, pnl3, pnl4, pnl5],
       );
 
@@ -1086,16 +1086,176 @@ describe('helpers', () => {
         createdAt: '2023-01-01T12:45:00.000Z',
       };
 
-      const aggregatedPnls: AggregatedPnl[] = aggregateHourlyPnl([pnl1, pnl2, pnl3]);
+      const aggregatedPnls: AggregatedPnl[] = aggregatePnl([pnl1, pnl2, pnl3]);
 
       expect(aggregatedPnls.length).toBe(1);
       expect(aggregatedPnls[0].numPnls).toBe(3);
       expect(aggregatedPnls[0].pnl).toMatchObject({
-        equity: '6000',  // 1000 + 2000 + 3000
+        equity: '6000', // 1000 + 2000 + 3000
         totalPnl: '600', // 100 + 200 + 300
         netTransfers: '5400', // 900 + 1800 + 2700
         createdAt: '2023-01-01T12:00:00.000Z', // truncated to hour start
       });
+    });
+
+    it('properly aggregates daily-interval PNL records across subaccounts', () => {
+    // Create daily PNL records for two different subaccounts spanning 3 days
+
+      // Subaccount 1, day 1
+      const pnl1Day1: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId,
+        equity: '1000',
+        totalPnl: '100',
+        netTransfers: '900',
+        createdAt: '2023-01-01T00:00:00.000Z',
+        createdAtHeight: '1000',
+      };
+
+      // Subaccount 2, day 1
+      const pnl2Day1: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '2000',
+        totalPnl: '200',
+        netTransfers: '1800',
+        createdAt: '2023-01-01T00:00:00.000Z',
+        createdAtHeight: '1001',
+      };
+
+      // Subaccount 1, day 2
+      const pnl1Day2: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId,
+        equity: '1100',
+        totalPnl: '110',
+        netTransfers: '990',
+        createdAt: '2023-01-02T00:00:00.000Z',
+        createdAtHeight: '2000',
+      };
+
+      // Subaccount 2, day 2
+      const pnl2Day2: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '2100',
+        totalPnl: '210',
+        netTransfers: '1890',
+        createdAt: '2023-01-02T00:00:00.000Z',
+        createdAtHeight: '2001',
+      };
+
+      // Subaccount 1, day 3
+      const pnl1Day3: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId,
+        equity: '1200',
+        totalPnl: '120',
+        netTransfers: '1080',
+        createdAt: '2023-01-03T00:00:00.000Z',
+        createdAtHeight: '3000',
+      };
+
+      // Subaccount 2, day 3
+      const pnl2Day3: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '2200',
+        totalPnl: '220',
+        netTransfers: '1980',
+        createdAt: '2023-01-03T00:00:00.000Z',
+        createdAtHeight: '3001',
+      };
+
+      // All records with daily intervals
+      const allPnls = [pnl1Day1, pnl2Day1, pnl1Day2, pnl2Day2, pnl1Day3, pnl2Day3];
+
+      const aggregatedPnls: AggregatedPnl[] = aggregatePnl(allPnls);
+
+      // Should have 3 aggregated records (one for each day)
+      expect(aggregatedPnls.length).toBe(3);
+
+      // Each aggregated record should combine both subaccounts
+      expect(aggregatedPnls).toEqual(
+        expect.arrayContaining([
+        // Day 1 combined
+          expect.objectContaining({
+            pnl: expect.objectContaining({
+              equity: '3000', // 1000 + 2000
+              totalPnl: '300', // 100 + 200
+              netTransfers: '2700', // 900 + 1800
+              createdAt: '2023-01-01T00:00:00.000Z',
+            }),
+            numPnls: 2,
+          }),
+
+          // Day 2 combined
+          expect.objectContaining({
+            pnl: expect.objectContaining({
+              equity: '3200', // 1100 + 2100
+              totalPnl: '320', // 110 + 210
+              netTransfers: '2880', // 990 + 1890
+              createdAt: '2023-01-02T00:00:00.000Z',
+            }),
+            numPnls: 2,
+          }),
+
+          // Day 3 combined
+          expect.objectContaining({
+            pnl: expect.objectContaining({
+              equity: '3400', // 1200 + 2200
+              totalPnl: '340', // 120 + 220
+              netTransfers: '3060', // 1080 + 1980
+              createdAt: '2023-01-03T00:00:00.000Z',
+            }),
+            numPnls: 2,
+          }),
+        ]),
+      );
+    });
+
+    it('handles mixed hourly and daily interval records correctly', () => {
+    // Daily record for subaccount 1
+      const pnl1Daily: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId,
+        equity: '1000',
+        totalPnl: '100',
+        netTransfers: '900',
+        createdAt: '2023-01-01T00:00:00.000Z',
+      };
+
+      // Hourly record for subaccount 2, same day but different hour
+      const pnl2Hourly: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '2000',
+        totalPnl: '200',
+        netTransfers: '1800',
+        createdAt: '2023-01-01T12:00:00.000Z', // Different hour
+      };
+
+      // Another hourly record for subaccount 2, same day but different hour
+      const pnl2Hourly2: PnlFromDatabase = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.defaultSubaccountId2,
+        equity: '2100',
+        totalPnl: '210',
+        netTransfers: '1890',
+        createdAt: '2023-01-01T13:00:00.000Z', // Different hour
+      };
+
+      const aggregatedPnls: AggregatedPnl[] = aggregatePnl([pnl1Daily, pnl2Hourly, pnl2Hourly2]);
+
+      // Should have 3 records - they're at different hours
+      expect(aggregatedPnls.length).toBe(3);
+
+      // Each should have 1 subaccount
+      expect(aggregatedPnls.every((agg) => agg.numPnls === 1)).toBe(true);
+
+      // Should include all the original equity values
+      const equityValues = aggregatedPnls.map((agg) => agg.pnl.equity).sort();
+      expect(equityValues).toEqual(['1000', '2000', '2100']);
     });
   });
 });

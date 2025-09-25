@@ -739,29 +739,36 @@ export function aggregateHourlyPnlTicks(
 }
 
 /**
- * Aggregates a list of PnL, combining any PnL values for the same hour by summing
- * the equity, totalPnl, and net transfers.
- * Returns a map of aggregated pnl and the number of data points is made up of.
- * @param allPnls
- * @returns
+ * Aggregates PNL records by time period (hour), combining values from different subaccounts.
+ * For each unique hour, sums the equity, totalPnl, and netTransfers across all subaccounts.
+ * Returns a map of aggregated PNL records and the number of subaccounts included in each.
+ *
+ * @param allPnls - Array of PNL records to aggregate
+ * @returns Array of aggregated PNL records with counts
  */
-export function aggregateHourlyPnl(
+export function aggregatePnl(
   allPnls: PnlFromDatabase[],
 ): AggregatedPnl[] {
-  const hourlyPnl: Map<string, PnlFromDatabase> = new Map();
-  const hourlySubaccountIds: Map<string, Set<string>> = new Map();
+  const timeGroupedPnl: Map<string, PnlFromDatabase> = new Map();
+  const timeGroupedSubaccountIds: Map<string, Set<string>> = new Map();
+
   for (const pnl of allPnls) {
+    // Group by hour - this works whether the records are hourly or daily
+    // as it will preserve the original time granularity
     const truncatedTime: string = DateTime.fromISO(pnl.createdAt).startOf('hour').toISO();
-    if (hourlyPnl.has(truncatedTime)) {
-      const subaccountIds: Set<string> = hourlySubaccountIds.get(truncatedTime) as Set<string>;
+
+    if (timeGroupedPnl.has(truncatedTime)) {
+      const subaccountIds: Set<string> = timeGroupedSubaccountIds.get(truncatedTime) as Set<string>;
       if (subaccountIds.has(pnl.subaccountId)) {
-        continue;
+        continue; // Skip duplicate records for the same subaccount in the same time period
       }
+
       subaccountIds.add(pnl.subaccountId);
-      const aggregatedPnl: PnlFromDatabase = hourlyPnl.get(
+      const aggregatedPnl: PnlFromDatabase = timeGroupedPnl.get(
         truncatedTime,
       ) as PnlFromDatabase;
-      hourlyPnl.set(
+
+      timeGroupedPnl.set(
         truncatedTime,
         {
           ...aggregatedPnl,
@@ -770,16 +777,17 @@ export function aggregateHourlyPnl(
           netTransfers: Big(aggregatedPnl.netTransfers).plus(pnl.netTransfers).toFixed(),
         },
       );
-      hourlySubaccountIds.set(truncatedTime, subaccountIds);
+      timeGroupedSubaccountIds.set(truncatedTime, subaccountIds);
     } else {
-      hourlyPnl.set(truncatedTime, pnl);
-      hourlySubaccountIds.set(truncatedTime, new Set([pnl.subaccountId]));
+      timeGroupedPnl.set(truncatedTime, pnl);
+      timeGroupedSubaccountIds.set(truncatedTime, new Set([pnl.subaccountId]));
     }
   }
-  return Array.from(hourlyPnl.keys()).map((hour: string): AggregatedPnl => {
+
+  return Array.from(timeGroupedPnl.keys()).map((timeKey: string): AggregatedPnl => {
     return {
-      pnl: hourlyPnl.get(hour) as PnlFromDatabase,
-      numPnls: (hourlySubaccountIds.get(hour) as Set<string>).size,
+      pnl: timeGroupedPnl.get(timeKey) as PnlFromDatabase,
+      numPnls: (timeGroupedSubaccountIds.get(timeKey) as Set<string>).size,
     };
   });
 }

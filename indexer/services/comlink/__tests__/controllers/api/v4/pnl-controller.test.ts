@@ -440,4 +440,403 @@ describe('pnl-controller#V4', () => {
     });
   });
 
+  describe('Get /pnl/parentSubaccountNumber', () => {
+    afterEach(async () => {
+      await dbHelpers.clearData();
+    });
+
+    it('Get /pnl/parentSubaccountNumber returns aggregated PNL across child subaccounts', async () => {
+      await testMocks.seedData();
+
+      // Create PNL records for two different subaccounts (children of the same parent)
+      const pnl1: PnlCreateObject = {
+        ...testConstants.defaultPnl,
+        equity: '1000.00',
+        totalPnl: '100.00',
+        netTransfers: '900.00',
+      };
+
+      const pnl2: PnlCreateObject = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.isolatedSubaccountId,
+        equity: '2000.00',
+        totalPnl: '200.00',
+        netTransfers: '1800.00',
+      };
+
+      await Promise.all([
+        PnlTable.create(pnl1),
+        PnlTable.create(pnl2),
+      ]);
+
+      const parentSubaccountNumber: number = 0;
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber,
+        })}`,
+      });
+
+      // Check for the aggregated values but with the correct format (without decimal places)
+      expect(response.body.pnl).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            equity: '3000',
+            totalPnl: '300',
+            netTransfers: '2700',
+            createdAt: testConstants.defaultPnl.createdAt,
+          }),
+        ]),
+      );
+    });
+
+    it('Get /pnl/parentSubaccountNumber with daily=true returns daily aggregated PNL', async () => {
+      await testMocks.seedData();
+
+      // Create hourly PNL records spanning 2 days for two different subaccounts
+      const baseDate = new Date('2023-01-01T00:00:00.000Z');
+      const hourlyRecords = [];
+
+      // Create 48 hourly records (2 days) for first subaccount
+      for (let i = 0; i < 48; i++) {
+        const date = new Date(baseDate);
+        date.setHours(baseDate.getHours() + i);
+
+        hourlyRecords.push({
+          ...testConstants.defaultPnl,
+          createdAt: date.toISOString(),
+          createdAtHeight: (1000 + i).toString(),
+          equity: (1000 + i).toString(),
+          totalPnl: (100 + i).toString(),
+          netTransfers: (900 + i).toString(),
+        });
+      }
+
+      // Create 48 hourly records (2 days) for second subaccount
+      for (let i = 0; i < 48; i++) {
+        const date = new Date(baseDate);
+        date.setHours(baseDate.getHours() + i);
+
+        hourlyRecords.push({
+          ...testConstants.defaultPnl,
+          subaccountId: testConstants.isolatedSubaccountId,
+          createdAt: date.toISOString(),
+          createdAtHeight: (2000 + i).toString(),
+          equity: (2000 + i).toString(),
+          totalPnl: (200 + i).toString(),
+          netTransfers: (1800 + i).toString(),
+        });
+      }
+
+      // Insert all records
+      await Promise.all(
+        hourlyRecords.map((record) => PnlTable.create(record)),
+      );
+
+      // Test with daily=true
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'true',
+        })}`,
+      });
+
+      // Should have 2 records (one for each day)
+      expect(response.body.pnl.length).toEqual(2);
+
+      // Get the records for further verification
+      const day1Record = response.body.pnl.find(
+        (r: any) => r.createdAt.startsWith('2023-01-01'),
+      );
+      const day2Record = response.body.pnl.find(
+        (r: any) => r.createdAt.startsWith('2023-01-02'),
+      );
+
+      // Verify both day records exist
+      expect(day1Record).toBeDefined();
+      expect(day2Record).toBeDefined();
+
+      // Expected values for day 1 (the last hour of day 1)
+      // Last record for day 1 for first subaccount is i=23:
+      //    equity=1023, totalPnl=123, netTransfers=923
+      // Last record for day 1 for second subaccount is i=23:
+      //    equity=2023, totalPnl=223, netTransfers=1823
+      // Total: equity=3046, totalPnl=346, netTransfers=2746
+
+      // Verify day 1 values (using Number parsing to ignore string format differences)
+      expect(Number(day1Record.equity)).toEqual(3046);
+      expect(Number(day1Record.totalPnl)).toEqual(346);
+      expect(Number(day1Record.netTransfers)).toEqual(2746);
+
+      // Expected values for day 2 (the last hour of day 2)
+      // Last record for day 2 for first subaccount is i=47:
+      //    equity=1047, totalPnl=147, netTransfers=947
+      // Last record for day 2 for second subaccount is i=47:
+      //    equity=2047, totalPnl=247, netTransfers=1847
+      // Total: equity=3094, totalPnl=394, netTransfers=2794
+
+      // Verify day 2 values
+      expect(Number(day2Record.equity)).toEqual(3094);
+      expect(Number(day2Record.totalPnl)).toEqual(394);
+      expect(Number(day2Record.netTransfers)).toEqual(2794);
+
+      // Verify the records are in descending order by date (day 2 should come before day 1)
+      const timestamps = response.body.pnl.map(
+        (record: any) => new Date(record.createdAt).getTime());
+      expect(timestamps[0]).toBeGreaterThan(timestamps[1]);
+    });
+
+    it('Get /pnl/parentSubaccountNumber respects filtering parameters', async () => {
+      await testMocks.seedData();
+
+      // Create PNL records with different timestamps and heights
+      const pnl1: PnlCreateObject = {
+        ...testConstants.defaultPnl,
+        createdAt: '2023-01-01T00:00:00.000Z',
+        createdAtHeight: '1000',
+      };
+
+      const pnl2: PnlCreateObject = {
+        ...testConstants.defaultPnl,
+        subaccountId: testConstants.isolatedSubaccountId,
+        createdAt: '2023-01-02T00:00:00.000Z',
+        createdAtHeight: '2000',
+      };
+
+      const pnl3: PnlCreateObject = {
+        ...testConstants.defaultPnl,
+        createdAt: '2023-01-03T00:00:00.000Z',
+        createdAtHeight: '3000',
+      };
+
+      await Promise.all([
+        PnlTable.create(pnl1),
+        PnlTable.create(pnl2),
+        PnlTable.create(pnl3),
+      ]);
+
+      // Test with createdBeforeOrAt filter
+      const responseBefore: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          createdBeforeOrAt: '2023-01-02T12:00:00.000Z',
+        })}`,
+      });
+
+      // Should only include records before or at the specified time
+      expect(responseBefore.body.pnl.length).toBeGreaterThanOrEqual(1);
+      expect(responseBefore.body.pnl.every(
+        (record: any) => new Date(record.createdAt) <= new Date('2023-01-02T12:00:00.000Z'),
+      )).toBe(true);
+
+      // Test with createdOnOrAfter filter
+      const responseAfter: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          createdOnOrAfter: '2023-01-02T00:00:00.000Z',
+        })}`,
+      });
+
+      // Should only include records on or after the specified time
+      expect(responseAfter.body.pnl.length).toBeGreaterThanOrEqual(1);
+      expect(responseAfter.body.pnl.every(
+        (record: any) => new Date(record.createdAt) >= new Date('2023-01-02T00:00:00.000Z'),
+      )).toBe(true);
+
+      // Test with height filters
+      const responseHeight: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          createdBeforeOrAtHeight: 2000,
+          createdOnOrAfterHeight: 1000,
+        })}`,
+      });
+
+      // Should only include records within the specified height range
+      expect(responseHeight.body.pnl.length).toBeGreaterThanOrEqual(1);
+      expect(responseHeight.body.pnl.every(
+        (record: any) => parseInt(record.createdAtHeight, 10) >= 1000 &&
+        parseInt(record.createdAtHeigh, 10) <= 2000,
+      )).toBe(true);
+    });
+
+    it('Get /pnl/parentSubaccountNumber with limit parameter respects the limit', async () => {
+      await testMocks.seedData();
+
+      // Create multiple PNL records
+      const records = [];
+      for (let i = 0; i < 5; i++) {
+        records.push({
+          ...testConstants.defaultPnl,
+          createdAt: new Date(Date.now() - i * 3600000).toISOString(), // 1 hour apart
+          createdAtHeight: (1000 + i).toString(),
+        });
+      }
+
+      await Promise.all(records.map((record) => PnlTable.create(record)));
+
+      // Test with limit parameter
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 3,
+        })}`,
+      });
+
+      // Should respect the limit
+      expect(response.body.pnl.length).toBeLessThanOrEqual(3);
+    });
+
+    it('Get /pnl/parentSubaccountNumber with invalid parentSubaccountNumber returns error', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 128,
+        })}`,
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            location: 'query',
+            msg: 'parentSubaccountNumber must be a non-negative integer less than 128',
+            param: 'parentSubaccountNumber',
+            value: '128',
+          },
+        ],
+      });
+    });
+
+    it('Get /pnl/parentSubaccountNumber with non-existent address returns 404', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: 'nonexistentaddress',
+          parentSubaccountNumber: 0,
+        })}`,
+        expectedStatus: 404,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            msg: 'No subaccounts found with address nonexistentaddress and parentSubaccountNumber 0',
+          },
+        ],
+      });
+    });
+
+    it('Get /pnl/parentSubaccountNumber with daily=false returns hourly aggregated PNL', async () => {
+      await testMocks.seedData();
+
+      // Create hourly PNL records for two different subaccounts
+      const baseDate = new Date('2023-01-01T00:00:00.000Z');
+      const hourlyRecords = [];
+
+      // Create 5 hourly records for first subaccount
+      for (let i = 0; i < 5; i++) {
+        const date = new Date(baseDate);
+        date.setHours(baseDate.getHours() + i);
+
+        hourlyRecords.push({
+          ...testConstants.defaultPnl,
+          createdAt: date.toISOString(),
+          createdAtHeight: (1000 + i).toString(),
+          equity: (1000 + i).toString(),
+          totalPnl: (100 + i).toString(),
+          netTransfers: (900 + i).toString(),
+        });
+      }
+
+      // Create 5 hourly records for second subaccount (same hours)
+      for (let i = 0; i < 5; i++) {
+        const date = new Date(baseDate);
+        date.setHours(baseDate.getHours() + i);
+
+        hourlyRecords.push({
+          ...testConstants.defaultPnl,
+          subaccountId: testConstants.isolatedSubaccountId,
+          createdAt: date.toISOString(),
+          createdAtHeight: (2000 + i).toString(),
+          equity: (2000 + i).toString(),
+          totalPnl: (200 + i).toString(),
+          netTransfers: (1800 + i).toString(),
+        });
+      }
+
+      // Insert all records
+      await Promise.all(
+        hourlyRecords.map((record) => PnlTable.create(record)),
+      );
+
+      // Test with daily=false explicitly
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'false',
+        })}`,
+      });
+
+      // Should have 5 records (one for each hour)
+      expect(response.body.pnl.length).toEqual(5);
+
+      // Verify hourly timestamps
+      const timestamps = response.body.pnl.map((r: any) => new Date(r.createdAt));
+
+      // Check timestamps are in descending order
+      for (let i = 0; i < timestamps.length - 1; i++) {
+        expect(timestamps[i] > timestamps[i + 1]).toBe(true);
+      }
+
+      // Check that records are 1 hour apart
+      for (let i = 0; i < timestamps.length - 1; i++) {
+        const diffHours = (timestamps[i].getTime() - timestamps[i + 1].getTime()) /
+        (1000 * 60 * 60);
+        expect(diffHours).toBeCloseTo(1, 1); // Should be close to 1 hour apart
+      }
+
+      // Verify the aggregated values for each hour
+      // For hour 0 (first hour): 1000 + 2000 = 3000
+      expect(Number(response.body.pnl[4].equity)).toEqual(3000); // index 4 since descending
+      expect(Number(response.body.pnl[4].totalPnl)).toEqual(300);
+      expect(Number(response.body.pnl[4].netTransfers)).toEqual(2700);
+
+      // For hour 4 (last hour): 1004 + 2004 = 3008
+      expect(Number(response.body.pnl[0].equity)).toEqual(3008); // index 0 since descending
+      expect(Number(response.body.pnl[0].totalPnl)).toEqual(308);
+      expect(Number(response.body.pnl[0].netTransfers)).toEqual(2708);
+
+      // Test with omitted daily parameter (should default to false)
+      const defaultResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+        })}`,
+      });
+
+      // Should also have 5 records when daily is omitted (default behavior)
+      expect(defaultResponse.body.pnl.length).toEqual(5);
+
+      // First record should match in both responses (same aggregation logic)
+      expect(defaultResponse.body.pnl[0].equity).toEqual(response.body.pnl[0].equity);
+      expect(defaultResponse.body.pnl[0].totalPnl).toEqual(response.body.pnl[0].totalPnl);
+      expect(defaultResponse.body.pnl[0].netTransfers).toEqual(response.body.pnl[0].netTransfers);
+    });
+  });
 });

@@ -21,7 +21,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { aggregateHourlyPnl, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
+import { aggregatePnl, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckDailyOptionalSchema,
@@ -177,7 +177,7 @@ class PnlController extends Controller {
 
     // Aggregate PNL records for all subaccounts
     const aggregatedPnl: PnlFromDatabase[] = _.map(
-      aggregateHourlyPnl(pnlData.results),
+      aggregatePnl(pnlData.results),
       'pnl',
     );
 
