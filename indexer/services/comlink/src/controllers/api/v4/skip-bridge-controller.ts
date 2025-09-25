@@ -46,6 +46,7 @@ import {
   getSvmSigner, getSkipCallData, getKernelAccount,
   buildUserAddresses,
 } from '../../../helpers/skip-helper';
+import { trackTurnkeyDepositSubmitted } from '../../../lib/amplitude-helpers';
 import { handleControllerError } from '../../../lib/helpers';
 import {
   dydxChainId, usdcAddressByChainId, ethDenomByChainId,
@@ -363,6 +364,14 @@ class BridgeController extends Controller {
 
           await BridgeInformationTable.create(bridgeRecord);
 
+          // Track TurnKey deposit confirmation event in Amplitude
+          await trackTurnkeyDepositSubmitted(
+            dydxAddress,
+            c,
+            amount,
+            txHash,
+            sourceAssetDenom,
+          );
           logger.info({
             at: `${controllerName}#startSolanaBridge`,
             message: 'Bridge transaction tracked',
@@ -532,6 +541,19 @@ class BridgeController extends Controller {
         await BridgeInformationTable.create(
           bridgeRecord,
         );
+
+        // Track TurnKey deposit confirmation event in Amplitude
+        const dydxAddress = await getDydxAddress(fromAddress, chainId);
+        if (dydxAddress) {
+          await trackTurnkeyDepositSubmitted(
+            dydxAddress,
+            chainId,
+            amount,
+            receipt.transactionHash,
+            sourceAssetDenom,
+          );
+        }
+
         logger.info({
           at: `${controllerName}#startEvmBridge`,
           message: 'Bridge information record created',

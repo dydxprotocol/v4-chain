@@ -453,6 +453,7 @@ importers:
 
   services/comlink:
     specifiers:
+      '@amplitude/analytics-node': ^1.5.11
       '@bugsnag/core': ^7.18.0
       '@bugsnag/js': ^7.18.0
       '@bugsnag/node': ^7.18.0
@@ -530,6 +531,7 @@ importers:
       typescript: ^5.8.3
       viem: ~2.31.7
     dependencies:
+      '@amplitude/analytics-node': 1.5.11
       '@bugsnag/core': 7.18.0
       '@bugsnag/js': 7.18.0
       '@bugsnag/node': 7.18.0
@@ -936,6 +938,24 @@ packages:
 
   /@adraffy/ens-normalize/1.11.0:
     resolution: {integrity: sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==}
+    dev: false
+
+  /@amplitude/analytics-connector/1.6.4:
+    resolution: {integrity: sha512-SpIv0IQMNIq6SH3UqFGiaZyGSc7PBZwRdq7lvP0pBxW8i4Ny+8zwI0pV+VMfMHQwWY3wdIbWw5WQphNjpdq1/Q==}
+    dev: false
+
+  /@amplitude/analytics-core/2.25.0:
+    resolution: {integrity: sha512-elWh5BTAMKx66gpjaUnqVpz2ZifMsVYvpcY+btEYFTyyLhfAi7G7QJ87xYAYZQvn3/49ioILjF5yyKW2D0BtEg==}
+    dependencies:
+      '@amplitude/analytics-connector': 1.6.4
+      tslib: 2.8.1
+    dev: false
+
+  /@amplitude/analytics-node/1.5.11:
+    resolution: {integrity: sha512-n2Ts234g5yrRNJZCxoCk9Kkc04zmcj5ap5nUJ7vW6Nc/iUotjlJJuPca+9dx3z44OXSY4TP8kesa9ap5RFi5Lg==}
+    dependencies:
+      '@amplitude/analytics-core': 2.25.0
+      tslib: 2.8.1
     dev: false
 
   /@ampproject/remapping/2.2.0:
