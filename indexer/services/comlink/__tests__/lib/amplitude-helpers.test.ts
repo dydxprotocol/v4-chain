@@ -167,9 +167,9 @@ describe('amplitude-helpers', () => {
     });
   });
 
-  describe('trackTurnKeyDepositConfirmed', () => {
+  describe('trackTurnkeyDepositSubmitted', () => {
     it('should track TurnKey deposit event with all parameters', async () => {
-      const { trackTurnKeyDepositConfirmed, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
+      const { trackTurnkeyDepositSubmitted, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
 
       // Initialize first
       initializeAmplitude();
@@ -180,7 +180,7 @@ describe('amplitude-helpers', () => {
       const transactionHash = '0x1234567890abcdef';
       const sourceAssetDenom = 'uusdc';
 
-      await trackTurnKeyDepositConfirmed(
+      await trackTurnkeyDepositSubmitted(
         dydxAddress,
         chainId,
         amount,
@@ -189,7 +189,7 @@ describe('amplitude-helpers', () => {
       );
 
       expect(mockTrack).toHaveBeenCalledWith(
-        'TurnKeyDepositConfirmed',
+        'TurnkeyDepositSubmitted',
         {
           chain_id: chainId,
           amount,
@@ -204,7 +204,7 @@ describe('amplitude-helpers', () => {
     });
 
     it('should track TurnKey deposit event without sourceAssetDenom', async () => {
-      const { trackTurnKeyDepositConfirmed, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
+      const { trackTurnkeyDepositSubmitted, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
 
       // Initialize first
       initializeAmplitude();
@@ -214,7 +214,7 @@ describe('amplitude-helpers', () => {
       const amount = '1000';
       const transactionHash = '0x1234567890abcdef';
 
-      await trackTurnKeyDepositConfirmed(
+      await trackTurnkeyDepositSubmitted(
         dydxAddress,
         chainId,
         amount,
@@ -222,7 +222,7 @@ describe('amplitude-helpers', () => {
       );
 
       expect(mockTrack).toHaveBeenCalledWith(
-        'TurnKeyDepositConfirmed',
+        'TurnkeyDepositSubmitted',
         {
           chain_id: chainId,
           amount,
@@ -237,14 +237,14 @@ describe('amplitude-helpers', () => {
     });
 
     it('should include current timestamp in event properties', async () => {
-      const { trackTurnKeyDepositConfirmed, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
+      const { trackTurnkeyDepositSubmitted, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
 
       // Initialize first
       initializeAmplitude();
 
       const beforeTime = new Date();
 
-      await trackTurnKeyDepositConfirmed(
+      await trackTurnkeyDepositSubmitted(
         'dydx1abc123',
         'dydxprotocol',
         '1000',
@@ -254,7 +254,7 @@ describe('amplitude-helpers', () => {
       const afterTime = new Date();
 
       expect(mockTrack).toHaveBeenCalledWith(
-        'TurnKeyDepositConfirmed',
+        'TurnkeyDepositSubmitted',
         expect.objectContaining({
           timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
         }),
@@ -273,12 +273,12 @@ describe('amplitude-helpers', () => {
       const error = new Error('Tracking failed');
       (mockTrack as jest.Mock).mockRejectedValueOnce(error);
 
-      const { trackTurnKeyDepositConfirmed, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
+      const { trackTurnkeyDepositSubmitted, initializeAmplitude } = require('../../src/lib/amplitude-helpers');
 
       // Initialize first
       initializeAmplitude();
 
-      await trackTurnKeyDepositConfirmed(
+      await trackTurnkeyDepositSubmitted(
         'dydx1abc123',
         'dydxprotocol',
         '1000',
@@ -289,7 +289,7 @@ describe('amplitude-helpers', () => {
         at: 'amplitude-helpers#trackAmplitudeEvent',
         message: 'Failed to track Amplitude event',
         error,
-        eventType: 'TurnKeyDepositConfirmed',
+        eventType: 'TurnkeyDepositSubmitted',
         userId: 'dydx1abc123',
         eventProperties: expect.objectContaining({
           chain_id: 'dydxprotocol',
@@ -307,7 +307,7 @@ describe('amplitude-helpers', () => {
       const {
         initializeAmplitude,
         trackAmplitudeEvent,
-        trackTurnKeyDepositConfirmed,
+        trackTurnkeyDepositSubmitted,
       } = require('../../src/lib/amplitude-helpers');
 
       // Initialize amplitude
@@ -319,7 +319,7 @@ describe('amplitude-helpers', () => {
       expect(mockTrack).toHaveBeenCalledTimes(1);
 
       // Track a TurnKey deposit event
-      await trackTurnKeyDepositConfirmed(
+      await trackTurnkeyDepositSubmitted(
         'dydx1abc123',
         'dydxprotocol',
         '1000',
@@ -340,7 +340,7 @@ describe('amplitude-helpers', () => {
         user_id: 'user123',
       });
 
-      expect(mockTrack).toHaveBeenNthCalledWith(2, 'TurnKeyDepositConfirmed', {
+      expect(mockTrack).toHaveBeenNthCalledWith(2, 'TurnkeyDepositSubmitted', {
         chain_id: 'dydxprotocol',
         amount: '1000',
         transaction_hash: '0x1234567890abcdef',

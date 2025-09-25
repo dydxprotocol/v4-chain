@@ -27,6 +27,11 @@ jest.mock('../../src/config', () => ({
   ALCHEMY_AUTH_TOKEN: 'test-auth-token',
   ALCHEMY_WEBHOOK_ID: 'test-webhook-id',
   ALCHEMY_WEBHOOK_UPDATE_URL: 'https://dashboard.alchemy.com/api/update-webhook-addresses',
+  ETHEREUM_WEBHOOK_ID: 'wh_ctbkt6y9hez91xr2',
+  ARBITRUM_WEBHOOK_ID: 'wh_ltwqwcsrx1b8lgry',
+  AVALANCHE_WEBHOOK_ID: 'wh_52wz9dbxywxov2dm',
+  BASE_WEBHOOK_ID: 'wh_lpjn5gnwj0ll0gap',
+  OPTIMISM_WEBHOOK_ID: 'wh_7eo900bsg8rkvo6z',
   SOLANA_WEBHOOK_ID: 'wh_eqxyotjv478gscpo',
 }));
 
@@ -143,11 +148,11 @@ describe('alchemy-helpers', () => {
       // Should be called for each EVM chain + Solana
       const expectedWebhookIds = [
         'wh_ctbkt6y9hez91xr2', // mainnet
-        'wh_arbitrum',          // arbitrum
-        'wh_avalanche',         // avalanche
-        'wh_base',              // base
-        'wh_optimism',          // optimism
-        'wh_eqxyotjv478gscpo',            // solana
+        'wh_ltwqwcsrx1b8lgry', // arbitrum
+        'wh_52wz9dbxywxov2dm', // avalanche
+        'wh_lpjn5gnwj0ll0gap', // base
+        'wh_7eo900bsg8rkvo6z', // optimism
+        'wh_eqxyotjv478gscpo', // solana
       ];
 
       expect(mockFetch).toHaveBeenCalledTimes(expectedWebhookIds.length);
@@ -182,16 +187,22 @@ describe('alchemy-helpers', () => {
           statusText: 'Not Found',
           text: () => Promise.resolve('{"error": "Webhook not found"}'),
         } as Response) // fourth network call fails
-        .mockResolvedValue({
+        .mockResolvedValueOnce({
           ok: true,
           status: 200,
           statusText: 'OK',
-        } as Response); // Third call succeeds
+        } as Response) // fifth call succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+        } as Response); // sixth call (Solana) succeeds
 
       await addAddressesToAlchemyWebhook(evmAddress, svmAddress);
 
       // Should still be called for all webhooks despite some failures
-      expect(mockFetch).toHaveBeenCalledTimes(8);
+      // Failed webhooks will retry 3 times each, so: 1 + 3 + 3 + 3 + 1 + 1 = 12 calls
+      expect(mockFetch).toHaveBeenCalledTimes(12); // 5 EVM chains + 1 Solana with retries
     });
 
     it('should handle missing EVM address', async () => {
@@ -244,32 +255,53 @@ describe('alchemy-helpers', () => {
     it('should handle retry logic correctly', async () => {
       const evmAddress = '0x1234567890123456789012345678901234567890';
 
-      // Mock first two calls to fail, third to succeed
+      // Mock first two calls to fail, third to succeed for the first chain
+      // Then all subsequent chains succeed immediately
       mockFetch
         .mockResolvedValueOnce({
           ok: false,
           status: 500,
           statusText: 'Internal Server Error',
           text: () => Promise.resolve('{"error": "Server error"}'),
-        } as Response)
+        } as Response) // First attempt for chain 1 fails
         .mockResolvedValueOnce({
           ok: false,
           status: 500,
           statusText: 'Internal Server Error',
           text: () => Promise.resolve('{"error": "Server error"}'),
-        } as Response)
+        } as Response) // Second attempt for chain 1 fails
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
           statusText: 'OK',
-        } as Response);
+        } as Response) // Third attempt for chain 1 succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+        } as Response) // Chain 2 succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+        } as Response) // Chain 3 succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+        } as Response) // Chain 4 succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+        } as Response); // Chain 5 succeeds
 
       // Test the retry logic by calling the registration function directly
       // Note: This tests the retry logic through the main function
       await addAddressesToAlchemyWebhook(evmAddress, '');
 
-      // Should be called multiple times due to retries
-      expect(mockFetch).toHaveBeenCalledTimes(15); // 5 chains * 3 attempts each
+      // Should be called multiple times due to retries for the first chain, then continue with others
+      expect(mockFetch).toHaveBeenCalledTimes(7); // 3 attempts for first chain + 4 more chains
     });
   });
 
@@ -296,7 +328,9 @@ describe('alchemy-helpers', () => {
         statusText: 'OK',
       } as Response);
 
-      await addAddressesToAlchemyWebhook(malformedAddress, '');
+      await expect(addAddressesToAlchemyWebhook(malformedAddress, '')).rejects.toThrow(
+        'EVM address does not exist in the database: invalid-address'
+      );
 
       // Should not make any webhook calls
       expect(mockFetch).not.toHaveBeenCalled();

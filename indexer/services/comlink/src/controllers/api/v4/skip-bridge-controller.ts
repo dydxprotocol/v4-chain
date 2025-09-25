@@ -46,7 +46,7 @@ import {
   getSvmSigner, getSkipCallData, getKernelAccount,
   buildUserAddresses,
 } from '../../../helpers/skip-helper';
-import { trackTurnkeyDepositConfirmed } from '../../../lib/amplitude-helpers';
+import { trackTurnkeyDepositSubmitted } from '../../../lib/amplitude-helpers';
 import { handleControllerError } from '../../../lib/helpers';
 import {
   dydxChainId, usdcAddressByChainId, ethDenomByChainId,
@@ -365,7 +365,7 @@ class BridgeController extends Controller {
           await BridgeInformationTable.create(bridgeRecord);
 
           // Track TurnKey deposit confirmation event in Amplitude
-          await trackTurnkeyDepositConfirmed(
+          await trackTurnkeyDepositSubmitted(
             dydxAddress,
             c,
             amount,
@@ -545,7 +545,7 @@ class BridgeController extends Controller {
         // Track TurnKey deposit confirmation event in Amplitude
         const dydxAddress = await getDydxAddress(fromAddress, chainId);
         if (dydxAddress) {
-          await trackTurnkeyDepositConfirmed(
+          await trackTurnkeyDepositSubmitted(
             dydxAddress,
             chainId,
             amount,
