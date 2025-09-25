@@ -189,7 +189,7 @@ describe('amplitude-helpers', () => {
       );
 
       expect(mockTrack).toHaveBeenCalledWith(
-        'TurnkeyDepositInitiated',
+        'TurnKeyDepositConfirmed',
         {
           chain_id: chainId,
           amount,
@@ -222,7 +222,7 @@ describe('amplitude-helpers', () => {
       );
 
       expect(mockTrack).toHaveBeenCalledWith(
-        'TurnkeyDepositInitiated',
+        'TurnKeyDepositConfirmed',
         {
           chain_id: chainId,
           amount,
@@ -254,7 +254,7 @@ describe('amplitude-helpers', () => {
       const afterTime = new Date();
 
       expect(mockTrack).toHaveBeenCalledWith(
-        'TurnkeyDepositInitiated',
+        'TurnKeyDepositConfirmed',
         expect.objectContaining({
           timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
         }),
@@ -289,7 +289,7 @@ describe('amplitude-helpers', () => {
         at: 'amplitude-helpers#trackAmplitudeEvent',
         message: 'Failed to track Amplitude event',
         error,
-        eventType: 'TurnkeyDepositInitiated',
+        eventType: 'TurnKeyDepositConfirmed',
         userId: 'dydx1abc123',
         eventProperties: expect.objectContaining({
           chain_id: 'dydxprotocol',
@@ -340,7 +340,7 @@ describe('amplitude-helpers', () => {
         user_id: 'user123',
       });
 
-      expect(mockTrack).toHaveBeenNthCalledWith(2, 'TurnkeyDepositInitiated', {
+      expect(mockTrack).toHaveBeenNthCalledWith(2, 'TurnKeyDepositConfirmed', {
         chain_id: 'dydxprotocol',
         amount: '1000',
         transaction_hash: '0x1234567890abcdef',
