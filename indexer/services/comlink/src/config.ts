@@ -131,7 +131,7 @@ export const configSchema = {
   ETHEREUM_GO_FAST_FREE_MINIMUM: parseInteger({ default: 100 }),
 
   // Amplitude configuration
-  AMPLITUDE_API_KEY: parseString({ default: '630e4710abefa73fcc01f80278294574' }),
+  AMPLITUDE_API_KEY: parseString({ default: '' }),
   AMPLITUDE_SERVER_URL: parseString({ default: 'https://api.eu.amplitude.com/2/httpapi' }),
 };
 
