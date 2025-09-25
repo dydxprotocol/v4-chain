@@ -3,6 +3,7 @@ import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { Alchemy } from 'alchemy-sdk';
 import { decode, encode } from 'bech32';
 import express from 'express';
 import {
@@ -46,6 +47,10 @@ export const chains: Record<string, Chain> = {
   [optimism.id.toString()]: optimism,
 };
 
+const alchemy = new Alchemy({
+  authToken: config.ALCHEMY_AUTH_TOKEN,
+});
+
 export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   acc[chainId] = createPublicClient({
     transport: http(getRPCEndpoint(chainId)),
@@ -55,55 +60,54 @@ export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
 }, {} as Record<string, PublicClient>);
 
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
-  try {
-    // Add EVM address to webhook for monitoring
-    if (evm) {
-      const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(evm);
-      if (!record) {
-        throw new Error(`EVM address does not exist in the database: ${evm}`);
-      }
-      // Iterate over all EVM networks and register the address with each webhook
-      for (const [chainId, webhookId] of Object.entries(evmChainIdToAlchemyWebhookId)) {
-        try {
-          await registerAddressWithAlchemyWebhookWithRetry(evm, webhookId);
-          logger.info({
-            at: 'TurnkeyController#addAddressesToAlchemyWebhook',
-            message: `Successfully registered EVM address with webhook for chain ${chainId}`,
-            address: evm,
-            chainId,
-            webhookId,
-          });
-        } catch (error) {
-          logger.error({
-            at: 'TurnkeyController#addAddressesToAlchemyWebhook',
-            message: `Failed to register EVM address with webhook for chain ${chainId} after retries`,
-            error,
-            address: evm,
-            chainId,
-            webhookId,
-          });
-        }
+  // Add EVM address to webhook for monitoring
+  if (evm) {
+    const record: TurnkeyUserFromDatabase | undefined = await findByEvmAddress(evm);
+    if (!record) {
+      throw new Error(`EVM address does not exist in the database: ${evm}`);
+    }
+    // Iterate over all EVM networks and register the address with each webhook
+    for (const [chainId, webhookId] of Object.entries(evmChainIdToAlchemyWebhookId)) {
+      try {
+        await registerAddressWithAlchemyWebhookWithRetry(evm, webhookId);
+        logger.info({
+          at: 'TurnkeyController#addAddressesToAlchemyWebhook',
+          message: `Successfully registered EVM address with webhook for chain ${chainId}`,
+          address: evm,
+          chainId,
+          webhookId,
+        });
+      } catch (error) {
+        logger.error({
+          at: 'TurnkeyController#addAddressesToAlchemyWebhook',
+          message: `Failed to register EVM address with webhook for chain ${chainId} after retries`,
+          error,
+          address: evm,
+          chainId,
+          webhookId,
+        });
       }
     }
-
-    // Add SVM address to webhook for monitoring
-    if (svm) {
-      const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(svm);
-      if (!record) {
-        throw new Error(`SVM address does not exist in the database: ${svm}`);
-      }
-      await registerAddressWithAlchemyWebhookWithRetry(svm, solanaAlchemyWebhookId);
-    }
-
-  } catch (error) {
-    logger.error({
-      at: 'TurnkeyController#addAddressesToAlchemyWebhook',
-      message: 'Failed to add addresses to Alchemy webhook',
-      error,
-      evmAddress: evm,
-      svmAddress: svm,
-    });
   }
+  // Add SVM address to webhook for monitoring
+  if (svm) {
+    const record: TurnkeyUserFromDatabase | undefined = await findBySvmAddress(svm);
+    if (!record) {
+      throw new Error(`SVM address does not exist in the database: ${svm}`);
+    }
+    try {
+      await registerAddressWithAlchemyWebhookWithRetry(svm, solanaAlchemyWebhookId);
+    } catch (error) {
+      logger.error({
+        at: 'TurnkeyController#addAddressesToAlchemyWebhook',
+        message: 'Failed to add addresses to Alchemy webhook',
+        error,
+        evmAddress: evm,
+        svmAddress: svm,
+      });
+    }
+  }
+
 }
 
 // Register address with Alchemy webhook using REST API
@@ -122,35 +126,21 @@ export async function registerAddressWithAlchemyWebhook(
   } else {
     addressesToAdd.push(address);
   }
-  const response = await fetch(config.ALCHEMY_WEBHOOK_UPDATE_URL, {
-    method: 'PATCH',
-    headers: {
-      'X-Alchemy-Token': config.ALCHEMY_AUTH_TOKEN,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      webhook_id: webhookId,
-      addresses_to_add: addressesToAdd,
-      addresses_to_remove: [],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
+  try {
+    console.log("updating webhook", webhookId, addressesToAdd);
+    await alchemy.notify.updateWebhook(webhookId, {
+      addAddresses: addressesToAdd,
+      removeAddresses: [],
+    });
+  } catch (error) {
     logger.error({
       at: 'TurnkeyController#registerAddressWithAlchemyWebhook',
-      message: `Failed to register address with Alchemy webhook: ${response.statusText} - ${errorText}`,
+      message: `Failed to register address with Alchemy webhook: ${error}`,
       address,
       webhookId,
     });
-    throw new Error(`Failed to register address with Alchemy webhook: ${response.statusText} - ${errorText}`);
+    throw new Error(`Failed to register address with Alchemy webhook: ${error}`);
   }
-
-  logger.info({
-    at: 'TurnkeyController#registerAddressWithAlchemyWebhook',
-    message: `Address ${address} successfully added to Alchemy webhook`,
-    address,
-  });
 }
 
 // Register address with Alchemy webhook using REST API with retry logic
@@ -163,7 +153,9 @@ async function registerAddressWithAlchemyWebhookWithRetry(
 
   for (let i = 0; i < maxRetries; i++) {
     try {
+      console.log("registering address with alchemy webhook", address, webhookId);
       await registerAddressWithAlchemyWebhook(address, webhookId);
+      console.log("done")
       return; // Success, exit retry loop
     } catch (error) {
       if (i === maxRetries - 1) {
