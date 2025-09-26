@@ -6,7 +6,7 @@ import {
 import WebSocket from 'ws';
 
 import config from '../config';
-import { getCountry } from '../helpers/header-utils';
+import { getGeoOriginHeaders } from '../helpers/header-utils';
 import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
 import { sendMessage, Wss } from '../helpers/wss';
 import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART, WS_CLOSE_HEARTBEAT_TIMEOUT } from '../lib/constants';
@@ -92,8 +92,8 @@ export class Index {
     this.connections[connectionId] = {
       ws,
       messageId: 0,
-      countryCode: getCountry(req),
       id: connectionId,
+      geoOriginHeaders: getGeoOriginHeaders(req),
     } as Connection;
     const connection: Connection = this.connections[connectionId];
 
@@ -287,7 +287,7 @@ export class Index {
           connection.messageId,
           subscribeMessage.id,
           subscribeMessage.batched,
-          connection.countryCode,
+          connection.geoOriginHeaders,
         ).catch((error: Error) => logger.error({
           at: 'Subscription#subscribe',
           message: `Subscribing threw error: ${error.message}`,
