@@ -554,4 +554,21 @@ var (
 		11000,
 		"Invalid order router address",
 	)
+
+	// Leverage update errors.
+	ErrInvalidAddress = errorsmod.Register(
+		ModuleName,
+		11001,
+		"Invalid address",
+	)
+	ErrInvalidLeverage = errorsmod.Register(
+		ModuleName,
+		11002,
+		"Invalid leverage",
+	)
+	ErrLeverageExceedsMaximum = errorsmod.Register(
+		ModuleName,
+		11003,
+		"Leverage exceeds maximum allowed for perpetual",
+	)
 )

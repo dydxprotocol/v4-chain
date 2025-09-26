@@ -278,6 +278,7 @@ func createClobKeeper(
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
+		rate_limit.NewNoOpRateLimiter[string](),
 		liquidationtypes.NewDaemonLiquidationInfo(),
 		revShareKeeper,
 	)

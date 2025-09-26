@@ -48,6 +48,10 @@ func (r ClobRateLimitDecorator) AnteHandle(
 			if err = r.clobKeeper.RateLimitBatchCancel(ctx, msg); err != nil {
 				return ctx, err
 			}
+		case *types.MsgUpdateLeverage:
+			if err = r.clobKeeper.RateLimitUpdateLeverage(ctx, msg); err != nil {
+				return ctx, err
+			}
 		}
 	}
 	return next(ctx, tx, simulate)
