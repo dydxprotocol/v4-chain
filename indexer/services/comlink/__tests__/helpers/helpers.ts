@@ -7,6 +7,7 @@ import {
   OrderFromDatabase,
   OrderSide,
   OrderTable,
+  PnlCreateObject,
   PnlTicksCreateObject,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
@@ -21,6 +22,7 @@ import {
   FillResponseObject,
   MarketType,
   PnlTicksResponseObject,
+  PnlResponseObject,
 } from '../../src/types';
 
 const app: e.Express = Server(IndexV4);
@@ -187,5 +189,18 @@ export function pnlTickCreateObjectToResponseObject(
     createdAt: pnlTick.createdAt,
     blockHeight: pnlTick.blockHeight,
     blockTime: pnlTick.blockTime,
+  };
+}
+
+export function pnlCreateObjectToResponseObject(
+  pnl: PnlCreateObject,
+): PnlResponseObject {
+  return {
+    // Leave out subaccountId
+    equity: pnl.equity,
+    totalPnl: pnl.totalPnl,
+    netTransfers: pnl.netTransfers,
+    createdAt: pnl.createdAt,
+    createdAtHeight: pnl.createdAtHeight,
   };
 }
