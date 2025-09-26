@@ -29,6 +29,7 @@ import {
   TransferType,
   parentSubaccountHelpers,
   FundingPaymentsFromDatabase,
+  PnlFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -62,6 +63,7 @@ import {
   TransferResponseObject,
   TraderSearchResponse,
   FundingPaymentResponseObject,
+  PnlResponseObject,
 } from '../types';
 
 /**
@@ -608,5 +610,17 @@ export function fundingPaymentsToResponseObject(
     rate: fundingPayments.rate,
     payment: fundingPayments.payment,
     fundingIndex: fundingPayments.fundingIndex,
+  };
+}
+
+export function pnlToResponseObject(
+  pnl: PnlFromDatabase,
+): PnlResponseObject {
+  return {
+    equity: pnl.equity,
+    netTransfers: pnl.netTransfers,
+    totalPnl: pnl.totalPnl,
+    createdAt: pnl.createdAt,
+    createdAtHeight: pnl.createdAtHeight,
   };
 }
