@@ -330,18 +330,22 @@ describe('pnl-controller#V4', () => {
 
       expect(dailyResponse.body.pnl.length).toEqual(3);
 
-      // Verify that records are spaced at least a day apart
-      if (dailyResponse.body.pnl.length >= 2) {
-        const timestamps = dailyResponse.body.pnl.map(
-          (record: { createdAt: string | number | Date }) => new Date(record.createdAt).getTime());
+      // Verify the record structure:
+      // 1. Latest record from day 3 (hour 71)
+      // 2. Earliest record from day 2 (hour 24)
+      // 3. Earliest record from day 1 (hour 0)
 
-        // Check time gaps between consecutive records (should be ~24h = 86400000ms)
-        for (let i = 0; i < timestamps.length - 1; i++) {
-          const gap = timestamps[i] - timestamps[i + 1];
-          // Allow for some flexibility in the gap (at least 20 hours)
-          expect(gap).toBeGreaterThanOrEqual(20 * 60 * 60 * 1000);
-        }
-      }
+      // First record should be latest from day 3 (hour 71)
+      expect(dailyResponse.body.pnl[0].createdAtHeight).toBe('1071');
+      expect(dailyResponse.body.pnl[0].createdAt).toBe('2023-01-03T23:00:00.000Z');
+
+      // Second record should be earliest from day 2 (hour 24)
+      expect(dailyResponse.body.pnl[1].createdAtHeight).toBe('1024');
+      expect(dailyResponse.body.pnl[1].createdAt).toBe('2023-01-02T00:00:00.000Z');
+
+      // Third record should be earliest from day 1 (hour 0)
+      expect(dailyResponse.body.pnl[2].createdAtHeight).toBe('1000');
+      expect(dailyResponse.body.pnl[2].createdAt).toBe('2023-01-01T00:00:00.000Z');
 
       // Test daily with pagination
       const dailyPageResponse: request.Response = await sendRequest({
@@ -359,6 +363,10 @@ describe('pnl-controller#V4', () => {
       expect(dailyPageResponse.body.pnl).toHaveLength(2);
       expect(dailyPageResponse.body.pageSize).toBe(2);
       expect(dailyPageResponse.body.offset).toBe(0);
+
+      // Should contain the first two daily records
+      expect(dailyPageResponse.body.pnl[0].createdAtHeight).toBe('1071');
+      expect(dailyPageResponse.body.pnl[1].createdAtHeight).toBe('1024');
     });
 
     it('Get /pnl with daily=false returns regular hourly records', async () => {
@@ -559,17 +567,16 @@ describe('pnl-controller#V4', () => {
       expect(day1Record).toBeDefined();
       expect(day2Record).toBeDefined();
 
-      // Expected values for day 1 (the last hour of day 1)
-      // Last record for day 1 for first subaccount is i=23:
-      //    equity=1023, totalPnl=123, netTransfers=923
-      // Last record for day 1 for second subaccount is i=23:
-      //    equity=2023, totalPnl=223, netTransfers=1823
-      // Total: equity=3046, totalPnl=346, netTransfers=2746
-
-      // Verify day 1 values (using Number parsing to ignore string format differences)
-      expect(Number(day1Record.equity)).toEqual(3046);
-      expect(Number(day1Record.totalPnl)).toEqual(346);
-      expect(Number(day1Record.netTransfers)).toEqual(2746);
+      // Expected values for day 1 (the earliest/first hour of day 1)
+      // Earliest record for day 1 for first subaccount is i=0:
+      //    equity=1000, totalPnl=100, netTransfers=900
+      // Earliest record for day 1 for second subaccount is i=0:
+      //    equity=2000, totalPnl=200, netTransfers=1800
+      // Total: equity=3000, totalPnl=300, netTransfers=2700
+      expect(day1Record.createdAt).toBe('2023-01-01T00:00:00.000Z');
+      expect(Number(day1Record.equity)).toEqual(3000);
+      expect(Number(day1Record.totalPnl)).toEqual(300);
+      expect(Number(day1Record.netTransfers)).toEqual(2700);
 
       // Expected values for day 2 (the last hour of day 2)
       // Last record for day 2 for first subaccount is i=47:
@@ -579,6 +586,7 @@ describe('pnl-controller#V4', () => {
       // Total: equity=3094, totalPnl=394, netTransfers=2794
 
       // Verify day 2 values
+      expect(day2Record.createdAt).toBe('2023-01-02T23:00:00.000Z');
       expect(Number(day2Record.equity)).toEqual(3094);
       expect(Number(day2Record.totalPnl)).toEqual(394);
       expect(Number(day2Record.netTransfers)).toEqual(2794);

@@ -262,24 +262,46 @@ export async function findAllDailyPnl(
     baseQuery = baseQuery.where(PnlColumns.createdAt, '>=', createdOnOrAfter);
   }
 
-  // Create a CTE (Common Table Expression) to rank records within each day for each subaccount
   const knex = baseQuery.modelClass().knex();
-  const dailyRankQuery = baseQuery.clone()
+  // 1. Identify the latest record for each subaccount (with RANK = 1 over entire subaccount)
+  // 2. For all other records, rank them within their day (RANK ordered by time ascending)
+  // 3. Select the latest record and earliest records for each other day
+  const rankQuery = baseQuery.clone()
     .select('*')
     .select(
-      knex.raw(
-        `ROW_NUMBER() OVER (
-        PARTITION BY "${PnlColumns.subaccountId}", DATE_TRUNC('day', "${PnlColumns.createdAt}" AT TIME ZONE 'UTC')
+      knex.raw(`
+      RANK() OVER (
+        PARTITION BY "${PnlColumns.subaccountId}" 
         ORDER BY "${PnlColumns.createdAtHeight}" DESC
-      ) as row_num`,
-      ),
+      ) as latest_rank,
+      DATE_TRUNC('day', "${PnlColumns.createdAt}") as day_date,
+      RANK() OVER (
+        PARTITION BY "${PnlColumns.subaccountId}", DATE_TRUNC('day', "${PnlColumns.createdAt}")
+        ORDER BY "${PnlColumns.createdAt}" ASC
+      ) as earliest_in_day_rank
+    `),
     );
 
-  // Create the outer query that selects only the top-ranked record for each day
-  const finalQuery = setupBaseQuery<PnlModel>(PnlModel, options)
-    .with('daily_ranked_pnl', dailyRankQuery)
-    .from('daily_ranked_pnl')
-    .where('row_num', 1)
+  // Now select only records that are either:
+  // 1. The very latest for their subaccount (latest_rank = 1), OR
+  // 2. The earliest record for their day (day_rank = 1) but NOT the latest day
+  const finalQuery = PnlModel.query(Transaction.get(options.txId))
+    .with('ranked_pnl', rankQuery)
+    .from(
+      knex.raw(`
+      (
+        SELECT DISTINCT ON ("subaccountId", day_date) *
+        FROM ranked_pnl
+        WHERE 
+          -- Either it's the latest record overall
+          (latest_rank = 1)
+          OR 
+          -- Or it's the earliest record of a day
+          (earliest_in_day_rank = 1)
+        ORDER BY "subaccountId", day_date, latest_rank ASC
+      ) AS unique_daily_records
+    `),
+    )
     .orderBy(PnlColumns.subaccountId, Ordering.ASC)
     .orderBy(PnlColumns.createdAtHeight, Ordering.DESC);
 
