@@ -262,7 +262,7 @@ export async function findAllDailyPnl(
     baseQuery = baseQuery.where(PnlColumns.createdAt, '>=', createdOnOrAfter);
   }
 
-  const knex = baseQuery.modelClass().knex();
+  const knex = PnlModel.knex();
   // 1. Identify the latest record for each subaccount (with RANK = 1 over entire subaccount)
   // 2. For all other records, rank them within their day (RANK ordered by time ascending)
   // 3. Select the latest record and earliest records for each other day
@@ -274,9 +274,9 @@ export async function findAllDailyPnl(
         PARTITION BY "${PnlColumns.subaccountId}" 
         ORDER BY "${PnlColumns.createdAtHeight}" DESC
       ) as latest_rank,
-      DATE_TRUNC('day', "${PnlColumns.createdAt}") as day_date,
+      DATE_TRUNC('day', "${PnlColumns.createdAt}" AT TIME ZONE 'UTC') as day_date,
       RANK() OVER (
-        PARTITION BY "${PnlColumns.subaccountId}", DATE_TRUNC('day', "${PnlColumns.createdAt}")
+        PARTITION BY "${PnlColumns.subaccountId}", DATE_TRUNC('day', "${PnlColumns.createdAt}" AT TIME ZONE 'UTC')
         ORDER BY "${PnlColumns.createdAt}" ASC
       ) as earliest_in_day_rank
     `),
