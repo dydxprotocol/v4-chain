@@ -3,11 +3,13 @@ import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { Alchemy, Network } from 'alchemy-sdk';
 import { decode, encode } from 'bech32';
 import express from 'express';
 import {
   Address, Chain, createPublicClient, http, checksumAddress,
   PublicClient,
+  ethAddress,
 } from 'viem';
 import {
   arbitrum, avalanche, base, mainnet, optimism,
@@ -53,6 +55,10 @@ export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   });
   return acc;
 }, {} as Record<string, PublicClient>);
+
+const alchemy = new Alchemy({
+  apiKey: config.ALCHEMY_API_KEY,
+});
 
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   const errors: string[] = [];
@@ -299,4 +305,12 @@ export function verifyAlchemyWebhook(
     return create4xxResponse(res, 'unauthorized webhook', 401);
   }
   return next();
+}
+
+export async function getETHPrice(): Promise<number> {
+  const price = await alchemy.prices.getTokenPriceByAddress([{
+    network: Network.ETH_MAINNET,
+    address: ethAddress,
+  }]);
+  return parseFloat(price.data[0].prices[0].value);
 }

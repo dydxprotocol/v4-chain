@@ -12,18 +12,20 @@ import { CreateKernelAccountReturnType } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import { decode, fromWords } from 'bech32';
 import bs58 from 'bs58';
+import { min } from 'lodash';
 import { encodeFunctionData, type Hex } from 'viem';
 import type { EntryPointVersion, SmartAccountImplementation } from 'viem/account-abstraction';
-import { avalanche, mainnet } from 'viem/chains';
+import { avalanche } from 'viem/chains';
 
 import config from '../config';
 import {
   dydxChainId,
   entryPoint,
   ETH_USDC_QUANTUM,
+  ETH_WEI_QUANTUM,
   ethDenomByChainId, usdcAddressByChainId,
 } from '../lib/smart-contract-constants';
-import { getAddress, publicClients } from './alchemy-helpers';
+import { getAddress, getETHPrice, publicClients } from './alchemy-helpers';
 
 const turnkeyClient = new Turnkey({
   apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
@@ -45,7 +47,6 @@ export async function buildUserAddresses(
   );
 }
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
-const ethereumGoFastFreeMinimumUSDC = config.ETHEREUM_GO_FAST_FREE_MINIMUM * ETH_USDC_QUANTUM;
 const skipMessagesTimeoutSeconds = '60';
 const dydxNobleChannel = 33;
 const slippageTolerancePercent = config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE;
@@ -61,6 +62,17 @@ export async function getSkipCallData(
   let amountToUse = amount;
   if (amount.startsWith('0x')) {
     amountToUse = parseInt(amount, 16).toString();
+  }
+
+  if (sourceAssetDenom === ethDenomByChainId[chainId]) {
+    // calculates the most eth we can bridge in one go and pins it to that.
+    const ethPrice = await getETHPrice();
+    const maxDepositInEth = config.MAXIMUM_BRIDGE_AMOUNT_USDC / ethPrice;
+    amountToUse = min([parseInt(amountToUse, 10), maxDepositInEth * ETH_WEI_QUANTUM])!.toString();
+  } else {
+    // calculates the most usdc we can bridge in one go and pins it to that.
+    const maxDepositInUsdc = config.MAXIMUM_BRIDGE_AMOUNT_USDC;
+    amountToUse = min([parseInt(amountToUse, 10), maxDepositInUsdc * ETH_USDC_QUANTUM])!.toString();
   }
 
   const routeResult = await route({

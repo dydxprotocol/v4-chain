@@ -29,6 +29,7 @@ export const ethDenomByChainId: Record<string, string> = {
 // used to convert the amount to the actual usdc amount.
 export const SOLANA_USDC_QUANTUM = 1_000_000;
 export const ETH_USDC_QUANTUM = 1_000_000;
+export const ETH_WEI_QUANTUM = 1_000_000_000_000_000_000;
 
 export const ARBITRUM_GO_FAST_HANDLER_SMART_CONTRACT = '0x4c58aE019E54D10594F1Aa26ABF385B6fb17A52d';
 
