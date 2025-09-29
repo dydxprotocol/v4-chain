@@ -79,14 +79,21 @@ func (k Keeper) SetBlockStats(ctx sdk.Context, blockStats *types.BlockStats) {
 }
 
 // Record a match in BlockStats, which is stored in the transient store
-func (k Keeper) RecordFill(ctx sdk.Context, takerAddress string, makerAddress string, notional *big.Int) {
+func (k Keeper) RecordFill(
+	ctx sdk.Context,
+	takerAddress string,
+	makerAddress string,
+	notional *big.Int,
+	affiliateFeeGenerated *big.Int,
+) {
 	blockStats := k.GetBlockStats(ctx)
 	blockStats.Fills = append(
 		blockStats.Fills,
 		&types.BlockStats_Fill{
-			Taker:    takerAddress,
-			Maker:    makerAddress,
-			Notional: notional.Uint64(),
+			Taker:                         takerAddress,
+			Maker:                         makerAddress,
+			Notional:                      notional.Uint64(),
+			AffiliateFeeGeneratedQuantums: affiliateFeeGenerated.Uint64(),
 		},
 	)
 	k.SetBlockStats(ctx, blockStats)
@@ -202,6 +209,8 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 	for _, fill := range blockStats.Fills {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional
+		// Add affiliate revenue generated on taker for this fill (if any)
+		userStats.AffiliateRevenueQuantums += fill.AffiliateFeeGeneratedQuantums
 		k.SetUserStats(ctx, fill.Taker, userStats)
 
 		userStats = k.GetUserStats(ctx, fill.Maker)
@@ -222,6 +231,8 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+		// Track affiliate revenue generated on the taker in this epoch snapshot
+		userStatsMap[fill.Taker].Stats.AffiliateRevenueQuantums += fill.AffiliateFeeGeneratedQuantums
 
 		globalStats := k.GetGlobalStats(ctx)
 		globalStats.NotionalTraded += fill.Notional

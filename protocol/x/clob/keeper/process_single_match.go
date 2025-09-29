@@ -566,6 +566,7 @@ func (k Keeper) persistMatchedOrders(
 		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
 		bigFillQuoteQuantums,
+		affiliateRevSharesQuoteQuantums,
 	)
 
 	takerOrderRouterFeeQuoteQuantums := big.NewInt(0)
