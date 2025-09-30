@@ -38,15 +38,16 @@ message AffiliateWhitelist {
 
 // AffiliateParameters defines the parameters for the affiliate program.
 message AffiliateParameters {
-  // Maximum commission per referred user in a 30d rolling window in revenue
-  uint64 maximum_30d_commission_per_referred_quote_quantums = 1;
+  // Maximum attributable volume for a referred user in a 30d rolling window in
+  // notional
+  uint64 maximum_30d_attributable_volume_per_referred_user_notional = 1;
 
-  // Referee minimum fee tier index
+  // Referred user automatically gets set to this fee tier
   uint32 referee_minimum_fee_tier_idx = 2;
 
-  // Maximum attributable revenue per affiliate in a 30d rolling window in
-  // revenue
-  uint64 maximum_30d_attributable_revenue_per_affiliate_quote_quantums = 3;
+  // Maximum attributable revenue for a referred user in a 30d rolling window in
+  // quote quantums
+  uint64 maximum_30d_attributable_revenue_per_referred_user_quote_quantums = 3;
 }
 
 // AffiliateOverrides defines the affiliate whitelist.

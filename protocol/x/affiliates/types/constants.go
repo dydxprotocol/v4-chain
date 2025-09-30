@@ -32,9 +32,9 @@ var (
 	}
 
 	DefaultAffiliateParameters = AffiliateParameters{
-		Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 100,
-		RefereeMinimumFeeTierIdx:                                1,
-		Maximum_30DCommissionPerReferredQuoteQuantums:           100,
+		Maximum_30DAttributableVolumePerReferredUserNotional:       100,
+		RefereeMinimumFeeTierIdx:                                   1,
+		Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 100,
 	}
 
 	AffiliatesRevSharePpmCap = uint32(500_000) // 50%
