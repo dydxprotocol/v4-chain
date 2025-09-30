@@ -26,5 +26,14 @@ var (
 		},
 	}
 
+<<<<<<< HEAD
+=======
+	DefaultAffiliateParameters = AffiliateParameters{
+		Maximum_30DAttributableVolumePerReferredUserNotional:       100,
+		RefereeMinimumFeeTierIdx:                                   1,
+		Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 100,
+	}
+
+>>>>>>> b901a3bb (Rename proto fields to be a bit more clear (#3112))
 	AffiliatesRevSharePpmCap = uint32(500_000) // 50%
 )
