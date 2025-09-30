@@ -137,21 +137,20 @@ func TestAddReferredVolume(t *testing.T) {
 	affiliate := "affiliate1"
 	initialVolume := big.NewInt(1000)
 	addedVolume := big.NewInt(500)
-	maximumSupportedVolume := big.NewInt(1250)
 
-	err := k.AddReferredVolume(ctx, affiliate, initialVolume, maximumSupportedVolume)
+	err := k.AddReferredVolume(ctx, affiliate, initialVolume)
 	require.NoError(t, err)
 
 	volume, err := k.GetReferredVolume(ctx, affiliate)
 	require.NoError(t, err)
 	require.Equal(t, initialVolume, volume)
 
-	err = k.AddReferredVolume(ctx, affiliate, addedVolume, maximumSupportedVolume)
+	err = k.AddReferredVolume(ctx, affiliate, addedVolume)
 	require.NoError(t, err)
 
 	updatedVolume, err := k.GetReferredVolume(ctx, affiliate)
 	require.NoError(t, err)
-	require.Equal(t, maximumSupportedVolume, updatedVolume)
+	require.Equal(t, initialVolume.Add(initialVolume, addedVolume), updatedVolume)
 }
 
 func TestAddReferredCommission(t *testing.T) {
@@ -162,21 +161,20 @@ func TestAddReferredCommission(t *testing.T) {
 	affiliate := "affiliate1"
 	initialCommission := big.NewInt(50)
 	addedCommission := big.NewInt(100)
-	maximumSupportedCommission := big.NewInt(100)
 
-	err := k.AddReferredCommission(ctx, affiliate, initialCommission, maximumSupportedCommission)
+	err := k.AddReferredCommission(ctx, affiliate, initialCommission)
 	require.NoError(t, err)
 
 	commission, err := k.GetReferredCommission(ctx, affiliate)
 	require.NoError(t, err)
 	require.Equal(t, initialCommission, commission)
 
-	err = k.AddReferredCommission(ctx, affiliate, addedCommission, maximumSupportedCommission)
+	err = k.AddReferredCommission(ctx, affiliate, addedCommission)
 	require.NoError(t, err)
 
 	updatedCommission, err := k.GetReferredCommission(ctx, affiliate)
 	require.NoError(t, err)
-	require.Equal(t, maximumSupportedCommission, updatedCommission)
+	require.Equal(t, initialCommission.Add(initialCommission, addedCommission), updatedCommission)
 }
 
 func TestGetReferredVolumeInvalidAffiliate(t *testing.T) {
@@ -230,8 +228,6 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 
 	// Add more referred volume to upgrade tier
 	err = k.AddReferredVolume(ctx, affiliate, big.NewInt(
-		int64(types.DefaultAffiliateTiers.Tiers[1].ReqReferredVolumeQuoteQuantums),
-	), big.NewInt(
 		int64(types.DefaultAffiliateTiers.Tiers[1].ReqReferredVolumeQuoteQuantums),
 	))
 	require.NoError(t, err)
@@ -328,7 +324,7 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	require.NoError(t, err)
 
 	reqReferredVolume := big.NewInt(int64(affiliateTiers.Tiers[2].ReqReferredVolumeQuoteQuantums))
-	err = k.AddReferredVolume(ctx, affiliate, reqReferredVolume, nil)
+	err = k.AddReferredVolume(ctx, affiliate, reqReferredVolume)
 	require.NoError(t, err)
 
 	stakedAmount := new(big.Int).Mul(
@@ -733,6 +729,8 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 		expectedVolume              *big.Int
 		expectedAttributedVolume    *big.Int
 		expectedAttributedComission *big.Int
+		referreeAddressesToVerify   []string
+		expectedCommissions         []*big.Int
 		setup                       func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper)
 	}{
 		{
@@ -752,11 +750,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			},
 		},
 		{
-			name:                        "1 referral",
-			referrals:                   1,
-			expectedVolume:              big.NewInt(100_000_000_000),
-			expectedAttributedVolume:    big.NewInt(100_000_000_000),
-			expectedAttributedComission: big.NewInt(1_000_000_000),
+			name:                     "1 referral",
+			referrals:                1,
+			expectedVolume:           big.NewInt(100_000_000_000),
+			expectedAttributedVolume: big.NewInt(100_000_000_000),
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, referee1, affiliate)
 				require.NoError(t, err)
@@ -773,11 +770,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			},
 		},
 		{
-			name:                        "2 referrals",
-			referrals:                   2,
-			expectedVolume:              big.NewInt(300_000_000_000),
-			expectedAttributedVolume:    big.NewInt(300_000_000_000),
-			expectedAttributedComission: big.NewInt(3_000_000_000),
+			name:                     "2 referrals",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(300_000_000_000),
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, referee1, affiliate)
 				require.NoError(t, err)
@@ -802,11 +798,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			},
 		},
 		{
-			name:                        "2 referrals, maker also referred",
-			referrals:                   2,
-			expectedVolume:              big.NewInt(600_000_000_000),
-			expectedAttributedVolume:    big.NewInt(400_000_000_000),
-			expectedAttributedComission: big.NewInt(3_000_000_000),
+			name:                     "2 referrals, maker also referred",
+			referrals:                2,
+			expectedVolume:           big.NewInt(600_000_000_000),
+			expectedAttributedVolume: big.NewInt(600_000_000_000),
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, referee1, affiliate)
 				require.NoError(t, err)
@@ -833,7 +828,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
-						Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 400_000_000_000,
+						Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 300_000_000_000,
 						Maximum_30DCommissionPerReferredQuoteQuantums:           3_000_000_000,
 					},
 				})
@@ -841,11 +836,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			},
 		},
 		{
-			name:                        "2 referrals, takers not referred, maker referred",
-			referrals:                   2,
-			expectedVolume:              big.NewInt(300_000_000_000),
-			expectedAttributedVolume:    big.NewInt(300_000_000_000),
-			expectedAttributedComission: big.NewInt(3_000_000_000),
+			name:                     "2 referrals, takers not referred, maker referred",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(300_000_000_000),
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, maker, affiliate)
 				require.NoError(t, err)
@@ -876,14 +870,25 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			},
 		},
 		{
-			name:                        "2 referrals, reached maximum attributable revenue and commission",
-			referrals:                   2,
-			expectedVolume:              big.NewInt(300_000_000_000),
-			expectedAttributedVolume:    big.NewInt(250_000_000_000),
-			expectedAttributedComission: big.NewInt(2_500_000_000),
+			name:                     "2 referrals, reached maximum attributable revenue",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(0),
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-				err := k.RegisterAffiliate(ctx, maker, affiliate)
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
 				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				// Maximum volume was reached per affiliate, so we should not add any attributable volume
+				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
+					TakerNotional: 150_000_000_000,
+					MakerNotional: 100_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
+					TakerNotional: 150_000_000_000,
+					MakerNotional: 100_000_000_000,
+				})
+
 				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
 					Fills: []*statstypes.BlockStats_Fill{
 						{
@@ -905,6 +910,115 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					AffiliateParameters: types.AffiliateParameters{
 						Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 250_000_000_000,
 						Maximum_30DCommissionPerReferredQuoteQuantums:           2_500_000_000,
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:                     "2 referrals, test limits of attributable revenue",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(200_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+
+				// They are close to the maximum of attributable volume so we should not add more than expected
+				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     100_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     100_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+						},
+					},
+				})
+				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+					Authority: constants.GovAuthority,
+					AffiliateParameters: types.AffiliateParameters{
+						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
+						Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 250_000_000_000,
+						// Each referee can only generate 2_500_000_000 quantums of commission on a 30d window
+						Maximum_30DCommissionPerReferredQuoteQuantums: 2_500_000_000,
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:                     "maker is also affiliate, test limits of attributable revenue",
+			referrals:                2,
+			expectedVolume:           big.NewInt(600_000_000_000),
+			expectedAttributedVolume: big.NewInt(350_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, maker, affiliate)
+				require.NoError(t, err)
+
+				// They are close to the maximum of attributable volume so we should not add more than expected
+				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     100_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     100_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, maker, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     50_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+						},
+					},
+				})
+				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+					Authority: constants.GovAuthority,
+					AffiliateParameters: types.AffiliateParameters{
+						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
+						Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 250_000_000_000,
+						// Each referee can only generate 2_500_000_000 quantums of commission on a 30d window
+						Maximum_30DCommissionPerReferredQuoteQuantums: 2_500_000_000,
 					},
 				})
 				require.NoError(t, err)

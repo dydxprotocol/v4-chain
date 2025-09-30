@@ -210,7 +210,7 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional
 		// Add affiliate revenue generated on taker for this fill (if any)
-		userStats.AffiliateRevenueQuantums += fill.AffiliateFeeGeneratedQuantums
+		userStats.AffiliateRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 		k.SetUserStats(ctx, fill.Taker, userStats)
 
 		userStats = k.GetUserStats(ctx, fill.Maker)
@@ -232,7 +232,7 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
 		// Track affiliate revenue generated on the taker in this epoch snapshot
-		userStatsMap[fill.Taker].Stats.AffiliateRevenueQuantums += fill.AffiliateFeeGeneratedQuantums
+		userStatsMap[fill.Taker].Stats.AffiliateRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
 		globalStats := k.GetGlobalStats(ctx)
 		globalStats.NotionalTraded += fill.Notional

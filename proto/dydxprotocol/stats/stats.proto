@@ -67,7 +67,7 @@ message UserStats {
   uint64 maker_notional = 2;
 
   // Affiliate revenue generated in quantums
-  uint64 affiliate_revenue_quantums = 3;
+  uint64 affiliate_revenue_generated_quantums = 3;
 }
 
 // CachedStakeAmount stores the last calculated total staked amount for address
