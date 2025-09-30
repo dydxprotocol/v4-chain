@@ -245,7 +245,7 @@ func (k Keeper) GetAllAffilliateOverrides(ctx sdk.Context) (types.AffiliateOverr
 func (k Keeper) GetTakerFeeShare(
 	ctx sdk.Context,
 	address string,
-	affiliatesWhitelistMap map[string]uint32,
+	affiliateOverrides map[string]bool,
 ) (
 	affiliateAddress string,
 	feeSharePpm uint32,
@@ -256,13 +256,7 @@ func (k Keeper) GetTakerFeeShare(
 	if !exists {
 		return "", 0, false, nil
 	}
-	// Override fee share ppm if the address is in the whitelist.
-	if _, exists := affiliatesWhitelistMap[affiliateAddress]; exists {
-		feeSharePpm = affiliatesWhitelistMap[affiliateAddress]
-		return affiliateAddress, feeSharePpm, true, nil
-	}
-
-	_, feeSharePpm, err = k.GetTierForAffiliate(ctx, affiliateAddress)
+	_, feeSharePpm, err = k.GetTierForAffiliate(ctx, affiliateAddress, affiliateOverrides)
 	if err != nil {
 		return "", 0, false, err
 	}
@@ -274,6 +268,7 @@ func (k Keeper) GetTakerFeeShare(
 func (k Keeper) GetTierForAffiliate(
 	ctx sdk.Context,
 	affiliateAddr string,
+	affiliateOverrides map[string]bool,
 ) (
 	tierLevel uint32,
 	feeSharePpm uint32,
@@ -294,15 +289,9 @@ func (k Keeper) GetTierForAffiliate(
 
 	// Check whether the address is overridden, if it is then set the
 	// affiliate tier to the max
-	affiliateOverrides, err := k.GetAllAffilliateOverrides(ctx)
-	if err != nil {
-		return 0, 0, err
-	}
-	for _, addr := range affiliateOverrides.Addresses {
-		if addr == affiliateAddr {
-			feeSharePpm = affiliateTiers.Tiers[maxTierLevel].TakerFeeSharePpm
-			return uint32(maxTierLevel), feeSharePpm, nil
-		}
+	if _, exists := affiliateOverrides[affiliateAddr]; exists {
+		feeSharePpm = affiliateTiers.Tiers[maxTierLevel].TakerFeeSharePpm
+		return uint32(maxTierLevel), feeSharePpm, nil
 	}
 
 	// If not then set it normally
@@ -482,6 +471,18 @@ func (k Keeper) GetAffiliateOverrides(ctx sdk.Context) (types.AffiliateOverrides
 		return types.AffiliateOverrides{}, err
 	}
 	return affiliateOverrides, nil
+}
+
+func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, error) {
+	affiliateOverrides, err := k.GetAffiliateOverrides(ctx)
+	affiliateOverridesMap := make(map[string]bool)
+	for _, address := range affiliateOverrides.Addresses {
+		affiliateOverridesMap[address] = true
+	}
+	if err != nil {
+		return nil, err
+	}
+	return affiliateOverridesMap, nil
 }
 
 func (k Keeper) AggregateAffiliateReferredVolumeForFills(

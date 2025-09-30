@@ -1747,7 +1747,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// shares/fees are distributed to the recipient’s bank balance and not settled at the subaccount level,
 		// and won’t affect the collateralization of future operations in the operations queue.
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
-			ctx, &matchWithOrders, map[string]uint32{})
+			ctx, &matchWithOrders, map[string]bool{}, nil)
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.

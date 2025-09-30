@@ -97,8 +97,8 @@ func TestAffiliateInfo(t *testing.T) {
 			},
 			res: &types.AffiliateInfoResponse{
 				IsWhitelisted:  true,
-				Tier:           0,
-				FeeSharePpm:    120_000,
+				Tier:           4,
+				FeeSharePpm:    250_000,
 				ReferredVolume: dtypes.NewIntFromUint64(0),
 				StakedAmount:   dtypes.NewIntFromUint64(0),
 			},
@@ -117,15 +117,10 @@ func TestAffiliateInfo(t *testing.T) {
 				)
 				require.NoError(t, err)
 
-				affiliatesWhitelist := types.AffiliateWhitelist{
-					Tiers: []types.AffiliateWhitelist_Tier{
-						{
-							Addresses:        []string{constants.AliceAccAddress.String()},
-							TakerFeeSharePpm: 120_000, // 12%
-						},
-					},
+				affiliateOverrides := types.AffiliateOverrides{
+					Addresses: []string{constants.AliceAccAddress.String()},
 				}
-				err = k.SetAffiliateWhitelist(ctx, affiliatesWhitelist)
+				err = k.SetAffiliateOverrides(ctx, affiliateOverrides)
 				require.NoError(t, err)
 			},
 		},
