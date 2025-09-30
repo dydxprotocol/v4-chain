@@ -724,14 +724,13 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 	referee2 := constants.DaveAccAddress.String()
 	maker := constants.CarlAccAddress.String()
 	testCases := []struct {
-		name                        string
-		referrals                   int
-		expectedVolume              *big.Int
-		expectedAttributedVolume    *big.Int
-		expectedAttributedComission *big.Int
-		referreeAddressesToVerify   []string
-		expectedCommissions         []*big.Int
-		setup                       func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper)
+		name                      string
+		referrals                 int
+		expectedVolume            *big.Int
+		expectedAttributedVolume  *big.Int
+		referreeAddressesToVerify []string
+		expectedCommissions       []*big.Int
+		setup                     func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper)
 	}{
 		{
 			name:                     "0 referrals",

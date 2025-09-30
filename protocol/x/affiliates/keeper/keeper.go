@@ -514,16 +514,6 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
 				return err
 			}
-
-			// Each referree can only give a limited amount of commission on a 30d window
-			attributableCommission := fill.AffiliateFeeGeneratedQuantums
-			if affiliateParams.Maximum_30DCommissionPerReferredQuoteQuantums != 0 && userStats.AffiliateRevenueGeneratedQuantums+attributableCommission > affiliateParams.Maximum_30DCommissionPerReferredQuoteQuantums {
-				attributableCommission = affiliateParams.Maximum_30DCommissionPerReferredQuoteQuantums - userStats.AffiliateRevenueGeneratedQuantums
-			}
-			println("attributableCommission ", attributableCommission, " for address ", referredByAddrTaker)
-			if err := k.AddReferredCommission(ctx, referredByAddrTaker, lib.BigU(attributableCommission)); err != nil {
-				return err
-			}
 		}
 
 		// Process maker's referred volume
