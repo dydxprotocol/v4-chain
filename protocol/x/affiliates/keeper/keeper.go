@@ -493,10 +493,10 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		return err
 	}
 	referredByCache := make(map[string]string)
+	previouslyAttributedVolume := make(map[string]uint64)
 
 	for _, fill := range blockStats.Fills {
 		// Process taker's referred volume
-		userStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
 		referredByAddrTaker, cached := referredByCache[fill.Taker]
 		if !cached {
 			var found bool
@@ -507,10 +507,15 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 		if referredByAddrTaker != "" {
 			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
+			takerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
 			attributableVolume := fill.Notional
-			if affiliateParams.Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums != 0 && userStats.TakerNotional+userStats.MakerNotional+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums {
-				attributableVolume = affiliateParams.Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums - (userStats.TakerNotional + userStats.MakerNotional)
+			previousVolume := takerUserStats.TakerNotional + takerUserStats.MakerNotional + previouslyAttributedVolume[fill.Taker]
+			// If parameter is 0 then no limit is applied
+			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
+				previousVolume+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
+				attributableVolume = affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums - previousVolume
 			}
+			previouslyAttributedVolume[fill.Taker] += attributableVolume
 			if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
 				return err
 			}
@@ -527,9 +532,14 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 		if referredByAddrMaker != "" {
 			attributableVolume := fill.Notional
-			if affiliateParams.Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums != 0 && userStats.TakerNotional+userStats.MakerNotional+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums {
-				attributableVolume = affiliateParams.Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums - (userStats.TakerNotional + userStats.MakerNotional)
+			makerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Maker)
+			previousVolume := makerUserStats.TakerNotional + makerUserStats.MakerNotional + previouslyAttributedVolume[fill.Maker]
+			// If parameter is 0 then no limit is applied
+			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
+				previousVolume+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
+				attributableVolume = affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums - previousVolume
 			}
+			previouslyAttributedVolume[fill.Maker] += attributableVolume
 			if err := k.AddReferredVolume(ctx, referredByAddrMaker, lib.BigU(attributableVolume)); err != nil {
 				return err
 			}
