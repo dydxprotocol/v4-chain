@@ -29,7 +29,8 @@ export interface BlockStats_Fill {
   notional: Long;
   /**
    * Affiliate fee generated in quantums
-   * Used to calculate affiliate revenue attributed for taker. This is dynamic per affiliate tier
+   * Used to calculate affiliate revenue attributed for taker. This is dynamic
+   * per affiliate tier
    */
 
   affiliateFeeGeneratedQuantums: Long;
@@ -50,7 +51,8 @@ export interface BlockStats_FillSDKType {
   notional: Long;
   /**
    * Affiliate fee generated in quantums
-   * Used to calculate affiliate revenue attributed for taker. This is dynamic per affiliate tier
+   * Used to calculate affiliate revenue attributed for taker. This is dynamic
+   * per affiliate tier
    */
 
   affiliate_fee_generated_quantums: Long;
@@ -125,7 +127,7 @@ export interface UserStats {
   makerNotional: Long;
   /** Affiliate revenue generated in quantums */
 
-  affiliateRevenueQuantums: Long;
+  affiliateRevenueGeneratedQuantums: Long;
 }
 /** UserStats stores stats for a User */
 
@@ -137,7 +139,7 @@ export interface UserStatsSDKType {
   maker_notional: Long;
   /** Affiliate revenue generated in quantums */
 
-  affiliate_revenue_quantums: Long;
+  affiliate_revenue_generated_quantums: Long;
 }
 /** CachedStakeAmount stores the last calculated total staked amount for address */
 
@@ -488,7 +490,7 @@ function createBaseUserStats(): UserStats {
   return {
     takerNotional: Long.UZERO,
     makerNotional: Long.UZERO,
-    affiliateRevenueQuantums: Long.UZERO
+    affiliateRevenueGeneratedQuantums: Long.UZERO
   };
 }
 
@@ -502,8 +504,8 @@ export const UserStats = {
       writer.uint32(16).uint64(message.makerNotional);
     }
 
-    if (!message.affiliateRevenueQuantums.isZero()) {
-      writer.uint32(24).uint64(message.affiliateRevenueQuantums);
+    if (!message.affiliateRevenueGeneratedQuantums.isZero()) {
+      writer.uint32(24).uint64(message.affiliateRevenueGeneratedQuantums);
     }
 
     return writer;
@@ -527,7 +529,7 @@ export const UserStats = {
           break;
 
         case 3:
-          message.affiliateRevenueQuantums = (reader.uint64() as Long);
+          message.affiliateRevenueGeneratedQuantums = (reader.uint64() as Long);
           break;
 
         default:
@@ -543,7 +545,7 @@ export const UserStats = {
     const message = createBaseUserStats();
     message.takerNotional = object.takerNotional !== undefined && object.takerNotional !== null ? Long.fromValue(object.takerNotional) : Long.UZERO;
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
-    message.affiliateRevenueQuantums = object.affiliateRevenueQuantums !== undefined && object.affiliateRevenueQuantums !== null ? Long.fromValue(object.affiliateRevenueQuantums) : Long.UZERO;
+    message.affiliateRevenueGeneratedQuantums = object.affiliateRevenueGeneratedQuantums !== undefined && object.affiliateRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliateRevenueGeneratedQuantums) : Long.UZERO;
     return message;
   }
 
