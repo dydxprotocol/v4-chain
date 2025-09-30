@@ -159,7 +159,7 @@ func (k Keeper) AddReferredCommission(
 		if err := prevReferredCommissionFromState.Unmarshal(
 			affiliateReferredCommissionPrefixStore.Get([]byte(referreeAddress)),
 		); err != nil {
-			return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+			return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
 				"affiliate %s, error: %s", referreeAddress, err)
 		}
 		referredCommission = prevReferredCommissionFromState.BigInt()
@@ -173,7 +173,7 @@ func (k Keeper) AddReferredCommission(
 
 	updatedReferredCommissionBytes, err := updatedReferedCommission.Marshal()
 	if err != nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
 			"affiliate %s, error: %s", referreeAddress, err)
 	}
 	affiliateReferredCommissionPrefixStore.Set([]byte(referreeAddress), updatedReferredCommissionBytes)
