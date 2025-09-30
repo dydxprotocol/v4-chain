@@ -732,239 +732,239 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 		expectedCommissions       []*big.Int
 		setup                     func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper)
 	}{
-		// {
-		// 	name:                     "0 referrals",
-		// 	expectedVolume:           big.NewInt(0),
-		// 	expectedAttributedVolume: big.NewInt(0),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:    referee1,
-		// 					Maker:    maker,
-		// 					Notional: 100_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 	},
-		// },
-		// {
-		// 	name:                     "1 referral",
-		// 	referrals:                1,
-		// 	expectedVolume:           big.NewInt(100_000_000_000),
-		// 	expectedAttributedVolume: big.NewInt(100_000_000_000),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		err := k.RegisterAffiliate(ctx, referee1, affiliate)
-		// 		require.NoError(t, err)
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:                         referee1,
-		// 					Maker:                         maker,
-		// 					Notional:                      100_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 1_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 	},
-		// },
-		// {
-		// 	name:                     "2 referrals",
-		// 	referrals:                2,
-		// 	expectedVolume:           big.NewInt(300_000_000_000),
-		// 	expectedAttributedVolume: big.NewInt(300_000_000_000),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		err := k.RegisterAffiliate(ctx, referee1, affiliate)
-		// 		require.NoError(t, err)
-		// 		err = k.RegisterAffiliate(ctx, referee2, affiliate)
-		// 		require.NoError(t, err)
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:                         referee1,
-		// 					Maker:                         maker,
-		// 					Notional:                      100_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 1_000_000_000,
-		// 				},
-		// 				{
-		// 					Taker:                         referee2,
-		// 					Maker:                         maker,
-		// 					Notional:                      200_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 2_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 	},
-		// },
-		// {
-		// 	name:                     "2 referrals, maker also referred",
-		// 	referrals:                2,
-		// 	expectedVolume:           big.NewInt(600_000_000_000),
-		// 	expectedAttributedVolume: big.NewInt(600_000_000_000),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		err := k.RegisterAffiliate(ctx, referee1, affiliate)
-		// 		require.NoError(t, err)
-		// 		err = k.RegisterAffiliate(ctx, referee2, affiliate)
-		// 		require.NoError(t, err)
-		// 		err = k.RegisterAffiliate(ctx, maker, affiliate)
-		// 		require.NoError(t, err)
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:                         referee1,
-		// 					Maker:                         maker,
-		// 					Notional:                      100_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 1_000_000_000,
-		// 				},
-		// 				{
-		// 					Taker:                         referee2,
-		// 					Maker:                         maker,
-		// 					Notional:                      200_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 3_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 		err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
-		// 			Authority: constants.GovAuthority,
-		// 			AffiliateParameters: types.AffiliateParameters{
-		// 				Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 300_000_000_000,
-		// 				Maximum_30DCommissionPerReferredUserQuoteQuantums:          3_000_000_000,
-		// 			},
-		// 		})
-		// 		require.NoError(t, err)
-		// 	},
-		// },
-		// {
-		// 	name:                     "2 referrals, takers not referred, maker referred",
-		// 	referrals:                2,
-		// 	expectedVolume:           big.NewInt(300_000_000_000),
-		// 	expectedAttributedVolume: big.NewInt(300_000_000_000),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		err := k.RegisterAffiliate(ctx, maker, affiliate)
-		// 		require.NoError(t, err)
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:                         referee1,
-		// 					Maker:                         maker,
-		// 					Notional:                      100_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 1_000_000_000,
-		// 				},
-		// 				{
-		// 					Taker:                         referee2,
-		// 					Maker:                         maker,
-		// 					Notional:                      200_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 2_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 		err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
-		// 			Authority: constants.GovAuthority,
-		// 			AffiliateParameters: types.AffiliateParameters{
-		// 				Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 300_000_000_000,
-		// 				Maximum_30DCommissionPerReferredUserQuoteQuantums:          3_000_000_000,
-		// 			},
-		// 		})
-		// 		require.NoError(t, err)
-		// 	},
-		// },
-		// {
-		// 	name:                     "2 referrals, reached maximum attributable revenue",
-		// 	referrals:                2,
-		// 	expectedVolume:           big.NewInt(300_000_000_000),
-		// 	expectedAttributedVolume: big.NewInt(0),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		err := k.RegisterAffiliate(ctx, referee1, affiliate)
-		// 		require.NoError(t, err)
-		// 		err = k.RegisterAffiliate(ctx, referee2, affiliate)
-		// 		require.NoError(t, err)
-		// 		// Maximum volume was reached per affiliate, so we should not add any attributable volume
-		// 		statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
-		// 			TakerNotional: 150_000_000_000,
-		// 			MakerNotional: 100_000_000_000,
-		// 		})
-		// 		statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
-		// 			TakerNotional: 150_000_000_000,
-		// 			MakerNotional: 100_000_000_000,
-		// 		})
+		{
+			name:                     "0 referrals",
+			expectedVolume:           big.NewInt(0),
+			expectedAttributedVolume: big.NewInt(0),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:                     "1 referral",
+			referrals:                1,
+			expectedVolume:           big.NewInt(100_000_000_000),
+			expectedAttributedVolume: big.NewInt(100_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:                     "2 referrals",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(300_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:                     "2 referrals, maker also referred",
+			referrals:                2,
+			expectedVolume:           big.NewInt(600_000_000_000),
+			expectedAttributedVolume: big.NewInt(600_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, maker, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 3_000_000_000,
+						},
+					},
+				})
+				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+					Authority: constants.GovAuthority,
+					AffiliateParameters: types.AffiliateParameters{
+						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 300_000_000_000,
+						Maximum_30DCommissionPerReferredUserQuoteQuantums:          3_000_000_000,
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:                     "2 referrals, takers not referred, maker referred",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(300_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, maker, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+						},
+					},
+				})
+				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+					Authority: constants.GovAuthority,
+					AffiliateParameters: types.AffiliateParameters{
+						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 300_000_000_000,
+						Maximum_30DCommissionPerReferredUserQuoteQuantums:          3_000_000_000,
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:                     "2 referrals, reached maximum attributable revenue",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(0),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				// Maximum volume was reached per affiliate, so we should not add any attributable volume
+				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
+					TakerNotional: 150_000_000_000,
+					MakerNotional: 100_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
+					TakerNotional: 150_000_000_000,
+					MakerNotional: 100_000_000_000,
+				})
 
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:                         referee1,
-		// 					Maker:                         maker,
-		// 					Notional:                      100_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 1_000_000_000,
-		// 				},
-		// 				{
-		// 					Taker:                         referee2,
-		// 					Maker:                         maker,
-		// 					Notional:                      200_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 2_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 		err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
-		// 			Authority: constants.GovAuthority,
-		// 			AffiliateParameters: types.AffiliateParameters{
-		// 				Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 250_000_000_000,
-		// 				Maximum_30DCommissionPerReferredUserQuoteQuantums:          2_500_000_000,
-		// 			},
-		// 		})
-		// 		require.NoError(t, err)
-		// 	},
-		// },
-		// {
-		// 	name:                     "2 referrals, test limits of attributable revenue",
-		// 	referrals:                2,
-		// 	expectedVolume:           big.NewInt(300_000_000_000),
-		// 	expectedAttributedVolume: big.NewInt(200_000_000_000),
-		// 	setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
-		// 		err := k.RegisterAffiliate(ctx, referee1, affiliate)
-		// 		require.NoError(t, err)
-		// 		err = k.RegisterAffiliate(ctx, referee2, affiliate)
-		// 		require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+						},
+					},
+				})
+				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+					Authority: constants.GovAuthority,
+					AffiliateParameters: types.AffiliateParameters{
+						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 250_000_000_000,
+						Maximum_30DCommissionPerReferredUserQuoteQuantums:          2_500_000_000,
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:                     "2 referrals, test limits of attributable revenue",
+			referrals:                2,
+			expectedVolume:           big.NewInt(300_000_000_000),
+			expectedAttributedVolume: big.NewInt(200_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
 
-		// 		// They are close to the maximum of attributable volume so we should not add more than expected
-		// 		statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
-		// 			TakerNotional:                     50_000_000_000,
-		// 			MakerNotional:                     100_000_000_000,
-		// 			AffiliateRevenueGeneratedQuantums: 1_000_000_000,
-		// 		})
-		// 		statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
-		// 			TakerNotional:                     50_000_000_000,
-		// 			MakerNotional:                     100_000_000_000,
-		// 			AffiliateRevenueGeneratedQuantums: 1_000_000_000,
-		// 		})
+				// They are close to the maximum of attributable volume so we should not add more than expected
+				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     100_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     100_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
 
-		// 		statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
-		// 			Fills: []*statstypes.BlockStats_Fill{
-		// 				{
-		// 					Taker:                         referee1,
-		// 					Maker:                         maker,
-		// 					Notional:                      100_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 1_000_000_000,
-		// 				},
-		// 				{
-		// 					Taker:                         referee2,
-		// 					Maker:                         maker,
-		// 					Notional:                      200_000_000_000,
-		// 					AffiliateFeeGeneratedQuantums: 2_000_000_000,
-		// 				},
-		// 			},
-		// 		})
-		// 		err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
-		// 			Authority: constants.GovAuthority,
-		// 			AffiliateParameters: types.AffiliateParameters{
-		// 				// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
-		// 				Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 250_000_000_000,
-		// 				// Each referee can only generate 2_500_000_000 quantums of commission on a 30d window
-		// 				Maximum_30DCommissionPerReferredUserQuoteQuantums: 2_500_000_000,
-		// 			},
-		// 		})
-		// 		require.NoError(t, err)
-		// 	},
-		// },
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:                         referee1,
+							Maker:                         maker,
+							Notional:                      100_000_000_000,
+							AffiliateFeeGeneratedQuantums: 1_000_000_000,
+						},
+						{
+							Taker:                         referee2,
+							Maker:                         maker,
+							Notional:                      200_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+						},
+					},
+				})
+				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+					Authority: constants.GovAuthority,
+					AffiliateParameters: types.AffiliateParameters{
+						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
+						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 250_000_000_000,
+						// Each referee can only generate 2_500_000_000 quantums of commission on a 30d window
+						Maximum_30DCommissionPerReferredUserQuoteQuantums: 2_500_000_000,
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
 		{
 			name:                     "maker is also affiliate, test limits of attributable revenue",
 			referrals:                2,
