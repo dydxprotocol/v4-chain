@@ -150,7 +150,8 @@ func (k Keeper) AddReferredCommission(
 	referreeAddress string,
 	referredCommissionFromBlock *big.Int,
 ) error {
-	affiliateReferredCommissionPrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
+	affiliateReferredCommissionPrefixStore := prefix.NewStore(
+		ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
 	referredCommission := big.NewInt(0)
 
 	if affiliateReferredCommissionPrefixStore.Has([]byte(referreeAddress)) {
@@ -194,7 +195,8 @@ func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.I
 
 // GetReferredVolume returns all time referred volume for an affiliate address.
 func (k Keeper) GetReferredCommission(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
-	affiliateReferredCommissionPrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
+	affiliateReferredCommissionPrefixStore := prefix.NewStore(
+		ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
 	if !affiliateReferredCommissionPrefixStore.Has([]byte(affiliateAddr)) {
 		return big.NewInt(0), nil
 	}
@@ -534,7 +536,8 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		if referredByAddrMaker != "" {
 			attributableVolume := fill.Notional
 			makerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Maker)
-			previousVolume := makerUserStats.TakerNotional + makerUserStats.MakerNotional + previouslyAttributedVolume[fill.Maker]
+			previousVolume := (makerUserStats.TakerNotional + makerUserStats.MakerNotional +
+				previouslyAttributedVolume[fill.Maker])
 			// If parameter is 0 then no limit is applied
 			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
 				previousVolume+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
