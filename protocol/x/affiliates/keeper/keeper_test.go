@@ -960,8 +960,6 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					AffiliateParameters: types.AffiliateParameters{
 						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
 						Maximum_30DAttributableVolumePerReferredUserNotional: 250_000_000_000,
-						// Each referee can only generate 2_500_000_000 quantums of commission on a 30d window
-						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 2_500_000_000,
 					},
 				})
 				require.NoError(t, err)
@@ -1017,9 +1015,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
 						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
-						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 250_000_000_000,
-						// Each referee can only generate 2_500_000_000 quantums of commission on a 30d window
-						Maximum_30DAttributableVolumePerReferredUserNotional: 2_500_000_000,
+						Maximum_30DAttributableVolumePerReferredUserNotional: 250_000_000_000,
 					},
 				})
 				require.NoError(t, err)
