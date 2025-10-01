@@ -1,3 +1,7 @@
+import {
+  createHash,
+} from 'crypto';
+
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BridgeInformationTable,
@@ -366,10 +370,12 @@ class BridgeController extends Controller {
           };
 
           await BridgeInformationTable.create(bridgeRecord);
-
+          const email = record.email?.trim().toLowerCase();
+          // sha256 hash email
+          const emailHash = email ? createHash('sha256').update(email).digest('hex') : record.evm_address;
           // Track TurnKey deposit confirmation event in Amplitude
           await trackTurnkeyDepositSubmitted(
-            dydxAddress,
+            emailHash,
             c,
             amountIn,
             txHash,
@@ -548,10 +554,20 @@ class BridgeController extends Controller {
         );
 
         // Track TurnKey deposit confirmation event in Amplitude
-        const dydxAddress = await getDydxAddress(fromAddress, chainId);
-        if (dydxAddress) {
+        if (record.email) {
+          const email = record.email.trim().toLowerCase();
+          // sha256 hash email
+          const emailHash = createHash('sha256').update(email).digest('hex');
           await trackTurnkeyDepositSubmitted(
-            dydxAddress,
+            emailHash,
+            chainId,
+            amountToUse,
+            receipt.transactionHash,
+            sourceAssetDenom,
+          );
+        } else {
+          await trackTurnkeyDepositSubmitted(
+            record.evm_address,
             chainId,
             amountToUse,
             receipt.transactionHash,

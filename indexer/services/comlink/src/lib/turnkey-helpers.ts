@@ -266,7 +266,7 @@ export class TurnkeyHelpers {
     magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // lowercase email address.
-    const lowerEmail = userEmail.toLowerCase();
+    const lowerEmail = userEmail.trim().toLowerCase();
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       email: lowerEmail,
     });
