@@ -107,7 +107,7 @@ export const configSchema = {
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
   SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
   TURNKEY_EMAIL_SENDER_ADDRESS: parseString({ default: 'notifications@mail.dydx.trade' }),
-  TURNKEY_EMAIL_SENDER_NAME: parseString({ default: 'dydx Notifications' }),
+  TURNKEY_EMAIL_SENDER_NAME: parseString({ default: 'dYdX Notifications' }),
   // Alchemy auth token for the skip bridge.
   ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
   ALCHEMY_API_KEY: parseString({ default: '' }),
