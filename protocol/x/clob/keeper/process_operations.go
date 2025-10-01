@@ -169,7 +169,8 @@ func (k Keeper) ProcessInternalOperations(
 				)
 			}
 			clobMatch := castedOperation.Match
-			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders, affiliateOverrides, &affiliateParameters); err != nil {
+			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders,
+				affiliateOverrides, &affiliateParameters); err != nil {
 				return errorsmod.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
