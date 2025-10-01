@@ -515,8 +515,8 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			previousVolume := (takerUserStats.TakerNotional + takerUserStats.MakerNotional +
 				previouslyAttributedVolume[fill.Taker])
 			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 {
-				cap := affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums
+			if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
+				cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
 				if previousVolume >= cap {
 					attributableVolume = 0
 				} else if previousVolume+attributableVolume > cap {
@@ -546,8 +546,8 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			previousVolume := (makerUserStats.TakerNotional + makerUserStats.MakerNotional +
 				previouslyAttributedVolume[fill.Maker])
 			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 {
-				cap := affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums
+			if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
+				cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
 				if previousVolume >= cap {
 					attributableVolume = 0
 				} else if previousVolume+attributableVolume > cap {
