@@ -906,6 +906,16 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			referrals:                2,
 			expectedVolume:           big.NewInt(300_000_000_000),
 			expectedAttributedVolume: big.NewInt(200_000_000_000),
+			referreeAddressesToVerify: []string{
+				referee1,
+				referee2,
+				maker,
+			},
+			expectedCommissions: []*big.Int{
+				big.NewInt(2_000_000_000),
+				big.NewInt(4_000_000_000),
+				big.NewInt(1_000_000_000),
+			},
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, referee1, affiliate)
 				require.NoError(t, err)
@@ -919,6 +929,11 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
 				})
 				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
+					TakerNotional:                     50_000_000_000,
+					MakerNotional:                     200_000_000_000,
+					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+				})
+				statsKeeper.SetUserStats(ctx, maker, &statstypes.UserStats{
 					TakerNotional:                     50_000_000_000,
 					MakerNotional:                     100_000_000_000,
 					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
@@ -936,7 +951,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 							Taker:                         referee2,
 							Maker:                         maker,
 							Notional:                      200_000_000_000,
-							AffiliateFeeGeneratedQuantums: 2_000_000_000,
+							AffiliateFeeGeneratedQuantums: 3_000_000_000,
 						},
 					},
 				})
@@ -1030,6 +1045,15 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			referredVolume, err := k.GetReferredVolume(ctx, affiliate)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedAttributedVolume, referredVolume)
+
+			if tc.referreeAddressesToVerify != nil {
+				for idx, referreeAddress := range tc.referreeAddressesToVerify {
+					referredCommission, err := k.GetReferredCommission(ctx, referreeAddress)
+					require.NoError(t, err)
+					println("referredCommission", referredCommission.String(), " for address ", referreeAddress)
+					require.Equal(t, tc.expectedCommissions[idx], referredCommission)
+				}
+			}
 		})
 	}
 }

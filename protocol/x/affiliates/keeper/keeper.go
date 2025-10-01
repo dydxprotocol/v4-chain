@@ -176,6 +176,7 @@ func (k Keeper) AddReferredCommission(
 		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
 			"affiliate %s, error: %s", referreeAddress, err)
 	}
+	println("Update commission is", updatedReferedCommission.String(), " for address ", referreeAddress)
 	affiliateReferredCommissionPrefixStore.Set([]byte(referreeAddress), updatedReferredCommissionBytes)
 	return nil
 }
@@ -528,6 +529,12 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 				if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
 					return err
 				}
+			}
+
+			// Add referred commission to the referred user, this is precalculated in the rev share generated in the fill
+			// Use this to keep track if the user exceeded the total amount they can attributed
+			if err := k.AddReferredCommission(ctx, fill.Taker, lib.BigU(fill.AffiliateFeeGeneratedQuantums)); err != nil {
+				return err
 			}
 		}
 
