@@ -477,12 +477,12 @@ func (k Keeper) GetAffiliateOverrides(ctx sdk.Context) (types.AffiliateOverrides
 
 func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, error) {
 	affiliateOverrides, err := k.GetAffiliateOverrides(ctx)
+	if err != nil {
+		return nil, err
+	}
 	affiliateOverridesMap := make(map[string]bool)
 	for _, address := range affiliateOverrides.Addresses {
 		affiliateOverridesMap[address] = true
-	}
-	if err != nil {
-		return nil, err
 	}
 	return affiliateOverridesMap, nil
 }
@@ -512,7 +512,8 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
 			takerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
 			attributableVolume := fill.Notional
-			previousVolume := takerUserStats.TakerNotional + takerUserStats.MakerNotional + previouslyAttributedVolume[fill.Taker]
+			previousVolume := (takerUserStats.TakerNotional + takerUserStats.MakerNotional +
+				previouslyAttributedVolume[fill.Taker])
 			// If parameter is 0 then no limit is applied
 			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
 				previousVolume+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {

@@ -163,7 +163,8 @@ type PricesKeeper interface {
 }
 
 type StatsKeeper interface {
-	RecordFill(ctx sdk.Context, takerAddress string, makerAddress string, notional *big.Int, affiliateFeeGenerated *big.Int)
+	RecordFill(ctx sdk.Context, takerAddress string, makerAddress string,
+		notional *big.Int, affiliateFeeGenerated *big.Int)
 	GetUserStats(ctx sdk.Context, address string) *stattypes.UserStats
 }
 

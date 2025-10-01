@@ -230,7 +230,8 @@ func (k Keeper) PersistMatchToState(
 ) error {
 	switch castedMatch := clobMatch.Match.(type) {
 	case *types.ClobMatch_MatchOrders:
-		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap, affiliateOverrides, affiliateParameters); err != nil {
+		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap,
+			affiliateOverrides, affiliateParameters); err != nil {
 			return err
 		}
 	case *types.ClobMatch_MatchPerpetualLiquidation:
@@ -517,7 +518,8 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 		makerOrders = append(makerOrders, makerOrder)
 
-		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(ctx, &matchWithOrders, affiliateOverrides, affiliateParameters)
+		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(ctx, &matchWithOrders,
+			affiliateOverrides, affiliateParameters)
 		if err != nil {
 			return err
 		}

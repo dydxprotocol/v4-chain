@@ -215,7 +215,8 @@ func (k Keeper) GetAllRevShares(
 		return types.RevSharesForFill{}, nil
 	}
 
-	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliateOverrides, affiliateParameters)
+	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(
+		ctx, fill, affiliateOverrides, affiliateParameters)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
