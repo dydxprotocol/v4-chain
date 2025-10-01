@@ -6,6 +6,7 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/feetiers/params.proto";
+import "dydxprotocol/feetiers/fee_holiday.proto";
 import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service.
@@ -13,6 +14,10 @@ service Msg {
   // UpdatePerpetualFeeParams updates the PerpetualFeeParams in state.
   rpc UpdatePerpetualFeeParams(MsgUpdatePerpetualFeeParams)
       returns (MsgUpdatePerpetualFeeParamsResponse);
+  
+  // SetFeeHolidayParams sets the no fee holiday period for each CLOB pair.
+  rpc SetFeeHolidayParams(MsgSetFeeHolidayParams)
+      returns (MsgSetFeeHolidayParamsResponse);
 }
 
 // MsgUpdatePerpetualFeeParams is the Msg/UpdatePerpetualFeeParams request type.
@@ -28,3 +33,16 @@ message MsgUpdatePerpetualFeeParams {
 // MsgUpdatePerpetualFeeParamsResponse is the Msg/UpdatePerpetualFeeParams
 // response type.
 message MsgUpdatePerpetualFeeParamsResponse {}
+
+// Governance message to create or update no fee holiday
+message MsgSetFeeHolidayParams {
+  // The address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  
+  // The fee holidays to create or update.
+  repeated FeeHolidayParams fee_holiday = 2 [(gogoproto.nullable) = false];
+}
+
+// Response to MsgSetFeeHolidayParams
+message MsgSetFeeHolidayParamsResponse {}

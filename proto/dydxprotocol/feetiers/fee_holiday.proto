@@ -1,0 +1,16 @@
+syntax = "proto3";
+package dydxprotocol.feetiers;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
+
+// FeeHoliday defines a fee-free period for a specific CLOB pair
+message FeeHolidayParams {
+  // The CLOB Pair ID this fee holiday applies to
+  uint32 clob_pair_id = 1;
+  
+  // Start time (Unix timestamp in seconds)
+  int64 start_time_unix = 2;
+  
+  // End time (Unix timestamp in seconds)
+  int64 end_time_unix = 3;
+}
