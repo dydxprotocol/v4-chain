@@ -280,6 +280,8 @@ export class TurnkeyHelpers {
     const emailAuthResponse = await this.turnkeyApiClient.emailAuth({
       email: lowerEmail,
       targetPublicKey,
+      sendFromEmailAddress: config.TURNKEY_EMAIL_SENDER_ADDRESS,
+      sendFromEmailSenderName: config.TURNKEY_EMAIL_SENDER_NAME,
       emailCustomization: {
         appName: TURNKEY_EMAIL_CUSTOMIZATION.APP_NAME,
         logoUrl: TURNKEY_EMAIL_CUSTOMIZATION.LOGO_URL,
