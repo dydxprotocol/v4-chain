@@ -905,16 +905,16 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			name:                     "2 referrals, test limits of attributable revenue",
 			referrals:                2,
 			expectedVolume:           big.NewInt(300_000_000_000),
-			expectedAttributedVolume: big.NewInt(200_000_000_000),
+			expectedAttributedVolume: big.NewInt(100_000_000_000),
 			referreeAddressesToVerify: []string{
 				referee1,
 				referee2,
 				maker,
 			},
 			expectedCommissions: []*big.Int{
-				big.NewInt(2_000_000_000),
-				big.NewInt(4_000_000_000),
 				big.NewInt(1_000_000_000),
+				big.NewInt(3_000_000_000),
+				big.NewInt(0),
 			},
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, referee1, affiliate)
