@@ -12,18 +12,20 @@ import { CreateKernelAccountReturnType } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import { decode, fromWords } from 'bech32';
 import bs58 from 'bs58';
+import { min } from 'lodash';
 import { encodeFunctionData, type Hex } from 'viem';
 import type { EntryPointVersion, SmartAccountImplementation } from 'viem/account-abstraction';
-import { avalanche, mainnet } from 'viem/chains';
+import { avalanche } from 'viem/chains';
 
 import config from '../config';
 import {
   dydxChainId,
   entryPoint,
   ETH_USDC_QUANTUM,
+  ETH_WEI_QUANTUM,
   ethDenomByChainId, usdcAddressByChainId,
 } from '../lib/smart-contract-constants';
-import { getAddress, publicClients } from './alchemy-helpers';
+import { getAddress, getETHPrice, publicClients } from './alchemy-helpers';
 
 const turnkeyClient = new Turnkey({
   apiBaseUrl: config.TURNKEY_API_BASE_URL as string,
@@ -45,7 +47,6 @@ export async function buildUserAddresses(
   );
 }
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
-const ethereumGoFastFreeMinimumUSDC = config.ETHEREUM_GO_FAST_FREE_MINIMUM * ETH_USDC_QUANTUM;
 const skipMessagesTimeoutSeconds = '60';
 const dydxNobleChannel = 33;
 const slippageTolerancePercent = config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE;
@@ -63,11 +64,6 @@ export async function getSkipCallData(
     amountToUse = parseInt(amount, 16).toString();
   }
 
-  let goFast = true;
-  if (chainId === mainnet.id.toString() &&
-    parseInt(amountToUse, 10) < ethereumGoFastFreeMinimumUSDC) {
-    goFast = false;
-  }
   const routeResult = await route({
     amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
@@ -81,7 +77,7 @@ export async function getSkipCallData(
       evmSwaps: true, // needed for native eth bridging.
     },
     allowUnsafe: false,
-    goFast,
+    goFast: true,
   });
   logger.info({
     at: 'skip-helper#getSkipCallData',
@@ -128,7 +124,7 @@ export async function getSkipCallData(
   const response = await messages({
     timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
-    amountOut: routeResult.estimatedAmountOut || '0',
+    amountOut: routeResult.estimatedAmountOut,
     sourceAssetChainId: routeResult?.sourceAssetChainId,
     sourceAssetDenom: routeResult?.sourceAssetDenom,
     destAssetChainId: routeResult?.destAssetChainId,
@@ -158,7 +154,7 @@ export async function getSkipCallData(
   if (Object.values(ethDenomByChainId).map(
     (x) => x.toLowerCase(),
   ).includes(sourceAssetDenom.toLowerCase())) {
-    value = BigInt(amount);
+    value = BigInt(amountToUse);
   }
 
   // this is the actual call data that is responsible for the bridge.
@@ -193,7 +189,7 @@ export async function getSkipCallData(
         functionName: 'approve',
         args: [
           (toAddress.startsWith('0x') ? toAddress : (`0x${toAddress}`)) as Hex,
-          BigInt(amount),
+          BigInt(amountToUse),
         ],
       }), // "0x",
     });
@@ -364,4 +360,33 @@ export async function getNobleForwardingAddress(dydxAddress: string): Promise<st
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function limitAmount(
+  chainId: string,
+  amount: string,
+  sourceAssetDenom: string,
+): Promise<string> {
+  let amountToUse = amount;
+  // calculates the most eth we can bridge in one go and pins it to that.
+  if (sourceAssetDenom === ethDenomByChainId[chainId]) {
+    try {
+      const ethPrice = await getETHPrice();
+      const maxDepositInEth = config.MAXIMUM_BRIDGE_AMOUNT_USDC / ethPrice;
+      amountToUse = min([parseInt(amountToUse, 10), maxDepositInEth * ETH_WEI_QUANTUM])!.toString();
+    } catch (error) {
+      logger.error({
+        at: 'skip-helper#limitAmount',
+        message: 'Failed to get ETH price',
+        error,
+      });
+      throw error;
+    }
+    return amountToUse;
+  }
+
+  // calculates the most usdc we can bridge in one go and pins it to that.
+  const maxDepositInUsdc = config.MAXIMUM_BRIDGE_AMOUNT_USDC;
+  amountToUse = min([parseInt(amountToUse, 10), maxDepositInUsdc * ETH_USDC_QUANTUM])!.toString();
+  return amountToUse;
 }

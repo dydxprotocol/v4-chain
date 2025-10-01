@@ -3,6 +3,7 @@ import { findByEvmAddress, findBySmartAccountAddress, findBySvmAddress } from '@
 import { TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres/build/src/types';
 import { getKernelAddressFromECDSA } from '@zerodev/ecdsa-validator';
 import { getEntryPoint, KERNEL_V3_1 } from '@zerodev/sdk/constants';
+import { Alchemy } from 'alchemy-sdk';
 import { decode, encode } from 'bech32';
 import express from 'express';
 import {
@@ -53,6 +54,10 @@ export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   });
   return acc;
 }, {} as Record<string, PublicClient>);
+
+const alchemy = new Alchemy({
+  apiKey: config.ALCHEMY_API_KEY,
+});
 
 export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): Promise<void> {
   const errors: string[] = [];
@@ -299,4 +304,39 @@ export function verifyAlchemyWebhook(
     return create4xxResponse(res, 'unauthorized webhook', 401);
   }
   return next();
+}
+
+export async function getETHPrice(): Promise<number> {
+  try {
+    const price = await alchemy.prices.getTokenPriceBySymbol(['ETH']);
+
+    // Check if we have valid price data
+    if (!price.data || price.data.length === 0) {
+      throw new Error('No price data returned from Alchemy API');
+    }
+
+    const priceData = price.data[0];
+    if (!priceData.prices || priceData.prices.length === 0) {
+      if (priceData.error) {
+        throw new Error(`Alchemy API error: ${priceData.error.message}`);
+      }
+      throw new Error('No price data available for ETH');
+    }
+
+    return parseFloat(priceData.prices[0].value);
+  } catch (error) {
+    // Properly serialize error for logging
+    const errorDetails = {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+    };
+
+    logger.error({
+      at: 'alchemy-helpers#getETHPrice',
+      message: 'Failed to get ETH price',
+      error: errorDetails,
+    });
+    throw error;
+  }
 }
