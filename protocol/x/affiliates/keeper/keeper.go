@@ -193,7 +193,7 @@ func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.I
 	return referredVolume.BigInt(), nil
 }
 
-// GetReferredVolume returns all time referred volume for an affiliate address.
+// GetReferredCommission returns all time referred commission for an affiliate address.
 func (k Keeper) GetReferredCommission(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
 	affiliateReferredCommissionPrefixStore := prefix.NewStore(
 		ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
@@ -515,13 +515,19 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			previousVolume := (takerUserStats.TakerNotional + takerUserStats.MakerNotional +
 				previouslyAttributedVolume[fill.Taker])
 			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
-				previousVolume+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
-				attributableVolume = affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums - previousVolume
+			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 {
+				cap := affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums
+				if previousVolume >= cap {
+					attributableVolume = 0
+				} else if previousVolume+attributableVolume > cap {
+					attributableVolume = cap - previousVolume
+				}
 			}
 			previouslyAttributedVolume[fill.Taker] += attributableVolume
-			if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
-				return err
+			if attributableVolume > 0 {
+				if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -540,13 +546,19 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			previousVolume := (makerUserStats.TakerNotional + makerUserStats.MakerNotional +
 				previouslyAttributedVolume[fill.Maker])
 			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
-				previousVolume+attributableVolume > affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
-				attributableVolume = affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums - previousVolume
+			if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 {
+				cap := affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums
+				if previousVolume >= cap {
+					attributableVolume = 0
+				} else if previousVolume+attributableVolume > cap {
+					attributableVolume = cap - previousVolume
+				}
 			}
 			previouslyAttributedVolume[fill.Maker] += attributableVolume
-			if err := k.AddReferredVolume(ctx, referredByAddrMaker, lib.BigU(attributableVolume)); err != nil {
-				return err
+			if attributableVolume > 0 {
+				if err := k.AddReferredVolume(ctx, referredByAddrMaker, lib.BigU(attributableVolume)); err != nil {
+					return err
+				}
 			}
 		}
 	}

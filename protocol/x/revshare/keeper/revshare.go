@@ -293,7 +293,7 @@ func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	_ *affiliatetypes.AffiliateParameters,
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums

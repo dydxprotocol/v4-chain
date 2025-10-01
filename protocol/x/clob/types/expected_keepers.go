@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
-	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -192,7 +192,7 @@ type RevShareKeeper interface {
 		ctx sdk.Context,
 		fill FillForProcess,
 		affiliateOverrides map[string]bool,
-		affiliateParameters *types.AffiliateParameters,
+		affiliateParameters *affiliatetypes.AffiliateParameters,
 	) (
 		revsharetypes.RevSharesForFill, error,
 	)
@@ -203,7 +203,7 @@ type RevShareKeeper interface {
 type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
 	GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, error)
-	GetAffiliateParameters(ctx sdk.Context) (types.AffiliateParameters, error)
+	GetAffiliateParameters(ctx sdk.Context) (affiliatetypes.AffiliateParameters, error)
 }
 
 type AccountPlusKeeper interface {
