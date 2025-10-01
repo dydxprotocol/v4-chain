@@ -1,3 +1,7 @@
+import {
+  createHash,
+} from 'crypto';
+
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BridgeInformationTable,
@@ -45,6 +49,7 @@ import {
 import {
   getSvmSigner, getSkipCallData, getKernelAccount,
   buildUserAddresses,
+  limitAmount,
 } from '../../../helpers/skip-helper';
 import { trackTurnkeyDepositSubmitted } from '../../../lib/amplitude-helpers';
 import { handleControllerError } from '../../../lib/helpers';
@@ -257,6 +262,8 @@ class BridgeController extends Controller {
       throw new Error('Failed to derive dYdX address');
     }
 
+    const amountIn = await limitAmount(chainId, amount, sourceAssetDenom);
+
     const path = await route({
       goFast: true,
       allowUnsafe: false,
@@ -264,7 +271,7 @@ class BridgeController extends Controller {
       smartSwapOptions: {
         splitRoutes: true,
       },
-      amountIn: amount,
+      amountIn,
       sourceAssetDenom,
       sourceAssetChainId: chainId,
       destAssetChainId: dydxChainId,
@@ -319,7 +326,7 @@ class BridgeController extends Controller {
         logger.info({
           message: `Broadcasted on ${c}: ${txHash}`,
           from: fromAddress,
-          amount,
+          amount: amountIn,
           sourceAssetDenom,
           chainId,
           toAddress: fromAddress,
@@ -339,7 +346,7 @@ class BridgeController extends Controller {
           message: 'Bridge transaction completed',
           fromAddress,
           chainId: c,
-          amount,
+          amount: amountIn,
           sourceAssetDenom,
           transactionHash: txHash,
           status,
@@ -357,18 +364,20 @@ class BridgeController extends Controller {
           const bridgeRecord = {
             from_address: fromAddress,
             chain_id: c,
-            amount,
+            amount: amountIn,
             transaction_hash: txHash,
             created_at: new Date().toISOString(),
           };
 
           await BridgeInformationTable.create(bridgeRecord);
-
+          const email = record.email?.trim().toLowerCase();
+          // sha256 hash email
+          const emailHash = email ? createHash('sha256').update(email).digest('hex') : record.evm_address;
           // Track TurnKey deposit confirmation event in Amplitude
           await trackTurnkeyDepositSubmitted(
-            dydxAddress,
+            emailHash,
             c,
-            amount,
+            amountIn,
             txHash,
             sourceAssetDenom,
           );
@@ -377,7 +386,7 @@ class BridgeController extends Controller {
             message: 'Bridge transaction tracked',
             fromAddress,
             chainId: c,
-            amount,
+            amount: amountIn,
             sourceAssetDenom,
             transactionHash: txHash,
             explorerLink,
@@ -389,7 +398,7 @@ class BridgeController extends Controller {
             message: 'Failed to create bridge information record on tracked',
             fromAddress,
             chainId: c,
-            amount,
+            amount: amountIn,
             error: error.message || error,
           });
           // Don't throw error to avoid breaking the bridge flow
@@ -457,13 +466,15 @@ class BridgeController extends Controller {
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
+    // we cannot bridge more than the max amount allowed through the bridge.
+    const amountToUse = await limitAmount(chainId, amount, sourceAssetDenom);
     let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
     try {
       callData = await getSkipCallData(
         srcAddress,
         sourceAssetDenom,
         record.dydx_address,
-        amount,
+        amountToUse,
         chainId,
       );
     } catch (error) {
@@ -534,7 +545,7 @@ class BridgeController extends Controller {
         const bridgeRecord: BridgeInformationCreateObject = {
           from_address: fromAddress,
           chain_id: chainId,
-          amount,
+          amount: amountToUse,
           transaction_hash: receipt.transactionHash,
           created_at: new Date().toISOString(),
         };
@@ -543,12 +554,22 @@ class BridgeController extends Controller {
         );
 
         // Track TurnKey deposit confirmation event in Amplitude
-        const dydxAddress = await getDydxAddress(fromAddress, chainId);
-        if (dydxAddress) {
+        if (record.email) {
+          const email = record.email.trim().toLowerCase();
+          // sha256 hash email
+          const emailHash = createHash('sha256').update(email).digest('hex');
           await trackTurnkeyDepositSubmitted(
-            dydxAddress,
+            emailHash,
             chainId,
-            amount,
+            amountToUse,
+            receipt.transactionHash,
+            sourceAssetDenom,
+          );
+        } else {
+          await trackTurnkeyDepositSubmitted(
+            record.evm_address,
+            chainId,
+            amountToUse,
             receipt.transactionHash,
             sourceAssetDenom,
           );
