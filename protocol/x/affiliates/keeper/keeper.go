@@ -144,7 +144,7 @@ func (k Keeper) AddReferredVolume(
 	return nil
 }
 
-// AddReferredCommission adds the referred commission from a block to the affiliate's referred commission.
+// AddReferredCommission adds the referred commission from a block to the commission a referred user generated.
 func (k Keeper) AddReferredCommission(
 	ctx sdk.Context,
 	referreeAddress string,
