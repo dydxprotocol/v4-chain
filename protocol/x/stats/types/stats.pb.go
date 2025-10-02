@@ -83,7 +83,7 @@ type BlockStats_Fill struct {
 	// Notional USDC filled in quantums
 	// Used to calculate fee tier, and affiliate revenue attributed for taker
 	Notional uint64 `protobuf:"varint,3,opt,name=notional,proto3" json:"notional,omitempty"`
-	// Affiliate fee generated in quantums
+	// Affiliate fee generated in quantums of the taker fee for the affiliate
 	// Used to calculate affiliate revenue attributed for taker. This is dynamic
 	// per affiliate tier
 	AffiliateFeeGeneratedQuantums uint64 `protobuf:"varint,4,opt,name=affiliate_fee_generated_quantums,json=affiliateFeeGeneratedQuantums,proto3" json:"affiliate_fee_generated_quantums,omitempty"`
