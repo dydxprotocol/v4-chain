@@ -75,12 +75,6 @@ message AffiliateInfoResponse {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
-  // The affiliate's all-time referred commission in quote quantums.
-  bytes referred_commission = 6 [
-    (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
-  ];
 }
 
 // ReferredByRequest is the request type for the Query/ReferredBy RPC method.
