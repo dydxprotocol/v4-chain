@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
-import { route, messages } from '@skip-go/client/cjs';
+import { route, messages, RouteResponse } from '@skip-go/client/cjs';
 import type { Adapter } from '@solana/wallet-adapter-base';
 import type { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
@@ -12,7 +12,7 @@ import { CreateKernelAccountReturnType } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import { decode, fromWords } from 'bech32';
 import bs58 from 'bs58';
-import { min } from 'lodash';
+import { max, min } from 'lodash';
 import { encodeFunctionData, type Hex } from 'viem';
 import type { EntryPointVersion, SmartAccountImplementation } from 'viem/account-abstraction';
 import { avalanche } from 'viem/chains';
@@ -49,7 +49,6 @@ export async function buildUserAddresses(
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
 const skipMessagesTimeoutSeconds = '60';
 const dydxNobleChannel = 33;
-const slippageTolerancePercent = config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE;
 // Grabs the raw skip route data to carry out the bridge on our own.
 export async function getSkipCallData(
   sourceAddress: string,
@@ -63,29 +62,52 @@ export async function getSkipCallData(
   if (amount.startsWith('0x')) {
     amountToUse = parseInt(amount, 16).toString();
   }
+  let toleranceMet = false;
+  let routeResult: RouteResponse | undefined;
+  let trueEstimateAmountOut: string | undefined;
+  for (let i = 0; i < 3 && !toleranceMet; i++) {
+    routeResult = await route({
+      amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
+      sourceAssetDenom,
+      sourceAssetChainId: chainId,
+      destAssetDenom: usdcAddressByChainId[dydxChainId],
+      destAssetChainId: dydxChainId,
+      cumulativeAffiliateFeeBps: '0',
+      smartRelay: true, // skip recommended to enable for better routes and less faults.
+      smartSwapOptions: {
+        splitRoutes: true,
+        evmSwaps: true, // needed for native eth bridging.
+      },
+      allowUnsafe: false,
+      goFast: true,
+    });
+    logger.info({
+      at: 'skip-helper#getSkipCallData',
+      message: 'Route result obtained',
+      routeResult,
+    });
+    if (!routeResult) {
+      throw new Error('Failed to find a route');
+    }
 
-  const routeResult = await route({
-    amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
-    sourceAssetDenom,
-    sourceAssetChainId: chainId,
-    destAssetDenom: usdcAddressByChainId[dydxChainId],
-    destAssetChainId: dydxChainId,
-    cumulativeAffiliateFeeBps: '0',
-    smartRelay: true, // skip recommended to enable for better routes and less faults.
-    smartSwapOptions: {
-      splitRoutes: true,
-      evmSwaps: true, // needed for native eth bridging.
-    },
-    allowUnsafe: false,
-    goFast: true,
-  });
-  logger.info({
-    at: 'skip-helper#getSkipCallData',
-    message: 'Route result obtained',
-    routeResult,
-  });
-  if (!routeResult) {
-    throw new Error('Failed to find a route');
+    trueEstimateAmountOut = await estimateAmountOutSwap(
+      routeResult?.sourceAssetChainId,
+      routeResult?.amountIn,
+      routeResult?.sourceAssetDenom,
+    );
+    toleranceMet = verifySkipEstimation(routeResult.estimatedAmountOut, trueEstimateAmountOut);
+    // estimatedAmountOut from skip needs to be appropriate.
+    if (!toleranceMet) {
+      logger.warning({
+        at: 'skip-helper#getSkipCallData',
+        message: 'estimated amount out is less than our tolerance. Retrying...',
+        estimatedAmountOut: routeResult.estimatedAmountOut,
+        actualAmount: trueEstimateAmountOut,
+      });
+    }
+  }
+  if (!toleranceMet || !routeResult) {
+    throw new Error('Failed to find a route that meets our tolerance after 3 retries.');
   }
 
   logger.info({
@@ -121,10 +143,15 @@ export async function getSkipCallData(
     throw new Error('executeRoute error: invalid address list');
   }
 
+  const expectedAmountOut = max([routeResult.estimatedAmountOut, trueEstimateAmountOut]);
+  const slippageTolerancePercent = min([
+    100 / parseInt(expectedAmountOut!, 10),
+    parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
+  ])!.toString();
   const response = await messages({
     timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
-    amountOut: routeResult.estimatedAmountOut,
+    amountOut: expectedAmountOut,
     sourceAssetChainId: routeResult?.sourceAssetChainId,
     sourceAssetDenom: routeResult?.sourceAssetDenom,
     destAssetChainId: routeResult?.destAssetChainId,
@@ -389,4 +416,40 @@ export async function limitAmount(
   const maxDepositInUsdc = config.MAXIMUM_BRIDGE_AMOUNT_USDC;
   amountToUse = min([parseInt(amountToUse, 10), maxDepositInUsdc * ETH_USDC_QUANTUM])!.toString();
   return amountToUse;
+}
+
+/**
+ * The USDC amount out of a bridge from `sourceAssetDenom` to USDC on dydx assuming we can get
+ * filled on the exact market rate. Given an input amount/sourceAssetDenom, it will
+ * estimate what the expected amount out will be.
+ * @param chainId
+ * @param amount
+ * @param sourceAssetDenom
+ * @returns the estimated amount out in usdc per true market rate.
+ */
+export async function estimateAmountOutSwap(
+  chainId: string,
+  amount: string,
+  sourceAssetDenom: string,
+): Promise<string> {
+  if (sourceAssetDenom === ethDenomByChainId[chainId]) {
+    const ethPrice = await getETHPrice();
+    // ethPrice multiplied by the amount will give us the rough amount in usdc.
+    return (ethPrice * parseInt(amount, 10) * (ETH_USDC_QUANTUM / ETH_WEI_QUANTUM)).toString();
+  }
+  return (parseInt(amount, 10) * ETH_USDC_QUANTUM).toString();
+}
+
+/**
+ * Verify that the amount that skip estimates user would get credited is close to the actual amount
+ * that is being bridged.
+ * @param skipEstimateAmount the amount that skip estimates user would get credited
+ * @param actualAmount the actual amount we expect per the market rate.
+ * @returns true if the skip amount no less than `actualAmount * (1 - min(100/actualAmount, 0.001))`
+ */
+export function verifySkipEstimation(skipEstimateAmount: string, actualAmount: string): boolean {
+  const skipEstimateAmountNum = parseInt(skipEstimateAmount, 10);
+  const actualAmountNum = parseInt(actualAmount, 10);
+  const anchor = max([actualAmountNum * (1 - 100 / actualAmountNum), 0.999 * actualAmountNum]);
+  return skipEstimateAmountNum >= anchor!;
 }
