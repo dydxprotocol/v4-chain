@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 type (
@@ -487,6 +488,28 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 	return affiliateOverridesMap, nil
 }
 
+func (k Keeper) addReferredVolumeIfQualified(ctx sdk.Context, userStats *statstypes.UserStats, addr string, referredByAddr string, volume uint64, affiliateParams *types.AffiliateParameters, previouslyAttributedVolume *map[string]uint64) error {
+	// If parameter is 0 then no limit is applied
+	previousVolume := (userStats.TakerNotional + userStats.MakerNotional +
+		(*previouslyAttributedVolume)[addr])
+
+	if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
+		cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
+		if previousVolume >= cap {
+			volume = 0
+		} else if previousVolume+volume > cap {
+			volume = cap - previousVolume
+		}
+	}
+	(*previouslyAttributedVolume)[addr] += volume
+	if volume > 0 {
+		if err := k.AddReferredVolume(ctx, referredByAddr, lib.BigU(volume)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 	ctx sdk.Context,
 ) error {
@@ -511,23 +534,12 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		if referredByAddrTaker != "" {
 			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
 			takerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
-			attributableVolume := fill.Notional
-			previousVolume := (takerUserStats.TakerNotional + takerUserStats.MakerNotional +
-				previouslyAttributedVolume[fill.Taker])
-			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
-				cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
-				if previousVolume >= cap {
-					attributableVolume = 0
-				} else if previousVolume+attributableVolume > cap {
-					attributableVolume = cap - previousVolume
-				}
-			}
-			previouslyAttributedVolume[fill.Taker] += attributableVolume
-			if attributableVolume > 0 {
-				if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
-					return err
-				}
+			k.addReferredVolumeIfQualified(ctx, takerUserStats, fill.Taker, referredByAddrTaker,
+				fill.Notional, &affiliateParams, &previouslyAttributedVolume)
+			// Add referred commission to the referred user, this is precalculated in the rev share generated in the fill
+			// Use this to keep track if the user exceeded the total amount they can attributed
+			if err := k.AddReferredCommission(ctx, fill.Taker, lib.BigU(fill.AffiliateFeeGeneratedQuantums)); err != nil {
+				return err
 			}
 		}
 
@@ -541,25 +553,9 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			}
 		}
 		if referredByAddrMaker != "" {
-			attributableVolume := fill.Notional
 			makerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Maker)
-			previousVolume := (makerUserStats.TakerNotional + makerUserStats.MakerNotional +
-				previouslyAttributedVolume[fill.Maker])
-			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
-				cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
-				if previousVolume >= cap {
-					attributableVolume = 0
-				} else if previousVolume+attributableVolume > cap {
-					attributableVolume = cap - previousVolume
-				}
-			}
-			previouslyAttributedVolume[fill.Maker] += attributableVolume
-			if attributableVolume > 0 {
-				if err := k.AddReferredVolume(ctx, referredByAddrMaker, lib.BigU(attributableVolume)); err != nil {
-					return err
-				}
-			}
+			k.addReferredVolumeIfQualified(ctx, makerUserStats, fill.Maker, referredByAddrMaker,
+				fill.Notional, &affiliateParams, &previouslyAttributedVolume)
 		}
 	}
 	return nil
