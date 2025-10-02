@@ -14,3 +14,4 @@ v4-proto-rs/Cargo.lock
 .idea
 .vscode
 **/.DS_Store
+.aider*

@@ -1,5 +1,5 @@
 import {
-  CountryHeaders,
+  GeoOriginHeaders,
   isRestrictedCountryHeaders,
   INDEXER_GEOBLOCKED_PAYLOAD,
   INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
@@ -80,7 +80,7 @@ export async function complianceAndGeoCheck(
     }
   }
 
-  if (isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
+  if (isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
     return create4xxResponse(
       res,
       INDEXER_GEOBLOCKED_PAYLOAD,

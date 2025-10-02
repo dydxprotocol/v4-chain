@@ -1,17 +1,19 @@
+import { GeoOriginHeaders, GeoOriginStatus } from '../../src/types';
 import {
   isRestrictedCountryHeaders,
-  CountryHeaders,
   isWhitelistedAddress,
 } from '../../src/geoblocking/restrict-countries';
-import * as util from '../../src/geoblocking/util';
+import * as restrictCountries from '../../src/geoblocking/restrict-countries';
 import config from '../../src/config';
 
-const defaultHeaders: CountryHeaders = {
-  'cf-ipcountry': 'US',
+const defaultHeaders: GeoOriginHeaders = {
+  'geo-origin-country': 'FR',
+  'geo-origin-region': 'FR-75', // Paris
+  'geo-origin-status': GeoOriginStatus.OK,
 };
 
 describe('isRestrictedCountryHeaders', () => {
-  let isRestrictedCountrySpy: jest.SpyInstance;
+  let isRestrictedCountryHeadersSpy: jest.SpyInstance;
   const defaultEnabled: boolean = config.INDEXER_LEVEL_GEOBLOCKING_ENABLED;
 
   beforeAll(() => {
@@ -23,7 +25,7 @@ describe('isRestrictedCountryHeaders', () => {
   });
 
   beforeEach(() => {
-    isRestrictedCountrySpy = jest.spyOn(util, 'isRestrictedCountry');
+    isRestrictedCountryHeadersSpy = jest.spyOn(restrictCountries, 'isRestrictedCountryHeaders');
   });
 
   afterEach(() => {
@@ -32,14 +34,14 @@ describe('isRestrictedCountryHeaders', () => {
 
   it('does not reject headers from non-restricted countries', () => {
     // non-restricted country in header
-    isRestrictedCountrySpy.mockReturnValue(false);
+    isRestrictedCountryHeadersSpy.mockReturnValue(false);
 
     expect(isRestrictedCountryHeaders(defaultHeaders)).toEqual(false);
   });
 
   it('does reject headers with restricted country', () => {
     // restricted country in header
-    isRestrictedCountrySpy.mockReturnValue(true);
+    isRestrictedCountryHeadersSpy.mockReturnValue(true);
 
     expect(isRestrictedCountryHeaders(defaultHeaders)).toEqual(true);
   });
