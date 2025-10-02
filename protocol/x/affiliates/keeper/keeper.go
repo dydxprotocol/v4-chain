@@ -440,7 +440,9 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 	return affiliateOverridesMap, nil
 }
 
-func (k Keeper) addReferredVolumeIfQualified(ctx sdk.Context, userStats *statstypes.UserStats, addr string, referredByAddr string, volume uint64, affiliateParams *types.AffiliateParameters, previouslyAttributedVolume *map[string]uint64) error {
+func (k Keeper) addReferredVolumeIfQualified(ctx sdk.Context, userStats *statstypes.UserStats, addr string,
+	referredByAddr string, volume uint64, affiliateParams *types.AffiliateParameters,
+	previouslyAttributedVolume *map[string]uint64) error {
 	// If parameter is 0 then no limit is applied
 	previousVolume := (userStats.TakerNotional + userStats.MakerNotional +
 		(*previouslyAttributedVolume)[addr])
