@@ -486,8 +486,10 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		if referredByAddrTaker != "" {
 			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
 			takerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
-			k.addReferredVolumeIfQualified(ctx, takerUserStats, fill.Taker, referredByAddrTaker,
-				fill.Notional, &affiliateParams, &previouslyAttributedVolume)
+			if err := k.addReferredVolumeIfQualified(ctx, takerUserStats, fill.Taker, referredByAddrTaker,
+				fill.Notional, &affiliateParams, &previouslyAttributedVolume); err != nil {
+				return err
+			}
 		}
 
 		// Process maker's referred volume
@@ -501,8 +503,10 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 		if referredByAddrMaker != "" {
 			makerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Maker)
-			k.addReferredVolumeIfQualified(ctx, makerUserStats, fill.Maker, referredByAddrMaker,
-				fill.Notional, &affiliateParams, &previouslyAttributedVolume)
+			if err := k.addReferredVolumeIfQualified(ctx, makerUserStats, fill.Maker, referredByAddrMaker,
+				fill.Notional, &affiliateParams, &previouslyAttributedVolume); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
