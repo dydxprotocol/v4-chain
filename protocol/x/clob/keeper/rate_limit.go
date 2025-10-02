@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -100,6 +101,11 @@ func (k *Keeper) RateLimitUpdateLeverage(ctx sdk.Context, msg *types.MsgUpdateLe
 	// Only rate limit during `CheckTx`.
 	if !k.ShouldRateLimit(ctx) {
 		return nil
+	}
+
+	// Defensive check to prevent null pointer dereference during rate limiting
+	if msg.SubaccountId == nil {
+		return errorsmod.Wrap(types.ErrInvalidLeverage, "subaccount ID cannot be nil")
 	}
 
 	// Use the subaccount owner address as the rate limiting key

@@ -952,6 +952,7 @@ func TestRateLimitingUpdateLeverage_RateLimitsAreEnforced(t *testing.T) {
 							genesisState.Subaccounts = []satypes.Subaccount{
 								constants.Alice_Num0_10_000USD,
 								constants.Alice_Num1_10_000USD,
+								constants.Bob_Num0_10_000USD,
 							}
 						})
 					return genesis
