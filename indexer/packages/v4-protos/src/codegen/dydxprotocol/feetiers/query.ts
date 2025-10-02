@@ -54,38 +54,70 @@ export interface QueryUserFeeTierResponseSDKType {
   index: number;
   tier?: PerpetualFeeTierSDKType;
 }
-/** QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC method. */
+/**
+ * QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC
+ * method.
+ */
 
 export interface QueryFeeHolidayParamsRequest {
+  /**
+   * QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC
+   * method.
+   */
   clobPairId: number;
 }
-/** QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC method. */
+/**
+ * QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC
+ * method.
+ */
 
 export interface QueryFeeHolidayParamsRequestSDKType {
+  /**
+   * QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC
+   * method.
+   */
   clob_pair_id: number;
 }
-/** QueryFeeHolidayParamsResponse is a response type for the FeeHolidayParams RPC method. */
+/**
+ * QueryFeeHolidayParamsResponse is a response type for the FeeHolidayParams RPC
+ * method.
+ */
 
 export interface QueryFeeHolidayParamsResponse {
   params?: FeeHolidayParams;
 }
-/** QueryFeeHolidayParamsResponse is a response type for the FeeHolidayParams RPC method. */
+/**
+ * QueryFeeHolidayParamsResponse is a response type for the FeeHolidayParams RPC
+ * method.
+ */
 
 export interface QueryFeeHolidayParamsResponseSDKType {
   params?: FeeHolidayParamsSDKType;
 }
-/** QueryAllFeeHolidayParamsRequest is a request type for the AllFeeHolidayParams RPC method. */
+/**
+ * QueryAllFeeHolidayParamsRequest is a request type for the AllFeeHolidayParams
+ * RPC method.
+ */
 
 export interface QueryAllFeeHolidayParamsRequest {}
-/** QueryAllFeeHolidayParamsRequest is a request type for the AllFeeHolidayParams RPC method. */
+/**
+ * QueryAllFeeHolidayParamsRequest is a request type for the AllFeeHolidayParams
+ * RPC method.
+ */
 
 export interface QueryAllFeeHolidayParamsRequestSDKType {}
-/** QueryAllFeeHolidayParamsResponse is a response type for the AllFeeHolidayParams RPC method. */
+/**
+ * QueryAllFeeHolidayParamsResponse is a response type for the
+ * AllFeeHolidayParams RPC method.
+ */
 
 export interface QueryAllFeeHolidayParamsResponse {
   params: FeeHolidayParams[];
 }
-/** QueryAllFeeHolidayParamsResponse is a response type for the AllFeeHolidayParams RPC method. */
+/**
+ * QueryAllFeeHolidayParamsResponse is a response type for the
+ * AllFeeHolidayParams RPC method.
+ */
 
 export interface QueryAllFeeHolidayParamsResponseSDKType {
   params: FeeHolidayParamsSDKType[];

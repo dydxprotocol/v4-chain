@@ -14,7 +14,7 @@ service Msg {
   // UpdatePerpetualFeeParams updates the PerpetualFeeParams in state.
   rpc UpdatePerpetualFeeParams(MsgUpdatePerpetualFeeParams)
       returns (MsgUpdatePerpetualFeeParamsResponse);
-  
+
   // SetFeeHolidayParams sets the no fee holiday period for each CLOB pair.
   rpc SetFeeHolidayParams(MsgSetFeeHolidayParams)
       returns (MsgSetFeeHolidayParamsResponse);
@@ -38,10 +38,10 @@ message MsgUpdatePerpetualFeeParamsResponse {}
 message MsgSetFeeHolidayParams {
   // The address that controls the module.
   option (cosmos.msg.v1.signer) = "authority";
-  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
   // The fee holidays to create or update.
-  repeated FeeHolidayParams params = 2 [(gogoproto.nullable) = false];
+  repeated FeeHolidayParams params = 2 [ (gogoproto.nullable) = false ];
 }
 
 // Response to MsgSetFeeHolidayParams

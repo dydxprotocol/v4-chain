@@ -12,7 +12,7 @@ export class LCDQueryClient {
     this.perpetualFeeParams = this.perpetualFeeParams.bind(this);
     this.userFeeTier = this.userFeeTier.bind(this);
     this.feeHolidayParams = this.feeHolidayParams.bind(this);
-    this.allFeeHolidays = this.allFeeHolidays.bind(this);
+    this.allFeeHolidayParams = this.allFeeHolidayParams.bind(this);
   }
   /* Queries the PerpetualFeeParams. */
 
@@ -46,7 +46,7 @@ export class LCDQueryClient {
   /* Queries all fee holiday params */
 
 
-  async allFeeHolidays(_params: QueryAllFeeHolidayParamsRequest = {}): Promise<QueryAllFeeHolidayParamsResponseSDKType> {
+  async allFeeHolidayParams(_params: QueryAllFeeHolidayParamsRequest = {}): Promise<QueryAllFeeHolidayParamsResponseSDKType> {
     const endpoint = `dydxprotocol/v4/feetiers/fee_holiday_params`;
     return await this.req.get<QueryAllFeeHolidayParamsResponseSDKType>(endpoint);
   }

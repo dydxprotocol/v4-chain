@@ -15,7 +15,7 @@ export interface Query {
   feeHolidayParams(request: QueryFeeHolidayParamsRequest): Promise<QueryFeeHolidayParamsResponse>;
   /** Queries all fee holiday params */
 
-  allFeeHolidays(request?: QueryAllFeeHolidayParamsRequest): Promise<QueryAllFeeHolidayParamsResponse>;
+  allFeeHolidayParams(request?: QueryAllFeeHolidayParamsRequest): Promise<QueryAllFeeHolidayParamsResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -25,7 +25,7 @@ export class QueryClientImpl implements Query {
     this.perpetualFeeParams = this.perpetualFeeParams.bind(this);
     this.userFeeTier = this.userFeeTier.bind(this);
     this.feeHolidayParams = this.feeHolidayParams.bind(this);
-    this.allFeeHolidays = this.allFeeHolidays.bind(this);
+    this.allFeeHolidayParams = this.allFeeHolidayParams.bind(this);
   }
 
   perpetualFeeParams(request: QueryPerpetualFeeParamsRequest = {}): Promise<QueryPerpetualFeeParamsResponse> {
@@ -46,9 +46,9 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryFeeHolidayParamsResponse.decode(new _m0.Reader(data)));
   }
 
-  allFeeHolidays(request: QueryAllFeeHolidayParamsRequest = {}): Promise<QueryAllFeeHolidayParamsResponse> {
+  allFeeHolidayParams(request: QueryAllFeeHolidayParamsRequest = {}): Promise<QueryAllFeeHolidayParamsResponse> {
     const data = QueryAllFeeHolidayParamsRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.feetiers.Query", "AllFeeHolidays", data);
+    const promise = this.rpc.request("dydxprotocol.feetiers.Query", "AllFeeHolidayParams", data);
     return promise.then(data => QueryAllFeeHolidayParamsResponse.decode(new _m0.Reader(data)));
   }
 
@@ -69,8 +69,8 @@ export const createRpcQueryExtension = (base: QueryClient) => {
       return queryService.feeHolidayParams(request);
     },
 
-    allFeeHolidays(request?: QueryAllFeeHolidayParamsRequest): Promise<QueryAllFeeHolidayParamsResponse> {
-      return queryService.allFeeHolidays(request);
+    allFeeHolidayParams(request?: QueryAllFeeHolidayParamsRequest): Promise<QueryAllFeeHolidayParamsResponse> {
+      return queryService.allFeeHolidayParams(request);
     }
 
   };
