@@ -530,7 +530,8 @@ func (k Keeper) persistMatchedOrders(
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess, &affiliateOverrides, affiliateParameters)
+	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess, &affiliateOverrides,
+		affiliateParameters)
 	if err != nil {
 		revSharesForFill = revsharetypes.RevSharesForFill{}
 		log.ErrorLogWithError(ctx, "error getting rev shares for fill", err)
