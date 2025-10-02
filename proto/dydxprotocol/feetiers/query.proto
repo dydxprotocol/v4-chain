@@ -5,6 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/feetiers/params.proto";
+import "dydxprotocol/feetiers/fee_holiday.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
 
@@ -20,6 +21,20 @@ service Query {
   // Queries a user's fee tier
   rpc UserFeeTier(QueryUserFeeTierRequest) returns (QueryUserFeeTierResponse) {
     option (google.api.http).get = "/dydxprotocol/v4/feetiers/user_fee_tier";
+  }
+
+  // Queries the FeeHolidayParams
+  rpc FeeHolidayParams(QueryFeeHolidayParamsRequest)
+      returns (QueryFeeHolidayParamsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/feetiers/fee_holiday_params/{clob_pair_id}";
+  }
+
+  // Queries all fee holiday params
+  rpc AllFeeHolidays(QueryAllFeeHolidayParamsRequest)
+      returns (QueryAllFeeHolidayParamsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/feetiers/fee_holiday_params";
   }
 }
 
@@ -43,4 +58,22 @@ message QueryUserFeeTierResponse {
   // Index of the fee tier in the list queried from PerpetualFeeParams.
   uint32 index = 1;
   PerpetualFeeTier tier = 2;
+}
+
+// QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC method.
+message QueryFeeHolidayParamsRequest {
+  uint32 clob_pair_id = 1;
+}
+
+// QueryFeeHolidayParamsResponse is a response type for the FeeHolidayParams RPC method.
+message QueryFeeHolidayParamsResponse {
+  FeeHolidayParams params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllFeeHolidayParamsRequest is a request type for the AllFeeHolidayParams RPC method.
+message QueryAllFeeHolidayParamsRequest {}
+
+// QueryAllFeeHolidayParamsResponse is a response type for the AllFeeHolidayParams RPC method.
+message QueryAllFeeHolidayParamsResponse {
+  repeated FeeHolidayParams params = 1 [(gogoproto.nullable) = false];
 }

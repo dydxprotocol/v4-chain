@@ -213,45 +213,231 @@ func (m *QueryUserFeeTierResponse) GetTier() *PerpetualFeeTier {
 	return nil
 }
 
+// QueryFeeHolidayParamsRequest is a request type for the FeeHolidayParams RPC method.
+type QueryFeeHolidayParamsRequest struct {
+	ClobPairId uint32 `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
+}
+
+func (m *QueryFeeHolidayParamsRequest) Reset()         { *m = QueryFeeHolidayParamsRequest{} }
+func (m *QueryFeeHolidayParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryFeeHolidayParamsRequest) ProtoMessage()    {}
+func (*QueryFeeHolidayParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{4}
+}
+func (m *QueryFeeHolidayParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryFeeHolidayParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryFeeHolidayParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryFeeHolidayParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryFeeHolidayParamsRequest.Merge(m, src)
+}
+func (m *QueryFeeHolidayParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryFeeHolidayParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryFeeHolidayParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryFeeHolidayParamsRequest proto.InternalMessageInfo
+
+func (m *QueryFeeHolidayParamsRequest) GetClobPairId() uint32 {
+	if m != nil {
+		return m.ClobPairId
+	}
+	return 0
+}
+
+// QueryFeeHolidayParamsResponse is a response type for the FeeHolidayParams RPC method.
+type QueryFeeHolidayParamsResponse struct {
+	Params FeeHolidayParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *QueryFeeHolidayParamsResponse) Reset()         { *m = QueryFeeHolidayParamsResponse{} }
+func (m *QueryFeeHolidayParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryFeeHolidayParamsResponse) ProtoMessage()    {}
+func (*QueryFeeHolidayParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{5}
+}
+func (m *QueryFeeHolidayParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryFeeHolidayParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryFeeHolidayParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryFeeHolidayParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryFeeHolidayParamsResponse.Merge(m, src)
+}
+func (m *QueryFeeHolidayParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryFeeHolidayParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryFeeHolidayParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryFeeHolidayParamsResponse proto.InternalMessageInfo
+
+func (m *QueryFeeHolidayParamsResponse) GetParams() FeeHolidayParams {
+	if m != nil {
+		return m.Params
+	}
+	return FeeHolidayParams{}
+}
+
+// QueryAllFeeHolidayParamsRequest is a request type for the AllFeeHolidayParams RPC method.
+type QueryAllFeeHolidayParamsRequest struct {
+}
+
+func (m *QueryAllFeeHolidayParamsRequest) Reset()         { *m = QueryAllFeeHolidayParamsRequest{} }
+func (m *QueryAllFeeHolidayParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllFeeHolidayParamsRequest) ProtoMessage()    {}
+func (*QueryAllFeeHolidayParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{6}
+}
+func (m *QueryAllFeeHolidayParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllFeeHolidayParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllFeeHolidayParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllFeeHolidayParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllFeeHolidayParamsRequest.Merge(m, src)
+}
+func (m *QueryAllFeeHolidayParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllFeeHolidayParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllFeeHolidayParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllFeeHolidayParamsRequest proto.InternalMessageInfo
+
+// QueryAllFeeHolidayParamsResponse is a response type for the AllFeeHolidayParams RPC method.
+type QueryAllFeeHolidayParamsResponse struct {
+	Params []FeeHolidayParams `protobuf:"bytes,1,rep,name=params,proto3" json:"params"`
+}
+
+func (m *QueryAllFeeHolidayParamsResponse) Reset()         { *m = QueryAllFeeHolidayParamsResponse{} }
+func (m *QueryAllFeeHolidayParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllFeeHolidayParamsResponse) ProtoMessage()    {}
+func (*QueryAllFeeHolidayParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{7}
+}
+func (m *QueryAllFeeHolidayParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllFeeHolidayParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllFeeHolidayParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllFeeHolidayParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllFeeHolidayParamsResponse.Merge(m, src)
+}
+func (m *QueryAllFeeHolidayParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllFeeHolidayParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllFeeHolidayParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllFeeHolidayParamsResponse proto.InternalMessageInfo
+
+func (m *QueryAllFeeHolidayParamsResponse) GetParams() []FeeHolidayParams {
+	if m != nil {
+		return m.Params
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryPerpetualFeeParamsRequest)(nil), "dydxprotocol.feetiers.QueryPerpetualFeeParamsRequest")
 	proto.RegisterType((*QueryPerpetualFeeParamsResponse)(nil), "dydxprotocol.feetiers.QueryPerpetualFeeParamsResponse")
 	proto.RegisterType((*QueryUserFeeTierRequest)(nil), "dydxprotocol.feetiers.QueryUserFeeTierRequest")
 	proto.RegisterType((*QueryUserFeeTierResponse)(nil), "dydxprotocol.feetiers.QueryUserFeeTierResponse")
+	proto.RegisterType((*QueryFeeHolidayParamsRequest)(nil), "dydxprotocol.feetiers.QueryFeeHolidayParamsRequest")
+	proto.RegisterType((*QueryFeeHolidayParamsResponse)(nil), "dydxprotocol.feetiers.QueryFeeHolidayParamsResponse")
+	proto.RegisterType((*QueryAllFeeHolidayParamsRequest)(nil), "dydxprotocol.feetiers.QueryAllFeeHolidayParamsRequest")
+	proto.RegisterType((*QueryAllFeeHolidayParamsResponse)(nil), "dydxprotocol.feetiers.QueryAllFeeHolidayParamsResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/feetiers/query.proto", fileDescriptor_f31456045d64644f) }
 
 var fileDescriptor_f31456045d64644f = []byte{
-	// 440 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xc1, 0xae, 0xd2, 0x40,
-	0x14, 0x6d, 0x09, 0xef, 0x25, 0xce, 0x8b, 0x9b, 0x09, 0xc6, 0xda, 0x98, 0xbe, 0x67, 0x37, 0x48,
-	0x22, 0x1d, 0x83, 0xca, 0x42, 0x57, 0xb2, 0x80, 0x2d, 0x56, 0xdc, 0xb8, 0x21, 0xa5, 0xbd, 0x94,
-	0x31, 0xb4, 0x53, 0x66, 0xa6, 0x06, 0xb6, 0x7e, 0x81, 0x89, 0x1f, 0xe0, 0x4f, 0xb8, 0xf3, 0x07,
-	0x58, 0x12, 0xdd, 0xb8, 0x32, 0x06, 0x4c, 0xfc, 0x0d, 0xd3, 0x69, 0x51, 0xb4, 0x40, 0x78, 0xbb,
-	0xb9, 0x77, 0xce, 0x39, 0xf7, 0x9c, 0x3b, 0x83, 0xee, 0x05, 0x8b, 0x60, 0x9e, 0x70, 0x26, 0x99,
-	0xcf, 0xa6, 0x64, 0x0c, 0x20, 0x29, 0x70, 0x41, 0x66, 0x29, 0xf0, 0x85, 0xa3, 0xfa, 0xf8, 0xd6,
-	0x2e, 0xc4, 0xd9, 0x42, 0xcc, 0x3b, 0x3e, 0x13, 0x11, 0x13, 0x43, 0x75, 0x43, 0xf2, 0x22, 0x67,
-	0x98, 0xb5, 0x90, 0x85, 0x2c, 0xef, 0x67, 0xa7, 0xa2, 0x7b, 0x37, 0x64, 0x2c, 0x9c, 0x02, 0xf1,
-	0x12, 0x4a, 0xbc, 0x38, 0x66, 0xd2, 0x93, 0x94, 0xc5, 0x5b, 0x8e, 0xbd, 0xdf, 0x48, 0xe2, 0x71,
-	0x2f, 0x2a, 0x30, 0xf6, 0x15, 0xb2, 0x5e, 0x64, 0xc6, 0xfa, 0xc0, 0x13, 0x90, 0xa9, 0x37, 0xed,
-	0x02, 0xf4, 0x15, 0xc0, 0x85, 0x59, 0x0a, 0x42, 0xda, 0x6f, 0xd0, 0xe5, 0x41, 0x84, 0x48, 0x58,
-	0x2c, 0x00, 0xf7, 0xd0, 0x79, 0x2e, 0x6a, 0xe8, 0x57, 0xfa, 0xfd, 0x8b, 0x56, 0xc3, 0xd9, 0x9b,
-	0xcf, 0x29, 0x4b, 0x74, 0xaa, 0xcb, 0xef, 0x97, 0x9a, 0x5b, 0xd0, 0xed, 0x1e, 0xba, 0xad, 0x66,
-	0xbd, 0x12, 0xc0, 0xbb, 0x00, 0x03, 0x0a, 0xbc, 0xb0, 0x81, 0x1f, 0xa0, 0x6a, 0x2a, 0x80, 0xab,
-	0x09, 0x37, 0x3a, 0xc6, 0x97, 0x4f, 0xcd, 0x5a, 0xb1, 0xa0, 0xe7, 0x41, 0xc0, 0x41, 0x88, 0x97,
-	0x92, 0xd3, 0x38, 0x74, 0x15, 0xca, 0x8e, 0x90, 0x51, 0x16, 0x2a, 0xdc, 0xd6, 0xd0, 0x19, 0x8d,
-	0x03, 0x98, 0x2b, 0xa9, 0x9b, 0x6e, 0x5e, 0xe0, 0x67, 0xa8, 0x9a, 0x99, 0x34, 0x2a, 0x2a, 0x41,
-	0xfd, 0x84, 0x04, 0x4a, 0x54, 0x91, 0x5a, 0xbf, 0x2a, 0xe8, 0x4c, 0xcd, 0xc3, 0x9f, 0x75, 0x84,
-	0xcb, 0x31, 0xf1, 0x93, 0x03, 0x7a, 0xc7, 0x77, 0x6f, 0xb6, 0xaf, 0x4b, 0xcb, 0x23, 0xda, 0xed,
-	0x77, 0x5f, 0x7f, 0x7e, 0xa8, 0x3c, 0xc4, 0x0e, 0xf9, 0xe7, 0x0b, 0xbc, 0x7d, 0xbc, 0xf3, 0x0b,
-	0xb6, 0xec, 0xe1, 0x18, 0x60, 0x98, 0xef, 0x1f, 0x7f, 0xd4, 0xd1, 0xc5, 0xce, 0xca, 0xb0, 0x73,
-	0x6c, 0x7e, 0xf9, 0x91, 0x4c, 0x72, 0x32, 0xbe, 0x30, 0x4a, 0x94, 0xd1, 0x06, 0xae, 0x1f, 0x36,
-	0x9a, 0xbd, 0xa7, 0xf2, 0x98, 0x95, 0x9d, 0xc1, 0x72, 0x6d, 0xe9, 0xab, 0xb5, 0xa5, 0xff, 0x58,
-	0x5b, 0xfa, 0xfb, 0x8d, 0xa5, 0xad, 0x36, 0x96, 0xf6, 0x6d, 0x63, 0x69, 0xaf, 0x9f, 0x86, 0x54,
-	0x4e, 0xd2, 0x91, 0xe3, 0xb3, 0xe8, 0x7f, 0xb1, 0xa6, 0x3f, 0xf1, 0x68, 0x4c, 0xfe, 0x74, 0xe6,
-	0x7f, 0xd5, 0xe5, 0x22, 0x01, 0x31, 0x3a, 0x57, 0x57, 0x8f, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff,
-	0x05, 0x23, 0x9b, 0x30, 0xbb, 0x03, 0x00, 0x00,
+	// 597 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x41, 0x6f, 0x12, 0x41,
+	0x14, 0xc7, 0xd9, 0x0a, 0x4d, 0x9c, 0xaa, 0x31, 0x13, 0x8c, 0xb8, 0xa9, 0x5b, 0xba, 0x17, 0x6c,
+	0xd2, 0xee, 0x9a, 0x16, 0x6b, 0x62, 0x63, 0x62, 0x31, 0x52, 0xbd, 0x21, 0xd6, 0x8b, 0x17, 0xb2,
+	0xb0, 0x8f, 0x65, 0xcc, 0xb2, 0xb3, 0x9d, 0x59, 0x0c, 0xc4, 0x78, 0xf1, 0x13, 0x98, 0xf8, 0x01,
+	0xfc, 0x12, 0x26, 0x1e, 0xbc, 0x79, 0xea, 0xb1, 0xd1, 0x8b, 0x27, 0x63, 0xc0, 0xf8, 0x39, 0xcc,
+	0xce, 0x0e, 0x0a, 0x0b, 0x43, 0x8a, 0x37, 0x66, 0xf6, 0xbd, 0xff, 0xff, 0xf7, 0xde, 0xbc, 0x07,
+	0xda, 0x74, 0x07, 0x6e, 0x3f, 0x64, 0x34, 0xa2, 0x2d, 0xea, 0xdb, 0x6d, 0x80, 0x88, 0x00, 0xe3,
+	0xf6, 0x49, 0x0f, 0xd8, 0xc0, 0x12, 0xf7, 0xf8, 0xda, 0x64, 0x88, 0x35, 0x0e, 0xd1, 0x6f, 0xb4,
+	0x28, 0xef, 0x52, 0xde, 0x10, 0x5f, 0xec, 0xe4, 0x90, 0x64, 0xe8, 0x79, 0x8f, 0x7a, 0x34, 0xb9,
+	0x8f, 0x7f, 0xc9, 0xdb, 0x75, 0x8f, 0x52, 0xcf, 0x07, 0xdb, 0x09, 0x89, 0xed, 0x04, 0x01, 0x8d,
+	0x9c, 0x88, 0xd0, 0x60, 0x9c, 0x63, 0xce, 0x07, 0x09, 0x1d, 0xe6, 0x74, 0xc7, 0x31, 0xa5, 0xf9,
+	0x31, 0x6d, 0x80, 0x46, 0x87, 0xfa, 0xc4, 0x75, 0x24, 0xb2, 0x59, 0x44, 0xc6, 0xd3, 0xb8, 0x82,
+	0x1a, 0xb0, 0x10, 0xa2, 0x9e, 0xe3, 0x57, 0x01, 0x6a, 0x42, 0xa9, 0x0e, 0x27, 0x3d, 0xe0, 0x91,
+	0xf9, 0x12, 0x6d, 0x28, 0x23, 0x78, 0x48, 0x03, 0x0e, 0xf8, 0x08, 0xad, 0x26, 0xee, 0x05, 0xad,
+	0xa8, 0xdd, 0x5a, 0xdb, 0xdd, 0xb2, 0xe6, 0x36, 0xc2, 0x9a, 0x95, 0xa8, 0x64, 0x4f, 0x7f, 0x6c,
+	0x64, 0xea, 0x32, 0xdd, 0x3c, 0x42, 0xd7, 0x85, 0xd7, 0x73, 0x0e, 0xac, 0x0a, 0x70, 0x4c, 0x80,
+	0x49, 0x0c, 0xbc, 0x8d, 0xb2, 0x3d, 0x0e, 0x4c, 0x38, 0x5c, 0xac, 0x14, 0xbe, 0x7e, 0xdc, 0xc9,
+	0xcb, 0x4e, 0x1e, 0xba, 0x2e, 0x03, 0xce, 0x9f, 0x45, 0x8c, 0x04, 0x5e, 0x5d, 0x44, 0x99, 0x5d,
+	0x54, 0x98, 0x15, 0x92, 0xb4, 0x79, 0x94, 0x23, 0x81, 0x0b, 0x7d, 0x21, 0x75, 0xb9, 0x9e, 0x1c,
+	0xf0, 0x01, 0xca, 0xc6, 0x90, 0x85, 0x15, 0x51, 0x41, 0xe9, 0x1c, 0x15, 0x08, 0x51, 0x91, 0x64,
+	0x3e, 0x40, 0xeb, 0xc2, 0xae, 0x0a, 0xf0, 0x38, 0x69, 0xef, 0x54, 0x0f, 0x71, 0x11, 0x5d, 0x6a,
+	0xf9, 0xb4, 0xd9, 0x08, 0x1d, 0xc2, 0x1a, 0xc4, 0x95, 0xce, 0x28, 0xbe, 0xab, 0x39, 0x84, 0x3d,
+	0x71, 0xcd, 0x36, 0xba, 0xa9, 0x50, 0x90, 0xd4, 0x8f, 0x52, 0x3d, 0x56, 0x11, 0xa6, 0x05, 0x52,
+	0x1d, 0xde, 0x94, 0xaf, 0x79, 0xe8, 0xfb, 0x0a, 0x58, 0x93, 0xa0, 0xa2, 0x3a, 0x64, 0x0e, 0xcd,
+	0x85, 0xff, 0xa6, 0xd9, 0xfd, 0x9d, 0x43, 0x39, 0xe1, 0x85, 0x3f, 0x6b, 0x08, 0xcf, 0x8e, 0x07,
+	0xbe, 0xa3, 0xd0, 0x5d, 0x3c, 0xb3, 0xfa, 0xfe, 0xb2, 0x69, 0x49, 0x59, 0xe6, 0xfe, 0xdb, 0x6f,
+	0xbf, 0xde, 0xaf, 0xdc, 0xc6, 0x96, 0x3d, 0xb5, 0x3f, 0xaf, 0xca, 0x13, 0x6b, 0x36, 0xce, 0x6e,
+	0xc4, 0xcb, 0x94, 0xd4, 0x81, 0x3f, 0x68, 0x68, 0x6d, 0x62, 0xd4, 0xb0, 0xb5, 0xc8, 0x7f, 0x76,
+	0xb8, 0x75, 0xfb, 0xdc, 0xf1, 0x12, 0xd4, 0x16, 0xa0, 0x5b, 0xb8, 0xa4, 0x06, 0x8d, 0xf7, 0x40,
+	0x30, 0xc6, 0x47, 0xfc, 0x45, 0x43, 0x57, 0xd3, 0x8f, 0x81, 0xf7, 0x16, 0xd9, 0x2a, 0xc6, 0x43,
+	0x2f, 0x2f, 0x97, 0x24, 0x81, 0x1f, 0x0a, 0xe0, 0xfb, 0xf8, 0x40, 0x0d, 0x3c, 0xf1, 0xe7, 0x24,
+	0xfb, 0x6a, 0xbf, 0x9e, 0xdc, 0x9a, 0x37, 0xf8, 0x93, 0x86, 0xae, 0x4c, 0x4d, 0x25, 0xc7, 0x0b,
+	0x5f, 0x5a, 0x3d, 0xe4, 0xfa, 0xdd, 0xa5, 0xf3, 0x64, 0x21, 0x65, 0x51, 0x88, 0x85, 0xb7, 0x97,
+	0x29, 0xa4, 0x72, 0x7c, 0x3a, 0x34, 0xb4, 0xb3, 0xa1, 0xa1, 0xfd, 0x1c, 0x1a, 0xda, 0xbb, 0x91,
+	0x91, 0x39, 0x1b, 0x19, 0x99, 0xef, 0x23, 0x23, 0xf3, 0xe2, 0x9e, 0x47, 0xa2, 0x4e, 0xaf, 0x69,
+	0xb5, 0x68, 0x37, 0xad, 0xb8, 0xd3, 0xea, 0x38, 0x24, 0xb0, 0xff, 0xde, 0xf4, 0xff, 0x59, 0x44,
+	0x83, 0x10, 0x78, 0x73, 0x55, 0x7c, 0xda, 0xfb, 0x13, 0x00, 0x00, 0xff, 0xff, 0x76, 0xa9, 0xc4,
+	0x11, 0x9b, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -270,6 +456,10 @@ type QueryClient interface {
 	PerpetualFeeParams(ctx context.Context, in *QueryPerpetualFeeParamsRequest, opts ...grpc.CallOption) (*QueryPerpetualFeeParamsResponse, error)
 	// Queries a user's fee tier
 	UserFeeTier(ctx context.Context, in *QueryUserFeeTierRequest, opts ...grpc.CallOption) (*QueryUserFeeTierResponse, error)
+	// Queries the FeeHolidayParams
+	FeeHolidayParams(ctx context.Context, in *QueryFeeHolidayParamsRequest, opts ...grpc.CallOption) (*QueryFeeHolidayParamsResponse, error)
+	// Queries all fee holiday params
+	AllFeeHolidays(ctx context.Context, in *QueryAllFeeHolidayParamsRequest, opts ...grpc.CallOption) (*QueryAllFeeHolidayParamsResponse, error)
 }
 
 type queryClient struct {
@@ -298,12 +488,34 @@ func (c *queryClient) UserFeeTier(ctx context.Context, in *QueryUserFeeTierReque
 	return out, nil
 }
 
+func (c *queryClient) FeeHolidayParams(ctx context.Context, in *QueryFeeHolidayParamsRequest, opts ...grpc.CallOption) (*QueryFeeHolidayParamsResponse, error) {
+	out := new(QueryFeeHolidayParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/FeeHolidayParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllFeeHolidays(ctx context.Context, in *QueryAllFeeHolidayParamsRequest, opts ...grpc.CallOption) (*QueryAllFeeHolidayParamsResponse, error) {
+	out := new(QueryAllFeeHolidayParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/AllFeeHolidays", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Queries the PerpetualFeeParams.
 	PerpetualFeeParams(context.Context, *QueryPerpetualFeeParamsRequest) (*QueryPerpetualFeeParamsResponse, error)
 	// Queries a user's fee tier
 	UserFeeTier(context.Context, *QueryUserFeeTierRequest) (*QueryUserFeeTierResponse, error)
+	// Queries the FeeHolidayParams
+	FeeHolidayParams(context.Context, *QueryFeeHolidayParamsRequest) (*QueryFeeHolidayParamsResponse, error)
+	// Queries all fee holiday params
+	AllFeeHolidays(context.Context, *QueryAllFeeHolidayParamsRequest) (*QueryAllFeeHolidayParamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -315,6 +527,12 @@ func (*UnimplementedQueryServer) PerpetualFeeParams(ctx context.Context, req *Qu
 }
 func (*UnimplementedQueryServer) UserFeeTier(ctx context.Context, req *QueryUserFeeTierRequest) (*QueryUserFeeTierResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserFeeTier not implemented")
+}
+func (*UnimplementedQueryServer) FeeHolidayParams(ctx context.Context, req *QueryFeeHolidayParamsRequest) (*QueryFeeHolidayParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FeeHolidayParams not implemented")
+}
+func (*UnimplementedQueryServer) AllFeeHolidays(ctx context.Context, req *QueryAllFeeHolidayParamsRequest) (*QueryAllFeeHolidayParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllFeeHolidays not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -357,6 +575,42 @@ func _Query_UserFeeTier_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_FeeHolidayParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryFeeHolidayParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).FeeHolidayParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Query/FeeHolidayParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).FeeHolidayParams(ctx, req.(*QueryFeeHolidayParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllFeeHolidays_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllFeeHolidayParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllFeeHolidays(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Query/AllFeeHolidays",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllFeeHolidays(ctx, req.(*QueryAllFeeHolidayParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.feetiers.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -368,6 +622,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserFeeTier",
 			Handler:    _Query_UserFeeTier_Handler,
+		},
+		{
+			MethodName: "FeeHolidayParams",
+			Handler:    _Query_FeeHolidayParams_Handler,
+		},
+		{
+			MethodName: "AllFeeHolidays",
+			Handler:    _Query_AllFeeHolidays_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -500,6 +762,127 @@ func (m *QueryUserFeeTierResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryFeeHolidayParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryFeeHolidayParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryFeeHolidayParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ClobPairId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ClobPairId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryFeeHolidayParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryFeeHolidayParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryFeeHolidayParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllFeeHolidayParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllFeeHolidayParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllFeeHolidayParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllFeeHolidayParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllFeeHolidayParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllFeeHolidayParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Params) > 0 {
+		for iNdEx := len(m.Params) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Params[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -556,6 +939,53 @@ func (m *QueryUserFeeTierResponse) Size() (n int) {
 	if m.Tier != nil {
 		l = m.Tier.Size()
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryFeeHolidayParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ClobPairId != 0 {
+		n += 1 + sovQuery(uint64(m.ClobPairId))
+	}
+	return n
+}
+
+func (m *QueryFeeHolidayParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAllFeeHolidayParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllFeeHolidayParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Params) > 0 {
+		for _, e := range m.Params {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -862,6 +1292,292 @@ func (m *QueryUserFeeTierResponse) Unmarshal(dAtA []byte) error {
 				m.Tier = &PerpetualFeeTier{}
 			}
 			if err := m.Tier.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryFeeHolidayParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryFeeHolidayParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryFeeHolidayParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClobPairId", wireType)
+			}
+			m.ClobPairId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ClobPairId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryFeeHolidayParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryFeeHolidayParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryFeeHolidayParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllFeeHolidayParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllFeeHolidayParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllFeeHolidayParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllFeeHolidayParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllFeeHolidayParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllFeeHolidayParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Params = append(m.Params, FeeHolidayParams{})
+			if err := m.Params[len(m.Params)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

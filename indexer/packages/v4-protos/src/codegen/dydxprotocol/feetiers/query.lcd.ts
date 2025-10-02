@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType } from "./query";
+import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType, QueryFeeHolidayParamsRequest, QueryFeeHolidayParamsResponseSDKType, QueryAllFeeHolidayParamsRequest, QueryAllFeeHolidayParamsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -11,6 +11,8 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.perpetualFeeParams = this.perpetualFeeParams.bind(this);
     this.userFeeTier = this.userFeeTier.bind(this);
+    this.feeHolidayParams = this.feeHolidayParams.bind(this);
+    this.allFeeHolidays = this.allFeeHolidays.bind(this);
   }
   /* Queries the PerpetualFeeParams. */
 
@@ -33,6 +35,20 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/v4/feetiers/user_fee_tier`;
     return await this.req.get<QueryUserFeeTierResponseSDKType>(endpoint, options);
+  }
+  /* Queries the FeeHolidayParams */
+
+
+  async feeHolidayParams(params: QueryFeeHolidayParamsRequest): Promise<QueryFeeHolidayParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/feetiers/fee_holiday_params/${params.clobPairId}`;
+    return await this.req.get<QueryFeeHolidayParamsResponseSDKType>(endpoint);
+  }
+  /* Queries all fee holiday params */
+
+
+  async allFeeHolidays(_params: QueryAllFeeHolidayParamsRequest = {}): Promise<QueryAllFeeHolidayParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/feetiers/fee_holiday_params`;
+    return await this.req.get<QueryAllFeeHolidayParamsResponseSDKType>(endpoint);
   }
 
 }
