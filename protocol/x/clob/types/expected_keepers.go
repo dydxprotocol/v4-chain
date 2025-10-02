@@ -191,7 +191,7 @@ type RevShareKeeper interface {
 	GetAllRevShares(
 		ctx sdk.Context,
 		fill FillForProcess,
-		affiliateOverrides map[string]bool,
+		affiliateOverrides *map[string]bool,
 		affiliateParameters *affiliatetypes.AffiliateParameters,
 	) (
 		revsharetypes.RevSharesForFill, error,

@@ -153,30 +153,6 @@ func TestAddReferredVolume(t *testing.T) {
 	require.Equal(t, initialVolume.Add(initialVolume, addedVolume), updatedVolume)
 }
 
-func TestAddReferredCommission(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.AffiliatesKeeper
-
-	affiliate := "affiliate1"
-	initialCommission := big.NewInt(50)
-	addedCommission := big.NewInt(100)
-
-	err := k.AddReferredCommission(ctx, affiliate, initialCommission)
-	require.NoError(t, err)
-
-	commission, err := k.GetReferredCommission(ctx, affiliate)
-	require.NoError(t, err)
-	require.Equal(t, initialCommission, commission)
-
-	err = k.AddReferredCommission(ctx, affiliate, addedCommission)
-	require.NoError(t, err)
-
-	updatedCommission, err := k.GetReferredCommission(ctx, affiliate)
-	require.NoError(t, err)
-	require.Equal(t, initialCommission.Add(initialCommission, addedCommission), updatedCommission)
-}
-
 func TestGetReferredVolumeInvalidAffiliate(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()

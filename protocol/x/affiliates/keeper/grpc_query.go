@@ -32,7 +32,7 @@ func (k Keeper) AffiliateInfo(c context.Context,
 	if _, exists := affiliateOverridesMap[addr.String()]; exists {
 		isWhitelisted = true
 	}
-	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String(), affiliateOverridesMap)
+	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String(), &affiliateOverridesMap)
 	if err != nil {
 		return nil, err
 	}

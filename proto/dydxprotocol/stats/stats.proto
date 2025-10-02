@@ -20,7 +20,7 @@ message BlockStats {
     // Used to calculate fee tier, and affiliate revenue attributed for taker
     uint64 notional = 3;
 
-    // Affiliate fee generated in quantums
+    // Affiliate fee generated in quantums of the taker fee for the affiliate
     // Used to calculate affiliate revenue attributed for taker. This is dynamic
     // per affiliate tier
     uint64 affiliate_fee_generated_quantums = 4;

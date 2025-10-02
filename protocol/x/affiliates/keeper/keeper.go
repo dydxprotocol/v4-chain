@@ -145,42 +145,6 @@ func (k Keeper) AddReferredVolume(
 	return nil
 }
 
-// AddReferredCommission adds the referred commission from a block to the commission a referred user generated.
-func (k Keeper) AddReferredCommission(
-	ctx sdk.Context,
-	referreeAddress string,
-	referredCommissionFromBlock *big.Int,
-) error {
-	affiliateReferredCommissionPrefixStore := prefix.NewStore(
-		ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
-	referredCommission := big.NewInt(0)
-
-	if affiliateReferredCommissionPrefixStore.Has([]byte(referreeAddress)) {
-		prevReferredCommissionFromState := dtypes.SerializableInt{}
-		if err := prevReferredCommissionFromState.Unmarshal(
-			affiliateReferredCommissionPrefixStore.Get([]byte(referreeAddress)),
-		); err != nil {
-			return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
-				"affiliate %s, error: %s", referreeAddress, err)
-		}
-		referredCommission = prevReferredCommissionFromState.BigInt()
-	}
-
-	referredCommission.Add(
-		referredCommission,
-		referredCommissionFromBlock,
-	)
-	updatedReferedCommission := dtypes.NewIntFromBigInt(referredCommission)
-
-	updatedReferredCommissionBytes, err := updatedReferedCommission.Marshal()
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
-			"affiliate %s, error: %s", referreeAddress, err)
-	}
-	affiliateReferredCommissionPrefixStore.Set([]byte(referreeAddress), updatedReferredCommissionBytes)
-	return nil
-}
-
 // GetReferredVolume returns all time referred volume for an affiliate address.
 func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
 	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
@@ -192,20 +156,6 @@ func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.I
 		return big.NewInt(0), err
 	}
 	return referredVolume.BigInt(), nil
-}
-
-// GetReferredCommission returns all time referred commission for an affiliate address.
-func (k Keeper) GetReferredCommission(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
-	affiliateReferredCommissionPrefixStore := prefix.NewStore(
-		ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
-	if !affiliateReferredCommissionPrefixStore.Has([]byte(affiliateAddr)) {
-		return big.NewInt(0), nil
-	}
-	var referredCommission dtypes.SerializableInt
-	if err := referredCommission.Unmarshal(affiliateReferredCommissionPrefixStore.Get([]byte(affiliateAddr))); err != nil {
-		return big.NewInt(0), err
-	}
-	return referredCommission.BigInt(), nil
 }
 
 // GetAllAffiliateTiers returns all affiliate tiers.
@@ -248,7 +198,7 @@ func (k Keeper) GetAllAffilliateOverrides(ctx sdk.Context) (types.AffiliateOverr
 func (k Keeper) GetTakerFeeShare(
 	ctx sdk.Context,
 	address string,
-	affiliateOverrides map[string]bool,
+	affiliateOverrides *map[string]bool,
 ) (
 	affiliateAddress string,
 	feeSharePpm uint32,
@@ -271,7 +221,7 @@ func (k Keeper) GetTakerFeeShare(
 func (k Keeper) GetTierForAffiliate(
 	ctx sdk.Context,
 	affiliateAddr string,
-	affiliateOverrides map[string]bool,
+	affiliateOverrides *map[string]bool,
 ) (
 	tierLevel uint32,
 	feeSharePpm uint32,
@@ -292,9 +242,11 @@ func (k Keeper) GetTierForAffiliate(
 
 	// Check whether the address is overridden, if it is then set the
 	// affiliate tier to the max
-	if _, exists := affiliateOverrides[affiliateAddr]; exists {
-		feeSharePpm = affiliateTiers.Tiers[maxTierLevel].TakerFeeSharePpm
-		return uint32(maxTierLevel), feeSharePpm, nil
+	if affiliateOverrides != nil {
+		if _, exists := (*affiliateOverrides)[affiliateAddr]; exists {
+			feeSharePpm = affiliateTiers.Tiers[maxTierLevel].TakerFeeSharePpm
+			return uint32(maxTierLevel), feeSharePpm, nil
+		}
 	}
 
 	// If not then set it normally
@@ -536,11 +488,6 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			takerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
 			k.addReferredVolumeIfQualified(ctx, takerUserStats, fill.Taker, referredByAddrTaker,
 				fill.Notional, &affiliateParams, &previouslyAttributedVolume)
-			// Add referred commission to the referred user, this is precalculated in the rev share generated in the fill
-			// Use this to keep track if the user exceeded the total amount they can attributed
-			if err := k.AddReferredCommission(ctx, fill.Taker, lib.BigU(fill.AffiliateFeeGeneratedQuantums)); err != nil {
-				return err
-			}
 		}
 
 		// Process maker's referred volume
