@@ -216,6 +216,8 @@ var (
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParams":              {},
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParamsResponse":      {},
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         {},

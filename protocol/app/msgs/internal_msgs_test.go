@@ -114,6 +114,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParams",
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParamsResponse",
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator",

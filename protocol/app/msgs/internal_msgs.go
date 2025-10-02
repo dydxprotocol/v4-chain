@@ -158,6 +158,8 @@ var (
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParams":              &feetiers.MsgSetFeeHolidayParams{},
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParamsResponse":      nil,
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},

@@ -13,4 +13,7 @@ const (
 const (
 	// PerpetualFeeParamsKey defines the key for the PerpetualFeeParams
 	PerpetualFeeParamsKey = "PerpParams"
+
+	// Key prefix for storing FeeHolidayParams
+	FeeHolidayPrefix = "FeeHoliday:"
 )

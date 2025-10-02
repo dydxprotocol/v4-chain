@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -52,5 +53,52 @@ func (k Keeper) UserFeeTier(
 	return &types.QueryUserFeeTierResponse{
 		Index: index,
 		Tier:  tier,
+	}, nil
+}
+
+// FeeHolidayParams processes a query for fee holiday parameters for a specific CLOB pair.
+func (k Keeper) FeeHolidayParams(
+	c context.Context,
+	req *types.QueryFeeHolidayParamsRequest,
+) (
+	*types.QueryFeeHolidayParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+
+	params, err := k.GetFeeHolidayParams(ctx, req.ClobPairId)
+	if err != nil {
+		if errors.Is(err, types.ErrFeeHolidayNotFound) {
+			return nil, status.Error(codes.NotFound, "fee holiday not found for the specified CLOB pair")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get fee holiday: %v", err)
+	}
+
+	return &types.QueryFeeHolidayParamsResponse{
+		Params: params,
+	}, nil
+}
+
+// AllFeeHolidayParams processes a query for all fee holiday parameters.
+func (k Keeper) AllFeeHolidayParams(
+	c context.Context,
+	req *types.QueryAllFeeHolidayParamsRequest,
+) (
+	*types.QueryAllFeeHolidayParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	params := k.GetAllFeeHolidayParams(ctx)
+
+	return &types.QueryAllFeeHolidayParamsResponse{
+		Params: params,
 	}, nil
 }

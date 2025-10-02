@@ -35,4 +35,14 @@ var (
 		405,
 		"Rev share safety violation",
 	)
+	ErrInvalidTimeRange = errorsmod.Register(
+		ModuleName,
+		406,
+		"Invalid time range for fee holiday",
+	)
+	ErrFeeHolidayNotFound = errorsmod.Register(
+		ModuleName,
+		407,
+		"Fee holiday not found for the specified CLOB pair",
+	)
 )
