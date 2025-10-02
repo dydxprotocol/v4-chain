@@ -15,6 +15,8 @@ const (
 
 	ReferredVolumeKeyPrefix = "RV:"
 
+	ReferredCommissionKeyPrefix = "RC:"
+
 	AffiliateTiersKey = "AT"
 
 	AffiliateWhitelistKey = "AW"
