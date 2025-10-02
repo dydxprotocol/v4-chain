@@ -39,15 +39,15 @@ func CmdUpdateLeverage() *cobra.Command {
 			}
 
 			// Convert string keys to uint32 and create LeverageEntry slice
-			var perpetualLeverage []*types.LeverageEntry
-			for perpetualIdStr, leverage := range leverageMap {
-				perpetualId, err := strconv.ParseUint(perpetualIdStr, 10, 32)
+			var clobPairLeverage []*types.LeverageEntry
+			for clobPairIdStr, leverage := range leverageMap {
+				clobPairId, err := strconv.ParseUint(clobPairIdStr, 10, 32)
 				if err != nil {
-					return fmt.Errorf("invalid perpetual ID %s: %w", perpetualIdStr, err)
+					return fmt.Errorf("invalid clob pair ID %s: %w", clobPairIdStr, err)
 				}
-				perpetualLeverage = append(perpetualLeverage, &types.LeverageEntry{
-					PerpetualId: uint32(perpetualId),
-					Leverage:    leverage,
+				clobPairLeverage = append(clobPairLeverage, &types.LeverageEntry{
+					ClobPairId: uint32(clobPairId),
+					Leverage:   leverage,
 				})
 			}
 
@@ -56,7 +56,7 @@ func CmdUpdateLeverage() *cobra.Command {
 					Owner:  address,
 					Number: uint32(subaccountNumber),
 				},
-				PerpetualLeverage: perpetualLeverage,
+				ClobPairLeverage: clobPairLeverage,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

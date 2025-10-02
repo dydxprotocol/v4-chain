@@ -564,11 +564,16 @@ var (
 	ErrInvalidLeverage = errorsmod.Register(
 		ModuleName,
 		11002,
-		"Invalid leverage",
+		"Invalid update leverage",
 	)
 	ErrLeverageExceedsMaximum = errorsmod.Register(
 		ModuleName,
 		11003,
 		"Leverage exceeds maximum allowed for perpetual",
+	)
+	ErrInitialMarginPpmIsZero = errorsmod.Register(
+		ModuleName,
+		11004,
+		"Initial margin ppm is zero",
 	)
 )

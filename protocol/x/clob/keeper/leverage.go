@@ -109,7 +109,7 @@ func (k Keeper) GetMaxLeverageForPerpetual(ctx sdk.Context, perpetualId uint32) 
 
 	// Calculate max leverage: 1,000,000 / initial_margin_ppm
 	if liquidityTier.InitialMarginPpm == 0 {
-		return 0, types.ErrInvalidLeverage
+		return 0, types.ErrInitialMarginPpmIsZero
 	}
 
 	maxLeverage := lib.OneMillion / liquidityTier.InitialMarginPpm

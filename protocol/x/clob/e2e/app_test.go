@@ -319,37 +319,37 @@ var (
 	// Leverage update message constants
 	UpdateLeverage_Alice_Num0_PerpId0_Lev5 = clobtypes.MsgUpdateLeverage{
 		SubaccountId: &constants.Alice_Num0,
-		PerpetualLeverage: []*clobtypes.LeverageEntry{
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				PerpetualId: 0,
-				Leverage:    5,
+				ClobPairId: 0,
+				Leverage:   5,
 			},
 		},
 	}
 	UpdateLeverage_Alice_Num0_PerpId1_Lev10 = clobtypes.MsgUpdateLeverage{
 		SubaccountId: &constants.Alice_Num0,
-		PerpetualLeverage: []*clobtypes.LeverageEntry{
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				PerpetualId: 1,
-				Leverage:    10,
+				ClobPairId: 1,
+				Leverage:   10,
 			},
 		},
 	}
 	UpdateLeverage_Alice_Num1_PerpId0_Lev3 = clobtypes.MsgUpdateLeverage{
 		SubaccountId: &constants.Alice_Num1,
-		PerpetualLeverage: []*clobtypes.LeverageEntry{
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				PerpetualId: 0,
-				Leverage:    3,
+				ClobPairId: 0,
+				Leverage:   3,
 			},
 		},
 	}
 	UpdateLeverage_Bob_Num0_PerpId0_Lev5 = clobtypes.MsgUpdateLeverage{
 		SubaccountId: &constants.Bob_Num0,
-		PerpetualLeverage: []*clobtypes.LeverageEntry{
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				PerpetualId: 0,
-				Leverage:    5,
+				ClobPairId: 0,
+				Leverage:   5,
 			},
 		},
 	}

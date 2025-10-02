@@ -195,10 +195,11 @@ func (cd ClobDecorator) AnteHandle(
 		case *types.MsgUpdateLeverage:
 			// Process UpdateLeverage message - just store the leverage data
 			// Convert from LeverageEntry slice to map
-			perpetualLeverageMap := make(map[uint32]uint32)
-			for _, entry := range msg.PerpetualLeverage {
-				perpetualLeverageMap[entry.PerpetualId] = entry.Leverage
+			perpetualLeverageMap, err := types.ValidateAndConstructPerpetualLeverageMap(ctx, msg, cd.clobKeeper)
+			if err != nil {
+				return ctx, err
 			}
+
 			if err := cd.clobKeeper.UpdateLeverage(ctx, msg.SubaccountId, perpetualLeverageMap); err != nil {
 				log.DebugLog(
 					ctx,

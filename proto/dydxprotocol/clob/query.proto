@@ -191,14 +191,14 @@ message QueryLeverageRequest {
 
 // QueryLeverageResponse is a response message that contains the leverage map.
 message QueryLeverageResponse {
-  // List of perpetual leverage settings.
-  repeated PerpetualLeverageInfo perpetual_leverage = 1;
+  // List of clob pair leverage settings.
+  repeated ClobPairLeverageInfo clob_pair_leverage = 1;
 }
 
-// PerpetualLeverageInfo represents the leverage setting for a single perpetual.
-message PerpetualLeverageInfo {
-  // The perpetual ID.
-  uint32 perpetual_id = 1;
+// ClobPairLeverageInfo represents the leverage setting for a single clob pair.
+message ClobPairLeverageInfo {
+  // The clob pair ID.
+  uint32 clob_pair_id = 1;
   // The leverage amount.
   uint32 leverage = 2;
 }

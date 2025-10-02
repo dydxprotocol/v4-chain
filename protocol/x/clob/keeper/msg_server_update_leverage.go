@@ -14,13 +14,13 @@ func (k msgServer) UpdateLeverage(
 ) (*types.MsgUpdateLeverageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Convert from LeverageEntry slice to map
-	perpetualLeverageMap := make(map[uint32]uint32)
-	for _, entry := range msg.PerpetualLeverage {
-		perpetualLeverageMap[entry.PerpetualId] = entry.Leverage
+	// Validate the message
+	perpetualLeverageMap, err := types.ValidateAndConstructPerpetualLeverageMap(ctx, msg, k.Keeper)
+	if err != nil {
+		return nil, err
 	}
 
-	// Update leverage for the subaccount (validation happens inside UpdateLeverage)
+	// Update leverage for the subaccount
 	if err := k.Keeper.UpdateLeverage(ctx, msg.SubaccountId, perpetualLeverageMap); err != nil {
 		return nil, err
 	}

@@ -30,15 +30,15 @@ func (k Keeper) Leverage(
 		leverage = make(map[uint32]uint32)
 	}
 
-	perpetualLeverage := make([]*types.PerpetualLeverageInfo, 0, len(leverage))
-	for perpetualId, leverage := range leverage {
-		perpetualLeverage = append(perpetualLeverage, &types.PerpetualLeverageInfo{
-			PerpetualId: perpetualId,
-			Leverage:    leverage,
+	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverage))
+	for clobPairId, leverage := range leverage {
+		clobPairLeverage = append(clobPairLeverage, &types.ClobPairLeverageInfo{
+			ClobPairId: clobPairId,
+			Leverage:   leverage,
 		})
 	}
 
 	return &types.QueryLeverageResponse{
-		PerpetualLeverage: perpetualLeverage,
+		ClobPairLeverage: clobPairLeverage,
 	}, nil
 }
