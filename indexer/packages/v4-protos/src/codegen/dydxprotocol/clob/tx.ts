@@ -382,47 +382,47 @@ export interface MsgUpdateLiquidationsConfigResponse {}
 /** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type. */
 
 export interface MsgUpdateLiquidationsConfigResponseSDKType {}
-/** LeverageEntry represents a single perpetual leverage setting. */
+/** LeverageEntry represents a single clob pair leverage setting. */
 
 export interface LeverageEntry {
-  /** The perpetual ID. */
-  perpetualId: number;
+  /** The clob pair ID. */
+  clobPairId: number;
   /** The leverage amount. */
 
   leverage: number;
 }
-/** LeverageEntry represents a single perpetual leverage setting. */
+/** LeverageEntry represents a single clob pair leverage setting. */
 
 export interface LeverageEntrySDKType {
-  /** The perpetual ID. */
-  perpetual_id: number;
+  /** The clob pair ID. */
+  clob_pair_id: number;
   /** The leverage amount. */
 
   leverage: number;
 }
 /**
  * MsgUpdateLeverage is a request type used for updating leverage for
- * perpetuals.
+ * clob pairs.
  */
 
 export interface MsgUpdateLeverage {
   /** The subaccount that is updating leverage. */
   subaccountId?: SubaccountId;
-  /** List of perpetual leverage settings. */
+  /** List of clob pair leverage settings. */
 
-  perpetualLeverage: LeverageEntry[];
+  clobPairLeverage: LeverageEntry[];
 }
 /**
  * MsgUpdateLeverage is a request type used for updating leverage for
- * perpetuals.
+ * clob pairs.
  */
 
 export interface MsgUpdateLeverageSDKType {
   /** The subaccount that is updating leverage. */
   subaccount_id?: SubaccountIdSDKType;
-  /** List of perpetual leverage settings. */
+  /** List of clob pair leverage settings. */
 
-  perpetual_leverage: LeverageEntrySDKType[];
+  clob_pair_leverage: LeverageEntrySDKType[];
 }
 /** MsgUpdateLeverageResponse is a response type used for updating leverage. */
 
@@ -1387,15 +1387,15 @@ export const MsgUpdateLiquidationsConfigResponse = {
 
 function createBaseLeverageEntry(): LeverageEntry {
   return {
-    perpetualId: 0,
+    clobPairId: 0,
     leverage: 0
   };
 }
 
 export const LeverageEntry = {
   encode(message: LeverageEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.perpetualId !== 0) {
-      writer.uint32(8).uint32(message.perpetualId);
+    if (message.clobPairId !== 0) {
+      writer.uint32(8).uint32(message.clobPairId);
     }
 
     if (message.leverage !== 0) {
@@ -1415,7 +1415,7 @@ export const LeverageEntry = {
 
       switch (tag >>> 3) {
         case 1:
-          message.perpetualId = reader.uint32();
+          message.clobPairId = reader.uint32();
           break;
 
         case 2:
@@ -1433,7 +1433,7 @@ export const LeverageEntry = {
 
   fromPartial(object: DeepPartial<LeverageEntry>): LeverageEntry {
     const message = createBaseLeverageEntry();
-    message.perpetualId = object.perpetualId ?? 0;
+    message.clobPairId = object.clobPairId ?? 0;
     message.leverage = object.leverage ?? 0;
     return message;
   }
@@ -1443,7 +1443,7 @@ export const LeverageEntry = {
 function createBaseMsgUpdateLeverage(): MsgUpdateLeverage {
   return {
     subaccountId: undefined,
-    perpetualLeverage: []
+    clobPairLeverage: []
   };
 }
 
@@ -1453,7 +1453,7 @@ export const MsgUpdateLeverage = {
       SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
     }
 
-    for (const v of message.perpetualLeverage) {
+    for (const v of message.clobPairLeverage) {
       LeverageEntry.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
@@ -1474,7 +1474,7 @@ export const MsgUpdateLeverage = {
           break;
 
         case 2:
-          message.perpetualLeverage.push(LeverageEntry.decode(reader, reader.uint32()));
+          message.clobPairLeverage.push(LeverageEntry.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -1489,7 +1489,7 @@ export const MsgUpdateLeverage = {
   fromPartial(object: DeepPartial<MsgUpdateLeverage>): MsgUpdateLeverage {
     const message = createBaseMsgUpdateLeverage();
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
-    message.perpetualLeverage = object.perpetualLeverage?.map(e => LeverageEntry.fromPartial(e)) || [];
+    message.clobPairLeverage = object.clobPairLeverage?.map(e => LeverageEntry.fromPartial(e)) || [];
     return message;
   }
 

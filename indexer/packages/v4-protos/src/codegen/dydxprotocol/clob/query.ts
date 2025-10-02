@@ -285,29 +285,29 @@ export interface QueryLeverageRequestSDKType {
 /** QueryLeverageResponse is a response message that contains the leverage map. */
 
 export interface QueryLeverageResponse {
-  /** List of perpetual leverage settings. */
-  perpetualLeverage: PerpetualLeverageInfo[];
+  /** List of clob pair leverage settings. */
+  clobPairLeverage: ClobPairLeverageInfo[];
 }
 /** QueryLeverageResponse is a response message that contains the leverage map. */
 
 export interface QueryLeverageResponseSDKType {
-  /** List of perpetual leverage settings. */
-  perpetual_leverage: PerpetualLeverageInfoSDKType[];
+  /** List of clob pair leverage settings. */
+  clob_pair_leverage: ClobPairLeverageInfoSDKType[];
 }
-/** PerpetualLeverageInfo represents the leverage setting for a single perpetual. */
+/** ClobPairLeverageInfo represents the leverage setting for a single clob pair. */
 
-export interface PerpetualLeverageInfo {
-  /** The perpetual ID. */
-  perpetualId: number;
+export interface ClobPairLeverageInfo {
+  /** The clob pair ID. */
+  clobPairId: number;
   /** The leverage amount. */
 
   leverage: number;
 }
-/** PerpetualLeverageInfo represents the leverage setting for a single perpetual. */
+/** ClobPairLeverageInfo represents the leverage setting for a single clob pair. */
 
-export interface PerpetualLeverageInfoSDKType {
-  /** The perpetual ID. */
-  perpetual_id: number;
+export interface ClobPairLeverageInfoSDKType {
+  /** The clob pair ID. */
+  clob_pair_id: number;
   /** The leverage amount. */
 
   leverage: number;
@@ -1413,14 +1413,14 @@ export const QueryLeverageRequest = {
 
 function createBaseQueryLeverageResponse(): QueryLeverageResponse {
   return {
-    perpetualLeverage: []
+    clobPairLeverage: []
   };
 }
 
 export const QueryLeverageResponse = {
   encode(message: QueryLeverageResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.perpetualLeverage) {
-      PerpetualLeverageInfo.encode(v!, writer.uint32(10).fork()).ldelim();
+    for (const v of message.clobPairLeverage) {
+      ClobPairLeverageInfo.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
@@ -1436,7 +1436,7 @@ export const QueryLeverageResponse = {
 
       switch (tag >>> 3) {
         case 1:
-          message.perpetualLeverage.push(PerpetualLeverageInfo.decode(reader, reader.uint32()));
+          message.clobPairLeverage.push(ClobPairLeverageInfo.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -1450,23 +1450,23 @@ export const QueryLeverageResponse = {
 
   fromPartial(object: DeepPartial<QueryLeverageResponse>): QueryLeverageResponse {
     const message = createBaseQueryLeverageResponse();
-    message.perpetualLeverage = object.perpetualLeverage?.map(e => PerpetualLeverageInfo.fromPartial(e)) || [];
+    message.clobPairLeverage = object.clobPairLeverage?.map(e => ClobPairLeverageInfo.fromPartial(e)) || [];
     return message;
   }
 
 };
 
-function createBasePerpetualLeverageInfo(): PerpetualLeverageInfo {
+function createBaseClobPairLeverageInfo(): ClobPairLeverageInfo {
   return {
-    perpetualId: 0,
+    clobPairId: 0,
     leverage: 0
   };
 }
 
-export const PerpetualLeverageInfo = {
-  encode(message: PerpetualLeverageInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.perpetualId !== 0) {
-      writer.uint32(8).uint32(message.perpetualId);
+export const ClobPairLeverageInfo = {
+  encode(message: ClobPairLeverageInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobPairId !== 0) {
+      writer.uint32(8).uint32(message.clobPairId);
     }
 
     if (message.leverage !== 0) {
@@ -1476,17 +1476,17 @@ export const PerpetualLeverageInfo = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): PerpetualLeverageInfo {
+  decode(input: _m0.Reader | Uint8Array, length?: number): ClobPairLeverageInfo {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePerpetualLeverageInfo();
+    const message = createBaseClobPairLeverageInfo();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.perpetualId = reader.uint32();
+          message.clobPairId = reader.uint32();
           break;
 
         case 2:
@@ -1502,9 +1502,9 @@ export const PerpetualLeverageInfo = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<PerpetualLeverageInfo>): PerpetualLeverageInfo {
-    const message = createBasePerpetualLeverageInfo();
-    message.perpetualId = object.perpetualId ?? 0;
+  fromPartial(object: DeepPartial<ClobPairLeverageInfo>): ClobPairLeverageInfo {
+    const message = createBaseClobPairLeverageInfo();
+    message.clobPairId = object.clobPairId ?? 0;
     message.leverage = object.leverage ?? 0;
     return message;
   }

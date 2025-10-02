@@ -46,7 +46,7 @@ export interface Msg {
   updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse>;
   /**
    * UpdateLeverage allows accounts to update their desired leverage for
-   * perpetuals.
+   * clob pairs.
    */
 
   updateLeverage(request: MsgUpdateLeverage): Promise<MsgUpdateLeverageResponse>;
