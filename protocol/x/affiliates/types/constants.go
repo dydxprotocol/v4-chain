@@ -26,7 +26,7 @@ var (
 			{
 				ReqReferredVolumeQuoteQuantums: 50_000_000_000_000, // 50 million USDC
 				ReqStakedWholeCoins:            100_000_000,        // 100m whole coins
-				TakerFeeSharePpm:               200_000,            // 20%
+				TakerFeeSharePpm:               250_000,            // 25%
 			},
 		},
 	}
