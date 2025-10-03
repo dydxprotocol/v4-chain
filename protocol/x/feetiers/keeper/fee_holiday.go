@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
 
+// GetFeeHolidayParams returns fee holiday configuration for a given clob pair id
 func (k Keeper) GetFeeHolidayParams(
 	ctx sdk.Context,
 	clobPairId uint32,
@@ -43,11 +44,12 @@ func (k Keeper) SetFeeHolidayParams(
 // GetAllFeeHolidayParams returns all configured fee holidays
 func (k Keeper) GetAllFeeHolidayParams(
 	ctx sdk.Context,
-) (feeHolidays []types.FeeHolidayParams) {
+) []types.FeeHolidayParams {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.FeeHolidayPrefix))
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
 
+	feeHolidays := []types.FeeHolidayParams{}
 	for ; iterator.Valid(); iterator.Next() {
 		var feeHoliday types.FeeHolidayParams
 		k.cdc.MustUnmarshal(iterator.Value(), &feeHoliday)
