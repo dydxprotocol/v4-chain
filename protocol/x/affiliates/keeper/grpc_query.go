@@ -42,20 +42,14 @@ func (k Keeper) AffiliateInfo(c context.Context,
 		return nil, err
 	}
 
-	referredCommission, err := k.GetReferredCommission(ctx, req.GetAddress())
-	if err != nil {
-		return nil, err
-	}
-
 	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.GetAddress())
 
 	return &types.AffiliateInfoResponse{
-		IsWhitelisted:      isWhitelisted,
-		Tier:               tierLevel,
-		FeeSharePpm:        feeSharePpm,
-		ReferredVolume:     dtypes.NewIntFromBigInt(referredVolume),
-		StakedAmount:       dtypes.NewIntFromBigInt(stakedAmount),
-		ReferredCommission: dtypes.NewIntFromBigInt(referredCommission),
+		IsWhitelisted:  isWhitelisted,
+		Tier:           tierLevel,
+		FeeSharePpm:    feeSharePpm,
+		ReferredVolume: dtypes.NewIntFromBigInt(referredVolume),
+		StakedAmount:   dtypes.NewIntFromBigInt(stakedAmount),
 	}, nil
 }
 
