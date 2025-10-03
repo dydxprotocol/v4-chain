@@ -36,7 +36,10 @@ func (k Keeper) SetFeeHolidayParams(
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.FeeHolidayPrefix))
 	key := lib.Uint32ToKey(feeHoliday.ClobPairId)
-	value := k.cdc.MustMarshal(&feeHoliday)
+	value, err := k.cdc.Marshal(&feeHoliday)
+	if err != nil {
+		return err
+	}
 	store.Set(key, value)
 	return nil
 }
@@ -52,7 +55,16 @@ func (k Keeper) GetAllFeeHolidayParams(
 	feeHolidays := []types.FeeHolidayParams{}
 	for ; iterator.Valid(); iterator.Next() {
 		var feeHoliday types.FeeHolidayParams
-		k.cdc.MustUnmarshal(iterator.Value(), &feeHoliday)
+		if err := k.cdc.Unmarshal(iterator.Value(), &feeHoliday); err != nil {
+			// Log error and skip corrupted entry
+			k.Logger(ctx).Error(
+				"failed to unmarshal fee holiday",
+				"clob pair id", string(iterator.Key()),
+				"value", string(iterator.Value()),
+				"error", err,
+			)
+			continue
+		}
 		feeHolidays = append(feeHolidays, feeHoliday)
 	}
 
