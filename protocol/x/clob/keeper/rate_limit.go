@@ -104,8 +104,8 @@ func (k *Keeper) RateLimitUpdateLeverage(ctx sdk.Context, msg *types.MsgUpdateLe
 	}
 
 	// Defensive check to prevent null pointer dereference during rate limiting
-	if msg.SubaccountId == nil {
-		return errorsmod.Wrap(types.ErrInvalidLeverage, "subaccount ID cannot be nil")
+	if msg.SubaccountId == nil || msg.SubaccountId.Owner == "" {
+		return errorsmod.Wrap(types.ErrInvalidLeverage, "subaccount ID cannot be empty")
 	}
 
 	// Use the subaccount owner address as the rate limiting key
