@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -96,4 +97,158 @@ func TestUserFeeTier(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFeeHolidayParams(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.FeeTiersKeeper
+
+	// Set up a test fee holiday
+	clobPairId := uint32(42)
+	feeHoliday := types.FeeHolidayParams{
+		ClobPairId:    clobPairId,
+		StartTimeUnix: 1100,
+		EndTimeUnix:   1200,
+	}
+
+	// Set current block time for validation
+	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
+	err := k.SetFeeHolidayParams(ctx, feeHoliday)
+	require.NoError(t, err)
+
+	for name, tc := range map[string]struct {
+		req *types.QueryFeeHolidayParamsRequest
+		res *types.QueryFeeHolidayParamsResponse
+		err error
+	}{
+		"Success": {
+			req: &types.QueryFeeHolidayParamsRequest{
+				ClobPairId: clobPairId,
+			},
+			res: &types.QueryFeeHolidayParamsResponse{
+				Params: feeHoliday,
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+		"Not Found": {
+			req: &types.QueryFeeHolidayParamsRequest{
+				ClobPairId: 999, // non-existent CLOB pair ID
+			},
+			res: nil,
+			err: status.Error(codes.NotFound, "fee holiday not found for the specified CLOB pair"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			res, err := k.FeeHolidayParams(ctx, tc.req)
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.err.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}
+
+func TestAllFeeHolidayParams(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.FeeTiersKeeper
+
+	// Set current block time for validation
+	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
+
+	// Set up multiple test fee holidays
+	holidays := []types.FeeHolidayParams{
+		{
+			ClobPairId:    1,
+			StartTimeUnix: 1100,
+			EndTimeUnix:   1200,
+		},
+		{
+			ClobPairId:    2,
+			StartTimeUnix: 1150,
+			EndTimeUnix:   1250,
+		},
+		{
+			ClobPairId:    3,
+			StartTimeUnix: 1200,
+			EndTimeUnix:   1300,
+		},
+	}
+
+	// Store the fee holidays
+	for _, holiday := range holidays {
+		err := k.SetFeeHolidayParams(ctx, holiday)
+		require.NoError(t, err)
+	}
+
+	for name, tc := range map[string]struct {
+		req *types.QueryAllFeeHolidayParamsRequest
+		res *types.QueryAllFeeHolidayParamsResponse
+		err error
+	}{
+		"Success": {
+			req: &types.QueryAllFeeHolidayParamsRequest{},
+			res: &types.QueryAllFeeHolidayParamsResponse{
+				Params: holidays,
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			res, err := k.AllFeeHolidayParams(ctx, tc.req)
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.err.Error(), err.Error())
+			} else {
+				require.NoError(t, err)
+				// We can't guarantee the order of the returned fee holidays, so we need to compare them differently
+				require.Equal(t, len(tc.res.Params), len(res.Params))
+
+				// Create a map to make comparison easier
+				holidayMap := make(map[uint32]types.FeeHolidayParams)
+				for _, h := range res.Params {
+					holidayMap[h.ClobPairId] = h
+				}
+
+				// Check that each expected holiday is in the result
+				for _, expected := range tc.res.Params {
+					actual, found := holidayMap[expected.ClobPairId]
+					require.True(t, found)
+					require.Equal(t, expected.ClobPairId, actual.ClobPairId)
+					require.Equal(t, expected.StartTimeUnix, actual.StartTimeUnix)
+					require.Equal(t, expected.EndTimeUnix, actual.EndTimeUnix)
+				}
+			}
+		})
+	}
+}
+
+func TestAllFeeHolidayParamsEmpty(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.FeeTiersKeeper
+
+	// Don't set any fee holidays - test empty response
+
+	req := &types.QueryAllFeeHolidayParamsRequest{}
+	res, err := k.AllFeeHolidayParams(ctx, req)
+
+	// Should succeed with empty params list
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Empty(t, res.Params)
 }

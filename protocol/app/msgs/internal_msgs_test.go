@@ -112,6 +112,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
 
 		// feetiers
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParams",
+		"/dydxprotocol.feetiers.MsgSetFeeHolidayParamsResponse",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
 
