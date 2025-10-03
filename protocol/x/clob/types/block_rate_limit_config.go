@@ -9,6 +9,8 @@ const (
 	MaxShortTermOrdersAndCancelsPerNBlocksLimit     = 10_000_000
 	MaxStatefulOrdersPerNBlocksNumBlocks            = 10_000
 	MaxStatefulOrdersPerNBlocksLimit                = 1_000_000
+	MaxLeverageUpdatesPerNBlocksNumBlocks           = 2_000
+	MaxLeverageUpdatesPerNBlocksLimit               = 10_000
 )
 
 // Validate validates each individual MaxPerNBlocksRateLimit.
@@ -33,6 +35,13 @@ func (lc BlockRateLimitConfiguration) Validate() error {
 		"MaxStatefulOrdersPerNBlocks",
 		MaxStatefulOrdersPerNBlocksNumBlocks,
 		MaxStatefulOrdersPerNBlocksLimit,
+	); err != nil {
+		return err
+	}
+	if err := (maxPerNBlocksRateLimits)(lc.MaxLeverageUpdatesPerNBlocks).validate(
+		"MaxLeverageUpdatesPerNBlocks",
+		MaxLeverageUpdatesPerNBlocksNumBlocks,
+		MaxLeverageUpdatesPerNBlocksLimit,
 	); err != nil {
 		return err
 	}

@@ -192,6 +192,30 @@ func (cd ClobDecorator) AnteHandle(
 				)
 				return ctx, err
 			}
+		case *types.MsgUpdateLeverage:
+			// Process UpdateLeverage message - just store the leverage data
+			// Convert from LeverageEntry slice to map
+			perpetualLeverageMap, err := types.ValidateAndConstructPerpetualLeverageMap(ctx, msg, cd.clobKeeper)
+			if err != nil {
+				return ctx, err
+			}
+
+			if err := cd.clobKeeper.UpdateLeverage(ctx, msg.SubaccountId, perpetualLeverageMap); err != nil {
+				log.DebugLog(
+					ctx,
+					"Failed to update leverage in ante handler",
+					log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+					log.Error, err,
+				)
+				return ctx, err
+			}
+
+			log.DebugLog(
+				ctx,
+				"Received new leverage update",
+				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				"subaccount", msg.SubaccountId.String(),
+			)
 		}
 		if err != nil {
 			return ctx, err
@@ -262,6 +286,8 @@ func HasClobMsg(tx sdk.Tx) bool {
 			return true
 		case *types.MsgBatchCancel:
 			return true
+		case *types.MsgUpdateLeverage:
+			return true
 		}
 	}
 	return false
@@ -295,6 +321,8 @@ func ValidateMsgsInClobTx(tx sdk.Tx) error {
 		case *types.MsgBatchCancel:
 			// MsgBatchCancel processes only short term orders for now.
 			hasShortTermOrder = true
+		case *types.MsgUpdateLeverage:
+			// UpdateLeverage messages are allowed in CLOB transactions
 		case *sendingtypes.MsgCreateTransfer:
 			numTransferMsgs += 1
 		default:

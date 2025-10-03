@@ -119,6 +119,18 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			firstMsg:  &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5,
 			secondMsg: &BatchCancel_Alice_Num1_Clob0_1_2_3_GTB20,
 		},
+		"Leverage updates with same address": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxLeverageUpdatesPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:  &UpdateLeverage_Alice_Num0_PerpId0_Lev5,
+			secondMsg: &UpdateLeverage_Alice_Num0_PerpId1_Lev10,
+		},
 	}
 
 	for name, tc := range tests {
@@ -872,4 +884,113 @@ func TestRateLimitingOrders_StatefulOrdersNotCountedDuringRecheck(t *testing.T) 
 	)
 	resp = tApp.CheckTx(secondCheckTx)
 	require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+}
+
+func TestRateLimitingUpdateLeverage_RateLimitsAreEnforced(t *testing.T) {
+	tests := map[string]struct {
+		blockRateLimitConfig clobtypes.BlockRateLimitConfiguration
+		firstMsg             sdktypes.Msg
+		secondMsg            sdktypes.Msg
+		expectSecondOK       bool
+	}{
+		"UpdateLeverage with same address is rate limited": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxLeverageUpdatesPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:       &UpdateLeverage_Alice_Num0_PerpId0_Lev5,
+			secondMsg:      &UpdateLeverage_Alice_Num0_PerpId1_Lev10,
+			expectSecondOK: false,
+		},
+		"UpdateLeverage with same address but looser limits is not rate limited": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxLeverageUpdatesPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 1,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:       &UpdateLeverage_Alice_Num0_PerpId0_Lev5,
+			secondMsg:      &UpdateLeverage_Alice_Num0_PerpId1_Lev10,
+			expectSecondOK: true,
+		},
+		"UpdateLeverage with different addresses is not rate limited": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxLeverageUpdatesPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:       &UpdateLeverage_Alice_Num0_PerpId0_Lev5,
+			secondMsg:      &UpdateLeverage_Bob_Num0_PerpId0_Lev5,
+			expectSecondOK: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *clobtypes.GenesisState) {
+							genesisState.BlockRateLimitConfig = tc.blockRateLimitConfig
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							genesisState.Subaccounts = []satypes.Subaccount{
+								constants.Alice_Num0_10_000USD,
+								constants.Alice_Num1_10_000USD,
+								constants.Bob_Num0_10_000USD,
+							}
+						})
+					return genesis
+				}).Build()
+			ctx := tApp.InitChain()
+
+			firstCheckTx := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.firstMsg),
+				},
+				tc.firstMsg,
+			)
+
+			// First transaction should be allowed.
+			resp := tApp.CheckTx(firstCheckTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+
+			// Advance to next block to trigger rate limit pruning
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			secondCheckTx := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.secondMsg),
+				},
+				tc.secondMsg,
+			)
+			resp = tApp.CheckTx(secondCheckTx)
+			if tc.expectSecondOK {
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			} else {
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+				require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+				require.Contains(t, resp.Log, "exceeds configured block rate limit")
+			}
+		})
+	}
 }

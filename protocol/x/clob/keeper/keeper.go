@@ -65,6 +65,7 @@ type (
 		antehandler sdk.AnteHandler
 
 		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
+		updateLeverageRateLimiter   rate_limit.RateLimiter[string]
 
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}
@@ -98,6 +99,7 @@ func NewKeeper(
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
+	updateLeverageRateLimiter rate_limit.RateLimiter[string],
 	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 	revshareKeeper types.RevShareKeeper,
 ) *Keeper {
@@ -131,6 +133,7 @@ func NewKeeper(
 		},
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
+		updateLeverageRateLimiter:   updateLeverageRateLimiter,
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
 		revshareKeeper:              revshareKeeper,
 		finalizeBlockEventStager: finalizeblock.NewEventStager[*types.ClobStagedFinalizeBlockEvent](

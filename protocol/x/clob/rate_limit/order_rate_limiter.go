@@ -188,3 +188,38 @@ func (r *placeAndCancelOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 	r.checkStateShortTermOrderPlaceCancelRateLimiter.PruneRateLimits(ctx)
 	r.checkStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
 }
+
+// NewUpdateLeverageRateLimiter returns a RateLimiter which rate limits leverage updates
+// based upon the provided types.BlockRateLimitConfiguration. The rate limiter currently
+// supports limiting based upon how many leverage updates per account per N blocks.
+//
+// The rate limiting must only be used during `CheckTx` because the rate limiting information is not recovered
+// on application restart preventing it from being deterministic during `DeliverTx`.
+//
+// Depending upon the provided types.BlockRateLimitConfiguration, the returned RateLimiter may rely on:
+//   - `ctx.BlockHeight()` in RateLimit to track which block the rate limit should apply to.
+//   - `ctx.BlockHeight()` in PruneRateLimits and should be invoked during `EndBlocker`.
+func NewUpdateLeverageRateLimiter(config types.BlockRateLimitConfiguration) RateLimiter[string] {
+	if err := config.Validate(); err != nil {
+		panic(err)
+	}
+
+	// Return the no-op rate limiter if the configuration is empty.
+	if len(config.MaxLeverageUpdatesPerNBlocks) == 0 {
+		return noOpRateLimiter[string]{}
+	}
+
+	// Create the appropriate rate limiter based on configuration
+	if len(config.MaxLeverageUpdatesPerNBlocks) == 1 &&
+		config.MaxLeverageUpdatesPerNBlocks[0].NumBlocks == 1 {
+		return NewSingleBlockRateLimiter[string](
+			"UpdateLeverage",
+			config.MaxLeverageUpdatesPerNBlocks[0],
+		)
+	} else {
+		return NewMultiBlockRateLimiter[string](
+			"UpdateLeverage",
+			config.MaxLeverageUpdatesPerNBlocks,
+		)
+	}
+}

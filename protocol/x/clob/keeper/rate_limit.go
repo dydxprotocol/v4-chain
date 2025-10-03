@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -95,6 +96,23 @@ func (k *Keeper) RateLimitBatchCancel(ctx sdk.Context, msg *types.MsgBatchCancel
 	return k.placeCancelOrderRateLimiter.RateLimit(ctx, msg)
 }
 
+// RateLimitUpdateLeverage passes update leverage messages to `updateLeverageRateLimiter`.
+func (k *Keeper) RateLimitUpdateLeverage(ctx sdk.Context, msg *types.MsgUpdateLeverage) error {
+	// Only rate limit during `CheckTx`.
+	if !k.ShouldRateLimit(ctx) {
+		return nil
+	}
+
+	// Defensive check to prevent null pointer dereference during rate limiting
+	if msg.SubaccountId == nil || msg.SubaccountId.Owner == "" {
+		return errorsmod.Wrap(types.ErrInvalidLeverage, "subaccount ID cannot be empty")
+	}
+
+	// Use the subaccount owner address as the rate limiting key
+	return k.updateLeverageRateLimiter.RateLimit(ctx, msg.SubaccountId.Owner)
+}
+
 func (k *Keeper) PruneRateLimits(ctx sdk.Context) {
 	k.placeCancelOrderRateLimiter.PruneRateLimits(ctx)
+	k.updateLeverageRateLimiter.PruneRateLimits(ctx)
 }
