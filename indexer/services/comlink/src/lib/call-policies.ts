@@ -17,6 +17,14 @@ const goFastHandlerProxyByChainId: Record<string, string> = {
   [mainnet.id.toString()]: '0xa11CC0eFb1B3AcD95a2B8cd316E8c132E16048b5',
 };
 
+const ethCCTPRelayerProxyByChainId: Record<string, string> = {
+  [mainnet.id.toString()]: '0xf33e750336e9C0D4E2f4c0D450d753030693CC71',
+  [arbitrum.id.toString()]: '0x6d4d4A979D766e8b87C985a61B262cfCDf8d6446',
+  [base.id.toString()]: '0xddAFc591Dda57dCF7b3E9Cf83e72c8591fC9cC24',
+  [optimism.id.toString()]: '0x55e4Cf6a73ED8B3307bE610f516fB41BA000f1E5',
+  [avalanche.id.toString()]: '0xB19Ff56BD455C2515207BDbdEDC68B57fBA9A78D',
+};
+
 // this value limit is set to restrict usdc transfers less than 100k.
 const valueLimit = config.CALL_POLICY_VALUE_LIMIT;
 
@@ -31,188 +39,236 @@ const valueLimit = config.CALL_POLICY_VALUE_LIMIT;
  */
 function constructPolicy(chainId: string): (dydxAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>> {
   const goFastHandlerProxy = goFastHandlerProxyByChainId[chainId] as `0x${string}`;
-  return (dydxAddress: string) => Promise.resolve({
-    policyVersion: CallPolicyVersion.V0_0_5,
-    permissions: [
-      {
-        target: usdcAddressByChainId[chainId] as `0x${string}`, // usdc on chainId
-        abi,
-        valueLimit,
-        functionName: 'approve',
-        args: [
-          {
-            condition: ParamCondition.EQUAL,
-            value: goFastHandlerProxy,
-          },
-          null,
-        ],
-      },
-      {
-        target: goFastHandlerProxy,
-        abi,
-        valueLimit,
-        functionName: 'submitOrder',
-        args: [
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          {
-            condition: ParamCondition.SLICE_EQUAL,
-            value: encodeToHexAndPad(dydxAddress),
-            start: 277,
-            length: 42,
-          },
-        ],
-      },
-      {
-        target: goFastHandlerProxy,
-        abi,
-        valueLimit,
-        functionName: 'swapAndSubmitOrder',
-        args: [
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          {
-            condition: ParamCondition.SLICE_EQUAL,
-            value: encodeToHexAndPad(dydxAddress),
-            start: 277,
-            length: 42,
-          },
-        ],
-      },
-    ],
-  });
-}
-
-export async function getEthereumCallPolicy(dydxAddress: string): Promise<CallPolicyParams<Abi, `0x${string}`>> {
-  const ethCCTPRelayerProxy = '0xf33e750336e9C0D4E2f4c0D450d753030693CC71';
-  const goFastHandlerProxy = goFastHandlerProxyByChainId[mainnet.id.toString()] as `0x${string}`;
+  const ethCCTPRelayerProxy = ethCCTPRelayerProxyByChainId[chainId] as `0x${string}`;
   // get the noble forwarding address.
   // cctp mints to a noble forwarding address which forwards to the dydx address.
-  const nobleForwardingAddress = await getNobleForwardingAddress(dydxAddress);
-  const nobleForwardingAddressEvm = nobleToHex(nobleForwardingAddress);
-  // for go fast
-  const destinationCallataAddr = encodeToHexAndPad(dydxAddress);
-  return {
-    policyVersion: CallPolicyVersion.V0_0_5,
-    permissions: [
-      // slow deposits, via CCTP Relayer. USDC Bridge
-      {
-        target: ethCCTPRelayerProxy,
-        abi,
-        valueLimit,
-        functionName: 'requestCCTPTransferWithCaller', // for usdc bridges
-        args: [
-          null,
-          null,
-          {
-            // mint recipient is the noble forwarding address.
-            condition: ParamCondition.EQUAL,
-            value: nobleForwardingAddressEvm,
-          },
-          null,
-          null,
-          null,
-        ],
-      },
-      // slow deposits, via CCTP Relayer. ETH Bridge
-      {
-        target: ethCCTPRelayerProxy,
-        abi,
-        valueLimit,
-        functionName: 'swapAndRequestCCTPTransferWithCaller', // for eth bridges
-        args: [
-          null,
-          null,
-          null,
-          null,
-          {
-            // mint recipient is the noble forwarding address.
-            condition: ParamCondition.EQUAL,
-            value: nobleForwardingAddressEvm,
-          },
-          null,
-          null,
-          null,
-        ],
-      },
-      // allow skip.go bridge smart contract permissions.
-      {
-        target: usdcAddressByChainId[mainnet.id.toString()] as `0x${string}`, // usdc on ethereum
-        abi,
-        valueLimit,
-        functionName: 'approve',
-        args: [
-          {
-            condition: ParamCondition.ONE_OF,
-            value: [
-              ethCCTPRelayerProxy,
-              goFastHandlerProxy,
-            ],
-          },
-          null,
-        ],
-      },
-      // skip go fast bridges.
-      {
-        target: goFastHandlerProxy,
-        abi,
-        valueLimit,
-        functionName: 'submitOrder',
-        args: [
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          {
-            condition: ParamCondition.SLICE_EQUAL,
-            value: destinationCallataAddr,
-            start: 277,
-            length: 42,
-          },
-        ],
-      },
-      {
-        target: goFastHandlerProxy,
-        abi,
-        valueLimit,
-        functionName: 'swapAndSubmitOrder',
-        args: [
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          {
-            condition: ParamCondition.SLICE_EQUAL,
-            value: destinationCallataAddr,
-            start: 277,
-            length: 42,
-          },
-        ],
-      },
-    ],
+  return async (dydxAddress: string) => {
+    const nobleForwardingAddress = await getNobleForwardingAddress(dydxAddress);
+    const nobleForwardingAddressEvm = nobleToHex(nobleForwardingAddress);
+    const destinationCallataAddr = encodeToHexAndPad(dydxAddress);
+    return Promise.resolve({
+      policyVersion: CallPolicyVersion.V0_0_5,
+      permissions: [
+        // slow deposits, via CCTP Relayer. USDC Bridge
+        {
+          target: ethCCTPRelayerProxy,
+          abi,
+          valueLimit,
+          functionName: 'requestCCTPTransferWithCaller', // for usdc bridges
+          args: [
+            null,
+            null,
+            {
+              // mint recipient is the noble forwarding address.
+              condition: ParamCondition.EQUAL,
+              value: nobleForwardingAddressEvm,
+            },
+            null,
+            null,
+            null,
+          ],
+        },
+        // slow deposits, via CCTP Relayer. ETH Bridge
+        {
+          target: ethCCTPRelayerProxy,
+          abi,
+          valueLimit,
+          functionName: 'swapAndRequestCCTPTransferWithCaller', // for eth bridges
+          args: [
+            null,
+            null,
+            null,
+            null,
+            {
+              // mint recipient is the noble forwarding address.
+              condition: ParamCondition.EQUAL,
+              value: nobleForwardingAddressEvm,
+            },
+            null,
+            null,
+            null,
+          ],
+        },
+        {
+          target: usdcAddressByChainId[chainId] as `0x${string}`, // usdc on chainId
+          abi,
+          valueLimit,
+          functionName: 'approve',
+          args: [
+            {
+              condition: ParamCondition.EQUAL,
+              value: goFastHandlerProxy,
+            },
+            null,
+          ],
+        },
+        {
+          target: goFastHandlerProxy,
+          abi,
+          valueLimit,
+          functionName: 'submitOrder',
+          args: [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              condition: ParamCondition.SLICE_EQUAL,
+              value: destinationCallataAddr,
+              start: 277,
+              length: 42,
+            },
+          ],
+        },
+        {
+          target: goFastHandlerProxy,
+          abi,
+          valueLimit,
+          functionName: 'swapAndSubmitOrder',
+          args: [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              condition: ParamCondition.SLICE_EQUAL,
+              value: destinationCallataAddr,
+              start: 277,
+              length: 42,
+            },
+          ],
+        },
+      ],
+    });
   };
 }
 
+// function getEthereumCallPolicy(dydxAddress: string):Promise<CallPolicyParams<Abi, `0x${string}`>{
+//   const ethCCTPRelayerProxy = '0xf33e750336e9C0D4E2f4c0D450d753030693CC71';
+//   const goFastHandlerProxy = goFastHandlerProxyByChainId[mainnet.id.toString()] as `0x${string}`;
+//   // get the noble forwarding address.
+//   // cctp mints to a noble forwarding address which forwards to the dydx address.
+//   const nobleForwardingAddress = await getNobleForwardingAddress(dydxAddress);
+//   const nobleForwardingAddressEvm = nobleToHex(nobleForwardingAddress);
+//   // for go fast
+//   const destinationCallataAddr = encodeToHexAndPad(dydxAddress);
+//   return {
+//     policyVersion: CallPolicyVersion.V0_0_5,
+//     permissions: [
+//       // slow deposits, via CCTP Relayer. USDC Bridge
+//       {
+//         target: ethCCTPRelayerProxy,
+//         abi,
+//         valueLimit,
+//         functionName: 'requestCCTPTransferWithCaller', // for usdc bridges
+//         args: [
+//           null,
+//           null,
+//           {
+//             // mint recipient is the noble forwarding address.
+//             condition: ParamCondition.EQUAL,
+//             value: nobleForwardingAddressEvm,
+//           },
+//           null,
+//           null,
+//           null,
+//         ],
+//       },
+//       // slow deposits, via CCTP Relayer. ETH Bridge
+//       {
+//         target: ethCCTPRelayerProxy,
+//         abi,
+//         valueLimit,
+//         functionName: 'swapAndRequestCCTPTransferWithCaller', // for eth bridges
+//         args: [
+//           null,
+//           null,
+//           null,
+//           null,
+//           {
+//             // mint recipient is the noble forwarding address.
+//             condition: ParamCondition.EQUAL,
+//             value: nobleForwardingAddressEvm,
+//           },
+//           null,
+//           null,
+//           null,
+//         ],
+//       },
+//       // allow skip.go bridge smart contract permissions.
+//       {
+//         target: usdcAddressByChainId[mainnet.id.toString()] as `0x${string}`, // usdc on ethereum
+//         abi,
+//         valueLimit,
+//         functionName: 'approve',
+//         args: [
+//           {
+//             condition: ParamCondition.ONE_OF,
+//             value: [
+//               ethCCTPRelayerProxy,
+//               goFastHandlerProxy,
+//             ],
+//           },
+//           null,
+//         ],
+//       },
+//       // skip go fast bridges.
+//       {
+//         target: goFastHandlerProxy,
+//         abi,
+//         valueLimit,
+//         functionName: 'submitOrder',
+//         args: [
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           {
+//             condition: ParamCondition.SLICE_EQUAL,
+//             value: destinationCallataAddr,
+//             start: 277,
+//             length: 42,
+//           },
+//         ],
+//       },
+//       {
+//         target: goFastHandlerProxy,
+//         abi,
+//         valueLimit,
+//         functionName: 'swapAndSubmitOrder',
+//         args: [
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           null,
+//           {
+//             condition: ParamCondition.SLICE_EQUAL,
+//             value: destinationCallataAddr,
+//             start: 277,
+//             length: 42,
+//           },
+//         ],
+//       },
+//     ],
+//   };
+// }
+
 export const callPolicyByChainId: Record<string, (dydxAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>>> = {
-  [mainnet.id.toString()]: getEthereumCallPolicy,
+  [mainnet.id.toString()]: constructPolicy(mainnet.id.toString()),
   [arbitrum.id.toString()]: constructPolicy(arbitrum.id.toString()),
   [avalanche.id.toString()]: constructPolicy(avalanche.id.toString()),
   [optimism.id.toString()]: constructPolicy(optimism.id.toString()),
