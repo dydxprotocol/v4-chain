@@ -210,7 +210,7 @@ func (k Keeper) GetAllRevShares(
 	makerFees := fill.MakerFeeQuoteQuantums
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
-	// when net fee is zero, no rev share is generat$ed from the fill
+	// when net fee is zero, no rev share is generated from the fill
 	if netFees.Sign() == 0 {
 		return types.RevSharesForFill{}, nil
 	}
