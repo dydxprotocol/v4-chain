@@ -7,7 +7,7 @@ import (
 type FeeTiersKeeper interface {
 	GetLowestMakerFee(ctx sdk.Context) int32
 	GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32
-	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool) int32
+	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool, feeTierOverride uint32) int32
 	GetPerpetualFeeParams(
 		ctx sdk.Context,
 	) PerpetualFeeParams

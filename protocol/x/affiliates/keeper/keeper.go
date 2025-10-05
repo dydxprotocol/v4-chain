@@ -176,7 +176,6 @@ func (k Keeper) AddReferredCommission(
 		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
 			"affiliate %s, error: %s", referreeAddress, err)
 	}
-	println("Update commission is", updatedReferedCommission.String(), " for address ", referreeAddress)
 	affiliateReferredCommissionPrefixStore.Set([]byte(referreeAddress), updatedReferredCommissionBytes)
 	return nil
 }
