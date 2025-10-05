@@ -296,15 +296,16 @@ func (k Keeper) GetTierForAffiliate(
 		return uint32(maxTierLevel), feeSharePpm, nil
 	}
 
-	// If not then set it normally
-	referredVolume, err := k.GetReferredVolume(ctx, affiliateAddr)
-	if err != nil {
-		return 0, 0, err
+	// Get the affiliate revenue generated in the last 30d
+	userStats := k.statsKeeper.GetUserStats(ctx, affiliateAddr)
+	if userStats == nil {
+		return 0, 0, nil
 	}
+	referredVolume := userStats.AffiliateRevenueGeneratedQuantums
 
 	for index, tier := range tiers {
 		// required referred volume is strictly increasing as tiers are traversed in order.
-		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) < 0 {
+		if referredVolume < tier.ReqReferredVolumeQuoteQuantums {
 			break
 		}
 		// safe to do as tier cannot be negative
@@ -364,6 +365,7 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
+// DO NOT USE: This will be deprecated soon.
 func (k Keeper) GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error) {
 	affiliateWhitelist, err := k.GetAffiliateWhitelist(ctx)
 	if err != nil {
@@ -378,6 +380,7 @@ func (k Keeper) GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, er
 	return affiliateWhitelistMap, nil
 }
 
+// DO NOT USE: This will be deprecated soon.
 func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.AffiliateWhitelist) error {
 	store := ctx.KVStore(k.storeKey)
 	addressSet := make(map[string]bool)
@@ -406,6 +409,7 @@ func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.Affiliate
 	return nil
 }
 
+// DO NOT USE: This will be deprecated soon.
 func (k Keeper) GetAffiliateWhitelist(ctx sdk.Context) (types.AffiliateWhitelist, error) {
 	store := ctx.KVStore(k.storeKey)
 	affiliateWhitelistBytes := store.Get([]byte(types.AffiliateWhitelistKey))
