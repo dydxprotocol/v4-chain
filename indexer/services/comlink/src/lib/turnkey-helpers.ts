@@ -265,19 +265,23 @@ export class TurnkeyHelpers {
     targetPublicKey: string,
     magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
+    // lowercase email address.
+    const lowerEmail = userEmail.trim().toLowerCase();
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
-      email: userEmail,
+      email: lowerEmail,
     });
     if (!suborg) {
       suborg = await this.createSuborg({
-        email: userEmail,
+        email: lowerEmail,
       });
     }
 
     const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink;
     const emailAuthResponse = await this.turnkeyApiClient.emailAuth({
-      email: userEmail,
+      email: lowerEmail,
       targetPublicKey,
+      sendFromEmailAddress: config.TURNKEY_EMAIL_SENDER_ADDRESS,
+      sendFromEmailSenderName: config.TURNKEY_EMAIL_SENDER_NAME,
       emailCustomization: {
         appName: TURNKEY_EMAIL_CUSTOMIZATION.APP_NAME,
         logoUrl: TURNKEY_EMAIL_CUSTOMIZATION.LOGO_URL,
@@ -306,7 +310,7 @@ export class TurnkeyHelpers {
     targetPublicKey: string,
   ) {
     // Extract email from Google OIDC token if available
-    const extractedEmail = extractEmailFromOidcToken(oidcToken, provider);
+    const extractedEmail = extractEmailFromOidcToken(oidcToken, provider)?.toLowerCase();
 
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       oidcToken,

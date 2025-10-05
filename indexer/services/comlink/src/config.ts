@@ -107,9 +107,10 @@ export const configSchema = {
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
   SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
   TURNKEY_EMAIL_SENDER_ADDRESS: parseString({ default: 'notifications@mail.dydx.trade' }),
-  TURNKEY_EMAIL_SENDER_NAME: parseString({ default: 'dydx Notifications' }),
+  TURNKEY_EMAIL_SENDER_NAME: parseString({ default: 'dYdX Notifications' }),
   // Alchemy auth token for the skip bridge.
   ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
+  ALCHEMY_API_KEY: parseString({ default: '' }),
   ALCHEMY_WEBHOOK_UPDATE_URL: parseString({ default: 'https://dashboard.alchemy.com/api/update-webhook-addresses' }),
   // ZeroDev RPC for skip bridge.
   ZERODEV_API_KEY: parseString({ default: '' }),
@@ -120,6 +121,8 @@ export const configSchema = {
   APPROVAL_SIGNER_PUBLIC_ADDRESS: parseString({ default: '0x3FC11ff27e5373c88EA142d2EdF5492d0839980B' }),
   // if policy approvals are enabled.
   APPROVAL_ENABLED: parseBoolean({ default: true }),
+  // largest amount we will tolerate to swap in usdc.
+  MAXIMUM_BRIDGE_AMOUNT_USDC: parseInteger({ default: 99_900 }),
 
   // webhook ids, defaults to the production webhook id.
   ETHEREUM_WEBHOOK_ID: parseString({ default: 'wh_ctbkt6y9hez91xr2' }),
