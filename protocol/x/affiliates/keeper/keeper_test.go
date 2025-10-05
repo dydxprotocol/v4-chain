@@ -1055,3 +1055,67 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 	require.Equal(t, uint32(4), tierLevel)
 	require.Equal(t, uint32(250_000), feeSharePpm)
 }
+
+func TestOnStatsExpiredHook(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+	referrer := constants.AliceAccAddress.String()
+	referee := constants.BobAccAddress.String()
+	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+	require.NoError(t, err)
+
+	err = k.RegisterAffiliate(ctx, referee, referrer)
+	require.NoError(t, err)
+
+	err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+		Authority:           constants.GovAuthority,
+		AffiliateParameters: types.DefaultAffiliateParameters,
+	})
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		name                   string
+		initialReferredVolume  *big.Int
+		resultingUserStats     *statstypes.UserStats
+		expectedReferredVolume *big.Int
+	}{
+		{
+			name:                  "referee hit maximum attributable volume",
+			initialReferredVolume: big.NewInt(100),
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     50,
+				MakerNotional:                     20,
+				AffiliateRevenueGeneratedQuantums: 100,
+			},
+			expectedReferredVolume: big.NewInt(70),
+		},
+		{
+			name:                  "referee started at 0 attributable volume",
+			initialReferredVolume: big.NewInt(0),
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     0,
+				MakerNotional:                     0,
+				AffiliateRevenueGeneratedQuantums: 100,
+			},
+			expectedReferredVolume: big.NewInt(0),
+		},
+		{
+			name:                  "normal case expired to 0",
+			initialReferredVolume: big.NewInt(75),
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     0,
+				MakerNotional:                     0,
+				AffiliateRevenueGeneratedQuantums: 100,
+			},
+			expectedReferredVolume: big.NewInt(0),
+		},
+	} {
+		k.SetReferredVolume(ctx, referrer, tc.initialReferredVolume)
+
+		k.OnStatsExpired(ctx, referee, tc.resultingUserStats)
+		referredVolume, err := k.GetReferredVolume(ctx, referrer)
+		require.NoError(t, err)
+		require.Equal(t, tc.expectedReferredVolume, referredVolume)
+	}
+}

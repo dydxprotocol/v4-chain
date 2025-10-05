@@ -105,19 +105,22 @@ export interface EpochStats_UserWithStatsSDKType {
   user: string;
   stats?: UserStatsSDKType;
 }
-/** GlobalStats stores global stats */
+/** GlobalStats stores global stats for the rolling window (default 30d). */
 
 export interface GlobalStats {
   /** Notional USDC traded in quantums */
   notionalTraded: Long;
 }
-/** GlobalStats stores global stats */
+/** GlobalStats stores global stats for the rolling window (default 30d). */
 
 export interface GlobalStatsSDKType {
   /** Notional USDC traded in quantums */
   notional_traded: Long;
 }
-/** UserStats stores stats for a User */
+/**
+ * UserStats stores stats for a User. This is the sum of all stats for a user in the
+ * rolling window (default 30d).
+ */
 
 export interface UserStats {
   /** Taker USDC in quantums */
@@ -129,7 +132,10 @@ export interface UserStats {
 
   affiliateRevenueGeneratedQuantums: Long;
 }
-/** UserStats stores stats for a User */
+/**
+ * UserStats stores stats for a User. This is the sum of all stats for a user in the
+ * rolling window (default 30d).
+ */
 
 export interface UserStatsSDKType {
   /** Taker USDC in quantums */

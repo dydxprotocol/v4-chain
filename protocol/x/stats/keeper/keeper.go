@@ -27,6 +27,7 @@ type (
 		transientStoreKey storetypes.StoreKey
 		authorities       map[string]struct{}
 		stakingKeeper     types.StakingKeeper
+		expirationHooks   []types.StatsExpirationHook
 	}
 )
 
@@ -285,6 +286,14 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats.AffiliateRevenueGeneratedQuantums -= removedStats.Stats.AffiliateRevenueGeneratedQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
 
+		// Execute work in other keepers
+		for _, hook := range k.expirationHooks {
+			err := hook.OnStatsExpired(ctx, removedStats.User, removedStats.Stats)
+			if err != nil {
+				k.Logger(ctx).Error("failed to expire stats", "user", removedStats.User, "error", err)
+			}
+		}
+
 		// Just remove TakerNotional to avoid double counting
 		globalStats.NotionalTraded -= removedStats.Stats.TakerNotional
 	}
@@ -292,6 +301,11 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	k.deleteEpochStats(ctx, metadata.TrailingEpoch)
 	metadata.TrailingEpoch += 1
 	k.SetStatsMetadata(ctx, metadata)
+}
+
+// AddStatsExpirationHook adds a hook to be called when stats expire
+func (k *Keeper) AddStatsExpirationHook(hook types.StatsExpirationHook) {
+	k.expirationHooks = append(k.expirationHooks, hook)
 }
 
 // GetStakedAmount returns the total staked amount for a delegator address.
