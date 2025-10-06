@@ -30,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 	batchCancelCmd := CmdBatchCancel()
 	batchCancelCmd.PersistentFlags().String("clientIds", "", "A list of client ids to to batch cancel")
 	cmd.AddCommand(batchCancelCmd)
+	cmd.AddCommand(CmdUpdateLeverage())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
