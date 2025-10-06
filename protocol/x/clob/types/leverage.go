@@ -43,17 +43,12 @@ func ValidateUpdateLeverageMsg(ctx sdk.Context, msg *MsgUpdateLeverage, clobKeep
 		}
 
 		// Validate that the clob pair ID is a valid clob pair ID
-		if clob, found := clobKeeper.GetClobPair(ctx, ClobPairId(entry.ClobPairId)); !found {
+		if _, found := clobKeeper.GetClobPair(ctx, ClobPairId(entry.ClobPairId)); !found {
 			return errorsmod.Wrap(
 				ErrInvalidClob,
 				fmt.Sprintf("clob pair ID %d does not exist", entry.ClobPairId),
 			)
-		} else if _, err := clob.GetPerpetualId(); err != nil {
-			return errorsmod.Wrap(
-				ErrInvalidClob,
-				fmt.Sprintf("clob pair ID %d does not map to a perpetual", entry.ClobPairId),
-			)
-		}
+		} 
 		clobPairIds[entry.ClobPairId] = true
 	}
 
