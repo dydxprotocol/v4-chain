@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -28,6 +29,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 		user                string
 		UserStats           *stattypes.UserStats
 		GlobalStats         *stattypes.GlobalStats
+		setupFeeHoliday     bool
+		feeHolidayParams    types.FeeHolidayParams
+		blockTime           time.Time
+		clobPairId          uint32
 		expectedTakerFeePpm int32
 		expectedMakerFeePpm int32
 	}{
@@ -40,6 +45,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			&stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
+			false,
+			types.FeeHolidayParams{},
+			time.Now(),
+			1,
 			10,
 			1,
 		},
@@ -52,6 +61,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			&stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
+			false,
+			types.FeeHolidayParams{},
+			time.Now(),
+			1,
 			20,
 			2,
 		},
@@ -64,6 +77,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			&stattypes.GlobalStats{
 				NotionalTraded: 10_000_000_000,
 			},
+			false,
+			types.FeeHolidayParams{},
+			time.Now(),
+			1,
 			20,
 			2,
 		},
@@ -76,6 +93,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			&stattypes.GlobalStats{
 				NotionalTraded: 2_000_000_000,
 			},
+			false,
+			types.FeeHolidayParams{},
+			time.Now(),
+			1,
 			30,
 			3,
 		},
@@ -88,8 +109,112 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			&stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
+			false,
+			types.FeeHolidayParams{},
+			time.Now(),
+			1,
 			30,
 			3,
+		},
+		"active fee holiday overrides tier - first tier": {
+			"alice",
+			&stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			&stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			true,
+			types.FeeHolidayParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+			},
+			time.Unix(2000, 0), // Within the fee holiday period
+			1,
+			0, // Fee holiday - zero fee
+			0, // Fee holiday - zero fee
+		},
+		"active fee holiday overrides tier - top tier": {
+			"alice",
+			&stattypes.UserStats{
+				TakerNotional: 1_000,
+				MakerNotional: 1_000_000_000,
+			},
+			&stattypes.GlobalStats{
+				NotionalTraded: 2_000_000_000,
+			},
+			true,
+			types.FeeHolidayParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+			},
+			time.Unix(2000, 0), // Within the fee holiday period
+			1,
+			0, // Fee holiday - zero fee
+			0, // Fee holiday - zero fee
+		},
+		"expired fee holiday doesn't override tier": {
+			"alice",
+			&stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			&stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			true,
+			types.FeeHolidayParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   2000,
+			},
+			time.Unix(2500, 0), // After the fee holiday period
+			1,
+			10, // Regular tier fee
+			1,  // Regular tier fee
+		},
+		"fee holiday for different CLOB pair doesn't affect fees": {
+			"alice",
+			&stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			&stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			true,
+			types.FeeHolidayParams{
+				ClobPairId:    2, // Different CLOB pair
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+			},
+			time.Unix(2000, 0), // Within the fee holiday period
+			1,                  // Querying for CLOB pair 1
+			10,                 // Regular tier fee
+			1,                  // Regular tier fee
+		},
+		"fee holiday for vault also overrides fees": {
+			constants.Vault_Clob0.ToModuleAccountAddress(),
+			&stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			&stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			true,
+			types.FeeHolidayParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+			},
+			time.Unix(2000, 0), // Within the fee holiday period
+			1,
+			0, // Fee holiday - zero fee
+			0, // Fee holiday - zero fee
 		},
 	}
 
@@ -97,6 +222,18 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+			// Special handling for the expired fee holiday test
+			var setupCtx sdk.Context
+			if name == "expired fee holiday doesn't override tier" {
+				// For expired holiday test, first set up a context with a time inside the holiday period
+				setupCtx = ctx.WithBlockTime(time.Unix(1500, 0))
+			} else {
+				// For other tests, setup context is the same as the test context
+				setupCtx = ctx.WithBlockTime(tc.blockTime)
+			}
+
+			ctx = ctx.WithBlockTime(tc.blockTime)
+
 			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
 			k := tApp.App.FeeTiersKeeper
 			err := k.SetPerpetualFeeParams(
@@ -126,12 +263,28 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			)
 			require.NoError(t, err)
 
+			if tc.setupFeeHoliday {
+				err = k.SetFeeHolidayParams(setupCtx, tc.feeHolidayParams)
+				require.NoError(t, err)
+			}
+
 			statsKeeper := tApp.App.StatsKeeper
 			statsKeeper.SetUserStats(ctx, tc.user, tc.UserStats)
 			statsKeeper.SetGlobalStats(ctx, tc.GlobalStats)
 
-			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true, uint32(1)))
-			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false, uint32(1)))
+			// Test taker fee
+			require.Equal(
+				t,
+				tc.expectedTakerFeePpm,
+				k.GetPerpetualFeePpm(ctx, tc.user, true, tc.clobPairId),
+			)
+
+			// Test maker fee
+			require.Equal(
+				t,
+				tc.expectedMakerFeePpm,
+				k.GetPerpetualFeePpm(ctx, tc.user, false, tc.clobPairId),
+			)
 		})
 	}
 }
