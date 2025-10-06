@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 type (
