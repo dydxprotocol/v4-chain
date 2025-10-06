@@ -115,7 +115,8 @@ func (k Keeper) SetReferredVolume(
 	referrer string,
 	referredVolume *big.Int,
 ) error {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeInWindowKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
+		[]byte(types.ReferredVolumeInWindowKeyPrefix))
 	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
 
 	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
@@ -133,7 +134,8 @@ func (k Keeper) AddReferredVolume(
 	affiliateAddr string,
 	referredVolumeFromBlock *big.Int,
 ) error {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeInWindowKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
+		[]byte(types.ReferredVolumeInWindowKeyPrefix))
 	referredVolume := big.NewInt(0)
 
 	if affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
@@ -168,7 +170,8 @@ func (k Keeper) AddReferredVolume(
 
 // GetReferredVolume returns all time referred volume for an affiliate address in the window.
 func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeInWindowKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
+		[]byte(types.ReferredVolumeInWindowKeyPrefix))
 	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
 		return big.NewInt(0), nil
 	}
