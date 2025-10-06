@@ -16,5 +16,9 @@ var (
 		ModuleName, 8, "Duplicate affiliate address for whitelist")
 	ErrAffiliateTiersNotSet = errorsmod.Register(ModuleName, 9,
 		"Affiliate tiers not set (affiliate program is not active)")
-	ErrSelfReferral = errorsmod.Register(ModuleName, 10, "Self referral not allowed")
+	ErrSelfReferral                        = errorsmod.Register(ModuleName, 10, "Self referral not allowed")
+	ErrUpdatingAffiliateReferredCommission = errorsmod.Register(
+		ModuleName, 11, "Error updating affiliate referred commission")
+	ErrUpdatingAttributedVolume = errorsmod.Register(
+		ModuleName, 12, "Error updating attributed volume")
 )

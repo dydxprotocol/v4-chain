@@ -36,6 +36,13 @@
         }
       ]
     },
+    "affiliates": {
+      "affiliate_parameters": {
+        "maximum_30d_attributable_volume_per_referred_user_notional": "100000000000",
+        "referee_minimum_fee_tier_idx": 2,
+        "maximum_30d_attributable_revenue_per_referred_user_quote_quantums": "10000000000"
+      }
+    },
     "auth": {
       "params": {
         "max_memo_characters": "256",
