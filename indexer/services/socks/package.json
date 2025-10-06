@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/index",
   "scripts": {
-    "start": "node --max-semi-space-size=512 --max-old-space-size=2368 --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
+    "start": "node --max-semi-space-size=64 --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
