@@ -22,21 +22,19 @@ func (k Keeper) AffiliateInfo(c context.Context,
 			req.GetAddress(), err.Error())
 	}
 
-	affiliateWhitelistMap, err := k.GetAffiliateWhitelistMap(ctx)
+	affiliateOverridesMap, err := k.GetAffiliateOverridesMap(ctx)
 	if err != nil {
 		return nil, err
 	}
 	tierLevel := uint32(0)
 	feeSharePpm := uint32(0)
 	isWhitelisted := false
-	if _, exists := affiliateWhitelistMap[addr.String()]; exists {
-		feeSharePpm = affiliateWhitelistMap[addr.String()]
+	if _, exists := affiliateOverridesMap[addr.String()]; exists {
 		isWhitelisted = true
-	} else {
-		tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String())
-		if err != nil {
-			return nil, err
-		}
+	}
+	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String(), affiliateOverridesMap)
+	if err != nil {
+		return nil, err
 	}
 
 	referredVolume, err := k.GetReferredVolume(ctx, req.GetAddress())

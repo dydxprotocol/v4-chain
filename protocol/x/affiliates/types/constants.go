@@ -23,6 +23,14 @@ var (
 				ReqStakedWholeCoins:            5_000,              // 5000 whole coins
 				TakerFeeSharePpm:               150_000,            // 15%
 			},
+<<<<<<< HEAD
+=======
+			{
+				ReqReferredVolumeQuoteQuantums: 50_000_000_000_000, // 50 million USDC
+				ReqStakedWholeCoins:            100_000_000,        // 100m whole coins
+				TakerFeeSharePpm:               250_000,            // 25%
+			},
+>>>>>>> c29eea29 (Dont attribute new revenue if user exceeds 30d max volume and deprecate AffiliateWhitelist (#3109))
 		},
 	}
 

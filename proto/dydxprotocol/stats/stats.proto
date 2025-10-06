@@ -17,7 +17,13 @@ message BlockStats {
     string maker = 2;
 
     // Notional USDC filled in quantums
+    // Used to calculate fee tier, and affiliate revenue attributed for taker
     uint64 notional = 3;
+
+    // Affiliate fee generated in quantums of the taker fee for the affiliate
+    // Used to calculate affiliate revenue attributed for taker. This is dynamic
+    // per affiliate tier
+    uint64 affiliate_fee_generated_quantums = 4;
   }
 
   // The fills that occured on this block.
@@ -47,19 +53,23 @@ message EpochStats {
   repeated UserWithStats stats = 2;
 }
 
-// GlobalStats stores global stats
+// GlobalStats stores global stats for the rolling window (default 30d).
 message GlobalStats {
   // Notional USDC traded in quantums
   uint64 notional_traded = 1;
 }
 
-// UserStats stores stats for a User
+// UserStats stores stats for a User. This is the sum of all stats for a user in
+// the rolling window (default 30d).
 message UserStats {
   // Taker USDC in quantums
   uint64 taker_notional = 1;
 
   // Maker USDC in quantums
   uint64 maker_notional = 2;
+
+  // Affiliate revenue generated in quantums
+  uint64 affiliate_revenue_generated_quantums = 3;
 }
 
 // CachedStakeAmount stores the last calculated total staked amount for address
