@@ -192,8 +192,8 @@ func (k Keeper) ValidateRevShareSafety(
 func (k Keeper) GetAllRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-	affiliateOverrides *map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateOverrides map[string]bool,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (types.RevSharesForFill, error) {
 	revShares := []types.RevShare{}
 	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
@@ -292,8 +292,8 @@ func (k Keeper) GetAllRevShares(
 func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-	affiliateOverrides *map[string]bool,
-	_ *affiliatetypes.AffiliateParameters,
+	affiliateOverrides map[string]bool,
+	_ affiliatetypes.AffiliateParameters,
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums

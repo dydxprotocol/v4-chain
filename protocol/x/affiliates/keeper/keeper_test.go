@@ -196,7 +196,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee, &map[string]bool{})
+	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee, map[string]bool{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -209,7 +209,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get updated taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee, &map[string]bool{})
+	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee, map[string]bool{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -245,7 +245,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee, &map[string]bool{})
+	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee, map[string]bool{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -263,7 +263,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 			))))
 	require.NoError(t, err)
 	// Get updated taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee, &map[string]bool{})
+	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee, map[string]bool{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -315,7 +315,7 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, affiliate, &map[string]bool{})
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, affiliate, map[string]bool{})
 	require.NoError(t, err)
 
 	require.Equal(t, uint32(3), tierLevel)
@@ -675,7 +675,7 @@ func TestGetTakerFeeShareViaWhitelist(t *testing.T) {
 			affiliateOverridesMap, err := k.GetAffiliateOverridesMap(ctx)
 			require.NoError(t, err)
 
-			affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, tc.refereeAddr, &affiliateOverridesMap)
+			affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, tc.refereeAddr, affiliateOverridesMap)
 			require.NoError(t, err)
 			require.Equal(t, tc.affiliateAddr, affiliateAddr)
 			require.Equal(t, tc.expectedFeeSharePpm, feeSharePpm)
@@ -1011,7 +1011,7 @@ func TestGetTierForAffiliateEmptyTiers(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), &map[string]bool{})
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), map[string]bool{})
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), tierLevel)
 	require.Equal(t, uint32(0), feeSharePpm)
@@ -1043,12 +1043,12 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
 	require.NoError(t, err)
 
-	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), &map[string]bool{})
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), map[string]bool{})
 	require.NoError(t, err)
 	require.Equal(t, uint32(3), tierLevel)
 	require.Equal(t, uint32(150_000), feeSharePpm)
 
-	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), &map[string]bool{
+	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), map[string]bool{
 		constants.AliceAccAddress.String(): true,
 	})
 	require.NoError(t, err)

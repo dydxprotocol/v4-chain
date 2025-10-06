@@ -1323,7 +1323,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			affiliateParameters, err := affiliatesKeeper.GetAffiliateParameters(ctx)
 			require.NoError(t, err)
 
-			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill, &affiliateOverridesMap, &affiliateParameters)
+			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill, affiliateOverridesMap, affiliateParameters)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRevSharesForFill, revSharesForFill)
@@ -1423,7 +1423,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			_, err := keeper.GetAllRevShares(ctx, fill, &map[string]bool{}, nil)
+			_, err := keeper.GetAllRevShares(ctx, fill, map[string]bool{}, affiliatetypes.AffiliateParameters{})
 
 			require.ErrorIs(t, err, tc.expectedError)
 		})

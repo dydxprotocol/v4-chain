@@ -44,7 +44,7 @@ func (k Keeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
@@ -327,7 +327,7 @@ func (k Keeper) persistMatchedOrders(
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
@@ -530,8 +530,12 @@ func (k Keeper) persistMatchedOrders(
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess, &affiliateOverrides,
-		affiliateParameters)
+	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(
+		ctx,
+		fillForProcess,
+		affiliateOverrides,
+		affiliateParameters,
+	)
 	if err != nil {
 		revSharesForFill = revsharetypes.RevSharesForFill{}
 		log.ErrorLogWithError(ctx, "error getting rev shares for fill", err)

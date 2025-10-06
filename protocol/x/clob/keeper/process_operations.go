@@ -170,7 +170,7 @@ func (k Keeper) ProcessInternalOperations(
 			}
 			clobMatch := castedOperation.Match
 			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders,
-				affiliateOverrides, &affiliateParameters); err != nil {
+				affiliateOverrides, affiliateParameters); err != nil {
 				return errorsmod.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
@@ -227,7 +227,7 @@ func (k Keeper) PersistMatchToState(
 	clobMatch *types.ClobMatch,
 	ordersMap map[types.OrderId]types.Order,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) error {
 	switch castedMatch := clobMatch.Match.(type) {
 	case *types.ClobMatch_MatchOrders:
@@ -474,7 +474,7 @@ func (k Keeper) PersistMatchOrdersToState(
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) error {
 	takerOrderId := matchOrders.GetTakerOrderId()
 	// Fetch the taker order from either short term orders or state
@@ -519,8 +519,12 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 		makerOrders = append(makerOrders, makerOrder)
 
-		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(ctx, &matchWithOrders,
-			affiliateOverrides, affiliateParameters)
+		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(
+			ctx,
+			&matchWithOrders,
+			affiliateOverrides,
+			affiliateParameters,
+		)
 		if err != nil {
 			return err
 		}
@@ -599,7 +603,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) error {
 	// If the subaccount is not liquidatable, do nothing.
 	if err := k.EnsureIsLiquidatable(ctx, matchLiquidation.Liquidated); err != nil {

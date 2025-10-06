@@ -981,7 +981,7 @@ func (_m *ClobKeeper) ProcessProposerOperations(ctx types.Context, operations []
 }
 
 // ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders, affiliatesWhitelistMap
-func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliateOverrides map[string]bool, affiliateParameters *affiliatetypes.AffiliateParameters) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error) {
+func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliateOverrides map[string]bool, affiliateParameters affiliatetypes.AffiliateParameters) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error) {
 	ret := _m.Called(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 
 	if len(ret) == 0 {
@@ -993,28 +993,28 @@ func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clo
 	var r2 subaccountstypes.UpdateResult
 	var r3 *big.Int
 	var r4 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, *affiliatetypes.AffiliateParameters) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error)); ok {
 		return rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, *affiliatetypes.AffiliateParameters) bool); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) bool); ok {
 		r0 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, *affiliatetypes.AffiliateParameters) subaccountstypes.UpdateResult); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) subaccountstypes.UpdateResult); ok {
 		r1 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r1 = ret.Get(1).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, *affiliatetypes.AffiliateParameters) subaccountstypes.UpdateResult); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) subaccountstypes.UpdateResult); ok {
 		r2 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r2 = ret.Get(2).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, *affiliatetypes.AffiliateParameters) *big.Int); ok {
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) *big.Int); ok {
 		r3 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		if ret.Get(3) != nil {
@@ -1022,7 +1022,7 @@ func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clo
 		}
 	}
 
-	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, *affiliatetypes.AffiliateParameters) error); ok {
+	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) error); ok {
 		r4 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r4 = ret.Error(4)
