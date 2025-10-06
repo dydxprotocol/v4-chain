@@ -495,12 +495,13 @@ func (k Keeper) addReferredVolumeIfQualified(
 	previousVolume := (refereeUserStats.TakerNotional + refereeUserStats.MakerNotional +
 		previouslyAttributedVolume[referee])
 
-	if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
-		if previousVolume >= affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
+	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
+	if cap != 0 {
+		if previousVolume >= cap {
 			volume = 0
-		} else if previousVolume+volume > affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
+		} else if previousVolume+volume > cap {
 			// Remainder of the volume to get them to the cap
-			volume = affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - previousVolume
+			volume = cap - previousVolume
 		}
 	}
 	previouslyAttributedVolume[referee] += volume
