@@ -32,6 +32,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 		setupFeeHoliday     bool
 		feeHolidayParams    types.FeeHolidayParams
 		blockTime           time.Time
+		setupTime           *time.Time
 		clobPairId          uint32
 		expectedTakerFeePpm int32
 		expectedMakerFeePpm int32
@@ -48,6 +49,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			false,
 			types.FeeHolidayParams{},
 			time.Now(),
+			nil,
 			1,
 			10,
 			1,
@@ -64,6 +66,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			false,
 			types.FeeHolidayParams{},
 			time.Now(),
+			nil,
 			1,
 			20,
 			2,
@@ -80,6 +83,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			false,
 			types.FeeHolidayParams{},
 			time.Now(),
+			nil,
 			1,
 			20,
 			2,
@@ -96,6 +100,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			false,
 			types.FeeHolidayParams{},
 			time.Now(),
+			nil,
 			1,
 			30,
 			3,
@@ -112,6 +117,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			false,
 			types.FeeHolidayParams{},
 			time.Now(),
+			nil,
 			1,
 			30,
 			3,
@@ -132,6 +138,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				EndTimeUnix:   3000,
 			},
 			time.Unix(2000, 0), // Within the fee holiday period
+			nil,
 			1,
 			0, // Fee holiday - zero fee
 			0, // Fee holiday - zero fee
@@ -152,6 +159,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				EndTimeUnix:   3000,
 			},
 			time.Unix(2000, 0), // Within the fee holiday period
+			nil,
 			1,
 			0, // Fee holiday - zero fee
 			0, // Fee holiday - zero fee
@@ -172,6 +180,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				EndTimeUnix:   2000,
 			},
 			time.Unix(2500, 0), // After the fee holiday period
+			func() *time.Time { t := time.Unix(1500, 0); return &t }(),
 			1,
 			10, // Regular tier fee
 			1,  // Regular tier fee
@@ -192,9 +201,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				EndTimeUnix:   3000,
 			},
 			time.Unix(2000, 0), // Within the fee holiday period
-			1,                  // Querying for CLOB pair 1
-			10,                 // Regular tier fee
-			1,                  // Regular tier fee
+			nil,
+			1,  // Querying for CLOB pair 1
+			10, // Regular tier fee
+			1,  // Regular tier fee
 		},
 		"fee holiday for vault also overrides fees": {
 			constants.Vault_Clob0.ToModuleAccountAddress(),
@@ -212,6 +222,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				EndTimeUnix:   3000,
 			},
 			time.Unix(2000, 0), // Within the fee holiday period
+			nil,
 			1,
 			0, // Fee holiday - zero fee
 			0, // Fee holiday - zero fee
@@ -222,17 +233,13 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
-			// Special handling for the expired fee holiday test
-			var setupCtx sdk.Context
-			if name == "expired fee holiday doesn't override tier" {
-				// For expired holiday test, first set up a context with a time inside the holiday period
-				setupCtx = ctx.WithBlockTime(time.Unix(1500, 0))
-			} else {
-				// For other tests, setup context is the same as the test context
-				setupCtx = ctx.WithBlockTime(tc.blockTime)
-			}
 
 			ctx = ctx.WithBlockTime(tc.blockTime)
+			setupTime := tc.blockTime
+			if tc.setupTime != nil {
+				setupTime = *tc.setupTime
+			}
+			setupCtx := ctx.WithBlockTime(setupTime)
 
 			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
 			k := tApp.App.FeeTiersKeeper

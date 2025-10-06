@@ -66,7 +66,6 @@ func (k Keeper) GetAllFeeHolidayParams(
 			k.Logger(ctx).Error(
 				"failed to unmarshal fee holiday",
 				"clob_pair_id", clobPairId,
-				"value", string(iterator.Value()),
 				"error", err,
 			)
 			continue
