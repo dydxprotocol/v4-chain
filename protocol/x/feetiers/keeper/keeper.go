@@ -102,6 +102,11 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string, feeTierOverride 
 		idx = uint32(i)
 	}
 
+	maxTierIdx := uint32(len(tiers) - 1)
+	if feeTierOverride > maxTierIdx {
+		feeTierOverride = maxTierIdx
+	}
+
 	if idx < feeTierOverride {
 		_, hasReferree := k.affiliatesKeeper.GetReferredBy(ctx, address)
 		if hasReferree {
