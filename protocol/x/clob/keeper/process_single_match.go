@@ -138,12 +138,7 @@ func (k Keeper) ProcessSingleMatch(
 		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
-	var referreeIndexOverride uint32
-	if affiliateParameters == nil {
-		referreeIndexOverride = 0
-	} else {
-		referreeIndexOverride = affiliateParameters.RefereeMinimumFeeTierIdx
-	}
+	referreeIndexOverride := affiliateParameters.RefereeMinimumFeeTierIdx
 
 	// Calculate taker and maker fee ppms.
 	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
