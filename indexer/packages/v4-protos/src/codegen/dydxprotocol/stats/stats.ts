@@ -118,8 +118,8 @@ export interface GlobalStatsSDKType {
   notional_traded: Long;
 }
 /**
- * UserStats stores stats for a User. This is the sum of all stats for a user in the
- * rolling window (default 30d).
+ * UserStats stores stats for a User. This is the sum of all stats for a user in
+ * the rolling window (default 30d).
  */
 
 export interface UserStats {
@@ -133,8 +133,8 @@ export interface UserStats {
   affiliateRevenueGeneratedQuantums: Long;
 }
 /**
- * UserStats stores stats for a User. This is the sum of all stats for a user in the
- * rolling window (default 30d).
+ * UserStats stores stats for a User. This is the sum of all stats for a user in
+ * the rolling window (default 30d).
  */
 
 export interface UserStatsSDKType {
