@@ -48,7 +48,7 @@ func ValidateUpdateLeverageMsg(ctx sdk.Context, msg *MsgUpdateLeverage, clobKeep
 				ErrInvalidClob,
 				fmt.Sprintf("clob pair ID %d does not exist", entry.ClobPairId),
 			)
-		} 
+		}
 		clobPairIds[entry.ClobPairId] = true
 	}
 
