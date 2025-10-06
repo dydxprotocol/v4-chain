@@ -480,15 +480,20 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 	return affiliateOverridesMap, nil
 }
 
-func (k Keeper) addReferredVolumeIfQualified(ctx sdk.Context, referee string,
-	referrer string, volume uint64, affiliateParams *types.AffiliateParameters,
-	previouslyAttributedVolume *map[string]uint64) error {
+func (k Keeper) addReferredVolumeIfQualified(
+	ctx sdk.Context,
+	referee string,
+	referrer string,
+	volume uint64,
+	affiliateParams *types.AffiliateParameters,
+	previouslyAttributedVolume map[string]uint64,
+) error {
 	// Get the user stats from the referee
 	refereeUserStats := k.statsKeeper.GetUserStats(ctx, referee)
 
 	// If parameter is 0 then no limit is applied
 	previousVolume := (refereeUserStats.TakerNotional + refereeUserStats.MakerNotional +
-		(*previouslyAttributedVolume)[referee])
+		previouslyAttributedVolume[referee])
 
 	if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
 		if previousVolume >= affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
@@ -498,7 +503,7 @@ func (k Keeper) addReferredVolumeIfQualified(ctx sdk.Context, referee string,
 			volume = affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - previousVolume
 		}
 	}
-	(*previouslyAttributedVolume)[referee] += volume
+	previouslyAttributedVolume[referee] += volume
 
 	// Add the volume to the referrer on their 30d rolling window
 	if volume > 0 {
@@ -535,7 +540,7 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		if referredByAddrTaker != "" {
 			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
 			if err := k.addReferredVolumeIfQualified(ctx, fill.Taker, referredByAddrTaker,
-				fill.Notional, &affiliateParams, &previouslyAttributedVolume); err != nil {
+				fill.Notional, &affiliateParams, previouslyAttributedVolume); err != nil {
 				return err
 			}
 		}
@@ -551,7 +556,7 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 		if referredByAddrMaker != "" {
 			if err := k.addReferredVolumeIfQualified(ctx, fill.Maker, referredByAddrMaker,
-				fill.Notional, &affiliateParams, &previouslyAttributedVolume); err != nil {
+				fill.Notional, &affiliateParams, previouslyAttributedVolume); err != nil {
 				return err
 			}
 		}
