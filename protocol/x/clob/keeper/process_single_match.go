@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -42,7 +43,8 @@ import (
 func (k Keeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
-	affiliatesWhitelistMap map[string]uint32,
+	affiliateOverrides map[string]bool,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
@@ -226,7 +228,8 @@ func (k Keeper) ProcessSingleMatch(
 		makerFeePpm,
 		bigFillQuoteQuantums,
 		takerInsuranceFundDelta,
-		affiliatesWhitelistMap,
+		affiliateOverrides,
+		affiliateParameters,
 	)
 
 	if err != nil {
@@ -323,7 +326,8 @@ func (k Keeper) persistMatchedOrders(
 	makerFeePpm int32,
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
-	affiliatesWhitelistMap map[string]uint32,
+	affiliateOverrides map[string]bool,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
@@ -526,7 +530,12 @@ func (k Keeper) persistMatchedOrders(
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess, affiliatesWhitelistMap)
+	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(
+		ctx,
+		fillForProcess,
+		affiliateOverrides,
+		affiliateParameters,
+	)
 	if err != nil {
 		revSharesForFill = revsharetypes.RevSharesForFill{}
 		log.ErrorLogWithError(ctx, "error getting rev shares for fill", err)
@@ -566,6 +575,7 @@ func (k Keeper) persistMatchedOrders(
 		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
 		bigFillQuoteQuantums,
+		affiliateRevSharesQuoteQuantums,
 	)
 
 	takerOrderRouterFeeQuoteQuantums := big.NewInt(0)
