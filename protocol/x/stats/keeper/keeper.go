@@ -288,7 +288,7 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 
 		// Execute work in other keepers
 		for _, hook := range k.expirationHooks {
-			err := hook.OnStatsExpired(ctx, removedStats.User, removedStats.Stats)
+			err := hook.OnStatsExpired(ctx, removedStats.User, stats)
 			if err != nil {
 				k.Logger(ctx).Error("failed to expire stats", "user", removedStats.User, "error", err)
 			}
