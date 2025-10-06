@@ -27,6 +27,7 @@ type (
 		transientStoreKey storetypes.StoreKey
 		authorities       map[string]struct{}
 		stakingKeeper     types.StakingKeeper
+		expirationHooks   []types.StatsExpirationHook
 	}
 )
 
@@ -79,14 +80,21 @@ func (k Keeper) SetBlockStats(ctx sdk.Context, blockStats *types.BlockStats) {
 }
 
 // Record a match in BlockStats, which is stored in the transient store
-func (k Keeper) RecordFill(ctx sdk.Context, takerAddress string, makerAddress string, notional *big.Int) {
+func (k Keeper) RecordFill(
+	ctx sdk.Context,
+	takerAddress string,
+	makerAddress string,
+	notional *big.Int,
+	affiliateFeeGenerated *big.Int,
+) {
 	blockStats := k.GetBlockStats(ctx)
 	blockStats.Fills = append(
 		blockStats.Fills,
 		&types.BlockStats_Fill{
-			Taker:    takerAddress,
-			Maker:    makerAddress,
-			Notional: notional.Uint64(),
+			Taker:                         takerAddress,
+			Maker:                         makerAddress,
+			Notional:                      notional.Uint64(),
+			AffiliateFeeGeneratedQuantums: affiliateFeeGenerated.Uint64(),
 		},
 	)
 	k.SetBlockStats(ctx, blockStats)
@@ -202,6 +210,8 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 	for _, fill := range blockStats.Fills {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional
+		// Add affiliate revenue generated on taker for this fill (if any)
+		userStats.AffiliateRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 		k.SetUserStats(ctx, fill.Taker, userStats)
 
 		userStats = k.GetUserStats(ctx, fill.Maker)
@@ -222,6 +232,8 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+		// Track affiliate revenue generated on the taker in this epoch snapshot
+		userStatsMap[fill.Taker].Stats.AffiliateRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
 		globalStats := k.GetGlobalStats(ctx)
 		globalStats.NotionalTraded += fill.Notional
@@ -271,7 +283,16 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
+		stats.AffiliateRevenueGeneratedQuantums -= removedStats.Stats.AffiliateRevenueGeneratedQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
+
+		// Execute work in other keepers
+		for _, hook := range k.expirationHooks {
+			err := hook.OnStatsExpired(ctx, removedStats.User, removedStats.Stats)
+			if err != nil {
+				k.Logger(ctx).Error("failed to expire stats", "user", removedStats.User, "error", err)
+			}
+		}
 
 		// Just remove TakerNotional to avoid double counting
 		globalStats.NotionalTraded -= removedStats.Stats.TakerNotional
@@ -280,6 +301,11 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	k.deleteEpochStats(ctx, metadata.TrailingEpoch)
 	metadata.TrailingEpoch += 1
 	k.SetStatsMetadata(ctx, metadata)
+}
+
+// AddStatsExpirationHook adds a hook to be called when stats expire
+func (k *Keeper) AddStatsExpirationHook(hook types.StatsExpirationHook) {
+	k.expirationHooks = append(k.expirationHooks, hook)
 }
 
 // GetStakedAmount returns the total staked amount for a delegator address.

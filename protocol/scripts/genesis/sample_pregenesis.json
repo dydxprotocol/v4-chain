@@ -28,7 +28,7 @@
           {
             "req_referred_volume_quote_quantums": "50000000000000",
             "req_staked_whole_coins": 100000000,
-            "taker_fee_share_ppm": 200000
+            "taker_fee_share_ppm": 250000
           }
         ]
       }

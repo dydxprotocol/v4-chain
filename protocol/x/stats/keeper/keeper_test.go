@@ -26,9 +26,10 @@ func TestLogger(t *testing.T) {
 }
 
 type recordFillArgs struct {
-	taker    string
-	maker    string
-	notional *big.Int
+	taker        string
+	maker        string
+	notional     *big.Int
+	affiliateFee *big.Int
 }
 
 func TestRecordFill(t *testing.T) {
@@ -44,7 +45,7 @@ func TestRecordFill(t *testing.T) {
 		},
 		"single fill": {
 			[]recordFillArgs{
-				{"taker", "maker", new(big.Int).SetUint64(123)},
+				{"taker", "maker", new(big.Int).SetUint64(123), big.NewInt(0)},
 			},
 			&types.BlockStats{
 				Fills: []*types.BlockStats_Fill{
@@ -58,8 +59,8 @@ func TestRecordFill(t *testing.T) {
 		},
 		"multiple fills": {
 			[]recordFillArgs{
-				{"alice", "bob", new(big.Int).SetUint64(123)},
-				{"bob", "alice", new(big.Int).SetUint64(321)},
+				{"alice", "bob", new(big.Int).SetUint64(123), big.NewInt(0)},
+				{"bob", "alice", new(big.Int).SetUint64(321), big.NewInt(0)},
 			},
 			&types.BlockStats{
 				Fills: []*types.BlockStats_Fill{
@@ -85,7 +86,7 @@ func TestRecordFill(t *testing.T) {
 			k := tApp.App.StatsKeeper
 
 			for _, fill := range tc.args {
-				k.RecordFill(ctx, fill.taker, fill.maker, fill.notional)
+				k.RecordFill(ctx, fill.taker, fill.maker, fill.notional, fill.affiliateFee)
 			}
 			require.Equal(t, tc.expectedBlockStats, k.GetBlockStats(ctx))
 		})
