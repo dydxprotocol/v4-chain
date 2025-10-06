@@ -96,8 +96,11 @@ function constructPolicy(chainId: string): (dydxAddress: string) => Promise<Call
           functionName: 'approve',
           args: [
             {
-              condition: ParamCondition.EQUAL,
-              value: goFastHandlerProxy,
+              condition: ParamCondition.ONE_OF,
+              value: [
+                ethCCTPRelayerProxy,
+                goFastHandlerProxy,
+              ],
             },
             null,
           ],
