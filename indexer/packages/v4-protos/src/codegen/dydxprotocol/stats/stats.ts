@@ -28,7 +28,7 @@ export interface BlockStats_Fill {
 
   notional: Long;
   /**
-   * Affiliate fee generated in quantums
+   * Affiliate fee generated in quantums of the taker fee for the affiliate
    * Used to calculate affiliate revenue attributed for taker. This is dynamic
    * per affiliate tier
    */
@@ -50,7 +50,7 @@ export interface BlockStats_FillSDKType {
 
   notional: Long;
   /**
-   * Affiliate fee generated in quantums
+   * Affiliate fee generated in quantums of the taker fee for the affiliate
    * Used to calculate affiliate revenue attributed for taker. This is dynamic
    * per affiliate tier
    */

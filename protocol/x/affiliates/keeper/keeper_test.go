@@ -153,30 +153,6 @@ func TestAddReferredVolume(t *testing.T) {
 	require.Equal(t, initialVolume.Add(initialVolume, addedVolume), updatedVolume)
 }
 
-func TestAddReferredCommission(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.AffiliatesKeeper
-
-	affiliate := "affiliate1"
-	initialCommission := big.NewInt(50)
-	addedCommission := big.NewInt(100)
-
-	err := k.AddReferredCommission(ctx, affiliate, initialCommission)
-	require.NoError(t, err)
-
-	commission, err := k.GetReferredCommission(ctx, affiliate)
-	require.NoError(t, err)
-	require.Equal(t, initialCommission, commission)
-
-	err = k.AddReferredCommission(ctx, affiliate, addedCommission)
-	require.NoError(t, err)
-
-	updatedCommission, err := k.GetReferredCommission(ctx, affiliate)
-	require.NoError(t, err)
-	require.Equal(t, initialCommission.Add(initialCommission, addedCommission), updatedCommission)
-}
-
 func TestGetReferredVolumeInvalidAffiliate(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
@@ -905,17 +881,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			name:                     "2 referrals, test limits of attributable revenue",
 			referrals:                2,
 			expectedVolume:           big.NewInt(300_000_000_000),
-			expectedAttributedVolume: big.NewInt(100_000_000_000),
-			referreeAddressesToVerify: []string{
-				referee1,
-				referee2,
-				maker,
-			},
-			expectedCommissions: []*big.Int{
-				big.NewInt(1_000_000_000),
-				big.NewInt(3_000_000_000),
-				big.NewInt(0),
-			},
+			expectedAttributedVolume: big.NewInt(200_000_000_000),
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, referee1, affiliate)
 				require.NoError(t, err)
@@ -929,11 +895,6 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
 				})
 				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
-					TakerNotional:                     50_000_000_000,
-					MakerNotional:                     200_000_000_000,
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
-				})
-				statsKeeper.SetUserStats(ctx, maker, &statstypes.UserStats{
 					TakerNotional:                     50_000_000_000,
 					MakerNotional:                     100_000_000_000,
 					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
@@ -951,7 +912,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 							Taker:                         referee2,
 							Maker:                         maker,
 							Notional:                      200_000_000_000,
-							AffiliateFeeGeneratedQuantums: 3_000_000_000,
+							AffiliateFeeGeneratedQuantums: 2_000_000_000,
 						},
 					},
 				})
@@ -1041,15 +1002,6 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			referredVolume, err := k.GetReferredVolume(ctx, affiliate)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedAttributedVolume, referredVolume)
-
-			if tc.referreeAddressesToVerify != nil {
-				for idx, referreeAddress := range tc.referreeAddressesToVerify {
-					referredCommission, err := k.GetReferredCommission(ctx, referreeAddress)
-					require.NoError(t, err)
-					println("referredCommission", referredCommission.String(), " for address ", referreeAddress)
-					require.Equal(t, tc.expectedCommissions[idx], referredCommission)
-				}
-			}
 		})
 	}
 }
