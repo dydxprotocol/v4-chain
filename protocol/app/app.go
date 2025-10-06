@@ -962,6 +962,9 @@ func New(
 	)
 	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
+	// Register the affiliates keeper to be notified when stats expire
+	app.StatsKeeper.AddStatsExpirationHook(&app.AffiliatesKeeper)
+
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
 		appCodec,

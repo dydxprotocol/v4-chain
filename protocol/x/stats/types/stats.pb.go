@@ -306,7 +306,7 @@ func (m *EpochStats_UserWithStats) GetStats() *UserStats {
 	return nil
 }
 
-// GlobalStats stores global stats
+// GlobalStats stores global stats for the rolling window (default 30d).
 type GlobalStats struct {
 	// Notional USDC traded in quantums
 	NotionalTraded uint64 `protobuf:"varint,1,opt,name=notional_traded,json=notionalTraded,proto3" json:"notional_traded,omitempty"`
@@ -352,7 +352,8 @@ func (m *GlobalStats) GetNotionalTraded() uint64 {
 	return 0
 }
 
-// UserStats stores stats for a User
+// UserStats stores stats for a User. This is the sum of all stats for a user in
+// the rolling window (default 30d).
 type UserStats struct {
 	// Taker USDC in quantums
 	TakerNotional uint64 `protobuf:"varint,1,opt,name=taker_notional,json=takerNotional,proto3" json:"taker_notional,omitempty"`

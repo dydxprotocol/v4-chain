@@ -109,13 +109,32 @@ func (k Keeper) GetReferredBy(ctx sdk.Context, referee string) (string, bool) {
 	return string(referredByPrefixStore.Get([]byte(referee))), true
 }
 
-// AddReferredVolume adds the referred volume from a block to the affiliate's referred volume.
+func (k Keeper) SetReferredVolume(
+	ctx sdk.Context,
+	referrer string,
+	referredVolume *big.Int,
+) error {
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
+		[]byte(types.ReferredVolumeInWindowKeyPrefix))
+	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
+
+	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
+	if err != nil {
+		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+			"referrer %s, error: %s", referrer, err)
+	}
+	affiliateReferredVolumePrefixStore.Set([]byte(referrer), updatedReferredVolumeBytes)
+	return nil
+}
+
+// AddReferredVolume adds the referred volume from a block to the affiliate's referred volume in the window.
 func (k Keeper) AddReferredVolume(
 	ctx sdk.Context,
 	affiliateAddr string,
 	referredVolumeFromBlock *big.Int,
 ) error {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
+		[]byte(types.ReferredVolumeInWindowKeyPrefix))
 	referredVolume := big.NewInt(0)
 
 	if affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
@@ -133,6 +152,10 @@ func (k Keeper) AddReferredVolume(
 		referredVolume,
 		referredVolumeFromBlock,
 	)
+
+	if referredVolume.Cmp(big.NewInt(0)) < 0 {
+		referredVolume = big.NewInt(0)
+	}
 	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
 
 	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
@@ -144,45 +167,10 @@ func (k Keeper) AddReferredVolume(
 	return nil
 }
 
-// AddReferredCommission adds the referred commission from a block to the commission a referred user generated.
-func (k Keeper) AddReferredCommission(
-	ctx sdk.Context,
-	referreeAddress string,
-	referredCommissionFromBlock *big.Int,
-) error {
-	affiliateReferredCommissionPrefixStore := prefix.NewStore(
-		ctx.KVStore(k.storeKey), []byte(types.ReferredCommissionKeyPrefix))
-	referredCommission := big.NewInt(0)
-
-	if affiliateReferredCommissionPrefixStore.Has([]byte(referreeAddress)) {
-		prevReferredCommissionFromState := dtypes.SerializableInt{}
-		if err := prevReferredCommissionFromState.Unmarshal(
-			affiliateReferredCommissionPrefixStore.Get([]byte(referreeAddress)),
-		); err != nil {
-			return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
-				"affiliate %s, error: %s", referreeAddress, err)
-		}
-		referredCommission = prevReferredCommissionFromState.BigInt()
-	}
-
-	referredCommission.Add(
-		referredCommission,
-		referredCommissionFromBlock,
-	)
-	updatedReferedCommission := dtypes.NewIntFromBigInt(referredCommission)
-
-	updatedReferredCommissionBytes, err := updatedReferedCommission.Marshal()
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredCommission,
-			"affiliate %s, error: %s", referreeAddress, err)
-	}
-	affiliateReferredCommissionPrefixStore.Set([]byte(referreeAddress), updatedReferredCommissionBytes)
-	return nil
-}
-
-// GetReferredVolume returns all time referred volume for an affiliate address.
+// GetReferredVolume returns all time referred volume for an affiliate address in the window.
 func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
+		[]byte(types.ReferredVolumeInWindowKeyPrefix))
 	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
 		return big.NewInt(0), nil
 	}
@@ -491,6 +479,35 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 	return affiliateOverridesMap, nil
 }
 
+func (k Keeper) addReferredVolumeIfQualified(ctx sdk.Context, referee string,
+	referrer string, volume uint64, affiliateParams *types.AffiliateParameters,
+	previouslyAttributedVolume *map[string]uint64) error {
+	// Get the user stats from the referee
+	refereeUserStats := k.statsKeeper.GetUserStats(ctx, referee)
+
+	// If parameter is 0 then no limit is applied
+	previousVolume := (refereeUserStats.TakerNotional + refereeUserStats.MakerNotional +
+		(*previouslyAttributedVolume)[referee])
+
+	if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
+		if previousVolume >= affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
+			volume = 0
+		} else if previousVolume+volume > affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
+			// Remainder of the volume to get them to the cap
+			volume = affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - previousVolume
+		}
+	}
+	(*previouslyAttributedVolume)[referee] += volume
+
+	// Add the volume to the referrer on their 30d rolling window
+	if volume > 0 {
+		if err := k.AddReferredVolume(ctx, referrer, lib.BigU(volume)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 	ctx sdk.Context,
 ) error {
@@ -500,6 +517,8 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		return err
 	}
 	referredByCache := make(map[string]string)
+
+	// Multiple fills within the same block can happen, so we want to keep track of those to properly attribute volume.
 	previouslyAttributedVolume := make(map[string]uint64)
 
 	for _, fill := range blockStats.Fills {
@@ -514,29 +533,8 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 		if referredByAddrTaker != "" {
 			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
-			takerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Taker)
-			attributableVolume := fill.Notional
-			previousVolume := (takerUserStats.TakerNotional + takerUserStats.MakerNotional +
-				previouslyAttributedVolume[fill.Taker])
-			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
-				cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
-				if previousVolume >= cap {
-					attributableVolume = 0
-				} else if previousVolume+attributableVolume > cap {
-					attributableVolume = cap - previousVolume
-				}
-			}
-			previouslyAttributedVolume[fill.Taker] += attributableVolume
-			if attributableVolume > 0 {
-				if err := k.AddReferredVolume(ctx, referredByAddrTaker, lib.BigU(attributableVolume)); err != nil {
-					return err
-				}
-			}
-
-			// Add referred commission to the referred user, this is precalculated in the rev share generated in the fill
-			// Use this to keep track if the user exceeded the total amount they can attributed
-			if err := k.AddReferredCommission(ctx, fill.Taker, lib.BigU(fill.AffiliateFeeGeneratedQuantums)); err != nil {
+			if err := k.addReferredVolumeIfQualified(ctx, fill.Taker, referredByAddrTaker,
+				fill.Notional, &affiliateParams, &previouslyAttributedVolume); err != nil {
 				return err
 			}
 		}
@@ -551,26 +549,56 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			}
 		}
 		if referredByAddrMaker != "" {
-			attributableVolume := fill.Notional
-			makerUserStats := k.statsKeeper.GetUserStats(ctx, fill.Maker)
-			previousVolume := (makerUserStats.TakerNotional + makerUserStats.MakerNotional +
-				previouslyAttributedVolume[fill.Maker])
-			// If parameter is 0 then no limit is applied
-			if affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional != 0 {
-				cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
-				if previousVolume >= cap {
-					attributableVolume = 0
-				} else if previousVolume+attributableVolume > cap {
-					attributableVolume = cap - previousVolume
-				}
-			}
-			previouslyAttributedVolume[fill.Maker] += attributableVolume
-			if attributableVolume > 0 {
-				if err := k.AddReferredVolume(ctx, referredByAddrMaker, lib.BigU(attributableVolume)); err != nil {
-					return err
-				}
+			if err := k.addReferredVolumeIfQualified(ctx, fill.Maker, referredByAddrMaker,
+				fill.Notional, &affiliateParams, &previouslyAttributedVolume); err != nil {
+				return err
 			}
 		}
 	}
 	return nil
+}
+
+// OnStatsExpired implements StatsExpirationHook interface
+// Called when a user's stats expire from the 30d rolling window, update the
+// users referred volume to reflect the expired volume.
+func (k Keeper) OnStatsExpired(
+	ctx sdk.Context,
+	userAddress string,
+	resultingUserStats *statstypes.UserStats,
+) error {
+	// Get affiliate parameters
+	affiliateParams, err := k.GetAffiliateParameters(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Check if this user has a referrer (is a referee)
+	referrer, found := k.GetReferredBy(ctx, userAddress)
+	if !found {
+		return nil // User is not referred, nothing to do
+	}
+
+	resultingVolume := resultingUserStats.TakerNotional + resultingUserStats.MakerNotional
+	var deltaAttributedVolume uint64
+	if resultingVolume < affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
+		deltaAttributedVolume = affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - resultingVolume
+	}
+
+	// Get current referred volume for the referrer
+	currentVolume, err := k.GetReferredVolume(ctx, referrer)
+	if err != nil {
+		return err
+	}
+
+	// Subtract the expired volume (use taker volume for consistency with how it's added)
+	expiredVolume := lib.BigU(deltaAttributedVolume)
+	newVolume := new(big.Int).Sub(currentVolume, expiredVolume)
+
+	// Ensure it doesn't go negative
+	if newVolume.Cmp(big.NewInt(0)) < 0 {
+		newVolume = big.NewInt(0)
+	}
+
+	// Update the referred volume
+	return k.SetReferredVolume(ctx, referrer, newVolume)
 }

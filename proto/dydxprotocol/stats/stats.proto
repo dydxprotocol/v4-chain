@@ -59,8 +59,8 @@ message GlobalStats {
   uint64 notional_traded = 1;
 }
 
-// UserStats stores stats for a User. This is the sum of all stats for a user in the
-// rolling window (default 30d).
+// UserStats stores stats for a User. This is the sum of all stats for a user in
+// the rolling window (default 30d).
 message UserStats {
   // Taker USDC in quantums
   uint64 taker_notional = 1;

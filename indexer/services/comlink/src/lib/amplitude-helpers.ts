@@ -80,7 +80,7 @@ export async function trackAmplitudeEvent(
 
 // Specific helper for TurnKey deposit events
 export async function trackTurnkeyDepositSubmitted(
-  dydxAddress: string,
+  userId: string,
   chainId: string,
   amount: string,
   transactionHash: string,
@@ -88,7 +88,7 @@ export async function trackTurnkeyDepositSubmitted(
 ): Promise<void> {
   await trackAmplitudeEvent(
     'TurnkeyDepositSubmitted',
-    dydxAddress, // Using fromAddress as userId
+    userId, // Using fromAddress as userId
     {
       chain_id: chainId,
       amount,

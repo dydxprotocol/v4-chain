@@ -13,7 +13,7 @@ const (
 const (
 	ReferredByKeyPrefix = "RB:"
 
-	ReferredVolumeKeyPrefix = "RV:"
+	ReferredVolumeInWindowKeyPrefix = "RVW:"
 
 	ReferredCommissionKeyPrefix = "RC:"
 

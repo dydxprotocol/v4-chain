@@ -19,4 +19,6 @@ var (
 	ErrSelfReferral                        = errorsmod.Register(ModuleName, 10, "Self referral not allowed")
 	ErrUpdatingAffiliateReferredCommission = errorsmod.Register(
 		ModuleName, 11, "Error updating affiliate referred commission")
+	ErrUpdatingAttributedVolume = errorsmod.Register(
+		ModuleName, 12, "Error updating attributed volume")
 )
