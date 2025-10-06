@@ -112,7 +112,17 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.
 	return idx, tiers[idx]
 }
 
-func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool) int32 {
+// GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
+// It checks if there's an active fee holiday for the specified CLOB pair.
+// If a fee holiday is active, it returns 0 (no fee).
+// Otherwise, it returns the tier-based fee according to the user's tier.
+func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool, clobPairId uint32) int32 {
+	// Check if a fee holiday is active for this CLOB pair
+	if k.IsFeeHolidayActive(ctx, clobPairId) {
+		return 0
+	}
+
+	// No active fee holiday, use regular tier-based fees
 	_, userTier := k.getUserFeeTier(ctx, address)
 	if isTaker {
 		return userTier.TakerFeePpm

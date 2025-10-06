@@ -19,7 +19,9 @@ func (k Keeper) GetFeeHolidayParams(
 		return params, types.ErrFeeHolidayNotFound
 	}
 
-	k.cdc.MustUnmarshal(b, &params)
+	if err := k.cdc.Unmarshal(b, &params); err != nil {
+		return params, err
+	}
 	return params, nil
 }
 

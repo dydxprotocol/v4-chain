@@ -138,9 +138,9 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Calculate taker and maker fee ppms.
 	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true)
+		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true, clobPairId.ToUint32())
 	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
+		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false, clobPairId.ToUint32())
 
 	takerInsuranceFundDelta := new(big.Int)
 	if takerMatchableOrder.IsLiquidation() {

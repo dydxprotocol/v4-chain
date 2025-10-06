@@ -130,8 +130,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			statsKeeper.SetUserStats(ctx, tc.user, tc.UserStats)
 			statsKeeper.SetGlobalStats(ctx, tc.GlobalStats)
 
-			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true))
-			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false))
+			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true, uint32(1)))
+			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false, uint32(1)))
 		})
 	}
 }
@@ -259,7 +259,7 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expectedTakerFeePpm,
-				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true))
+				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true, uint32(1)))
 		})
 	}
 }
