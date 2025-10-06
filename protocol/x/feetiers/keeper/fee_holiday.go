@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"encoding/binary"
+	"errors"
+
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -59,9 +62,10 @@ func (k Keeper) GetAllFeeHolidayParams(
 		var feeHoliday types.FeeHolidayParams
 		if err := k.cdc.Unmarshal(iterator.Value(), &feeHoliday); err != nil {
 			// Log error and skip corrupted entry
+			clobPairId := binary.BigEndian.Uint32(iterator.Key())
 			k.Logger(ctx).Error(
 				"failed to unmarshal fee holiday",
-				"clob pair id", string(iterator.Key()),
+				"clob_pair_id", clobPairId,
 				"value", string(iterator.Value()),
 				"error", err,
 			)
@@ -80,6 +84,13 @@ func (k Keeper) IsFeeHolidayActive(
 ) bool {
 	feeHoliday, err := k.GetFeeHolidayParams(ctx, clobPairId)
 	if err != nil {
+		if !errors.Is(err, types.ErrFeeHolidayNotFound) {
+			k.Logger(ctx).Error(
+				"failed to get fee holiday params",
+				"clob_pair_id", clobPairId,
+				"error", err,
+			)
+		}
 		return false
 	}
 
