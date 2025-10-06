@@ -1111,9 +1111,12 @@ func TestOnStatsExpiredHook(t *testing.T) {
 			expectedReferredVolume: big.NewInt(0),
 		},
 	} {
-		k.SetReferredVolume(ctx, referrer, tc.initialReferredVolume)
+		err := k.SetReferredVolume(ctx, referrer, tc.initialReferredVolume)
+		require.NoError(t, err)
 
-		k.OnStatsExpired(ctx, referee, tc.resultingUserStats)
+		err = k.OnStatsExpired(ctx, referee, tc.resultingUserStats)
+		require.NoError(t, err)
+
 		referredVolume, err := k.GetReferredVolume(ctx, referrer)
 		require.NoError(t, err)
 		require.Equal(t, tc.expectedReferredVolume, referredVolume)
