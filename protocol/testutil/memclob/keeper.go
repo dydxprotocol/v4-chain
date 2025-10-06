@@ -329,7 +329,7 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
 	affiliateOverrides map[string]bool,
-	affiliateParameters *affiliatetypes.AffiliateParameters,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,

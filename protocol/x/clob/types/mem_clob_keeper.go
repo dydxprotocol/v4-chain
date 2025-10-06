@@ -23,7 +23,7 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		matchWithOrders *MatchWithOrders,
 		affiliateOverrides map[string]bool,
-		affiliateParameters *types.AffiliateParameters,
+		affiliateParameters types.AffiliateParameters,
 	) (
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
