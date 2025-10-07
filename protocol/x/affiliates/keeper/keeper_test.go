@@ -153,6 +153,22 @@ func TestAddReferredVolume(t *testing.T) {
 	require.Equal(t, initialVolume.Add(initialVolume, addedVolume), updatedVolume)
 }
 
+func TestSetReferredVolume(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	affiliate := "affiliate1"
+	initialVolume := big.NewInt(1000)
+
+	err := k.SetReferredVolume(ctx, affiliate, initialVolume)
+	require.NoError(t, err)
+
+	volume, err := k.GetReferredVolume(ctx, affiliate)
+	require.NoError(t, err)
+	require.Equal(t, initialVolume, volume)
+}
+
 func TestGetReferredVolumeInvalidAffiliate(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
@@ -176,6 +192,13 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	err := k.UpdateAffiliateTiers(ctx, affiliateTiers)
 	require.NoError(t, err)
 	stakingKeeper := tApp.App.StakingKeeper
+
+	k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+		Authority: constants.GovAuthority,
+		AffiliateParameters: types.AffiliateParameters{
+			Maximum_30DAttributableVolumePerReferredUserNotional: 100_000_000_000_000,
+		},
+	})
 
 	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),

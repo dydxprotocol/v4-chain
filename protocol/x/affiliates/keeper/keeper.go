@@ -279,15 +279,14 @@ func (k Keeper) GetTierForAffiliate(
 	}
 
 	// Get the affiliate revenue generated in the last 30d
-	userStats := k.statsKeeper.GetUserStats(ctx, affiliateAddr)
-	if userStats == nil {
-		return 0, 0, nil
+	referredVolume, err := k.GetReferredVolume(ctx, affiliateAddr)
+	if err != nil {
+		return 0, 0, err
 	}
-	referredVolume := userStats.AffiliateRevenueGeneratedQuantums
 
 	for index, tier := range tiers {
 		// required referred volume is strictly increasing as tiers are traversed in order.
-		if referredVolume < tier.ReqReferredVolumeQuoteQuantums {
+		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) < 0 {
 			break
 		}
 		// safe to do as tier cannot be negative

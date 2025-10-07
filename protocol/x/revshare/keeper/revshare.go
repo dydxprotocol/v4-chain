@@ -293,13 +293,23 @@ func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
 	affiliateOverrides map[string]bool,
-	_ affiliatetypes.AffiliateParameters,
+	affiliateParams affiliatetypes.AffiliateParameters,
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
 	if fill.MonthlyRollingTakerVolumeQuantums >= types.MaxReferee30dVolumeForAffiliateShareQuantums ||
 		takerFee.Sign() == 0 {
 		return nil, big.NewInt(0), nil
+	}
+
+	userStats := k.statsKeeper.GetUserStats(ctx, takerAddr)
+	if userStats != nil {
+		// If the affiliate revenue generated is greater than the maximum 30d attributable volume
+		// per referred user notional, then no affiliate rev share is generated
+		if userStats.AffiliateRevenueGeneratedQuantums >=
+			affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
+			return []types.RevShare{}, big.NewInt(0), nil
+		}
 	}
 
 	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(
