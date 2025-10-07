@@ -604,6 +604,7 @@ func (k Keeper) OnStatsExpired(
 
 	// Get the min of cap and resultingVolume
 	capInt := big.NewInt(int64(affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional))
+
 	// New volume should be the minimum of the resulting user volume, current referred volume,
 	// and below the cap
 	newVolume := lib.BigMin(capInt, lib.BigMin(currentVolume, big.NewInt(int64(resultingVolume))))
