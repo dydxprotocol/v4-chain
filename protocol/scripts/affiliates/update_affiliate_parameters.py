@@ -12,8 +12,6 @@ import tempfile
 import yaml
 import json
 import time
-import toml
-from pathlib import Path
 from typing import Dict, Any
 
 # Mainnet configuration
@@ -33,7 +31,7 @@ PROPOSAL_STATUS_PASSED = 3
 def vote_for(node, chain, proposal_id, person):
     print("voting as " + person)
     cmd = [
-        "dydxprotocol",
+        "dydxprotocold",
         "tx",
         "gov",
         "vote",
@@ -49,24 +47,6 @@ def vote_for(node, chain, proposal_id, person):
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise Exception(f"Failed to vote: {result.stderr}")
-
-def load_client_config() -> Dict[str, Any]:
-    """
-    Loads configuration from ~/.dydxprotocol/config/client.toml if it exists.
-    
-    Returns:
-        Dictionary containing chain-id and node from client.toml, or empty dict if not found
-    """
-    config_path = Path.home() / ".dydxprotocol" / "config" / "client.toml"
-    if config_path.exists():
-        try:
-            with open(config_path, 'r') as f:
-                config = toml.load(f)
-                return config
-        except Exception as e:
-            print(f"Warning: Could not load client.toml: {e}")
-            return {}
-    return {}
 
 def load_yml(file_path) -> Dict[str, Any]:
     """
@@ -91,7 +71,7 @@ def load_yml(file_path) -> Dict[str, Any]:
 
 def get_proposal_id(node, chain):
     cmd = [
-        "dydxprotocol",
+        "dydxprotocold",
         "query",
         "gov",
         "proposals",
@@ -104,24 +84,13 @@ def get_proposal_id(node, chain):
         return result['proposals'][-1]['id']
 
 def main():
-    # Load configuration from client.toml if available
-    client_config = load_client_config()
-    default_chain_id = client_config.get('chain-id', staging_chain)
-    default_node = client_config.get('node', staging_node)
-    
-    parser = argparse.ArgumentParser(description='Update affiliate parameters')
-    parser.add_argument('--chain-id', default=default_chain_id, help=f'Chain ID, default from client.toml or {staging_chain}')
-    parser.add_argument('--node', default=default_node, help=f'Node URL, default from client.toml or {staging_node}')
+    parser = argparse.ArgumentParser(description='Parse market map and sync markets')
+    parser.add_argument('--chain-id', default=staging_chain, help='Chain ID, default is dydxprotocol-testnet')
+    parser.add_argument('--node', default=staging_node, help='Node URL, default is https://validator.v4staging.dydx.exchange:443')
     parser.add_argument('--max-30d-commission', type=int, required=True, help='Maximum 30d commission per referred')
     parser.add_argument('--referee-min-fee-tier', type=int, required=True, help='Referee minimum fee tier idx')
-    parser.add_argument('--max-30d-volume', type=int, required=True, help='Maximum 30d attributable volume per referred')
+    parser.add_argument('--max-30d-revenue', type=int, required=True, help='Maximum 30d attributable revenue per affiliate')
     args = parser.parse_args()
-    
-    # Print configuration source
-    if client_config:
-        print(f"Loaded configuration from ~/.dydxprotocol/config/client.toml")
-    print(f"Using chain-id: {args.chain_id}")
-    print(f"Using node: {args.node}")
 
     counter = 0
     # 3 retries for the process.
@@ -134,23 +103,23 @@ def main():
                             "@type": "/dydxprotocol.affiliates.MsgUpdateAffiliateParameters",
                             "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
                             "affiliate_parameters": {
-                                "maximum_30d_attributable_volume_per_referred_user_notional": int(args.max_30d_volume),
+                                "maximum_30d_commission_per_referred_quote_quantums": int(args.max_30d_commission),
                                 "referee_minimum_fee_tier_idx": int(args.referee_min_fee_tier),
-                                "maximum_30d_attributable_revenue_per_referred_user_quote_quantums": int(args.max_30d_commission),
+                                "maximum_30d_attributable_revenue_per_affiliate_quote_quantums": int(args.max_30d_revenue),
                             }
 			            }
                     ],
                     "deposit": "10000000000000000000000adv4tnt",
                     "metadata": "",
                     "title": "Update affiliate parameters",
-                    "summary": f"Update affiliate parameters: max_30d_commission={args.max_30d_commission}, referee_min_fee_tier={args.referee_min_fee_tier}, max_30d_volume={args.max_30d_volume}"
+                    "summary": f"Update affiliate parameters: max_30d_commission={args.max_30d_commission}, referee_min_fee_tier={args.referee_min_fee_tier}, max_30d_revenue={args.max_30d_revenue}"
                 }
                 json.dump(affiliate_parameters_msg, tmp_file, indent=2)
                 print(affiliate_parameters_msg)
                 tmp_file_path = tmp_file.name
             print("submitting proposal for affiliate parameters update")
             cmd = [
-                "dydxprotocol",
+                "dydxprotocold",
                 "tx",
                 "gov",
                 "submit-proposal",
@@ -164,7 +133,6 @@ def main():
                 "--yes"
             ]
             
-            # Print the full command
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 raise Exception(f"Failed to submit proposal: {result.stderr}")
@@ -183,7 +151,7 @@ def main():
             time.sleep(120)
             # check if the proposal passed
             cmd = [
-                "/Users/justinbarnett/projects/v4-chain/protocol/build/dydxprotocold",
+                "dydxprotocold",
                 "query",
                 "gov",
                 "proposal",
