@@ -31,8 +31,6 @@ func CmdRegisterAffiliate() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
-			println(args[0])
-			println(args[1])
 			if err != nil {
 				return err
 			}

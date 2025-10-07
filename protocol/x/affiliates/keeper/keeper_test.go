@@ -1092,11 +1092,11 @@ func TestOnStatsExpiredHook(t *testing.T) {
 			name:                  "referee hit maximum attributable volume",
 			initialReferredVolume: big.NewInt(100),
 			resultingUserStats: &statstypes.UserStats{
-				TakerNotional:                     50,
-				MakerNotional:                     20,
-				AffiliateRevenueGeneratedQuantums: 100,
+				TakerNotional:                     50_000_000_000,
+				MakerNotional:                     20_000_000_000,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
 			},
-			expectedReferredVolume: big.NewInt(70),
+			expectedReferredVolume: big.NewInt(70_000_000_000),
 		},
 		{
 			name:                  "referee started at 0 attributable volume",
@@ -1104,7 +1104,7 @@ func TestOnStatsExpiredHook(t *testing.T) {
 			resultingUserStats: &statstypes.UserStats{
 				TakerNotional:                     0,
 				MakerNotional:                     0,
-				AffiliateRevenueGeneratedQuantums: 100,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
 			},
 			expectedReferredVolume: big.NewInt(0),
 		},
@@ -1114,7 +1114,7 @@ func TestOnStatsExpiredHook(t *testing.T) {
 			resultingUserStats: &statstypes.UserStats{
 				TakerNotional:                     0,
 				MakerNotional:                     0,
-				AffiliateRevenueGeneratedQuantums: 100,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
 			},
 			expectedReferredVolume: big.NewInt(0),
 		},

@@ -115,6 +115,11 @@ func (k Keeper) SetReferredVolume(
 	referrer string,
 	referredVolume *big.Int,
 ) error {
+	if referredVolume == nil {
+		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+			"referrer %s, referredVolume is nil", referrer)
+	}
+
 	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
 		[]byte(types.ReferredVolumeInWindowKeyPrefix))
 	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
@@ -478,6 +483,10 @@ func (k Keeper) addReferredVolumeIfQualified(
 ) error {
 	// Get the user stats from the referee
 	refereeUserStats := k.statsKeeper.GetUserStats(ctx, referee)
+	if refereeUserStats == nil {
+		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+			"referee %s, refereeUserStats is nil", referee)
+	}
 
 	// If parameter is 0 then no limit is applied
 	previousVolume := (refereeUserStats.TakerNotional + refereeUserStats.MakerNotional +
@@ -587,8 +596,9 @@ func (k Keeper) OnStatsExpired(
 
 	resultingVolume := resultingUserStats.TakerNotional + resultingUserStats.MakerNotional
 	var deltaAttributedVolume uint64
-	if resultingVolume < affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
-		deltaAttributedVolume = affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - resultingVolume
+	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
+	if resultingVolume < cap {
+		deltaAttributedVolume = cap - resultingVolume
 	}
 
 	// Get current referred volume for the referrer
