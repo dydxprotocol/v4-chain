@@ -52,60 +52,68 @@ export class PolicyEngine {
     const chains = [
       arbitrum.id.toString(), mainnet.id.toString(), optimism.id.toString(), base.id.toString(),
     ];
-    for (const chain of chains) {
-      try {
-        const exists = await PermissionApprovalTable.findBySuborgIdAndChainId(suborgId, chain);
-        if (exists) {
+
+    // Process all chains in parallel
+    await Promise.all([
+      // Process EVM chains in parallel
+      ...chains.map(async (chain) => {
+        try {
+          const exists = await PermissionApprovalTable.findBySuborgIdAndChainId(suborgId, chain);
+          if (exists) {
+            logger.info({
+              at: 'policy-controller#configurePolicy',
+              message: `Policy already exists for chain ${chain} and suborg ${suborgId}, skipping`,
+            });
+            return;
+          }
+          const approval = await getApprovalFor7702Evm(turnkeyAccount, chain, dydxAddress);
           logger.info({
             at: 'policy-controller#configurePolicy',
-            message: `Policy already exists for chain ${chain} and suborg ${suborgId}, skipping`,
+            message: `Approval obtained for chain ${chain} and suborg ${suborgId}`,
           });
-          continue;
+          await PermissionApprovalTable.create({
+            suborg_id: suborgId,
+            chain_id: chain,
+            approval,
+          });
+        } catch (error) {
+          logger.error({ at: 'policy-controller#configurePolicy', message: `Error configuring policy for chain ${chain}`, error });
+          throw error;
         }
-        const approval = await getApprovalFor7702Evm(turnkeyAccount, chain, dydxAddress);
-        logger.info({
-          at: 'policy-controller#configurePolicy',
-          message: `Approval obtained for chain ${chain} and suborg ${suborgId}`,
-        });
-        await PermissionApprovalTable.create({
-          suborg_id: suborgId,
-          chain_id: chain,
-          approval,
-        });
-      } catch (error) {
-        logger.error({ at: 'policy-controller#configurePolicy', message: `Error configuring policy for chain ${chain}`, error });
-        throw error;
-      }
-    }
-
-    try {
-      const exists = await PermissionApprovalTable.findBySuborgIdAndChainId(
-        suborgId,
-        avalanche.id.toString(),
-      );
-      if (!exists) {
-        const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount, dydxAddress);
-        await PermissionApprovalTable.create({
-          suborg_id: suborgId,
-          chain_id: avalanche.id.toString(),
-          approval: avalancheApproval,
-        });
-      } else {
-        logger.info({
-          at: 'policy-controller#configurePolicy',
-          message: `Policy already exists for chain ${avalanche.id.toString()} and suborg ${suborgId}, skipping`,
-        });
-      }
-    } catch (error) {
-      logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring avalanche policy', error });
-    }
-
-    // configuring solana policy
-    try {
-      await this.configureSolanaPolicy(dydxAddress, suborgId);
-    } catch (error) {
-      logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring solana policy', error });
-    }
+      }),
+      // Process Avalanche chain
+      (async () => {
+        try {
+          const exists = await PermissionApprovalTable.findBySuborgIdAndChainId(
+            suborgId,
+            avalanche.id.toString(),
+          );
+          if (!exists) {
+            const avalancheApproval = await getApprovalForAvalanche(turnkeyAccount, dydxAddress);
+            await PermissionApprovalTable.create({
+              suborg_id: suborgId,
+              chain_id: avalanche.id.toString(),
+              approval: avalancheApproval,
+            });
+          } else {
+            logger.info({
+              at: 'policy-controller#configurePolicy',
+              message: `Policy already exists for chain ${avalanche.id.toString()} and suborg ${suborgId}, skipping`,
+            });
+          }
+        } catch (error) {
+          logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring avalanche policy', error });
+        }
+      })(),
+      // Process Solana chain
+      (async () => {
+        try {
+          await this.configureSolanaPolicy(dydxAddress, suborgId);
+        } catch (error) {
+          logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring solana policy', error });
+        }
+      })(),
+    ]);
   }
 
   async getAPIUserId(suborgId: string): Promise<string> {
