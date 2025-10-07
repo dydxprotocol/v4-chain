@@ -154,7 +154,7 @@ export async function registerAddressWithAlchemyWebhook(
       addresses_to_add: addressesToAdd,
       addresses_to_remove: [],
     }),
-    signal: AbortSignal.timeout(5000), // 10 second timeout
+    signal: AbortSignal.timeout(config.ALCHEMY_WEBHOOK_UPDATE_TIMEOUT_MS),
   });
 
   if (!response.ok) {
