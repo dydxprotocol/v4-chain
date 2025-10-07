@@ -13,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
-err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+	err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 		AffiliateParameters: genState.AffiliateParameters,
 	})
 	if err != nil {
