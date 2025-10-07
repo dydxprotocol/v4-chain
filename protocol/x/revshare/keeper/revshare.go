@@ -306,8 +306,10 @@ func (k Keeper) getAffiliateRevShares(
 	if userStats != nil {
 		// If the affiliate revenue generated is greater than the maximum 30d attributable volume
 		// per referred user notional, then no affiliate rev share is generated
-		if userStats.AffiliateRevenueGeneratedQuantums >=
-			affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
+		// Disable this check if it is 0
+		if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
+			userStats.AffiliateRevenueGeneratedQuantums >=
+				affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
 			return []types.RevShare{}, big.NewInt(0), nil
 		}
 	}
