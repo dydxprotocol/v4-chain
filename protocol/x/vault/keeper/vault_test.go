@@ -330,11 +330,14 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
 	aliceAddress := constants.AliceAccAddress.String()
 
-	tApp.App.AffiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
-		AffiliateParameters: affiliatetypes.AffiliateParameters{
-			RefereeMinimumFeeTierIdx: 2,
+	tApp.App.AffiliatesKeeper.UpdateAffiliateParameters(
+		ctx,
+		&affiliatetypes.MsgUpdateAffiliateParameters{
+			AffiliateParameters: affiliatetypes.AffiliateParameters{
+				RefereeMinimumFeeTierIdx: 2,
+			},
 		},
-	})
+	)
 
 	// Vault in genesis state should be in best fee tier.
 	takerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, true, 2)
