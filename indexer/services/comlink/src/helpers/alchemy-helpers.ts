@@ -68,29 +68,31 @@ export async function addAddressesToAlchemyWebhook(evm?: string, svm?: string): 
     if (!record) {
       throw new Error(`EVM address does not exist in the database: ${evm}`);
     }
-    // Iterate over all EVM networks and register the address with each webhook
-    for (const [chainId, webhookId] of Object.entries(evmChainIdToAlchemyWebhookId)) {
-      try {
-        await registerAddressWithAlchemyWebhookWithRetry(evm, webhookId);
-        logger.info({
-          at: 'TurnkeyController#addAddressesToAlchemyWebhook',
-          message: `Successfully registered EVM address with webhook for chain ${chainId}`,
-          address: evm,
-          chainId,
-          webhookId,
-        });
-      } catch (error) {
-        logger.error({
-          at: 'TurnkeyController#addAddressesToAlchemyWebhook',
-          message: `Failed to register EVM address with webhook for chain ${chainId} after retries`,
-          error,
-          address: evm,
-          chainId,
-          webhookId,
-        });
-        errors.push(`Failed to register EVM address with webhook for chain ${chainId} after retries`);
-      }
-    }
+    // Register the address with all EVM webhooks in parallel
+    await Promise.allSettled(
+      Object.entries(evmChainIdToAlchemyWebhookId).map(async ([chainId, webhookId]) => {
+        try {
+          await registerAddressWithAlchemyWebhookWithRetry(evm, webhookId);
+          logger.info({
+            at: 'TurnkeyController#addAddressesToAlchemyWebhook',
+            message: `Successfully registered EVM address with webhook for chain ${chainId}`,
+            address: evm,
+            chainId,
+            webhookId,
+          });
+        } catch (error) {
+          logger.error({
+            at: 'TurnkeyController#addAddressesToAlchemyWebhook',
+            message: `Failed to register EVM address with webhook for chain ${chainId} after retries`,
+            error,
+            address: evm,
+            chainId,
+            webhookId,
+          });
+          errors.push(`Failed to register EVM address with webhook for chain ${chainId} after retries`);
+        }
+      }),
+    );
   }
 
   // Add SVM address to webhook for monitoring
