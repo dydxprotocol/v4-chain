@@ -5,6 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/feetiers/params.proto";
+import "dydxprotocol/feetiers/fee_discount_campaign.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
 
@@ -20,6 +21,21 @@ service Query {
   // Queries a user's fee tier
   rpc UserFeeTier(QueryUserFeeTierRequest) returns (QueryUserFeeTierResponse) {
     option (google.api.http).get = "/dydxprotocol/v4/feetiers/user_fee_tier";
+  }
+
+  // FeeDiscountCampaignParams queries fee discount campaign parameters for a
+  // specific CLOB pair.
+  rpc FeeDiscountCampaignParams(QueryFeeDiscountCampaignParamsRequest)
+      returns (QueryFeeDiscountCampaignParamsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/feetiers/fee_discount_campaign_params/{clob_pair_id}";
+  }
+
+  // AllFeeDiscountCampaignParams queries all fee discount campaign parameters.
+  rpc AllFeeDiscountCampaignParams(QueryAllFeeDiscountCampaignParamsRequest)
+      returns (QueryAllFeeDiscountCampaignParamsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/feetiers/fee_discount_campaign_params";
   }
 }
 
@@ -43,4 +59,25 @@ message QueryUserFeeTierResponse {
   // Index of the fee tier in the list queried from PerpetualFeeParams.
   uint32 index = 1;
   PerpetualFeeTier tier = 2;
+}
+
+// QueryFeeDiscountCampaignParamsRequest is the request type for the
+// Query/FeeDiscountCampaignParams RPC method.
+message QueryFeeDiscountCampaignParamsRequest { uint32 clob_pair_id = 1; }
+
+// QueryFeeDiscountCampaignParamsResponse is the response type for the
+// Query/FeeDiscountCampaignParams RPC method.
+message QueryFeeDiscountCampaignParamsResponse {
+  FeeDiscountCampaignParams params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllFeeDiscountCampaignParamsRequest is the request type for the
+// Query/AllFeeDiscountCampaignParams RPC method.
+message QueryAllFeeDiscountCampaignParamsRequest {}
+
+// QueryAllFeeDiscountCampaignParamsResponse is the response type for the
+// Query/AllFeeDiscountCampaignParams RPC method.
+message QueryAllFeeDiscountCampaignParamsResponse {
+  repeated FeeDiscountCampaignParams params = 1
+      [ (gogoproto.nullable) = false ];
 }
