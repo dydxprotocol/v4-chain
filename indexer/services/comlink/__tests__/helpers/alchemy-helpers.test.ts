@@ -202,7 +202,8 @@ describe('alchemy-helpers', () => {
 
       // Should still be called for all webhooks despite some failures
       // Failed webhooks will retry 3 times each, so: 1 + 3 + 3 + 3 + 1 + 1 = 12 calls
-      expect(mockFetch).toHaveBeenCalledTimes(12); // 5 EVM chains + 1 Solana with retries
+      // Plus 1 additional call from getKernelAddressFromECDSA for Avalanche chain = 13 calls
+      expect(mockFetch).toHaveBeenCalledTimes(13);
     });
 
     it('should handle missing EVM address', async () => {
