@@ -128,15 +128,19 @@ export class TurnkeyController extends Controller {
       throw new TurnkeyError('Dydx address already uploaded');
     }
 
-    // alchemy webhook upload.
-    await addAddressesToAlchemyWebhook(user.evm_address, user.svm_address);
+    // Run independent operations in parallel
+    await Promise.all([
+      // alchemy webhook upload
+      addAddressesToAlchemyWebhook(user.evm_address, user.svm_address),
+      // configure the policies now
+      this.policyEngine.configurePolicy(user.suborg_id, user.evm_address, dydxAddress),
+    ]);
 
-    await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
-
-    // configure the policies now
-    await this.policyEngine.configurePolicy(user.suborg_id, user.evm_address, dydxAddress);
-    // this removes self from root quorum.
+    // Remove self from root quorum (depends on policy configuration)
     await this.policyEngine.removeSelfFromRootQuorum(user.suborg_id);
+
+    // Update database with dydx address (final step)
+    await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
 
     return { success: true };
   }
