@@ -1109,7 +1109,12 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	if err != nil {
 		panic(err)
 	}
-	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, subaccountId.Owner, false, affiliateParameters.RefereeMinimumFeeTierIdx)
+	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
+		ctx,
+		subaccountId.Owner,
+		false,
+		affiliateParameters.RefereeMinimumFeeTierIdx,
+	)
 	bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
 		order.Subticks,
 		order.RemainingQuantums,

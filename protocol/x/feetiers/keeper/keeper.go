@@ -60,7 +60,11 @@ func (k *Keeper) SetVaultKeeper(vk types.VaultKeeper) {
 	k.vaultKeeper = vk
 }
 
-func (k Keeper) getUserFeeTier(ctx sdk.Context, address string, feeTierOverride uint32) (uint32, *types.PerpetualFeeTier) {
+func (k Keeper) getUserFeeTier(
+	ctx sdk.Context,
+	address string,
+	feeTierOverride uint32,
+) (uint32, *types.PerpetualFeeTier) {
 	tiers := k.GetPerpetualFeeParams(ctx).Tiers
 
 	// A vault is always in the highest tier.
