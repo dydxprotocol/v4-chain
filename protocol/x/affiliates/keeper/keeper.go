@@ -595,11 +595,6 @@ func (k Keeper) OnStatsExpired(
 	}
 
 	resultingVolume := resultingUserStats.TakerNotional + resultingUserStats.MakerNotional
-	var deltaAttributedVolume uint64
-	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
-	if resultingVolume < cap {
-		deltaAttributedVolume = cap - resultingVolume
-	}
 
 	// Get current referred volume for the referrer
 	currentVolume, err := k.GetReferredVolume(ctx, referrer)
@@ -607,9 +602,11 @@ func (k Keeper) OnStatsExpired(
 		return err
 	}
 
-	// Subtract the expired volume (use taker volume for consistency with how it's added)
-	expiredVolume := lib.BigU(deltaAttributedVolume)
-	newVolume := new(big.Int).Sub(currentVolume, expiredVolume)
+	// Get the min of cap and resultingVolume
+	capInt := big.NewInt(int64(affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional))
+	// New volume should be the minimum of the resulting user volume, current referred volume,
+	// and below the cap
+	newVolume := lib.BigMin(capInt, lib.BigMin(currentVolume, big.NewInt(int64(resultingVolume))))
 
 	// Ensure it doesn't go negative
 	if newVolume.Cmp(big.NewInt(0)) < 0 {

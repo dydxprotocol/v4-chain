@@ -1090,7 +1090,7 @@ func TestOnStatsExpiredHook(t *testing.T) {
 	}{
 		{
 			name:                  "referee hit maximum attributable volume",
-			initialReferredVolume: big.NewInt(100),
+			initialReferredVolume: big.NewInt(100_000_000_000),
 			resultingUserStats: &statstypes.UserStats{
 				TakerNotional:                     50_000_000_000,
 				MakerNotional:                     20_000_000_000,
@@ -1110,13 +1110,23 @@ func TestOnStatsExpiredHook(t *testing.T) {
 		},
 		{
 			name:                  "normal case expired to 0",
-			initialReferredVolume: big.NewInt(75),
+			initialReferredVolume: big.NewInt(75_000_000_000),
 			resultingUserStats: &statstypes.UserStats{
 				TakerNotional:                     0,
 				MakerNotional:                     0,
 				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
 			},
 			expectedReferredVolume: big.NewInt(0),
+		},
+		{
+			name:                  "Current referred volume is below the resulting user stats, maintain it.",
+			initialReferredVolume: big.NewInt(50_000_000),
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     50_000_000_000,
+				MakerNotional:                     20_000_000_000,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			expectedReferredVolume: big.NewInt(50_000_000),
 		},
 	} {
 		err := k.SetReferredVolume(ctx, referrer, tc.initialReferredVolume)
