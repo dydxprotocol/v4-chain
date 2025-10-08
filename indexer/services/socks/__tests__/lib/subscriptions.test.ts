@@ -3,6 +3,7 @@ import { Channel, OutgoingMessageType } from '../../src/types';
 import { Subscriptions } from '../../src/lib/subscription';
 import { sendMessage, sendMessageString } from '../../src/helpers/wss';
 import { RateLimiter } from '../../src/lib/rate-limit';
+import { GeoOriginStatus } from '@dydxprotocol-indexer/compliance';
 import {
   dbHelpers,
   testMocks,
@@ -90,7 +91,11 @@ describe('Subscriptions', () => {
     [Channel.V4_BLOCK_HEIGHT]: ['v4/height'],
   };
   const initialMessage: Object = ['a', 'b'];
-  const country: string = 'AR';
+  const geoOriginHeaders = {
+    'geo-origin-country': 'AR', // Argentina
+    'geo-origin-region': 'AR-V', // Tierra del Fuego
+    'geo-origin-status': GeoOriginStatus.OK,
+  };
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -146,7 +151,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        country,
+        geoOriginHeaders,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -166,9 +171,7 @@ describe('Subscriptions', () => {
         for (const urlPattern of urlPatterns) {
           expect(axiosRequestMock).toHaveBeenCalledWith(expect.objectContaining({
             url: expect.stringMatching(RegExp(urlPattern)),
-            headers: {
-              'cf-ipcountry': country,
-            },
+            headers: geoOriginHeaders,
           }));
         }
       } else {
@@ -295,7 +298,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        country,
+        geoOriginHeaders,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -324,7 +327,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        country,
+        geoOriginHeaders,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -362,7 +365,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        country,
+        geoOriginHeaders,
       );
       subscriptions.unsubscribe(
         connectionId,
@@ -382,7 +385,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        country,
+        geoOriginHeaders,
       );
       subscriptions.unsubscribe(
         connectionId,
