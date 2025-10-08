@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	// Maximum duration for a fee holiday (90 days in seconds)
+	// Maximum duration for a fee discount campaign (90 days in seconds)
 	MaxFeeDiscountCampaignDuration = 90 * 24 * 60 * 60
 
 	// Maximum ppm value for fee discount
@@ -19,7 +19,7 @@ func (m *FeeDiscountCampaignParams) Validate(currentTime time.Time) error {
 		return ErrInvalidTimeRange
 	}
 
-	// Validate reasonable time range (max 30 days)
+	// Validate reasonable time range (max 90 days)
 	duration := m.EndTimeUnix - m.StartTimeUnix
 	if duration > MaxFeeDiscountCampaignDuration {
 		return ErrInvalidTimeRange
