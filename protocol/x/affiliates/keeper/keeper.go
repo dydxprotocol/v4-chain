@@ -110,6 +110,7 @@ func (k Keeper) GetReferredBy(ctx sdk.Context, referee string) (string, bool) {
 	return string(referredByPrefixStore.Get([]byte(referee))), true
 }
 
+// SetReferredVolume sets the referred volume for an affiliate.
 func (k Keeper) SetReferredVolume(
 	ctx sdk.Context,
 	referrer string,
