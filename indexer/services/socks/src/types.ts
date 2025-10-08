@@ -1,5 +1,6 @@
 import { IncomingMessage as IncomingMessageHttp } from 'http';
 
+import { GeoOriginHeaders } from '@dydxprotocol-indexer/compliance';
 import express from 'express';
 import WebSocket from 'ws';
 
@@ -125,7 +126,7 @@ export interface Connection {
   messageId: number,
   heartbeat?: NodeJS.Timeout,
   disconnect?: NodeJS.Timeout,
-  countryCode?: string,
+  geoOriginHeaders?: GeoOriginHeaders,
   id: string,
 }
 
