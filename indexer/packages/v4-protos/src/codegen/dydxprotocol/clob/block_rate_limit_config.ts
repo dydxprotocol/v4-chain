@@ -30,6 +30,16 @@ export interface BlockRateLimitConfiguration {
 
   maxShortTermOrderCancellationsPerNBlocks: MaxPerNBlocksRateLimit[];
   maxShortTermOrdersAndCancelsPerNBlocks: MaxPerNBlocksRateLimit[];
+  /**
+   * How many leverage update attempts (successful and failed) are allowed for
+   * an account per N blocks. Note that the rate limits are applied in an AND
+   * fashion such that a leverage update must pass all rate limit
+   * configurations.
+   * 
+   * Specifying 0 values disables this rate limit.
+   */
+
+  maxLeverageUpdatesPerNBlocks: MaxPerNBlocksRateLimit[];
 }
 /** Defines the block rate limits for CLOB specific operations. */
 
@@ -61,6 +71,16 @@ export interface BlockRateLimitConfigurationSDKType {
 
   max_short_term_order_cancellations_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
   max_short_term_orders_and_cancels_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
+  /**
+   * How many leverage update attempts (successful and failed) are allowed for
+   * an account per N blocks. Note that the rate limits are applied in an AND
+   * fashion such that a leverage update must pass all rate limit
+   * configurations.
+   * 
+   * Specifying 0 values disables this rate limit.
+   */
+
+  max_leverage_updates_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
 }
 /** Defines a rate limit over a specific number of blocks. */
 
@@ -98,7 +118,8 @@ function createBaseBlockRateLimitConfiguration(): BlockRateLimitConfiguration {
     maxShortTermOrdersPerNBlocks: [],
     maxStatefulOrdersPerNBlocks: [],
     maxShortTermOrderCancellationsPerNBlocks: [],
-    maxShortTermOrdersAndCancelsPerNBlocks: []
+    maxShortTermOrdersAndCancelsPerNBlocks: [],
+    maxLeverageUpdatesPerNBlocks: []
   };
 }
 
@@ -118,6 +139,10 @@ export const BlockRateLimitConfiguration = {
 
     for (const v of message.maxShortTermOrdersAndCancelsPerNBlocks) {
       MaxPerNBlocksRateLimit.encode(v!, writer.uint32(34).fork()).ldelim();
+    }
+
+    for (const v of message.maxLeverageUpdatesPerNBlocks) {
+      MaxPerNBlocksRateLimit.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -148,6 +173,10 @@ export const BlockRateLimitConfiguration = {
           message.maxShortTermOrdersAndCancelsPerNBlocks.push(MaxPerNBlocksRateLimit.decode(reader, reader.uint32()));
           break;
 
+        case 5:
+          message.maxLeverageUpdatesPerNBlocks.push(MaxPerNBlocksRateLimit.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -163,6 +192,7 @@ export const BlockRateLimitConfiguration = {
     message.maxStatefulOrdersPerNBlocks = object.maxStatefulOrdersPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
     message.maxShortTermOrderCancellationsPerNBlocks = object.maxShortTermOrderCancellationsPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
     message.maxShortTermOrdersAndCancelsPerNBlocks = object.maxShortTermOrdersAndCancelsPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
+    message.maxLeverageUpdatesPerNBlocks = object.maxLeverageUpdatesPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
     return message;
   }
 

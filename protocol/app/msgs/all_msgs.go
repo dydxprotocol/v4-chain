@@ -208,6 +208,8 @@ var (
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": {},
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   {},
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           {},
+		"/dydxprotocol.clob.MsgUpdateLeverage":                             {},
+		"/dydxprotocol.clob.MsgUpdateLeverageResponse":                     {},
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         {},

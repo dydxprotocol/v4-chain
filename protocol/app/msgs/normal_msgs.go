@@ -226,12 +226,14 @@ var (
 		"/dydxprotocol.accountplus.TxExtension":                    nil,
 
 		// clob
-		"/dydxprotocol.clob.MsgBatchCancel":         &clob.MsgBatchCancel{},
-		"/dydxprotocol.clob.MsgBatchCancelResponse": nil,
-		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
-		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
-		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
-		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
+		"/dydxprotocol.clob.MsgBatchCancel":            &clob.MsgBatchCancel{},
+		"/dydxprotocol.clob.MsgBatchCancelResponse":    nil,
+		"/dydxprotocol.clob.MsgCancelOrder":            &clob.MsgCancelOrder{},
+		"/dydxprotocol.clob.MsgCancelOrderResponse":    nil,
+		"/dydxprotocol.clob.MsgPlaceOrder":             &clob.MsgPlaceOrder{},
+		"/dydxprotocol.clob.MsgPlaceOrderResponse":     nil,
+		"/dydxprotocol.clob.MsgUpdateLeverage":         &clob.MsgUpdateLeverage{},
+		"/dydxprotocol.clob.MsgUpdateLeverageResponse": nil,
 
 		// listing
 		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         &listing.MsgCreateMarketPermissionless{},

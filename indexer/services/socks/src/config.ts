@@ -53,6 +53,9 @@ export const configSchema = {
   KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
     default: 3_000,
   }),
+
+  // Metrics
+  LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS: parseInteger({ default: 60 * 1000 }), // 1 minute
 };
 
 ////////////////////////////////////////////////////////////////////////////////
