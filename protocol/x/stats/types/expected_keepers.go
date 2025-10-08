@@ -20,5 +20,5 @@ type StakingKeeper interface {
 
 // StatsExpirationHook is called when stats are expired from the rolling window
 type StatsExpirationHook interface {
-	OnStatsExpired(ctx sdk.Context, userAddress string, resultingUserStats *UserStats) error
+	OnStatsExpired(ctx sdk.Context, userAddress string, previousUserStats *UserStats, resultingUserStats *UserStats) error
 }

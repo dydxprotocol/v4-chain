@@ -1108,12 +1108,18 @@ func TestOnStatsExpiredHook(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		initialReferredVolume  *big.Int
+		previousUserStats      *statstypes.UserStats
 		resultingUserStats     *statstypes.UserStats
 		expectedReferredVolume *big.Int
 	}{
 		{
-			name:                  "referee hit maximum attributable volume",
+			name:                  "referee hit was above the maximum attributable volume and went under it in next window",
 			initialReferredVolume: big.NewInt(100_000_000_000),
+			previousUserStats: &statstypes.UserStats{
+				TakerNotional:                     100_000_000_000,
+				MakerNotional:                     20_000_000_000,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
 			resultingUserStats: &statstypes.UserStats{
 				TakerNotional:                     50_000_000_000,
 				MakerNotional:                     20_000_000_000,
@@ -1122,40 +1128,70 @@ func TestOnStatsExpiredHook(t *testing.T) {
 			expectedReferredVolume: big.NewInt(70_000_000_000),
 		},
 		{
-			name:                  "referee started at 0 attributable volume",
-			initialReferredVolume: big.NewInt(0),
-			resultingUserStats: &statstypes.UserStats{
-				TakerNotional:                     0,
-				MakerNotional:                     0,
+			name:                  "referee volume came from multiple people",
+			initialReferredVolume: big.NewInt(200_000_000_000),
+			previousUserStats: &statstypes.UserStats{
+				TakerNotional:                     90_000_000_000,
+				MakerNotional:                     20_000_000_000,
 				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
 			},
-			expectedReferredVolume: big.NewInt(0),
-		},
-		{
-			name:                  "normal case expired to 0",
-			initialReferredVolume: big.NewInt(75_000_000_000),
-			resultingUserStats: &statstypes.UserStats{
-				TakerNotional:                     0,
-				MakerNotional:                     0,
-				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
-			},
-			expectedReferredVolume: big.NewInt(0),
-		},
-		{
-			name:                  "Current referred volume is below the resulting user stats, maintain it.",
-			initialReferredVolume: big.NewInt(50_000_000),
 			resultingUserStats: &statstypes.UserStats{
 				TakerNotional:                     50_000_000_000,
 				MakerNotional:                     20_000_000_000,
 				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
 			},
-			expectedReferredVolume: big.NewInt(50_000_000),
+			expectedReferredVolume: big.NewInt(170_000_000_000),
+		},
+		{
+			name:                  "referee started at 0 attributable volume, should not under 0",
+			initialReferredVolume: big.NewInt(0),
+			previousUserStats: &statstypes.UserStats{
+				TakerNotional:                     20_000_000_000,
+				MakerNotional:                     0,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     0,
+				MakerNotional:                     0,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			expectedReferredVolume: big.NewInt(0),
+		},
+		{
+			name:                  "User lost all revenue for the window",
+			initialReferredVolume: big.NewInt(75_000_000_000),
+			previousUserStats: &statstypes.UserStats{
+				TakerNotional:                     55_000_000_000,
+				MakerNotional:                     20_000_000_000,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     0,
+				MakerNotional:                     0,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			expectedReferredVolume: big.NewInt(0),
+		},
+		{
+			name:                  "User lost not volume during the window change",
+			initialReferredVolume: big.NewInt(50_000_000_000),
+			previousUserStats: &statstypes.UserStats{
+				TakerNotional:                     50_000_000_000,
+				MakerNotional:                     20_000_000_000,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			resultingUserStats: &statstypes.UserStats{
+				TakerNotional:                     50_000_000_000,
+				MakerNotional:                     20_000_000_000,
+				AffiliateRevenueGeneratedQuantums: 100_000_000_000,
+			},
+			expectedReferredVolume: big.NewInt(50_000_000_000),
 		},
 	} {
 		err := k.SetReferredVolume(ctx, referrer, tc.initialReferredVolume)
 		require.NoError(t, err)
 
-		err = k.OnStatsExpired(ctx, referee, tc.resultingUserStats)
+		err = k.OnStatsExpired(ctx, referee, tc.previousUserStats, tc.resultingUserStats)
 		require.NoError(t, err)
 
 		referredVolume, err := k.GetReferredVolume(ctx, referrer)

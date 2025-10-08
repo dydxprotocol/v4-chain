@@ -281,6 +281,11 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	globalStats := k.GetGlobalStats(ctx)
 	for _, removedStats := range epochStats.Stats {
 		stats := k.GetUserStats(ctx, removedStats.User)
+		previousStats := types.UserStats{
+			TakerNotional:                     stats.TakerNotional,
+			MakerNotional:                     stats.MakerNotional,
+			AffiliateRevenueGeneratedQuantums: stats.AffiliateRevenueGeneratedQuantums,
+		}
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
 		stats.AffiliateRevenueGeneratedQuantums -= removedStats.Stats.AffiliateRevenueGeneratedQuantums
@@ -288,7 +293,7 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 
 		// Execute work in other keepers
 		for _, hook := range k.expirationHooks {
-			err := hook.OnStatsExpired(ctx, removedStats.User, stats)
+			err := hook.OnStatsExpired(ctx, removedStats.User, &previousStats, removedStats.Stats)
 			if err != nil {
 				k.Logger(ctx).Error("failed to expire stats", "user", removedStats.User, "error", err)
 			}

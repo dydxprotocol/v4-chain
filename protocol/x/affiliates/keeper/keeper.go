@@ -579,6 +579,7 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 func (k Keeper) OnStatsExpired(
 	ctx sdk.Context,
 	userAddress string,
+	previousUserStats *statstypes.UserStats,
 	resultingUserStats *statstypes.UserStats,
 ) error {
 	// Get affiliate parameters
@@ -593,26 +594,32 @@ func (k Keeper) OnStatsExpired(
 		return nil // User is not referred, nothing to do
 	}
 
-	resultingVolume := resultingUserStats.TakerNotional + resultingUserStats.MakerNotional
-
 	// Get current referred volume for the referrer
 	currentVolume, err := k.GetReferredVolume(ctx, referrer)
 	if err != nil {
 		return err
 	}
 
-	// Get the min of cap and resultingVolume
-	capInt := big.NewInt(int64(affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional))
+	previousVolume := previousUserStats.TakerNotional + previousUserStats.MakerNotional
+	resultingVolume := resultingUserStats.TakerNotional + resultingUserStats.MakerNotional
 
-	// New volume should be the minimum of the resulting user volume, current referred volume,
-	// and below the cap
-	newVolume := lib.BigMin(capInt, lib.BigMin(currentVolume, big.NewInt(int64(resultingVolume))))
+	// Volume didn't change
+	if previousVolume == resultingVolume {
+		return nil
+	}
+
+	var newVolume *big.Int = lib.BigU(uint64(resultingVolume))
+	if previousVolume >= affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional &&
+		resultingVolume < affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
+		deltaAttributedVolume := lib.BigU(affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - resultingVolume)
+		// Subtract the expired volume (use taker volume for consistency with how it's added)
+		newVolume = new(big.Int).Sub(currentVolume, deltaAttributedVolume)
+	}
 
 	// Ensure it doesn't go negative
 	if newVolume.Cmp(big.NewInt(0)) < 0 {
 		newVolume = big.NewInt(0)
 	}
 
-	// Update the referred volume
 	return k.SetReferredVolume(ctx, referrer, newVolume)
 }
