@@ -138,6 +138,7 @@ func (k Keeper) ProcessSingleMatch(
 		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
+	// Fee tier for affiliates
 	referreeIndexOverride := affiliateParameters.RefereeMinimumFeeTierIdx
 
 	// Calculate taker and maker fee ppms.

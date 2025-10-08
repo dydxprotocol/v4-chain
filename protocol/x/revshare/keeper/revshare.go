@@ -307,15 +307,19 @@ func (k Keeper) getAffiliateRevShares(
 		// If the affiliate revenue generated is greater than the maximum 30d attributable volume
 		// per referred user notional, then no affiliate rev share is generated
 		// Disable this check if it is 0
-		if affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums != 0 &&
-			userStats.AffiliateRevenueGeneratedQuantums >=
-				affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums {
+		cap := affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums
+		if cap != 0 &&
+			userStats.AffiliateRevenueGeneratedQuantums >= cap {
+			// Exceeded revenue cap, no rev share is attributed
 			return []types.RevShare{}, big.NewInt(0), nil
 		}
 	}
 
 	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(
-		ctx, takerAddr, affiliateOverrides)
+		ctx,
+		takerAddr,
+		affiliateOverrides,
+	)
 	if err != nil {
 		return nil, big.NewInt(0), err
 	}

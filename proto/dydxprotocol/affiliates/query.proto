@@ -63,7 +63,7 @@ message AffiliateInfoResponse {
   // The affiliate's taker fee share in parts-per-million (for both VIP and
   // regular affiliate).
   uint32 fee_share_ppm = 3;
-  // The affiliate's all-time referred volume in quote quantums.
+  // The affiliate's 30d referred volume in quote quantums.
   bytes referred_volume = 4 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",

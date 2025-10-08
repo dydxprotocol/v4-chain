@@ -37,7 +37,7 @@ export interface AffiliateInfoResponse {
    */
 
   feeSharePpm: number;
-  /** The affiliate's all-time referred volume in quote quantums. */
+  /** The affiliate's 30d referred volume in quote quantums. */
 
   referredVolume: Uint8Array;
   /** The affiliate's currently staked native tokens (in whole coins). */
@@ -64,7 +64,7 @@ export interface AffiliateInfoResponseSDKType {
    */
 
   fee_share_ppm: number;
-  /** The affiliate's all-time referred volume in quote quantums. */
+  /** The affiliate's 30d referred volume in quote quantums. */
 
   referred_volume: Uint8Array;
   /** The affiliate's currently staked native tokens (in whole coins). */
