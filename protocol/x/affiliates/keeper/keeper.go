@@ -610,9 +610,10 @@ func (k Keeper) OnStatsExpired(
 	}
 
 	var newVolume *big.Int = lib.BigU(uint64(resultingVolume))
-	if previousVolume >= affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional &&
-		resultingVolume < affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional {
-		deltaAttributedVolume := lib.BigU(affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional - resultingVolume)
+	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
+	if previousVolume >= cap &&
+		resultingVolume < cap {
+		deltaAttributedVolume := lib.BigU(cap - resultingVolume)
 		// Subtract the expired volume (use taker volume for consistency with how it's added)
 		newVolume = new(big.Int).Sub(currentVolume, deltaAttributedVolume)
 	}
