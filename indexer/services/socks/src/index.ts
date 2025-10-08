@@ -17,21 +17,27 @@ import { Index } from './websocket';
 
 let index: Index;
 let messageForwarder: MessageForwarder;
+let subscriptions: Subscriptions;
 
-process.on('SIGTERM', async () => {
+const shutdown = async (signal: string) => {
   logger.info({
-    at: 'index#SIGTERM',
-    message: 'Received SIGTERM, shutting down',
+    at: `index#${signal}`,
+    message: `Received ${signal.toUpperCase()}, shutting down`,
   });
 
   if (index !== undefined) {
     await index.close();
   }
-  messageForwarder.stop();
+  if (messageForwarder !== undefined) {
+    messageForwarder.stop();
+  }
+  if (subscriptions !== undefined) {
+    subscriptions.stop();
+  }
   await disconnectFromKafka();
 
   process.exit(0);
-});
+};
 
 async function start(): Promise<void> {
   logger.info({
@@ -76,7 +82,7 @@ async function start(): Promise<void> {
 
   await connectToKafka();
 
-  const subscriptions: Subscriptions = new Subscriptions();
+  subscriptions = new Subscriptions();
   index = new Index(wss, subscriptions);
   messageForwarder = new MessageForwarder(subscriptions, index);
   subscriptions.start(messageForwarder.forwardToClient);
@@ -108,3 +114,6 @@ function startServer(): void {
 }
 
 wrapBackgroundTask(start(), true, 'main');
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
