@@ -193,14 +193,14 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 	stakingKeeper := tApp.App.StakingKeeper
 
-	k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+	require.NoError(t, k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 		Authority: constants.GovAuthority,
 		AffiliateParameters: types.AffiliateParameters{
 			Maximum_30DAttributableVolumePerReferredUserNotional: 100_000_000_000_000,
 		},
-	})
+	}))
 
-	err = stakingKeeper.SetDelegation(ctx,
+	require.NoError(t, stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
@@ -209,8 +209,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 				),
 			),
 		),
-	)
-	require.NoError(t, err)
+	))
 
 	// Register affiliate and referee
 	affiliate := constants.AliceAccAddress.String()

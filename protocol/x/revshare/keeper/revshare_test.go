@@ -397,7 +397,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statsKeeper.Keeper) {
-
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
 					Address:         constants.AliceAccAddress.String(),
 					RevenueSharePpm: 100_000, // 10%
@@ -1381,11 +1380,11 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				tc.setup(tApp, ctx, &keeper, &affiliatesKeeper, &statsKeeper)
 			}
 
-			affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
+			require.NoError(t, affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
 				AffiliateParameters: affiliatetypes.AffiliateParameters{
 					Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 1_000_000_000_000,
 				},
-			})
+			}))
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 			affiliateOverridesMap, err := affiliatesKeeper.GetAffiliateOverridesMap(ctx)
