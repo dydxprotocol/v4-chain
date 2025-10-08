@@ -10,7 +10,12 @@ export function getInstanceId(): string {
   return INSTANCE_ID;
 }
 
-export async function setInstanceId(): Promise<void> {
+export async function setInstanceId(instanceId? : string): Promise<void> {
+  if (instanceId !== undefined) {
+    INSTANCE_ID = instanceId;
+    return;
+  }
+
   if (INSTANCE_ID !== '') {
     return;
   }
