@@ -13,4 +13,7 @@ const (
 const (
 	// PerpetualFeeParamsKey defines the key for the PerpetualFeeParams
 	PerpetualFeeParamsKey = "PerpParams"
+
+	// FeeDiscountCampaignPrefix is the prefix for storing fee discount campaigns
+	FeeDiscountCampaignPrefix = "FeeDiscountCampaign:"
 )

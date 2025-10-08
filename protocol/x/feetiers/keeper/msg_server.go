@@ -41,3 +41,42 @@ func (k msgServer) UpdatePerpetualFeeParams(
 
 	return &types.MsgUpdatePerpetualFeeParamsResponse{}, nil
 }
+
+// SetFeeDiscountCampaignParams sets or updates fee discount campaigns for specific CLOB pairs
+func (k msgServer) SetFeeDiscountCampaignParams(
+	goCtx context.Context,
+	msg *types.MsgSetFeeDiscountCampaignParams,
+) (*types.MsgSetFeeDiscountCampaignParamsResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errorsmod.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	// Process each fee discount campaign in the message
+	for _, campaign := range msg.Params {
+		// Validate the fee discount campaign parameters with the current block time
+		if err := campaign.Validate(ctx.BlockTime()); err != nil {
+			return nil, errorsmod.Wrapf(
+				err,
+				"invalid fee discount campaign parameters for CLOB pair ID %d",
+				campaign.ClobPairId,
+			)
+		}
+
+		// Set the fee discount campaign parameters
+		if err := k.Keeper.SetFeeDiscountCampaignParams(ctx, campaign); err != nil {
+			return nil, errorsmod.Wrapf(
+				err,
+				"failed to set fee discount campaign for CLOB pair ID %d",
+				campaign.ClobPairId,
+			)
+		}
+	}
+
+	return &types.MsgSetFeeDiscountCampaignParamsResponse{}, nil
+}

@@ -216,8 +216,10 @@ var (
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": {},
 
 		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":             {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":     {},
+		"/dydxprotocol.feetiers.MsgSetFeeDiscountCampaignParams":         {},
+		"/dydxprotocol.feetiers.MsgSetFeeDiscountCampaignParamsResponse": {},
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         {},

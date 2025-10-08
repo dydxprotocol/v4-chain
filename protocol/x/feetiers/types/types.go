@@ -15,5 +15,13 @@ type FeeTiersKeeper interface {
 		ctx sdk.Context,
 		params PerpetualFeeParams,
 	) error
+	GetFeeDiscountCampaignParams(
+		ctx sdk.Context,
+		clobPairId uint32,
+	) (params FeeDiscountCampaignParams, err error)
+	SetFeeDiscountCampaignParams(
+		ctx sdk.Context,
+		feeHoliday FeeDiscountCampaignParams,
+	) error
 	HasAuthority(authority string) bool
 }

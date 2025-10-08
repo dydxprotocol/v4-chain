@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -52,5 +53,52 @@ func (k Keeper) UserFeeTier(
 	return &types.QueryUserFeeTierResponse{
 		Index: index,
 		Tier:  tier,
+	}, nil
+}
+
+// FeeDiscountCampaignParams processes a query for fee discount campaign parameters for a specific CLOB pair.
+func (k Keeper) FeeDiscountCampaignParams(
+	c context.Context,
+	req *types.QueryFeeDiscountCampaignParamsRequest,
+) (
+	*types.QueryFeeDiscountCampaignParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+
+	params, err := k.GetFeeDiscountCampaignParams(ctx, req.ClobPairId)
+	if err != nil {
+		if errors.Is(err, types.ErrFeeDiscountCampaignNotFound) {
+			return nil, status.Error(codes.NotFound, "fee discount campaign not found for the specified CLOB pair")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get fee discount campaign: %v", err)
+	}
+
+	return &types.QueryFeeDiscountCampaignParamsResponse{
+		Params: params,
+	}, nil
+}
+
+// AllFeeDiscountCampaignParams processes a query for all fee discount campaign parameters.
+func (k Keeper) AllFeeDiscountCampaignParams(
+	c context.Context,
+	req *types.QueryAllFeeDiscountCampaignParamsRequest,
+) (
+	*types.QueryAllFeeDiscountCampaignParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	params := k.GetAllFeeDiscountCampaignParams(ctx)
+
+	return &types.QueryAllFeeDiscountCampaignParamsResponse{
+		Params: params,
 	}, nil
 }
