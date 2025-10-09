@@ -27,7 +27,6 @@ type (
 		transientStoreKey storetypes.StoreKey
 		authorities       map[string]struct{}
 		stakingKeeper     types.StakingKeeper
-		expirationHooks   []types.StatsExpirationHook
 	}
 )
 
@@ -281,23 +280,10 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	globalStats := k.GetGlobalStats(ctx)
 	for _, removedStats := range epochStats.Stats {
 		stats := k.GetUserStats(ctx, removedStats.User)
-		previousStats := types.UserStats{
-			TakerNotional:                     stats.TakerNotional,
-			MakerNotional:                     stats.MakerNotional,
-			AffiliateRevenueGeneratedQuantums: stats.AffiliateRevenueGeneratedQuantums,
-		}
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
 		stats.AffiliateRevenueGeneratedQuantums -= removedStats.Stats.AffiliateRevenueGeneratedQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
-
-		// Execute work in other keepers
-		for _, hook := range k.expirationHooks {
-			err := hook.OnStatsExpired(ctx, removedStats.User, &previousStats, removedStats.Stats)
-			if err != nil {
-				k.Logger(ctx).Error("failed to expire stats", "user", removedStats.User, "error", err)
-			}
-		}
 
 		// Just remove TakerNotional to avoid double counting
 		globalStats.NotionalTraded -= removedStats.Stats.TakerNotional
