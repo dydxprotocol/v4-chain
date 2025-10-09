@@ -66,3 +66,20 @@ func TestQueryUserFeeTier(t *testing.T) {
 	var resp types.QueryUserFeeTierResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
+
+func TestQueryFeeDiscountParams(t *testing.T) {
+	net, ctx := setupNetwork(t)
+
+	// Test query without arguments (all params)
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryFeeDiscountCampaignParams(), []string{})
+	require.NoError(t, err)
+	var allResp types.QueryAllFeeDiscountCampaignParamsResponse
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &allResp))
+
+	// Test query with CLOB pair ID
+	clobPairID := "1"
+	out, err = clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryFeeDiscountCampaignParams(), []string{clobPairID})
+	require.NoError(t, err)
+	var resp types.QueryFeeDiscountCampaignParamsResponse
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+}
