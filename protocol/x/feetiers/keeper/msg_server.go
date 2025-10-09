@@ -41,3 +41,23 @@ func (k msgServer) UpdatePerpetualFeeParams(
 
 	return &types.MsgUpdatePerpetualFeeParamsResponse{}, nil
 }
+
+func (k msgServer) SetStakingTiers(
+	goCtx context.Context,
+	msg *types.MsgSetStakingTiers,
+) (*types.MsgSetStakingTiersResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errorsmod.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+	if err := k.Keeper.SetStakingTiers(ctx, msg.StakingTiers); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetStakingTiersResponse{}, nil
+}

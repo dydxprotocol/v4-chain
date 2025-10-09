@@ -13,11 +13,19 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.SetPerpetualFeeParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
+
+	// Set staking tiers if they exist
+	if len(genState.StakingTiers) > 0 {
+		if err := k.SetStakingTiers(ctx, genState.StakingTiers); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the feetiers module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Params: k.GetPerpetualFeeParams(ctx),
+		Params:       k.GetPerpetualFeeParams(ctx),
+		StakingTiers: k.GetAllStakingTiers(ctx),
 	}
 }
