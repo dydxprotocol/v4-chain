@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
@@ -258,4 +259,117 @@ func TestAllMarketFeeDiscountParamsEmpty(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Empty(t, res.Params)
+}
+
+func TestStakingTiers(t *testing.T) {
+	tests := map[string]struct {
+		// Setup
+		stakingTiers []*types.StakingTier
+
+		// Input
+		req *types.QueryStakingTiersRequest
+
+		// Expected
+		expectedError      error
+		expectedTiersCount int
+	}{
+		"returns empty when nothing set": {
+			stakingTiers:       []*types.StakingTier{},
+			req:                &types.QueryStakingTiersRequest{},
+			expectedError:      nil,
+			expectedTiersCount: 0,
+		},
+		"returns staking tiers correctly": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      10000,
+						},
+					},
+				},
+				{
+					FeeTierName: "2",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(500),
+							FeeDiscountPpm:      25000,
+						},
+					},
+				},
+			},
+			req:                &types.QueryStakingTiersRequest{},
+			expectedError:      nil,
+			expectedTiersCount: 2,
+		},
+		"returns error for nil request": {
+			stakingTiers:  []*types.StakingTier{},
+			req:           nil,
+			expectedError: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.FeeTiersKeeper
+
+			// Set staking tiers
+			err := k.SetStakingTiers(ctx, tc.stakingTiers)
+			require.NoError(t, err)
+
+			// Verify query
+			resp, err := k.StakingTiers(ctx, tc.req)
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedError.Error(), err.Error())
+				require.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Len(t, resp.StakingTiers, tc.expectedTiersCount)
+				require.ElementsMatch(t, tc.stakingTiers, resp.StakingTiers)
+			}
+		})
+	}
+}
+
+func TestUserStakingTier(t *testing.T) {
+	tests := map[string]struct {
+		// Input
+		req *types.QueryUserStakingTierRequest
+
+		// Expected
+		expectedError    error
+		expectedResponse *types.QueryUserStakingTierResponse
+	}{
+		// TODO: add valid test cases after implementation
+		"returns error for nil request": {
+			req:           nil,
+			expectedError: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.FeeTiersKeeper
+
+			// Verify query
+			resp, err := k.UserStakingTier(ctx, tc.req)
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedError.Error(), err.Error())
+				require.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, tc.expectedResponse, resp)
+			}
+		})
+	}
 }

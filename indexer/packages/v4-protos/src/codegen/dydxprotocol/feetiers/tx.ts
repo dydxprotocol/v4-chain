@@ -1,5 +1,6 @@
 import { PerpetualFeeParams, PerpetualFeeParamsSDKType } from "./params";
 import { PerMarketFeeDiscountParams, PerMarketFeeDiscountParamsSDKType } from "./per_market_fee_discount";
+import { StakingTier, StakingTierSDKType } from "./staking_tier";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** MsgUpdatePerpetualFeeParams is the Msg/UpdatePerpetualFeeParams request type. */
@@ -66,6 +67,28 @@ export interface MsgSetMarketFeeDiscountParamsResponse {}
  */
 
 export interface MsgSetMarketFeeDiscountParamsResponseSDKType {}
+/** MsgSetStakingTiers is the Msg/SetStakingTiers request type. */
+
+export interface MsgSetStakingTiers {
+  authority: string;
+  /** List of Staking tiers */
+
+  stakingTiers: StakingTier[];
+}
+/** MsgSetStakingTiers is the Msg/SetStakingTiers request type. */
+
+export interface MsgSetStakingTiersSDKType {
+  authority: string;
+  /** List of Staking tiers */
+
+  staking_tiers: StakingTierSDKType[];
+}
+/** MsgSetStakingTiersResponse is the Msg/SetStakingTiers response type. */
+
+export interface MsgSetStakingTiersResponse {}
+/** MsgSetStakingTiersResponse is the Msg/SetStakingTiers response type. */
+
+export interface MsgSetStakingTiersResponseSDKType {}
 
 function createBaseMsgUpdatePerpetualFeeParams(): MsgUpdatePerpetualFeeParams {
   return {
@@ -240,6 +263,95 @@ export const MsgSetMarketFeeDiscountParamsResponse = {
 
   fromPartial(_: DeepPartial<MsgSetMarketFeeDiscountParamsResponse>): MsgSetMarketFeeDiscountParamsResponse {
     const message = createBaseMsgSetMarketFeeDiscountParamsResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSetStakingTiers(): MsgSetStakingTiers {
+  return {
+    authority: "",
+    stakingTiers: []
+  };
+}
+
+export const MsgSetStakingTiers = {
+  encode(message: MsgSetStakingTiers, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    for (const v of message.stakingTiers) {
+      StakingTier.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetStakingTiers {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetStakingTiers();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.stakingTiers.push(StakingTier.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetStakingTiers>): MsgSetStakingTiers {
+    const message = createBaseMsgSetStakingTiers();
+    message.authority = object.authority ?? "";
+    message.stakingTiers = object.stakingTiers?.map(e => StakingTier.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseMsgSetStakingTiersResponse(): MsgSetStakingTiersResponse {
+  return {};
+}
+
+export const MsgSetStakingTiersResponse = {
+  encode(_: MsgSetStakingTiersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetStakingTiersResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetStakingTiersResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSetStakingTiersResponse>): MsgSetStakingTiersResponse {
+    const message = createBaseMsgSetStakingTiersResponse();
     return message;
   }
 

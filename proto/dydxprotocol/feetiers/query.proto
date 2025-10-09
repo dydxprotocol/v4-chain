@@ -5,6 +5,8 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/feetiers/params.proto";
 import "dydxprotocol/feetiers/per_market_fee_discount.proto";
+import "dydxprotocol/feetiers/staking_tier.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
 
 // Query defines the gRPC querier service.
@@ -34,6 +36,19 @@ service Query {
       returns (QueryAllMarketFeeDiscountParamsResponse) {
     option (google.api.http).get =
         "/dydxprotocol/v4/feetiers/market_fee_discount_params";
+  }
+
+  // Get all staking tiers
+  rpc StakingTiers(QueryStakingTiersRequest)
+      returns (QueryStakingTiersResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/feetiers/staking_tiers";
+  }
+
+  // Get user's current staked amount and staking tier
+  rpc UserStakingTier(QueryUserStakingTierRequest)
+      returns (QueryUserStakingTierResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/feetiers/user_staking_tier/{address}";
   }
 }
 
@@ -78,4 +93,27 @@ message QueryAllMarketFeeDiscountParamsRequest {}
 message QueryAllMarketFeeDiscountParamsResponse {
   repeated PerMarketFeeDiscountParams params = 1
       [ (gogoproto.nullable) = false ];
+}
+
+// QueryStakingTiersRequest is a request type for the StakingTiers RPC method.
+message QueryStakingTiersRequest {}
+
+// QueryStakingTiersResponse is a response type for the StakingTiers RPC method.
+message QueryStakingTiersResponse { repeated StakingTier staking_tiers = 1; }
+
+// QueryUserStakingTierRequest is a request type for the UserStakingTier RPC
+// method.
+message QueryUserStakingTierRequest {
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// QueryUserStakingTierResponse is a response type for the UserStakingTier RPC
+// method.
+message QueryUserStakingTierResponse {
+  // The user's current fee tier name
+  string fee_tier_name = 1;
+  // Amount of tokens staked by the user (in base units)
+  string staked_base_tokens = 2;
+  // The discount percentage in ppm that user qualifies for
+  uint32 discount_ppm = 3;
 }
