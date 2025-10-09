@@ -129,44 +129,6 @@ func TestGetReferredByEmptyAffiliate(t *testing.T) {
 	require.Equal(t, "", affiliate)
 }
 
-func TestAddReferredVolume(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.AffiliatesKeeper
-
-	affiliate := "affiliate1"
-	initialVolume := big.NewInt(1000)
-	addedVolume := big.NewInt(500)
-
-	err := k.AddReferredVolume(ctx, affiliate, initialVolume)
-	require.NoError(t, err)
-
-	volume, err := k.GetReferredVolume(ctx, affiliate)
-	require.NoError(t, err)
-	require.Equal(t, initialVolume, volume)
-
-	err = k.AddReferredVolume(ctx, affiliate, addedVolume)
-	require.NoError(t, err)
-
-	updatedVolume, err := k.GetReferredVolume(ctx, affiliate)
-	require.NoError(t, err)
-	require.Equal(t, initialVolume.Add(initialVolume, addedVolume), updatedVolume)
-}
-
-func TestGetReferredVolumeInvalidAffiliate(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.AffiliatesKeeper
-
-	affiliate := "malformed_address"
-	_, exists := k.GetReferredBy(ctx, affiliate)
-	require.False(t, exists)
-
-	affiliate = constants.AliceAccAddress.String()
-	_, exists = k.GetReferredBy(ctx, affiliate)
-	require.False(t, exists)
-}
-
 func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
@@ -305,9 +267,11 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	err = k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
 
-	reqReferredVolume := big.NewInt(int64(affiliateTiers.Tiers[2].ReqReferredVolumeQuoteQuantums))
-	err = k.AddReferredVolume(ctx, affiliate, reqReferredVolume)
-	require.NoError(t, err)
+	tApp.App.StatsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
+		TakerNotional:                        100_000_000_000_000,
+		MakerNotional:                        100_000_000_000_000,
+		AffiliateReferredVolumeQuoteQuantums: affiliateTiers.Tiers[2].ReqReferredVolumeQuoteQuantums,
+	})
 
 	stakedAmount := new(big.Int).Mul(
 		big.NewInt(int64(affiliateTiers.Tiers[3].ReqStakedWholeCoins)),

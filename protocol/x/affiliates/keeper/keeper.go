@@ -10,7 +10,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -107,60 +106,6 @@ func (k Keeper) GetReferredBy(ctx sdk.Context, referee string) (string, bool) {
 		return "", false
 	}
 	return string(referredByPrefixStore.Get([]byte(referee))), true
-}
-
-// AddReferredVolume adds the referred volume from a block to the affiliate's referred volume in the window.
-func (k Keeper) AddReferredVolume(
-	ctx sdk.Context,
-	affiliateAddr string,
-	referredVolumeFromBlock *big.Int,
-) error {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
-		[]byte(types.ReferredVolumeInWindowKeyPrefix))
-	referredVolume := big.NewInt(0)
-
-	if affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
-		prevReferredVolumeFromState := dtypes.SerializableInt{}
-		if err := prevReferredVolumeFromState.Unmarshal(
-			affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)),
-		); err != nil {
-			return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
-				"affiliate %s, error: %s", affiliateAddr, err)
-		}
-		referredVolume = prevReferredVolumeFromState.BigInt()
-	}
-
-	referredVolume.Add(
-		referredVolume,
-		referredVolumeFromBlock,
-	)
-
-	if referredVolume.Cmp(big.NewInt(0)) < 0 {
-		referredVolume = big.NewInt(0)
-	}
-	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
-
-	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
-			"affiliate %s, error: %s", affiliateAddr, err)
-	}
-	affiliateReferredVolumePrefixStore.Set([]byte(affiliateAddr), updatedReferredVolumeBytes)
-	return nil
-}
-
-// GetReferredVolume returns all time referred volume for an affiliate address in the window.
-func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
-		[]byte(types.ReferredVolumeInWindowKeyPrefix))
-	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
-		return big.NewInt(0), nil
-	}
-	var referredVolume dtypes.SerializableInt
-	if err := referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr))); err != nil {
-		return big.NewInt(0), err
-	}
-	return referredVolume.BigInt(), nil
 }
 
 // GetAllAffiliateTiers returns all affiliate tiers.
@@ -323,7 +268,7 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
-// DO NOT USE: This will be deprecated soon.
+// Deprecated: This is deprecated in favor of AffiliateOverride.
 func (k Keeper) GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error) {
 	affiliateWhitelist, err := k.GetAffiliateWhitelist(ctx)
 	if err != nil {
@@ -338,7 +283,7 @@ func (k Keeper) GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, er
 	return affiliateWhitelistMap, nil
 }
 
-// DO NOT USE: This will be deprecated soon.
+// Deprecated: This is deprecated in favor of AffiliateOverride.
 func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.AffiliateWhitelist) error {
 	store := ctx.KVStore(k.storeKey)
 	addressSet := make(map[string]bool)
