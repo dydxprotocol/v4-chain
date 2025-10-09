@@ -385,39 +385,3 @@ export async function limitAmount(
   amountToUse = min([parseInt(amountToUse, 10), maxDepositInUsdc * ETH_USDC_QUANTUM])!.toString();
   return amountToUse;
 }
-
-/**
- * The USDC amount out of a bridge from `sourceAssetDenom` to USDC on dydx assuming we can get
- * filled on the exact market rate. Given an input amount/sourceAssetDenom, it will
- * estimate what the expected amount out will be.
- * @param chainId
- * @param amount
- * @param sourceAssetDenom
- * @returns the estimated amount out in usdc per true market rate.
- */
-export async function estimateAmountOutSwap(
-  chainId: string,
-  amount: string,
-  sourceAssetDenom: string,
-): Promise<string> {
-  if (sourceAssetDenom === ethDenomByChainId[chainId]) {
-    const ethPrice = await getETHPrice();
-    // ethPrice multiplied by the amount will give us the rough amount in usdc.
-    return (ethPrice * parseInt(amount, 10) * (ETH_USDC_QUANTUM / ETH_WEI_QUANTUM)).toString();
-  }
-  return (parseInt(amount, 10) * ETH_USDC_QUANTUM).toString();
-}
-
-/**
- * Verify that the amount that skip estimates user would get credited is close to the actual amount
- * that is being bridged.
- * @param skipEstimateAmount the amount that skip estimates user would get credited
- * @param actualAmount the actual amount we expect per the market rate.
- * @returns true if the skip amount no less than `actualAmount * (1 - min(100/actualAmount, 0.001))`
- */
-export function verifySkipEstimation(skipEstimateAmount: string, actualAmount: string): boolean {
-  const skipEstimateAmountNum = parseInt(skipEstimateAmount, 10);
-  const actualAmountNum = parseInt(actualAmount, 10);
-  const anchor = max([actualAmountNum * (1 - 100 / actualAmountNum), 0.999 * actualAmountNum]);
-  return skipEstimateAmountNum >= anchor!;
-}
