@@ -56,6 +56,14 @@ export const configSchema = {
 
   // Metrics
   LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS: parseInteger({ default: 60 * 1000 }), // 1 minute
+
+  // Per-Channel Limits
+  V4_ACCOUNTS_CHANNEL_LIMIT: parseInteger({ default: 256 }),
+  V4_CANDLES_CHANNEL_LIMIT: parseInteger({ default: 32 }),
+  V4_MARKETS_CHANNEL_LIMIT: parseInteger({ default: 32 }),
+  V4_ORDERBOOK_CHANNEL_LIMIT: parseInteger({ default: 32 }),
+  V4_PARENT_ACCOUNTS_CHANNEL_LIMIT: parseInteger({ default: 256 }),
+  V4_TRADES_CHANNEL_LIMIT: parseInteger({ default: 32 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

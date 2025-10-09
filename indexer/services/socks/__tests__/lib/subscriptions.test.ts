@@ -31,6 +31,9 @@ describe('Subscriptions', () => {
   let mockWs: WebSocket;
   let sendMessageMock: jest.Mock;
   let sendMessageStringMock: jest.Mock;
+  let decrementSubscriptionsSpy: jest.SpyInstance;
+  let incrementSubscriptionsSpy: jest.SpyInstance;
+  let removeSubscriptionsSpy: jest.SpyInstance;
   let rateLimiterSpy: jest.SpyInstance;
   let axiosRequestMock: jest.Mock;
 
@@ -116,6 +119,9 @@ describe('Subscriptions', () => {
     mockWs = new WebSocket(null);
     sendMessageMock = (sendMessage as jest.Mock);
     sendMessageStringMock = (sendMessageString as jest.Mock);
+    decrementSubscriptionsSpy = jest.spyOn(Subscriptions.prototype, 'decrementSubscriptions');
+    incrementSubscriptionsSpy = jest.spyOn(Subscriptions.prototype, 'incrementSubscriptions');
+    removeSubscriptionsSpy = jest.spyOn(Subscriptions.prototype, 'removeSubscriptions');
     rateLimiterSpy = jest.spyOn(RateLimiter.prototype, 'rateLimit');
     axiosRequestMock = (axiosRequest as jest.Mock);
     axiosRequestMock.mockClear();
@@ -124,6 +130,10 @@ describe('Subscriptions', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    decrementSubscriptionsSpy.mockRestore();
+    incrementSubscriptionsSpy.mockRestore();
+    removeSubscriptionsSpy.mockRestore();
+    rateLimiterSpy.mockRestore();
   });
 
   describe('subscribe', () => {
@@ -225,6 +235,80 @@ describe('Subscriptions', () => {
           );
         },
       ).rejects.toEqual(new Error(`Invalid channel: ${invalidChannel}`));
+    });
+
+    it('sends error message if v4_accounts channel subscription limit exceeded', async () => {
+      const limit = config.V4_ACCOUNTS_CHANNEL_LIMIT;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      await subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ACCOUNTS,
+        connectionId,
+        initialMsgId,
+        mockSubaccountId,
+        false,
+      );
+
+      expect(incrementSubscriptionsSpy).toHaveBeenCalledTimes(1);
+      expect(incrementSubscriptionsSpy).toHaveBeenCalledWith(Channel.V4_ACCOUNTS, connectionId);
+
+      expect(sendMessageMock).toHaveBeenCalledTimes(1);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Per-connection subscription limit reached for ${Channel.V4_ACCOUNTS} (limit=${limit}).`,
+          ),
+        }),
+      );
+    });
+
+    it('sends error message if v4_accounts channel subscription limit exceeded by inflight requests', async () => {
+      const limit = config.V4_ACCOUNTS_CHANNEL_LIMIT;
+      incrementSubscriptionsSpy.mockReturnValueOnce(limit);
+      incrementSubscriptionsSpy.mockReturnValueOnce(limit + 1);
+      incrementSubscriptionsSpy.mockReturnValueOnce(limit + 2);
+      await Promise.all([
+        subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          connectionId,
+          initialMsgId,
+          mockSubaccountId,
+          false,
+        ),
+        subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          connectionId,
+          initialMsgId + 1,
+          mockSubaccountId1,
+          false,
+        ),
+        subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          connectionId,
+          initialMsgId + 2,
+          mockSubaccountId1,
+          false,
+        ),
+      ]);
+
+      expect(sendMessageMock).toHaveBeenCalledTimes(2);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Per-connection subscription limit reached for ${Channel.V4_ACCOUNTS} (limit=${limit}).`,
+          ),
+        }),
+      );
+
+      expect(decrementSubscriptionsSpy).toHaveBeenCalledTimes(2);
+      expect(decrementSubscriptionsSpy).toHaveBeenCalledWith(Channel.V4_ACCOUNTS, connectionId);
     });
 
     it('sends error message if rate limit exceeded', async () => {
@@ -421,8 +505,11 @@ describe('Subscriptions', () => {
 
       subscriptions.remove(connectionId);
 
+      expect(removeSubscriptionsSpy).toHaveBeenCalledWith(connectionId);
+
       for (const channel of Object.values(Channel)) {
         expect(subscriptions.subscriptions[channel][singleIds[channel]]).toHaveLength(0);
+        expect(subscriptions.subsByChannelByConnectionId[channel][connectionId]).toBe(undefined);
       }
       expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
     });
