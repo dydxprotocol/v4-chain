@@ -62,60 +62,29 @@ export async function getSkipCallData(
   if (amount.startsWith('0x')) {
     amountToUse = parseInt(amount, 16).toString();
   }
-  let toleranceMet = false;
-  let routeResult: RouteResponse | undefined;
-  let trueEstimateAmountOut: string | undefined;
-  for (let i = 0; i < 3 && !toleranceMet; i++) {
-    routeResult = await route({
-      amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
-      sourceAssetDenom,
-      sourceAssetChainId: chainId,
-      destAssetDenom: usdcAddressByChainId[dydxChainId],
-      destAssetChainId: dydxChainId,
-      cumulativeAffiliateFeeBps: '0',
-      smartRelay: true, // skip recommended to enable for better routes and less faults.
-      smartSwapOptions: {
-        splitRoutes: true,
-        evmSwaps: true, // needed for native eth bridging.
-      },
-      allowUnsafe: false,
-      goFast: true,
-    });
-    logger.info({
-      at: 'skip-helper#getSkipCallData',
-      message: 'Route result obtained',
-      routeResult,
-    });
-    if (!routeResult) {
-      throw new Error('Failed to find a route');
-    }
-
-    trueEstimateAmountOut = await estimateAmountOutSwap(
-      routeResult?.sourceAssetChainId,
-      routeResult?.amountIn,
-      routeResult?.sourceAssetDenom,
-    );
-    toleranceMet = verifySkipEstimation(routeResult.estimatedAmountOut, trueEstimateAmountOut);
-    // estimatedAmountOut from skip needs to be appropriate.
-    if (!toleranceMet) {
-      logger.warning({
-        at: 'skip-helper#getSkipCallData',
-        message: 'estimated amount out is less than our tolerance. Retrying...',
-        estimatedAmountOut: routeResult.estimatedAmountOut,
-        actualAmount: trueEstimateAmountOut,
-      });
-    }
-  }
-  if (!toleranceMet || !routeResult) {
-    throw new Error('Failed to find a route that meets our tolerance after 3 retries.');
-  }
-
+  const routeResult = await route({
+    amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
+    sourceAssetDenom,
+    sourceAssetChainId: chainId,
+    destAssetDenom: usdcAddressByChainId[dydxChainId],
+    destAssetChainId: dydxChainId,
+    cumulativeAffiliateFeeBps: '0',
+    smartRelay: true, // skip recommended to enable for better routes and less faults.
+    smartSwapOptions: {
+      splitRoutes: true,
+      evmSwaps: true, // needed for native eth bridging.
+    },
+    allowUnsafe: false,
+    goFast: true,
+  });
   logger.info({
     at: 'skip-helper#getSkipCallData',
     message: 'Route result obtained',
     routeResult,
-    dydxAddress,
   });
+  if (!routeResult) {
+    throw new Error('Failed to find a route that meets our tolerance after 3 retries.');
+  }
 
   const userAddresses = await buildUserAddresses(
     routeResult.requiredChainAddresses,
@@ -143,15 +112,14 @@ export async function getSkipCallData(
     throw new Error('executeRoute error: invalid address list');
   }
 
-  const expectedAmountOut = max([routeResult.estimatedAmountOut, trueEstimateAmountOut]);
   const slippageTolerancePercent = min([
-    100 / parseInt(expectedAmountOut!, 10),
+    config.SKIP_SLIPPAGE_TOLERANCE_USDC / parseInt(routeResult.estimatedAmountOut!, 10),
     parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
   ])!.toString();
   const response = await messages({
     timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
-    amountOut: expectedAmountOut,
+    amountOut: routeResult.estimatedAmountOut,
     sourceAssetChainId: routeResult?.sourceAssetChainId,
     sourceAssetDenom: routeResult?.sourceAssetDenom,
     destAssetChainId: routeResult?.destAssetChainId,
