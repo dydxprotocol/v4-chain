@@ -15,7 +15,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
-	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 type (
@@ -280,9 +279,10 @@ func (k Keeper) GetTierForAffiliate(
 	}
 
 	// Get the affiliate revenue generated in the last 30d
-	referredVolume, err := k.GetReferredVolume(ctx, affiliateAddr)
-	if err != nil {
-		return 0, 0, err
+	userStats := k.statsKeeper.GetUserStats(ctx, affiliateAddr)
+	var referredVolume *big.Int
+	if userStats != nil {
+		referredVolume = big.NewInt(int64(userStats.AffiliateReferredVolumeQuoteQuantums))
 	}
 
 	for index, tier := range tiers {
@@ -488,10 +488,10 @@ func (k Keeper) addReferredVolumeIfQualified(
 			"referee %s, refereeUserStats is nil", referee)
 	}
 
-	// If parameter is 0 then no limit is applied
 	previousVolume := (refereeUserStats.TakerNotional + refereeUserStats.MakerNotional +
 		previouslyAttributedVolume[referee])
 
+	// If parameter is 0 then no limit is applied
 	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
 	if cap != 0 {
 		if previousVolume >= cap {
@@ -505,9 +505,11 @@ func (k Keeper) addReferredVolumeIfQualified(
 
 	// Add the volume to the referrer on their 30d rolling window
 	if volume > 0 {
-		if err := k.AddReferredVolume(ctx, referrer, lib.BigU(volume)); err != nil {
-			return err
+		affiliateUserStats := k.statsKeeper.GetUserStats(ctx, referrer)
+		if affiliateUserStats != nil {
+			affiliateUserStats.AffiliateReferredVolumeQuoteQuantums += volume
 		}
+		k.statsKeeper.SetUserStats(ctx, referrer, affiliateUserStats)
 	}
 	return nil
 }
@@ -572,56 +574,4 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 	}
 	return nil
-}
-
-// OnStatsExpired implements StatsExpirationHook interface
-// Called when a user's stats expire from the 30d rolling window, update the
-// users referred volume to reflect the expired volume.
-func (k Keeper) OnStatsExpired(
-	ctx sdk.Context,
-	userAddress string,
-	previousUserStats *statstypes.UserStats,
-	resultingUserStats *statstypes.UserStats,
-) error {
-	// Get affiliate parameters
-	affiliateParams, err := k.GetAffiliateParameters(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Check if this user has a referrer (is a referee)
-	referrer, found := k.GetReferredBy(ctx, userAddress)
-	if !found {
-		return nil // User is not referred, nothing to do
-	}
-
-	// Get current referred volume for the referrer
-	currentVolume, err := k.GetReferredVolume(ctx, referrer)
-	if err != nil {
-		return err
-	}
-
-	previousVolume := previousUserStats.TakerNotional + previousUserStats.MakerNotional
-	resultingVolume := resultingUserStats.TakerNotional + resultingUserStats.MakerNotional
-
-	// Volume didn't change
-	if previousVolume == resultingVolume {
-		return nil
-	}
-
-	var newVolume *big.Int = lib.BigU(uint64(resultingVolume))
-	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
-	if previousVolume >= cap &&
-		resultingVolume < cap {
-		deltaAttributedVolume := lib.BigU(cap - resultingVolume)
-		// Subtract the expired volume (use taker volume for consistency with how it's added)
-		newVolume = new(big.Int).Sub(currentVolume, deltaAttributedVolume)
-	}
-
-	// Ensure it doesn't go negative
-	if newVolume.Cmp(big.NewInt(0)) < 0 {
-		newVolume = big.NewInt(0)
-	}
-
-	return k.SetReferredVolume(ctx, referrer, newVolume)
 }

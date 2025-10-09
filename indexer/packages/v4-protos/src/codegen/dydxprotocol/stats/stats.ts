@@ -131,6 +131,9 @@ export interface UserStats {
   /** Affiliate revenue generated in quantums */
 
   affiliateRevenueGeneratedQuantums: Long;
+  /** Affiliate referred volume in quote quantums */
+
+  affiliateReferredVolumeQuoteQuantums: Long;
 }
 /**
  * UserStats stores stats for a User. This is the sum of all stats for a user in
@@ -146,6 +149,9 @@ export interface UserStatsSDKType {
   /** Affiliate revenue generated in quantums */
 
   affiliate_revenue_generated_quantums: Long;
+  /** Affiliate referred volume in quote quantums */
+
+  affiliate_referred_volume_quote_quantums: Long;
 }
 /** CachedStakeAmount stores the last calculated total staked amount for address */
 
@@ -496,7 +502,8 @@ function createBaseUserStats(): UserStats {
   return {
     takerNotional: Long.UZERO,
     makerNotional: Long.UZERO,
-    affiliateRevenueGeneratedQuantums: Long.UZERO
+    affiliateRevenueGeneratedQuantums: Long.UZERO,
+    affiliateReferredVolumeQuoteQuantums: Long.UZERO
   };
 }
 
@@ -512,6 +519,10 @@ export const UserStats = {
 
     if (!message.affiliateRevenueGeneratedQuantums.isZero()) {
       writer.uint32(24).uint64(message.affiliateRevenueGeneratedQuantums);
+    }
+
+    if (!message.affiliateReferredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(32).uint64(message.affiliateReferredVolumeQuoteQuantums);
     }
 
     return writer;
@@ -538,6 +549,10 @@ export const UserStats = {
           message.affiliateRevenueGeneratedQuantums = (reader.uint64() as Long);
           break;
 
+        case 4:
+          message.affiliateReferredVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -552,6 +567,7 @@ export const UserStats = {
     message.takerNotional = object.takerNotional !== undefined && object.takerNotional !== null ? Long.fromValue(object.takerNotional) : Long.UZERO;
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
     message.affiliateRevenueGeneratedQuantums = object.affiliateRevenueGeneratedQuantums !== undefined && object.affiliateRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliateRevenueGeneratedQuantums) : Long.UZERO;
+    message.affiliateReferredVolumeQuoteQuantums = object.affiliateReferredVolumeQuoteQuantums !== undefined && object.affiliateReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliateReferredVolumeQuoteQuantums) : Long.UZERO;
     return message;
   }
 

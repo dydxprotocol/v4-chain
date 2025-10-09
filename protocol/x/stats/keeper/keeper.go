@@ -308,11 +308,6 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	k.SetStatsMetadata(ctx, metadata)
 }
 
-// AddStatsExpirationHook adds a hook to be called when stats expire
-func (k *Keeper) AddStatsExpirationHook(hook types.StatsExpirationHook) {
-	k.expirationHooks = append(k.expirationHooks, hook)
-}
-
 // GetStakedAmount returns the total staked amount for a delegator address.
 // It maintains a cache to optimize performance. The function first checks
 // if there's a cached value that hasn't expired. If found, it returns the

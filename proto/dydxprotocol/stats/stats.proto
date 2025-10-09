@@ -70,6 +70,9 @@ message UserStats {
 
   // Affiliate revenue generated in quantums
   uint64 affiliate_revenue_generated_quantums = 3;
+
+  // Affiliate referred volume in quote quantums
+  uint64 affiliate_referred_volume_quote_quantums = 4;
 }
 
 // CachedStakeAmount stores the last calculated total staked amount for address
