@@ -1154,7 +1154,7 @@ func TestUpdateAffiliateParameters(t *testing.T) {
 	require.Equal(
 		t,
 		uint64(10_000_000_000),
-		affiliateParameters.GetMaximum_30DAttributableRevenuePerReferredUserQuoteQuantums(),
+		affiliateParameters.GetMaximum_30DAffiliateRevenuePerReferredUserQuoteQuantums(),
 	)
 }
 

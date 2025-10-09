@@ -406,7 +406,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 
 				require.NoError(t, affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
 					AffiliateParameters: affiliatetypes.AffiliateParameters{
-						Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 1_000_000_000_000,
+						Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums: 1_000_000_000_000,
 					},
 				}))
 
@@ -1382,7 +1382,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 
 			require.NoError(t, affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
 				AffiliateParameters: affiliatetypes.AffiliateParameters{
-					Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums: 1_000_000_000_000,
+					Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums: 1_000_000_000_000,
 				},
 			}))
 

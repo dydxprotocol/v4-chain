@@ -307,7 +307,7 @@ func (k Keeper) getAffiliateRevShares(
 		// If the affiliate revenue generated is greater than the maximum 30d attributable volume
 		// per referred user notional, then no affiliate rev share is generated
 		// Disable this check if it is 0
-		cap := affiliateParams.Maximum_30DAttributableRevenuePerReferredUserQuoteQuantums
+		cap := affiliateParams.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums
 		if cap != 0 &&
 			userStats.AffiliateRevenueGeneratedQuantums >= cap {
 			// Exceeded revenue cap, no rev share is attributed
