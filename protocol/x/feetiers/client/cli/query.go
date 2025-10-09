@@ -79,7 +79,7 @@ func CmdQueryUserFeeTier() *cobra.Command {
 
 func CmdQueryFeeDiscountCampaignParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-fee-discount-compaign-params [clob_pair_id]",
+		Use:   "get-fee-discount-campaign-params [clob_pair_id]",
 		Short: "get the FeeDiscountCampaignParams for all or a specific CLOB pair",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
