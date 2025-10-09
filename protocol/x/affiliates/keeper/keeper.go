@@ -109,30 +109,6 @@ func (k Keeper) GetReferredBy(ctx sdk.Context, referee string) (string, bool) {
 	return string(referredByPrefixStore.Get([]byte(referee))), true
 }
 
-// SetReferredVolume sets the referred volume for an affiliate.
-func (k Keeper) SetReferredVolume(
-	ctx sdk.Context,
-	referrer string,
-	referredVolume *big.Int,
-) error {
-	if referredVolume == nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
-			"referrer %s, referredVolume is nil", referrer)
-	}
-
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey),
-		[]byte(types.ReferredVolumeInWindowKeyPrefix))
-	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
-
-	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
-			"referrer %s, error: %s", referrer, err)
-	}
-	affiliateReferredVolumePrefixStore.Set([]byte(referrer), updatedReferredVolumeBytes)
-	return nil
-}
-
 // AddReferredVolume adds the referred volume from a block to the affiliate's referred volume in the window.
 func (k Keeper) AddReferredVolume(
 	ctx sdk.Context,
@@ -282,7 +258,7 @@ func (k Keeper) GetTierForAffiliate(
 	userStats := k.statsKeeper.GetUserStats(ctx, affiliateAddr)
 	var referredVolume *big.Int
 	if userStats != nil {
-		referredVolume = big.NewInt(int64(userStats.AffiliateReferredVolumeQuoteQuantums))
+		referredVolume = new(big.Int).SetUint64(userStats.AffiliateReferredVolumeQuoteQuantums)
 	}
 
 	for index, tier := range tiers {
