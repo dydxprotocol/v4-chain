@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { PermissionApprovalTable } from '@dydxprotocol-indexer/postgres';
-import { route, messages, RouteResponse } from '@skip-go/client/cjs';
+import { route, messages } from '@skip-go/client/cjs';
 import type { Adapter } from '@solana/wallet-adapter-base';
 import type { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { Turnkey } from '@turnkey/sdk-server';
@@ -12,7 +12,7 @@ import { CreateKernelAccountReturnType } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import { decode, fromWords } from 'bech32';
 import bs58 from 'bs58';
-import { max, min } from 'lodash';
+import { min } from 'lodash';
 import { encodeFunctionData, type Hex } from 'viem';
 import type { EntryPointVersion, SmartAccountImplementation } from 'viem/account-abstraction';
 import { avalanche } from 'viem/chains';
@@ -83,7 +83,7 @@ export async function getSkipCallData(
     routeResult,
   });
   if (!routeResult) {
-    throw new Error('Failed to find a route that meets our tolerance after 3 retries.');
+    throw new Error('Failed to find a route');
   }
 
   const userAddresses = await buildUserAddresses(

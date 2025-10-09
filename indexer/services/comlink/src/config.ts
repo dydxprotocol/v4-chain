@@ -124,7 +124,7 @@ export const configSchema = {
   // if policy approvals are enabled.
   APPROVAL_ENABLED: parseBoolean({ default: true }),
   // largest amount we will tolerate to swap in usdc.
-  MAXIMUM_BRIDGE_AMOUNT_USDC: parseInteger({ default: 99_900 }),
+  MAXIMUM_BRIDGE_AMOUNT_USDC: parseInteger({ default: 999_000 }),
 
   // webhook ids, defaults to the production webhook id.
   ETHEREUM_WEBHOOK_ID: parseString({ default: 'wh_ctbkt6y9hez91xr2' }),
