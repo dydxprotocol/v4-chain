@@ -102,7 +102,7 @@ func (k Keeper) GetDiscountPpm(
 	currentTime := ctx.BlockTime().Unix()
 	if currentTime >= campaign.StartTimeUnix && currentTime < campaign.EndTimeUnix {
 		return campaign.ChargePpm
+	} else {
+		return types.MaxChargePpm
 	}
-
-	return types.MaxChargePpm
 }

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -24,81 +25,258 @@ func TestLogger(t *testing.T) {
 }
 
 func TestGetPerpetualFeePpm(t *testing.T) {
-	tests := map[string]struct {
-		user                string
-		UserStats           *stattypes.UserStats
-		GlobalStats         *stattypes.GlobalStats
-		expectedTakerFeePpm int32
-		expectedMakerFeePpm int32
+	tests := []struct {
+		name                     string
+		user                     string
+		userStats                *stattypes.UserStats
+		globalStats              *stattypes.GlobalStats
+		setupFeeDiscountCampaign bool
+		campaignParams           types.FeeDiscountCampaignParams
+		setupTime                *time.Time
+		blockTime                time.Time
+		clobPairId               uint32
+		expectedTakerFeePpm      int32
+		expectedMakerFeePpm      int32
 	}{
-		"regular user, first tier": {
-			"alice",
-			&stattypes.UserStats{
+		{
+			name: "regular user, first tier, no discount",
+			user: "alice",
+			userStats: &stattypes.UserStats{
 				TakerNotional: 10,
 				MakerNotional: 10,
 			},
-			&stattypes.GlobalStats{
+			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			10,
-			1,
+			setupFeeDiscountCampaign: false,
+			blockTime:                time.Now(),
+			clobPairId:               1,
+			expectedTakerFeePpm:      10,
+			expectedMakerFeePpm:      1,
 		},
-		"regular user, increased tier": {
-			"alice",
-			&stattypes.UserStats{
+		{
+			name: "regular user, increased tier, no discount",
+			user: "alice",
+			userStats: &stattypes.UserStats{
 				TakerNotional: 1_000,
 				MakerNotional: 150,
 			},
-			&stattypes.GlobalStats{
+			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			20,
-			2,
+			setupFeeDiscountCampaign: false,
+			blockTime:                time.Now(),
+			clobPairId:               1,
+			expectedTakerFeePpm:      20,
+			expectedMakerFeePpm:      2,
 		},
-		"regular user, partial requirements doesn't increase tier": {
-			"alice",
-			&stattypes.UserStats{
+		{
+			name: "regular user, top tier, no discount",
+			user: "alice",
+			userStats: &stattypes.UserStats{
 				TakerNotional: 1_000,
 				MakerNotional: 1_000_000_000,
 			},
-			&stattypes.GlobalStats{
-				NotionalTraded: 10_000_000_000,
-			},
-			20,
-			2,
-		},
-		"regular user, top tier": {
-			"alice",
-			&stattypes.UserStats{
-				TakerNotional: 1_000,
-				MakerNotional: 1_000_000_000,
-			},
-			&stattypes.GlobalStats{
+			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 2_000_000_000,
 			},
-			30,
-			3,
+			setupFeeDiscountCampaign: false,
+			blockTime:                time.Now(),
+			clobPairId:               1,
+			expectedTakerFeePpm:      30,
+			expectedMakerFeePpm:      3,
 		},
-		"vault is top tier regardless of stats": {
-			constants.Vault_Clob0.ToModuleAccountAddress(),
-			&stattypes.UserStats{
+		{
+			name: "vault is top tier regardless of stats, no discount",
+			user: constants.Vault_Clob0.ToModuleAccountAddress(),
+			userStats: &stattypes.UserStats{
 				TakerNotional: 10,
 				MakerNotional: 10,
 			},
-			&stattypes.GlobalStats{
+			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			30,
-			3,
+			setupFeeDiscountCampaign: false,
+			blockTime:                time.Now(),
+			clobPairId:               1,
+			expectedTakerFeePpm:      30,
+			expectedMakerFeePpm:      3,
+		},
+		{
+			name: "first tier with 50% discount",
+			user: "alice",
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+				ChargePpm:     500_000, // 50% discount
+			},
+			blockTime:           time.Unix(2000, 0),
+			clobPairId:          1,
+			expectedTakerFeePpm: 5, // 10 * 0.5 = 5
+			expectedMakerFeePpm: 0, // 1 * 0.5 = 0.5, rounded to 0
+		},
+		{
+			name: "top tier with 50% discount",
+			user: "alice",
+			userStats: &stattypes.UserStats{
+				TakerNotional: 1_000,
+				MakerNotional: 1_000_000_000,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 2_000_000_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+				ChargePpm:     500_000, // 50% discount
+			},
+			blockTime:           time.Unix(2000, 0),
+			clobPairId:          1,
+			expectedTakerFeePpm: 15, // 30 * 0.5 = 15
+			expectedMakerFeePpm: 1,  // 3 * 0.5 = 1.5, rounded to 1
+		},
+		{
+			name: "first tier with 100% discount (free)",
+			user: "alice",
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+				ChargePpm:     0, // 100% discount (free)
+			},
+			blockTime:           time.Unix(2000, 0),
+			clobPairId:          1,
+			expectedTakerFeePpm: 0, // 10 * 0 = 0
+			expectedMakerFeePpm: 0, // 1 * 0 = 0
+		},
+		{
+			name: "top tier with 75% discount",
+			user: "alice",
+			userStats: &stattypes.UserStats{
+				TakerNotional: 1_000,
+				MakerNotional: 1_000_000_000,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 2_000_000_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+				ChargePpm:     250_000, // 75% discount
+			},
+			blockTime:           time.Unix(2000, 0),
+			clobPairId:          1,
+			expectedTakerFeePpm: 7, // 30 * 0.25 = 7.5, rounded to 7
+			expectedMakerFeePpm: 0, // 3 * 0.25 = 0.75, rounded to 0
+		},
+		{
+			name: "expired campaign has no effect",
+			user: "alice",
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   2000,
+			},
+			setupTime:           func() *time.Time { t := time.Unix(1500, 0); return &t }(), // Within campaign period
+			blockTime:           time.Unix(2500, 0),                                         // After campaign period
+			clobPairId:          1,
+			expectedTakerFeePpm: 10, // Regular tier fee
+			expectedMakerFeePpm: 1,  // Regular tier fee
+		},
+		{
+			name: "campaign for different CLOB pair has no effect",
+			user: "alice",
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    2, // Different CLOB pair
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+				ChargePpm:     0, // 100% discount (free)
+			},
+			blockTime:           time.Unix(2000, 0),
+			clobPairId:          1,  // Querying for CLOB pair 1
+			expectedTakerFeePpm: 10, // Regular tier fee
+			expectedMakerFeePpm: 1,  // Regular tier fee
+		},
+		{
+			name: "vault with 50% discount",
+			user: constants.Vault_Clob0.ToModuleAccountAddress(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			setupFeeDiscountCampaign: true,
+			campaignParams: types.FeeDiscountCampaignParams{
+				ClobPairId:    1,
+				StartTimeUnix: 1000,
+				EndTimeUnix:   3000,
+				ChargePpm:     500_000, // 50% discount
+			},
+			blockTime:           time.Unix(2000, 0), // Within campaign period
+			clobPairId:          1,
+			expectedTakerFeePpm: 15, // 30 * 0.5 = 15
+			expectedMakerFeePpm: 1,  // 3 * 0.5 = 1.5, rounded to 1
 		},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+
+			// Determine setup time (either special setup time or regular block time)
+			setupTime := tc.blockTime
+			if tc.setupTime != nil {
+				setupTime = *tc.setupTime
+			}
+
+			// Create setup context with the setup time
+			setupCtx := ctx.WithBlockTime(setupTime)
+			ctx = ctx.WithBlockTime(tc.blockTime)
+
 			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
 			k := tApp.App.FeeTiersKeeper
+
+			// Setup fee tiers
 			err := k.SetPerpetualFeeParams(
 				ctx,
 				types.PerpetualFeeParams{
@@ -126,12 +304,33 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			statsKeeper := tApp.App.StatsKeeper
-			statsKeeper.SetUserStats(ctx, tc.user, tc.UserStats)
-			statsKeeper.SetGlobalStats(ctx, tc.GlobalStats)
+			// Setup fee discount campaign if needed
+			if tc.setupFeeDiscountCampaign {
+				// Use setupCtx with the appropriate time for setting up the campaign
+				err = k.SetFeeDiscountCampaignParams(setupCtx, tc.campaignParams)
+				require.NoError(t, err)
 
-			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true))
-			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false))
+				// Verify fee discount campaign was set correctly
+				campaign, err := k.GetFeeDiscountCampaignParams(ctx, tc.campaignParams.ClobPairId)
+				require.NoError(t, err)
+				require.Equal(t, tc.campaignParams.ClobPairId, campaign.ClobPairId)
+				require.Equal(t, tc.campaignParams.StartTimeUnix, campaign.StartTimeUnix)
+				require.Equal(t, tc.campaignParams.EndTimeUnix, campaign.EndTimeUnix)
+				require.Equal(t, tc.campaignParams.ChargePpm, campaign.ChargePpm)
+			}
+
+			// Setup stats
+			statsKeeper := tApp.App.StatsKeeper
+			statsKeeper.SetUserStats(ctx, tc.user, tc.userStats)
+			statsKeeper.SetGlobalStats(ctx, tc.globalStats)
+
+			// Test taker fee
+			takerFee := k.GetPerpetualFeePpm(ctx, tc.user, true, tc.clobPairId)
+			require.Equal(t, tc.expectedTakerFeePpm, takerFee)
+
+			// Test maker fee
+			makerFee := k.GetPerpetualFeePpm(ctx, tc.user, false, tc.clobPairId)
+			require.Equal(t, tc.expectedMakerFeePpm, makerFee)
 		})
 	}
 }
@@ -259,7 +458,7 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expectedTakerFeePpm,
-				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true))
+				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true, uint32(1)))
 		})
 	}
 }
