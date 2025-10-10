@@ -11,6 +11,7 @@ import (
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	statsKeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 )
 
 type (
@@ -20,6 +21,7 @@ type (
 		authorities      map[string]struct{}
 		affiliatesKeeper affiliateskeeper.Keeper
 		feetiersKeeper   feetierskeeper.Keeper
+		statsKeeper      statsKeeper.Keeper
 	}
 )
 
@@ -29,6 +31,7 @@ func NewKeeper(
 	authorities []string,
 	affiliatesKeeper affiliateskeeper.Keeper,
 	feetiersKeeper feetierskeeper.Keeper,
+	statsKeeper statsKeeper.Keeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:              cdc,
@@ -36,6 +39,7 @@ func NewKeeper(
 		authorities:      lib.UniqueSliceToSet(authorities),
 		affiliatesKeeper: affiliatesKeeper,
 		feetiersKeeper:   feetiersKeeper,
+		statsKeeper:      statsKeeper,
 	}
 }
 
