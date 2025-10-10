@@ -119,6 +119,111 @@ func TestSetStakingTiers_ValidationError(t *testing.T) {
 		// Expected
 		expectedError string
 	}{
+		"empty fee tier name": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: "100",
+							FeeDiscountPpm:      10000,
+						},
+					},
+				},
+			},
+			expectedError: "fee tier name cannot be empty",
+		},
+		"duplicate fee tier names": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels:      []*types.StakingLevel{},
+				},
+				{
+					FeeTierName: "1",
+					Levels:      []*types.StakingLevel{},
+				},
+			},
+			expectedError: "duplicate staking tier for fee tier: 1",
+		},
+		"invalid min staked tokens": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: "not-a-number",
+							FeeDiscountPpm:      10000,
+						},
+					},
+				},
+			},
+			expectedError: "invalid min staked tokens for tier 1 level 0",
+		},
+		"negative min staked tokens": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: "-100",
+							FeeDiscountPpm:      10000,
+						},
+					},
+				},
+			},
+			expectedError: "min staked tokens cannot be negative for tier 1 level 0",
+		},
+		"levels in decreasing order": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: "1000",
+							FeeDiscountPpm:      10000,
+						},
+						{
+							MinStakedBaseTokens: "999",
+							FeeDiscountPpm:      20000,
+						},
+					},
+				},
+			},
+			expectedError: "staking levels must be in increasing order for tier 1",
+		},
+		"levels with equal amounts": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: "1000",
+							FeeDiscountPpm:      10000,
+						},
+						{
+							MinStakedBaseTokens: "1000",
+							FeeDiscountPpm:      20000,
+						},
+					},
+				},
+			},
+			expectedError: "staking levels must be in increasing order for tier 1",
+		},
+		"discount exceeds 100%": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: "100",
+							FeeDiscountPpm:      1_000_001,
+						},
+					},
+				},
+			},
+			expectedError: "fee discount cannot exceed 100% for tier 1 level 0",
+		},
 		"fails with non-existent fee tier": {
 			stakingTiers: []*types.StakingTier{
 				{
