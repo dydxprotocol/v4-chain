@@ -42,6 +42,16 @@ const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
 
 const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
+const CHANNEL_CONNECTION_LIMITS: { [channel: string]: number } = {
+  [Channel.V4_ACCOUNTS]: config.V4_ACCOUNTS_CHANNEL_LIMIT,
+  [Channel.V4_BLOCK_HEIGHT]: 1,
+  [Channel.V4_CANDLES]: config.V4_CANDLES_CHANNEL_LIMIT,
+  [Channel.V4_MARKETS]: config.V4_MARKETS_CHANNEL_LIMIT,
+  [Channel.V4_ORDERBOOK]: config.V4_ORDERBOOK_CHANNEL_LIMIT,
+  [Channel.V4_PARENT_ACCOUNTS]: config.V4_PARENT_ACCOUNTS_CHANNEL_LIMIT,
+  [Channel.V4_TRADES]: config.V4_TRADES_CHANNEL_LIMIT,
+};
+
 export class Subscriptions {
   // Maps channels and ids to a list of websocket connections subscribed to them
   public subscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
@@ -82,6 +92,31 @@ export class Subscriptions {
     );
   }
 
+  public incrementSubscriptions(channel: Channel, connectionId: string): number {
+    this.subsByChannelByConnectionId[channel] ??= {};
+    this.subsByChannelByConnectionId[channel][connectionId] ??= 0;
+    this.subsByChannelByConnectionId[channel][connectionId] += 1;
+    return this.subsByChannelByConnectionId[channel][connectionId];
+  }
+
+  public decrementSubscriptions(channel: Channel, connectionId: string): number {
+    this.subsByChannelByConnectionId[channel] ??= {};
+    this.subsByChannelByConnectionId[channel][connectionId] ??= 0;
+    this.subsByChannelByConnectionId[channel][connectionId] -= 1;
+    if (this.subsByChannelByConnectionId[channel][connectionId] < 0) {
+      this.subsByChannelByConnectionId[channel][connectionId] = 0;
+    }
+    return this.subsByChannelByConnectionId[channel][connectionId];
+  }
+
+  public removeSubscriptions(connectionId: string): void {
+    Object.keys(this.subsByChannelByConnectionId).forEach((channel) => {
+      if (this.subsByChannelByConnectionId[channel][connectionId] !== undefined) {
+        delete this.subsByChannelByConnectionId[channel][connectionId];
+      }
+    });
+  }
+
   /**
    * subscribe handles:
    * - mapping a websocket connection to the channel + id it's subscribing to
@@ -105,7 +140,10 @@ export class Subscriptions {
     batched?: boolean,
     country?: string,
   ): Promise<void> {
+    const activeSubscriptions = this.incrementSubscriptions(channel, connectionId);
+
     if (this.forwardMessage === undefined) {
+      this.decrementSubscriptions(channel, connectionId);
       throw new Error('Unexpected error, subscription object is uninitialized.');
     }
 
@@ -119,6 +157,30 @@ export class Subscriptions {
           messageId,
         ),
       );
+      this.decrementSubscriptions(channel, connectionId);
+      return;
+    }
+
+    const channelSubscriptionsLimit = CHANNEL_CONNECTION_LIMITS[channel];
+
+    if (activeSubscriptions > channelSubscriptionsLimit) {
+      stats.increment(
+        `${config.SERVICE_NAME}.subscriptions_limit_reached`,
+        1,
+        undefined,
+        { channel, instance: getInstanceId() },
+      );
+
+      sendMessage(
+        ws,
+        connectionId,
+        createErrorMessage(
+          `Per-connection subscription limit reached for ${channel} (limit=${channelSubscriptionsLimit}).`,
+          connectionId,
+          messageId,
+        ),
+      );
+      this.decrementSubscriptions(channel, connectionId);
       return;
     }
 
@@ -150,6 +212,7 @@ export class Subscriptions {
         message: 'Connection closed due to violating rate limit',
         connectionId,
       });
+      this.decrementSubscriptions(channel, connectionId);
       return;
     }
 
@@ -195,6 +258,7 @@ export class Subscriptions {
           channel,
         },
       );
+      this.decrementSubscriptions(channel, connectionId);
       return;
     } finally {
       stats.timing(
@@ -230,6 +294,7 @@ export class Subscriptions {
           id,
         ),
       );
+      this.decrementSubscriptions(channel, connectionId);
       return;
     }
 
@@ -307,10 +372,6 @@ export class Subscriptions {
         instance: getInstanceId(),
       },
     );
-
-    this.subsByChannelByConnectionId[channel] ??= {};
-    this.subsByChannelByConnectionId[channel][connectionId] ??= 0;
-    this.subsByChannelByConnectionId[channel][connectionId] += 1;
   }
 
   /**
@@ -327,9 +388,6 @@ export class Subscriptions {
     channel: Channel,
     id?: string,
   ): void {
-
-    this.subsByChannelByConnectionId[channel] ??= {};
-    this.subsByChannelByConnectionId[channel][connectionId] ??= 0;
 
     const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
     if (this.subscriptionLists[connectionId]) {
@@ -360,10 +418,6 @@ export class Subscriptions {
       subscribedConnections += this.batchedSubscriptions[channel][subscriptionId].length;
     }
 
-    if (this.subsByChannelByConnectionId[channel][connectionId] > 0) {
-      this.subsByChannelByConnectionId[channel][connectionId] -= 1;
-    }
-
     // If 0 connections are subscribed to the id for this channel after this unsubscribe, socks will
     // not forward any future messages in the channel with the id.
     // Delete from the set tracking the # of ids for the channel socks will forward messages for.
@@ -378,6 +432,7 @@ export class Subscriptions {
         },
       );
     }
+    this.decrementSubscriptions(channel, connectionId);
   }
 
   /**
@@ -410,7 +465,7 @@ export class Subscriptions {
       });
       delete this.subscriptionLists[connectionId];
     }
-
+    this.removeSubscriptions(connectionId);
     this.subscribeRateLimiter.removeConnection(connectionId);
   }
 
