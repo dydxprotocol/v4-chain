@@ -110,7 +110,7 @@ func TestGetAllMarketsFeeDiscountParams(t *testing.T) {
 	}
 }
 
-func TestGetDiscountPpm(t *testing.T) {
+func TestGetDiscountedPpm(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
@@ -206,7 +206,7 @@ func TestGetDiscountPpm(t *testing.T) {
 			checkCtx := ctx.WithBlockTime(time.Unix(tc.checkTime, 0))
 
 			// Get the discount PPM
-			chargePpm := k.GetDiscountPpm(checkCtx, clobPairId)
+			chargePpm := k.GetDiscountedPpm(checkCtx, clobPairId)
 			require.Equal(t, tc.expectedChargePpm, chargePpm)
 		})
 	}

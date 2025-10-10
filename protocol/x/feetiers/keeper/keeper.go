@@ -124,7 +124,7 @@ func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool
 	}
 
 	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
-	discountPpm := k.GetDiscountPpm(ctx, clobPairId)
+	discountPpm := k.GetDiscountedPpm(ctx, clobPairId)
 
 	// Calculate the discounted fee
 	// For negative fees (rebates), we also apply the discount percentage

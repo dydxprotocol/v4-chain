@@ -72,10 +72,10 @@ func (k Keeper) GetAllMarketFeeDiscountParams(
 	return discountParams
 }
 
-// GetDiscountPpm returns the charge PPM (parts per million) for a CLOB pair.
+// GetDiscountedPpm returns the charge PPM (parts per million) for a CLOB pair.
 // If a fee discount is active, it returns the charge PPM.
 // If no active fee discount exists, it returns 1,000,000 (100% charge -> no discount).
-func (k Keeper) GetDiscountPpm(
+func (k Keeper) GetDiscountedPpm(
 	ctx sdk.Context,
 	clobPairId uint32,
 ) uint32 {
