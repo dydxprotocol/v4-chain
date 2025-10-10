@@ -14,11 +14,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
-	// Set staking tiers if they exist
-	if len(genState.StakingTiers) > 0 {
-		if err := k.SetStakingTiers(ctx, genState.StakingTiers); err != nil {
-			panic(err)
-		}
+	// Set staking tiers
+	if err := k.SetStakingTiers(ctx, genState.StakingTiers); err != nil {
+		panic(err)
 	}
 }
 
