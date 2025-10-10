@@ -1095,7 +1095,7 @@ func TestUpdateAffiliateParameters(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		uint64(100_000_000_000),
+		uint64(100_000_000_000_000),
 		affiliateParameters.GetMaximum_30DAttributableVolumePerReferredUserQuoteQuantums(),
 	)
 	require.Equal(t, uint32(2), affiliateParameters.GetRefereeMinimumFeeTierIdx())
