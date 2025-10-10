@@ -112,6 +112,8 @@ export async function getSkipCallData(
     throw new Error('executeRoute error: invalid address list');
   }
 
+  // acceptable slippage is smallest of SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided
+  // by the estimatedAmountOut or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
   const slippageTolerancePercent = min([
     config.SKIP_SLIPPAGE_TOLERANCE_USDC / parseInt(routeResult.estimatedAmountOut!, 10),
     parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
