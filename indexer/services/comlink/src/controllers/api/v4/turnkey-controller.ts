@@ -13,16 +13,20 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
+import { AppleHelpers } from '../../../lib/apple-helpers';
+import { EncryptionHelpers } from '../../../lib/encryption-helpers';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { TurnkeyHelpers } from '../../../lib/turnkey-helpers';
-import { CheckSignInSchema, CheckUploadDydxAddressSchema } from '../../../lib/validation/schemas';
+import { CheckSignInSchema, CheckUploadDydxAddressSchema, CheckAppleLoginRedirectSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
   SigninMethod,
   TurnkeyAuthResponse,
+  AppleLoginRedirectRequest,
+  AppleLoginResponse,
 } from '../../../types';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
@@ -213,6 +217,73 @@ export class TurnkeyController extends Controller {
     }
     throw new Error(`Invalid signin method. Must be one of: ${SigninMethod.EMAIL}, ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}`);
   }
+
+  /**
+   * Handles Apple login redirect from Apple's authorization server
+   * Exchanges authorization code for ID token and processes user login/signup
+   */
+  @Post('/appleLoginRedirect')
+  async appleLoginRedirect(
+    @Body() body: AppleLoginRedirectRequest,
+  ): Promise<AppleLoginResponse> {
+    const { state: publicKey, code } = body;
+
+    // Validate Apple configuration
+    if (!config.APPLE_TEAM_ID || !config.APPLE_SERVICE_ID ||
+        !config.APPLE_KEY_ID || !config.APPLE_PRIVATE_KEY) {
+      throw new TurnkeyError('Apple Sign-In configuration is incomplete');
+    }
+
+    // Validate public key format
+    if (!EncryptionHelpers.isValidPublicKey(publicKey)) {
+      throw new TurnkeyError('Invalid public key format');
+    }
+
+    try {
+      // Exchange authorization code for ID token
+      const tokenResponse = await AppleHelpers.fetchTokenFromCode(
+        code,
+        config.APPLE_TEAM_ID,
+        config.APPLE_SERVICE_ID,
+        config.APPLE_KEY_ID,
+        config.APPLE_PRIVATE_KEY,
+      );
+
+      // Extract email from ID token
+      const email = AppleHelpers.extractEmailFromIdToken(tokenResponse.id_token);
+      if (!email) {
+        throw new TurnkeyError('No email found in Apple ID token');
+      }
+
+      // Use social signin with Apple provider
+      const socialResponse = await this.turnkeyHelpers.socialSignin(
+        'apple',
+        tokenResponse.id_token,
+        publicKey,
+      );
+
+      // Convert social response to TurnkeyAuthResponse format
+      const authResponse: TurnkeyAuthResponse = {
+        session: socialResponse.session,
+        salt: socialResponse.salt || '',
+        dydxAddress: socialResponse.dydxAddress || '',
+        alreadyExists: socialResponse.alreadyExists,
+      };
+
+      // Encrypt the response payload
+      const encryptedPayload = await EncryptionHelpers.encryptPayload(authResponse, publicKey);
+
+      return {
+        success: true,
+        encryptedPayload,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
 }
 
 router.post(
@@ -282,6 +353,49 @@ router.post(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.post_uploadAddress.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.get(
+  '/appleLoginRedirect',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckAppleLoginRedirectSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    try {
+      const query = matchedData(req) as AppleLoginRedirectRequest;
+      const controller: TurnkeyController = new TurnkeyController();
+      const response = await controller.appleLoginRedirect(query);
+
+      if (response.success && response.encryptedPayload) {
+        // Redirect to mobile app with encrypted payload
+        const redirectUrl = EncryptionHelpers.createRedirectUrl(
+          config.APPLE_APP_SCHEME,
+          response.encryptedPayload,
+        );
+        return res.redirect(redirectUrl);
+      } else {
+        // Handle error case - redirect with error
+        const errorUrl = `${config.APPLE_APP_SCHEME}:///onboard/turnkey?error=${encodeURIComponent(response.error || 'Unknown error')}`;
+        return res.redirect(errorUrl);
+      }
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController GET /appleLoginRedirect',
+        'Apple login redirect error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_appleLoginRedirect.timing`,
         Date.now() - start,
       );
     }
