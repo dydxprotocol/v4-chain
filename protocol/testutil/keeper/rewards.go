@@ -80,7 +80,7 @@ func RewardsKeepers(
 			db,
 			cdc,
 		)
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper, statsKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
 		// Mock time provider response for market creation.
