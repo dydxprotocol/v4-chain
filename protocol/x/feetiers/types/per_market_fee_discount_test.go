@@ -8,18 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
+func TestPerMarketFeeDiscountParams_Validate(t *testing.T) {
 	// Set a fixed current time for testing
 	currentTime := time.Unix(1000, 0)
 
 	tests := []struct {
 		name    string
-		params  types.FeeDiscountCampaignParams
+		params  types.PerMarketFeeDiscountParams
 		wantErr error
 	}{
 		{
 			name: "valid params",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -29,7 +29,7 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "valid params - start time in past but end time in future",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 900,
 				EndTimeUnix:   1100,
@@ -39,7 +39,7 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "valid params - zero charge (100% discount)",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -49,7 +49,7 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "valid params - max charge (no discount)",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -59,17 +59,17 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "valid params - maximum duration",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
-				EndTimeUnix:   1100 + types.MaxFeeDiscountCampaignDuration,
+				EndTimeUnix:   1100 + types.MaxFeeDiscountDuration,
 				ChargePpm:     500_000, // 50% discount
 			},
 			wantErr: nil,
 		},
 		{
 			name: "invalid params - start time equals end time",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1100, // Same as start time
@@ -79,7 +79,7 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid params - start time after end time",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1200,
 				EndTimeUnix:   1100, // Before start time
@@ -89,7 +89,7 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid params - end time in past",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 900,
 				EndTimeUnix:   950, // Before current time (1000)
@@ -99,7 +99,7 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid params - end time equals current time",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 900,
 				EndTimeUnix:   1000, // Equal to current time
@@ -109,17 +109,17 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid params - duration exceeds maximum",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
-				EndTimeUnix:   1100 + types.MaxFeeDiscountCampaignDuration + 1, // Exceeds maximum duration
+				EndTimeUnix:   1100 + types.MaxFeeDiscountDuration + 1, // Exceeds maximum duration
 				ChargePpm:     500_000,
 			},
 			wantErr: types.ErrInvalidTimeRange,
 		},
 		{
 			name: "invalid params - charge PPM exceeds maximum",
-			params: types.FeeDiscountCampaignParams{
+			params: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -143,9 +143,9 @@ func TestFeeDiscountCampaignParams_Validate(t *testing.T) {
 }
 
 // Test validations across different current times
-func TestFeeDiscountCampaignParams_ValidateWithDifferentTimes(t *testing.T) {
-	// Define a fixed campaign
-	campaign := types.FeeDiscountCampaignParams{
+func TestPerMarketFeeDiscountParams_ValidateWithDifferentTimes(t *testing.T) {
+	// Define a fixed discount params
+	discountParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    1,
 		StartTimeUnix: 1100,
 		EndTimeUnix:   1200,
@@ -186,7 +186,7 @@ func TestFeeDiscountCampaignParams_ValidateWithDifferentTimes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := campaign.Validate(tt.currentTime)
+			err := discountParams.Validate(tt.currentTime)
 			if tt.wantErr != nil {
 				require.Error(t, err)
 				require.ErrorIs(t, err, tt.wantErr)
@@ -198,7 +198,7 @@ func TestFeeDiscountCampaignParams_ValidateWithDifferentTimes(t *testing.T) {
 }
 
 // Test for edge cases around the MaxChargePpm constant
-func TestFeeDiscountCampaignParams_ChargePpmEdgeCases(t *testing.T) {
+func TestPerMarketFeeDiscountParams_ChargePpmEdgeCases(t *testing.T) {
 	currentTime := time.Unix(1000, 0)
 
 	tests := []struct {
@@ -235,13 +235,12 @@ func TestFeeDiscountCampaignParams_ChargePpmEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params := types.FeeDiscountCampaignParams{
+			params := types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
 				ChargePpm:     tt.chargePpm,
 			}
-
 			err := params.Validate(currentTime)
 			if tt.wantErr != nil {
 				require.Error(t, err)
@@ -253,8 +252,8 @@ func TestFeeDiscountCampaignParams_ChargePpmEdgeCases(t *testing.T) {
 	}
 }
 
-// Test for edge cases around the MaxFeeDiscountCampaignDuration constant
-func TestFeeDiscountCampaignParams_DurationEdgeCases(t *testing.T) {
+// Test for edge cases around the MaxFeeDiscountDuration constant
+func TestPerMarketFeeDiscountParams_DurationEdgeCases(t *testing.T) {
 	currentTime := time.Unix(1000, 0)
 
 	tests := []struct {
@@ -279,12 +278,12 @@ func TestFeeDiscountCampaignParams_DurationEdgeCases(t *testing.T) {
 		},
 		{
 			name:     "maximum duration (90 days)",
-			duration: types.MaxFeeDiscountCampaignDuration,
+			duration: types.MaxFeeDiscountDuration,
 			wantErr:  nil,
 		},
 		{
 			name:     "duration just over maximum (90 days + 1 second)",
-			duration: types.MaxFeeDiscountCampaignDuration + 1,
+			duration: types.MaxFeeDiscountDuration + 1,
 			wantErr:  types.ErrInvalidTimeRange,
 		},
 		{
@@ -296,13 +295,12 @@ func TestFeeDiscountCampaignParams_DurationEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params := types.FeeDiscountCampaignParams{
+			params := types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1100 + tt.duration,
 				ChargePpm:     500_000,
 			}
-
 			err := params.Validate(currentTime)
 			if tt.wantErr != nil {
 				require.Error(t, err)

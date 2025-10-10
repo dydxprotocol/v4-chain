@@ -113,7 +113,7 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.
 }
 
 // GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
-// It checks if there's an active fee discount campaign for the specified CLOB pair.
+// It checks if there's an active fee discount for the specified CLOB pair.
 func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool, clobPairId uint32) int32 {
 	_, userTier := k.getUserFeeTier(ctx, address)
 	var baseFee int32
@@ -123,7 +123,7 @@ func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool
 		baseFee = userTier.MakerFeePpm
 	}
 
-	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active campaign)
+	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
 	discountPpm := k.GetDiscountPpm(ctx, clobPairId)
 
 	// Calculate the discounted fee

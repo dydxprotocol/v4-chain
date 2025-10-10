@@ -42,11 +42,11 @@ func (k msgServer) UpdatePerpetualFeeParams(
 	return &types.MsgUpdatePerpetualFeeParamsResponse{}, nil
 }
 
-// SetFeeDiscountCampaignParams sets or updates fee discount campaigns for specific CLOB pairs
-func (k msgServer) SetFeeDiscountCampaignParams(
+// SetMarketFeeDiscountParams sets or updates fee discount parameters for specific CLOB pairs
+func (k msgServer) SetMarketFeeDiscountParams(
 	goCtx context.Context,
-	msg *types.MsgSetFeeDiscountCampaignParams,
-) (*types.MsgSetFeeDiscountCampaignParamsResponse, error) {
+	msg *types.MsgSetMarketFeeDiscountParams,
+) (*types.MsgSetMarketFeeDiscountParamsResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -57,26 +57,26 @@ func (k msgServer) SetFeeDiscountCampaignParams(
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	// Process each fee discount campaign in the message
-	for _, campaign := range msg.Params {
-		// Validate the fee discount campaign parameters with the current block time
-		if err := campaign.Validate(ctx.BlockTime()); err != nil {
+	// Process each market fee discount in the message
+	for _, marketDiscount := range msg.Params {
+		// Validate the fee discount parameters with the current block time
+		if err := marketDiscount.Validate(ctx.BlockTime()); err != nil {
 			return nil, errorsmod.Wrapf(
 				err,
-				"invalid fee discount campaign parameters for CLOB pair ID %d",
-				campaign.ClobPairId,
+				"invalid market fee discount parameters for CLOB pair ID %d",
+				marketDiscount.ClobPairId,
 			)
 		}
 
-		// Set the fee discount campaign parameters
-		if err := k.Keeper.SetFeeDiscountCampaignParams(ctx, campaign); err != nil {
+		// Set the market fee discount parameters
+		if err := k.Keeper.SetPerMarketFeeDiscountParams(ctx, marketDiscount); err != nil {
 			return nil, errorsmod.Wrapf(
 				err,
-				"failed to set fee discount campaign for CLOB pair ID %d",
-				campaign.ClobPairId,
+				"failed to set market fee discount for CLOB pair ID %d",
+				marketDiscount.ClobPairId,
 			)
 		}
 	}
 
-	return &types.MsgSetFeeDiscountCampaignParamsResponse{}, nil
+	return &types.MsgSetMarketFeeDiscountParamsResponse{}, nil
 }

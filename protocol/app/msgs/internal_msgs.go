@@ -156,10 +156,10 @@ var (
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": nil,
 
 		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":             &feetiers.MsgUpdatePerpetualFeeParams{},
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":     nil,
-		"/dydxprotocol.feetiers.MsgSetFeeDiscountCampaignParams":         &feetiers.MsgSetFeeDiscountCampaignParams{},
-		"/dydxprotocol.feetiers.MsgSetFeeDiscountCampaignParamsResponse": nil,
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
+		"/dydxprotocol.feetiers.MsgSetPerMarketFeeDiscountParams":    &feetiers.MsgSetMarketFeeDiscountParams{},
+		"/dydxprotocol.feetiers.MsgSetPerMarketFeeDiscountResponse":  nil,
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},

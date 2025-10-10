@@ -5,15 +5,15 @@ import (
 )
 
 const (
-	// Maximum duration for a fee discount campaign (90 days in seconds)
-	MaxFeeDiscountCampaignDuration = 90 * 24 * 60 * 60
+	// Maximum duration for a fee discount period (90 days in seconds)
+	MaxFeeDiscountDuration = 90 * 24 * 60 * 60
 
 	// Maximum ppm value for fee discount
 	MaxChargePpm = 1000000
 )
 
-// Validate checks if the FeeDiscountCampaignParams are valid
-func (m *FeeDiscountCampaignParams) Validate(currentTime time.Time) error {
+// Validate checks if the PerMarketFeeDiscountParams are valid
+func (m *PerMarketFeeDiscountParams) Validate(currentTime time.Time) error {
 	// Validate time range (start < end)
 	if m.StartTimeUnix >= m.EndTimeUnix {
 		return ErrInvalidTimeRange
@@ -21,7 +21,7 @@ func (m *FeeDiscountCampaignParams) Validate(currentTime time.Time) error {
 
 	// Validate reasonable time range (max 90 days)
 	duration := m.EndTimeUnix - m.StartTimeUnix
-	if duration > MaxFeeDiscountCampaignDuration {
+	if duration > MaxFeeDiscountDuration {
 		return ErrInvalidTimeRange
 	}
 

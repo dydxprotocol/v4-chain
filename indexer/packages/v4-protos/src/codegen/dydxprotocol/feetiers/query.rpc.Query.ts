@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponse, QueryUserFeeTierRequest, QueryUserFeeTierResponse, QueryFeeDiscountCampaignParamsRequest, QueryFeeDiscountCampaignParamsResponse, QueryAllFeeDiscountCampaignParamsRequest, QueryAllFeeDiscountCampaignParamsResponse } from "./query";
+import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponse, QueryUserFeeTierRequest, QueryUserFeeTierResponse, QueryPerMarketFeeDiscountParamsRequest, QueryPerMarketFeeDiscountParamsResponse, QueryAllMarketFeeDiscountParamsRequest, QueryAllMarketFeeDiscountParamsResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -11,14 +11,14 @@ export interface Query {
 
   userFeeTier(request: QueryUserFeeTierRequest): Promise<QueryUserFeeTierResponse>;
   /**
-   * FeeDiscountCampaignParams queries fee discount campaign parameters for a
-   * specific CLOB pair.
+   * PerMarketFeeDiscountParams queries fee discount parameters for a
+   * specific market/CLOB pair.
    */
 
-  feeDiscountCampaignParams(request: QueryFeeDiscountCampaignParamsRequest): Promise<QueryFeeDiscountCampaignParamsResponse>;
-  /** AllFeeDiscountCampaignParams queries all fee discount campaign parameters. */
+  perMarketFeeDiscountParams(request: QueryPerMarketFeeDiscountParamsRequest): Promise<QueryPerMarketFeeDiscountParamsResponse>;
+  /** AllMarketFeeDiscountParams queries all per-market fee discount parameters. */
 
-  allFeeDiscountCampaignParams(request?: QueryAllFeeDiscountCampaignParamsRequest): Promise<QueryAllFeeDiscountCampaignParamsResponse>;
+  allMarketFeeDiscountParams(request?: QueryAllMarketFeeDiscountParamsRequest): Promise<QueryAllMarketFeeDiscountParamsResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -27,8 +27,8 @@ export class QueryClientImpl implements Query {
     this.rpc = rpc;
     this.perpetualFeeParams = this.perpetualFeeParams.bind(this);
     this.userFeeTier = this.userFeeTier.bind(this);
-    this.feeDiscountCampaignParams = this.feeDiscountCampaignParams.bind(this);
-    this.allFeeDiscountCampaignParams = this.allFeeDiscountCampaignParams.bind(this);
+    this.perMarketFeeDiscountParams = this.perMarketFeeDiscountParams.bind(this);
+    this.allMarketFeeDiscountParams = this.allMarketFeeDiscountParams.bind(this);
   }
 
   perpetualFeeParams(request: QueryPerpetualFeeParamsRequest = {}): Promise<QueryPerpetualFeeParamsResponse> {
@@ -43,16 +43,16 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryUserFeeTierResponse.decode(new _m0.Reader(data)));
   }
 
-  feeDiscountCampaignParams(request: QueryFeeDiscountCampaignParamsRequest): Promise<QueryFeeDiscountCampaignParamsResponse> {
-    const data = QueryFeeDiscountCampaignParamsRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.feetiers.Query", "FeeDiscountCampaignParams", data);
-    return promise.then(data => QueryFeeDiscountCampaignParamsResponse.decode(new _m0.Reader(data)));
+  perMarketFeeDiscountParams(request: QueryPerMarketFeeDiscountParamsRequest): Promise<QueryPerMarketFeeDiscountParamsResponse> {
+    const data = QueryPerMarketFeeDiscountParamsRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.feetiers.Query", "PerMarketFeeDiscountParams", data);
+    return promise.then(data => QueryPerMarketFeeDiscountParamsResponse.decode(new _m0.Reader(data)));
   }
 
-  allFeeDiscountCampaignParams(request: QueryAllFeeDiscountCampaignParamsRequest = {}): Promise<QueryAllFeeDiscountCampaignParamsResponse> {
-    const data = QueryAllFeeDiscountCampaignParamsRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.feetiers.Query", "AllFeeDiscountCampaignParams", data);
-    return promise.then(data => QueryAllFeeDiscountCampaignParamsResponse.decode(new _m0.Reader(data)));
+  allMarketFeeDiscountParams(request: QueryAllMarketFeeDiscountParamsRequest = {}): Promise<QueryAllMarketFeeDiscountParamsResponse> {
+    const data = QueryAllMarketFeeDiscountParamsRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.feetiers.Query", "AllMarketFeeDiscountParams", data);
+    return promise.then(data => QueryAllMarketFeeDiscountParamsResponse.decode(new _m0.Reader(data)));
   }
 
 }
@@ -68,12 +68,12 @@ export const createRpcQueryExtension = (base: QueryClient) => {
       return queryService.userFeeTier(request);
     },
 
-    feeDiscountCampaignParams(request: QueryFeeDiscountCampaignParamsRequest): Promise<QueryFeeDiscountCampaignParamsResponse> {
-      return queryService.feeDiscountCampaignParams(request);
+    perMarketFeeDiscountParams(request: QueryPerMarketFeeDiscountParamsRequest): Promise<QueryPerMarketFeeDiscountParamsResponse> {
+      return queryService.perMarketFeeDiscountParams(request);
     },
 
-    allFeeDiscountCampaignParams(request?: QueryAllFeeDiscountCampaignParamsRequest): Promise<QueryAllFeeDiscountCampaignParamsResponse> {
-      return queryService.allFeeDiscountCampaignParams(request);
+    allMarketFeeDiscountParams(request?: QueryAllMarketFeeDiscountParamsRequest): Promise<QueryAllMarketFeeDiscountParamsResponse> {
+      return queryService.allMarketFeeDiscountParams(request);
     }
 
   };

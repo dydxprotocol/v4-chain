@@ -9,30 +9,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetSetFeeDiscountCampaignParams(t *testing.T) {
+func TestGetSetPerMarketFeeDiscountParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
-	// Set the fee discount campaign params for a CLOB pair
+	// Set the fee discount params for a CLOB pair
 	clobPairId := uint32(42)
 
 	// Set current block time to a fixed time
 	baseTime := time.Unix(1000, 0)
 	ctx = ctx.WithBlockTime(baseTime)
 
-	setParams := types.FeeDiscountCampaignParams{
+	setParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    clobPairId,
 		StartTimeUnix: 1100,
 		EndTimeUnix:   1200,
 		ChargePpm:     500_000, // 50% discount
 	}
 
-	err := k.SetFeeDiscountCampaignParams(ctx, setParams)
+	err := k.SetPerMarketFeeDiscountParams(ctx, setParams)
 	require.NoError(t, err)
 
-	// Get the fee discount campaign params for the CLOB pair
-	getParams, err := k.GetFeeDiscountCampaignParams(ctx, clobPairId)
+	// Get the fee discount params for the CLOB pair
+	getParams, err := k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, setParams.ClobPairId, getParams.ClobPairId)
 	require.Equal(t, setParams.StartTimeUnix, getParams.StartTimeUnix)
@@ -40,17 +40,17 @@ func TestGetSetFeeDiscountCampaignParams(t *testing.T) {
 	require.Equal(t, setParams.ChargePpm, getParams.ChargePpm)
 }
 
-func TestGetFeeDiscountCampaignParamsNotFound(t *testing.T) {
+func TestGetPerMarketFeeDiscountParamsNotFound(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
-	// Get the fee discount campaign params for a non-existent CLOB pair
-	_, err := k.GetFeeDiscountCampaignParams(ctx, 42)
-	require.ErrorIs(t, err, types.ErrFeeDiscountCampaignNotFound)
+	// Get the fee discount params for a non-existent CLOB pair
+	_, err := k.GetPerMarketFeeDiscountParams(ctx, 42)
+	require.ErrorIs(t, err, types.ErrMarketFeeDiscountNotFound)
 }
 
-func TestGetAllFeeDiscountCampaignParams(t *testing.T) {
+func TestGetAllMarketsFeeDiscountParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
@@ -59,8 +59,8 @@ func TestGetAllFeeDiscountCampaignParams(t *testing.T) {
 	baseTime := time.Unix(1000, 0)
 	ctx = ctx.WithBlockTime(baseTime)
 
-	// Set up multiple fee discount campaigns
-	campaigns := []types.FeeDiscountCampaignParams{
+	// Set up multiple fee discounts
+	discountParams := []types.PerMarketFeeDiscountParams{
 		{
 			ClobPairId:    1,
 			StartTimeUnix: 1100,
@@ -81,32 +81,32 @@ func TestGetAllFeeDiscountCampaignParams(t *testing.T) {
 		},
 	}
 
-	// Store the fee discount campaigns
-	for _, campaign := range campaigns {
-		err := k.SetFeeDiscountCampaignParams(ctx, campaign)
+	// Store the fee discount params
+	for _, params := range discountParams {
+		err := k.SetPerMarketFeeDiscountParams(ctx, params)
 		require.NoError(t, err)
 	}
 
-	// Get all fee discount campaigns
-	allCampaigns := k.GetAllFeeDiscountCampaignParams(ctx)
+	// Get all fee discount params
+	allDiscountParams := k.GetAllMarketFeeDiscountParams(ctx)
 
-	// Check that we got all the expected campaigns
-	require.Len(t, allCampaigns, len(campaigns))
+	// Check that we got all the expected discount params
+	require.Len(t, allDiscountParams, len(discountParams))
 
-	// Create a map of CLOB pair IDs to campaigns for easier checking
-	campaignMap := make(map[uint32]types.FeeDiscountCampaignParams)
-	for _, campaign := range allCampaigns {
-		campaignMap[campaign.ClobPairId] = campaign
+	// Create a map of CLOB pair IDs to discount params for easier checking
+	discountParamsMap := make(map[uint32]types.PerMarketFeeDiscountParams)
+	for _, params := range allDiscountParams {
+		discountParamsMap[params.ClobPairId] = params
 	}
 
-	// Check each expected campaign is in the map
-	for _, expectedCampaign := range campaigns {
-		campaign, found := campaignMap[expectedCampaign.ClobPairId]
+	// Check each expected discount params is in the map
+	for _, expectedParams := range discountParams {
+		params, found := discountParamsMap[expectedParams.ClobPairId]
 		require.True(t, found)
-		require.Equal(t, expectedCampaign.ClobPairId, campaign.ClobPairId)
-		require.Equal(t, expectedCampaign.StartTimeUnix, campaign.StartTimeUnix)
-		require.Equal(t, expectedCampaign.EndTimeUnix, campaign.EndTimeUnix)
-		require.Equal(t, expectedCampaign.ChargePpm, campaign.ChargePpm)
+		require.Equal(t, expectedParams.ClobPairId, params.ClobPairId)
+		require.Equal(t, expectedParams.StartTimeUnix, params.StartTimeUnix)
+		require.Equal(t, expectedParams.EndTimeUnix, params.EndTimeUnix)
+		require.Equal(t, expectedParams.ChargePpm, params.ChargePpm)
 	}
 }
 
@@ -118,12 +118,12 @@ func TestGetDiscountPpm(t *testing.T) {
 	tests := []struct {
 		name              string
 		setupTime         int64
-		setupCampaign     *types.FeeDiscountCampaignParams
+		setupParams       *types.PerMarketFeeDiscountParams
 		checkTime         int64
 		expectedChargePpm uint32
 	}{
 		{
-			name:              "campaign not found",
+			name:              "discount not found",
 			setupTime:         1000,
 			checkTime:         1100,
 			expectedChargePpm: types.MaxChargePpm, // 100% charge (no discount)
@@ -131,7 +131,7 @@ func TestGetDiscountPpm(t *testing.T) {
 		{
 			name:      "current time before start time",
 			setupTime: 1000,
-			setupCampaign: &types.FeeDiscountCampaignParams{
+			setupParams: &types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -143,7 +143,7 @@ func TestGetDiscountPpm(t *testing.T) {
 		{
 			name:      "current time at start time",
 			setupTime: 1000,
-			setupCampaign: &types.FeeDiscountCampaignParams{
+			setupParams: &types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -155,7 +155,7 @@ func TestGetDiscountPpm(t *testing.T) {
 		{
 			name:      "current time between start and end time",
 			setupTime: 1000,
-			setupCampaign: &types.FeeDiscountCampaignParams{
+			setupParams: &types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -167,7 +167,7 @@ func TestGetDiscountPpm(t *testing.T) {
 		{
 			name:      "current time at end time",
 			setupTime: 1000,
-			setupCampaign: &types.FeeDiscountCampaignParams{
+			setupParams: &types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -179,7 +179,7 @@ func TestGetDiscountPpm(t *testing.T) {
 		{
 			name:      "current time after end time",
 			setupTime: 1000,
-			setupCampaign: &types.FeeDiscountCampaignParams{
+			setupParams: &types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1100,
 				EndTimeUnix:   1200,
@@ -196,9 +196,9 @@ func TestGetDiscountPpm(t *testing.T) {
 			setupCtx := ctx.WithBlockTime(time.Unix(tc.setupTime, 0))
 			clobPairId := uint32(1)
 
-			// If there's a campaign to set up, do it
-			if tc.setupCampaign != nil {
-				err := k.SetFeeDiscountCampaignParams(setupCtx, *tc.setupCampaign)
+			// If there's a discount params to set up, do it
+			if tc.setupParams != nil {
+				err := k.SetPerMarketFeeDiscountParams(setupCtx, *tc.setupParams)
 				require.NoError(t, err)
 			}
 
@@ -212,7 +212,7 @@ func TestGetDiscountPpm(t *testing.T) {
 	}
 }
 
-func TestSetFeeDiscountCampaignParamsUpdate(t *testing.T) {
+func TestSetPerMarketFeeDiscountParamsUpdate(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
@@ -221,41 +221,41 @@ func TestSetFeeDiscountCampaignParamsUpdate(t *testing.T) {
 	baseTime := time.Unix(1000, 0)
 	ctx = ctx.WithBlockTime(baseTime)
 
-	// Initial fee discount campaign
+	// Initial fee discount params
 	clobPairId := uint32(1)
-	initialParams := types.FeeDiscountCampaignParams{
+	initialParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    clobPairId,
 		StartTimeUnix: 1100,
 		EndTimeUnix:   1200,
 		ChargePpm:     500_000, // 50% discount
 	}
 
-	// Set the initial fee discount campaign
-	err := k.SetFeeDiscountCampaignParams(ctx, initialParams)
+	// Set the initial fee discount params
+	err := k.SetPerMarketFeeDiscountParams(ctx, initialParams)
 	require.NoError(t, err)
 
 	// Verify it was set correctly
-	getParams, err := k.GetFeeDiscountCampaignParams(ctx, clobPairId)
+	getParams, err := k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, initialParams.ClobPairId, getParams.ClobPairId)
 	require.Equal(t, initialParams.StartTimeUnix, getParams.StartTimeUnix)
 	require.Equal(t, initialParams.EndTimeUnix, getParams.EndTimeUnix)
 	require.Equal(t, initialParams.ChargePpm, getParams.ChargePpm)
 
-	// Update with new fee discount campaign
-	updatedParams := types.FeeDiscountCampaignParams{
+	// Update with new fee discount params
+	updatedParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    clobPairId,
 		StartTimeUnix: 1150,
 		EndTimeUnix:   1250,
 		ChargePpm:     250_000, // 75% discount
 	}
 
-	// Set the updated fee discount campaign
-	err = k.SetFeeDiscountCampaignParams(ctx, updatedParams)
+	// Set the updated fee discount params
+	err = k.SetPerMarketFeeDiscountParams(ctx, updatedParams)
 	require.NoError(t, err)
 
 	// Verify it was updated correctly
-	getParams, err = k.GetFeeDiscountCampaignParams(ctx, clobPairId)
+	getParams, err = k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, updatedParams.ClobPairId, getParams.ClobPairId)
 	require.Equal(t, updatedParams.StartTimeUnix, getParams.StartTimeUnix)
@@ -263,15 +263,15 @@ func TestSetFeeDiscountCampaignParamsUpdate(t *testing.T) {
 	require.Equal(t, updatedParams.ChargePpm, getParams.ChargePpm)
 }
 
-func TestEmptyGetAllFeeDiscountCampaignParams(t *testing.T) {
+func TestEmptyGetAllMarketsFeeDiscountParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
-	// Get all fee discount campaigns when none exist
-	allCampaigns := k.GetAllFeeDiscountCampaignParams(ctx)
+	// Get all fee discounts when none exist
+	allDiscountParams := k.GetAllMarketFeeDiscountParams(ctx)
 
 	// Check that we got an empty slice, not nil
-	require.NotNil(t, allCampaigns)
-	require.Len(t, allCampaigns, 0)
+	require.NotNil(t, allDiscountParams)
+	require.Len(t, allDiscountParams, 0)
 }

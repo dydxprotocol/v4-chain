@@ -99,15 +99,15 @@ func TestUserFeeTier(t *testing.T) {
 	}
 }
 
-// TestFeeDiscountCampaignParams tests the FeeDiscountCampaignParams query handler
-func TestFeeDiscountCampaignParams(t *testing.T) {
+// TestPerMarketFeeDiscountParams tests the PerMarketFeeDiscountParams query handler
+func TestPerMarketFeeDiscountParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
-	// Set up a test fee discount campaign
+	// Set up a test fee discount params
 	clobPairId := uint32(42)
-	campaign := types.FeeDiscountCampaignParams{
+	discountParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    clobPairId,
 		StartTimeUnix: 1100,
 		EndTimeUnix:   1200,
@@ -116,20 +116,20 @@ func TestFeeDiscountCampaignParams(t *testing.T) {
 
 	// Set current block time for validation
 	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
-	err := k.SetFeeDiscountCampaignParams(ctx, campaign)
+	err := k.SetPerMarketFeeDiscountParams(ctx, discountParams)
 	require.NoError(t, err)
 
 	for name, tc := range map[string]struct {
-		req *types.QueryFeeDiscountCampaignParamsRequest
-		res *types.QueryFeeDiscountCampaignParamsResponse
+		req *types.QueryPerMarketFeeDiscountParamsRequest
+		res *types.QueryPerMarketFeeDiscountParamsResponse
 		err error
 	}{
 		"Success": {
-			req: &types.QueryFeeDiscountCampaignParamsRequest{
+			req: &types.QueryPerMarketFeeDiscountParamsRequest{
 				ClobPairId: clobPairId,
 			},
-			res: &types.QueryFeeDiscountCampaignParamsResponse{
-				Params: campaign,
+			res: &types.QueryPerMarketFeeDiscountParamsResponse{
+				Params: discountParams,
 			},
 			err: nil,
 		},
@@ -139,15 +139,15 @@ func TestFeeDiscountCampaignParams(t *testing.T) {
 			err: status.Error(codes.InvalidArgument, "invalid request"),
 		},
 		"Not Found": {
-			req: &types.QueryFeeDiscountCampaignParamsRequest{
+			req: &types.QueryPerMarketFeeDiscountParamsRequest{
 				ClobPairId: 999, // non-existent CLOB pair ID
 			},
 			res: nil,
-			err: status.Error(codes.NotFound, "fee discount campaign not found for the specified CLOB pair"),
+			err: status.Error(codes.NotFound, "fee discount not found for the specified market/CLOB pair"),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			res, err := k.FeeDiscountCampaignParams(ctx, tc.req)
+			res, err := k.PerMarketFeeDiscountParams(ctx, tc.req)
 			if tc.err != nil {
 				require.Error(t, err)
 				require.Equal(t, tc.err.Error(), err.Error())
@@ -159,8 +159,8 @@ func TestFeeDiscountCampaignParams(t *testing.T) {
 	}
 }
 
-// TestAllFeeDiscountCampaignParams tests the AllFeeDiscountCampaignParams query handler
-func TestAllFeeDiscountCampaignParams(t *testing.T) {
+// TestAllMarketFeeDiscountParams tests the AllMarketFeeDiscountParams query handler
+func TestAllMarketFeeDiscountParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
@@ -168,8 +168,8 @@ func TestAllFeeDiscountCampaignParams(t *testing.T) {
 	// Set current block time for validation
 	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
 
-	// Set up multiple test fee discount campaigns
-	campaigns := []types.FeeDiscountCampaignParams{
+	// Set up multiple test fee discount params
+	discountParams := []types.PerMarketFeeDiscountParams{
 		{
 			ClobPairId:    1,
 			StartTimeUnix: 1100,
@@ -190,21 +190,21 @@ func TestAllFeeDiscountCampaignParams(t *testing.T) {
 		},
 	}
 
-	// Store the fee discount campaigns
-	for _, campaign := range campaigns {
-		err := k.SetFeeDiscountCampaignParams(ctx, campaign)
+	// Store the fee discount params
+	for _, params := range discountParams {
+		err := k.SetPerMarketFeeDiscountParams(ctx, params)
 		require.NoError(t, err)
 	}
 
 	for name, tc := range map[string]struct {
-		req *types.QueryAllFeeDiscountCampaignParamsRequest
-		res *types.QueryAllFeeDiscountCampaignParamsResponse
+		req *types.QueryAllMarketFeeDiscountParamsRequest
+		res *types.QueryAllMarketFeeDiscountParamsResponse
 		err error
 	}{
 		"Success": {
-			req: &types.QueryAllFeeDiscountCampaignParamsRequest{},
-			res: &types.QueryAllFeeDiscountCampaignParamsResponse{
-				Params: campaigns,
+			req: &types.QueryAllMarketFeeDiscountParamsRequest{},
+			res: &types.QueryAllMarketFeeDiscountParamsResponse{
+				Params: discountParams,
 			},
 			err: nil,
 		},
@@ -215,25 +215,24 @@ func TestAllFeeDiscountCampaignParams(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			res, err := k.AllFeeDiscountCampaignParams(ctx, tc.req)
+			res, err := k.AllMarketFeeDiscountParams(ctx, tc.req)
 			if tc.err != nil {
 				require.Error(t, err)
 				require.Equal(t, tc.err.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-
-				// We can't guarantee the order of the returned fee discount campaigns, so we need to compare them differently
+				// We can't guarantee the order of the returned fee discount params, so we need to compare them differently
 				require.Equal(t, len(tc.res.Params), len(res.Params))
 
 				// Create a map to make comparison easier
-				campaignMap := make(map[uint32]types.FeeDiscountCampaignParams)
-				for _, c := range res.Params {
-					campaignMap[c.ClobPairId] = c
+				paramsMap := make(map[uint32]types.PerMarketFeeDiscountParams)
+				for _, p := range res.Params {
+					paramsMap[p.ClobPairId] = p
 				}
 
-				// Check that each expected campaign is in the result
+				// Check that each expected params entry is in the result
 				for _, expected := range tc.res.Params {
-					actual, found := campaignMap[expected.ClobPairId]
+					actual, found := paramsMap[expected.ClobPairId]
 					require.True(t, found)
 					require.Equal(t, expected.ClobPairId, actual.ClobPairId)
 					require.Equal(t, expected.StartTimeUnix, actual.StartTimeUnix)
@@ -245,16 +244,15 @@ func TestAllFeeDiscountCampaignParams(t *testing.T) {
 	}
 }
 
-// TestAllFeeDiscountCampaignParamsEmpty tests the AllFeeDiscountCampaignParams query handler with no campaigns
-func TestAllFeeDiscountCampaignParamsEmpty(t *testing.T) {
+// TestAllMarketFeeDiscountParamsEmpty tests the AllMarketFeeDiscountParams query handler with no params
+func TestAllMarketFeeDiscountParamsEmpty(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
-	// Don't set any fee discount campaigns - test empty response
-
-	req := &types.QueryAllFeeDiscountCampaignParamsRequest{}
-	res, err := k.AllFeeDiscountCampaignParams(ctx, req)
+	// Don't set any fee discount params - test empty response
+	req := &types.QueryAllMarketFeeDiscountParamsRequest{}
+	res, err := k.AllMarketFeeDiscountParams(ctx, req)
 
 	// Should succeed with empty params list
 	require.NoError(t, err)

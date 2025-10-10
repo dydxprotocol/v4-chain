@@ -216,10 +216,10 @@ var (
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": {},
 
 		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":             {},
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":     {},
-		"/dydxprotocol.feetiers.MsgSetFeeDiscountCampaignParams":         {},
-		"/dydxprotocol.feetiers.MsgSetFeeDiscountCampaignParamsResponse": {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":              {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":      {},
+		"/dydxprotocol.feetiers.MsgSetPerMarketFeeDiscountParams":         {},
+		"/dydxprotocol.feetiers.MsgSetPerMarketFeeDiscountParamsResponse": {},
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         {},

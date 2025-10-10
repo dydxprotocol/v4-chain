@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType, QueryFeeDiscountCampaignParamsRequest, QueryFeeDiscountCampaignParamsResponseSDKType, QueryAllFeeDiscountCampaignParamsRequest, QueryAllFeeDiscountCampaignParamsResponseSDKType } from "./query";
+import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType, QueryPerMarketFeeDiscountParamsRequest, QueryPerMarketFeeDiscountParamsResponseSDKType, QueryAllMarketFeeDiscountParamsRequest, QueryAllMarketFeeDiscountParamsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -11,8 +11,8 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.perpetualFeeParams = this.perpetualFeeParams.bind(this);
     this.userFeeTier = this.userFeeTier.bind(this);
-    this.feeDiscountCampaignParams = this.feeDiscountCampaignParams.bind(this);
-    this.allFeeDiscountCampaignParams = this.allFeeDiscountCampaignParams.bind(this);
+    this.perMarketFeeDiscountParams = this.perMarketFeeDiscountParams.bind(this);
+    this.allMarketFeeDiscountParams = this.allMarketFeeDiscountParams.bind(this);
   }
   /* Queries the PerpetualFeeParams. */
 
@@ -36,20 +36,20 @@ export class LCDQueryClient {
     const endpoint = `dydxprotocol/v4/feetiers/user_fee_tier`;
     return await this.req.get<QueryUserFeeTierResponseSDKType>(endpoint, options);
   }
-  /* FeeDiscountCampaignParams queries fee discount campaign parameters for a
-   specific CLOB pair. */
+  /* PerMarketFeeDiscountParams queries fee discount parameters for a
+   specific market/CLOB pair. */
 
 
-  async feeDiscountCampaignParams(params: QueryFeeDiscountCampaignParamsRequest): Promise<QueryFeeDiscountCampaignParamsResponseSDKType> {
-    const endpoint = `dydxprotocol/feetiers/fee_discount_campaign_params/${params.clobPairId}`;
-    return await this.req.get<QueryFeeDiscountCampaignParamsResponseSDKType>(endpoint);
+  async perMarketFeeDiscountParams(params: QueryPerMarketFeeDiscountParamsRequest): Promise<QueryPerMarketFeeDiscountParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/feetiers/market_fee_discount_params/${params.clobPairId}`;
+    return await this.req.get<QueryPerMarketFeeDiscountParamsResponseSDKType>(endpoint);
   }
-  /* AllFeeDiscountCampaignParams queries all fee discount campaign parameters. */
+  /* AllMarketFeeDiscountParams queries all per-market fee discount parameters. */
 
 
-  async allFeeDiscountCampaignParams(_params: QueryAllFeeDiscountCampaignParamsRequest = {}): Promise<QueryAllFeeDiscountCampaignParamsResponseSDKType> {
-    const endpoint = `dydxprotocol/feetiers/fee_discount_campaign_params`;
-    return await this.req.get<QueryAllFeeDiscountCampaignParamsResponseSDKType>(endpoint);
+  async allMarketFeeDiscountParams(_params: QueryAllMarketFeeDiscountParamsRequest = {}): Promise<QueryAllMarketFeeDiscountParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/feetiers/market_fee_discount_params`;
+    return await this.req.get<QueryAllMarketFeeDiscountParamsResponseSDKType>(endpoint);
   }
 
 }

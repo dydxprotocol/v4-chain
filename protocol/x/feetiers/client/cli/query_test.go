@@ -70,8 +70,8 @@ func TestQueryUserFeeTier(t *testing.T) {
 func TestQueryFeeDiscountParams(t *testing.T) {
 	net, ctx := setupNetwork(t)
 
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryFeeDiscountCampaignParams(), []string{})
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMarketFeeDiscountParams(), []string{})
 	require.NoError(t, err)
-	var allResp types.QueryAllFeeDiscountCampaignParamsResponse
+	var allResp types.CmdQueryMarketFeeDiscountParamsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &allResp))
 }

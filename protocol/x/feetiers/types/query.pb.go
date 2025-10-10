@@ -213,24 +213,26 @@ func (m *QueryUserFeeTierResponse) GetTier() *PerpetualFeeTier {
 	return nil
 }
 
-// QueryFeeDiscountCampaignParamsRequest is the request type for the
-// Query/FeeDiscountCampaignParams RPC method.
-type QueryFeeDiscountCampaignParamsRequest struct {
+// QueryPerMarketFeeDiscountParamsRequest is the request type for the
+// Query/PerMarketFeeDiscountParams RPC method.
+type QueryPerMarketFeeDiscountParamsRequest struct {
 	ClobPairId uint32 `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
 }
 
-func (m *QueryFeeDiscountCampaignParamsRequest) Reset()         { *m = QueryFeeDiscountCampaignParamsRequest{} }
-func (m *QueryFeeDiscountCampaignParamsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryFeeDiscountCampaignParamsRequest) ProtoMessage()    {}
-func (*QueryFeeDiscountCampaignParamsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryPerMarketFeeDiscountParamsRequest) Reset() {
+	*m = QueryPerMarketFeeDiscountParamsRequest{}
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPerMarketFeeDiscountParamsRequest) ProtoMessage()    {}
+func (*QueryPerMarketFeeDiscountParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f31456045d64644f, []int{4}
 }
-func (m *QueryFeeDiscountCampaignParamsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFeeDiscountCampaignParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFeeDiscountCampaignParamsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -240,45 +242,45 @@ func (m *QueryFeeDiscountCampaignParamsRequest) XXX_Marshal(b []byte, determinis
 		return b[:n], nil
 	}
 }
-func (m *QueryFeeDiscountCampaignParamsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFeeDiscountCampaignParamsRequest.Merge(m, src)
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest.Merge(m, src)
 }
-func (m *QueryFeeDiscountCampaignParamsRequest) XXX_Size() int {
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFeeDiscountCampaignParamsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFeeDiscountCampaignParamsRequest.DiscardUnknown(m)
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFeeDiscountCampaignParamsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest proto.InternalMessageInfo
 
-func (m *QueryFeeDiscountCampaignParamsRequest) GetClobPairId() uint32 {
+func (m *QueryPerMarketFeeDiscountParamsRequest) GetClobPairId() uint32 {
 	if m != nil {
 		return m.ClobPairId
 	}
 	return 0
 }
 
-// QueryFeeDiscountCampaignParamsResponse is the response type for the
-// Query/FeeDiscountCampaignParams RPC method.
-type QueryFeeDiscountCampaignParamsResponse struct {
-	Params FeeDiscountCampaignParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+// QueryPerMarketFeeDiscountParamsResponse is the response type for the
+// Query/PerMarketFeeDiscountParams RPC method.
+type QueryPerMarketFeeDiscountParamsResponse struct {
+	Params PerMarketFeeDiscountParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
-func (m *QueryFeeDiscountCampaignParamsResponse) Reset() {
-	*m = QueryFeeDiscountCampaignParamsResponse{}
+func (m *QueryPerMarketFeeDiscountParamsResponse) Reset() {
+	*m = QueryPerMarketFeeDiscountParamsResponse{}
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryFeeDiscountCampaignParamsResponse) ProtoMessage()    {}
-func (*QueryFeeDiscountCampaignParamsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryPerMarketFeeDiscountParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPerMarketFeeDiscountParamsResponse) ProtoMessage()    {}
+func (*QueryPerMarketFeeDiscountParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f31456045d64644f, []int{5}
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFeeDiscountCampaignParamsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -288,44 +290,44 @@ func (m *QueryFeeDiscountCampaignParamsResponse) XXX_Marshal(b []byte, determini
 		return b[:n], nil
 	}
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFeeDiscountCampaignParamsResponse.Merge(m, src)
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse.Merge(m, src)
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) XXX_Size() int {
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFeeDiscountCampaignParamsResponse.DiscardUnknown(m)
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFeeDiscountCampaignParamsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse proto.InternalMessageInfo
 
-func (m *QueryFeeDiscountCampaignParamsResponse) GetParams() FeeDiscountCampaignParams {
+func (m *QueryPerMarketFeeDiscountParamsResponse) GetParams() PerMarketFeeDiscountParams {
 	if m != nil {
 		return m.Params
 	}
-	return FeeDiscountCampaignParams{}
+	return PerMarketFeeDiscountParams{}
 }
 
-// QueryAllFeeDiscountCampaignParamsRequest is the request type for the
-// Query/AllFeeDiscountCampaignParams RPC method.
-type QueryAllFeeDiscountCampaignParamsRequest struct {
+// QueryAllMarketFeeDiscountParamsRequest is the request type for the
+// Query/AllMarketFeeDiscountParams RPC method.
+type QueryAllMarketFeeDiscountParamsRequest struct {
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsRequest) Reset() {
-	*m = QueryAllFeeDiscountCampaignParamsRequest{}
+func (m *QueryAllMarketFeeDiscountParamsRequest) Reset() {
+	*m = QueryAllMarketFeeDiscountParamsRequest{}
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryAllFeeDiscountCampaignParamsRequest) ProtoMessage()    {}
-func (*QueryAllFeeDiscountCampaignParamsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryAllMarketFeeDiscountParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketFeeDiscountParamsRequest) ProtoMessage()    {}
+func (*QueryAllMarketFeeDiscountParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f31456045d64644f, []int{6}
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAllFeeDiscountCampaignParamsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -335,40 +337,38 @@ func (m *QueryAllFeeDiscountCampaignParamsRequest) XXX_Marshal(b []byte, determi
 		return b[:n], nil
 	}
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllFeeDiscountCampaignParamsRequest.Merge(m, src)
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest.Merge(m, src)
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) XXX_Size() int {
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllFeeDiscountCampaignParamsRequest.DiscardUnknown(m)
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAllFeeDiscountCampaignParamsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest proto.InternalMessageInfo
 
-// QueryAllFeeDiscountCampaignParamsResponse is the response type for the
-// Query/AllFeeDiscountCampaignParams RPC method.
-type QueryAllFeeDiscountCampaignParamsResponse struct {
-	Params []FeeDiscountCampaignParams `protobuf:"bytes,1,rep,name=params,proto3" json:"params"`
+// QueryAllMarketFeeDiscountParamsResponse is the response type for the
+// Query/AllMarketFeeDiscountParams RPC method.
+type QueryAllMarketFeeDiscountParamsResponse struct {
+	Params []PerMarketFeeDiscountParams `protobuf:"bytes,1,rep,name=params,proto3" json:"params"`
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsResponse) Reset() {
-	*m = QueryAllFeeDiscountCampaignParamsResponse{}
+func (m *QueryAllMarketFeeDiscountParamsResponse) Reset() {
+	*m = QueryAllMarketFeeDiscountParamsResponse{}
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*QueryAllFeeDiscountCampaignParamsResponse) ProtoMessage() {}
-func (*QueryAllFeeDiscountCampaignParamsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryAllMarketFeeDiscountParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketFeeDiscountParamsResponse) ProtoMessage()    {}
+func (*QueryAllMarketFeeDiscountParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f31456045d64644f, []int{7}
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryAllFeeDiscountCampaignParamsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -378,19 +378,19 @@ func (m *QueryAllFeeDiscountCampaignParamsResponse) XXX_Marshal(b []byte, determ
 		return b[:n], nil
 	}
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryAllFeeDiscountCampaignParamsResponse.Merge(m, src)
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse.Merge(m, src)
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) XXX_Size() int {
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryAllFeeDiscountCampaignParamsResponse.DiscardUnknown(m)
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryAllFeeDiscountCampaignParamsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse proto.InternalMessageInfo
 
-func (m *QueryAllFeeDiscountCampaignParamsResponse) GetParams() []FeeDiscountCampaignParams {
+func (m *QueryAllMarketFeeDiscountParamsResponse) GetParams() []PerMarketFeeDiscountParams {
 	if m != nil {
 		return m.Params
 	}
@@ -402,55 +402,55 @@ func init() {
 	proto.RegisterType((*QueryPerpetualFeeParamsResponse)(nil), "dydxprotocol.feetiers.QueryPerpetualFeeParamsResponse")
 	proto.RegisterType((*QueryUserFeeTierRequest)(nil), "dydxprotocol.feetiers.QueryUserFeeTierRequest")
 	proto.RegisterType((*QueryUserFeeTierResponse)(nil), "dydxprotocol.feetiers.QueryUserFeeTierResponse")
-	proto.RegisterType((*QueryFeeDiscountCampaignParamsRequest)(nil), "dydxprotocol.feetiers.QueryFeeDiscountCampaignParamsRequest")
-	proto.RegisterType((*QueryFeeDiscountCampaignParamsResponse)(nil), "dydxprotocol.feetiers.QueryFeeDiscountCampaignParamsResponse")
-	proto.RegisterType((*QueryAllFeeDiscountCampaignParamsRequest)(nil), "dydxprotocol.feetiers.QueryAllFeeDiscountCampaignParamsRequest")
-	proto.RegisterType((*QueryAllFeeDiscountCampaignParamsResponse)(nil), "dydxprotocol.feetiers.QueryAllFeeDiscountCampaignParamsResponse")
+	proto.RegisterType((*QueryPerMarketFeeDiscountParamsRequest)(nil), "dydxprotocol.feetiers.QueryPerMarketFeeDiscountParamsRequest")
+	proto.RegisterType((*QueryPerMarketFeeDiscountParamsResponse)(nil), "dydxprotocol.feetiers.QueryPerMarketFeeDiscountParamsResponse")
+	proto.RegisterType((*QueryAllMarketFeeDiscountParamsRequest)(nil), "dydxprotocol.feetiers.QueryAllMarketFeeDiscountParamsRequest")
+	proto.RegisterType((*QueryAllMarketFeeDiscountParamsResponse)(nil), "dydxprotocol.feetiers.QueryAllMarketFeeDiscountParamsResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/feetiers/query.proto", fileDescriptor_f31456045d64644f) }
 
 var fileDescriptor_f31456045d64644f = []byte{
-	// 613 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xcf, 0x4e, 0x13, 0x5d,
-	0x14, 0xef, 0xf0, 0x01, 0xc9, 0x77, 0xd1, 0xcd, 0x0d, 0xc6, 0x32, 0x21, 0x43, 0x9d, 0x44, 0xa1,
-	0x46, 0x66, 0x10, 0x84, 0x85, 0x68, 0x94, 0x4a, 0x4a, 0x70, 0x61, 0x6a, 0xc5, 0x8d, 0x9b, 0xc9,
-	0x74, 0xe6, 0x30, 0x5c, 0x33, 0x9d, 0x3b, 0xdc, 0x3b, 0x63, 0xda, 0x10, 0x37, 0x3e, 0x81, 0x89,
-	0x0f, 0xe0, 0x23, 0xb8, 0x71, 0xe7, 0x0b, 0xb0, 0x24, 0xba, 0x71, 0x45, 0x4c, 0xcb, 0x83, 0x98,
-	0xb9, 0x73, 0xab, 0xa5, 0xed, 0xb4, 0xa5, 0xee, 0xb8, 0x67, 0xce, 0xf9, 0xfd, 0xe3, 0x9c, 0xa2,
-	0x5b, 0x6e, 0xd3, 0x6d, 0x84, 0x8c, 0x46, 0xd4, 0xa1, 0xbe, 0x79, 0x08, 0x10, 0x11, 0x60, 0xdc,
-	0x3c, 0x8e, 0x81, 0x35, 0x0d, 0x51, 0xc7, 0x37, 0xba, 0x5b, 0x8c, 0x4e, 0x8b, 0xba, 0xe0, 0x50,
-	0x5e, 0xa7, 0xdc, 0x12, 0x5f, 0xcc, 0xf4, 0x91, 0x4e, 0xa8, 0xf3, 0x1e, 0xf5, 0x68, 0x5a, 0x4f,
-	0xfe, 0x92, 0xd5, 0x45, 0x8f, 0x52, 0xcf, 0x07, 0xd3, 0x0e, 0x89, 0x69, 0x07, 0x01, 0x8d, 0xec,
-	0x88, 0xd0, 0xa0, 0x33, 0xa3, 0x0f, 0x16, 0x12, 0xda, 0xcc, 0xae, 0x77, 0x7a, 0xee, 0x0f, 0xee,
-	0x39, 0x04, 0xb0, 0x5c, 0xc2, 0x1d, 0x1a, 0x07, 0x91, 0xe5, 0xd8, 0xf5, 0xd0, 0x26, 0x5e, 0x90,
-	0x8e, 0xe8, 0x05, 0xa4, 0xbd, 0x4c, 0xbc, 0x54, 0x80, 0x85, 0x10, 0xc5, 0xb6, 0x5f, 0x06, 0xa8,
-	0x08, 0xcc, 0x2a, 0x1c, 0xc7, 0xc0, 0x23, 0xfd, 0x2d, 0x5a, 0xca, 0xec, 0xe0, 0x21, 0x0d, 0x38,
-	0xe0, 0x3d, 0x34, 0x9b, 0xea, 0xc8, 0x2b, 0x05, 0x65, 0x65, 0x6e, 0xbd, 0x68, 0x0c, 0x8c, 0xc4,
-	0xe8, 0x87, 0x28, 0x4d, 0x9f, 0x9e, 0x2f, 0xe5, 0xaa, 0x72, 0x5c, 0xdf, 0x43, 0x37, 0x05, 0xd7,
-	0x6b, 0x0e, 0xac, 0x0c, 0x70, 0x40, 0x80, 0x49, 0x19, 0xf8, 0x1e, 0x9a, 0x8e, 0x39, 0x30, 0xc1,
-	0xf0, 0x7f, 0x29, 0xff, 0xfd, 0xeb, 0xea, 0xbc, 0xcc, 0x74, 0xc7, 0x75, 0x19, 0x70, 0xfe, 0x2a,
-	0x62, 0x24, 0xf0, 0xaa, 0xa2, 0x4b, 0xaf, 0xa3, 0x7c, 0x3f, 0x90, 0x54, 0x3b, 0x8f, 0x66, 0x48,
-	0xe0, 0x42, 0x43, 0x40, 0x5d, 0xaf, 0xa6, 0x0f, 0xbc, 0x8d, 0xa6, 0x13, 0x91, 0xf9, 0x29, 0xe1,
-	0x60, 0x79, 0x0c, 0x07, 0x02, 0x54, 0x0c, 0xe9, 0xfb, 0xe8, 0xb6, 0xa0, 0x2b, 0x03, 0xec, 0xca,
-	0xa0, 0x9f, 0xc9, 0x9c, 0x2f, 0x85, 0x89, 0x0b, 0xe8, 0x9a, 0xe3, 0xd3, 0x9a, 0x15, 0xda, 0x84,
-	0x59, 0xc4, 0x95, 0x12, 0x50, 0x52, 0xab, 0xd8, 0x84, 0xed, 0xbb, 0x7a, 0x03, 0xdd, 0x19, 0x05,
-	0x25, 0x7d, 0xbc, 0xe8, 0x49, 0x7d, 0x2d, 0x43, 0x73, 0x26, 0x52, 0x4f, 0xf8, 0x77, 0xd1, 0x8a,
-	0x60, 0xde, 0xf1, 0xfd, 0x51, 0x3e, 0xf4, 0x13, 0x54, 0x1c, 0xa3, 0x77, 0x80, 0xd0, 0xff, 0xfe,
-	0x5d, 0xe8, 0xfa, 0x97, 0x59, 0x34, 0x23, 0xd8, 0xf1, 0x37, 0x05, 0xe1, 0xfe, 0xa5, 0xc2, 0x9b,
-	0x19, 0x04, 0xc3, 0x37, 0x5d, 0xdd, 0xba, 0xea, 0x58, 0xea, 0x4f, 0xdf, 0xfa, 0xf0, 0xe3, 0xe2,
-	0xd3, 0xd4, 0x1a, 0x36, 0xcc, 0x4b, 0xf7, 0xf7, 0xee, 0x41, 0xd7, 0x99, 0x76, 0xa6, 0xad, 0xe4,
-	0x18, 0x53, 0x1f, 0xf8, 0xb3, 0x82, 0xe6, 0xba, 0x16, 0x14, 0x1b, 0xc3, 0xf8, 0xfb, 0x4f, 0x42,
-	0x35, 0xc7, 0xee, 0x97, 0x42, 0x4d, 0x21, 0xb4, 0x88, 0x97, 0xb3, 0x85, 0x26, 0xd7, 0x23, 0x34,
-	0x26, 0x4f, 0x7c, 0xa1, 0xa0, 0x85, 0xcc, 0xff, 0x0a, 0x7e, 0x34, 0x8c, 0x7f, 0xd4, 0x0a, 0xa9,
-	0x8f, 0x27, 0x9c, 0x96, 0x5e, 0x9e, 0x0b, 0x2f, 0xbb, 0xb8, 0x64, 0x5e, 0xe1, 0x47, 0x4f, 0x26,
-	0x6f, 0x9e, 0x74, 0x1f, 0xe1, 0x7b, 0x7c, 0xae, 0xa0, 0xc5, 0x61, 0x9b, 0x8c, 0x9f, 0x0c, 0xd3,
-	0x3a, 0xc6, 0xbd, 0xa8, 0x4f, 0x27, 0x07, 0x90, 0x7e, 0xb7, 0x85, 0xdf, 0x4d, 0xbc, 0x31, 0x81,
-	0xdf, 0xd2, 0xc1, 0x69, 0x4b, 0x53, 0xce, 0x5a, 0x9a, 0xf2, 0xab, 0xa5, 0x29, 0x1f, 0xdb, 0x5a,
-	0xee, 0xac, 0xad, 0xe5, 0x7e, 0xb6, 0xb5, 0xdc, 0x9b, 0x87, 0x1e, 0x89, 0x8e, 0xe2, 0x9a, 0xe1,
-	0xd0, 0x7a, 0xef, 0x52, 0xac, 0x3a, 0x47, 0x36, 0x09, 0xcc, 0x3f, 0x95, 0xc6, 0x5f, 0xb2, 0xa8,
-	0x19, 0x02, 0xaf, 0xcd, 0x8a, 0x4f, 0x1b, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xba, 0x68, 0x78,
-	0x11, 0x24, 0x07, 0x00, 0x00,
+	// 611 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0x8d, 0xfb, 0xb5, 0x95, 0xbe, 0x29, 0x6c, 0x46, 0x41, 0x04, 0x0b, 0xb9, 0xc1, 0x0b, 0xd2,
+	0x4a, 0xd4, 0xa6, 0x0d, 0x54, 0x02, 0x04, 0xa2, 0x11, 0x4a, 0x01, 0x09, 0x11, 0x42, 0xd9, 0xb0,
+	0xb1, 0x1c, 0xfb, 0xd6, 0x1d, 0x70, 0x3c, 0xee, 0x8c, 0x8d, 0x12, 0x10, 0x1b, 0x9e, 0x00, 0x89,
+	0x07, 0x60, 0xcb, 0x03, 0xb0, 0xe3, 0x05, 0xba, 0xac, 0x40, 0x42, 0xac, 0x10, 0x4a, 0xe0, 0x3d,
+	0x90, 0xc7, 0x93, 0x92, 0x3f, 0x3b, 0x2d, 0x62, 0xe7, 0xb9, 0x73, 0x7f, 0xce, 0x39, 0xbe, 0x67,
+	0xd0, 0x05, 0xb7, 0xeb, 0x76, 0x42, 0x46, 0x23, 0xea, 0x50, 0xdf, 0xdc, 0x05, 0x88, 0x08, 0x30,
+	0x6e, 0xee, 0xc7, 0xc0, 0xba, 0x86, 0x88, 0xe3, 0x33, 0xc3, 0x29, 0xc6, 0x20, 0x45, 0x3d, 0xe7,
+	0x50, 0xde, 0xa6, 0xdc, 0x12, 0x37, 0x66, 0x7a, 0x48, 0x2b, 0xd4, 0xa2, 0x47, 0x3d, 0x9a, 0xc6,
+	0x93, 0x2f, 0x19, 0x3d, 0xef, 0x51, 0xea, 0xf9, 0x60, 0xda, 0x21, 0x31, 0xed, 0x20, 0xa0, 0x91,
+	0x1d, 0x11, 0x1a, 0x0c, 0x6a, 0xf4, 0xe9, 0x40, 0x42, 0x9b, 0xd9, 0xed, 0x41, 0x4e, 0x35, 0x23,
+	0x07, 0x98, 0xd5, 0xb6, 0xd9, 0x73, 0x88, 0xac, 0x5d, 0x00, 0xcb, 0x25, 0xdc, 0xa1, 0x71, 0x10,
+	0xa5, 0x45, 0x7a, 0x19, 0x69, 0x8f, 0x12, 0x36, 0x0d, 0x60, 0x21, 0x44, 0xb1, 0xed, 0xd7, 0x01,
+	0x1a, 0xa2, 0x6b, 0x13, 0xf6, 0x63, 0xe0, 0x91, 0xfe, 0x0c, 0x2d, 0x67, 0x66, 0xf0, 0x90, 0x06,
+	0x1c, 0xf0, 0x36, 0x5a, 0x4c, 0x91, 0x94, 0x94, 0xb2, 0xb2, 0xb2, 0xb4, 0xb1, 0x6a, 0x4c, 0x15,
+	0xc5, 0x98, 0x6c, 0x51, 0x9b, 0x3f, 0xf8, 0xbe, 0x5c, 0x68, 0xca, 0x72, 0x7d, 0x1b, 0x9d, 0x15,
+	0xb3, 0x9e, 0x70, 0x60, 0x75, 0x80, 0x1d, 0x02, 0x4c, 0xc2, 0xc0, 0x97, 0xd0, 0x7c, 0xcc, 0x81,
+	0x89, 0x09, 0xff, 0xd7, 0x4a, 0x9f, 0x3f, 0xae, 0x15, 0xa5, 0xaa, 0x5b, 0xae, 0xcb, 0x80, 0xf3,
+	0xc7, 0x11, 0x23, 0x81, 0xd7, 0x14, 0x59, 0x7a, 0x1b, 0x95, 0x26, 0x1b, 0x49, 0xb4, 0x45, 0xb4,
+	0x40, 0x02, 0x17, 0x3a, 0xa2, 0xd5, 0xe9, 0x66, 0x7a, 0xc0, 0x37, 0xd0, 0x7c, 0x02, 0xb2, 0x34,
+	0x27, 0x18, 0x54, 0x8e, 0xc1, 0x40, 0x34, 0x15, 0x45, 0xfa, 0x7d, 0x74, 0x71, 0xa0, 0xd1, 0x03,
+	0x21, 0x75, 0x1d, 0xe0, 0x8e, 0x14, 0x7a, 0x44, 0x4d, 0x5c, 0x46, 0xa7, 0x1c, 0x9f, 0xb6, 0xac,
+	0xd0, 0x26, 0xcc, 0x22, 0xae, 0xc4, 0x80, 0x92, 0x58, 0xc3, 0x26, 0xec, 0x9e, 0xab, 0xbf, 0x44,
+	0x95, 0x99, 0xbd, 0x24, 0x93, 0x87, 0x63, 0xba, 0xaf, 0x67, 0xa3, 0xce, 0x68, 0x35, 0xa6, 0xff,
+	0x8a, 0xe4, 0xb1, 0xe5, 0xfb, 0xf9, 0x3c, 0x8e, 0x50, 0xe6, 0x65, 0x4e, 0x41, 0xf9, 0xdf, 0x3f,
+	0x40, 0xb9, 0xf1, 0x61, 0x11, 0x2d, 0x88, 0xe1, 0xf8, 0x93, 0x82, 0xf0, 0xe4, 0x52, 0xe1, 0xab,
+	0x19, 0x13, 0xf2, 0x37, 0x5d, 0xdd, 0x3c, 0x69, 0x59, 0x4a, 0x50, 0xdf, 0x7c, 0xf3, 0xe5, 0xe7,
+	0xbb, 0xb9, 0xcb, 0xd8, 0x30, 0x47, 0x1c, 0xf8, 0xe2, 0xca, 0x88, 0x09, 0xd3, 0x6a, 0xe1, 0xc1,
+	0x94, 0x07, 0x7e, 0xaf, 0xa0, 0xa5, 0xa1, 0x05, 0xc5, 0x46, 0xde, 0xfc, 0x49, 0x4b, 0xa8, 0xe6,
+	0xb1, 0xf3, 0x25, 0x50, 0x53, 0x00, 0x5d, 0xc5, 0x95, 0x6c, 0xa0, 0x89, 0x7b, 0x04, 0xc6, 0xe4,
+	0x88, 0x7f, 0x29, 0x48, 0xcd, 0xfe, 0x2d, 0xf8, 0xe6, 0x0c, 0xc1, 0xf2, 0x77, 0x48, 0xbd, 0xf5,
+	0xb7, 0xe5, 0x92, 0xce, 0x5d, 0x41, 0xa7, 0x86, 0x6f, 0x9b, 0xd3, 0x5f, 0xbe, 0x29, 0xaf, 0x9e,
+	0x94, 0xde, 0x7c, 0x35, 0x6c, 0xc2, 0xd7, 0xf8, 0xab, 0x82, 0xd4, 0xec, 0x4d, 0xce, 0xe7, 0x39,
+	0xd3, 0x2b, 0xf9, 0x3c, 0x67, 0x1b, 0x48, 0xbf, 0x26, 0x78, 0x56, 0xf1, 0xfa, 0x89, 0x79, 0xd6,
+	0x76, 0x0e, 0x7a, 0x9a, 0x72, 0xd8, 0xd3, 0x94, 0x1f, 0x3d, 0x4d, 0x79, 0xdb, 0xd7, 0x0a, 0x87,
+	0x7d, 0xad, 0xf0, 0xad, 0xaf, 0x15, 0x9e, 0x5e, 0xf7, 0x48, 0xb4, 0x17, 0xb7, 0x0c, 0x87, 0xb6,
+	0xc7, 0xb7, 0x61, 0xcd, 0xd9, 0xb3, 0x49, 0x60, 0x1e, 0x45, 0x3a, 0x7f, 0x46, 0x45, 0xdd, 0x10,
+	0x78, 0x6b, 0x51, 0x5c, 0x55, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0x4e, 0xb4, 0x6a, 0xb4, 0x1f,
+	0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -469,11 +469,11 @@ type QueryClient interface {
 	PerpetualFeeParams(ctx context.Context, in *QueryPerpetualFeeParamsRequest, opts ...grpc.CallOption) (*QueryPerpetualFeeParamsResponse, error)
 	// Queries a user's fee tier
 	UserFeeTier(ctx context.Context, in *QueryUserFeeTierRequest, opts ...grpc.CallOption) (*QueryUserFeeTierResponse, error)
-	// FeeDiscountCampaignParams queries fee discount campaign parameters for a
-	// specific CLOB pair.
-	FeeDiscountCampaignParams(ctx context.Context, in *QueryFeeDiscountCampaignParamsRequest, opts ...grpc.CallOption) (*QueryFeeDiscountCampaignParamsResponse, error)
-	// AllFeeDiscountCampaignParams queries all fee discount campaign parameters.
-	AllFeeDiscountCampaignParams(ctx context.Context, in *QueryAllFeeDiscountCampaignParamsRequest, opts ...grpc.CallOption) (*QueryAllFeeDiscountCampaignParamsResponse, error)
+	// PerMarketFeeDiscountParams queries fee discount parameters for a
+	// specific market/CLOB pair.
+	PerMarketFeeDiscountParams(ctx context.Context, in *QueryPerMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryPerMarketFeeDiscountParamsResponse, error)
+	// AllMarketFeeDiscountParams queries all per-market fee discount parameters.
+	AllMarketFeeDiscountParams(ctx context.Context, in *QueryAllMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryAllMarketFeeDiscountParamsResponse, error)
 }
 
 type queryClient struct {
@@ -502,18 +502,18 @@ func (c *queryClient) UserFeeTier(ctx context.Context, in *QueryUserFeeTierReque
 	return out, nil
 }
 
-func (c *queryClient) FeeDiscountCampaignParams(ctx context.Context, in *QueryFeeDiscountCampaignParamsRequest, opts ...grpc.CallOption) (*QueryFeeDiscountCampaignParamsResponse, error) {
-	out := new(QueryFeeDiscountCampaignParamsResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/FeeDiscountCampaignParams", in, out, opts...)
+func (c *queryClient) PerMarketFeeDiscountParams(ctx context.Context, in *QueryPerMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryPerMarketFeeDiscountParamsResponse, error) {
+	out := new(QueryPerMarketFeeDiscountParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/PerMarketFeeDiscountParams", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) AllFeeDiscountCampaignParams(ctx context.Context, in *QueryAllFeeDiscountCampaignParamsRequest, opts ...grpc.CallOption) (*QueryAllFeeDiscountCampaignParamsResponse, error) {
-	out := new(QueryAllFeeDiscountCampaignParamsResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/AllFeeDiscountCampaignParams", in, out, opts...)
+func (c *queryClient) AllMarketFeeDiscountParams(ctx context.Context, in *QueryAllMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryAllMarketFeeDiscountParamsResponse, error) {
+	out := new(QueryAllMarketFeeDiscountParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/AllMarketFeeDiscountParams", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -526,11 +526,11 @@ type QueryServer interface {
 	PerpetualFeeParams(context.Context, *QueryPerpetualFeeParamsRequest) (*QueryPerpetualFeeParamsResponse, error)
 	// Queries a user's fee tier
 	UserFeeTier(context.Context, *QueryUserFeeTierRequest) (*QueryUserFeeTierResponse, error)
-	// FeeDiscountCampaignParams queries fee discount campaign parameters for a
-	// specific CLOB pair.
-	FeeDiscountCampaignParams(context.Context, *QueryFeeDiscountCampaignParamsRequest) (*QueryFeeDiscountCampaignParamsResponse, error)
-	// AllFeeDiscountCampaignParams queries all fee discount campaign parameters.
-	AllFeeDiscountCampaignParams(context.Context, *QueryAllFeeDiscountCampaignParamsRequest) (*QueryAllFeeDiscountCampaignParamsResponse, error)
+	// PerMarketFeeDiscountParams queries fee discount parameters for a
+	// specific market/CLOB pair.
+	PerMarketFeeDiscountParams(context.Context, *QueryPerMarketFeeDiscountParamsRequest) (*QueryPerMarketFeeDiscountParamsResponse, error)
+	// AllMarketFeeDiscountParams queries all per-market fee discount parameters.
+	AllMarketFeeDiscountParams(context.Context, *QueryAllMarketFeeDiscountParamsRequest) (*QueryAllMarketFeeDiscountParamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -543,11 +543,11 @@ func (*UnimplementedQueryServer) PerpetualFeeParams(ctx context.Context, req *Qu
 func (*UnimplementedQueryServer) UserFeeTier(ctx context.Context, req *QueryUserFeeTierRequest) (*QueryUserFeeTierResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserFeeTier not implemented")
 }
-func (*UnimplementedQueryServer) FeeDiscountCampaignParams(ctx context.Context, req *QueryFeeDiscountCampaignParamsRequest) (*QueryFeeDiscountCampaignParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FeeDiscountCampaignParams not implemented")
+func (*UnimplementedQueryServer) PerMarketFeeDiscountParams(ctx context.Context, req *QueryPerMarketFeeDiscountParamsRequest) (*QueryPerMarketFeeDiscountParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PerMarketFeeDiscountParams not implemented")
 }
-func (*UnimplementedQueryServer) AllFeeDiscountCampaignParams(ctx context.Context, req *QueryAllFeeDiscountCampaignParamsRequest) (*QueryAllFeeDiscountCampaignParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AllFeeDiscountCampaignParams not implemented")
+func (*UnimplementedQueryServer) AllMarketFeeDiscountParams(ctx context.Context, req *QueryAllMarketFeeDiscountParamsRequest) (*QueryAllMarketFeeDiscountParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllMarketFeeDiscountParams not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -590,38 +590,38 @@ func _Query_UserFeeTier_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_FeeDiscountCampaignParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFeeDiscountCampaignParamsRequest)
+func _Query_PerMarketFeeDiscountParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPerMarketFeeDiscountParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).FeeDiscountCampaignParams(ctx, in)
+		return srv.(QueryServer).PerMarketFeeDiscountParams(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.feetiers.Query/FeeDiscountCampaignParams",
+		FullMethod: "/dydxprotocol.feetiers.Query/PerMarketFeeDiscountParams",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FeeDiscountCampaignParams(ctx, req.(*QueryFeeDiscountCampaignParamsRequest))
+		return srv.(QueryServer).PerMarketFeeDiscountParams(ctx, req.(*QueryPerMarketFeeDiscountParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AllFeeDiscountCampaignParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAllFeeDiscountCampaignParamsRequest)
+func _Query_AllMarketFeeDiscountParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllMarketFeeDiscountParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).AllFeeDiscountCampaignParams(ctx, in)
+		return srv.(QueryServer).AllMarketFeeDiscountParams(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.feetiers.Query/AllFeeDiscountCampaignParams",
+		FullMethod: "/dydxprotocol.feetiers.Query/AllMarketFeeDiscountParams",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AllFeeDiscountCampaignParams(ctx, req.(*QueryAllFeeDiscountCampaignParamsRequest))
+		return srv.(QueryServer).AllMarketFeeDiscountParams(ctx, req.(*QueryAllMarketFeeDiscountParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -639,12 +639,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_UserFeeTier_Handler,
 		},
 		{
-			MethodName: "FeeDiscountCampaignParams",
-			Handler:    _Query_FeeDiscountCampaignParams_Handler,
+			MethodName: "PerMarketFeeDiscountParams",
+			Handler:    _Query_PerMarketFeeDiscountParams_Handler,
 		},
 		{
-			MethodName: "AllFeeDiscountCampaignParams",
-			Handler:    _Query_AllFeeDiscountCampaignParams_Handler,
+			MethodName: "AllMarketFeeDiscountParams",
+			Handler:    _Query_AllMarketFeeDiscountParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -777,7 +777,7 @@ func (m *QueryUserFeeTierResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFeeDiscountCampaignParamsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryPerMarketFeeDiscountParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -787,12 +787,12 @@ func (m *QueryFeeDiscountCampaignParamsRequest) Marshal() (dAtA []byte, err erro
 	return dAtA[:n], nil
 }
 
-func (m *QueryFeeDiscountCampaignParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryPerMarketFeeDiscountParamsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFeeDiscountCampaignParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryPerMarketFeeDiscountParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -805,7 +805,7 @@ func (m *QueryFeeDiscountCampaignParamsRequest) MarshalToSizedBuffer(dAtA []byte
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFeeDiscountCampaignParamsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryPerMarketFeeDiscountParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -815,12 +815,12 @@ func (m *QueryFeeDiscountCampaignParamsResponse) Marshal() (dAtA []byte, err err
 	return dAtA[:n], nil
 }
 
-func (m *QueryFeeDiscountCampaignParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryPerMarketFeeDiscountParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFeeDiscountCampaignParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryPerMarketFeeDiscountParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -838,7 +838,7 @@ func (m *QueryFeeDiscountCampaignParamsResponse) MarshalToSizedBuffer(dAtA []byt
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllMarketFeeDiscountParamsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -848,12 +848,12 @@ func (m *QueryAllFeeDiscountCampaignParamsRequest) Marshal() (dAtA []byte, err e
 	return dAtA[:n], nil
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllMarketFeeDiscountParamsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllMarketFeeDiscountParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -861,7 +861,7 @@ func (m *QueryAllFeeDiscountCampaignParamsRequest) MarshalToSizedBuffer(dAtA []b
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllMarketFeeDiscountParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -871,12 +871,12 @@ func (m *QueryAllFeeDiscountCampaignParamsResponse) Marshal() (dAtA []byte, err 
 	return dAtA[:n], nil
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllMarketFeeDiscountParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllMarketFeeDiscountParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -958,7 +958,7 @@ func (m *QueryUserFeeTierResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryFeeDiscountCampaignParamsRequest) Size() (n int) {
+func (m *QueryPerMarketFeeDiscountParamsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -970,7 +970,7 @@ func (m *QueryFeeDiscountCampaignParamsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryFeeDiscountCampaignParamsResponse) Size() (n int) {
+func (m *QueryPerMarketFeeDiscountParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -981,7 +981,7 @@ func (m *QueryFeeDiscountCampaignParamsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsRequest) Size() (n int) {
+func (m *QueryAllMarketFeeDiscountParamsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -990,7 +990,7 @@ func (m *QueryAllFeeDiscountCampaignParamsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryAllFeeDiscountCampaignParamsResponse) Size() (n int) {
+func (m *QueryAllMarketFeeDiscountParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1331,7 +1331,7 @@ func (m *QueryUserFeeTierResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryFeeDiscountCampaignParamsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryPerMarketFeeDiscountParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1354,10 +1354,10 @@ func (m *QueryFeeDiscountCampaignParamsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFeeDiscountCampaignParamsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFeeDiscountCampaignParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1400,7 +1400,7 @@ func (m *QueryFeeDiscountCampaignParamsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryFeeDiscountCampaignParamsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryPerMarketFeeDiscountParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1423,10 +1423,10 @@ func (m *QueryFeeDiscountCampaignParamsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFeeDiscountCampaignParamsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFeeDiscountCampaignParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1483,7 +1483,7 @@ func (m *QueryFeeDiscountCampaignParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryAllFeeDiscountCampaignParamsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryAllMarketFeeDiscountParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1506,10 +1506,10 @@ func (m *QueryAllFeeDiscountCampaignParamsRequest) Unmarshal(dAtA []byte) error 
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllFeeDiscountCampaignParamsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllFeeDiscountCampaignParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1533,7 +1533,7 @@ func (m *QueryAllFeeDiscountCampaignParamsRequest) Unmarshal(dAtA []byte) error 
 	}
 	return nil
 }
-func (m *QueryAllFeeDiscountCampaignParamsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAllMarketFeeDiscountParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1556,10 +1556,10 @@ func (m *QueryAllFeeDiscountCampaignParamsResponse) Unmarshal(dAtA []byte) error
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAllFeeDiscountCampaignParamsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryAllFeeDiscountCampaignParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1591,7 +1591,7 @@ func (m *QueryAllFeeDiscountCampaignParamsResponse) Unmarshal(dAtA []byte) error
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Params = append(m.Params, FeeDiscountCampaignParams{})
+			m.Params = append(m.Params, PerMarketFeeDiscountParams{})
 			if err := m.Params[len(m.Params)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

@@ -23,7 +23,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdQueryPerpetualFeeParams())
 	cmd.AddCommand(CmdQueryUserFeeTier())
-	cmd.AddCommand(CmdQueryFeeDiscountCampaignParams())
+	cmd.AddCommand(CmdQueryMarketFeeDiscountParams())
 
 	return cmd
 }
@@ -77,20 +77,20 @@ func CmdQueryUserFeeTier() *cobra.Command {
 	return cmd
 }
 
-func CmdQueryFeeDiscountCampaignParams() *cobra.Command {
+func CmdQueryMarketFeeDiscountParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-fee-discount-campaign-params [clob_pair_id]",
-		Short: "get the FeeDiscountCampaignParams for all or a specific CLOB pair",
+		Use:   "get-market-fee-discount-params [clob_pair_id]",
+		Short: "get the fee discount parameters for all markets or a specific CLOB pair",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
 
 			if len(args) == 0 {
-				// Query all fee discount params
-				res, err := queryClient.AllFeeDiscountCampaignParams(
+				// Query all market fee discount params
+				res, err := queryClient.AllMarketFeeDiscountParams(
 					context.Background(),
-					&types.QueryAllFeeDiscountCampaignParamsRequest{},
+					&types.QueryAllMarketFeeDiscountParamsRequest{},
 				)
 				if err != nil {
 					return err
@@ -103,10 +103,10 @@ func CmdQueryFeeDiscountCampaignParams() *cobra.Command {
 					return fmt.Errorf("clob_pair_id %s not a valid uint32", args[0])
 				}
 
-				// Query specific fee discount params
-				res, err := queryClient.FeeDiscountCampaignParams(
+				// Query specific market fee discount params
+				res, err := queryClient.PerMarketFeeDiscountParams(
 					context.Background(),
-					&types.QueryFeeDiscountCampaignParamsRequest{
+					&types.QueryPerMarketFeeDiscountParamsRequest{
 						ClobPairId: clobPairID,
 					},
 				)
@@ -119,6 +119,5 @@ func CmdQueryFeeDiscountCampaignParams() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-
 	return cmd
 }

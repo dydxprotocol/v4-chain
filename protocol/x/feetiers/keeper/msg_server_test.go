@@ -82,16 +82,16 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 }
 
-// TestMsgSetFeeDiscountCampaignParams tests the SetFeeDiscountCampaignParams message handler
-func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
+// TestMsgSetMarketFeeDiscountParams tests the SetMarketFeeDiscountParams message handler
+func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 	_, ms, ctx := setupMsgServer(t)
 
 	// Set a fixed current time
 	baseTime := time.Unix(1000, 0)
 	ctx = ctx.WithBlockTime(baseTime)
 
-	// Create valid fee discount campaign params
-	validParams := types.FeeDiscountCampaignParams{
+	// Create valid fee discount params
+	validParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    1,
 		StartTimeUnix: 1100,
 		EndTimeUnix:   1200,
@@ -100,23 +100,23 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		input     *types.MsgSetFeeDiscountCampaignParams
+		input     *types.MsgSetMarketFeeDiscountParams
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "valid single param",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params:    []types.FeeDiscountCampaignParams{validParams},
+				Params:    []types.PerMarketFeeDiscountParams{validParams},
 			},
 			expErr: false,
 		},
 		{
 			name: "valid multiple params",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: []types.FeeDiscountCampaignParams{
+				Params: []types.PerMarketFeeDiscountParams{
 					validParams,
 					{
 						ClobPairId:    2,
@@ -130,26 +130,26 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 		},
 		{
 			name: "empty params",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params:    []types.FeeDiscountCampaignParams{},
+				Params:    []types.PerMarketFeeDiscountParams{},
 			},
 			expErr: false, // Empty list is valid (no-op)
 		},
 		{
 			name: "invalid authority",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: "invalid",
-				Params:    []types.FeeDiscountCampaignParams{validParams},
+				Params:    []types.PerMarketFeeDiscountParams{validParams},
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
 		},
 		{
 			name: "invalid param - end time before current time",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: []types.FeeDiscountCampaignParams{
+				Params: []types.PerMarketFeeDiscountParams{
 					{
 						ClobPairId:    1,
 						StartTimeUnix: 900,
@@ -163,9 +163,9 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 		},
 		{
 			name: "invalid param - start time after end time",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: []types.FeeDiscountCampaignParams{
+				Params: []types.PerMarketFeeDiscountParams{
 					{
 						ClobPairId:    1,
 						StartTimeUnix: 1200,
@@ -179,9 +179,9 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 		},
 		{
 			name: "invalid param - too long duration",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: []types.FeeDiscountCampaignParams{
+				Params: []types.PerMarketFeeDiscountParams{
 					{
 						ClobPairId:    1,
 						StartTimeUnix: 1100,
@@ -195,9 +195,9 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 		},
 		{
 			name: "invalid param - charge PPM exceeds maximum",
-			input: &types.MsgSetFeeDiscountCampaignParams{
+			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: []types.FeeDiscountCampaignParams{
+				Params: []types.PerMarketFeeDiscountParams{
 					{
 						ClobPairId:    1,
 						StartTimeUnix: 1100,
@@ -213,7 +213,7 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := ms.SetFeeDiscountCampaignParams(ctx, tc.input)
+			_, err := ms.SetMarketFeeDiscountParams(ctx, tc.input)
 			if tc.expErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expErrMsg)
@@ -224,55 +224,55 @@ func TestMsgSetFeeDiscountCampaignParams(t *testing.T) {
 	}
 }
 
-// TestMsgSetFeeDiscountCampaignParamsUpdate tests updating existing fee discount campaign params
-func TestMsgSetFeeDiscountCampaignParamsUpdate(t *testing.T) {
+// TestMsgSetMarketFeeDiscountParamsUpdate tests updating existing fee discount parameters
+func TestMsgSetMarketFeeDiscountParamsUpdate(t *testing.T) {
 	k, ms, ctx := setupMsgServer(t)
 
 	// Set a fixed current time
 	baseTime := time.Unix(1000, 0)
 	ctx = ctx.WithBlockTime(baseTime)
 
-	// Initial fee discount campaign params
+	// Initial fee discount params
 	clobPairId := uint32(1)
-	initialParams := types.FeeDiscountCampaignParams{
+	initialParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    clobPairId,
 		StartTimeUnix: 1100,
 		EndTimeUnix:   1200,
 		ChargePpm:     500_000, // 50% discount
 	}
 
-	// Set the initial fee discount campaign
-	_, err := ms.SetFeeDiscountCampaignParams(ctx, &types.MsgSetFeeDiscountCampaignParams{
+	// Set the initial fee discount params
+	_, err := ms.SetMarketFeeDiscountParams(ctx, &types.MsgSetMarketFeeDiscountParams{
 		Authority: lib.GovModuleAddress.String(),
-		Params:    []types.FeeDiscountCampaignParams{initialParams},
+		Params:    []types.PerMarketFeeDiscountParams{initialParams},
 	})
 	require.NoError(t, err)
 
 	// Verify it was set correctly
-	getParams, err := k.GetFeeDiscountCampaignParams(ctx, clobPairId)
+	getParams, err := k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, initialParams.ClobPairId, getParams.ClobPairId)
 	require.Equal(t, initialParams.StartTimeUnix, getParams.StartTimeUnix)
 	require.Equal(t, initialParams.EndTimeUnix, getParams.EndTimeUnix)
 	require.Equal(t, initialParams.ChargePpm, getParams.ChargePpm)
 
-	// Update with new fee discount campaign params
-	updatedParams := types.FeeDiscountCampaignParams{
+	// Update with new fee discount params
+	updatedParams := types.PerMarketFeeDiscountParams{
 		ClobPairId:    clobPairId,
 		StartTimeUnix: 1150,
 		EndTimeUnix:   1250,
 		ChargePpm:     250_000, // 75% discount
 	}
 
-	// Set the updated fee discount campaign
-	_, err = ms.SetFeeDiscountCampaignParams(ctx, &types.MsgSetFeeDiscountCampaignParams{
+	// Set the updated fee discount params
+	_, err = ms.SetMarketFeeDiscountParams(ctx, &types.MsgSetMarketFeeDiscountParams{
 		Authority: lib.GovModuleAddress.String(),
-		Params:    []types.FeeDiscountCampaignParams{updatedParams},
+		Params:    []types.PerMarketFeeDiscountParams{updatedParams},
 	})
 	require.NoError(t, err)
 
 	// Verify it was updated correctly
-	getParams, err = k.GetFeeDiscountCampaignParams(ctx, clobPairId)
+	getParams, err = k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, updatedParams.ClobPairId, getParams.ClobPairId)
 	require.Equal(t, updatedParams.StartTimeUnix, getParams.StartTimeUnix)
@@ -280,16 +280,16 @@ func TestMsgSetFeeDiscountCampaignParamsUpdate(t *testing.T) {
 	require.Equal(t, updatedParams.ChargePpm, getParams.ChargePpm)
 }
 
-// TestMsgSetMultipleFeeDiscountCampaignParams tests setting multiple fee discount campaign params
-func TestMsgSetMultipleFeeDiscountCampaignParams(t *testing.T) {
+// TestMsgSetMultipleMarketFeeDiscountParams tests setting multiple fee discount parameters
+func TestMsgSetMultipleMarketFeeDiscountParams(t *testing.T) {
 	k, ms, ctx := setupMsgServer(t)
 
 	// Set a fixed current time
 	baseTime := time.Unix(1000, 0)
 	ctx = ctx.WithBlockTime(baseTime)
 
-	// Multiple fee discount campaign params
-	campaigns := []types.FeeDiscountCampaignParams{
+	// Multiple fee discount params
+	discountParams := []types.PerMarketFeeDiscountParams{
 		{
 			ClobPairId:    1,
 			StartTimeUnix: 1100,
@@ -310,24 +310,24 @@ func TestMsgSetMultipleFeeDiscountCampaignParams(t *testing.T) {
 		},
 	}
 
-	// Set all fee discount campaigns
-	_, err := ms.SetFeeDiscountCampaignParams(ctx, &types.MsgSetFeeDiscountCampaignParams{
+	// Set all fee discount params
+	_, err := ms.SetMarketFeeDiscountParams(ctx, &types.MsgSetMarketFeeDiscountParams{
 		Authority: lib.GovModuleAddress.String(),
-		Params:    campaigns,
+		Params:    discountParams,
 	})
 	require.NoError(t, err)
 
-	// Verify all campaigns were set correctly
-	for _, campaign := range campaigns {
-		getParams, err := k.GetFeeDiscountCampaignParams(ctx, campaign.ClobPairId)
+	// Verify all params were set correctly
+	for _, params := range discountParams {
+		getParams, err := k.GetPerMarketFeeDiscountParams(ctx, params.ClobPairId)
 		require.NoError(t, err)
-		require.Equal(t, campaign.ClobPairId, getParams.ClobPairId)
-		require.Equal(t, campaign.StartTimeUnix, getParams.StartTimeUnix)
-		require.Equal(t, campaign.EndTimeUnix, getParams.EndTimeUnix)
-		require.Equal(t, campaign.ChargePpm, getParams.ChargePpm)
+		require.Equal(t, params.ClobPairId, getParams.ClobPairId)
+		require.Equal(t, params.StartTimeUnix, getParams.StartTimeUnix)
+		require.Equal(t, params.EndTimeUnix, getParams.EndTimeUnix)
+		require.Equal(t, params.ChargePpm, getParams.ChargePpm)
 	}
 
-	// Check total count of fee discount campaigns
-	allCampaigns := k.GetAllFeeDiscountCampaignParams(ctx)
-	require.Len(t, allCampaigns, len(campaigns))
+	// Check total count of fee discount params
+	allDiscountParams := k.GetAllMarketFeeDiscountParams(ctx)
+	require.Len(t, allDiscountParams, len(discountParams))
 }

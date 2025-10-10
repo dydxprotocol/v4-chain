@@ -1,5 +1,5 @@
 import { PerpetualFeeParams, PerpetualFeeParamsSDKType, PerpetualFeeTier, PerpetualFeeTierSDKType } from "./params";
-import { FeeDiscountCampaignParams, FeeDiscountCampaignParamsSDKType } from "./fee_discount_campaign";
+import { PerMarketFeeDiscountParams, PerMarketFeeDiscountParamsSDKType } from "./per_market_fee_discount";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -55,72 +55,72 @@ export interface QueryUserFeeTierResponseSDKType {
   tier?: PerpetualFeeTierSDKType;
 }
 /**
- * QueryFeeDiscountCampaignParamsRequest is the request type for the
- * Query/FeeDiscountCampaignParams RPC method.
+ * QueryPerMarketFeeDiscountParamsRequest is the request type for the
+ * Query/PerMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryFeeDiscountCampaignParamsRequest {
+export interface QueryPerMarketFeeDiscountParamsRequest {
   /**
-   * QueryFeeDiscountCampaignParamsRequest is the request type for the
-   * Query/FeeDiscountCampaignParams RPC method.
+   * QueryPerMarketFeeDiscountParamsRequest is the request type for the
+   * Query/PerMarketFeeDiscountParams RPC method.
    */
   clobPairId: number;
 }
 /**
- * QueryFeeDiscountCampaignParamsRequest is the request type for the
- * Query/FeeDiscountCampaignParams RPC method.
+ * QueryPerMarketFeeDiscountParamsRequest is the request type for the
+ * Query/PerMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryFeeDiscountCampaignParamsRequestSDKType {
+export interface QueryPerMarketFeeDiscountParamsRequestSDKType {
   /**
-   * QueryFeeDiscountCampaignParamsRequest is the request type for the
-   * Query/FeeDiscountCampaignParams RPC method.
+   * QueryPerMarketFeeDiscountParamsRequest is the request type for the
+   * Query/PerMarketFeeDiscountParams RPC method.
    */
   clob_pair_id: number;
 }
 /**
- * QueryFeeDiscountCampaignParamsResponse is the response type for the
- * Query/FeeDiscountCampaignParams RPC method.
+ * QueryPerMarketFeeDiscountParamsResponse is the response type for the
+ * Query/PerMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryFeeDiscountCampaignParamsResponse {
-  params?: FeeDiscountCampaignParams;
+export interface QueryPerMarketFeeDiscountParamsResponse {
+  params?: PerMarketFeeDiscountParams;
 }
 /**
- * QueryFeeDiscountCampaignParamsResponse is the response type for the
- * Query/FeeDiscountCampaignParams RPC method.
+ * QueryPerMarketFeeDiscountParamsResponse is the response type for the
+ * Query/PerMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryFeeDiscountCampaignParamsResponseSDKType {
-  params?: FeeDiscountCampaignParamsSDKType;
+export interface QueryPerMarketFeeDiscountParamsResponseSDKType {
+  params?: PerMarketFeeDiscountParamsSDKType;
 }
 /**
- * QueryAllFeeDiscountCampaignParamsRequest is the request type for the
- * Query/AllFeeDiscountCampaignParams RPC method.
+ * QueryAllMarketFeeDiscountParamsRequest is the request type for the
+ * Query/AllMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryAllFeeDiscountCampaignParamsRequest {}
+export interface QueryAllMarketFeeDiscountParamsRequest {}
 /**
- * QueryAllFeeDiscountCampaignParamsRequest is the request type for the
- * Query/AllFeeDiscountCampaignParams RPC method.
+ * QueryAllMarketFeeDiscountParamsRequest is the request type for the
+ * Query/AllMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryAllFeeDiscountCampaignParamsRequestSDKType {}
+export interface QueryAllMarketFeeDiscountParamsRequestSDKType {}
 /**
- * QueryAllFeeDiscountCampaignParamsResponse is the response type for the
- * Query/AllFeeDiscountCampaignParams RPC method.
+ * QueryAllMarketFeeDiscountParamsResponse is the response type for the
+ * Query/AllMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryAllFeeDiscountCampaignParamsResponse {
-  params: FeeDiscountCampaignParams[];
+export interface QueryAllMarketFeeDiscountParamsResponse {
+  params: PerMarketFeeDiscountParams[];
 }
 /**
- * QueryAllFeeDiscountCampaignParamsResponse is the response type for the
- * Query/AllFeeDiscountCampaignParams RPC method.
+ * QueryAllMarketFeeDiscountParamsResponse is the response type for the
+ * Query/AllMarketFeeDiscountParams RPC method.
  */
 
-export interface QueryAllFeeDiscountCampaignParamsResponseSDKType {
-  params: FeeDiscountCampaignParamsSDKType[];
+export interface QueryAllMarketFeeDiscountParamsResponseSDKType {
+  params: PerMarketFeeDiscountParamsSDKType[];
 }
 
 function createBaseQueryPerpetualFeeParamsRequest(): QueryPerpetualFeeParamsRequest {
@@ -302,14 +302,14 @@ export const QueryUserFeeTierResponse = {
 
 };
 
-function createBaseQueryFeeDiscountCampaignParamsRequest(): QueryFeeDiscountCampaignParamsRequest {
+function createBaseQueryPerMarketFeeDiscountParamsRequest(): QueryPerMarketFeeDiscountParamsRequest {
   return {
     clobPairId: 0
   };
 }
 
-export const QueryFeeDiscountCampaignParamsRequest = {
-  encode(message: QueryFeeDiscountCampaignParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryPerMarketFeeDiscountParamsRequest = {
+  encode(message: QueryPerMarketFeeDiscountParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.clobPairId !== 0) {
       writer.uint32(8).uint32(message.clobPairId);
     }
@@ -317,10 +317,10 @@ export const QueryFeeDiscountCampaignParamsRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryFeeDiscountCampaignParamsRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPerMarketFeeDiscountParamsRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryFeeDiscountCampaignParamsRequest();
+    const message = createBaseQueryPerMarketFeeDiscountParamsRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -339,40 +339,40 @@ export const QueryFeeDiscountCampaignParamsRequest = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryFeeDiscountCampaignParamsRequest>): QueryFeeDiscountCampaignParamsRequest {
-    const message = createBaseQueryFeeDiscountCampaignParamsRequest();
+  fromPartial(object: DeepPartial<QueryPerMarketFeeDiscountParamsRequest>): QueryPerMarketFeeDiscountParamsRequest {
+    const message = createBaseQueryPerMarketFeeDiscountParamsRequest();
     message.clobPairId = object.clobPairId ?? 0;
     return message;
   }
 
 };
 
-function createBaseQueryFeeDiscountCampaignParamsResponse(): QueryFeeDiscountCampaignParamsResponse {
+function createBaseQueryPerMarketFeeDiscountParamsResponse(): QueryPerMarketFeeDiscountParamsResponse {
   return {
     params: undefined
   };
 }
 
-export const QueryFeeDiscountCampaignParamsResponse = {
-  encode(message: QueryFeeDiscountCampaignParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryPerMarketFeeDiscountParamsResponse = {
+  encode(message: QueryPerMarketFeeDiscountParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.params !== undefined) {
-      FeeDiscountCampaignParams.encode(message.params, writer.uint32(10).fork()).ldelim();
+      PerMarketFeeDiscountParams.encode(message.params, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryFeeDiscountCampaignParamsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPerMarketFeeDiscountParamsResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryFeeDiscountCampaignParamsResponse();
+    const message = createBaseQueryPerMarketFeeDiscountParamsResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.params = FeeDiscountCampaignParams.decode(reader, reader.uint32());
+          message.params = PerMarketFeeDiscountParams.decode(reader, reader.uint32());
           break;
 
         default:
@@ -384,27 +384,27 @@ export const QueryFeeDiscountCampaignParamsResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryFeeDiscountCampaignParamsResponse>): QueryFeeDiscountCampaignParamsResponse {
-    const message = createBaseQueryFeeDiscountCampaignParamsResponse();
-    message.params = object.params !== undefined && object.params !== null ? FeeDiscountCampaignParams.fromPartial(object.params) : undefined;
+  fromPartial(object: DeepPartial<QueryPerMarketFeeDiscountParamsResponse>): QueryPerMarketFeeDiscountParamsResponse {
+    const message = createBaseQueryPerMarketFeeDiscountParamsResponse();
+    message.params = object.params !== undefined && object.params !== null ? PerMarketFeeDiscountParams.fromPartial(object.params) : undefined;
     return message;
   }
 
 };
 
-function createBaseQueryAllFeeDiscountCampaignParamsRequest(): QueryAllFeeDiscountCampaignParamsRequest {
+function createBaseQueryAllMarketFeeDiscountParamsRequest(): QueryAllMarketFeeDiscountParamsRequest {
   return {};
 }
 
-export const QueryAllFeeDiscountCampaignParamsRequest = {
-  encode(_: QueryAllFeeDiscountCampaignParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryAllMarketFeeDiscountParamsRequest = {
+  encode(_: QueryAllMarketFeeDiscountParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllFeeDiscountCampaignParamsRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllMarketFeeDiscountParamsRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryAllFeeDiscountCampaignParamsRequest();
+    const message = createBaseQueryAllMarketFeeDiscountParamsRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -419,39 +419,39 @@ export const QueryAllFeeDiscountCampaignParamsRequest = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryAllFeeDiscountCampaignParamsRequest>): QueryAllFeeDiscountCampaignParamsRequest {
-    const message = createBaseQueryAllFeeDiscountCampaignParamsRequest();
+  fromPartial(_: DeepPartial<QueryAllMarketFeeDiscountParamsRequest>): QueryAllMarketFeeDiscountParamsRequest {
+    const message = createBaseQueryAllMarketFeeDiscountParamsRequest();
     return message;
   }
 
 };
 
-function createBaseQueryAllFeeDiscountCampaignParamsResponse(): QueryAllFeeDiscountCampaignParamsResponse {
+function createBaseQueryAllMarketFeeDiscountParamsResponse(): QueryAllMarketFeeDiscountParamsResponse {
   return {
     params: []
   };
 }
 
-export const QueryAllFeeDiscountCampaignParamsResponse = {
-  encode(message: QueryAllFeeDiscountCampaignParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryAllMarketFeeDiscountParamsResponse = {
+  encode(message: QueryAllMarketFeeDiscountParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.params) {
-      FeeDiscountCampaignParams.encode(v!, writer.uint32(10).fork()).ldelim();
+      PerMarketFeeDiscountParams.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllFeeDiscountCampaignParamsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllMarketFeeDiscountParamsResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryAllFeeDiscountCampaignParamsResponse();
+    const message = createBaseQueryAllMarketFeeDiscountParamsResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.params.push(FeeDiscountCampaignParams.decode(reader, reader.uint32()));
+          message.params.push(PerMarketFeeDiscountParams.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -463,9 +463,9 @@ export const QueryAllFeeDiscountCampaignParamsResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryAllFeeDiscountCampaignParamsResponse>): QueryAllFeeDiscountCampaignParamsResponse {
-    const message = createBaseQueryAllFeeDiscountCampaignParamsResponse();
-    message.params = object.params?.map(e => FeeDiscountCampaignParams.fromPartial(e)) || [];
+  fromPartial(object: DeepPartial<QueryAllMarketFeeDiscountParamsResponse>): QueryAllMarketFeeDiscountParamsResponse {
+    const message = createBaseQueryAllMarketFeeDiscountParamsResponse();
+    message.params = object.params?.map(e => PerMarketFeeDiscountParams.fromPartial(e)) || [];
     return message;
   }
 

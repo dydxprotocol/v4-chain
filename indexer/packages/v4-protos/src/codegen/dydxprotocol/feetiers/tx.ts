@@ -1,5 +1,5 @@
 import { PerpetualFeeParams, PerpetualFeeParamsSDKType } from "./params";
-import { FeeDiscountCampaignParams, FeeDiscountCampaignParamsSDKType } from "./fee_discount_campaign";
+import { PerMarketFeeDiscountParams, PerMarketFeeDiscountParamsSDKType } from "./per_market_fee_discount";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** MsgUpdatePerpetualFeeParams is the Msg/UpdatePerpetualFeeParams request type. */
@@ -31,41 +31,41 @@ export interface MsgUpdatePerpetualFeeParamsResponse {}
 
 export interface MsgUpdatePerpetualFeeParamsResponseSDKType {}
 /**
- * MsgSetFeeDiscountCampaignParams is the Msg/SetFeeDiscountCampaignParams
+ * MsgSetMarketFeeDiscountParams is the Msg/SetMarketFeeDiscountParams
  * request type.
  */
 
-export interface MsgSetFeeDiscountCampaignParams {
+export interface MsgSetMarketFeeDiscountParams {
   /** authority is the address that controls the module */
   authority: string;
-  /** The fee discount campaigns to create or update */
+  /** The per-market fee discount parameters to create or update */
 
-  params: FeeDiscountCampaignParams[];
+  params: PerMarketFeeDiscountParams[];
 }
 /**
- * MsgSetFeeDiscountCampaignParams is the Msg/SetFeeDiscountCampaignParams
+ * MsgSetMarketFeeDiscountParams is the Msg/SetMarketFeeDiscountParams
  * request type.
  */
 
-export interface MsgSetFeeDiscountCampaignParamsSDKType {
+export interface MsgSetMarketFeeDiscountParamsSDKType {
   /** authority is the address that controls the module */
   authority: string;
-  /** The fee discount campaigns to create or update */
+  /** The per-market fee discount parameters to create or update */
 
-  params: FeeDiscountCampaignParamsSDKType[];
+  params: PerMarketFeeDiscountParamsSDKType[];
 }
 /**
- * MsgSetFeeDiscountCampaignParamsResponse is the
- * Msg/SetFeeDiscountCampaignParams response type.
+ * MsgSetMarketFeeDiscountParamsResponse is the
+ * Msg/SetMarketFeeDiscountParams response type.
  */
 
-export interface MsgSetFeeDiscountCampaignParamsResponse {}
+export interface MsgSetMarketFeeDiscountParamsResponse {}
 /**
- * MsgSetFeeDiscountCampaignParamsResponse is the
- * Msg/SetFeeDiscountCampaignParams response type.
+ * MsgSetMarketFeeDiscountParamsResponse is the
+ * Msg/SetMarketFeeDiscountParams response type.
  */
 
-export interface MsgSetFeeDiscountCampaignParamsResponseSDKType {}
+export interface MsgSetMarketFeeDiscountParamsResponseSDKType {}
 
 function createBaseMsgUpdatePerpetualFeeParams(): MsgUpdatePerpetualFeeParams {
   return {
@@ -156,30 +156,30 @@ export const MsgUpdatePerpetualFeeParamsResponse = {
 
 };
 
-function createBaseMsgSetFeeDiscountCampaignParams(): MsgSetFeeDiscountCampaignParams {
+function createBaseMsgSetMarketFeeDiscountParams(): MsgSetMarketFeeDiscountParams {
   return {
     authority: "",
     params: []
   };
 }
 
-export const MsgSetFeeDiscountCampaignParams = {
-  encode(message: MsgSetFeeDiscountCampaignParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgSetMarketFeeDiscountParams = {
+  encode(message: MsgSetMarketFeeDiscountParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.authority !== "") {
       writer.uint32(10).string(message.authority);
     }
 
     for (const v of message.params) {
-      FeeDiscountCampaignParams.encode(v!, writer.uint32(18).fork()).ldelim();
+      PerMarketFeeDiscountParams.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetFeeDiscountCampaignParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetMarketFeeDiscountParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgSetFeeDiscountCampaignParams();
+    const message = createBaseMsgSetMarketFeeDiscountParams();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -190,7 +190,7 @@ export const MsgSetFeeDiscountCampaignParams = {
           break;
 
         case 2:
-          message.params.push(FeeDiscountCampaignParams.decode(reader, reader.uint32()));
+          message.params.push(PerMarketFeeDiscountParams.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -202,28 +202,28 @@ export const MsgSetFeeDiscountCampaignParams = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgSetFeeDiscountCampaignParams>): MsgSetFeeDiscountCampaignParams {
-    const message = createBaseMsgSetFeeDiscountCampaignParams();
+  fromPartial(object: DeepPartial<MsgSetMarketFeeDiscountParams>): MsgSetMarketFeeDiscountParams {
+    const message = createBaseMsgSetMarketFeeDiscountParams();
     message.authority = object.authority ?? "";
-    message.params = object.params?.map(e => FeeDiscountCampaignParams.fromPartial(e)) || [];
+    message.params = object.params?.map(e => PerMarketFeeDiscountParams.fromPartial(e)) || [];
     return message;
   }
 
 };
 
-function createBaseMsgSetFeeDiscountCampaignParamsResponse(): MsgSetFeeDiscountCampaignParamsResponse {
+function createBaseMsgSetMarketFeeDiscountParamsResponse(): MsgSetMarketFeeDiscountParamsResponse {
   return {};
 }
 
-export const MsgSetFeeDiscountCampaignParamsResponse = {
-  encode(_: MsgSetFeeDiscountCampaignParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgSetMarketFeeDiscountParamsResponse = {
+  encode(_: MsgSetMarketFeeDiscountParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetFeeDiscountCampaignParamsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetMarketFeeDiscountParamsResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgSetFeeDiscountCampaignParamsResponse();
+    const message = createBaseMsgSetMarketFeeDiscountParamsResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -238,8 +238,8 @@ export const MsgSetFeeDiscountCampaignParamsResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgSetFeeDiscountCampaignParamsResponse>): MsgSetFeeDiscountCampaignParamsResponse {
-    const message = createBaseMsgSetFeeDiscountCampaignParamsResponse();
+  fromPartial(_: DeepPartial<MsgSetMarketFeeDiscountParamsResponse>): MsgSetMarketFeeDiscountParamsResponse {
+    const message = createBaseMsgSetMarketFeeDiscountParamsResponse();
     return message;
   }
 

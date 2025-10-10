@@ -38,12 +38,12 @@ var (
 	ErrInvalidTimeRange = errorsmod.Register(
 		ModuleName,
 		406,
-		"Invalid time range for fee discount campaign",
+		"Invalid time range for market fee discount",
 	)
-	ErrFeeDiscountCampaignNotFound = errorsmod.Register(
+	ErrMarketFeeDiscountNotFound = errorsmod.Register(
 		ModuleName,
 		407,
-		"Fee discount campaign not found for the specified CLOB pair",
+		"Market fee discount not found for the specified CLOB pair",
 	)
 	ErrInvalidChargePpm = errorsmod.Register(
 		ModuleName,

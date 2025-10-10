@@ -56,12 +56,12 @@ func (k Keeper) UserFeeTier(
 	}, nil
 }
 
-// FeeDiscountCampaignParams processes a query for fee discount campaign parameters for a specific CLOB pair.
-func (k Keeper) FeeDiscountCampaignParams(
+// PerMarketFeeDiscountParams processes a query for fee discount parameters for a specific market/CLOB pair.
+func (k Keeper) PerMarketFeeDiscountParams(
 	c context.Context,
-	req *types.QueryFeeDiscountCampaignParamsRequest,
+	req *types.QueryPerMarketFeeDiscountParamsRequest,
 ) (
-	*types.QueryFeeDiscountCampaignParamsResponse,
+	*types.QueryPerMarketFeeDiscountParamsResponse,
 	error,
 ) {
 	if req == nil {
@@ -69,26 +69,25 @@ func (k Keeper) FeeDiscountCampaignParams(
 	}
 
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
-
-	params, err := k.GetFeeDiscountCampaignParams(ctx, req.ClobPairId)
+	params, err := k.GetPerMarketFeeDiscountParams(ctx, req.ClobPairId)
 	if err != nil {
-		if errors.Is(err, types.ErrFeeDiscountCampaignNotFound) {
-			return nil, status.Error(codes.NotFound, "fee discount campaign not found for the specified CLOB pair")
+		if errors.Is(err, types.ErrMarketFeeDiscountNotFound) {
+			return nil, status.Error(codes.NotFound, "fee discount not found for the specified market/CLOB pair")
 		}
-		return nil, status.Errorf(codes.Internal, "failed to get fee discount campaign: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get per-market fee discount: %v", err)
 	}
 
-	return &types.QueryFeeDiscountCampaignParamsResponse{
+	return &types.QueryPerMarketFeeDiscountParamsResponse{
 		Params: params,
 	}, nil
 }
 
-// AllFeeDiscountCampaignParams processes a query for all fee discount campaign parameters.
-func (k Keeper) AllFeeDiscountCampaignParams(
+// AllMarketFeeDiscountParams processes a query for all market fee discount parameters.
+func (k Keeper) AllMarketFeeDiscountParams(
 	c context.Context,
-	req *types.QueryAllFeeDiscountCampaignParamsRequest,
+	req *types.QueryAllMarketFeeDiscountParamsRequest,
 ) (
-	*types.QueryAllFeeDiscountCampaignParamsResponse,
+	*types.QueryAllMarketFeeDiscountParamsResponse,
 	error,
 ) {
 	if req == nil {
@@ -96,9 +95,9 @@ func (k Keeper) AllFeeDiscountCampaignParams(
 	}
 
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
-	params := k.GetAllFeeDiscountCampaignParams(ctx)
+	params := k.GetAllMarketFeeDiscountParams(ctx)
 
-	return &types.QueryAllFeeDiscountCampaignParamsResponse{
+	return &types.QueryAllMarketFeeDiscountParamsResponse{
 		Params: params,
 	}, nil
 }

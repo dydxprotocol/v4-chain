@@ -97,7 +97,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// feetiers
 		*feetiers.MsgUpdatePerpetualFeeParams,
-		*feetiers.MsgSetFeeDiscountCampaignParams,
+		*feetiers.MsgSetMarketFeeDiscountParams,
 
 		// govplus
 		*govplus.MsgSlashValidator,

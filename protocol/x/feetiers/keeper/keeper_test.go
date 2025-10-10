@@ -26,17 +26,17 @@ func TestLogger(t *testing.T) {
 
 func TestGetPerpetualFeePpm(t *testing.T) {
 	tests := []struct {
-		name                     string
-		user                     string
-		userStats                *stattypes.UserStats
-		globalStats              *stattypes.GlobalStats
-		setupFeeDiscountCampaign bool
-		campaignParams           types.FeeDiscountCampaignParams
-		setupTime                *time.Time
-		blockTime                time.Time
-		clobPairId               uint32
-		expectedTakerFeePpm      int32
-		expectedMakerFeePpm      int32
+		name                string
+		user                string
+		userStats           *stattypes.UserStats
+		globalStats         *stattypes.GlobalStats
+		setupFeeDiscount    bool
+		discountParams      types.PerMarketFeeDiscountParams
+		setupTime           *time.Time
+		blockTime           time.Time
+		clobPairId          uint32
+		expectedTakerFeePpm int32
+		expectedMakerFeePpm int32
 	}{
 		{
 			name: "regular user, first tier, no discount",
@@ -48,11 +48,11 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: false,
-			blockTime:                time.Now(),
-			clobPairId:               1,
-			expectedTakerFeePpm:      10,
-			expectedMakerFeePpm:      1,
+			setupFeeDiscount:    false,
+			blockTime:           time.Now(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 10,
+			expectedMakerFeePpm: 1,
 		},
 		{
 			name: "regular user, increased tier, no discount",
@@ -64,11 +64,11 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: false,
-			blockTime:                time.Now(),
-			clobPairId:               1,
-			expectedTakerFeePpm:      20,
-			expectedMakerFeePpm:      2,
+			setupFeeDiscount:    false,
+			blockTime:           time.Now(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 20,
+			expectedMakerFeePpm: 2,
 		},
 		{
 			name: "regular user, top tier, no discount",
@@ -80,11 +80,11 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 2_000_000_000,
 			},
-			setupFeeDiscountCampaign: false,
-			blockTime:                time.Now(),
-			clobPairId:               1,
-			expectedTakerFeePpm:      30,
-			expectedMakerFeePpm:      3,
+			setupFeeDiscount:    false,
+			blockTime:           time.Now(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 30,
+			expectedMakerFeePpm: 3,
 		},
 		{
 			name: "vault is top tier regardless of stats, no discount",
@@ -96,11 +96,11 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: false,
-			blockTime:                time.Now(),
-			clobPairId:               1,
-			expectedTakerFeePpm:      30,
-			expectedMakerFeePpm:      3,
+			setupFeeDiscount:    false,
+			blockTime:           time.Now(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 30,
+			expectedMakerFeePpm: 3,
 		},
 		{
 			name: "first tier with 50% discount",
@@ -112,8 +112,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1000,
 				EndTimeUnix:   3000,
@@ -134,8 +134,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 2_000_000_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1000,
 				EndTimeUnix:   3000,
@@ -156,8 +156,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1000,
 				EndTimeUnix:   3000,
@@ -178,8 +178,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 2_000_000_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1000,
 				EndTimeUnix:   3000,
@@ -191,7 +191,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			expectedMakerFeePpm: 0, // 3 * 0.25 = 0.75, rounded to 0
 		},
 		{
-			name: "expired campaign has no effect",
+			name: "expired discount has no effect",
 			user: "alice",
 			userStats: &stattypes.UserStats{
 				TakerNotional: 10,
@@ -200,20 +200,20 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1000,
 				EndTimeUnix:   2000,
 			},
-			setupTime:           func() *time.Time { t := time.Unix(1500, 0); return &t }(), // Within campaign period
-			blockTime:           time.Unix(2500, 0),                                         // After campaign period
+			setupTime:           func() *time.Time { t := time.Unix(1500, 0); return &t }(), // Within discount period
+			blockTime:           time.Unix(2500, 0),                                         // After discount period
 			clobPairId:          1,
 			expectedTakerFeePpm: 10, // Regular tier fee
 			expectedMakerFeePpm: 1,  // Regular tier fee
 		},
 		{
-			name: "campaign for different CLOB pair has no effect",
+			name: "discount for different CLOB pair has no effect",
 			user: "alice",
 			userStats: &stattypes.UserStats{
 				TakerNotional: 10,
@@ -222,8 +222,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    2, // Different CLOB pair
 				StartTimeUnix: 1000,
 				EndTimeUnix:   3000,
@@ -244,14 +244,14 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			globalStats: &stattypes.GlobalStats{
 				NotionalTraded: 10_000,
 			},
-			setupFeeDiscountCampaign: true,
-			campaignParams: types.FeeDiscountCampaignParams{
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
 				ClobPairId:    1,
 				StartTimeUnix: 1000,
 				EndTimeUnix:   3000,
 				ChargePpm:     500_000, // 50% discount
 			},
-			blockTime:           time.Unix(2000, 0), // Within campaign period
+			blockTime:           time.Unix(2000, 0), // Within discount period
 			clobPairId:          1,
 			expectedTakerFeePpm: 15, // 30 * 0.5 = 15
 			expectedMakerFeePpm: 1,  // 3 * 0.5 = 1.5, rounded to 1
@@ -272,7 +272,6 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			// Create setup context with the setup time
 			setupCtx := ctx.WithBlockTime(setupTime)
 			ctx = ctx.WithBlockTime(tc.blockTime)
-
 			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
 			k := tApp.App.FeeTiersKeeper
 
@@ -304,19 +303,19 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			// Setup fee discount campaign if needed
-			if tc.setupFeeDiscountCampaign {
-				// Use setupCtx with the appropriate time for setting up the campaign
-				err = k.SetFeeDiscountCampaignParams(setupCtx, tc.campaignParams)
+			// Setup fee discount if needed
+			if tc.setupFeeDiscount {
+				// Use setupCtx with the appropriate time for setting up the discount
+				err = k.SetPerMarketFeeDiscountParams(setupCtx, tc.discountParams)
 				require.NoError(t, err)
 
-				// Verify fee discount campaign was set correctly
-				campaign, err := k.GetFeeDiscountCampaignParams(ctx, tc.campaignParams.ClobPairId)
+				// Verify fee discount was set correctly
+				params, err := k.GetPerMarketFeeDiscountParams(ctx, tc.discountParams.ClobPairId)
 				require.NoError(t, err)
-				require.Equal(t, tc.campaignParams.ClobPairId, campaign.ClobPairId)
-				require.Equal(t, tc.campaignParams.StartTimeUnix, campaign.StartTimeUnix)
-				require.Equal(t, tc.campaignParams.EndTimeUnix, campaign.EndTimeUnix)
-				require.Equal(t, tc.campaignParams.ChargePpm, campaign.ChargePpm)
+				require.Equal(t, tc.discountParams.ClobPairId, params.ClobPairId)
+				require.Equal(t, tc.discountParams.StartTimeUnix, params.StartTimeUnix)
+				require.Equal(t, tc.discountParams.EndTimeUnix, params.EndTimeUnix)
+				require.Equal(t, tc.discountParams.ChargePpm, params.ChargePpm)
 			}
 
 			// Setup stats

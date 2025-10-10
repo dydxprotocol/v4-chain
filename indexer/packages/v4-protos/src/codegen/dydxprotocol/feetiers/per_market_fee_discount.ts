@@ -1,11 +1,11 @@
 import * as _m0 from "protobufjs/minimal";
 import { Long, DeepPartial } from "../../helpers";
 /**
- * FeeDiscountCampaignParams defines a fee discount period for a specific CLOB
+ * PerMarketFeeDiscountParams defines a fee discount period for a specific CLOB
  * pair
  */
 
-export interface FeeDiscountCampaignParams {
+export interface PerMarketFeeDiscountParams {
   /** The CLOB Pair ID this fee holiday applies to */
   clobPairId: number;
   /** Start time (Unix timestamp in seconds) */
@@ -15,7 +15,7 @@ export interface FeeDiscountCampaignParams {
 
   endTimeUnix: Long;
   /**
-   * Percentage of normal fee to charge during the campaign (in parts per
+   * Percentage of normal fee to charge during the period (in parts per
    * million) 0 = completely free (100% discount) 500000 = charge 50% of normal
    * fee (50% discount) 1000000 = charge 100% of normal fee (no discount)
    */
@@ -23,11 +23,11 @@ export interface FeeDiscountCampaignParams {
   chargePpm: number;
 }
 /**
- * FeeDiscountCampaignParams defines a fee discount period for a specific CLOB
+ * PerMarketFeeDiscountParams defines a fee discount period for a specific CLOB
  * pair
  */
 
-export interface FeeDiscountCampaignParamsSDKType {
+export interface PerMarketFeeDiscountParamsSDKType {
   /** The CLOB Pair ID this fee holiday applies to */
   clob_pair_id: number;
   /** Start time (Unix timestamp in seconds) */
@@ -37,7 +37,7 @@ export interface FeeDiscountCampaignParamsSDKType {
 
   end_time_unix: Long;
   /**
-   * Percentage of normal fee to charge during the campaign (in parts per
+   * Percentage of normal fee to charge during the period (in parts per
    * million) 0 = completely free (100% discount) 500000 = charge 50% of normal
    * fee (50% discount) 1000000 = charge 100% of normal fee (no discount)
    */
@@ -45,7 +45,7 @@ export interface FeeDiscountCampaignParamsSDKType {
   charge_ppm: number;
 }
 
-function createBaseFeeDiscountCampaignParams(): FeeDiscountCampaignParams {
+function createBasePerMarketFeeDiscountParams(): PerMarketFeeDiscountParams {
   return {
     clobPairId: 0,
     startTimeUnix: Long.ZERO,
@@ -54,8 +54,8 @@ function createBaseFeeDiscountCampaignParams(): FeeDiscountCampaignParams {
   };
 }
 
-export const FeeDiscountCampaignParams = {
-  encode(message: FeeDiscountCampaignParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const PerMarketFeeDiscountParams = {
+  encode(message: PerMarketFeeDiscountParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.clobPairId !== 0) {
       writer.uint32(8).uint32(message.clobPairId);
     }
@@ -75,10 +75,10 @@ export const FeeDiscountCampaignParams = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): FeeDiscountCampaignParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): PerMarketFeeDiscountParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFeeDiscountCampaignParams();
+    const message = createBasePerMarketFeeDiscountParams();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -109,8 +109,8 @@ export const FeeDiscountCampaignParams = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<FeeDiscountCampaignParams>): FeeDiscountCampaignParams {
-    const message = createBaseFeeDiscountCampaignParams();
+  fromPartial(object: DeepPartial<PerMarketFeeDiscountParams>): PerMarketFeeDiscountParams {
+    const message = createBasePerMarketFeeDiscountParams();
     message.clobPairId = object.clobPairId ?? 0;
     message.startTimeUnix = object.startTimeUnix !== undefined && object.startTimeUnix !== null ? Long.fromValue(object.startTimeUnix) : Long.ZERO;
     message.endTimeUnix = object.endTimeUnix !== undefined && object.endTimeUnix !== null ? Long.fromValue(object.endTimeUnix) : Long.ZERO;
