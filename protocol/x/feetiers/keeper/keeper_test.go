@@ -274,8 +274,6 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			ctx = ctx.WithBlockTime(tc.blockTime)
 			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
 			k := tApp.App.FeeTiersKeeper
-
-			// Setup fee tiers
 			err := k.SetPerpetualFeeParams(
 				ctx,
 				types.PerpetualFeeParams{
@@ -323,13 +321,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			statsKeeper.SetUserStats(ctx, tc.user, tc.userStats)
 			statsKeeper.SetGlobalStats(ctx, tc.globalStats)
 
-			// Test taker fee
-			takerFee := k.GetPerpetualFeePpm(ctx, tc.user, true, tc.clobPairId)
-			require.Equal(t, tc.expectedTakerFeePpm, takerFee)
-
-			// Test maker fee
-			makerFee := k.GetPerpetualFeePpm(ctx, tc.user, false, tc.clobPairId)
-			require.Equal(t, tc.expectedMakerFeePpm, makerFee)
+			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true, 2, tc.clobPairId))
+			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false, 2, tc.clobPairId))
 		})
 	}
 }
@@ -448,6 +441,13 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 			statsKeeper := tApp.App.StatsKeeper
 			affiliatesKeeper := tApp.App.AffiliatesKeeper
 
+			err = affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
+				AffiliateParameters: affiliatetypes.AffiliateParameters{
+					RefereeMinimumFeeTierIdx: 2,
+				},
+			})
+			require.NoError(t, err)
+
 			// common setup
 			err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
 			require.NoError(t, err)
@@ -457,7 +457,7 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expectedTakerFeePpm,
-				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true, uint32(1)))
+				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true, 2, uint32(1)))
 		})
 	}
 }

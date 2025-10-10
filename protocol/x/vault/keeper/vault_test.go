@@ -9,6 +9,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -329,16 +330,25 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
 	aliceAddress := constants.AliceAccAddress.String()
 
+	require.NoError(t, tApp.App.AffiliatesKeeper.UpdateAffiliateParameters(
+		ctx,
+		&affiliatetypes.MsgUpdateAffiliateParameters{
+			AffiliateParameters: affiliatetypes.AffiliateParameters{
+				RefereeMinimumFeeTierIdx: 2,
+			},
+		},
+	))
+
 	// Vault in genesis state should be in best fee tier.
-	takerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, true, uint32(1))
+	takerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, true, 2, uint32(1))
 	require.Equal(t, int32(11), takerFee)
-	makerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, false, uint32(1))
+	makerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, false, 2, uint32(1))
 	require.Equal(t, int32(1), makerFee)
 
 	// A regular user Alice should be in worst fee tier.
-	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, true, uint32(1))
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, true, 2, uint32(1))
 	require.Equal(t, int32(33), takerFee)
-	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false, uint32(1))
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false, 2, uint32(1))
 	require.Equal(t, int32(3), makerFee)
 
 	// A newly allocated-to vault should be in best fee tier.
@@ -363,9 +373,9 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 		uint32(ctx.BlockHeight())+1,
 		testapp.AdvanceToBlockOptions{},
 	)
-	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true, uint32(1))
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true, 2, uint32(1))
 	require.Equal(t, int32(11), takerFee)
-	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false, uint32(1))
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false, 2, uint32(1))
 	require.Equal(t, int32(1), makerFee)
 }
 

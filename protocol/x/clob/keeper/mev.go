@@ -455,6 +455,10 @@ func (k Keeper) GetMEVDataFromOperations(
 	// Populate `mevMatches` and `mevLiquidationMatches` from the local validator's match operations.
 	mevMatches := make([]types.MEVMatch, 0)
 	mevLiquidationMatches := make([]types.MEVLiquidationMatch, 0)
+	affiliateParameters, err := k.affiliatesKeeper.GetAffiliateParameters(ctx)
+	if err != nil {
+		return nil, err
+	}
 	for _, operation := range operations {
 		switch typedOperation := operation.Operation.(type) {
 		case *types.OperationRaw_ShortTermOrderPlacement:
@@ -484,6 +488,7 @@ func (k Keeper) GetMEVDataFromOperations(
 							ctx,
 							takerOrder.GetSubaccountId().Owner,
 							true,
+							affiliateParameters.RefereeMinimumFeeTierIdx,
 							takerOrder.OrderId.ClobPairId,
 						),
 
@@ -494,6 +499,7 @@ func (k Keeper) GetMEVDataFromOperations(
 							ctx,
 							makerOrder.GetSubaccountId().Owner,
 							false,
+							affiliateParameters.RefereeMinimumFeeTierIdx,
 							takerOrder.OrderId.ClobPairId,
 						),
 
@@ -542,6 +548,7 @@ func (k Keeper) GetMEVDataFromOperations(
 							ctx,
 							makerOrder.GetSubaccountId().Owner,
 							false,
+							affiliateParameters.RefereeMinimumFeeTierIdx,
 							matchLiquidation.ClobPairId,
 						),
 
