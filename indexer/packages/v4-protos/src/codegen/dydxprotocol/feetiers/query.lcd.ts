@@ -41,14 +41,14 @@ export class LCDQueryClient {
 
 
   async perMarketFeeDiscountParams(params: QueryPerMarketFeeDiscountParamsRequest): Promise<QueryPerMarketFeeDiscountParamsResponseSDKType> {
-    const endpoint = `dydxprotocol/feetiers/market_fee_discount_params/${params.clobPairId}`;
+    const endpoint = `dydxprotocol/v4/feetiers/market_fee_discount_params/${params.clobPairId}`;
     return await this.req.get<QueryPerMarketFeeDiscountParamsResponseSDKType>(endpoint);
   }
   /* AllMarketFeeDiscountParams queries all per-market fee discount parameters. */
 
 
   async allMarketFeeDiscountParams(_params: QueryAllMarketFeeDiscountParamsRequest = {}): Promise<QueryAllMarketFeeDiscountParamsResponseSDKType> {
-    const endpoint = `dydxprotocol/feetiers/market_fee_discount_params`;
+    const endpoint = `dydxprotocol/v4/feetiers/market_fee_discount_params`;
     return await this.req.get<QueryAllMarketFeeDiscountParamsResponseSDKType>(endpoint);
   }
 

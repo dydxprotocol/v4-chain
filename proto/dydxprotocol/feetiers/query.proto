@@ -26,14 +26,14 @@ service Query {
   rpc PerMarketFeeDiscountParams(QueryPerMarketFeeDiscountParamsRequest)
       returns (QueryPerMarketFeeDiscountParamsResponse) {
     option (google.api.http).get =
-        "/dydxprotocol/feetiers/market_fee_discount_params/{clob_pair_id}";
+        "/dydxprotocol/v4/feetiers/market_fee_discount_params/{clob_pair_id}";
   }
 
   // AllMarketFeeDiscountParams queries all per-market fee discount parameters.
   rpc AllMarketFeeDiscountParams(QueryAllMarketFeeDiscountParamsRequest)
       returns (QueryAllMarketFeeDiscountParamsResponse) {
     option (google.api.http).get =
-        "/dydxprotocol/feetiers/market_fee_discount_params";
+        "/dydxprotocol/v4/feetiers/market_fee_discount_params";
   }
 }
 

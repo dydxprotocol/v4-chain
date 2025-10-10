@@ -386,9 +386,9 @@ var (
 
 	pattern_Query_UserFeeTier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "feetiers", "user_fee_tier"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PerMarketFeeDiscountParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"dydxprotocol", "feetiers", "market_fee_discount_params", "clob_pair_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_PerMarketFeeDiscountParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"dydxprotocol", "v4", "feetiers", "market_fee_discount_params", "clob_pair_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllMarketFeeDiscountParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "feetiers", "market_fee_discount_params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AllMarketFeeDiscountParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"dydxprotocol", "v4", "feetiers", "market_fee_discount_params"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
