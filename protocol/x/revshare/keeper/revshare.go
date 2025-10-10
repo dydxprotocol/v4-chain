@@ -291,7 +291,12 @@ func (k Keeper) GetAllRevShares(
 func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
+<<<<<<< HEAD
 	affiliatesWhitelistMap map[string]uint32,
+=======
+	affiliateOverrides map[string]bool,
+	affiliateParams affiliatetypes.AffiliateParameters,
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
@@ -300,8 +305,28 @@ func (k Keeper) getAffiliateRevShares(
 		return nil, big.NewInt(0), nil
 	}
 
+	userStats := k.statsKeeper.GetUserStats(ctx, takerAddr)
+	if userStats != nil {
+		// If the affiliate revenue generated is greater than the maximum 30d attributable volume
+		// per referred user notional, then no affiliate rev share is generated
+		// Disable this check if it is 0
+		cap := affiliateParams.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums
+		if cap != 0 &&
+			userStats.Affiliate_30DRevenueGeneratedQuantums >= cap {
+			// Exceeded revenue cap, no rev share is attributed
+			return []types.RevShare{}, big.NewInt(0), nil
+		}
+	}
+
 	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(
+<<<<<<< HEAD
 		ctx, takerAddr, affiliatesWhitelistMap)
+=======
+		ctx,
+		takerAddr,
+		affiliateOverrides,
+	)
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 	if err != nil {
 		return nil, big.NewInt(0), err
 	}

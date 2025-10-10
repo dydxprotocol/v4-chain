@@ -993,6 +993,7 @@ func New(
 		},
 		app.AffiliatesKeeper,
 		*app.FeeTiersKeeper,
+		app.StatsKeeper,
 	)
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
 	app.FeeTiersKeeper.SetRevShareKeeper(app.RevShareKeeper)

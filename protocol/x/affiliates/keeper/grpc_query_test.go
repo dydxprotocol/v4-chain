@@ -29,11 +29,15 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
-				IsWhitelisted:  false,
-				Tier:           0,
-				FeeSharePpm:    types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
-				ReferredVolume: dtypes.NewIntFromUint64(types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums),
-				StakedAmount:   dtypes.NewIntFromUint64(uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18),
+				IsWhitelisted: false,
+				Tier:          0,
+				FeeSharePpm:   types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
+				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(
+					types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums,
+				),
+				StakedAmount: dtypes.NewIntFromUint64(
+					uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18,
+				),
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
@@ -59,11 +63,15 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
-				IsWhitelisted:  false,
-				Tier:           0,
-				FeeSharePpm:    types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
-				ReferredVolume: dtypes.NewIntFromUint64(types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums),
-				StakedAmount:   dtypes.NewIntFromUint64(uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18),
+				IsWhitelisted: false,
+				Tier:          0,
+				FeeSharePpm:   types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
+				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(
+					types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums,
+				),
+				StakedAmount: dtypes.NewIntFromUint64(
+					uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18,
+				),
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				stakingKeeper := tApp.App.StakingKeeper
@@ -96,11 +104,19 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
+<<<<<<< HEAD
 				IsWhitelisted:  true,
 				Tier:           0,
 				FeeSharePpm:    120_000,
 				ReferredVolume: dtypes.NewIntFromUint64(0),
 				StakedAmount:   dtypes.NewIntFromUint64(0),
+=======
+				IsWhitelisted:             true,
+				Tier:                      4,
+				FeeSharePpm:               250_000,
+				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(0),
+				StakedAmount:              dtypes.NewIntFromUint64(0),
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
