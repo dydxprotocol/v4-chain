@@ -72,6 +72,6 @@ func TestQueryFeeDiscountParams(t *testing.T) {
 
 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMarketFeeDiscountParams(), []string{})
 	require.NoError(t, err)
-	var allResp types.CmdQueryMarketFeeDiscountParamsResponse
+	var allResp types.QueryAllMarketFeeDiscountParamsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &allResp))
 }
