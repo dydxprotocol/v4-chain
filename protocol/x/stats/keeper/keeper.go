@@ -202,6 +202,11 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 	for _, fill := range blockStats.Fills {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional
+<<<<<<< HEAD
+=======
+		// Add affiliate revenue generated on taker for this fill (if any)
+		userStats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 		k.SetUserStats(ctx, fill.Taker, userStats)
 
 		userStats = k.GetUserStats(ctx, fill.Maker)
@@ -222,6 +227,11 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+<<<<<<< HEAD
+=======
+		// Track affiliate revenue generated on the taker in this epoch snapshot
+		userStatsMap[fill.Taker].Stats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 
 		globalStats := k.GetGlobalStats(ctx)
 		globalStats.NotionalTraded += fill.Notional
@@ -271,6 +281,10 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
+<<<<<<< HEAD
+=======
+		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting

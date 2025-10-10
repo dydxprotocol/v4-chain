@@ -10,6 +10,11 @@ import (
 type StatsKeeper interface {
 	GetStakedAmount(ctx sdk.Context, delegatorAddr string) *big.Int
 	GetBlockStats(ctx sdk.Context) *stattypes.BlockStats
+<<<<<<< HEAD
+=======
+	GetUserStats(ctx sdk.Context, address string) *stattypes.UserStats
+	SetUserStats(ctx sdk.Context, address string, userStats *stattypes.UserStats)
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 }
 
 type FeetiersKeeper interface {

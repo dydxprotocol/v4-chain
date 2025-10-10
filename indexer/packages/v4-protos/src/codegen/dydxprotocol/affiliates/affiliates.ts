@@ -74,6 +74,63 @@ export interface AffiliateWhitelist_TierSDKType {
 
   taker_fee_share_ppm: number;
 }
+<<<<<<< HEAD
+=======
+/** AffiliateParameters defines the parameters for the affiliate program. */
+
+export interface AffiliateParameters {
+  /**
+   * Maximum attributable volume for a referred user in a 30d rolling window in
+   * notional
+   */
+  maximum_30dAttributableVolumePerReferredUserQuoteQuantums: Long;
+  /** Referred user automatically gets set to this fee tier */
+
+  refereeMinimumFeeTierIdx: number;
+  /**
+   * Maximum affiliate revenue for a referred user in a 30d rolling window in
+   * quote quantums
+   */
+
+  maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums: Long;
+}
+/** AffiliateParameters defines the parameters for the affiliate program. */
+
+export interface AffiliateParametersSDKType {
+  /**
+   * Maximum attributable volume for a referred user in a 30d rolling window in
+   * notional
+   */
+  maximum_30d_attributable_volume_per_referred_user_quote_quantums: Long;
+  /** Referred user automatically gets set to this fee tier */
+
+  referee_minimum_fee_tier_idx: number;
+  /**
+   * Maximum affiliate revenue for a referred user in a 30d rolling window in
+   * quote quantums
+   */
+
+  maximum_30d_affiliate_revenue_per_referred_user_quote_quantums: Long;
+}
+/** AffiliateOverrides defines the affiliate whitelist. */
+
+export interface AffiliateOverrides {
+  /**
+   * List of unique whitelisted addresses.
+   * These are automatically put at the maximum affiliate tier
+   */
+  addresses: string[];
+}
+/** AffiliateOverrides defines the affiliate whitelist. */
+
+export interface AffiliateOverridesSDKType {
+  /**
+   * List of unique whitelisted addresses.
+   * These are automatically put at the maximum affiliate tier
+   */
+  addresses: string[];
+}
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 
 function createBaseAffiliateTiers(): AffiliateTiers {
   return {
@@ -283,4 +340,117 @@ export const AffiliateWhitelist_Tier = {
     return message;
   }
 
+<<<<<<< HEAD
+=======
+};
+
+function createBaseAffiliateParameters(): AffiliateParameters {
+  return {
+    maximum_30dAttributableVolumePerReferredUserQuoteQuantums: Long.UZERO,
+    refereeMinimumFeeTierIdx: 0,
+    maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums: Long.UZERO
+  };
+}
+
+export const AffiliateParameters = {
+  encode(message: AffiliateParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (!message.maximum_30dAttributableVolumePerReferredUserQuoteQuantums.isZero()) {
+      writer.uint32(8).uint64(message.maximum_30dAttributableVolumePerReferredUserQuoteQuantums);
+    }
+
+    if (message.refereeMinimumFeeTierIdx !== 0) {
+      writer.uint32(16).uint32(message.refereeMinimumFeeTierIdx);
+    }
+
+    if (!message.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums.isZero()) {
+      writer.uint32(24).uint64(message.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateParameters {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateParameters();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.maximum_30dAttributableVolumePerReferredUserQuoteQuantums = (reader.uint64() as Long);
+          break;
+
+        case 2:
+          message.refereeMinimumFeeTierIdx = reader.uint32();
+          break;
+
+        case 3:
+          message.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateParameters>): AffiliateParameters {
+    const message = createBaseAffiliateParameters();
+    message.maximum_30dAttributableVolumePerReferredUserQuoteQuantums = object.maximum_30dAttributableVolumePerReferredUserQuoteQuantums !== undefined && object.maximum_30dAttributableVolumePerReferredUserQuoteQuantums !== null ? Long.fromValue(object.maximum_30dAttributableVolumePerReferredUserQuoteQuantums) : Long.UZERO;
+    message.refereeMinimumFeeTierIdx = object.refereeMinimumFeeTierIdx ?? 0;
+    message.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums = object.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums !== undefined && object.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums !== null ? Long.fromValue(object.maximum_30dAffiliateRevenuePerReferredUserQuoteQuantums) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseAffiliateOverrides(): AffiliateOverrides {
+  return {
+    addresses: []
+  };
+}
+
+export const AffiliateOverrides = {
+  encode(message: AffiliateOverrides, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.addresses) {
+      writer.uint32(10).string(v!);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateOverrides {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateOverrides();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.addresses.push(reader.string());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateOverrides>): AffiliateOverrides {
+    const message = createBaseAffiliateOverrides();
+    message.addresses = object.addresses?.map(e => e) || [];
+    return message;
+  }
+
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 };

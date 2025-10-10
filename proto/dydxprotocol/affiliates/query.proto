@@ -55,10 +55,17 @@ message AffiliateInfoResponse {
   bytes referred_volume = 4 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable) = false,
+    deprecated = true
   ];
   // The affiliate's currently staked native tokens (in whole coins).
   bytes staked_amount = 5 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // The affiliate's 30d referred volume in quote quantums.
+  bytes referred_volume_30d_rolling = 6 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false

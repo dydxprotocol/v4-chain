@@ -105,6 +105,15 @@ export interface UserStats {
   /** Maker USDC in quantums */
 
   makerNotional: Long;
+<<<<<<< HEAD
+=======
+  /** Affiliate revenue generated in quantums with this user being a referee */
+
+  affiliate_30dRevenueGeneratedQuantums: Long;
+  /** Referred volume in quote quantums with this user being an affiliate */
+
+  affiliate_30dReferredVolumeQuoteQuantums: Long;
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 }
 /** UserStats stores stats for a User */
 
@@ -114,6 +123,15 @@ export interface UserStatsSDKType {
   /** Maker USDC in quantums */
 
   maker_notional: Long;
+<<<<<<< HEAD
+=======
+  /** Affiliate revenue generated in quantums with this user being a referee */
+
+  affiliate_30d_revenue_generated_quantums: Long;
+  /** Referred volume in quote quantums with this user being an affiliate */
+
+  affiliate_30d_referred_volume_quote_quantums: Long;
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 }
 /** CachedStakeAmount stores the last calculated total staked amount for address */
 
@@ -453,7 +471,13 @@ export const GlobalStats = {
 function createBaseUserStats(): UserStats {
   return {
     takerNotional: Long.UZERO,
+<<<<<<< HEAD
     makerNotional: Long.UZERO
+=======
+    makerNotional: Long.UZERO,
+    affiliate_30dRevenueGeneratedQuantums: Long.UZERO,
+    affiliate_30dReferredVolumeQuoteQuantums: Long.UZERO
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
   };
 }
 
@@ -467,6 +491,17 @@ export const UserStats = {
       writer.uint32(16).uint64(message.makerNotional);
     }
 
+<<<<<<< HEAD
+=======
+    if (!message.affiliate_30dRevenueGeneratedQuantums.isZero()) {
+      writer.uint32(24).uint64(message.affiliate_30dRevenueGeneratedQuantums);
+    }
+
+    if (!message.affiliate_30dReferredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(32).uint64(message.affiliate_30dReferredVolumeQuoteQuantums);
+    }
+
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
     return writer;
   },
 
@@ -487,6 +522,17 @@ export const UserStats = {
           message.makerNotional = (reader.uint64() as Long);
           break;
 
+<<<<<<< HEAD
+=======
+        case 3:
+          message.affiliate_30dRevenueGeneratedQuantums = (reader.uint64() as Long);
+          break;
+
+        case 4:
+          message.affiliate_30dReferredVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
         default:
           reader.skipType(tag & 7);
           break;
@@ -500,6 +546,11 @@ export const UserStats = {
     const message = createBaseUserStats();
     message.takerNotional = object.takerNotional !== undefined && object.takerNotional !== null ? Long.fromValue(object.takerNotional) : Long.UZERO;
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
+<<<<<<< HEAD
+=======
+    message.affiliate_30dRevenueGeneratedQuantums = object.affiliate_30dRevenueGeneratedQuantums !== undefined && object.affiliate_30dRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliate_30dRevenueGeneratedQuantums) : Long.UZERO;
+    message.affiliate_30dReferredVolumeQuoteQuantums = object.affiliate_30dReferredVolumeQuoteQuantums !== undefined && object.affiliate_30dReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliate_30dReferredVolumeQuoteQuantums) : Long.UZERO;
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
     return message;
   }
 

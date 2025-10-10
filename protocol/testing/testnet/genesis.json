@@ -36,6 +36,16 @@
         }
       ]
     },
+<<<<<<< HEAD
+=======
+    "affiliates": {
+      "affiliate_parameters": {
+        "maximum_30d_attributable_volume_per_referred_user_quote_quantums": "100000000000000",
+        "referee_minimum_fee_tier_idx": 2,
+        "maximum_30d_affiliate_revenue_per_referred_user_quote_quantums": "10000000000"
+      }
+    },
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
     "auth": {
       "params": {
         "max_memo_characters": "256",

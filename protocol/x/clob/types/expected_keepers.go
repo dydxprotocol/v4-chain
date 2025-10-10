@@ -115,7 +115,7 @@ type BlockTimeKeeper interface {
 }
 
 type FeeTiersKeeper interface {
-	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool) int32
+	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool, feeTierOverrideIdx uint32) int32
 }
 
 type PerpetualsKeeper interface {

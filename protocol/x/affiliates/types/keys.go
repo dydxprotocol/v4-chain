@@ -13,7 +13,11 @@ const (
 const (
 	ReferredByKeyPrefix = "RB:"
 
+<<<<<<< HEAD
 	ReferredVolumeKeyPrefix = "RV:"
+=======
+	ReferredVolumeInWindowKeyPrefix = "RVW:"
+>>>>>>> 1b536022 (Integrate commission and overrides to fee tier calculation (#3117))
 
 	AffiliateTiersKey = "AT"
 
