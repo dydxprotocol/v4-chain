@@ -63,14 +63,21 @@ message AffiliateInfoResponse {
   // The affiliate's taker fee share in parts-per-million (for both VIP and
   // regular affiliate).
   uint32 fee_share_ppm = 3;
-  // The affiliate's 30d referred volume in quote quantums.
+  // The affiliate's all-time referred volume in quote quantums.
   bytes referred_volume = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false,
+    deprecated = true
+  ];
+  // The affiliate's currently staked native tokens (in whole coins).
+  bytes staked_amount = 5 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
-  // The affiliate's currently staked native tokens (in whole coins).
-  bytes staked_amount = 5 [
+  // The affiliate's 30d referred volume in quote quantums.
+  bytes referred_volume_30d_rolling = 6 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false

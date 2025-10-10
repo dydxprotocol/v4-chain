@@ -39,15 +39,15 @@ func (k Keeper) AffiliateInfo(c context.Context,
 	}
 
 	userStats := k.statsKeeper.GetUserStats(ctx, addr.String())
-	referredVolume := userStats.AffiliateReferredVolumeQuoteQuantums
+	referredVolume := userStats.Affiliate_30DReferredVolumeQuoteQuantums
 	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.GetAddress())
 
 	return &types.AffiliateInfoResponse{
-		IsWhitelisted:  isWhitelisted,
-		Tier:           tierLevel,
-		FeeSharePpm:    feeSharePpm,
-		ReferredVolume: dtypes.NewIntFromBigInt(lib.BigU(referredVolume)),
-		StakedAmount:   dtypes.NewIntFromBigInt(stakedAmount),
+		IsWhitelisted:             isWhitelisted,
+		Tier:                      tierLevel,
+		FeeSharePpm:               feeSharePpm,
+		StakedAmount:              dtypes.NewIntFromBigInt(stakedAmount),
+		ReferredVolume_30DRolling: dtypes.NewIntFromBigInt(lib.BigU(referredVolume)),
 	}, nil
 }
 

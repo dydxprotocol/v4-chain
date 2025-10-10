@@ -411,7 +411,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				}))
 
 				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &statstypes.UserStats{
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000_000,
+					Affiliate_30DRevenueGeneratedQuantums: 1_000_000_000_000,
 				})
 
 				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)

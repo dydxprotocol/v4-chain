@@ -128,12 +128,12 @@ export interface UserStats {
   /** Maker USDC in quantums */
 
   makerNotional: Long;
-  /** Affiliate revenue generated in quantums */
+  /** Affiliate revenue generated in quantums with this user being a referee */
 
-  affiliateRevenueGeneratedQuantums: Long;
-  /** Affiliate referred volume in quote quantums */
+  affiliate_30dRevenueGeneratedQuantums: Long;
+  /** Referred volume in quote quantums with this user being an affiliate */
 
-  affiliateReferredVolumeQuoteQuantums: Long;
+  affiliate_30dReferredVolumeQuoteQuantums: Long;
 }
 /**
  * UserStats stores stats for a User. This is the sum of all stats for a user in
@@ -146,12 +146,12 @@ export interface UserStatsSDKType {
   /** Maker USDC in quantums */
 
   maker_notional: Long;
-  /** Affiliate revenue generated in quantums */
+  /** Affiliate revenue generated in quantums with this user being a referee */
 
-  affiliate_revenue_generated_quantums: Long;
-  /** Affiliate referred volume in quote quantums */
+  affiliate_30d_revenue_generated_quantums: Long;
+  /** Referred volume in quote quantums with this user being an affiliate */
 
-  affiliate_referred_volume_quote_quantums: Long;
+  affiliate_30d_referred_volume_quote_quantums: Long;
 }
 /** CachedStakeAmount stores the last calculated total staked amount for address */
 
@@ -502,8 +502,8 @@ function createBaseUserStats(): UserStats {
   return {
     takerNotional: Long.UZERO,
     makerNotional: Long.UZERO,
-    affiliateRevenueGeneratedQuantums: Long.UZERO,
-    affiliateReferredVolumeQuoteQuantums: Long.UZERO
+    affiliate_30dRevenueGeneratedQuantums: Long.UZERO,
+    affiliate_30dReferredVolumeQuoteQuantums: Long.UZERO
   };
 }
 
@@ -517,12 +517,12 @@ export const UserStats = {
       writer.uint32(16).uint64(message.makerNotional);
     }
 
-    if (!message.affiliateRevenueGeneratedQuantums.isZero()) {
-      writer.uint32(24).uint64(message.affiliateRevenueGeneratedQuantums);
+    if (!message.affiliate_30dRevenueGeneratedQuantums.isZero()) {
+      writer.uint32(24).uint64(message.affiliate_30dRevenueGeneratedQuantums);
     }
 
-    if (!message.affiliateReferredVolumeQuoteQuantums.isZero()) {
-      writer.uint32(32).uint64(message.affiliateReferredVolumeQuoteQuantums);
+    if (!message.affiliate_30dReferredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(32).uint64(message.affiliate_30dReferredVolumeQuoteQuantums);
     }
 
     return writer;
@@ -546,11 +546,11 @@ export const UserStats = {
           break;
 
         case 3:
-          message.affiliateRevenueGeneratedQuantums = (reader.uint64() as Long);
+          message.affiliate_30dRevenueGeneratedQuantums = (reader.uint64() as Long);
           break;
 
         case 4:
-          message.affiliateReferredVolumeQuoteQuantums = (reader.uint64() as Long);
+          message.affiliate_30dReferredVolumeQuoteQuantums = (reader.uint64() as Long);
           break;
 
         default:
@@ -566,8 +566,8 @@ export const UserStats = {
     const message = createBaseUserStats();
     message.takerNotional = object.takerNotional !== undefined && object.takerNotional !== null ? Long.fromValue(object.takerNotional) : Long.UZERO;
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
-    message.affiliateRevenueGeneratedQuantums = object.affiliateRevenueGeneratedQuantums !== undefined && object.affiliateRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliateRevenueGeneratedQuantums) : Long.UZERO;
-    message.affiliateReferredVolumeQuoteQuantums = object.affiliateReferredVolumeQuoteQuantums !== undefined && object.affiliateReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliateReferredVolumeQuoteQuantums) : Long.UZERO;
+    message.affiliate_30dRevenueGeneratedQuantums = object.affiliate_30dRevenueGeneratedQuantums !== undefined && object.affiliate_30dRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliate_30dRevenueGeneratedQuantums) : Long.UZERO;
+    message.affiliate_30dReferredVolumeQuoteQuantums = object.affiliate_30dReferredVolumeQuoteQuantums !== undefined && object.affiliate_30dReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliate_30dReferredVolumeQuoteQuantums) : Long.UZERO;
     return message;
   }
 

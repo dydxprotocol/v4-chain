@@ -309,7 +309,7 @@ func (k Keeper) getAffiliateRevShares(
 		// Disable this check if it is 0
 		cap := affiliateParams.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums
 		if cap != 0 &&
-			userStats.AffiliateRevenueGeneratedQuantums >= cap {
+			userStats.Affiliate_30DRevenueGeneratedQuantums >= cap {
 			// Exceeded revenue cap, no rev share is attributed
 			return []types.RevShare{}, big.NewInt(0), nil
 		}

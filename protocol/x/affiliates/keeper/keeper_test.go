@@ -142,7 +142,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 		Authority: constants.GovAuthority,
 		AffiliateParameters: types.AffiliateParameters{
-			Maximum_30DAttributableVolumePerReferredUserNotional: 100_000_000_000_000,
+			Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 100_000_000_000_000,
 		},
 	}))
 
@@ -171,9 +171,9 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.Equal(t, types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
 
 	tApp.App.StatsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-		TakerNotional:                        100_000_000_000_000,
-		MakerNotional:                        100_000_000_000_000,
-		AffiliateReferredVolumeQuoteQuantums: 1_000_000_000_001,
+		TakerNotional:                            100_000_000_000_000,
+		MakerNotional:                            100_000_000_000_000,
+		Affiliate_30DReferredVolumeQuoteQuantums: 1_000_000_000_001,
 	})
 
 	// Get updated taker fee share for referee
@@ -268,9 +268,9 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	require.NoError(t, err)
 
 	tApp.App.StatsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-		TakerNotional:                        100_000_000_000_000,
-		MakerNotional:                        100_000_000_000_000,
-		AffiliateReferredVolumeQuoteQuantums: affiliateTiers.Tiers[2].ReqReferredVolumeQuoteQuantums,
+		TakerNotional:                            100_000_000_000_000,
+		MakerNotional:                            100_000_000_000_000,
+		Affiliate_30DReferredVolumeQuoteQuantums: affiliateTiers.Tiers[2].ReqReferredVolumeQuoteQuantums,
 	})
 
 	stakedAmount := new(big.Int).Mul(
@@ -702,10 +702,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-					TakerNotional:                        0,
-					MakerNotional:                        0,
-					AffiliateRevenueGeneratedQuantums:    0,
-					AffiliateReferredVolumeQuoteQuantums: 100_000_000_000,
+					TakerNotional:                            0,
+					MakerNotional:                            0,
+					Affiliate_30DRevenueGeneratedQuantums:    0,
+					Affiliate_30DReferredVolumeQuoteQuantums: 100_000_000_000,
 				})
 
 				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
@@ -738,10 +738,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-					TakerNotional:                        0,
-					MakerNotional:                        0,
-					AffiliateRevenueGeneratedQuantums:    0,
-					AffiliateReferredVolumeQuoteQuantums: 0,
+					TakerNotional:                            0,
+					MakerNotional:                            0,
+					Affiliate_30DRevenueGeneratedQuantums:    0,
+					Affiliate_30DReferredVolumeQuoteQuantums: 0,
 				})
 
 				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
@@ -798,7 +798,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
-						Maximum_30DAttributableVolumePerReferredUserNotional: 800_000_000_000,
+						Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 800_000_000_000,
 					},
 				})
 				require.NoError(t, err)
@@ -820,10 +820,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-					TakerNotional:                        0,
-					MakerNotional:                        0,
-					AffiliateRevenueGeneratedQuantums:    0,
-					AffiliateReferredVolumeQuoteQuantums: 0,
+					TakerNotional:                            0,
+					MakerNotional:                            0,
+					Affiliate_30DRevenueGeneratedQuantums:    0,
+					Affiliate_30DReferredVolumeQuoteQuantums: 0,
 				})
 
 				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
@@ -845,7 +845,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
-						Maximum_30DAttributableVolumePerReferredUserNotional: 300_000_000_000,
+						Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 300_000_000_000,
 					},
 				})
 				require.NoError(t, err)
@@ -869,10 +869,10 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-					TakerNotional:                        0,
-					MakerNotional:                        0,
-					AffiliateRevenueGeneratedQuantums:    0,
-					AffiliateReferredVolumeQuoteQuantums: 0,
+					TakerNotional:                            0,
+					MakerNotional:                            0,
+					Affiliate_30DRevenueGeneratedQuantums:    0,
+					Affiliate_30DReferredVolumeQuoteQuantums: 0,
 				})
 
 				// Maximum volume was reached per affiliate, so we should not add any attributable volume
@@ -904,7 +904,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 				err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
-						Maximum_30DAttributableVolumePerReferredUserNotional: 290_000_000_000,
+						Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 290_000_000_000,
 					},
 				})
 				require.NoError(t, err)
@@ -928,22 +928,22 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-					TakerNotional:                        0,
-					MakerNotional:                        0,
-					AffiliateRevenueGeneratedQuantums:    0,
-					AffiliateReferredVolumeQuoteQuantums: 0,
+					TakerNotional:                            0,
+					MakerNotional:                            0,
+					Affiliate_30DRevenueGeneratedQuantums:    0,
+					Affiliate_30DReferredVolumeQuoteQuantums: 0,
 				})
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
-					TakerNotional:                     50_000_000_000,
-					MakerNotional:                     100_000_000_000,
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+					TakerNotional:                         50_000_000_000,
+					MakerNotional:                         100_000_000_000,
+					Affiliate_30DRevenueGeneratedQuantums: 1_000_000_000,
 				})
 				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
-					TakerNotional:                     50_000_000_000,
-					MakerNotional:                     100_000_000_000,
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+					TakerNotional:                         50_000_000_000,
+					MakerNotional:                         100_000_000_000,
+					Affiliate_30DRevenueGeneratedQuantums: 1_000_000_000,
 				})
 
 				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
@@ -966,7 +966,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
 						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
-						Maximum_30DAttributableVolumePerReferredUserNotional: 250_000_000_000,
+						Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 250_000_000_000,
 					},
 				})
 				require.NoError(t, err)
@@ -992,28 +992,28 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 
 				// They are close to the maximum of attributable volume so we should not add more than expected
 				statsKeeper.SetUserStats(ctx, affiliate, &statstypes.UserStats{
-					TakerNotional:                        0,
-					MakerNotional:                        0,
-					AffiliateRevenueGeneratedQuantums:    0,
-					AffiliateReferredVolumeQuoteQuantums: 0,
+					TakerNotional:                            0,
+					MakerNotional:                            0,
+					Affiliate_30DRevenueGeneratedQuantums:    0,
+					Affiliate_30DReferredVolumeQuoteQuantums: 0,
 				})
 				// Starts with 150M volume
 				statsKeeper.SetUserStats(ctx, referee1, &statstypes.UserStats{
-					TakerNotional:                     50_000_000_000,
-					MakerNotional:                     100_000_000_000,
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+					TakerNotional:                         50_000_000_000,
+					MakerNotional:                         100_000_000_000,
+					Affiliate_30DRevenueGeneratedQuantums: 1_000_000_000,
 				})
 				// starts with 150M volume
 				statsKeeper.SetUserStats(ctx, referee2, &statstypes.UserStats{
-					TakerNotional:                     50_000_000_000,
-					MakerNotional:                     100_000_000_000,
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+					TakerNotional:                         50_000_000_000,
+					MakerNotional:                         100_000_000_000,
+					Affiliate_30DRevenueGeneratedQuantums: 1_000_000_000,
 				})
 				// Starts with 100M volume
 				statsKeeper.SetUserStats(ctx, maker, &statstypes.UserStats{
-					TakerNotional:                     50_000_000_000,
-					MakerNotional:                     50_000_000_000,
-					AffiliateRevenueGeneratedQuantums: 1_000_000_000,
+					TakerNotional:                         50_000_000_000,
+					MakerNotional:                         50_000_000_000,
+					Affiliate_30DRevenueGeneratedQuantums: 1_000_000_000,
 				})
 
 				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
@@ -1036,7 +1036,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 					Authority: constants.GovAuthority,
 					AffiliateParameters: types.AffiliateParameters{
 						// Each affiliate can only generate 250_000_000_000 quantums of attributable revenue on a 30d window
-						Maximum_30DAttributableVolumePerReferredUserNotional: 250_000_000_000,
+						Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 250_000_000_000,
 					},
 				})
 				require.NoError(t, err)
@@ -1063,7 +1063,7 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 				referrer := tc.expectedReferrer[idx]
 				referrerUser := statsKeeper.GetUserStats(ctx, referrer)
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedAttributedVolume[idx], referrerUser.AffiliateReferredVolumeQuoteQuantums)
+				require.Equal(t, tc.expectedAttributedVolume[idx], referrerUser.Affiliate_30DReferredVolumeQuoteQuantums)
 			}
 		})
 	}
@@ -1096,7 +1096,7 @@ func TestUpdateAffiliateParameters(t *testing.T) {
 	require.Equal(
 		t,
 		uint64(100_000_000_000),
-		affiliateParameters.GetMaximum_30DAttributableVolumePerReferredUserNotional(),
+		affiliateParameters.GetMaximum_30DAttributableVolumePerReferredUserQuoteQuantums(),
 	)
 	require.Equal(t, uint32(2), affiliateParameters.GetRefereeMinimumFeeTierIdx())
 	require.Equal(

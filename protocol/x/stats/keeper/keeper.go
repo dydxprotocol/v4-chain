@@ -210,7 +210,7 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional
 		// Add affiliate revenue generated on taker for this fill (if any)
-		userStats.AffiliateRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
+		userStats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 		k.SetUserStats(ctx, fill.Taker, userStats)
 
 		userStats = k.GetUserStats(ctx, fill.Maker)
@@ -232,7 +232,7 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
 		// Track affiliate revenue generated on the taker in this epoch snapshot
-		userStatsMap[fill.Taker].Stats.AffiliateRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
+		userStatsMap[fill.Taker].Stats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
 		globalStats := k.GetGlobalStats(ctx)
 		globalStats.NotionalTraded += fill.Notional
@@ -282,7 +282,7 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
-		stats.AffiliateRevenueGeneratedQuantums -= removedStats.Stats.AffiliateRevenueGeneratedQuantums
+		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting

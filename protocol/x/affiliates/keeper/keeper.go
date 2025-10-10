@@ -201,9 +201,9 @@ func (k Keeper) GetTierForAffiliate(
 
 	// Get the affiliate revenue generated in the last 30d
 	userStats := k.statsKeeper.GetUserStats(ctx, affiliateAddr)
-	var referredVolume *big.Int
+	referredVolume := big.NewInt(0)
 	if userStats != nil {
-		referredVolume = new(big.Int).SetUint64(userStats.AffiliateReferredVolumeQuoteQuantums)
+		referredVolume = new(big.Int).SetUint64(userStats.Affiliate_30DReferredVolumeQuoteQuantums)
 	}
 
 	for index, tier := range tiers {
@@ -413,7 +413,7 @@ func (k Keeper) addReferredVolumeIfQualified(
 		previouslyAttributedVolume[referee])
 
 	// If parameter is 0 then no limit is applied
-	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserNotional
+	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums
 	if cap != 0 {
 		if previousVolume >= cap {
 			volume = 0
@@ -428,7 +428,7 @@ func (k Keeper) addReferredVolumeIfQualified(
 	if volume > 0 {
 		affiliateUserStats := k.statsKeeper.GetUserStats(ctx, referrer)
 		if affiliateUserStats != nil {
-			affiliateUserStats.AffiliateReferredVolumeQuoteQuantums += volume
+			affiliateUserStats.Affiliate_30DReferredVolumeQuoteQuantums += volume
 		}
 		k.statsKeeper.SetUserStats(ctx, referrer, affiliateUserStats)
 	}

@@ -17,8 +17,3 @@ type StakingKeeper interface {
 	GetDelegatorDelegations(ctx context.Context,
 		delegator sdk.AccAddress, maxRetrieve uint16) ([]stakingtypes.Delegation, error)
 }
-
-// StatsExpirationHook is called when stats are expired from the rolling window
-type StatsExpirationHook interface {
-	OnStatsExpired(ctx sdk.Context, userAddress string, previousUserStats *UserStats, resultingUserStats *UserStats) error
-}
