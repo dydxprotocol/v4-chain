@@ -55,7 +55,7 @@ export const configSchema = {
   }),
 
   // Metrics
-  LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS: parseInteger({ default: 60 * 1000 }), // 1 minute
+  SUBSCRIPTION_METRIC_INTERVAL_MS: parseInteger({ default: 60 * 1000 }), // 1 minute
 
   // Per-Channel Limits
   V4_ACCOUNTS_CHANNEL_LIMIT: parseInteger({ default: 256 }),

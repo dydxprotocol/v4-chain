@@ -21,6 +21,11 @@ import {
 import { BlockedError } from '../../src/lib/errors';
 import config from '../../src/config';
 
+import 'jest-extended';
+import * as matchers from 'jest-extended';
+
+expect.extend(matchers);
+
 jest.mock('ws');
 jest.mock('../../src/helpers/wss');
 jest.mock('../../src/lib/axios');
@@ -521,92 +526,45 @@ describe('Subscriptions', () => {
       const statsSpy = jest.spyOn(stats, 'gauge');
 
       // Subscribe connection 1 to multiple channels
-      await subscriptions.subscribe(
-        mockWs,
+      const channels = [
         Channel.V4_ACCOUNTS,
-        'connection1',
-        initialMsgId,
-        singleIds[Channel.V4_ACCOUNTS],
-        false,
-      );
-      await subscriptions.subscribe(
-        mockWs,
         Channel.V4_TRADES,
-        'connection1',
-        initialMsgId,
-        singleIds[Channel.V4_TRADES],
-        false,
-      );
-      await subscriptions.subscribe(
-        mockWs,
         Channel.V4_ORDERBOOK,
-        'connection1',
-        initialMsgId,
-        singleIds[Channel.V4_ORDERBOOK],
-        false,
-      );
+      ];
+      for (const channel of channels) {
+        await subscriptions.subscribe(
+          mockWs,
+          channel,
+          'connection1',
+          initialMsgId,
+          singleIds[channel],
+          false,
+        );
+      }
 
-      // verify metrics emitted for each channel with subscriptions
-      // accounts: 1
-      expect(statsSpy).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        1,
-        {
-          channel: Channel.V4_ACCOUNTS,
-          instance: 'test-instance-id',
-        },
-      );
-      // trades: 1
-      expect(statsSpy).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        1,
-        {
-          channel: Channel.V4_TRADES,
-          instance: 'test-instance-id',
-        },
-      );
-      // orders: 1
-      expect(statsSpy).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        1,
-        {
-          channel: Channel.V4_ORDERBOOK,
-          instance: 'test-instance-id',
-        },
-      );
-      jest.advanceTimersByTime(config.LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS);
-      // accounts: 1
-      expect(statsSpy).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        1,
-        {
-          channel: Channel.V4_ACCOUNTS,
-          instance: 'test-instance-id',
-        },
-      );
+      // verify largest_subscriber updated after interval
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
 
-      // trades: 1
-      expect(statsSpy).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        1,
-        {
-          channel: Channel.V4_TRADES,
-          instance: 'test-instance-id',
-        },
-      );
+      for (const channel of channels) {
+        expect(statsSpy).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.subscriptions.channel_size`,
+          1,
+          {
+            channel,
+            instance: 'test-instance-id',
+          },
+        );
+        expect(statsSpy).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.largest_subscriber`,
+          1,
+          {
+            channel,
+            instance: 'test-instance-id',
+          },
+        );
+      }
 
-      // books: 1
-      expect(statsSpy).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        1,
-        {
-          channel: Channel.V4_ORDERBOOK,
-          instance: 'test-instance-id',
-        },
-      );
-
-      // Subscribe connection 2 to fewer channels
-      // for each id in multipleIds[Channel.V4_ACCOUNTS], subscribe to the channel
+      // Subscribe connection 2 to multiple channels
       for (const id of multipleIds[Channel.V4_ACCOUNTS]) {
         await subscriptions.subscribe(
           mockWs,
@@ -629,23 +587,38 @@ describe('Subscriptions', () => {
         );
       }
 
-      // Advance timers to trigger metric emission
-      jest.advanceTimersByTime(config.LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS);
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
 
-      // accounts: 2
       expect(statsSpy).toHaveBeenCalledWith(
         `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        2,
+        multipleIds[Channel.V4_ACCOUNTS].length + 1,
         {
           channel: Channel.V4_ACCOUNTS,
           instance: 'test-instance-id',
         },
       );
 
-      // orders: 2
+      expect(statsSpy).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.largest_subscriber`,
+        multipleIds[Channel.V4_ACCOUNTS].length,
+        {
+          channel: Channel.V4_ACCOUNTS,
+          instance: 'test-instance-id',
+        },
+      );
+
       expect(statsSpy).toHaveBeenCalledWith(
         `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        2,
+        multipleIds[Channel.V4_TRADES].length + 1,
+        {
+          channel: Channel.V4_TRADES,
+          instance: 'test-instance-id',
+        },
+      );
+
+      expect(statsSpy).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.largest_subscriber`,
+        multipleIds[Channel.V4_TRADES].length,
         {
           channel: Channel.V4_TRADES,
           instance: 'test-instance-id',
@@ -657,7 +630,7 @@ describe('Subscriptions', () => {
       const statsSpy = jest.spyOn(stats, 'gauge');
 
       // Advance timers to trigger metric emission
-      jest.advanceTimersByTime(config.LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS);
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
 
       // Should not emit any largest_subscriber metrics
       expect(statsSpy).not.toHaveBeenCalledWith(
