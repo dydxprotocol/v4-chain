@@ -13,4 +13,12 @@ const (
 const (
 	// PerpetualFeeParamsKey defines the key for the PerpetualFeeParams
 	PerpetualFeeParamsKey = "PerpParams"
+
+	// StakingTierKeyPrefix is the prefix for staking tier store
+	StakingTierKeyPrefix = "StakingTier:"
 )
+
+// StakingTierKey returns the store key for a staking tier
+func StakingTierKey(tierName string) []byte {
+	return append([]byte(StakingTierKeyPrefix), []byte(tierName)...)
+}

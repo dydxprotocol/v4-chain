@@ -560,7 +560,8 @@ const GenesisState = `{
             "taker_fee_ppm": 250
           }
         ]
-      }
+      },
+      "staking_tiers": []
     },
     "genutil": {
       "gen_txs": [

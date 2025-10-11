@@ -814,7 +814,8 @@
             "total_volume_share_requirement_ppm": 5000
           }
         ]
-      }
+      },
+      "staking_tiers": []
     },
     "genutil": {
       "gen_txs": []
