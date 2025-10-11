@@ -4,6 +4,7 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
+import { GeoOriginHeaders } from '@dydxprotocol-indexer/compliance';
 import {
   APIOrderStatus,
   BestEffortOpenedStatus,
@@ -138,7 +139,7 @@ export class Subscriptions {
     messageId: number,
     id?: string,
     batched?: boolean,
-    country?: string,
+    geoOriginHeaders?: GeoOriginHeaders,
   ): Promise<void> {
     const activeSubscriptions = this.incrementSubscriptions(channel, connectionId);
 
@@ -219,7 +220,7 @@ export class Subscriptions {
     let initialResponse: string;
     const startGetInitialResponse: number = Date.now();
     try {
-      initialResponse = await this.getInitialResponsesForChannels(channel, id, country);
+      initialResponse = await this.getInitialResponsesForChannels(channel, id, geoOriginHeaders);
     } catch (error) {
       logger.info({
         at: 'Subscription#subscribe',
@@ -614,7 +615,7 @@ export class Subscriptions {
 
   private async getInitialResponseForSubaccountSubscription(
     id?: string,
-    country?: string,
+    geoOriginHeaders?: GeoOriginHeaders,
   ): Promise<string> {
     if (id === undefined) {
       throw new Error('Invalid undefined id');
@@ -641,9 +642,7 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/addresses/${address}/subaccountNumber/${subaccountNumber}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
+          headers: geoOriginHeaders || {},
           transformResponse: (res) => res,
         }),
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
@@ -651,18 +650,14 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
+          headers: geoOriginHeaders || {},
           transformResponse: (res) => res,
         }),
         axiosRequest({
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(numBlockHeight - 20, 1)}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
+          headers: geoOriginHeaders || {},
           transformResponse: (res) => res,
         }),
       ]);
@@ -702,7 +697,7 @@ export class Subscriptions {
 
   private async getInitialResponseForParentSubaccountSubscription(
     id?: string,
-    country?: string,
+    geoOriginHeaders?: GeoOriginHeaders,
   ): Promise<string> {
     if (id === undefined) {
       throw new Error('Invalid undefined id');
@@ -729,9 +724,7 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/addresses/${address}/parentSubaccountNumber/${subaccountNumber}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
+          headers: geoOriginHeaders || {},
           transformResponse: (res) => res,
         }),
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
@@ -739,18 +732,14 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
+          headers: geoOriginHeaders || {},
           transformResponse: (res) => res,
         }),
         axiosRequest({
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(numBlockHeight - 20, 1)}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
+          headers: geoOriginHeaders || {},
           transformResponse: (res) => res,
         }),
       ]);
@@ -820,13 +809,13 @@ export class Subscriptions {
   private async getInitialResponsesForChannels(
     channel: Channel,
     id?: string,
-    country?: string,
+    geoOriginHeaders?: GeoOriginHeaders,
   ): Promise<string> {
     if (channel === Channel.V4_ACCOUNTS) {
-      return this.getInitialResponseForSubaccountSubscription(id, country);
+      return this.getInitialResponseForSubaccountSubscription(id, geoOriginHeaders);
     }
     if (channel === Channel.V4_PARENT_ACCOUNTS) {
-      return this.getInitialResponseForParentSubaccountSubscription(id, country);
+      return this.getInitialResponseForParentSubaccountSubscription(id, geoOriginHeaders);
     }
     const endpoint: string | undefined = this.getInitialEndpointForSubscription(channel, id);
     // If no endpoint exists, return an empty initial response.
@@ -838,9 +827,7 @@ export class Subscriptions {
       method: RequestMethod.GET,
       url: endpoint,
       timeout: config.INITIAL_GET_TIMEOUT_MS,
-      headers: {
-        'cf-ipcountry': country,
-      },
+      headers: geoOriginHeaders || {},
       transformResponse: (res) => res, // Disables JSON parsing
     });
   }
