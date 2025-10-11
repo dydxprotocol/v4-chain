@@ -121,17 +121,30 @@ func (k Keeper) getUserFeeTier(
 	return idx, tiers[idx]
 }
 
+// GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
+// It checks if there's an active fee discount for the specified CLOB pair.
 func (k Keeper) GetPerpetualFeePpm(
 	ctx sdk.Context,
 	address string,
 	isTaker bool,
 	feeTierOverrideIdx uint32,
+	clobPairId uint32,
 ) int32 {
 	_, userTier := k.getUserFeeTier(ctx, address, feeTierOverrideIdx)
+	var baseFee int32
 	if isTaker {
-		return userTier.TakerFeePpm
+		baseFee = userTier.TakerFeePpm
+	} else {
+		baseFee = userTier.MakerFeePpm
 	}
-	return userTier.MakerFeePpm
+
+	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
+	discountPpm := k.GetDiscountedPpm(ctx, clobPairId)
+
+	// Calculate the discounted fee
+	// For negative fees (rebates), we also apply the discount percentage
+	discountedFee := int32(int64(baseFee) * int64(discountPpm) / int64(types.MaxChargePpm))
+	return discountedFee
 }
 
 // GetLowestMakerFee returns the lowest maker fee among any tiers.

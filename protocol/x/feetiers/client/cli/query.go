@@ -23,6 +23,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdQueryPerpetualFeeParams())
 	cmd.AddCommand(CmdQueryUserFeeTier())
+	cmd.AddCommand(CmdQueryMarketFeeDiscountParams())
 
 	return cmd
 }
@@ -73,5 +74,50 @@ func CmdQueryUserFeeTier() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func CmdQueryMarketFeeDiscountParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-market-fee-discount-params [clob_pair_id]",
+		Short: "get the fee discount parameters for all markets or a specific CLOB pair",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			if len(args) == 0 {
+				// Query all market fee discount params
+				res, err := queryClient.AllMarketFeeDiscountParams(
+					context.Background(),
+					&types.QueryAllMarketFeeDiscountParamsRequest{},
+				)
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintProto(res)
+			} else {
+				// Parse CLOB pair ID
+				var clobPairID uint32
+				if _, err := fmt.Sscanf(args[0], "%d", &clobPairID); err != nil {
+					return fmt.Errorf("clob_pair_id %s not a valid uint32", args[0])
+				}
+
+				// Query specific market fee discount params
+				res, err := queryClient.PerMarketFeeDiscountParams(
+					context.Background(),
+					&types.QueryPerMarketFeeDiscountParamsRequest{
+						ClobPairId: clobPairID,
+					},
+				)
+				if err != nil {
+					return err
+				}
+				return clientCtx.PrintProto(res)
+			}
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

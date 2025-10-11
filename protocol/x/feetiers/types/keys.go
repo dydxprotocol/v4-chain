@@ -13,4 +13,7 @@ const (
 const (
 	// PerpetualFeeParamsKey defines the key for the PerpetualFeeParams
 	PerpetualFeeParamsKey = "PerpParams"
+
+	// MarketFeeDiscountPrefix is the prefix for storing market fee discount
+	MarketFeeDiscountPrefix = "MarketFeeDiscount:"
 )
