@@ -400,29 +400,3 @@ func GetRiskForSettledUpdate(
 	updatedSubaccount := CalculateUpdatedSubaccount(settledUpdate, perpInfos)
 	return GetRiskForSubaccount(updatedSubaccount, perpInfos, settledUpdate.LeverageMap)
 }
-
-// CalculateLeverageAwareCollateralRequirement calculates how much collateral should be
-// allocated to a perpetual position based on the user's leverage configuration.
-// Returns the amount of collateral that should be moved from main asset balance to
-// the perpetual position's quote balance.
-func CalculateLeverageAwareCollateralRequirement(
-	perpetualUpdate types.PerpetualUpdate,
-	perpInfo perptypes.PerpInfo,
-	leverage uint32, // 0 means no leverage configured (use default)
-) *big.Int {
-	// If no leverage is configured or position size is zero, no collateral allocation needed
-	if leverage == 0 || perpetualUpdate.BigQuantumsDelta.Sign() == 0 {
-		return big.NewInt(0)
-	}
-
-	// Calculate the initial margin requirement for this position with leverage
-	imr, _ := perplib.GetMarginRequirementsInQuoteQuantums(
-		perpInfo.Perpetual,
-		perpInfo.Price,
-		perpInfo.LiquidityTier,
-		new(big.Int).Abs(perpetualUpdate.BigQuantumsDelta), // Use absolute value for margin calculation
-		leverage,
-	)
-
-	return imr
-}
