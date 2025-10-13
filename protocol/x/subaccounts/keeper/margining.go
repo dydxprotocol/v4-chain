@@ -70,12 +70,20 @@ func getMarginedUpdate(
 		}
 
 		perpInfo := perpInfos.MustGet(pos.PerpetualId)
+
+		// Get leverage for this perpetual (0 if not configured)
+		leverage := uint32(0)
+		if update.LeverageMap != nil {
+			leverage = update.LeverageMap[pos.PerpetualId]
+		}
+
 		risk := perplib.GetNetCollateralAndMarginRequirements(
 			perpInfo.Perpetual,
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
 			pos.GetQuoteBalance(),
+			leverage, // Use actual user leverage for margining calculations
 		)
 
 		// case 2: the position is undercollateralized w.r.t. the maintenance margin requirement.
@@ -112,6 +120,7 @@ func getMarginedUpdate(
 				marginedAssetUpdates,
 				marginedPerpetualUpdates,
 				perpInfos,
+				update.LeverageMap,
 			),
 		)
 		// Distribute the collateral to those under collateralized positions.
@@ -125,6 +134,7 @@ func getMarginedUpdate(
 
 	r := types.SettledUpdate{
 		SettledSubaccount: update.SettledSubaccount,
+		LeverageMap:       update.LeverageMap,
 	}
 	if len(marginedAssetUpdates) > 0 {
 		r.AssetUpdates = lib.MapToSortedSlice[lib.Sortable[uint32]](marginedAssetUpdates)
@@ -161,16 +171,25 @@ func withdrawCollateralFromPerpetualPositions(
 	assetUpdates map[uint32]types.AssetUpdate,
 	perpetualUpdates map[uint32]types.PerpetualUpdate,
 	perpInfos perptypes.PerpInfos,
+	leverageMap map[uint32]uint32,
 ) (collateralWithdrawn *big.Int) {
 	collateralWithdrawn = new(big.Int)
 	for _, pos := range subaccount.PerpetualPositions {
 		perpInfo := perpInfos.MustGet(pos.PerpetualId)
+
+		// Get leverage for this perpetual (0 if not configured)
+		leverage := uint32(0)
+		if leverageMap != nil {
+			leverage = leverageMap[pos.PerpetualId]
+		}
+
 		risk := perplib.GetNetCollateralAndMarginRequirements(
 			perpInfo.Perpetual,
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
 			pos.GetQuoteBalance(),
+			leverage, // Use actual user leverage for margining calculations
 		)
 
 		// Calculate the amount of extra collateral that can be withdrawn.
