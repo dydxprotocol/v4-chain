@@ -172,11 +172,17 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	ctx := tApp.InitChain()
 
 	// Log initial state
-	isolatedPoolAddr, err := tApp.App.SubaccountsKeeper.GetCollateralPoolFromPerpetualId(ctx, constants.IsoUsd_IsolatedMarket.Params.Id)
+	isolatedPoolAddr, err := tApp.App.SubaccountsKeeper.GetCollateralPoolFromPerpetualId(
+		ctx,
+		constants.IsoUsd_IsolatedMarket.Params.Id,
+	)
 	require.NoError(t, err)
 	isolatedPoolBalance := tApp.App.BankKeeper.GetBalance(ctx, isolatedPoolAddr, constants.Usdc.Denom)
 
-	insuranceFundBalance := tApp.App.SubaccountsKeeper.GetInsuranceFundBalance(ctx, constants.IsoUsd_IsolatedMarket.Params.Id)
+	insuranceFundBalance := tApp.App.SubaccountsKeeper.GetInsuranceFundBalance(
+		ctx,
+		constants.IsoUsd_IsolatedMarket.Params.Id,
+	)
 
 	carlInitial := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount1.Id)
 	aliceInitial := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount2.Id)
@@ -272,8 +278,16 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	// Get the subaccount states to see what partial updates happened
 	carlAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount1.Id)
 	aliceAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount2.Id)
-	t.Logf("\nCarl AFTER error: quote=%s, positions=%+v", carlAfter.GetUsdcPosition().String(), carlAfter.PerpetualPositions)
-	t.Logf("Alice AFTER error: quote=%s, positions=%+v", aliceAfter.GetUsdcPosition().String(), aliceAfter.PerpetualPositions)
+	t.Logf(
+		"\nCarl AFTER error: quote=%s, positions=%+v",
+		carlAfter.GetUsdcPosition().String(),
+		carlAfter.PerpetualPositions,
+	)
+	t.Logf(
+		"Alice AFTER error: quote=%s, positions=%+v",
+		aliceAfter.GetUsdcPosition().String(),
+		aliceAfter.PerpetualPositions,
+	)
 	t.Logf("(Both unchanged because the entire update was rolled back)")
 
 	// Analyze the error
@@ -285,7 +299,10 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	t.Logf("So the pool doesn't have enough when Alice tries to withdraw!")
 
 	// The match failed before insurance payment could execute
-	insuranceFundBalanceAfter := tApp.App.SubaccountsKeeper.GetInsuranceFundBalance(ctx, constants.IsoUsd_IsolatedMarket.Params.Id)
+	insuranceFundBalanceAfter := tApp.App.SubaccountsKeeper.GetInsuranceFundBalance(
+		ctx,
+		constants.IsoUsd_IsolatedMarket.Params.Id,
+	)
 	t.Logf("Insurance fund balance (unchanged due to error): %s", insuranceFundBalanceAfter.String())
 	t.Logf("Insurance fund delta: NEGATIVE (would pay INTO pool to cover shortfall), but too late!")
 
