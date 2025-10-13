@@ -506,6 +506,26 @@ func (_m *ClobKeeper) GetMaxLeverageForPerpetual(ctx types.Context, perpetualId 
 	return r0, r1
 }
 
+// GetSubaccountsKeeper provides a mock function with given fields:
+func (_m *ClobKeeper) GetSubaccountsKeeper() clobtypes.SubaccountsKeeper {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSubaccountsKeeper")
+	}
+
+	var r0 clobtypes.SubaccountsKeeper
+	if rf, ok := ret.Get(0).(func() clobtypes.SubaccountsKeeper); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(clobtypes.SubaccountsKeeper)
+		}
+	}
+
+	return r0
+}
+
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, error) {
 	ret := _m.Called(ctx, subaccountId)

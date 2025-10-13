@@ -160,7 +160,7 @@ func TestGetRiskForSubaccount(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			risk, err := lib.GetRiskForSubaccount(tc.subaccount, tc.perpInfos)
+			risk, err := lib.GetRiskForSubaccount(tc.subaccount, tc.perpInfos, nil)
 			require.Equal(t, tc.expectedRisk, risk)
 			if tc.expectedErr != nil {
 				require.Equal(t, tc.expectedErr, err)
@@ -183,6 +183,6 @@ func TestGetRiskForSubaccount_Panic(t *testing.T) {
 
 	// Panics since relevant perpetual information cannot be found.
 	require.Panics(t, func() {
-		_, _ = lib.GetRiskForSubaccount(subaccount, emptyPerpInfos)
+		_, _ = lib.GetRiskForSubaccount(subaccount, emptyPerpInfos, nil)
 	})
 }

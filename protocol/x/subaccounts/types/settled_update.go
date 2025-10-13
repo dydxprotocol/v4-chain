@@ -11,6 +11,9 @@ type SettledUpdate struct {
 	AssetUpdates []AssetUpdate
 	// A list of changes to make to any `PerpetualPositions` in the `Subaccount`.
 	PerpetualUpdates []PerpetualUpdate
+	// Leverage configuration for this subaccount (perpetualId -> leverage).
+	// nil means no leverage configured (use default margin requirements).
+	LeverageMap map[uint32]uint32
 }
 
 func (u *SettledUpdate) GetAssetUpdates() map[uint32]AssetUpdate {
