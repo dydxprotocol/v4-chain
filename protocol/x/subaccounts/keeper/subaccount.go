@@ -270,17 +270,21 @@ func (k Keeper) getSettledUpdates(
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
 			settledSubaccount, fundingPayments = salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
-			// Fetch leverage configuration for this subaccount
-			if leverage, found := k.GetLeverage(ctx, &u.SubaccountId); found {
-				leverageMap = leverage
+			// Only fetch leverage if there are perpetual updates (to avoid unnecessary gas consumption)
+			if len(u.PerpetualUpdates) > 0 {
+				if leverage, found := k.GetLeverage(ctx, &u.SubaccountId); found {
+					leverageMap = leverage
+				}
 			}
 
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
 			idToLeverageMap[u.SubaccountId] = leverageMap
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
 		} else {
-			// Reuse cached leverage map
-			leverageMap = idToLeverageMap[u.SubaccountId]
+			// Only reuse cached leverage map if there are perpetual updates
+			if len(u.PerpetualUpdates) > 0 {
+				leverageMap = idToLeverageMap[u.SubaccountId]
+			}
 		}
 
 		settledUpdate := types.SettledUpdate{
@@ -290,98 +294,10 @@ func (k Keeper) getSettledUpdates(
 			LeverageMap:       leverageMap,
 		}
 
-		// Apply leverage-aware collateral allocation if leverage is configured
-		if leverageMap != nil {
-			settledUpdate = k.applyLeverageAwareCollateralAllocation(ctx, settledUpdate, perpInfos)
-		}
-
 		settledUpdates[i] = settledUpdate
 	}
 
 	return settledUpdates, subaccountIdToFundingPayments, nil
-}
-
-// applyLeverageAwareCollateralAllocation modifies the SettledUpdate to allocate
-// leverage-appropriate collateral from main asset balance to perpetual positions.
-// This ensures that positions have the correct amount of dedicated collateral
-// based on the user's leverage configuration.
-func (k Keeper) applyLeverageAwareCollateralAllocation(
-	ctx sdk.Context,
-	settledUpdate types.SettledUpdate,
-	perpInfos perptypes.PerpInfos,
-) types.SettledUpdate {
-	// Create copies of the updates to modify
-	modifiedAssetUpdates := make([]types.AssetUpdate, len(settledUpdate.AssetUpdates))
-	copy(modifiedAssetUpdates, settledUpdate.AssetUpdates)
-
-	modifiedPerpetualUpdates := make([]types.PerpetualUpdate, len(settledUpdate.PerpetualUpdates))
-	copy(modifiedPerpetualUpdates, settledUpdate.PerpetualUpdates)
-
-	// For each perpetual update, calculate and apply leverage-aware collateral allocation
-	for i, perpUpdate := range modifiedPerpetualUpdates {
-		// Skip if no leverage configured for this perpetual
-		leverage := uint32(0)
-		if settledUpdate.LeverageMap != nil {
-			leverage = settledUpdate.LeverageMap[perpUpdate.PerpetualId]
-		}
-		if leverage == 0 {
-			continue
-		}
-
-		// Calculate required collateral allocation
-		perpInfo := perpInfos.MustGet(perpUpdate.PerpetualId)
-		collateralRequired := salib.CalculateLeverageAwareCollateralRequirement(
-			perpUpdate,
-			perpInfo,
-			leverage,
-		)
-
-		// Skip if no collateral allocation needed
-		if collateralRequired.Sign() == 0 {
-			continue
-		}
-
-		// Modify the perpetual update to include collateral allocation
-		if modifiedPerpetualUpdates[i].BigQuoteBalanceDelta == nil {
-			modifiedPerpetualUpdates[i].BigQuoteBalanceDelta = new(big.Int)
-		}
-		modifiedPerpetualUpdates[i].BigQuoteBalanceDelta.Add(
-			modifiedPerpetualUpdates[i].BigQuoteBalanceDelta,
-			collateralRequired,
-		)
-
-		// Modify the USDC asset update to subtract the allocated collateral
-		// Find or create USDC asset update
-		usdcAssetIndex := -1
-		for j, assetUpdate := range modifiedAssetUpdates {
-			if assetUpdate.AssetId == assettypes.AssetUsdc.Id {
-				usdcAssetIndex = j
-				break
-			}
-		}
-
-		if usdcAssetIndex >= 0 {
-			// Subtract collateral from existing USDC update
-			modifiedAssetUpdates[usdcAssetIndex].BigQuantumsDelta.Sub(
-				modifiedAssetUpdates[usdcAssetIndex].BigQuantumsDelta,
-				collateralRequired,
-			)
-		} else {
-			// Create new USDC asset update to subtract collateral
-			modifiedAssetUpdates = append(modifiedAssetUpdates, types.AssetUpdate{
-				AssetId:          assettypes.AssetUsdc.Id,
-				BigQuantumsDelta: new(big.Int).Neg(collateralRequired),
-			})
-		}
-	}
-
-	// Return modified settled update
-	return types.SettledUpdate{
-		SettledSubaccount: settledUpdate.SettledSubaccount,
-		AssetUpdates:      modifiedAssetUpdates,
-		PerpetualUpdates:  modifiedPerpetualUpdates,
-		LeverageMap:       settledUpdate.LeverageMap,
-	}
 }
 
 func GenerateStreamSubaccountUpdate(
