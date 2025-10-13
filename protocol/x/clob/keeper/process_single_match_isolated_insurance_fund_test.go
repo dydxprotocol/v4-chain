@@ -23,6 +23,9 @@ import (
 // TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta demonstrates the ordering bug
 // where transferring collateral from the isolated pool fails because insurance fund payment hasn't
 // been added to the pool yet.
+// This test is expected to
+// - fail before the fix that moves insurance payment before collateral transfers
+// - succeed after the fix
 func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing.T) {
 	// SCENARIO:
 	// - Carl: Short 1 ISO, quote +$49 (underwater after match)
@@ -37,37 +40,34 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	// WHAT HAPPENS WHEN THEY CLOSE AT $100:
 	// - Carl: Pays $100 to close short, has -$51, insurance covers → final USDC = $0
 	// - Alice: Receives $100 from closing long → final USDC = $200
-	// - System needs to transfer collateral when positions close
+	// - System needs to transfer collateral from isolated pool to main pool when positions close
 	//
 	// INSURANCE FUND DELTA:
-	// - Insurance fund has negative delta of -$51 (pays INTO pool)
+	// - Insurance fund has negative delta of -$51 (i.e. pays INTO pool)
 	// - This payment would bring pool to $149 + $51 = $200
 	//
 	// THE BUG:
-	// - UpdateSubaccounts() (line 450) tries to transfer collateral FIRST
-	// - When Alice's position closes, system needs to transfer $200 from pool
-	// - Pool only has $149 (not enough!)
-	// - Bank transfer FAILS "insufficient funds"
-	// - TransferInsuranceFundPayments() (line 487) would add $51, but it's TOO LATE
-	//
+	// - UpdateSubaccounts() (line 450) tries to transfer $200 of collateral FIRST
+	// - Pool only has $149 as insurance fund delta isn't transferred into the pool yet
+	//   - TransferInsuranceFundPayments() (line 487) would add $51
 	// Result: Bank transfer error "spendable balance 149000000 is smaller than 200000000"
 
-	// Use pre-existing subaccounts with ISO positions
-	subaccount1 := constants.Carl_Num0_1ISO_Short_49USD // Carl: short 1 ISO, quote $49
+	// Carl: short 1 ISO, quote $49
+	subaccount1 := constants.Carl_Num0_1ISO_Short_49USD
 
-	// Create Alice with only $100 instead of $10k
+	// Alice: long 1 ISO, quote $100
 	subaccount2 := satypes.Subaccount{
 		Id: &constants.Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			{
 				AssetId:  0,
-				Quantums: dtypes.NewInt(100_000_000), // $100 instead of $10k
+				Quantums: dtypes.NewInt(100_000_000),
 			},
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId:  3,                            // ISO perpetual
-				Quantums:     dtypes.NewInt(1_000_000_000), // +1 ISO (long)
+				PerpetualId:  3,
+				Quantums:     dtypes.NewInt(1_000_000_000),
 				FundingIndex: dtypes.NewInt(0),
 			},
 		},
@@ -187,17 +187,14 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	carlInitial := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount1.Id)
 	aliceInitial := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount2.Id)
 
-	// Get the perpetual to understand funding
-	isoPerpetual, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, constants.IsoUsd_IsolatedMarket.Params.Id)
+	_, err = tApp.App.PerpetualsKeeper.GetPerpetual(ctx, constants.IsoUsd_IsolatedMarket.Params.Id)
 	require.NoError(t, err)
 
 	t.Logf("=== INITIAL STATE ===")
 	t.Logf("Isolated pool: %s (Carl $49 + Alice $100 = $149)", isolatedPoolBalance.String())
 	t.Logf("Insurance fund: %s", insuranceFundBalance.String())
-	t.Logf("ISO Perpetual FundingIndex: %s", isoPerpetual.FundingIndex.String())
 	t.Logf("Carl: quote=%s, positions=%+v", carlInitial.GetUsdcPosition().String(), carlInitial.PerpetualPositions)
 	t.Logf("Alice: quote=%s, positions=%+v", aliceInitial.GetUsdcPosition().String(), aliceInitial.PerpetualPositions)
-	t.Logf("Pool has correct amount - but insurance must pay in BEFORE collateral transfers!")
 
 	// Create liquidation match - Carl (short) and Alice (long) close positions
 	// Price calculation: quoteQuantums = subticks × baseQuantums × 10^(quantumConversionExponent)
@@ -208,7 +205,7 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	// At $100, Carl pays $100 to close his short:
 	// - Carl final: $49 - $100 = -$51 (insurance covers $51)
 	// - Insurance delta: -$51 (pays INTO pool)
-	// - This creates larger shortfall requiring insurance payment first
+	// - This creates larger shortfall requiring insurance payment
 	liquidationOrder := clobtypes.NewLiquidationOrder(
 		*subaccount1.Id,
 		constants.ClobPair_3_Iso,
@@ -275,36 +272,34 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 		t.Logf("Error: %v", err)
 	}
 
-	// Get the subaccount states to see what partial updates happened
-	carlAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount1.Id)
-	aliceAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount2.Id)
-	t.Logf(
-		"\nCarl AFTER error: quote=%s, positions=%+v",
-		carlAfter.GetUsdcPosition().String(),
-		carlAfter.PerpetualPositions,
-	)
-	t.Logf(
-		"Alice AFTER error: quote=%s, positions=%+v",
-		aliceAfter.GetUsdcPosition().String(),
-		aliceAfter.PerpetualPositions,
-	)
-	t.Logf("(Both unchanged because the entire update was rolled back)")
+	// DEMONSTRATE BUG
+	// // Get subaccount states to see what partial updates happened
+	// carlAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount1.Id)
+	// aliceAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount2.Id)
+	// t.Logf(
+	// 	"\nCarl AFTER error: quote=%s, positions=%+v",
+	// 	carlAfter.GetUsdcPosition().String(),
+	// 	carlAfter.PerpetualPositions,
+	// )
+	// t.Logf(
+	// 	"Alice AFTER error: quote=%s, positions=%+v",
+	// 	aliceAfter.GetUsdcPosition().String(),
+	// 	aliceAfter.PerpetualPositions,
+	// )
+	// t.Logf("(Both unchanged because the entire update was rolled back)")
 
-	// Analyze the error
-	t.Logf("\n=== ANALYSIS ===")
-	t.Logf("Pool balance: %s quantums ($%d)", poolBalanceBefore.Amount.String(), 149)
-	t.Logf("Insurance would add: $51 (bringing pool to $200)")
-	t.Logf("Alice needs to withdraw: $200")
-	t.Logf("But UpdateSubaccounts() happens BEFORE TransferInsuranceFundPayments()")
-	t.Logf("So the pool doesn't have enough when Alice tries to withdraw!")
+	// // Analyze the error
+	// t.Logf("\n=== ANALYSIS ===")
+	// t.Logf("Pool balance: %s quantums ($%d)", poolBalanceBefore.Amount.String(), 149)
+	// t.Logf("Insurance would add: $51 (bringing pool to $200)")
+	// t.Logf("System tries to withdraw $200")
+	// t.Logf("But UpdateSubaccounts() happens BEFORE TransferInsuranceFundPayments()")
 
-	// The match failed before insurance payment could execute
 	insuranceFundBalanceAfter := tApp.App.SubaccountsKeeper.GetInsuranceFundBalance(
 		ctx,
 		constants.IsoUsd_IsolatedMarket.Params.Id,
 	)
 	t.Logf("Insurance fund balance (unchanged due to error): %s", insuranceFundBalanceAfter.String())
-	t.Logf("Insurance fund delta: NEGATIVE (would pay INTO pool to cover shortfall), but too late!")
 
 	require.NoError(t, err, "Match should succeed after insurance payment is moved before collateral transfers")
 	require.True(t, success, "Match should succeed")
@@ -318,5 +313,5 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	t.Logf("Carl final: quote=%s, positions=%+v", carlFinal.GetUsdcPosition().String(), carlFinal.PerpetualPositions)
 	t.Logf("Alice final: quote=%s, positions=%+v", aliceFinal.GetUsdcPosition().String(), aliceFinal.PerpetualPositions)
 	t.Logf("Pool final balance: %s", poolBalanceFinal.String())
-	t.Logf("\n✓ Match succeeded because insurance payment happened before collateral transfers!")
+	t.Logf("\n✓ Match succeeded because insurance payment happened before collateral transfers")
 }
