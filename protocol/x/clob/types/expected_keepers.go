@@ -105,6 +105,26 @@ type SubaccountsKeeper interface {
 		revSharesForFill revsharetypes.RevSharesForFill,
 		fillForProcess FillForProcess,
 	) error
+
+	// Leverage methods
+	SetLeverage(
+		ctx sdk.Context,
+		subaccountId *satypes.SubaccountId,
+		leverageMap map[uint32]uint32,
+	)
+	GetLeverage(
+		ctx sdk.Context,
+		subaccountId *satypes.SubaccountId,
+	) (map[uint32]uint32, bool)
+	UpdateLeverage(
+		ctx sdk.Context,
+		subaccountId *satypes.SubaccountId,
+		perpetualLeverage map[uint32]uint32,
+	) error
+	GetMaxLeverageForPerpetual(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (uint32, error)
 }
 
 type AssetsKeeper interface {

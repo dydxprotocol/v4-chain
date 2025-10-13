@@ -251,6 +251,7 @@ func (k Keeper) getSettledUpdates(
 	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
+	var idToLeverageMap = make(map[types.SubaccountId]map[uint32]uint32)
 	settledUpdates = make([]types.SettledUpdate, len(updates))
 	subaccountIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
 
@@ -258,31 +259,129 @@ func (k Keeper) getSettledUpdates(
 	for i, u := range updates {
 		settledSubaccount, exists := idToSettledSubaccount[u.SubaccountId]
 		var fundingPayments map[uint32]dtypes.SerializableInt
+		var leverageMap map[uint32]uint32
 
 		if exists && requireUniqueSubaccount {
 			return nil, nil, types.ErrNonUniqueUpdatesSubaccount
 		}
 
-		// Get and store the settledSubaccount if SubaccountId doesn't exist in
-		// idToSettledSubaccount map.
+		// Get and store the settledSubaccount and leverage if SubaccountId doesn't exist in maps.
 		if !exists {
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
 			settledSubaccount, fundingPayments = salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
+			// Fetch leverage configuration for this subaccount
+			if leverage, found := k.GetLeverage(ctx, &u.SubaccountId); found {
+				leverageMap = leverage
+			}
+
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
+			idToLeverageMap[u.SubaccountId] = leverageMap
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
+		} else {
+			// Reuse cached leverage map
+			leverageMap = idToLeverageMap[u.SubaccountId]
 		}
 
 		settledUpdate := types.SettledUpdate{
 			SettledSubaccount: settledSubaccount,
 			AssetUpdates:      u.AssetUpdates,
 			PerpetualUpdates:  u.PerpetualUpdates,
+			LeverageMap:       leverageMap,
+		}
+
+		// Apply leverage-aware collateral allocation if leverage is configured
+		if leverageMap != nil {
+			settledUpdate = k.applyLeverageAwareCollateralAllocation(ctx, settledUpdate, perpInfos)
 		}
 
 		settledUpdates[i] = settledUpdate
 	}
 
 	return settledUpdates, subaccountIdToFundingPayments, nil
+}
+
+// applyLeverageAwareCollateralAllocation modifies the SettledUpdate to allocate
+// leverage-appropriate collateral from main asset balance to perpetual positions.
+// This ensures that positions have the correct amount of dedicated collateral
+// based on the user's leverage configuration.
+func (k Keeper) applyLeverageAwareCollateralAllocation(
+	ctx sdk.Context,
+	settledUpdate types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
+) types.SettledUpdate {
+	// Create copies of the updates to modify
+	modifiedAssetUpdates := make([]types.AssetUpdate, len(settledUpdate.AssetUpdates))
+	copy(modifiedAssetUpdates, settledUpdate.AssetUpdates)
+
+	modifiedPerpetualUpdates := make([]types.PerpetualUpdate, len(settledUpdate.PerpetualUpdates))
+	copy(modifiedPerpetualUpdates, settledUpdate.PerpetualUpdates)
+
+	// For each perpetual update, calculate and apply leverage-aware collateral allocation
+	for i, perpUpdate := range modifiedPerpetualUpdates {
+		// Skip if no leverage configured for this perpetual
+		leverage := uint32(0)
+		if settledUpdate.LeverageMap != nil {
+			leverage = settledUpdate.LeverageMap[perpUpdate.PerpetualId]
+		}
+		if leverage == 0 {
+			continue
+		}
+
+		// Calculate required collateral allocation
+		perpInfo := perpInfos.MustGet(perpUpdate.PerpetualId)
+		collateralRequired := salib.CalculateLeverageAwareCollateralRequirement(
+			perpUpdate,
+			perpInfo,
+			leverage,
+		)
+
+		// Skip if no collateral allocation needed
+		if collateralRequired.Sign() == 0 {
+			continue
+		}
+
+		// Modify the perpetual update to include collateral allocation
+		if modifiedPerpetualUpdates[i].BigQuoteBalanceDelta == nil {
+			modifiedPerpetualUpdates[i].BigQuoteBalanceDelta = new(big.Int)
+		}
+		modifiedPerpetualUpdates[i].BigQuoteBalanceDelta.Add(
+			modifiedPerpetualUpdates[i].BigQuoteBalanceDelta,
+			collateralRequired,
+		)
+
+		// Modify the USDC asset update to subtract the allocated collateral
+		// Find or create USDC asset update
+		usdcAssetIndex := -1
+		for j, assetUpdate := range modifiedAssetUpdates {
+			if assetUpdate.AssetId == assettypes.AssetUsdc.Id {
+				usdcAssetIndex = j
+				break
+			}
+		}
+
+		if usdcAssetIndex >= 0 {
+			// Subtract collateral from existing USDC update
+			modifiedAssetUpdates[usdcAssetIndex].BigQuantumsDelta.Sub(
+				modifiedAssetUpdates[usdcAssetIndex].BigQuantumsDelta,
+				collateralRequired,
+			)
+		} else {
+			// Create new USDC asset update to subtract collateral
+			modifiedAssetUpdates = append(modifiedAssetUpdates, types.AssetUpdate{
+				AssetId:          assettypes.AssetUsdc.Id,
+				BigQuantumsDelta: new(big.Int).Neg(collateralRequired),
+			})
+		}
+	}
+
+	// Return modified settled update
+	return types.SettledUpdate{
+		SettledSubaccount: settledUpdate.SettledSubaccount,
+		AssetUpdates:      modifiedAssetUpdates,
+		PerpetualUpdates:  modifiedPerpetualUpdates,
+		LeverageMap:       settledUpdate.LeverageMap,
+	}
 }
 
 func GenerateStreamSubaccountUpdate(
@@ -366,7 +465,7 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(
+	success, successPerUpdate, err = k.internalCanUpdateSubaccountsWithLeverage(
 		ctx,
 		settledUpdates,
 		updateType,
@@ -479,6 +578,9 @@ func (k Keeper) UpdateSubaccounts(
 // with the same `SubaccountId`, they are validated without respect to each
 // other.
 //
+// This method automatically fetches leverage configuration for all subaccounts
+// being updated and applies leverage-aware margin requirements.
+//
 // Returns a `success` value of `true` if all updates are valid.
 // Returns a `successPerUpdates` value, which is a slice of `UpdateResult`.
 // These map to the updates and are used to indicate which of the updates
@@ -511,23 +613,11 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, perpInfos)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccountsWithLeverage(ctx, settledUpdates, updateType, perpInfos)
 	return success, successPerUpdate, err
 }
 
-// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
-// if any of the updates led to an isolated perpetual position being opened or closed.
-// The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
-// Each update is considered in isolation. Thus if two updates are provided
-// with the same `Subaccount`, they are validated without respect to each
-// other.
-// The input subaccounts must be settled.
-//
-// Returns a `success` value of `true` if all updates are valid.
-// Returns a `successPerUpdates` value, which is a slice of `UpdateResult`.
-// These map to the updates and are used to indicate which of the updates
-// caused a failure, if any.
-func (k Keeper) internalCanUpdateSubaccounts(
+func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 	ctx sdk.Context,
 	settledUpdates []types.SettledUpdate,
 	updateType types.UpdateType,
@@ -673,11 +763,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
-		updatedSubaccount := salib.CalculateUpdatedSubaccount(u, perpInfos)
-		riskNew, err := salib.GetRiskForSubaccount(
-			updatedSubaccount,
-			perpInfos,
-		)
+		riskNew, err := salib.GetRiskForSettledUpdate(u, perpInfos)
 		if err != nil {
 			return false, nil, err
 		}
@@ -699,6 +785,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				riskCurMap[saKey], err = salib.GetRiskForSubaccount(
 					u.SettledSubaccount,
 					perpInfos,
+					u.LeverageMap,
 				)
 				if err != nil {
 					return false, nil, err
@@ -755,9 +842,16 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	}
 	updatedSubaccount := salib.CalculateUpdatedSubaccount(settledUpdate, perpInfos)
 
+	// Get leverage configuration for this subaccount
+	var leverageMap map[uint32]uint32
+	if leverage, found := k.GetLeverage(ctx, &update.SubaccountId); found {
+		leverageMap = leverage
+	}
+
 	return salib.GetRiskForSubaccount(
 		updatedSubaccount,
 		perpInfos,
+		leverageMap,
 	)
 }
 

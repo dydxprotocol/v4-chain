@@ -193,14 +193,19 @@ func (cd ClobDecorator) AnteHandle(
 				return ctx, err
 			}
 		case *types.MsgUpdateLeverage:
-			// Process UpdateLeverage message - just store the leverage data
+			// Process UpdateLeverage message - delegate to subaccounts keeper
 			// Convert from LeverageEntry slice to map
 			perpetualLeverageMap, err := types.ValidateAndConstructPerpetualLeverageMap(ctx, msg, cd.clobKeeper)
 			if err != nil {
 				return ctx, err
 			}
 
-			if err := cd.clobKeeper.UpdateLeverage(ctx, msg.SubaccountId, perpetualLeverageMap); err != nil {
+			// Delegate to subaccounts keeper for leverage storage and validation
+			if err := cd.clobKeeper.GetSubaccountsKeeper().UpdateLeverage(
+				ctx,
+				msg.SubaccountId,
+				perpetualLeverageMap,
+			); err != nil {
 				log.DebugLog(
 					ctx,
 					"Failed to update leverage in ante handler",

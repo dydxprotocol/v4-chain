@@ -43,6 +43,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
+	leverage uint32,
 ) (
 	risk margin.Risk,
 ) {
@@ -56,6 +57,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
+		leverage,
 	)
 	return margin.Risk{
 		NC:  nc,
@@ -72,6 +74,7 @@ func GetNetCollateralAndMarginRequirements(
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
 	quoteBalance *big.Int,
+	leverage uint32, // 0 means use default liquidity tier margins
 ) (
 	risk margin.Risk,
 ) {
@@ -80,6 +83,7 @@ func GetNetCollateralAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
+		leverage,
 	)
 	risk.NC.Add(risk.NC, quoteBalance)
 	return risk
@@ -109,11 +113,13 @@ func GetNetNotionalInQuoteQuantums(
 
 // GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
 // in quote quantums, given the position size in base quantums.
+// If leverage > 0, scales the margin requirements based on maxLeverage/userLeverage ratio.
 func GetMarginRequirementsInQuoteQuantums(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	bigQuantums *big.Int,
+	leverage uint32, // 0 means use default liquidity tier margins
 ) (
 	bigInitialMarginQuoteQuantums *big.Int,
 	bigMaintenanceMarginQuoteQuantums *big.Int,
@@ -152,5 +158,24 @@ func GetMarginRequirementsInQuoteQuantums(
 		bigQuoteQuantums,
 		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
 	)
+
+	// Apply leverage scaling if configured
+	if leverage > 0 {
+		// Calculate max leverage: 1,000,000 / InitialMarginPpm
+		if liquidityTier.InitialMarginPpm == 0 {
+			panic("InitialMarginPpm cannot be zero for leverage calculation")
+		}
+		maxLeverage := lib.OneMillion / liquidityTier.InitialMarginPpm
+
+		// Scale IMR: baseIMR * (maxLeverage / userLeverage)
+		if leverage <= maxLeverage {
+			leverageRatio := maxLeverage / leverage
+			bigInitialMarginQuoteQuantums = new(big.Int).Mul(
+				bigInitialMarginQuoteQuantums,
+				big.NewInt(int64(leverageRatio)),
+			)
+		}
+	}
+
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }
