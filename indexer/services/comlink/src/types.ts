@@ -184,6 +184,9 @@ export interface FillResponseObject {
   builderAddress?: string,
   orderRouterAddress?: string,
   orderRouterFee?: string,
+  positionSizeBefore?: string,
+  entryPriceBefore?: string,
+  positionSideBefore?: string,
 }
 
 /* ------- TRANSFER TYPES ------- */

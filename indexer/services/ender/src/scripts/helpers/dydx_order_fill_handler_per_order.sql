@@ -199,6 +199,18 @@ BEGIN
         );
     END IF;
 
+    -- Retrieve the latest perpetual position record.
+    SELECT * INTO perpetual_position_record
+    FROM perpetual_positions
+    WHERE "subaccountId" = subaccount_uuid
+      AND "perpetualId" = perpetual_market_record."id"
+    ORDER BY "openEventId" DESC
+    LIMIT 1;
+
+    snap_size_before := COALESCE(ABS(perpetual_position_record."sumOpen"), 0);
+    snap_entry_before := NULLIF(perpetual_position_record."entryPrice", 0);
+    snap_side_before := perpetual_position_record."side";
+
     /* Insert the associated fill record for this order_fill event. */
     event_id = dydx_event_id_from_parts(
         block_height, transaction_index, event_index);
@@ -226,7 +238,10 @@ BEGIN
             NULLIF(builder_fee, 0),
             NULLIF(builder_address, ''),
             NULLIF(order_router_fee, 0),
-            NULLIF(order_router_address, ''))
+            NULLIF(order_router_address, ''),
+            snap_size_before,
+            snap_entry_before,
+            snap_side_before)
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
@@ -236,6 +251,16 @@ BEGIN
             order_side,
             fill_amount,
             maker_price);
+
+    PERFORM dydx_apply_fill_realized_effects(
+        perpetual_position_record."id",
+        fill_record."side",
+        fill_record."size",
+        fill_record."price",
+        fill_record."fee",
+        fill_record."positionSideBefore",
+        fill_record."positionSizeBefore",
+        fill_record."entryPriceBefore");
 
     RETURN jsonb_build_object(
             'order',

@@ -92,6 +92,9 @@ export default class FillModel extends Model {
         builderAddress: { type: ['string', 'null'], default: null },
         orderRouterAddress: { type: ['string', 'null'], default: null },
         orderRouterFee: { type: ['string', 'null'], default: null },
+        positionSizeBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
+        entryPriceBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
+        positionSideBefore: { type: ['string', 'null'], enum: [...Object.values(OrderSide)], default: null },
       },
     };
   }
@@ -125,6 +128,9 @@ export default class FillModel extends Model {
       builderAddress: 'string',
       orderRouterAddress: 'string',
       orderRouterFee: 'string',
+      positionSizeBefore: 'string',
+      entryPriceBefore: 'string',
+      positionSideBefore: 'string',
     };
   }
 
@@ -169,4 +175,10 @@ export default class FillModel extends Model {
   orderRouterAddress!: string;
 
   orderRouterFee!: string;
+
+  positionSizeBefore?: string;
+
+  entryPriceBefore?: string;
+
+  positionSideBefore?: OrderSide;
 }

@@ -1294,7 +1294,10 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "builderFee": "string",
       "builderAddress": "string",
       "orderRouterAddress": "string",
-      "orderRouterFee": "string"
+      "orderRouterFee": "string",
+      "positionSizeBefore": "string",
+      "entryPriceBefore": "string",
+      "positionSideBefore": "string"
     }
   ]
 }
@@ -1398,7 +1401,10 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "builderFee": "string",
       "builderAddress": "string",
       "orderRouterAddress": "string",
-      "orderRouterFee": "string"
+      "orderRouterFee": "string",
+      "positionSizeBefore": "string",
+      "entryPriceBefore": "string",
+      "positionSideBefore": "string"
     }
   ]
 }
@@ -5459,7 +5465,10 @@ This operation does not require authentication
   "builderFee": "string",
   "builderAddress": "string",
   "orderRouterAddress": "string",
-  "orderRouterFee": "string"
+  "orderRouterFee": "string",
+  "positionSizeBefore": "string",
+  "entryPriceBefore": "string",
+  "positionSideBefore": "string"
 }
 
 ```
@@ -5487,6 +5496,9 @@ This operation does not require authentication
 |builderAddress|string|false|none|none|
 |orderRouterAddress|string|false|none|none|
 |orderRouterFee|string|false|none|none|
+|positionSizeBefore|string|false|none|none|
+|entryPriceBefore|string|false|none|none|
+|positionSideBefore|[OrderSide](#schemaorderside)|false|none|none|
 
 ## FillResponse
 
@@ -5520,7 +5532,10 @@ This operation does not require authentication
       "builderFee": "string",
       "builderAddress": "string",
       "orderRouterAddress": "string",
-      "orderRouterFee": "string"
+      "orderRouterFee": "string",
+      "positionSizeBefore": "string",
+      "entryPriceBefore": "string",
+      "positionSideBefore": "string"
     }
   ]
 }
