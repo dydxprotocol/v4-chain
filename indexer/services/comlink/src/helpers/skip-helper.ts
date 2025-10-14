@@ -388,9 +388,9 @@ export async function limitAmount(
 // getSlippageTolerancePercent returns the acceptable slippage is smallest of
 // SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided by the estimatedAmountOut
 // or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
-export function getSlippageTolerancePercent(estimatedAmountOut: string): string {
+export function getSlippageTolerancePercent(estAmountOut: string): string {
   return min([
-    (config.SKIP_SLIPPAGE_TOLERANCE_USDC * ETH_USDC_QUANTUM) / parseInt(estimatedAmountOut, 10),
+    (100 * (config.SKIP_SLIPPAGE_TOLERANCE_USDC * ETH_USDC_QUANTUM)) / parseInt(estAmountOut, 10),
     parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
   ])!.toString();
 }
