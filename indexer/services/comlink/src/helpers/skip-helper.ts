@@ -367,7 +367,7 @@ export async function limitAmount(
   amount: string,
   sourceAssetDenom: string,
 ): Promise<string> {
-  let amountToUse = amount;
+  let amountToUse = BigInt(amount);
   // calculates the most eth we can bridge in one go and pins it to that.
   if (sourceAssetDenom === ethDenomByChainId[chainId]) {
     try {
@@ -376,9 +376,9 @@ export async function limitAmount(
         (config.MAXIMUM_BRIDGE_AMOUNT_USDC / ethPrice) * ETH_WEI_QUANTUM,
       );
       amountToUse = min([
-        BigInt(amountToUse),
+        amountToUse,
         BigInt(maxDepositInWei),
-      ])!.toString();
+      ])!;
     } catch (error) {
       logger.error({
         at: 'skip-helper#limitAmount',
@@ -387,11 +387,10 @@ export async function limitAmount(
       });
       throw error;
     }
-    return amountToUse;
+    return amountToUse.toString();
   }
 
   // calculates the most usdc we can bridge in one go and pins it to that.
   const maxDepositInUsdc = config.MAXIMUM_BRIDGE_AMOUNT_USDC;
-  amountToUse = min([parseInt(amountToUse, 10), maxDepositInUsdc * ETH_USDC_QUANTUM])!.toString();
-  return amountToUse;
+  return min([amountToUse, BigInt(maxDepositInUsdc * ETH_USDC_QUANTUM)])!.toString();
 }
