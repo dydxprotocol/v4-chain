@@ -53,22 +53,13 @@ const CHANNEL_CONNECTION_LIMITS: { [channel: string]: number } = {
 };
 
 export class Subscriptions {
-  // Maps channels and ids to a list of websocket connections subscribed to them
-  public subscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
-  // Maps connection ids to the channels and ids the connection is subscribed to
-  public subscriptionLists: { [connectionId: string]: Subscription[] };
-  // Similar to `subscriptions`, maps channels and ids to websocket connections subscribed to them
-  // in batched mode (messages will be sent to the connections in batches from these subscriptions)
-  public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
-  // Tracks the # of ids per channel socks will forward messages for
-  // Make public to access in tests
-  public subscribedIdsPerChannel: { [channel: string]: Set<string> };
-  private largestSubscriberMetricsInterval?: NodeJS.Timeout;
-  public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
-
-  private subscribeRateLimiter: RateLimiter;
-
   private forwardMessage?: (message: MessageToForward, connectionId: string) => number;
+  private subscriptionMetricsInterval?: NodeJS.Timeout;
+  private subscribeRateLimiter: RateLimiter;
+  public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
+  public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
+  public subscriptionLists: { [connectionId: string]: Subscription[] };
+  public subscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
 
   constructor() {
     this.subscriptionLists = {};
@@ -78,7 +69,6 @@ export class Subscriptions {
       points: config.RATE_LIMIT_SUBSCRIBE_POINTS,
       durationMs: config.RATE_LIMIT_SUBSCRIBE_DURATION_MS,
     });
-    this.subscribedIdsPerChannel = {};
     this.subsByChannelByConnectionId = {};
     this.forwardMessage = undefined;
   }
@@ -86,9 +76,9 @@ export class Subscriptions {
   public start(forwardMessage: (message: MessageToForward, connectionId: string) => number): void {
     this.forwardMessage = forwardMessage;
 
-    this.largestSubscriberMetricsInterval = setInterval(
-      () => this.emitLargestSubscriberMetric(),
-      config.LARGEST_SUBSCRIBER_METRIC_INTERVAL_MS,
+    this.subscriptionMetricsInterval = setInterval(
+      () => this.emitSubscriptionMetrics(),
+      config.SUBSCRIPTION_METRIC_INTERVAL_MS,
     );
   }
 
@@ -265,10 +255,7 @@ export class Subscriptions {
         `${config.SERVICE_NAME}.initial_response_get`,
         Date.now() - startGetInitialResponse,
         undefined,
-        {
-          instance: getInstanceId(),
-          channel,
-        },
+        { channel, instance: getInstanceId() },
       );
     }
 
@@ -299,15 +286,8 @@ export class Subscriptions {
     }
 
     this.subscriptionLists[connectionId].push(subscription);
-    if (!this.subscriptions[channel]) {
-      this.subscriptions[channel] = {};
-      this.subscribedIdsPerChannel[channel] = new Set<string>();
-    }
-
-    if (!this.subscriptions[channel][subscriptionId]) {
-      this.subscriptions[channel][subscriptionId] = [];
-      this.subscribedIdsPerChannel[channel].add(subscriptionId);
-    }
+    this.subscriptions[channel] ??= {};
+    this.subscriptions[channel][subscriptionId] ??= [];
 
     this.subscriptions[channel][subscriptionId].push({
       connectionId,
@@ -357,20 +337,10 @@ export class Subscriptions {
     }
 
     // Stat every time a subscribe happens so we have up to date stats on datadog.
-    stats.gauge(
-      `${config.SERVICE_NAME}.subscriptions.channel_size`,
-      this.subscribedIdsPerChannel[channel].size,
-      {
-        instance: getInstanceId(),
-        channel,
-      },
-    );
     stats.timing(
       `${config.SERVICE_NAME}.subscribe_send_message`,
       Date.now() - startSend,
-      {
-        instance: getInstanceId(),
-      },
+      { instance: getInstanceId() },
     );
   }
 
@@ -389,50 +359,34 @@ export class Subscriptions {
     id?: string,
   ): void {
 
+    let removed = false;
+
+    // remove subscription from subscription list
     const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
     if (this.subscriptionLists[connectionId]) {
-      this.subscriptionLists[connectionId] = this.subscriptionLists[connectionId].filter(
-        (e: Subscription) => (e.channel !== channel || e.id !== subscriptionId),
-      );
+      const idx = this.subscriptionLists[connectionId]
+        .findIndex((e: Subscription) => e.channel === channel && e.id === subscriptionId);
+      if (idx >= 0) {
+        this.subscriptionLists[connectionId].splice(idx, 1);
+        removed = true;
+      }
     }
 
-    let subscribedConnections: number = 0;
-
-    // If there is a list of connections subscribed to the channel and id, remove the connection
-    // that is being unsubscribed.
-    if (this.subscriptions[channel] && this.subscriptions[channel][subscriptionId]) {
-      this.subscriptions[channel][subscriptionId] = this.subscriptions[channel][subscriptionId]
-        .filter(
-          (e: SubscriptionInfo) => (e.connectionId !== connectionId),
-        );
-      subscribedConnections += this.subscriptions[channel][subscriptionId].length;
+    // remove subscription from batched and non-batched subscriptions
+    for (const subscriptions of [this.subscriptions[channel], this.batchedSubscriptions[channel]]) {
+      if (subscriptions && subscriptions[subscriptionId]) {
+        const idx = subscriptions[subscriptionId]
+          .findIndex((e: SubscriptionInfo) => e.connectionId === connectionId);
+        if (idx >= 0) {
+          subscriptions[subscriptionId].splice(idx, 1);
+          removed = true;
+        }
+      }
     }
 
-    // If there is a list of connections subscribed to the channel and id for batched messages,
-    // remove the connection that is being unsubscribed.
-    if (this.batchedSubscriptions[channel] && this.batchedSubscriptions[channel][subscriptionId]) {
-      this.batchedSubscriptions[channel][subscriptionId] = this
-        .batchedSubscriptions[channel][subscriptionId].filter(
-          (e: SubscriptionInfo) => (e.connectionId !== connectionId),
-        );
-      subscribedConnections += this.batchedSubscriptions[channel][subscriptionId].length;
+    if (removed) {
+      this.decrementSubscriptions(channel, connectionId);
     }
-
-    // If 0 connections are subscribed to the id for this channel after this unsubscribe, socks will
-    // not forward any future messages in the channel with the id.
-    // Delete from the set tracking the # of ids for the channel socks will forward messages for.
-    if (this.subscribedIdsPerChannel[channel] && subscribedConnections === 0) {
-      this.subscribedIdsPerChannel[channel].delete(subscriptionId);
-      stats.gauge(
-        `${config.SERVICE_NAME}.subscriptions.channel_size`,
-        this.subscribedIdsPerChannel[channel].size,
-        {
-          instance: getInstanceId(),
-          channel,
-        },
-      );
-    }
-    this.decrementSubscriptions(channel, connectionId);
   }
 
   /**
@@ -443,23 +397,16 @@ export class Subscriptions {
     const subscriptionList = this.subscriptionLists[connectionId];
     if (subscriptionList) {
       subscriptionList.forEach((subscription) => {
-        if (subscription.batched) {
-          const idx = this.batchedSubscriptions[subscription.channel][subscription.id]
-            .findIndex(
-              (e: SubscriptionInfo) => e.connectionId === connectionId,
-            );
-          if (idx >= 0) {
-            this.batchedSubscriptions[subscription.channel][subscription.id]
-              .splice(idx, 1);
-          }
-        } else {
-          const idx = this.subscriptions[subscription.channel][subscription.id]
-            .findIndex(
-              (e: SubscriptionInfo) => e.connectionId === connectionId,
-            );
-          if (idx >= 0) {
-            this.subscriptions[subscription.channel][subscription.id]
-              .splice(idx, 1);
+        for (const subscriptions of [
+          this.batchedSubscriptions[subscription.channel],
+          this.subscriptions[subscription.channel],
+        ]) {
+          if (subscriptions && subscriptions[subscription.id]) {
+            const idx = subscriptions[subscription.id]
+              .findIndex((e: SubscriptionInfo) => e.connectionId === connectionId);
+            if (idx >= 0) {
+              subscriptions[subscription.id].splice(idx, 1);
+            }
           }
         }
       });
@@ -477,9 +424,15 @@ export class Subscriptions {
    */
   private validateSubscription(channel: Channel, id?: string): boolean {
     // Only markets & block height channels do not require an id to subscribe to.
-    if ((channel !== Channel.V4_MARKETS && channel !== Channel.V4_BLOCK_HEIGHT) &&
-      id === undefined) {
-      return false;
+    switch (channel) {
+      case (Channel.V4_BLOCK_HEIGHT):
+      case (Channel.V4_MARKETS):
+        return true;
+      default:
+        if (id === undefined) {
+          return false;
+        }
+        break;
     }
     switch (channel) {
       case (Channel.V4_ACCOUNTS): {
@@ -488,37 +441,19 @@ export class Subscriptions {
           MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER,
         );
       }
-      case (Channel.V4_BLOCK_HEIGHT):
-      case (Channel.V4_MARKETS): {
-        return true;
-      }
-      case (Channel.V4_ORDERBOOK):
-      case (Channel.V4_TRADES):
-        if (id === undefined) {
-          return false;
-        }
-        return perpetualMarketRefresher.isValidPerpetualMarketTicker(id);
       case (Channel.V4_CANDLES): {
-        if (id === undefined) {
-          return false;
-        }
-
-        const {
-          ticker,
-          resolution,
-        }: {
-          ticker: string,
-          resolution?: CandleResolution,
-        } = this.parseCandleChannelId(id);
+        const { ticker, resolution } = this.parseCandleChannelId(id);
         if (!perpetualMarketRefresher.isValidPerpetualMarketTicker(ticker)) {
           return false;
         }
-
         return resolution !== undefined;
       }
       case (Channel.V4_PARENT_ACCOUNTS): {
         return this.validateSubaccountChannelId(id, MAX_PARENT_SUBACCOUNTS);
       }
+      case (Channel.V4_ORDERBOOK):
+      case (Channel.V4_TRADES):
+        return perpetualMarketRefresher.isValidPerpetualMarketTicker(id);
       default: {
         throw new InvalidChannelError(channel);
       }
@@ -540,10 +475,7 @@ export class Subscriptions {
     return id ?? V4_MARKETS_ID;
   }
 
-  private validateSubaccountChannelId(id?: string, maxSubaccountNumber?: number): boolean {
-    if (id === undefined) {
-      return false;
-    }
+  private validateSubaccountChannelId(id: string, maxSubaccountNumber: number): boolean {
     // Id for subaccounts channel should be of the format {address}/{subaccountNumber}
     const parts: string[] = id.split('/');
     if (parts.length !== 2) {
@@ -554,11 +486,7 @@ export class Subscriptions {
       return false;
     }
 
-    if (maxSubaccountNumber !== undefined && Number(Number(parts[1]) >= maxSubaccountNumber)) {
-      return false;
-    }
-
-    return true;
+    return Number(parts[1]) < maxSubaccountNumber;
   }
 
   /**
@@ -568,33 +496,27 @@ export class Subscriptions {
    * @returns The endpoint if it exists, or undefined if the channel has no initial response
    * endpoint.
    */
-  private getInitialEndpointForSubscription(channel: Channel, id?: string): string | undefined {
+  private getInitialEndpointForSubscription(
+    channel: Exclude<Channel, Channel.V4_ACCOUNTS | Channel.V4_PARENT_ACCOUNTS>,
+    id?: string,
+  ): string | undefined {
     switch (channel) {
-      case (Channel.V4_TRADES): {
-        if (id === undefined) {
-          throw new Error('Invalid undefined channel');
-        }
-
-        return `${COMLINK_URL}/v4/trades/perpetualMarket/${id}`;
+      case (Channel.V4_BLOCK_HEIGHT): {
+        return `${COMLINK_URL}/v4/height`;
       }
       case (Channel.V4_MARKETS): {
         return `${COMLINK_URL}/v4/perpetualMarkets`;
       }
-      case (Channel.V4_BLOCK_HEIGHT): {
-        return `${COMLINK_URL}/v4/height`;
+      case (Channel.V4_TRADES): {
+        if (id === undefined) { throw new Error('Invalid undefined channel'); }
+        return `${COMLINK_URL}/v4/trades/perpetualMarket/${id}`;
       }
       case (Channel.V4_ORDERBOOK): {
-        if (id === undefined) {
-          throw new Error('Invalid undefined channel');
-        }
-
+        if (id === undefined) { throw new Error('Invalid undefined channel'); }
         return `${COMLINK_URL}/v4/orderbooks/perpetualMarket/${id}`;
       }
       case (Channel.V4_CANDLES): {
-        if (id === undefined) {
-          throw new Error('Invalid undefined channel');
-        }
-
+        if (id === undefined) { throw new Error('Invalid undefined channel'); }
         const {
           ticker,
           resolution,
@@ -606,31 +528,20 @@ export class Subscriptions {
         // validateSubscription.
         return `${COMLINK_URL}/v4/candles/perpetualMarkets/${ticker}?resolution=${resolution!}`;
       }
-      default: {
-        throw new InvalidChannelError(channel);
-      }
+      default: throw new InvalidChannelError(channel);
     }
   }
 
+  // TODO deduplicate with getInitialResponseForParentSubaccountSubscription
   private async getInitialResponseForSubaccountSubscription(
-    id?: string,
+    id: string,
     country?: string,
   ): Promise<string> {
-    if (id === undefined) {
-      throw new Error('Invalid undefined id');
-    }
 
     try {
-      const {
-        address,
-        subaccountNumber,
-      }: {
-        address: string,
-        subaccountNumber: string,
-      } = this.parseSubaccountChannelId(id);
-
-      const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
-      const numBlockHeight: number = parseInt(blockHeight, 10);
+      const { address, subaccountNumber } = this.parseSubaccountChannelId(id);
+      const blockHeightString: string = await blockHeightRefresher.getLatestBlockHeight();
+      const blockHeight: number = parseInt(blockHeightString, 10);
 
       const [
         subaccountsResponse,
@@ -658,7 +569,7 @@ export class Subscriptions {
         }),
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(numBlockHeight - 20, 1)}`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(blockHeight - 20, 1)}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
@@ -676,7 +587,7 @@ export class Subscriptions {
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
         orders: allOrders,
-        blockHeight,
+        blockHeight: blockHeightString,
       });
     } catch (error) {
       logger.error({
@@ -685,14 +596,10 @@ export class Subscriptions {
         id,
         error,
       });
-      // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
-      // such subaccounts can be subscribed to and events can be sent when the subaccounts are
-      // indexed to an existing subscription.
+      // The subaccount may initially be invalid but become valid later
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
         return EMPTY_INITIAL_RESPONSE;
       }
-      // 403 indicates a blocked address. Throw a specific error for blocked addresses with a
-      // specific error message detailing why the subscription failed due to a blocked address.
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
         throw new BlockedError();
       }
@@ -701,12 +608,9 @@ export class Subscriptions {
   }
 
   private async getInitialResponseForParentSubaccountSubscription(
-    id?: string,
+    id: string,
     country?: string,
   ): Promise<string> {
-    if (id === undefined) {
-      throw new Error('Invalid undefined id');
-    }
 
     try {
       const {
@@ -734,7 +638,6 @@ export class Subscriptions {
           },
           transformResponse: (res) => res,
         }),
-        // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
@@ -773,14 +676,10 @@ export class Subscriptions {
         id,
         error,
       });
-      // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
-      // such subaccounts can be subscribed to and events can be sent when the subaccounts are
-      // indexed to an existing subscription.
+      // The subaccounts may initially be invalid but become valid later
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
         return EMPTY_INITIAL_RESPONSE;
       }
-      // 403 indicates a blocked address. Throw a specific error for blocked addresses with a
-      // specific error message detailing why the subscription failed due to a blocked address.
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
         throw new BlockedError();
       }
@@ -822,38 +721,41 @@ export class Subscriptions {
     id?: string,
     country?: string,
   ): Promise<string> {
-    if (channel === Channel.V4_ACCOUNTS) {
-      return this.getInitialResponseForSubaccountSubscription(id, country);
+    let endpoint: string | undefined;
+    switch (channel) {
+      case (Channel.V4_ACCOUNTS):
+        if (id === undefined) { throw new Error('Invalid undefined id'); }
+        return this.getInitialResponseForSubaccountSubscription(id, country);
+      case (Channel.V4_PARENT_ACCOUNTS):
+        if (id === undefined) { throw new Error('Invalid undefined id'); }
+        return this.getInitialResponseForParentSubaccountSubscription(id, country);
+      default:
+        endpoint = this.getInitialEndpointForSubscription(channel, id);
+        if (endpoint === undefined) { return EMPTY_INITIAL_RESPONSE; }
+        return axiosRequest({
+          method: RequestMethod.GET,
+          url: endpoint,
+          timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
+          transformResponse: (res) => res, // Disables JSON parsing
+        });
     }
-    if (channel === Channel.V4_PARENT_ACCOUNTS) {
-      return this.getInitialResponseForParentSubaccountSubscription(id, country);
-    }
-    const endpoint: string | undefined = this.getInitialEndpointForSubscription(channel, id);
-    // If no endpoint exists, return an empty initial response.
-    if (endpoint === undefined) {
-      return EMPTY_INITIAL_RESPONSE;
-    }
-
-    return axiosRequest({
-      method: RequestMethod.GET,
-      url: endpoint,
-      timeout: config.INITIAL_GET_TIMEOUT_MS,
-      headers: {
-        'cf-ipcountry': country,
-      },
-      transformResponse: (res) => res, // Disables JSON parsing
-    });
   }
 
-  private emitLargestSubscriberMetric(): void {
+  private emitSubscriptionMetrics(): void {
     const maxSubscriptionsByChannel: { [channel: string]: number } = {};
     const maxIdByChannel: { [channel: string]: string } = {};
+    const subscriptionsByChannel: { [channel: string]: number } = {};
 
     Object.entries(this.subsByChannelByConnectionId).forEach(
       ([channel, subscribedIdsByConnectionId]) => {
         let maxId: string = '';
         let maxSubscriptions: number = 0;
+        subscriptionsByChannel[channel] = 0;
         Object.entries(subscribedIdsByConnectionId).forEach(([connectionId, subscriptions]) => {
+          subscriptionsByChannel[channel] += subscriptions;
           if (subscriptions > (maxSubscriptions || 0)) {
             maxSubscriptions = subscriptions;
             maxId = connectionId;
@@ -863,20 +765,33 @@ export class Subscriptions {
         maxSubscriptionsByChannel[channel] = maxSubscriptions;
       });
 
+    const instanceId = getInstanceId();
+
     Object.entries(maxSubscriptionsByChannel).forEach(([channel, count]) => {
       stats.gauge(
         `${config.SERVICE_NAME}.largest_subscriber`,
         count,
         {
-          instance: getInstanceId(),
           channel,
+          instance: instanceId,
+        },
+      );
+    });
+
+    Object.entries(subscriptionsByChannel).forEach(([channel, count]) => {
+      stats.gauge(
+        `${config.SERVICE_NAME}.subscriptions.channel_size`,
+        count,
+        {
+          channel,
+          instance: instanceId,
         },
       );
     });
 
     if (Object.keys(maxSubscriptionsByChannel).length > 0) {
       logger.info({
-        at: 'Subscriptions#emitLargestSubscriberMetric',
+        at: 'Subscriptions#emitSubscriptionMetrics',
         message: 'Max subscriptions by channel',
         maxSubscriptionsByChannel,
       });
@@ -884,7 +799,7 @@ export class Subscriptions {
 
     if (Object.keys(maxIdByChannel).length > 0) {
       logger.info({
-        at: 'Subscriptions#emitLargestSubscriberMetric',
+        at: 'Subscriptions#emitSubscriptionMetrics',
         message: 'Max id by channel',
         maxIdByChannel,
       });
@@ -892,8 +807,8 @@ export class Subscriptions {
   }
 
   public stop(): void {
-    if (this.largestSubscriberMetricsInterval !== undefined) {
-      clearInterval(this.largestSubscriberMetricsInterval);
+    if (this.subscriptionMetricsInterval !== undefined) {
+      clearInterval(this.subscriptionMetricsInterval);
     }
   }
 }
