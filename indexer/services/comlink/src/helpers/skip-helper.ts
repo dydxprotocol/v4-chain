@@ -114,10 +114,8 @@ export async function getSkipCallData(
 
   // acceptable slippage is smallest of SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided
   // by the estimatedAmountOut or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
-  const slippageTolerancePercent = min([
-    config.SKIP_SLIPPAGE_TOLERANCE_USDC / parseInt(routeResult.estimatedAmountOut!, 10),
-    parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
-  ])!.toString();
+  const slippageTolerancePercent = getSlippageTolerancePercent(routeResult.estimatedAmountOut);
+  console.log('slippageTolerancePercent', slippageTolerancePercent);
   const response = await messages({
     timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
@@ -386,4 +384,14 @@ export async function limitAmount(
   const maxDepositInUsdc = config.MAXIMUM_BRIDGE_AMOUNT_USDC;
   amountToUse = min([parseInt(amountToUse, 10), maxDepositInUsdc * ETH_USDC_QUANTUM])!.toString();
   return amountToUse;
+}
+
+// getSlippageTolerancePercent returns the acceptable slippage is smallest of
+// SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided by the estimatedAmountOut
+// or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
+export function getSlippageTolerancePercent(estimatedAmountOut: string): string {
+  return min([
+    (config.SKIP_SLIPPAGE_TOLERANCE_USDC * ETH_USDC_QUANTUM) / parseInt(estimatedAmountOut, 10),
+    parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
+  ])!.toString();
 }
