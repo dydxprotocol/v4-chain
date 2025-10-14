@@ -1,5 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { SignJWT, JWTPayload } from 'jose';
+import {
+  SignJWT, JWTPayload, importPKCS8, KeyLike, decodeJwt,
+} from 'jose';
 import fetch from 'node-fetch';
 
 import { AppleJWTClaims, AppleTokenResponse } from '../types';
@@ -40,10 +42,7 @@ export class AppleHelpers {
 
       // Create and sign the JWT
       const jwt = await new SignJWT(claims)
-        .setProtectedHeader({
-          alg: 'ES256',
-          kid: keyId,
-        })
+        .setProtectedHeader({ alg: 'ES256', kid: keyId })
         .sign(key);
 
       return jwt;
@@ -53,7 +52,10 @@ export class AppleHelpers {
         message: 'Failed to generate Apple client secret',
         error: error instanceof Error ? error.message : error,
       });
-      throw new TurnkeyError(`Failed to generate Apple client secret: ${error instanceof Error ? error.message : String(error)}`);
+      throw new TurnkeyError(
+        `Failed to generate Apple client secret: ${error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 
@@ -85,9 +87,7 @@ export class AppleHelpers {
 
       const response = await fetch('https://appleid.apple.com/auth/token', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: bodyParams.toString(),
       });
 
@@ -115,42 +115,31 @@ export class AppleHelpers {
         message: 'Failed to fetch Apple token',
         error: error instanceof Error ? error.message : error,
       });
-      throw new TurnkeyError(`Failed to fetch Apple token: ${error instanceof Error ? error.message : String(error)}`);
+      throw new TurnkeyError(
+        `Failed to fetch Apple token: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Parses Apple private key from PEM format
    * @param privateKey - Private key in PEM format
-   * @returns CryptoKey for signing
+   * @returns KeyLike for signing
    */
-  private static async parsePrivateKey(privateKey: string): Promise<CryptoKey> {
+  static async parsePrivateKey(privateKey: string): Promise<KeyLike> {
     try {
-      // Clean up the private key string
-      const cleanKey = privateKey
-        .replace(/-----BEGIN PRIVATE KEY-----/, '')
-        .replace(/-----END PRIVATE KEY-----/, '')
-        .replace(/\s/g, '');
-
-      const keyBuffer = Buffer.from(cleanKey, 'base64');
-
-      return await crypto.subtle.importKey(
-        'pkcs8',
-        keyBuffer,
-        {
-          name: 'ECDSA',
-          namedCurve: 'P-256',
-        },
-        false,
-        ['sign'],
-      );
+      // jose handles PKCS#8 PEM parsing and produces a KeyLike usable by SignJWT
+      return await importPKCS8(privateKey, 'ES256');
     } catch (error) {
       logger.error({
         at: 'AppleHelpers#parsePrivateKey',
         message: 'Failed to parse Apple private key',
         error: error instanceof Error ? error.message : error,
       });
-      throw new TurnkeyError(`Failed to parse Apple private key: ${error instanceof Error ? error.message : String(error)}`);
+      throw new TurnkeyError(
+        `Failed to parse Apple private key: ${error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 
@@ -161,14 +150,9 @@ export class AppleHelpers {
    */
   static extractEmailFromIdToken(idToken: string): string | undefined {
     try {
-      // Decode the JWT payload (without verification since we just need to extract email)
-      const parts = idToken.split('.');
-      if (parts.length !== 3) {
-        throw new Error('Invalid JWT format');
-      }
-
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-      return payload.email;
+      const payload = decodeJwt(idToken); // handles base64url
+      // payload is JWTPayload; email is optional string
+      return (payload as JWTPayload & { email?: string }).email;
     } catch (error) {
       logger.warning({
         at: 'AppleHelpers#extractEmailFromIdToken',

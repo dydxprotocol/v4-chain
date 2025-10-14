@@ -393,15 +393,6 @@ const appleLoginRedirectSchema: Record<string, ParamSchema> = {
     isString: true,
     notEmpty: true,
     errorMessage: 'state (public key) is required and must be a non-empty string',
-    custom: {
-      options: (value: string) => {
-        // Basic validation for Ethereum public key format
-        if (!/^0x[0-9a-fA-F]{64}$/.test(value)) {
-          throw new Error('state must be a valid Ethereum public key (0x + 64 hex characters)');
-        }
-        return true;
-      },
-    },
   },
   code: {
     in: ['query'],

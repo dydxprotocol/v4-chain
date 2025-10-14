@@ -234,11 +234,6 @@ export class TurnkeyController extends Controller {
       throw new TurnkeyError('Apple Sign-In configuration is incomplete');
     }
 
-    // Validate public key format
-    if (!EncryptionHelpers.isValidPublicKey(publicKey)) {
-      throw new TurnkeyError('Invalid public key format');
-    }
-
     try {
       // Exchange authorization code for ID token
       const tokenResponse = await AppleHelpers.fetchTokenFromCode(
@@ -248,7 +243,6 @@ export class TurnkeyController extends Controller {
         config.APPLE_KEY_ID,
         config.APPLE_PRIVATE_KEY,
       );
-
       // Extract email from ID token
       const email = AppleHelpers.extractEmailFromIdToken(tokenResponse.id_token);
       if (!email) {
@@ -261,7 +255,6 @@ export class TurnkeyController extends Controller {
         tokenResponse.id_token,
         publicKey,
       );
-
       // Convert social response to TurnkeyAuthResponse format
       const authResponse: TurnkeyAuthResponse = {
         session: socialResponse.session,
@@ -272,7 +265,6 @@ export class TurnkeyController extends Controller {
 
       // Encrypt the response payload
       const encryptedPayload = await EncryptionHelpers.encryptPayload(authResponse, publicKey);
-
       return {
         success: true,
         encryptedPayload,
