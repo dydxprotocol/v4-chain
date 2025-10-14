@@ -410,6 +410,12 @@ func (k Keeper) persistMatchedOrders(
 		takerBuilderAddress = takerBuilderCodeParams.GetBuilderAddress()
 	}
 
+	// Do this before subaccount updates so that bank sends are always valid between different
+	// module accounts.
+	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
+		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+	}
+
 	// Create the subaccount update.
 	updates := []satypes.Update{
 		// Taker update
@@ -484,9 +490,6 @@ func (k Keeper) persistMatchedOrders(
 	// perpetual object. This will reduce the number of times we need to get the perpetual from the
 	// keeper.
 
-	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
-		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
-	}
 	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
 	if err != nil {
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
