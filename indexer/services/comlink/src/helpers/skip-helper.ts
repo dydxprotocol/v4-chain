@@ -115,7 +115,6 @@ export async function getSkipCallData(
   // acceptable slippage is smallest of SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided
   // by the estimatedAmountOut or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
   const slippageTolerancePercent = getSlippageTolerancePercent(routeResult.estimatedAmountOut);
-  console.log('slippageTolerancePercent', slippageTolerancePercent);
   const response = await messages({
     timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
