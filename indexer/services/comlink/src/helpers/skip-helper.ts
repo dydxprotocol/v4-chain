@@ -372,8 +372,13 @@ export async function limitAmount(
   if (sourceAssetDenom === ethDenomByChainId[chainId]) {
     try {
       const ethPrice = await getETHPrice();
-      const maxDepositInEth = config.MAXIMUM_BRIDGE_AMOUNT_USDC / ethPrice;
-      amountToUse = min([parseInt(amountToUse, 10), maxDepositInEth * ETH_WEI_QUANTUM])!.toString();
+      const maxDepositInWei = Math.floor(
+        (config.MAXIMUM_BRIDGE_AMOUNT_USDC / ethPrice) * ETH_WEI_QUANTUM,
+      );
+      amountToUse = min([
+        BigInt(amountToUse),
+        BigInt(maxDepositInWei),
+      ])!.toString();
     } catch (error) {
       logger.error({
         at: 'skip-helper#limitAmount',
