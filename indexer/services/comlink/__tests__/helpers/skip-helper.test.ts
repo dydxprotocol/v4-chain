@@ -3,7 +3,7 @@ import { getSlippageTolerancePercent } from '../../src/helpers/skip-helper';
 // Mock config
 jest.mock('../../src/config', () => ({
   SKIP_SLIPPAGE_TOLERANCE_USDC: 100,
-  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: '0.1', // 5%
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: '0.1', // 10%
 }));
 
 describe('skip-helper', () => {
