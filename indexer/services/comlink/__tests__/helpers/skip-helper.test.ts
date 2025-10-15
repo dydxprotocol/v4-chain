@@ -3,7 +3,7 @@ import {
   nobleToHex,
   encodeToHexAndPad,
   nobleToSolana,
-  getSlippageTolerancePercent
+  getSlippageTolerancePercent,
 } from '../../src/helpers/skip-helper';
 import { getETHPrice } from '../../src/helpers/alchemy-helpers';
 import { ethDenomByChainId, ETH_WEI_QUANTUM, ETH_USDC_QUANTUM } from '../../src/lib/smart-contract-constants';
