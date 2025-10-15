@@ -382,7 +382,7 @@ func TestWithdrawalWithLeverage(t *testing.T) {
 	bobAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
 
 	// Both should have positions now
- 	require.Len(t, aliceAfter.PerpetualPositions, 1, "Alice should have 1 perpetual position")
+	require.Len(t, aliceAfter.PerpetualPositions, 1, "Alice should have 1 perpetual position")
 	require.Len(t, bobAfter.PerpetualPositions, 1, "Bob should have 1 perpetual position")
 
 	// Verify the positions are equal in size but opposite in direction
@@ -416,7 +416,7 @@ func TestWithdrawalWithLeverage(t *testing.T) {
 		"Bob's available collateral (%s) should be greater than Alice's (%s) due to lower IMR from higher leverage",
 		bobAvailable.String(), aliceAvailable.String())
 
-	// Let's try to withdraw bob's avaliable collateral from both subaccounts
+	// Let's try to withdraw bob's available collateral from both subaccounts
 
 	bobWithdrawal := &sendingtypes.MsgWithdrawFromSubaccount{
 		Sender:    constants.Bob_Num0,
@@ -460,7 +460,6 @@ func TestWithdrawalWithLeverage(t *testing.T) {
 		require.False(t, resp.IsOK(), "Expected Alice's withdrawal to fail. Response: %+v", resp)
 	}
 }
-
 
 func TestUpdateLeverageWithExistingPosition(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
@@ -525,7 +524,6 @@ func TestUpdateLeverageWithExistingPosition(t *testing.T) {
 
 	// Advance to next block which matches the orders
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
-	
 
 	// Configure leverage for Alice with an existing bitcoin position
 	// This should make the account fail against the IMR check

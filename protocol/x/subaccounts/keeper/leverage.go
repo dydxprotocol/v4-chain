@@ -106,7 +106,7 @@ func (k Keeper) UpdateLeverage(
 // construct empty updates for each perpetual for which leverage is configured
 func (k Keeper) checkNewLeverageAgainstMarginRequirements(
 	ctx sdk.Context,
-	subaccountId *types.SubaccountId, 
+	subaccountId *types.SubaccountId,
 	leverageMap map[uint32]uint32,
 ) (err error) {
 	for perpetualId := range leverageMap {
@@ -114,12 +114,12 @@ func (k Keeper) checkNewLeverageAgainstMarginRequirements(
 			SubaccountId: *subaccountId,
 			PerpetualUpdates: []types.PerpetualUpdate{
 				{
-					PerpetualId: perpetualId,
+					PerpetualId:      perpetualId,
 					BigQuantumsDelta: big.NewInt(0),
 				},
 			},
 		}
-		
+
 		// check margin requirements with new leverage configuration
 		risk, err := k.GetNetCollateralAndMarginRequirementsWithLeverage(ctx, update, leverageMap)
 		if err != nil {
