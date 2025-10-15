@@ -1,6 +1,6 @@
 {
   "app_name": "dydxprotocold",
-  "app_version": "7.0.0-dev0-303-g3b0e4145c",
+  "app_version": "9.2.1",
   "genesis_time": "2023-01-01T00:00:00Z",
   "chain_id": "localdydxprotocol",
   "initial_height": 1,
