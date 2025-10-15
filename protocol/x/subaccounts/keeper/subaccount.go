@@ -726,6 +726,22 @@ func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 	return success, successPerUpdate, nil
 }
 
+func (k Keeper) GetNetCollateralAndMarginRequirements(
+	ctx sdk.Context,
+	update types.Update,
+) (
+	risk margin.Risk,
+	err error,
+) {
+	// Get leverage configuration for this subaccount
+	var leverageMap map[uint32]uint32
+	if leverage, found := k.GetLeverage(ctx, &update.SubaccountId); found {
+		leverageMap = leverage
+	}
+
+	return k.GetNetCollateralAndMarginRequirementsWithLeverage(ctx, update, leverageMap)
+}
+
 // GetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin requirement,
 // and total maintenance margin requirement for the subaccount as if the `update` was applied.
 // It is used to get information about speculative changes to the subaccount.
@@ -736,9 +752,10 @@ func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 // If two position updates reference the same position, an error is returned.
 //
 // All return values are denoted in quote quantums.
-func (k Keeper) GetNetCollateralAndMarginRequirements(
+func (k Keeper) GetNetCollateralAndMarginRequirementsWithLeverage(
 	ctx sdk.Context,
 	update types.Update,
+	leverageMap map[uint32]uint32,
 ) (
 	risk margin.Risk,
 	err error,
@@ -757,12 +774,6 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		PerpetualUpdates:  update.PerpetualUpdates,
 	}
 	updatedSubaccount := salib.CalculateUpdatedSubaccount(settledUpdate, perpInfos)
-
-	// Get leverage configuration for this subaccount
-	var leverageMap map[uint32]uint32
-	if leverage, found := k.GetLeverage(ctx, &update.SubaccountId); found {
-		leverageMap = leverage
-	}
 
 	return salib.GetRiskForSubaccount(
 		updatedSubaccount,

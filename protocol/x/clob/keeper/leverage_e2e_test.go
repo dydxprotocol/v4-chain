@@ -460,3 +460,90 @@ func TestWithdrawalWithLeverage(t *testing.T) {
 		require.False(t, resp.IsOK(), "Expected Alice's withdrawal to fail. Response: %+v", resp)
 	}
 }
+
+
+func TestUpdateLeverageWithExistingPosition(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Place orders for both Alice and Bob that would require the entire margin if leverage was unchanged
+	orderSize := dtypes.NewIntFromBigInt(big.NewInt(5_500_000_000_000_000))
+
+	// Use the same price and clob pair as in the other test
+	price := uint64(2_000_000_000)
+
+	// Bob's order should succeed
+	bobOrder := &clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Bob_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_SELL,
+		Quantums: orderSize.BigInt().Uint64(),
+		Subticks: price,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 100),
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(*bobOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Bob's CheckTx to succeed. Response: %+v", resp)
+	}
+
+	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
+	require.True(t, bobSubaccount.AssetPositions != nil, "Bob should have a subaccount")
+
+	// Alice's order should fail due to leverage config
+	aliceOrder := &clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: orderSize.BigInt().Uint64(),
+		Subticks: price,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 100),
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(*aliceOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Alice's CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance to next block which matches the orders
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	
+
+	// Configure leverage for Alice with an existing bitcoin position
+	// This should make the account fail against the IMR check
+	aliceLeverage := &clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Alice_Num0,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId: 0,
+				Leverage:   2,
+			},
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*aliceLeverage,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.False(t, resp.IsOK(), "Expected Alice's CheckTx to fail. Response: %+v", resp)
+	}
+}
