@@ -1,3 +1,4 @@
+import { GeoOriginHeaders, GeoOriginStatus } from '@dydxprotocol-indexer/compliance';
 import crypto from 'node:crypto';
 import { Index } from '../../src/websocket/index';
 import WebSocket from 'ws';
@@ -15,7 +16,6 @@ import {
   Connection,
 } from '../../src/types';
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
-import { COUNTRY_HEADER_KEY } from '@dydxprotocol-indexer/compliance';
 
 jest.mock('node:crypto');
 jest.mock('../../src/helpers/wss');
@@ -36,7 +36,11 @@ describe('Index', () => {
   let invalidMsgHandlerSpy: jest.SpyInstance;
 
   const connectionId: string = 'conId';
-  const countryCode: string = 'AR';
+  const geoOriginHeaders: GeoOriginHeaders = {
+    'geo-origin-country': 'AR', // Argentina
+    'geo-origin-region': 'AR-V', // Tierra del Fuego
+    'geo-origin-status': GeoOriginStatus.OK,
+  };
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -103,7 +107,9 @@ describe('Index', () => {
       // Connect to the index before starting each test.
       (crypto.randomUUID as unknown as jest.Mock).mockReturnValueOnce(connectionId);
       const incomingMessage: IncomingMessage = new IncomingMessage(new Socket());
-      incomingMessage.headers[COUNTRY_HEADER_KEY] = countryCode;
+      incomingMessage.headers['geo-origin-country'] = geoOriginHeaders['geo-origin-country'];
+      incomingMessage.headers['geo-origin-region'] = geoOriginHeaders['geo-origin-region'];
+      incomingMessage.headers['geo-origin-status'] = geoOriginHeaders['geo-origin-status'];
       mockConnect(websocket, incomingMessage);
     });
 
@@ -202,7 +208,7 @@ describe('Index', () => {
           index.connections[connectionId].messageId,
           id,
           isBatched,
-          countryCode,
+          geoOriginHeaders,
         );
       });
 
