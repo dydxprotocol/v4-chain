@@ -272,7 +272,6 @@ const checkBridgeSchema: Record<string, ParamSchema> = {
   },
   'event.activity.*.value': {
     in: 'body',
-    isNumeric: true,
     optional: true,
     errorMessage: 'Activity value must be a number',
   },

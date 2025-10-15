@@ -60,7 +60,11 @@ func (k *Keeper) SetVaultKeeper(vk types.VaultKeeper) {
 	k.vaultKeeper = vk
 }
 
-func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.PerpetualFeeTier) {
+func (k Keeper) getUserFeeTier(
+	ctx sdk.Context,
+	address string,
+	feeTierOverrideIdx uint32,
+) (uint32, *types.PerpetualFeeTier) {
 	tiers := k.GetPerpetualFeeParams(ctx).Tiers
 
 	// A vault is always in the highest tier.
@@ -102,18 +106,28 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.
 		idx = uint32(i)
 	}
 
-	if idx < types.RefereeStartingFeeTier {
+	maxTierIdx := uint32(len(tiers) - 1)
+	if feeTierOverrideIdx > maxTierIdx {
+		feeTierOverrideIdx = maxTierIdx
+	}
+
+	if idx < feeTierOverrideIdx {
 		_, hasReferree := k.affiliatesKeeper.GetReferredBy(ctx, address)
 		if hasReferree {
-			idx = types.RefereeStartingFeeTier
+			idx = feeTierOverrideIdx
 		}
 	}
 
 	return idx, tiers[idx]
 }
 
-func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool) int32 {
-	_, userTier := k.getUserFeeTier(ctx, address)
+func (k Keeper) GetPerpetualFeePpm(
+	ctx sdk.Context,
+	address string,
+	isTaker bool,
+	feeTierOverrideIdx uint32,
+) int32 {
+	_, userTier := k.getUserFeeTier(ctx, address, feeTierOverrideIdx)
 	if isTaker {
 		return userTier.TakerFeePpm
 	}

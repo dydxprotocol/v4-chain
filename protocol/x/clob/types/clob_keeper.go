@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -81,7 +82,8 @@ type ClobKeeper interface {
 	ProcessSingleMatch(
 		ctx sdk.Context,
 		matchWithOrders *MatchWithOrders,
-		affiliatesWhitelistMap map[string]uint32,
+		affiliateOverrides map[string]bool,
+		affiliateParameters types.AffiliateParameters,
 	) (
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
@@ -153,4 +155,10 @@ type ClobKeeper interface {
 	// Migrate order expiration state (for upgrading to 5.2 only)
 	UnsafeMigrateOrderExpirationState(ctx sdk.Context)
 	SetNextClobPairID(ctx sdk.Context, nextID uint32)
+
+	// Leverage methods
+	UpdateLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId, perpetualLeverage map[uint32]uint32) error
+	GetLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId) (map[uint32]uint32, bool)
+	RateLimitUpdateLeverage(ctx sdk.Context, msg *MsgUpdateLeverage) error
+	GetMaxLeverageForPerpetual(ctx sdk.Context, perpetualId uint32) (uint32, error)
 }

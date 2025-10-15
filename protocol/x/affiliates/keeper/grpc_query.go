@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
 
@@ -22,36 +23,31 @@ func (k Keeper) AffiliateInfo(c context.Context,
 			req.GetAddress(), err.Error())
 	}
 
-	affiliateWhitelistMap, err := k.GetAffiliateWhitelistMap(ctx)
+	affiliateOverridesMap, err := k.GetAffiliateOverridesMap(ctx)
 	if err != nil {
 		return nil, err
 	}
 	tierLevel := uint32(0)
 	feeSharePpm := uint32(0)
 	isWhitelisted := false
-	if _, exists := affiliateWhitelistMap[addr.String()]; exists {
-		feeSharePpm = affiliateWhitelistMap[addr.String()]
+	if _, exists := affiliateOverridesMap[addr.String()]; exists {
 		isWhitelisted = true
-	} else {
-		tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String())
-		if err != nil {
-			return nil, err
-		}
 	}
-
-	referredVolume, err := k.GetReferredVolume(ctx, req.GetAddress())
+	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String(), affiliateOverridesMap)
 	if err != nil {
 		return nil, err
 	}
 
+	userStats := k.statsKeeper.GetUserStats(ctx, addr.String())
+	referredVolume := userStats.Affiliate_30DReferredVolumeQuoteQuantums
 	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.GetAddress())
 
 	return &types.AffiliateInfoResponse{
-		IsWhitelisted:  isWhitelisted,
-		Tier:           tierLevel,
-		FeeSharePpm:    feeSharePpm,
-		ReferredVolume: dtypes.NewIntFromBigInt(referredVolume),
-		StakedAmount:   dtypes.NewIntFromBigInt(stakedAmount),
+		IsWhitelisted:             isWhitelisted,
+		Tier:                      tierLevel,
+		FeeSharePpm:               feeSharePpm,
+		StakedAmount:              dtypes.NewIntFromBigInt(stakedAmount),
+		ReferredVolume_30DRolling: dtypes.NewIntFromBigInt(lib.BigU(referredVolume)),
 	}, nil
 }
 

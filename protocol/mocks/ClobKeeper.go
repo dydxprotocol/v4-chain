@@ -6,6 +6,7 @@ import (
 	big "math/big"
 
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	log "cosmossdk.io/log"
@@ -332,6 +333,36 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 	return r0
 }
 
+// GetLeverage provides a mock function with given fields: ctx, subaccountId
+func (_m *ClobKeeper) GetLeverage(ctx types.Context, subaccountId *subaccountstypes.SubaccountId) (map[uint32]uint32, bool) {
+	ret := _m.Called(ctx, subaccountId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLeverage")
+	}
+
+	var r0 map[uint32]uint32
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId) (map[uint32]uint32, bool)); ok {
+		return rf(ctx, subaccountId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId) map[uint32]uint32); ok {
+		r0 = rf(ctx, subaccountId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint32]uint32)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *subaccountstypes.SubaccountId) bool); ok {
+		r1 = rf(ctx, subaccountId)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetLiquidationInsuranceFundDelta provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
 func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
@@ -445,6 +476,34 @@ func (_m *ClobKeeper) GetMaxAndMinPositionNotionalLiquidatable(ctx types.Context
 	}
 
 	return r0, r1, r2
+}
+
+// GetMaxLeverageForPerpetual provides a mock function with given fields: ctx, perpetualId
+func (_m *ClobKeeper) GetMaxLeverageForPerpetual(ctx types.Context, perpetualId uint32) (uint32, error) {
+	ret := _m.Called(ctx, perpetualId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMaxLeverageForPerpetual")
+	}
+
+	var r0 uint32
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (uint32, error)); ok {
+		return rf(ctx, perpetualId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) uint32); ok {
+		r0 = rf(ctx, perpetualId)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+		r1 = rf(ctx, perpetualId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
@@ -980,8 +1039,8 @@ func (_m *ClobKeeper) ProcessProposerOperations(ctx types.Context, operations []
 }
 
 // ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders, affiliatesWhitelistMap
-func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliatesWhitelistMap map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error) {
-	ret := _m.Called(ctx, matchWithOrders, affiliatesWhitelistMap)
+func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliateOverrides map[string]bool, affiliateParameters affiliatetypes.AffiliateParameters) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error) {
+	ret := _m.Called(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ProcessSingleMatch")
@@ -992,37 +1051,37 @@ func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clo
 	var r2 subaccountstypes.UpdateResult
 	var r3 *big.Int
 	var r4 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error)); ok {
-		return rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error)); ok {
+		return rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) bool); ok {
-		r0 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) bool); ok {
+		r0 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) subaccountstypes.UpdateResult); ok {
-		r1 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) subaccountstypes.UpdateResult); ok {
+		r1 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r1 = ret.Get(1).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) subaccountstypes.UpdateResult); ok {
-		r2 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) subaccountstypes.UpdateResult); ok {
+		r2 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r2 = ret.Get(2).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) *big.Int); ok {
-		r3 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) *big.Int); ok {
+		r3 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		if ret.Get(3) != nil {
 			r3 = ret.Get(3).(*big.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) error); ok {
-		r4 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders, map[string]bool, affiliatetypes.AffiliateParameters) error); ok {
+		r4 = rf(ctx, matchWithOrders, affiliateOverrides, affiliateParameters)
 	} else {
 		r4 = ret.Error(4)
 	}
@@ -1089,6 +1148,24 @@ func (_m *ClobKeeper) RateLimitPlaceOrder(ctx types.Context, order *clobtypes.Ms
 	return r0
 }
 
+// RateLimitUpdateLeverage provides a mock function with given fields: ctx, msg
+func (_m *ClobKeeper) RateLimitUpdateLeverage(ctx types.Context, msg *clobtypes.MsgUpdateLeverage) error {
+	ret := _m.Called(ctx, msg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RateLimitUpdateLeverage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgUpdateLeverage) error); ok {
+		r0 = rf(ctx, msg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveClobPair provides a mock function with given fields: ctx, id
 func (_m *ClobKeeper) RemoveClobPair(ctx types.Context, id clobtypes.ClobPairId) {
 	_m.Called(ctx, id)
@@ -1135,6 +1212,24 @@ func (_m *ClobKeeper) UpdateClobPair(ctx types.Context, clobPair clobtypes.ClobP
 	var r0 error
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPair) error); ok {
 		r0 = rf(ctx, clobPair)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateLeverage provides a mock function with given fields: ctx, subaccountId, perpetualLeverage
+func (_m *ClobKeeper) UpdateLeverage(ctx types.Context, subaccountId *subaccountstypes.SubaccountId, perpetualLeverage map[uint32]uint32) error {
+	ret := _m.Called(ctx, subaccountId, perpetualLeverage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateLeverage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId, map[uint32]uint32) error); ok {
+		r0 = rf(ctx, subaccountId, perpetualLeverage)
 	} else {
 		r0 = ret.Error(0)
 	}

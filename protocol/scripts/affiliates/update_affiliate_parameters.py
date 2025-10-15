@@ -89,7 +89,7 @@ def main():
     parser.add_argument('--node', default=staging_node, help='Node URL, default is https://validator.v4staging.dydx.exchange:443')
     parser.add_argument('--max-30d-commission', type=int, required=True, help='Maximum 30d commission per referred')
     parser.add_argument('--referee-min-fee-tier', type=int, required=True, help='Referee minimum fee tier idx')
-    parser.add_argument('--max-30d-revenue', type=int, required=True, help='Maximum 30d attributable revenue per affiliate')
+    parser.add_argument('--max-30d-revenue', type=int, required=True, help='Maximum 30d affiliate revenue per affiliate')
     args = parser.parse_args()
 
     counter = 0
@@ -105,7 +105,7 @@ def main():
                             "affiliate_parameters": {
                                 "maximum_30d_commission_per_referred_quote_quantums": int(args.max_30d_commission),
                                 "referee_minimum_fee_tier_idx": int(args.referee_min_fee_tier),
-                                "maximum_30d_attributable_revenue_per_affiliate_quote_quantums": int(args.max_30d_revenue),
+                                "maximum_30d_affiliate_revenue_per_affiliate_quote_quantums": int(args.max_30d_revenue),
                             }
 			            }
                     ],
