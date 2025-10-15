@@ -85,12 +85,14 @@ export async function sendRequest({
   body,
   errorMsg,
   expectedStatus = 200,
+  headers,
 }: {
   type: RequestMethod,
   path: string,
   body?: {},
   errorMsg?: string,
   expectedStatus?: number,
+  headers?: Record<string, string>,
 }) {
   return sendRequestToApp({
     type,
@@ -99,6 +101,7 @@ export async function sendRequest({
     errorMsg,
     expressApp: app,
     expectedStatus,
+    headers,
   });
 }
 
