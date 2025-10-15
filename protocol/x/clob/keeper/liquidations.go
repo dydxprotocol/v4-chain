@@ -122,21 +122,17 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return nil, err
 		}
 
-		optimisticallyFilledQuantums := satypes.BaseQuantums(0)
-		// TEMPORARY: ONLY FOR FARTCOIN (CLOB PAIR ID 181) SKIP LIQUIDATIONS AND GO TO DELEVERAGING
-		if !(liquidationOrder.GetClobPairId().ToUint32() == 181) {
-			optimisticallyFilledQuantums, _, err = k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
-			// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
-			// for subaccounts with open positions in final settlement markets.
-			if err != nil && !errors.Is(err, types.ErrLiquidationConflictsWithClobPairStatus) {
-				log.ErrorLogWithError(
-					ctx,
-					"Failed to liquidate subaccount",
-					err,
-					"liquidationOrder", *liquidationOrder,
-				)
-				return nil, err
-			}
+		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
+		// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
+		// for subaccounts with open positions in final settlement markets.
+		if err != nil && !errors.Is(err, types.ErrLiquidationConflictsWithClobPairStatus) {
+			log.ErrorLogWithError(
+				ctx,
+				"Failed to liquidate subaccount",
+				err,
+				"liquidationOrder", *liquidationOrder,
+			)
+			return nil, err
 		}
 
 		if optimisticallyFilledQuantums == 0 {
