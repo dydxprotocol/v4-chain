@@ -20,12 +20,12 @@ describe('skip-helper', () => {
 
     it('should return the USDC-based tolerance when it is smaller than percentage-based tolerance', () => {
       // When estimatedAmountOut is small, USDC-based tolerance becomes large
-      const estimatedAmountOut = '1000000000000'; // 1 USDC (assuming 6 decimals)
+      const estimatedAmountOut = '1000000000000'; // 1,000,000 USDC (1 million with 6 decimals)
       const result = getSlippageTolerancePercent(estimatedAmountOut);
 
-      // USDC-based: 100 / 1000000 = 0.1 (10%)
-      // Percentage-based: 0.05 (5%)
-      // Should return the smaller value: 0.05
+      // USDC-based: 10_000_000_000 / 1_000_000_000_000 = 0.01 (1%)
+      // Percentage-based: 0.1 (10%)
+      // Should return the smaller value: 0.01 (1%)
       expect(result).toBe('0.01');
     });
   });
