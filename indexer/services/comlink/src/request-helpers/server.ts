@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import * as swaggerJson from '../../public/swagger.json';
 import config from '../config';
 import { logErrors } from './error-handler';
+import geoHeadersMiddleware from './geo-headers-middleware';
 import RequestLogger from './request-logger';
 import resBodyCapture from './res-body-capture';
 
@@ -15,6 +16,8 @@ export default function server(
   indexV4?: express.Router,
 ): Express {
   const app: Express = express();
+
+  app.use(geoHeadersMiddleware);
 
   app.use(responseTime({ suffix: false }));
 
