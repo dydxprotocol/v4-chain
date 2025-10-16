@@ -235,13 +235,15 @@ export class TurnkeyController extends Controller {
     }
 
     try {
+      // base64 decode the apple private key
+      const privKey = Buffer.from(config.APPLE_PRIVATE_KEY, 'base64').toString('utf8');
       // Exchange authorization code for ID token
       const tokenResponse = await AppleHelpers.fetchTokenFromCode(
         code,
         config.APPLE_TEAM_ID,
         config.APPLE_SERVICE_ID,
         config.APPLE_KEY_ID,
-        config.APPLE_PRIVATE_KEY,
+        privKey,
       );
       // Extract email from ID token
       const email = AppleHelpers.extractEmailFromIdToken(tokenResponse.id_token);
