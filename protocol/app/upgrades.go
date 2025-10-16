@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 
-	v_9_1 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.1"
 	v_9_3 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.3"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -23,7 +22,7 @@ var (
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	if app.UpgradeKeeper.HasHandler(v_9_1.UpgradeName) {
+	if app.UpgradeKeeper.HasHandler(v_9_3.UpgradeName) {
 		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_9_3.UpgradeName))
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
