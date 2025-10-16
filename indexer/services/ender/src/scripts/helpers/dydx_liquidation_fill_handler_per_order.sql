@@ -27,6 +27,9 @@ DECLARE
     event_id bytea;
     order_router_address text;
     order_router_fee numeric;
+    snap_size_before numeric;
+    snap_entry_before numeric;
+    snap_side_before text;
 /**
   Parameters:
     - field: the field storing the order to process.
@@ -133,7 +136,7 @@ BEGIN
         IF FOUND THEN
             IF jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint = constants.order_flag_twap_suborder() THEN
                 order_record."price" = dydx_get_weighted_average(order_record."price", order_record."totalFilled", maker_price, fill_amount);
-                order_record."totalFilled" = order_record."totalFilled" + fill_amount; 
+                order_record."totalFilled" = order_record."totalFilled" + fill_amount;
 
                 order_record."status" = dydx_get_order_status(order_record."totalFilled", order_record."size", 'NOT_CANCELED', jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint, order_record."timeInForce");
                 UPDATE orders
@@ -144,7 +147,7 @@ BEGIN
                     "updatedAtHeight" = order_record."updatedAtHeight",
                     "totalFilled" = order_record."totalFilled" -- keep track of fill amount for the parent order
                 WHERE "id" = order_uuid;
-            
+
             ELSE
                 order_record."totalFilled" = total_filled;
                 order_record."status" = dydx_get_order_status(total_filled, order_record.size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
@@ -188,15 +191,15 @@ BEGIN
                 order_record."type" = 'TWAP';
                 order_record."price" = maker_price;
             END IF;
-            
+
             order_record."duration" = NULL;
             order_record."interval" = NULL;
             order_record."priceTolerance" = NULL;
-            
+
             INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
              "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
-             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm", 
+             "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm",
              "orderRouterAddress", "duration", "interval", "priceTolerance")
             VALUES (
                 order_record."id", order_record."subaccountId", order_record."clientId", order_record."clobPairId",
@@ -210,13 +213,25 @@ BEGIN
         END IF;
     END IF;
 
+    -- Retrieve the latest perpetual position record.
+    SELECT * INTO perpetual_position_record
+    FROM perpetual_positions
+    WHERE "subaccountId" = subaccount_uuid
+      AND "perpetualId" = perpetual_market_record."id"
+    ORDER BY "openEventId" DESC
+    LIMIT 1;
+
+    snap_size_before = COALESCE(ABS(perpetual_position_record."sumOpen"), 0);
+    snap_entry_before = NULLIF(perpetual_position_record."entryPrice", 0);
+    snap_side_before = perpetual_position_record."side";
+
     /* Insert the associated fill record for this order_fill event. */
     event_id = dydx_event_id_from_parts(
             block_height, transaction_index, event_index);
     INSERT INTO fills
-    ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
-     "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee", "builderAddress",
-     "orderRouterFee", "orderRouterAddress")
+        ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
+         "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare",
+         "builderFee", "builderAddress", "orderRouterFee", "orderRouterAddress", "positionSizeBefore", "entryPriceBefore", "positionSideBefore")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -237,7 +252,10 @@ BEGIN
             NULLIF(builder_fee, 0),
             NULLIF(builder_address, ''),
             NULLIF(order_router_fee, 0),
-            NULLIF(order_router_address, ''))
+            NULLIF(order_router_address, ''),
+            snap_size_before,
+            snap_entry_before,
+            snap_side_before)
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
