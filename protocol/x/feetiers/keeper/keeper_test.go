@@ -49,7 +49,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				NotionalTraded: 10_000,
 			},
 			setupFeeDiscount:    false,
-			blockTime:           time.Now(),
+			blockTime:           time.Now().UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 10,
 			expectedMakerFeePpm: 1,
@@ -65,7 +65,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				NotionalTraded: 10_000,
 			},
 			setupFeeDiscount:    false,
-			blockTime:           time.Now(),
+			blockTime:           time.Now().UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 20,
 			expectedMakerFeePpm: 2,
@@ -81,7 +81,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				NotionalTraded: 2_000_000_000,
 			},
 			setupFeeDiscount:    false,
-			blockTime:           time.Now(),
+			blockTime:           time.Now().UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 30,
 			expectedMakerFeePpm: 3,
@@ -97,7 +97,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				NotionalTraded: 10_000,
 			},
 			setupFeeDiscount:    false,
-			blockTime:           time.Now(),
+			blockTime:           time.Now().UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 30,
 			expectedMakerFeePpm: 3,
@@ -114,12 +114,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    1,
-				StartTimeUnix: 1000,
-				EndTimeUnix:   3000,
-				ChargePpm:     500_000, // 50% discount
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  500_000, // 50% discount
 			},
-			blockTime:           time.Unix(2000, 0),
+			blockTime:           time.Unix(2000, 0).UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 5, // 10 * 0.5 = 5
 			expectedMakerFeePpm: 0, // 1 * 0.5 = 0.5, rounded to 0
@@ -136,12 +136,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    1,
-				StartTimeUnix: 1000,
-				EndTimeUnix:   3000,
-				ChargePpm:     500_000, // 50% discount
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  500_000, // 50% discount
 			},
-			blockTime:           time.Unix(2000, 0),
+			blockTime:           time.Unix(2000, 0).UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 15, // 30 * 0.5 = 15
 			expectedMakerFeePpm: 1,  // 3 * 0.5 = 1.5, rounded to 1
@@ -158,12 +158,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    1,
-				StartTimeUnix: 1000,
-				EndTimeUnix:   3000,
-				ChargePpm:     0, // 100% discount (free)
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  0, // 100% discount (free)
 			},
-			blockTime:           time.Unix(2000, 0),
+			blockTime:           time.Unix(2000, 0).UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 0, // 10 * 0 = 0
 			expectedMakerFeePpm: 0, // 1 * 0 = 0
@@ -180,12 +180,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    1,
-				StartTimeUnix: 1000,
-				EndTimeUnix:   3000,
-				ChargePpm:     250_000, // 75% discount
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  250_000, // 75% discount
 			},
-			blockTime:           time.Unix(2000, 0),
+			blockTime:           time.Unix(2000, 0).UTC(),
 			clobPairId:          1,
 			expectedTakerFeePpm: 7, // 30 * 0.25 = 7.5, rounded to 7
 			expectedMakerFeePpm: 0, // 3 * 0.25 = 0.75, rounded to 0
@@ -202,12 +202,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    1,
-				StartTimeUnix: 1000,
-				EndTimeUnix:   2000,
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(2000, 0).UTC(),
 			},
-			setupTime:           func() *time.Time { t := time.Unix(1500, 0); return &t }(), // Within discount period
-			blockTime:           time.Unix(2500, 0),                                         // After discount period
+			setupTime:           func() *time.Time { t := time.Unix(1500, 0).UTC(); return &t }(), // Within discount period
+			blockTime:           time.Unix(2500, 0).UTC(),                                         // After discount period
 			clobPairId:          1,
 			expectedTakerFeePpm: 10, // Regular tier fee
 			expectedMakerFeePpm: 1,  // Regular tier fee
@@ -224,12 +224,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    2, // Different CLOB pair
-				StartTimeUnix: 1000,
-				EndTimeUnix:   3000,
-				ChargePpm:     0, // 100% discount (free)
+				ClobPairId: 2, // Different CLOB pair
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  0, // 100% discount (free)
 			},
-			blockTime:           time.Unix(2000, 0),
+			blockTime:           time.Unix(2000, 0).UTC(),
 			clobPairId:          1,  // Querying for CLOB pair 1
 			expectedTakerFeePpm: 10, // Regular tier fee
 			expectedMakerFeePpm: 1,  // Regular tier fee
@@ -246,12 +246,12 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			},
 			setupFeeDiscount: true,
 			discountParams: types.PerMarketFeeDiscountParams{
-				ClobPairId:    1,
-				StartTimeUnix: 1000,
-				EndTimeUnix:   3000,
-				ChargePpm:     500_000, // 50% discount
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  500_000, // 50% discount
 			},
-			blockTime:           time.Unix(2000, 0), // Within discount period
+			blockTime:           time.Unix(2000, 0).UTC(), // Within discount period
 			clobPairId:          1,
 			expectedTakerFeePpm: 15, // 30 * 0.5 = 15
 			expectedMakerFeePpm: 1,  // 3 * 0.5 = 1.5, rounded to 1
@@ -272,8 +272,10 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			// Create setup context with the setup time
 			setupCtx := ctx.WithBlockTime(setupTime)
 			ctx = ctx.WithBlockTime(tc.blockTime)
+
 			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
 			k := tApp.App.FeeTiersKeeper
+
 			err := k.SetPerpetualFeeParams(
 				ctx,
 				types.PerpetualFeeParams{
@@ -311,8 +313,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 				params, err := k.GetPerMarketFeeDiscountParams(ctx, tc.discountParams.ClobPairId)
 				require.NoError(t, err)
 				require.Equal(t, tc.discountParams.ClobPairId, params.ClobPairId)
-				require.Equal(t, tc.discountParams.StartTimeUnix, params.StartTimeUnix)
-				require.Equal(t, tc.discountParams.EndTimeUnix, params.EndTimeUnix)
+				require.Equal(t, tc.discountParams.StartTime, params.StartTime)
+				require.Equal(t, tc.discountParams.EndTime, params.EndTime)
 				require.Equal(t, tc.discountParams.ChargePpm, params.ChargePpm)
 			}
 

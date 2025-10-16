@@ -9,19 +9,19 @@ const (
 	MaxFeeDiscountDuration = 90 * 24 * 60 * 60
 
 	// Maximum ppm value for fee discount
-	MaxChargePpm = 1000000
+	MaxChargePpm = 1_000_000
 )
 
 // Validate checks if the PerMarketFeeDiscountParams are valid
 func (m *PerMarketFeeDiscountParams) Validate(currentTime time.Time) error {
 	// Validate time range (start < end)
-	if m.StartTimeUnix >= m.EndTimeUnix {
+	if !m.StartTime.Before(m.EndTime) {
 		return ErrInvalidTimeRange
 	}
 
 	// Validate reasonable time range (max 90 days)
-	duration := m.EndTimeUnix - m.StartTimeUnix
-	if duration > MaxFeeDiscountDuration {
+	duration := m.EndTime.Sub(m.StartTime)
+	if duration.Seconds() > MaxFeeDiscountDuration {
 		return ErrInvalidTimeRange
 	}
 
@@ -31,7 +31,7 @@ func (m *PerMarketFeeDiscountParams) Validate(currentTime time.Time) error {
 	}
 
 	// Check that end time is in the future
-	if m.EndTimeUnix <= currentTime.Unix() {
+	if !m.EndTime.After(currentTime) {
 		return ErrInvalidTimeRange
 	}
 

@@ -93,8 +93,9 @@ func (k Keeper) GetDiscountedPpm(
 		return types.MaxChargePpm
 	}
 
-	currentTime := ctx.BlockTime().Unix()
-	if currentTime >= marketDiscount.StartTimeUnix && currentTime < marketDiscount.EndTimeUnix {
+	currentTime := ctx.BlockTime()
+	if (currentTime.Equal(marketDiscount.StartTime) || currentTime.After(marketDiscount.StartTime)) &&
+		currentTime.Before(marketDiscount.EndTime) {
 		return marketDiscount.ChargePpm
 	} else {
 		return types.MaxChargePpm

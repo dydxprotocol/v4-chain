@@ -87,15 +87,15 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 	_, ms, ctx := setupMsgServer(t)
 
 	// Set a fixed current time
-	baseTime := time.Unix(1000, 0)
+	baseTime := time.Unix(1000, 0).UTC()
 	ctx = ctx.WithBlockTime(baseTime)
 
 	// Create valid fee discount params
 	validParams := types.PerMarketFeeDiscountParams{
-		ClobPairId:    1,
-		StartTimeUnix: 1100,
-		EndTimeUnix:   1200,
-		ChargePpm:     500_000, // 50% discount
+		ClobPairId: 1,
+		StartTime:  time.Unix(1100, 0).UTC(),
+		EndTime:    time.Unix(1200, 0).UTC(),
+		ChargePpm:  500_000, // 50% discount
 	}
 
 	testCases := []struct {
@@ -119,10 +119,10 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 				Params: []types.PerMarketFeeDiscountParams{
 					validParams,
 					{
-						ClobPairId:    2,
-						StartTimeUnix: 1100,
-						EndTimeUnix:   1200,
-						ChargePpm:     750_000, // 25% discount
+						ClobPairId: 2,
+						StartTime:  time.Unix(1100, 0).UTC(),
+						EndTime:    time.Unix(1200, 0).UTC(),
+						ChargePpm:  750_000, // 25% discount
 					},
 				},
 			},
@@ -151,10 +151,10 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 				Authority: lib.GovModuleAddress.String(),
 				Params: []types.PerMarketFeeDiscountParams{
 					{
-						ClobPairId:    1,
-						StartTimeUnix: 900,
-						EndTimeUnix:   950, // Before current time (1000)
-						ChargePpm:     500_000,
+						ClobPairId: 1,
+						StartTime:  time.Unix(900, 0).UTC(),
+						EndTime:    time.Unix(950, 0).UTC(),
+						ChargePpm:  500_000,
 					},
 				},
 			},
@@ -167,10 +167,10 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 				Authority: lib.GovModuleAddress.String(),
 				Params: []types.PerMarketFeeDiscountParams{
 					{
-						ClobPairId:    1,
-						StartTimeUnix: 1200,
-						EndTimeUnix:   1100, // Before start time
-						ChargePpm:     500_000,
+						ClobPairId: 1,
+						StartTime:  time.Unix(1200, 0).UTC(),
+						EndTime:    time.Unix(1100, 0).UTC(),
+						ChargePpm:  500_000,
 					},
 				},
 			},
@@ -183,10 +183,10 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 				Authority: lib.GovModuleAddress.String(),
 				Params: []types.PerMarketFeeDiscountParams{
 					{
-						ClobPairId:    1,
-						StartTimeUnix: 1100,
-						EndTimeUnix:   1100 + 91*24*60*60, // 91 days
-						ChargePpm:     500_000,
+						ClobPairId: 1,
+						StartTime:  time.Unix(1100, 0).UTC(),
+						EndTime:    time.Unix(1100, 0).Add(91 * 24 * time.Hour).UTC(), // 91 days
+						ChargePpm:  500_000,
 					},
 				},
 			},
@@ -199,10 +199,10 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 				Authority: lib.GovModuleAddress.String(),
 				Params: []types.PerMarketFeeDiscountParams{
 					{
-						ClobPairId:    1,
-						StartTimeUnix: 1100,
-						EndTimeUnix:   1200,
-						ChargePpm:     1_500_000, // 150% - exceeds maximum
+						ClobPairId: 1,
+						StartTime:  time.Unix(1100, 0).UTC(),
+						EndTime:    time.Unix(1200, 0).UTC(),
+						ChargePpm:  1_500_000, // 150% - exceeds maximum
 					},
 				},
 			},
@@ -229,16 +229,16 @@ func TestMsgSetMarketFeeDiscountParamsUpdate(t *testing.T) {
 	k, ms, ctx := setupMsgServer(t)
 
 	// Set a fixed current time
-	baseTime := time.Unix(1000, 0)
+	baseTime := time.Unix(1000, 0).UTC()
 	ctx = ctx.WithBlockTime(baseTime)
 
 	// Initial fee discount params
 	clobPairId := uint32(1)
 	initialParams := types.PerMarketFeeDiscountParams{
-		ClobPairId:    clobPairId,
-		StartTimeUnix: 1100,
-		EndTimeUnix:   1200,
-		ChargePpm:     500_000, // 50% discount
+		ClobPairId: clobPairId,
+		StartTime:  time.Unix(1100, 0).UTC(),
+		EndTime:    time.Unix(1200, 0).UTC(),
+		ChargePpm:  500_000, // 50% discount
 	}
 
 	// Set the initial fee discount params
@@ -252,16 +252,16 @@ func TestMsgSetMarketFeeDiscountParamsUpdate(t *testing.T) {
 	getParams, err := k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, initialParams.ClobPairId, getParams.ClobPairId)
-	require.Equal(t, initialParams.StartTimeUnix, getParams.StartTimeUnix)
-	require.Equal(t, initialParams.EndTimeUnix, getParams.EndTimeUnix)
+	require.Equal(t, initialParams.StartTime, getParams.StartTime)
+	require.Equal(t, initialParams.EndTime, getParams.EndTime)
 	require.Equal(t, initialParams.ChargePpm, getParams.ChargePpm)
 
 	// Update with new fee discount params
 	updatedParams := types.PerMarketFeeDiscountParams{
-		ClobPairId:    clobPairId,
-		StartTimeUnix: 1150,
-		EndTimeUnix:   1250,
-		ChargePpm:     250_000, // 75% discount
+		ClobPairId: clobPairId,
+		StartTime:  time.Unix(1150, 0).UTC(),
+		EndTime:    time.Unix(1250, 0).UTC(),
+		ChargePpm:  250_000, // 75% discount
 	}
 
 	// Set the updated fee discount params
@@ -275,8 +275,8 @@ func TestMsgSetMarketFeeDiscountParamsUpdate(t *testing.T) {
 	getParams, err = k.GetPerMarketFeeDiscountParams(ctx, clobPairId)
 	require.NoError(t, err)
 	require.Equal(t, updatedParams.ClobPairId, getParams.ClobPairId)
-	require.Equal(t, updatedParams.StartTimeUnix, getParams.StartTimeUnix)
-	require.Equal(t, updatedParams.EndTimeUnix, getParams.EndTimeUnix)
+	require.Equal(t, updatedParams.StartTime, getParams.StartTime)
+	require.Equal(t, updatedParams.EndTime, getParams.EndTime)
 	require.Equal(t, updatedParams.ChargePpm, getParams.ChargePpm)
 }
 
@@ -285,28 +285,28 @@ func TestMsgSetMultipleMarketFeeDiscountParams(t *testing.T) {
 	k, ms, ctx := setupMsgServer(t)
 
 	// Set a fixed current time
-	baseTime := time.Unix(1000, 0)
+	baseTime := time.Unix(1000, 0).UTC()
 	ctx = ctx.WithBlockTime(baseTime)
 
 	// Multiple fee discount params
 	discountParams := []types.PerMarketFeeDiscountParams{
 		{
-			ClobPairId:    1,
-			StartTimeUnix: 1100,
-			EndTimeUnix:   1200,
-			ChargePpm:     0, // 100% discount (free)
+			ClobPairId: 1,
+			StartTime:  time.Unix(1100, 0).UTC(),
+			EndTime:    time.Unix(1200, 0).UTC(),
+			ChargePpm:  0, // 100% discount (free)
 		},
 		{
-			ClobPairId:    2,
-			StartTimeUnix: 1150,
-			EndTimeUnix:   1250,
-			ChargePpm:     500_000, // 50% discount
+			ClobPairId: 2,
+			StartTime:  time.Unix(1150, 0).UTC(),
+			EndTime:    time.Unix(1250, 0).UTC(),
+			ChargePpm:  500_000, // 50% discount
 		},
 		{
-			ClobPairId:    3,
-			StartTimeUnix: 1200,
-			EndTimeUnix:   1300,
-			ChargePpm:     750_000, // 25% discount
+			ClobPairId: 3,
+			StartTime:  time.Unix(1200, 0).UTC(),
+			EndTime:    time.Unix(1300, 0).UTC(),
+			ChargePpm:  750_000, // 25% discount
 		},
 	}
 
@@ -322,8 +322,8 @@ func TestMsgSetMultipleMarketFeeDiscountParams(t *testing.T) {
 		getParams, err := k.GetPerMarketFeeDiscountParams(ctx, params.ClobPairId)
 		require.NoError(t, err)
 		require.Equal(t, params.ClobPairId, getParams.ClobPairId)
-		require.Equal(t, params.StartTimeUnix, getParams.StartTimeUnix)
-		require.Equal(t, params.EndTimeUnix, getParams.EndTimeUnix)
+		require.Equal(t, params.StartTime, getParams.StartTime)
+		require.Equal(t, params.EndTime, getParams.EndTime)
 		require.Equal(t, params.ChargePpm, getParams.ChargePpm)
 	}
 

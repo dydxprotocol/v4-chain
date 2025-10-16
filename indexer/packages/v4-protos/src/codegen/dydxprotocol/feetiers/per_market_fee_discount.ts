@@ -1,5 +1,6 @@
+import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
-import { Long, DeepPartial } from "../../helpers";
+import { toTimestamp, fromTimestamp, DeepPartial } from "../../helpers";
 /**
  * PerMarketFeeDiscountParams defines a fee discount period for a specific CLOB
  * pair
@@ -8,12 +9,12 @@ import { Long, DeepPartial } from "../../helpers";
 export interface PerMarketFeeDiscountParams {
   /** The CLOB Pair ID this fee holiday applies to */
   clobPairId: number;
-  /** Start time (Unix timestamp in seconds) */
+  /** Start time */
 
-  startTimeUnix: Long;
-  /** End time (Unix timestamp in seconds) */
+  startTime?: Date;
+  /** End time */
 
-  endTimeUnix: Long;
+  endTime?: Date;
   /**
    * Percentage of normal fee to charge during the period (in parts per
    * million) 0 = completely free (100% discount) 500000 = charge 50% of normal
@@ -30,12 +31,12 @@ export interface PerMarketFeeDiscountParams {
 export interface PerMarketFeeDiscountParamsSDKType {
   /** The CLOB Pair ID this fee holiday applies to */
   clob_pair_id: number;
-  /** Start time (Unix timestamp in seconds) */
+  /** Start time */
 
-  start_time_unix: Long;
-  /** End time (Unix timestamp in seconds) */
+  start_time?: Date;
+  /** End time */
 
-  end_time_unix: Long;
+  end_time?: Date;
   /**
    * Percentage of normal fee to charge during the period (in parts per
    * million) 0 = completely free (100% discount) 500000 = charge 50% of normal
@@ -48,8 +49,8 @@ export interface PerMarketFeeDiscountParamsSDKType {
 function createBasePerMarketFeeDiscountParams(): PerMarketFeeDiscountParams {
   return {
     clobPairId: 0,
-    startTimeUnix: Long.ZERO,
-    endTimeUnix: Long.ZERO,
+    startTime: undefined,
+    endTime: undefined,
     chargePpm: 0
   };
 }
@@ -60,12 +61,12 @@ export const PerMarketFeeDiscountParams = {
       writer.uint32(8).uint32(message.clobPairId);
     }
 
-    if (!message.startTimeUnix.isZero()) {
-      writer.uint32(16).int64(message.startTimeUnix);
+    if (message.startTime !== undefined) {
+      Timestamp.encode(toTimestamp(message.startTime), writer.uint32(18).fork()).ldelim();
     }
 
-    if (!message.endTimeUnix.isZero()) {
-      writer.uint32(24).int64(message.endTimeUnix);
+    if (message.endTime !== undefined) {
+      Timestamp.encode(toTimestamp(message.endTime), writer.uint32(26).fork()).ldelim();
     }
 
     if (message.chargePpm !== 0) {
@@ -89,11 +90,11 @@ export const PerMarketFeeDiscountParams = {
           break;
 
         case 2:
-          message.startTimeUnix = (reader.int64() as Long);
+          message.startTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           break;
 
         case 3:
-          message.endTimeUnix = (reader.int64() as Long);
+          message.endTime = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           break;
 
         case 4:
@@ -112,8 +113,8 @@ export const PerMarketFeeDiscountParams = {
   fromPartial(object: DeepPartial<PerMarketFeeDiscountParams>): PerMarketFeeDiscountParams {
     const message = createBasePerMarketFeeDiscountParams();
     message.clobPairId = object.clobPairId ?? 0;
-    message.startTimeUnix = object.startTimeUnix !== undefined && object.startTimeUnix !== null ? Long.fromValue(object.startTimeUnix) : Long.ZERO;
-    message.endTimeUnix = object.endTimeUnix !== undefined && object.endTimeUnix !== null ? Long.fromValue(object.endTimeUnix) : Long.ZERO;
+    message.startTime = object.startTime ?? undefined;
+    message.endTime = object.endTime ?? undefined;
     message.chargePpm = object.chargePpm ?? 0;
     return message;
   }

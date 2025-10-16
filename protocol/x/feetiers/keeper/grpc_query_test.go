@@ -108,10 +108,10 @@ func TestPerMarketFeeDiscountParams(t *testing.T) {
 	// Set up a test fee discount params
 	clobPairId := uint32(42)
 	discountParams := types.PerMarketFeeDiscountParams{
-		ClobPairId:    clobPairId,
-		StartTimeUnix: 1100,
-		EndTimeUnix:   1200,
-		ChargePpm:     500_000, // 50% discount
+		ClobPairId: clobPairId,
+		StartTime:  time.Unix(1100, 0).UTC(),
+		EndTime:    time.Unix(1200, 0).UTC(),
+		ChargePpm:  500_000, // 50% discount
 	}
 
 	// Set current block time for validation
@@ -171,22 +171,22 @@ func TestAllMarketFeeDiscountParams(t *testing.T) {
 	// Set up multiple test fee discount params
 	discountParams := []types.PerMarketFeeDiscountParams{
 		{
-			ClobPairId:    1,
-			StartTimeUnix: 1100,
-			EndTimeUnix:   1200,
-			ChargePpm:     0, // 100% discount (free)
+			ClobPairId: 1,
+			StartTime:  time.Unix(1100, 0).UTC(),
+			EndTime:    time.Unix(1200, 0).UTC(),
+			ChargePpm:  0, // 100% discount (free)
 		},
 		{
-			ClobPairId:    2,
-			StartTimeUnix: 1150,
-			EndTimeUnix:   1250,
-			ChargePpm:     500_000, // 50% discount
+			ClobPairId: 2,
+			StartTime:  time.Unix(1150, 0).UTC(),
+			EndTime:    time.Unix(1250, 0).UTC(),
+			ChargePpm:  500_000, // 50% discount
 		},
 		{
-			ClobPairId:    3,
-			StartTimeUnix: 1200,
-			EndTimeUnix:   1300,
-			ChargePpm:     750_000, // 25% discount
+			ClobPairId: 3,
+			StartTime:  time.Unix(1200, 0).UTC(),
+			EndTime:    time.Unix(1300, 0).UTC(),
+			ChargePpm:  750_000, // 25% discount
 		},
 	}
 
@@ -235,8 +235,8 @@ func TestAllMarketFeeDiscountParams(t *testing.T) {
 					actual, found := paramsMap[expected.ClobPairId]
 					require.True(t, found)
 					require.Equal(t, expected.ClobPairId, actual.ClobPairId)
-					require.Equal(t, expected.StartTimeUnix, actual.StartTimeUnix)
-					require.Equal(t, expected.EndTimeUnix, actual.EndTimeUnix)
+					require.Equal(t, expected.StartTime, actual.StartTime)
+					require.Equal(t, expected.EndTime, actual.EndTime)
 					require.Equal(t, expected.ChargePpm, actual.ChargePpm)
 				}
 			}
