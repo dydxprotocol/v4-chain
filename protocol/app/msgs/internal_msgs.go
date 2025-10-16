@@ -156,6 +156,8 @@ var (
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": nil,
 
 		// feetiers
+		"/dydxprotocol.feetiers.MsgSetStakingTiers":                  &feetiers.MsgSetStakingTiers{},
+		"/dydxprotocol.feetiers.MsgSetStakingTiersResponse":          nil,
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
 

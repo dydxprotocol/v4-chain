@@ -15,5 +15,9 @@ type FeeTiersKeeper interface {
 		ctx sdk.Context,
 		params PerpetualFeeParams,
 	) error
+	SetStakingTiers(
+		ctx sdk.Context,
+		stakingTiers []*StakingTier,
+	) error
 	HasAuthority(authority string) bool
 }
