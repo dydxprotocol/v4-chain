@@ -5498,7 +5498,7 @@ This operation does not require authentication
 |orderRouterFee|string|false|none|none|
 |positionSizeBefore|string|false|none|none|
 |entryPriceBefore|string|false|none|none|
-|positionSideBefore|[OrderSide](#schemaorderside)|false|none|none|
+|positionSideBefore|string|false|none|none|
 
 ## FillResponse
 

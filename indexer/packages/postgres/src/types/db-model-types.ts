@@ -52,7 +52,7 @@ export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase 
   closeEventId?: Buffer,
   lastEventId: Buffer,
   settledFunding: string,
-  totalRealizedPnl: string,
+  totalRealizedPnl?: string,
 }
 
 export interface OrderFromDatabase extends IdBasedModelFromDatabase {
@@ -130,7 +130,7 @@ export interface FillFromDatabase {
   orderRouterFee?: string,
   positionSizeBefore?: string,
   entryPriceBefore?: string,
-  positionSideBefore?: OrderSide,
+  positionSideBefore?: PositionSide,
 }
 
 export interface BlockFromDatabase {

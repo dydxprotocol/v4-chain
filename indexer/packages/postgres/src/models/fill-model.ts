@@ -12,6 +12,7 @@ import {
   IsoString,
   Liquidity,
   OrderSide,
+  PositionSide,
 } from '../types';
 
 export default class FillModel extends Model {
@@ -94,7 +95,7 @@ export default class FillModel extends Model {
         orderRouterFee: { type: ['string', 'null'], default: null },
         positionSizeBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
         entryPriceBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
-        positionSideBefore: { type: ['string', 'null'], enum: [...Object.values(OrderSide)], default: null },
+        positionSideBefore: { type: ['string', 'null'], enum: [...Object.values(PositionSide), null], default: null },
       },
     };
   }
@@ -180,5 +181,5 @@ export default class FillModel extends Model {
 
   entryPriceBefore?: string;
 
-  positionSideBefore?: OrderSide;
+  positionSideBefore?: PositionSide;
 }

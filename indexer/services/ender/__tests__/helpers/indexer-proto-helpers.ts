@@ -591,6 +591,9 @@ export async function expectFillInDatabase({
   builderFee = null,
   orderRouterAddress = null,
   orderRouterFee = null,
+  positionSideBefore = null,
+  entryPriceBefore = null,
+  positionSizeBefore = null,
 }: {
   subaccountId: string,
   clientId: string,
@@ -614,6 +617,9 @@ export async function expectFillInDatabase({
   builderFee?: string | null,
   orderRouterAddress?: string | null,
   orderRouterFee?: string | null,
+  positionSizeBefore?: string | null,
+  entryPriceBefore?: string | null,
+  positionSideBefore?: string | null,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -640,6 +646,9 @@ export async function expectFillInDatabase({
     builderFee,
     orderRouterAddress,
     orderRouterFee,
+    positionSideBefore,
+    positionSizeBefore,
+    entryPriceBefore,
   }));
 }
 
@@ -678,6 +687,7 @@ export async function expectOrderInDatabase({
   interval,
   priceTolerance,
   orderType,
+  totalRealizedPnl,
 }: {
   subaccountId: string,
   clientId: string,
@@ -701,6 +711,7 @@ export async function expectOrderInDatabase({
   interval?: number,
   priceTolerance?: number,
   orderType?: OrderType,
+  totalRealizedPnl?: string,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -730,6 +741,7 @@ export async function expectOrderInDatabase({
     duration: duration ?? null,
     interval: interval ?? null,
     priceTolerance: priceTolerance ?? null,
+    totalRealizedPnl: totalRealizedPnl ?? null,
   }));
 }
 
@@ -978,6 +990,7 @@ export async function expectPerpetualPosition(
     sumClose?: string,
     entryPrice?: string,
     exitPrice?: string | null,
+    totalRealizedPnl?: string | null,
   },
 ) {
   const perpetualPosition:
@@ -998,6 +1011,9 @@ export async function expectPerpetualPosition(
   }
   if (fields.exitPrice !== undefined) {
     expect(perpetualPosition!.exitPrice).toEqual(fields.exitPrice);
+  }
+  if (fields.totalRealizedPnl !== undefined) {
+    expect(perpetualPosition!.totalRealizedPnl).toEqual(fields.totalRealizedPnl);
   }
 }
 

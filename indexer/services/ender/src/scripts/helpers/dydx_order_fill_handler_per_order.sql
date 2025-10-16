@@ -51,6 +51,9 @@ DECLARE
     event_id bytea;
     order_router_fee numeric;
     order_router_address text;
+    snap_size_before numeric;
+    snap_entry_before numeric;
+    snap_side_before text;
 BEGIN
     order_ = event_data->field;
     maker_order = event_data->'makerOrder';
@@ -207,9 +210,9 @@ BEGIN
     ORDER BY "openEventId" DESC
     LIMIT 1;
 
-    snap_size_before := COALESCE(ABS(perpetual_position_record."sumOpen"), 0);
-    snap_entry_before := NULLIF(perpetual_position_record."entryPrice", 0);
-    snap_side_before := perpetual_position_record."side";
+    snap_size_before = COALESCE(ABS(perpetual_position_record."sumOpen"), 0);
+    snap_entry_before = NULLIF(perpetual_position_record."entryPrice", 0);
+    snap_side_before = perpetual_position_record."side";
 
     /* Insert the associated fill record for this order_fill event. */
     event_id = dydx_event_id_from_parts(
@@ -217,7 +220,7 @@ BEGIN
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
          "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", 
-         "builderFee", "builderAddress", "orderRouterFee", "orderRouterAddress")
+         "builderFee", "builderAddress", "orderRouterFee", "orderRouterAddress", "positionSizeBefore", "entryPriceBefore", "positionSideBefore")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -254,13 +257,13 @@ BEGIN
 
     PERFORM dydx_apply_fill_realized_effects(
         perpetual_position_record."id",
-        fill_record."side",
-        fill_record."size",
-        fill_record."price",
-        fill_record."fee",
-        fill_record."positionSideBefore",
-        fill_record."positionSizeBefore",
-        fill_record."entryPriceBefore");
+        order_side,
+        fill_amount,
+        maker_price,
+        fee,
+        snap_side_before,
+        snap_size_before,
+        snap_entry_before);
 
     RETURN jsonb_build_object(
             'order',

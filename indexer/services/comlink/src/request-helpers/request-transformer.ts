@@ -82,7 +82,7 @@ export function perpetualPositionToResponseObject(
   subaccountNumber: number,
 ): PerpetualPositionResponseObject {
   const netFunding: Big = Big(position.settledFunding).plus(position.unsettledFunding);
-  const realizedPnl: string = position.totalRealizedPnl;
+  const realizedPnl: string = position.totalRealizedPnl ?? '0';
 
   return {
     market: perpetualMarketsMap[position.perpetualId].ticker,

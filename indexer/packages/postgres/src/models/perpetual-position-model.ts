@@ -97,7 +97,7 @@ export default class PerpetualPositionModel extends Model {
         createdAtHeight: { type: 'string', pattern: IntegerPattern },
         closedAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         settledFunding: { type: 'string', pattern: NumericPattern },
-        totalRealizedPnl: { type: 'string', default: null, pattern: NumericPattern },
+        totalRealizedPnl: { type: ['string', 'null'], default: null, pattern: NumericPattern },
       },
     };
   }
