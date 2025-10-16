@@ -9,7 +9,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { getIpAddr } from '../../../../src/lib/utils';
 import { sendRequest } from '../../../helpers/helpers';
-import { RequestMethod } from '../../../../src/types';
+import { BlockedCode, RequestMethod } from '../../../../src/types';
 import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
@@ -19,7 +19,11 @@ import { DateTime } from 'luxon';
 import { ExtendedSecp256k1Signature, Secp256k1 } from '@cosmjs/crypto';
 import { verifyADR36Amino } from '@keplr-wallet/cosmos';
 import { getGeoComplianceReason, ComplianceAction } from '../../../../src/helpers/compliance/compliance-utils';
-import { isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
+import {
+  INDEXER_GEOBLOCKED_PAYLOAD,
+  isRestrictedCountryHeaders,
+  isWhitelistedAddress,
+} from '@dydxprotocol-indexer/compliance';
 import { toBech32 } from '@cosmjs/encoding';
 
 jest.mock('@dydxprotocol-indexer/compliance');
@@ -464,7 +468,7 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
 
-    it('should return COMPLIANT from a restricted country when whitelisted', async () => {
+    it('should raise 403 error from a restricted country when whitelisted', async () => {
       getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
       isRestrictedCountryHeadersSpy.mockReturnValue(true);
       await dbHelpers.clearData();
@@ -477,51 +481,25 @@ describe('ComplianceV2Controller', () => {
         type: RequestMethod.POST,
         path: endpoint,
         body,
-        expectedStatus: 200,
+        expectedStatus: 403,
       });
 
+      // expect compliance status to be empty
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(0);
 
-      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
-      expect(response.body.updatedAt).toBeDefined();
+      // expect response to be a 403 geo-blocking error
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
     });
 
-    it('should set status to BLOCKED for CONNECT action from a restricted country with no existing compliance status and no wallet', async () => {
+    it('should return 403 for CONNECT action from a restricted country with no existing compliance status', async () => {
       getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
       isRestrictedCountryHeadersSpy.mockReturnValue(true);
       await dbHelpers.clearData();
 
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: endpoint,
-        body,
-        expectedStatus: 200,
-      });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.BLOCKED,
-        reason: ComplianceReason.US_GEO,
-      }));
-
-      expect(stats.increment).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
-        {
-          newStatus: ComplianceStatus.BLOCKED,
-        },
-      );
-
-      expect(response.body.status).toEqual(ComplianceStatus.BLOCKED);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toBeDefined();
-    });
-
-    it('should set status to FIRST_STRIKE_CLOSE_ONLY for CONNECT action from a restricted country with no existing compliance status and a wallet', async () => {
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+      expect(await ComplianceStatusTable.findAll({}, [], {})).toHaveLength(0);
 
       const response: any = await sendRequest({
         type: RequestMethod.POST,
@@ -530,25 +508,245 @@ describe('ComplianceV2Controller', () => {
           ...body,
           action: ComplianceAction.CONNECT,
         },
-        expectedStatus: 200,
+        expectedStatus: 403,
       });
 
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
+      // Verify no database changes occurred
+      expect(await ComplianceStatusTable.findAll({}, [], {})).toHaveLength(0);
+
+      // Verify error response
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
+
+      // Verify no stats were incremented for status changes
+      expect(stats.increment).not.toHaveBeenCalledWith(
+        expect.stringContaining('compliance_status_changed'),
+        expect.any(Object),
+      );
+    });
+
+    it('should return 403 for CONNECT action from a restricted country with existing COMPLIANT status', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.COMPLIANT,
+      });
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const dataBefore: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataBefore).toHaveLength(1);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: endpoint,
+        body: {
+          ...body,
+          action: ComplianceAction.CONNECT,
+        },
+        expectedStatus: 403,
+      });
+
+      // Verify no database changes occurred
+      const dataAfter: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+      expect(dataAfter).toHaveLength(1);
+      expect(dataAfter).toEqual(dataBefore);
+
+      // Verify error response
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
+    });
+
+    it('should return 403 for CONNECT action from a restricted country with existing FIRST_STRIKE status', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+        reason: ComplianceReason.US_GEO,
+      });
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const dataBefore: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataBefore).toHaveLength(1);
+      const originalStatus = dataBefore[0].status;
+      const originalUpdatedAt = dataBefore[0].updatedAt;
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: endpoint,
+        body: {
+          ...body,
+          action: ComplianceAction.CONNECT,
+        },
+        expectedStatus: 403,
+      });
+
+      // Verify no database changes occurred
+      const dataAfter: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataAfter).toHaveLength(1);
+      expect(dataAfter[0].status).toEqual(originalStatus);
+      expect(dataAfter[0].updatedAt).toEqual(originalUpdatedAt);
+
+      // Verify error response
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
+    });
+
+    it('should return 403 for CONNECT action from a restricted country with existing CLOSE_ONLY status', async () => {
+      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+        updatedAt: createdAt,
+      });
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      expect(await ComplianceStatusTable.findAll({}, [], {})).toHaveLength(1);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: endpoint,
+        body: {
+          ...body,
+          action: ComplianceAction.CONNECT,
+        },
+        expectedStatus: 403,
+      });
+
+      // Verify no database changes occurred
+      const dataAfter: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataAfter).toHaveLength(1);
+      expect(dataAfter[0].status).toEqual(ComplianceStatus.CLOSE_ONLY);
+      expect(dataAfter[0].updatedAt).toEqual(createdAt);
+
+      // Verify error response
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
+    });
+
+    it('should return 403 for INVALID_SURVEY action from a restricted country', async () => {
+      await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
-      }));
-      expect(stats.increment).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
-        {
-          newStatus: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        });
+      });
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
 
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      const dataBefore: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataBefore).toHaveLength(1);
+      const originalStatus = dataBefore[0].status;
+      const originalUpdatedAt = dataBefore[0].updatedAt;
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: endpoint,
+        body: {
+          ...body,
+          action: ComplianceAction.INVALID_SURVEY,
+        },
+        expectedStatus: 403,
+      });
+
+      // Verify no database changes occurred
+      const dataAfter: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataAfter).toHaveLength(1);
+      expect(dataAfter[0].status).toEqual(originalStatus);
+      expect(dataAfter[0].updatedAt).toEqual(originalUpdatedAt);
+
+      // Verify error response
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
+    });
+
+    it('should return 403 for VALID_SURVEY action from a restricted country', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+      });
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const dataBefore: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataBefore).toHaveLength(1);
+      const originalStatus = dataBefore[0].status;
+      const originalUpdatedAt = dataBefore[0].updatedAt;
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: endpoint,
+        body: {
+          ...body,
+          action: ComplianceAction.VALID_SURVEY,
+        },
+        expectedStatus: 403,
+      });
+
+      // Verify no database changes occurred
+      const dataAfter: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll({}, [], {});
+
+      expect(dataAfter).toHaveLength(1);
+      expect(dataAfter[0].status).toEqual(originalStatus);
+      expect(dataAfter[0].updatedAt).toEqual(originalUpdatedAt);
+
+      // Verify error response
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].msg).toEqual(INDEXER_GEOBLOCKED_PAYLOAD);
+      expect(response.body.errors[0].code).toEqual(BlockedCode.GEOBLOCKED);
+    });
+
+    it.each([
+      ComplianceStatus.BLOCKED,
+      ComplianceStatus.FIRST_STRIKE,
+      ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+    ])('should set status to COMPLIANT for any action from a non-restricted country with existing compliance status not CLOSE_ONLY', async (status: ComplianceStatus) => {
+      isRestrictedCountryHeadersSpy.mockReturnValue(false);
+
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status,
+      });
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: endpoint,
+        body,
+        expectedStatus: 200,
+      });
+
       expect(response.body.updatedAt).toBeDefined();
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.COMPLIANT,
+      }));
     });
 
     it('should set status to COMPLIANT for any action from a non-restricted country with no existing compliance status', async () => {
@@ -569,183 +767,6 @@ describe('ComplianceV2Controller', () => {
       }));
 
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
-    });
-
-    it('should update status to FIRST_STRIKE_CLOSE_ONLY for CONNECT action from a restricted country with existing COMPLIANT status', async () => {
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.COMPLIANT,
-      });
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: endpoint,
-        body: {
-          ...body,
-          action: ComplianceAction.CONNECT,
-        },
-        expectedStatus: 200,
-      });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      }));
-
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toBeDefined();
-    });
-
-    it('should update status to CLOSE_ONLY for CONNECT action from a restricted country with existing FIRST_STRIKE status', async () => {
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE,
-        reason: ComplianceReason.US_GEO,
-      });
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: endpoint,
-        body: {
-          ...body,
-          action: ComplianceAction.CONNECT,
-        },
-        expectedStatus: 200,
-      });
-
-      expect(stats.increment).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
-        {
-          newStatus: ComplianceStatus.CLOSE_ONLY,
-        });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      }));
-
-      expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toBeDefined();
-    });
-
-    it('should return CLOSE_ONLY for CONNECT action from a restricted country with existing CLOSE_ONLY status', async () => {
-      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-        updatedAt: createdAt,
-      });
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: endpoint,
-        body: {
-          ...body,
-          action: ComplianceAction.CONNECT,
-        },
-        expectedStatus: 200,
-      });
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-        updatedAt: createdAt,
-      }));
-
-      expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toEqual(createdAt);
-    });
-
-    it('should update status to CLOSE_ONLY for INVALID_SURVEY action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      });
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: endpoint,
-        body: {
-          ...body,
-          action: ComplianceAction.INVALID_SURVEY,
-        },
-        expectedStatus: 200,
-      });
-      expect(stats.increment).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
-        {
-          newStatus: ComplianceStatus.CLOSE_ONLY,
-        });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      }));
-
-      expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toBeDefined();
-    });
-
-    it('should update status to FIRST_STRIKE for VALID_SURVEY action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      });
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: endpoint,
-        body: {
-          ...body,
-          action: ComplianceAction.VALID_SURVEY,
-        },
-        expectedStatus: 200,
-      });
-      expect(stats.increment).toHaveBeenCalledWith(
-        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
-        {
-          newStatus: ComplianceStatus.FIRST_STRIKE,
-        });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE,
-        reason: ComplianceReason.US_GEO,
-      }));
-
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toBeDefined();
     });
   });
 });
