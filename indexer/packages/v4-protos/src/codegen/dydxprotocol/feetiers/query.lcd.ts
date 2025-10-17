@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType } from "./query";
+import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType, QueryPerMarketFeeDiscountParamsRequest, QueryPerMarketFeeDiscountParamsResponseSDKType, QueryAllMarketFeeDiscountParamsRequest, QueryAllMarketFeeDiscountParamsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -11,6 +11,8 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.perpetualFeeParams = this.perpetualFeeParams.bind(this);
     this.userFeeTier = this.userFeeTier.bind(this);
+    this.perMarketFeeDiscountParams = this.perMarketFeeDiscountParams.bind(this);
+    this.allMarketFeeDiscountParams = this.allMarketFeeDiscountParams.bind(this);
   }
   /* Queries the PerpetualFeeParams. */
 
@@ -33,6 +35,21 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/v4/feetiers/user_fee_tier`;
     return await this.req.get<QueryUserFeeTierResponseSDKType>(endpoint, options);
+  }
+  /* PerMarketFeeDiscountParams queries fee discount parameters for a
+   specific market/CLOB pair. */
+
+
+  async perMarketFeeDiscountParams(params: QueryPerMarketFeeDiscountParamsRequest): Promise<QueryPerMarketFeeDiscountParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/feetiers/market_fee_discount_params/${params.clobPairId}`;
+    return await this.req.get<QueryPerMarketFeeDiscountParamsResponseSDKType>(endpoint);
+  }
+  /* AllMarketFeeDiscountParams queries all per-market fee discount parameters. */
+
+
+  async allMarketFeeDiscountParams(_params: QueryAllMarketFeeDiscountParamsRequest = {}): Promise<QueryAllMarketFeeDiscountParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/feetiers/market_fee_discount_params`;
+    return await this.req.get<QueryAllMarketFeeDiscountParamsResponseSDKType>(endpoint);
   }
 
 }
