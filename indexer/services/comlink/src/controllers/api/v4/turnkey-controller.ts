@@ -14,7 +14,6 @@ import config from '../../../config';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
 import { AppleHelpers } from '../../../lib/apple-helpers';
-import { EncryptionHelpers } from '../../../lib/encryption-helpers';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -265,11 +264,13 @@ export class TurnkeyController extends Controller {
         alreadyExists: socialResponse.alreadyExists,
       };
 
-      // Encrypt the response payload
-      const encryptedPayload = await EncryptionHelpers.encryptPayload(authResponse, publicKey);
+      // base64 encode the response payload
+      const payloadString = JSON.stringify(authResponse);
+      const encodedPayload = Buffer.from(payloadString, 'utf8').toString('base64');
+
       return {
         success: true,
-        encryptedPayload,
+        encodedPayload,
       };
     } catch (error) {
       return {
@@ -367,13 +368,9 @@ router.get(
       const controller: TurnkeyController = new TurnkeyController();
       const response = await controller.appleLoginRedirect(query);
 
-      if (response.success && response.encryptedPayload) {
-        // Redirect to mobile app with encrypted payload
-        const redirectUrl = EncryptionHelpers.createRedirectUrl(
-          config.APPLE_APP_SCHEME,
-          response.encryptedPayload,
-        );
-        return res.redirect(redirectUrl);
+      if (response.success && response.encodedPayload) {
+        const encodedPayload = encodeURIComponent(response.encodedPayload);
+        return res.redirect(`${config.APPLE_APP_SCHEME}:///onboard/turnkey?appleLogin=${encodedPayload}`);
       } else {
         // Handle error case - redirect with error
         const errorUrl = `${config.APPLE_APP_SCHEME}:///onboard/turnkey?error=${encodeURIComponent(response.error || 'Unknown error')}`;

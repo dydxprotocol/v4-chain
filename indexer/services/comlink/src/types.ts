@@ -865,7 +865,7 @@ export interface AppleJWTClaims {
 
 export interface AppleLoginResponse {
   success: boolean,
-  encryptedPayload?: string,
+  encodedPayload?: string,
   error?: string,
 }
 
