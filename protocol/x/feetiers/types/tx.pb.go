@@ -122,36 +122,138 @@ func (m *MsgUpdatePerpetualFeeParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdatePerpetualFeeParamsResponse proto.InternalMessageInfo
 
+// MsgSetMarketFeeDiscountParams is the Msg/SetMarketFeeDiscountParams
+// request type.
+type MsgSetMarketFeeDiscountParams struct {
+	// authority is the address that controls the module
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The per-market fee discount parameters to create or update
+	Params []PerMarketFeeDiscountParams `protobuf:"bytes,2,rep,name=params,proto3" json:"params"`
+}
+
+func (m *MsgSetMarketFeeDiscountParams) Reset()         { *m = MsgSetMarketFeeDiscountParams{} }
+func (m *MsgSetMarketFeeDiscountParams) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMarketFeeDiscountParams) ProtoMessage()    {}
+func (*MsgSetMarketFeeDiscountParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_caa74a3b986b7fd9, []int{2}
+}
+func (m *MsgSetMarketFeeDiscountParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetMarketFeeDiscountParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetMarketFeeDiscountParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetMarketFeeDiscountParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMarketFeeDiscountParams.Merge(m, src)
+}
+func (m *MsgSetMarketFeeDiscountParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetMarketFeeDiscountParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMarketFeeDiscountParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetMarketFeeDiscountParams proto.InternalMessageInfo
+
+func (m *MsgSetMarketFeeDiscountParams) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgSetMarketFeeDiscountParams) GetParams() []PerMarketFeeDiscountParams {
+	if m != nil {
+		return m.Params
+	}
+	return nil
+}
+
+// MsgSetMarketFeeDiscountParamsResponse is the
+// Msg/SetMarketFeeDiscountParams response type.
+type MsgSetMarketFeeDiscountParamsResponse struct {
+}
+
+func (m *MsgSetMarketFeeDiscountParamsResponse) Reset()         { *m = MsgSetMarketFeeDiscountParamsResponse{} }
+func (m *MsgSetMarketFeeDiscountParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMarketFeeDiscountParamsResponse) ProtoMessage()    {}
+func (*MsgSetMarketFeeDiscountParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_caa74a3b986b7fd9, []int{3}
+}
+func (m *MsgSetMarketFeeDiscountParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetMarketFeeDiscountParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetMarketFeeDiscountParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetMarketFeeDiscountParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMarketFeeDiscountParamsResponse.Merge(m, src)
+}
+func (m *MsgSetMarketFeeDiscountParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetMarketFeeDiscountParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMarketFeeDiscountParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetMarketFeeDiscountParamsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdatePerpetualFeeParams)(nil), "dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams")
 	proto.RegisterType((*MsgUpdatePerpetualFeeParamsResponse)(nil), "dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse")
+	proto.RegisterType((*MsgSetMarketFeeDiscountParams)(nil), "dydxprotocol.feetiers.MsgSetMarketFeeDiscountParams")
+	proto.RegisterType((*MsgSetMarketFeeDiscountParamsResponse)(nil), "dydxprotocol.feetiers.MsgSetMarketFeeDiscountParamsResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/feetiers/tx.proto", fileDescriptor_caa74a3b986b7fd9) }
 
 var fileDescriptor_caa74a3b986b7fd9 = []byte{
-	// 331 bytes of a gzipped FileDescriptorProto
+	// 426 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xa9, 0x4c, 0xa9,
 	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x4b, 0x4d, 0x2d, 0xc9, 0x4c, 0x2d,
 	0x2a, 0xd6, 0x2f, 0xa9, 0xd0, 0x03, 0x0b, 0x0a, 0x89, 0x22, 0xcb, 0xeb, 0xc1, 0xe4, 0xa5, 0x24,
 	0x93, 0xf3, 0x8b, 0x73, 0xf3, 0x8b, 0xe3, 0xc1, 0x32, 0xfa, 0x10, 0x0e, 0x44, 0x87, 0x94, 0x38,
 	0x84, 0xa7, 0x9f, 0x5b, 0x9c, 0xae, 0x5f, 0x66, 0x08, 0xa2, 0xa0, 0x12, 0x4a, 0xd8, 0xad, 0x2a,
-	0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x69, 0x16, 0x49, 0xcf, 0x4f, 0xcf, 0x87, 0x18, 0x0a, 0x62, 0x41,
-	0x44, 0x95, 0xd6, 0x31, 0x72, 0x49, 0xfb, 0x16, 0xa7, 0x87, 0x16, 0xa4, 0x24, 0x96, 0xa4, 0x06,
-	0xa4, 0x16, 0x15, 0xa4, 0x96, 0x94, 0x26, 0xe6, 0xb8, 0xa5, 0xa6, 0x06, 0x80, 0xf5, 0x0a, 0x99,
-	0x71, 0x71, 0x26, 0x96, 0x96, 0x64, 0xe4, 0x17, 0x65, 0x96, 0x54, 0x4a, 0x30, 0x2a, 0x30, 0x6a,
-	0x70, 0x3a, 0x49, 0x5c, 0xda, 0xa2, 0x2b, 0x02, 0x75, 0x97, 0x63, 0x4a, 0x4a, 0x51, 0x6a, 0x71,
-	0x71, 0x70, 0x49, 0x51, 0x66, 0x5e, 0x7a, 0x10, 0x42, 0xa9, 0x90, 0x3b, 0x17, 0x1b, 0xc4, 0x76,
-	0x09, 0x26, 0x05, 0x46, 0x0d, 0x6e, 0x23, 0x4d, 0x3d, 0xac, 0xbe, 0xd5, 0xc3, 0xb4, 0xd2, 0x89,
-	0xe5, 0xc4, 0x3d, 0x79, 0x86, 0x20, 0xa8, 0x76, 0x2b, 0xbe, 0xa6, 0xe7, 0x1b, 0xb4, 0x10, 0x06,
-	0x2b, 0xa9, 0x72, 0x29, 0xe3, 0x71, 0x6f, 0x50, 0x6a, 0x71, 0x41, 0x7e, 0x5e, 0x71, 0xaa, 0xd1,
-	0x24, 0x46, 0x2e, 0x66, 0xdf, 0xe2, 0x74, 0xa1, 0x2e, 0x46, 0x2e, 0x09, 0x9c, 0x9e, 0x33, 0xc2,
-	0xe1, 0x28, 0x3c, 0x16, 0x48, 0x59, 0x91, 0xae, 0x07, 0xe6, 0x28, 0xa7, 0x90, 0x13, 0x8f, 0xe4,
-	0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f,
-	0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0xb2, 0x4a, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b,
-	0xce, 0xcf, 0xd5, 0x47, 0x89, 0xcb, 0x32, 0x13, 0xdd, 0xe4, 0x8c, 0xc4, 0xcc, 0x3c, 0x7d, 0xb8,
-	0x48, 0x05, 0x52, 0x52, 0xaa, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x4b, 0x19, 0x03, 0x02, 0x00,
-	0x00, 0xff, 0xff, 0xf0, 0x6c, 0xb3, 0xcc, 0x70, 0x02, 0x00, 0x00,
+	0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x69, 0x36, 0xc6, 0xa1, 0x26, 0xb5, 0x28, 0x3e, 0x37, 0xb1, 0x28,
+	0x3b, 0xb5, 0x24, 0x3e, 0x2d, 0x35, 0x35, 0x3e, 0x25, 0xb3, 0x38, 0x39, 0xbf, 0x34, 0xaf, 0x04,
+	0xaa, 0x49, 0x24, 0x3d, 0x3f, 0x3d, 0x1f, 0xe2, 0x12, 0x10, 0x0b, 0x22, 0xaa, 0xb4, 0x8e, 0x91,
+	0x4b, 0xda, 0xb7, 0x38, 0x3d, 0xb4, 0x20, 0x25, 0xb1, 0x24, 0x35, 0x20, 0xb5, 0xa8, 0x20, 0xb5,
+	0xa4, 0x34, 0x31, 0xc7, 0x2d, 0x35, 0x35, 0x00, 0x6c, 0xa1, 0x90, 0x19, 0x17, 0x67, 0x62, 0x69,
+	0x49, 0x46, 0x7e, 0x51, 0x66, 0x49, 0xa5, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0xa7, 0x93, 0xc4, 0xa5,
+	0x2d, 0xba, 0x22, 0x50, 0xcf, 0x38, 0xa6, 0xa4, 0x14, 0xa5, 0x16, 0x17, 0x07, 0x97, 0x14, 0x65,
+	0xe6, 0xa5, 0x07, 0x21, 0x94, 0x0a, 0xb9, 0x73, 0xb1, 0x41, 0x9c, 0x2c, 0xc1, 0xa4, 0xc0, 0xa8,
+	0xc1, 0x6d, 0xa4, 0xa9, 0x87, 0x35, 0x88, 0xf4, 0x30, 0xad, 0x74, 0x62, 0x39, 0x71, 0x4f, 0x9e,
+	0x21, 0x08, 0xaa, 0xdd, 0x8a, 0xaf, 0xe9, 0xf9, 0x06, 0x2d, 0x84, 0xc1, 0x4a, 0xaa, 0x5c, 0xca,
+	0x78, 0xdc, 0x1b, 0x94, 0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0xaa, 0xb4, 0x83, 0x91, 0x4b, 0xd6,
+	0xb7, 0x38, 0x3d, 0x38, 0xb5, 0xc4, 0x17, 0x1c, 0x22, 0x6e, 0xa9, 0xa9, 0x2e, 0xd0, 0xf0, 0xa0,
+	0xd0, 0x67, 0xfe, 0x48, 0x3e, 0x63, 0xd6, 0xe0, 0x36, 0x32, 0xc4, 0xed, 0x33, 0x1c, 0x56, 0x13,
+	0xf0, 0xa1, 0x3a, 0x97, 0x2a, 0x5e, 0x97, 0xc3, 0xfc, 0x68, 0xb4, 0x94, 0x89, 0x8b, 0xd9, 0xb7,
+	0x38, 0x5d, 0xa8, 0x8b, 0x91, 0x4b, 0x02, 0x67, 0x04, 0x1a, 0xe1, 0x70, 0x1e, 0x9e, 0x40, 0x94,
+	0xb2, 0x22, 0x5d, 0x0f, 0xcc, 0x51, 0x42, 0x13, 0x18, 0xb9, 0xa4, 0xf0, 0x84, 0xba, 0x09, 0x6e,
+	0xa3, 0x71, 0xeb, 0x92, 0xb2, 0x21, 0x47, 0x17, 0xcc, 0x49, 0x4e, 0x21, 0x27, 0x1e, 0xc9, 0x31,
+	0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb,
+	0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0x65, 0x95, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c,
+	0x9f, 0xab, 0x8f, 0x92, 0xa7, 0xca, 0x4c, 0x74, 0x93, 0x33, 0x12, 0x33, 0xf3, 0xf4, 0xe1, 0x22,
+	0x15, 0x48, 0xd9, 0xbe, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d, 0x2c, 0x65, 0x0c, 0x08, 0x00, 0x00,
+	0xff, 0xff, 0x8e, 0x07, 0x86, 0xa1, 0x1c, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -168,6 +270,9 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// UpdatePerpetualFeeParams updates the PerpetualFeeParams in state.
 	UpdatePerpetualFeeParams(ctx context.Context, in *MsgUpdatePerpetualFeeParams, opts ...grpc.CallOption) (*MsgUpdatePerpetualFeeParamsResponse, error)
+	// SetMarketFeeDiscountParams sets or updates PerMarketFeeDiscountParams for
+	// specific CLOB pairs.
+	SetMarketFeeDiscountParams(ctx context.Context, in *MsgSetMarketFeeDiscountParams, opts ...grpc.CallOption) (*MsgSetMarketFeeDiscountParamsResponse, error)
 }
 
 type msgClient struct {
@@ -187,10 +292,22 @@ func (c *msgClient) UpdatePerpetualFeeParams(ctx context.Context, in *MsgUpdateP
 	return out, nil
 }
 
+func (c *msgClient) SetMarketFeeDiscountParams(ctx context.Context, in *MsgSetMarketFeeDiscountParams, opts ...grpc.CallOption) (*MsgSetMarketFeeDiscountParamsResponse, error) {
+	out := new(MsgSetMarketFeeDiscountParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Msg/SetMarketFeeDiscountParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdatePerpetualFeeParams updates the PerpetualFeeParams in state.
 	UpdatePerpetualFeeParams(context.Context, *MsgUpdatePerpetualFeeParams) (*MsgUpdatePerpetualFeeParamsResponse, error)
+	// SetMarketFeeDiscountParams sets or updates PerMarketFeeDiscountParams for
+	// specific CLOB pairs.
+	SetMarketFeeDiscountParams(context.Context, *MsgSetMarketFeeDiscountParams) (*MsgSetMarketFeeDiscountParamsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -199,6 +316,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdatePerpetualFeeParams(ctx context.Context, req *MsgUpdatePerpetualFeeParams) (*MsgUpdatePerpetualFeeParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePerpetualFeeParams not implemented")
+}
+func (*UnimplementedMsgServer) SetMarketFeeDiscountParams(ctx context.Context, req *MsgSetMarketFeeDiscountParams) (*MsgSetMarketFeeDiscountParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMarketFeeDiscountParams not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -223,6 +343,24 @@ func _Msg_UpdatePerpetualFeeParams_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetMarketFeeDiscountParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetMarketFeeDiscountParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetMarketFeeDiscountParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Msg/SetMarketFeeDiscountParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetMarketFeeDiscountParams(ctx, req.(*MsgSetMarketFeeDiscountParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.feetiers.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -230,6 +368,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdatePerpetualFeeParams",
 			Handler:    _Msg_UpdatePerpetualFeeParams_Handler,
+		},
+		{
+			MethodName: "SetMarketFeeDiscountParams",
+			Handler:    _Msg_SetMarketFeeDiscountParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -299,6 +441,73 @@ func (m *MsgUpdatePerpetualFeeParamsResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSetMarketFeeDiscountParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetMarketFeeDiscountParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetMarketFeeDiscountParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Params) > 0 {
+		for iNdEx := len(m.Params) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Params[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetMarketFeeDiscountParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetMarketFeeDiscountParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetMarketFeeDiscountParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -326,6 +535,34 @@ func (m *MsgUpdatePerpetualFeeParams) Size() (n int) {
 }
 
 func (m *MsgUpdatePerpetualFeeParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetMarketFeeDiscountParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Params) > 0 {
+		for _, e := range m.Params {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgSetMarketFeeDiscountParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -482,6 +719,172 @@ func (m *MsgUpdatePerpetualFeeParamsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdatePerpetualFeeParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetMarketFeeDiscountParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetMarketFeeDiscountParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetMarketFeeDiscountParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Params = append(m.Params, PerMarketFeeDiscountParams{})
+			if err := m.Params[len(m.Params)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetMarketFeeDiscountParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetMarketFeeDiscountParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetMarketFeeDiscountParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
