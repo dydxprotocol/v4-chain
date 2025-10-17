@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -60,7 +61,10 @@ func (k Keeper) UserFeeTier(
 	}, nil
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
 
 // PerMarketFeeDiscountParams processes a query for fee discount parameters for a specific market/CLOB pair.
 func (k Keeper) PerMarketFeeDiscountParams(
@@ -107,6 +111,7 @@ func (k Keeper) AllMarketFeeDiscountParams(
 		Params: params,
 	}, nil
 }
+<<<<<<< HEAD
 
 func (k Keeper) StakingTiers(
 	c context.Context,
@@ -163,3 +168,5 @@ func (k Keeper) UserStakingTier(
 	}, nil
 }
 >>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+=======
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))

@@ -489,6 +489,7 @@ func (k Keeper) GetMEVDataFromOperations(
 							takerOrder.GetSubaccountId().Owner,
 							true,
 							affiliateParameters.RefereeMinimumFeeTierIdx,
+							takerOrder.OrderId.ClobPairId,
 						),
 
 						MakerOrderSubaccountId: &makerOrder.OrderId.SubaccountId,
@@ -499,6 +500,7 @@ func (k Keeper) GetMEVDataFromOperations(
 							makerOrder.GetSubaccountId().Owner,
 							false,
 							affiliateParameters.RefereeMinimumFeeTierIdx,
+							takerOrder.OrderId.ClobPairId,
 						),
 
 						ClobPairId: takerOrder.OrderId.ClobPairId,
@@ -547,6 +549,7 @@ func (k Keeper) GetMEVDataFromOperations(
 							makerOrder.GetSubaccountId().Owner,
 							false,
 							affiliateParameters.RefereeMinimumFeeTierIdx,
+							matchLiquidation.ClobPairId,
 						),
 
 						ClobPairId: matchLiquidation.ClobPairId,

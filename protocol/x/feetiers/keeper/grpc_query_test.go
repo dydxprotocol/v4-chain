@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -101,7 +102,10 @@ func TestUserFeeTier(t *testing.T) {
 	}
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
 
 // TestPerMarketFeeDiscountParams tests the PerMarketFeeDiscountParams query handler
 func TestPerMarketFeeDiscountParams(t *testing.T) {
@@ -263,6 +267,7 @@ func TestAllMarketFeeDiscountParamsEmpty(t *testing.T) {
 	require.NotNil(t, res)
 	require.Empty(t, res.Params)
 }
+<<<<<<< HEAD
 
 func TestStakingTiers(t *testing.T) {
 	tests := map[string]struct {
@@ -561,3 +566,5 @@ func TestUserStakingTier(t *testing.T) {
 	}
 }
 >>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+=======
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
