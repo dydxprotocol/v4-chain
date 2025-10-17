@@ -17,7 +17,7 @@ import { AppleHelpers } from '../../../lib/apple-helpers';
 import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { TurnkeyHelpers } from '../../../lib/turnkey-helpers';
+import { extractEmailFromOidcToken, TurnkeyHelpers } from '../../../lib/turnkey-helpers';
 import { CheckSignInSchema, CheckUploadDydxAddressSchema, CheckAppleLoginRedirectSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -245,7 +245,7 @@ export class TurnkeyController extends Controller {
         privKey,
       );
       // Extract email from ID token
-      const email = AppleHelpers.extractEmailFromIdToken(tokenResponse.id_token);
+      const email = extractEmailFromOidcToken(tokenResponse.id_token, 'apple');
       if (!email) {
         throw new TurnkeyError('No email found in Apple ID token');
       }

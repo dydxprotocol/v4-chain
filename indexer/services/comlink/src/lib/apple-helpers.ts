@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  SignJWT, JWTPayload, importPKCS8, KeyLike, decodeJwt,
+  SignJWT, JWTPayload, importPKCS8, KeyLike,
 } from 'jose';
 import fetch from 'node-fetch';
 
@@ -140,26 +140,6 @@ export class AppleHelpers {
         `Failed to parse Apple private key: ${error instanceof Error ? error.message : String(error)
         }`,
       );
-    }
-  }
-
-  /**
-   * Extracts email from Apple ID token
-   * @param idToken - Apple ID token
-   * @returns Email address if found
-   */
-  static extractEmailFromIdToken(idToken: string): string | undefined {
-    try {
-      const payload = decodeJwt(idToken); // handles base64url
-      // payload is JWTPayload; email is optional string
-      return (payload as JWTPayload & { email?: string }).email;
-    } catch (error) {
-      logger.warning({
-        at: 'AppleHelpers#extractEmailFromIdToken',
-        message: 'Failed to extract email from Apple ID token',
-        error: error instanceof Error ? error.message : error,
-      });
-      return undefined;
     }
   }
 }
