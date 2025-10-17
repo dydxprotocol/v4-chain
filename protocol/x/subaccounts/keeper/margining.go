@@ -76,6 +76,7 @@ func getMarginedUpdate(
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
 			pos.GetQuoteBalance(),
+			0, // Margining uses default leverage and MMR
 		)
 
 		// case 2: the position is undercollateralized w.r.t. the maintenance margin requirement.
@@ -171,6 +172,7 @@ func withdrawCollateralFromPerpetualPositions(
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
 			pos.GetQuoteBalance(),
+			0,
 		)
 
 		// Calculate the amount of extra collateral that can be withdrawn.
