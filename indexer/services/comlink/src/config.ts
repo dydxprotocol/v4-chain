@@ -106,6 +106,8 @@ export const configSchema = {
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
   SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
+  // this is the largest allowed slippage amount in USDC.
+  SKIP_SLIPPAGE_TOLERANCE_USDC: parseInteger({ default: 100 }),
   TURNKEY_EMAIL_SENDER_ADDRESS: parseString({ default: 'notifications@mail.dydx.trade' }),
   TURNKEY_EMAIL_SENDER_NAME: parseString({ default: 'dYdX Notifications' }),
   // Alchemy auth token for the skip bridge.
@@ -122,7 +124,7 @@ export const configSchema = {
   // if policy approvals are enabled.
   APPROVAL_ENABLED: parseBoolean({ default: true }),
   // largest amount we will tolerate to swap in usdc.
-  MAXIMUM_BRIDGE_AMOUNT_USDC: parseInteger({ default: 99_900 }),
+  MAXIMUM_BRIDGE_AMOUNT_USDC: parseInteger({ default: 999_000 }),
 
   // webhook ids, defaults to the production webhook id.
   ETHEREUM_WEBHOOK_ID: parseString({ default: 'wh_ctbkt6y9hez91xr2' }),

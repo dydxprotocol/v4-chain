@@ -49,7 +49,6 @@ export async function buildUserAddresses(
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
 const skipMessagesTimeoutSeconds = '60';
 const dydxNobleChannel = 33;
-const slippageTolerancePercent = config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE;
 // Grabs the raw skip route data to carry out the bridge on our own.
 export async function getSkipCallData(
   sourceAddress: string,
@@ -63,7 +62,6 @@ export async function getSkipCallData(
   if (amount.startsWith('0x')) {
     amountToUse = parseInt(amount, 16).toString();
   }
-
   const routeResult = await route({
     amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
@@ -87,13 +85,6 @@ export async function getSkipCallData(
   if (!routeResult) {
     throw new Error('Failed to find a route');
   }
-
-  logger.info({
-    at: 'skip-helper#getSkipCallData',
-    message: 'Route result obtained',
-    routeResult,
-    dydxAddress,
-  });
 
   const userAddresses = await buildUserAddresses(
     routeResult.requiredChainAddresses,
@@ -121,6 +112,9 @@ export async function getSkipCallData(
     throw new Error('executeRoute error: invalid address list');
   }
 
+  // acceptable slippage is smallest of SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided
+  // by the estimatedAmountOut or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
+  const slippageTolerancePercent = getSlippageTolerancePercent(routeResult.estimatedAmountOut);
   const response = await messages({
     timeoutSeconds: skipMessagesTimeoutSeconds,
     amountIn: routeResult?.amountIn,
@@ -393,4 +387,14 @@ export async function limitAmount(
   // calculates the most usdc we can bridge in one go and pins it to that.
   const maxDepositInUsdc = config.MAXIMUM_BRIDGE_AMOUNT_USDC;
   return min([amountToUse, BigInt(maxDepositInUsdc * ETH_USDC_QUANTUM)])!.toString();
+}
+
+// getSlippageTolerancePercent returns the acceptable slippage is smallest of
+// SKIP_SLIPPAGE_TOLERANCE_USDC (Default $100) divided by the estimatedAmountOut
+// or the SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE.
+export function getSlippageTolerancePercent(estAmountOut: string): string {
+  return min([
+    (100 * (config.SKIP_SLIPPAGE_TOLERANCE_USDC * ETH_USDC_QUANTUM)) / parseInt(estAmountOut, 10),
+    parseFloat(config.SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE),
+  ])!.toString();
 }
