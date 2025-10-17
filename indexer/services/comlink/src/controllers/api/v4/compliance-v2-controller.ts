@@ -7,6 +7,7 @@ import {
   GeoOriginHeaders,
   isRestrictedCountryHeaders,
   isWhitelistedAddress,
+  INDEXER_GEOBLOCKED_PAYLOAD,
 } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
@@ -38,17 +39,15 @@ import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
-  ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest,
+  BlockedCode,
+  ComplianceRequest,
+  ComplianceV2Response,
+  SetComplianceStatusRequest,
 } from '../../../types';
 import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-v2-controller';
-
-const COMPLIANCE_PROGRESSION: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
-  [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-  [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
-};
 
 @Route('compliance')
 class ComplianceV2Controller extends Controller {
@@ -194,6 +193,15 @@ router.post(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
 
+    if (isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
+      return create4xxResponse(
+        res,
+        INDEXER_GEOBLOCKED_PAYLOAD,
+        403,
+        { code: BlockedCode.GEOBLOCKED },
+      );
+    }
+
     const {
       address,
       message,
@@ -237,6 +245,15 @@ router.post(
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
+
+    if (isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
+      return create4xxResponse(
+        res,
+        INDEXER_GEOBLOCKED_PAYLOAD,
+        403,
+        { code: BlockedCode.GEOBLOCKED },
+      );
+    }
 
     const {
       address,
@@ -333,7 +350,7 @@ async function checkCompliance(
 }
 
 function handleError(
-  error: Error, endpointName: string, message:string, req: express.Request, res: express.Response,
+  error: Error, endpointName: string, message: string, req: express.Request, res: express.Response,
 ): express.Response {
   logger.error({
     at: `ComplianceV2Controller POST /${endpointName}`,
@@ -363,17 +380,23 @@ function handleError(
  *  - set the status to FIRST_STRIKE_CLOSE_ONLY
  *
  * if the address is FIRST_STRIKE_CLOSE_ONLY:
- * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT. CONNECT
- * are no-ops.
+ * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT.
+ * - if the request is from a restricted country:
+ *  - set the status to CLOSE_ONLY
+ * - else if the request is from a non-restricted country:
+ *  - set the status to COMPLIANT
+ *
  * - if the action is VALID_SURVEY:
- *   - set the status to FIRST_STRIKE
+ *   - set the status to COMPLIANT unless the address is CLOSE_ONLY
+ *
  * - if the action is INVALID_SURVEY:
  *   - set the status to CLOSE_ONLY
  *
  * if the address is FIRST_STRIKE:
- * - the ONLY action should be CONNECT. VALID_SURVEY/INVALID_SURVEY are no-ops.
  * - if the request is from a restricted country:
- *  - set the status to CLOSE_ONLY
+ *   - set the status to CLOSE_ONLY
+ * - else if the request is from a non-restricted country:
+ *   - set the status to COMPLIANT
  */
 // eslint-disable-next-line @typescript-eslint/require-await
 async function upsertComplianceStatus(
@@ -384,8 +407,10 @@ async function upsertComplianceStatus(
   complianceStatus: ComplianceStatusFromDatabase[],
   updatedAt: string,
 ): Promise<ComplianceStatusFromDatabase | undefined> {
+  const restricted = isRestrictedCountryHeaders(req.headers as GeoOriginHeaders);
+
   if (complianceStatus.length === 0) {
-    if (!isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
+    if (!restricted) {
       return ComplianceStatusTable.upsert({
         address,
         status: ComplianceStatus.COMPLIANT,
@@ -405,7 +430,7 @@ async function upsertComplianceStatus(
 
     return ComplianceStatusTable.upsert({
       address,
-      status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+      status: ComplianceStatus.CLOSE_ONLY,
       reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
       updatedAt,
     });
@@ -413,30 +438,21 @@ async function upsertComplianceStatus(
 
   if (
     complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
+    complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY ||
+    complianceStatus[0].status === ComplianceStatus.BLOCKED ||
     complianceStatus[0].status === ComplianceStatus.COMPLIANT
   ) {
-    if (
-      isRestrictedCountryHeaders(req.headers as GeoOriginHeaders) &&
-      action === ComplianceAction.CONNECT
-    ) {
-      return ComplianceStatusTable.update({
-        address,
-        status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
-        reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
-        updatedAt,
-      });
-    }
-  } else if (complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY) {
-    if (action === ComplianceAction.VALID_SURVEY) {
-      return ComplianceStatusTable.update({
-        address,
-        status: ComplianceStatus.FIRST_STRIKE,
-        updatedAt,
-      });
-    } else if (action === ComplianceAction.INVALID_SURVEY) {
+    if (restricted) {
       return ComplianceStatusTable.update({
         address,
         status: ComplianceStatus.CLOSE_ONLY,
+        reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
+        updatedAt,
+      });
+    } else {
+      return ComplianceStatusTable.update({
+        address,
+        status: ComplianceStatus.COMPLIANT,
         updatedAt,
       });
     }
