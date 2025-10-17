@@ -26,6 +26,7 @@ export class AppleHelpers {
     privateKey: string,
   ): Promise<string> {
     try {
+      const aud = 'https://appleid.apple.com';
       const now = Math.floor(Date.now() / 1000);
       const exp = now + (60 * 60 * 24 * 180); // 6 months max
 
@@ -33,7 +34,7 @@ export class AppleHelpers {
         iss: teamId,
         iat: now,
         exp,
-        aud: 'https://appleid.apple.com',
+        aud,
         sub: serviceId,
       };
 
