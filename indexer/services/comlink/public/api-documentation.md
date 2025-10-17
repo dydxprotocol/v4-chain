@@ -4214,7 +4214,7 @@ Exchanges authorization code for ID token and processes user login/signup
 ```json
 {
   "success": true,
-  "encryptedPayload": "string",
+  "encodedPayload": "string",
   "error": "string"
 }
 ```
@@ -7081,7 +7081,7 @@ Request interface for user sign-in operations
 ```json
 {
   "success": true,
-  "encryptedPayload": "string",
+  "encodedPayload": "string",
   "error": "string"
 }
 
@@ -7092,7 +7092,7 @@ Request interface for user sign-in operations
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |success|boolean|true|none|none|
-|encryptedPayload|string|false|none|none|
+|encodedPayload|string|false|none|none|
 |error|string|false|none|none|
 
 ## AppleLoginRedirectRequest

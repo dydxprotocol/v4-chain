@@ -1787,7 +1787,7 @@
           "success": {
             "type": "boolean"
           },
-          "encryptedPayload": {
+          "encodedPayload": {
             "type": "string"
           },
           "error": {
