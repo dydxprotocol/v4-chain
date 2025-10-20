@@ -7,6 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/feetiers/params.proto";
 import "dydxprotocol/feetiers/per_market_fee_discount.proto";
+import "dydxprotocol/feetiers/staking_tier.proto";
 import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service.
@@ -19,6 +20,9 @@ service Msg {
   // specific CLOB pairs.
   rpc SetMarketFeeDiscountParams(MsgSetMarketFeeDiscountParams)
       returns (MsgSetMarketFeeDiscountParamsResponse);
+
+  // SetStakingTiers sets the staking tiers in state.
+  rpc SetStakingTiers(MsgSetStakingTiers) returns (MsgSetStakingTiersResponse);
 }
 
 // MsgUpdatePerpetualFeeParams is the Msg/UpdatePerpetualFeeParams request type.
@@ -51,3 +55,15 @@ message MsgSetMarketFeeDiscountParams {
 // MsgSetMarketFeeDiscountParamsResponse is the
 // Msg/SetMarketFeeDiscountParams response type.
 message MsgSetMarketFeeDiscountParamsResponse {}
+// MsgSetStakingTiers is the Msg/SetStakingTiers request type.
+message MsgSetStakingTiers {
+  // The address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // List of Staking tiers
+  repeated StakingTier staking_tiers = 2;
+}
+
+// MsgSetStakingTiersResponse is the Msg/SetStakingTiers response type.
+message MsgSetStakingTiersResponse {}

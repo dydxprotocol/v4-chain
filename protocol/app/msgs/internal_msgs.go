@@ -160,6 +160,8 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":   nil,
 		"/dydxprotocol.feetiers.MsgSetMarketFeeDiscountParams":         &feetiers.MsgSetMarketFeeDiscountParams{},
 		"/dydxprotocol.feetiers.MsgSetMarketFeeDiscountParamsResponse": nil,
+		"/dydxprotocol.feetiers.MsgSetStakingTiers":                    &feetiers.MsgSetStakingTiers{},
+		"/dydxprotocol.feetiers.MsgSetStakingTiersResponse":            nil,
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},
