@@ -1,3 +1,4 @@
+import Knex from 'knex';
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
@@ -52,7 +53,6 @@ export async function findAll(
     throw new Error('subaccountId array must be provided and non-empty');
   }
 
-  const knex = PnlModel.knex();
   let baseQuery: QueryBuilder<PnlModel> = setupBaseQuery<PnlModel>(
     PnlModel,
     options,
@@ -93,10 +93,13 @@ export async function findAll(
   }
 
   // Aggregate by hour across all subaccounts
-  const hourlyAggregateQuery = PnlModel.query(Transaction.get(options.txId))
+  const aggregateBase = setupBaseQuery<PnlModel>(PnlModel, options);
+  const knex = (aggregateBase as unknown as { knex?: () => Knex }).knex?.() ?? PnlModel.knex();
+  const hourlyAggregateQuery = aggregateBase
+    .clearSelect()
     .select(
       knex.raw('DATE_TRUNC(\'hour\', "createdAt") as "createdAt"'),
-      knex.raw('MAX("createdAtHeight") as "createdAtHeight"'),
+      knex.raw('MAX("createdAtHeight"::bigint)::text as "createdAtHeight"'),
       knex.raw('SUM(equity::numeric) as equity'),
       knex.raw('SUM("totalPnl"::numeric) as "totalPnl"'),
       knex.raw('SUM("netTransfers"::numeric) as "netTransfers"'),
@@ -107,14 +110,20 @@ export async function findAll(
   // Apply ordering with same expression
   let finalQuery = hourlyAggregateQuery;
   if (options.orderBy !== undefined) {
-    for (const [column, order] of options.orderBy) {
-      finalQuery = finalQuery.orderBy(column, order);
+  for (const [column, order] of options.orderBy) {
+    if (column === 'createdAtHeight') {
+      finalQuery = finalQuery.orderByRaw(`MAX("createdAtHeight"::bigint) ${order}`);
+    } else if (column === PnlColumns.createdAt) {
+      finalQuery = finalQuery.orderByRaw(`DATE_TRUNC('hour', "${column}") ${order}`);
+    } else {
+      finalQuery = finalQuery.orderBy(column as string, order);
     }
+  }
   } else {
     finalQuery = finalQuery.orderByRaw('DATE_TRUNC(\'hour\', "createdAt") DESC');
   }
 
-  return handleLimitAndPagination(finalQuery, limit, page);
+  return handleLimitAndPagination(finalQuery, limit, page, options);
 }
 
 export async function create(
@@ -145,6 +154,7 @@ async function handleLimitAndPagination(
   baseQuery: QueryBuilder<PnlModel>,
   limit?: number,
   page?: number,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PaginationFromDatabase<PnlFromDatabase>> {
   let query = baseQuery;
 
@@ -163,9 +173,7 @@ async function handleLimitAndPagination(
      * Also a casting of the ts type is required since the infer of the type
      * obtained from the count is not performed.
      */
-    const countQuery = query
-      .modelClass()
-      .query()
+    const countQuery = setupBaseQuery<PnlModel>(PnlModel, options)
       .count('* as count')
       .from(query.clone().clearOrder().as('grouped_results'))
       .first();
@@ -229,7 +237,8 @@ export async function findAllDailyPnl(
     options,
   );
 
-  const knex = PnlModel.knex();
+  const dailyBase = setupBaseQuery<PnlModel>(PnlModel, options);
+  const knex = (dailyBase as unknown as { knex?: () => Knex }).knex?.() ?? PnlModel.knex();
   baseQuery = baseQuery.whereIn(PnlColumns.subaccountId, subaccountId);
 
   if (createdBeforeOrAtHeight !== undefined) {
@@ -273,7 +282,8 @@ export async function findAllDailyPnl(
     .orderBy(PnlColumns.createdAt, 'ASC'); // Earliest in day
 
   // Step 2: Aggregate across subaccounts by day
-  const aggregatedQuery = PnlModel.query(Transaction.get(options.txId))
+  const aggregatedQuery = dailyBase
+    .clearSelect()
     .with('daily_snapshots', dailySnapshotsQuery)
     .select(
       knex.raw('DATE_TRUNC(\'day\', "createdAt") as "createdAt"'),
@@ -287,5 +297,5 @@ export async function findAllDailyPnl(
     .orderByRaw('DATE_TRUNC(\'day\', "createdAt") DESC');
 
   // Apply pagination if needed
-  return handleLimitAndPagination(aggregatedQuery, limit, page);
+  return handleLimitAndPagination(aggregatedQuery, limit, page, options);
 }
