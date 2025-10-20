@@ -71,6 +71,24 @@ describe('pnl-controller#V4', () => {
     it('Get /pnl respects pagination', async () => {
       await testMocks.seedData();
 
+      await Promise.all([
+        PnlTable.create({
+          ...testConstants.defaultPnl,
+          createdAt: '2023-01-01T10:00:00.000Z',
+          createdAtHeight: '1000',
+          equity: '5000.00',
+          totalPnl: '500.00',
+        }),
+
+        PnlTable.create({
+          ...testConstants.defaultPnl,
+          createdAt: '2023-01-01T11:00:00.000Z',
+          createdAtHeight: '1100',
+          equity: '5100.00',
+          totalPnl: '600.00',
+        }),
+      ]);
+
       // Test first page with limit 1
       const responsePage1: request.Response = await sendRequest({
         type: RequestMethod.GET,

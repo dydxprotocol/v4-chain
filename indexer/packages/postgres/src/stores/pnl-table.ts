@@ -156,8 +156,6 @@ async function handleLimitAndPagination(
   page?: number,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PaginationFromDatabase<PnlFromDatabase>> {
-  let query = baseQuery;
-
   /**
    * If a query is made using a page number, then the limit property is used as 'page limit'
    */
@@ -173,30 +171,42 @@ async function handleLimitAndPagination(
      * Also a casting of the ts type is required since the infer of the type
      * obtained from the count is not performed.
      */
-    const countQuery = setupBaseQuery<PnlModel>(PnlModel, options)
+     const ModelClass = baseQuery.modelClass();
+    const aggregatedQueryKnex = baseQuery.clone().toKnexQuery();
+    
+    // Build count query using Objection to preserve transaction
+    const countQueryBuilder = ModelClass
+      .query(Transaction.get(options.txId))
       .count('* as count')
-      .from(query.clone().clearOrder().as('grouped_results'))
+      .from(aggregatedQueryKnex.as('subquery'))
       .first();
-
-    const count: { count?: string } = (await countQuery) as unknown as { count?: string };
-
-    query = query.offset(offset).limit(limit);
-
-    const results = (await query) as PnlFromDatabase[];
+    
+    const countResult = await countQueryBuilder as unknown as { count?: string | number } | undefined;
+    
+    const total = countResult?.count 
+      ? (typeof countResult.count === 'string' ? parseInt(countResult.count, 10) : countResult.count)
+      : 0;
+    
+    // Apply pagination
+    const paginatedQuery = baseQuery.offset(offset).limit(limit);
+    const results = (await paginatedQuery) as PnlFromDatabase[];
+     
     return {
       results,
       limit,
       offset,
-      total: parseInt(count.count ?? '0', 10),
+      total,
     };
   }
 
   // If no pagination, just apply the limit
+  let query = baseQuery;
   if (limit !== undefined) {
     query = query.limit(limit);
   }
 
   const results = (await query) as PnlFromDatabase[];
+  
   return {
     results,
   };
@@ -287,7 +297,7 @@ export async function findAllDailyPnl(
     .with('daily_snapshots', dailySnapshotsQuery)
     .select(
       knex.raw('DATE_TRUNC(\'day\', "createdAt") as "createdAt"'),
-      knex.raw('MAX("createdAtHeight") as "createdAtHeight"'),
+      knex.raw('MAX("createdAtHeight"::bigint)::text as "createdAtHeight"'),
       knex.raw('SUM(equity::numeric) as equity'),
       knex.raw('SUM("totalPnl"::numeric) as "totalPnl"'),
       knex.raw('SUM("netTransfers"::numeric) as "netTransfers"'),
