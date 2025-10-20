@@ -28,8 +28,18 @@ func TestStateUpgrade(t *testing.T) {
 	postUpgradeChecks(node, t)
 }
 
-func preUpgradeSetups(node *containertest.Node, t *testing.T) {}
+func preUpgradeSetups(node *containertest.Node, t *testing.T) {
+	// Set default affiliate tiers and parameters.
+	node.SetAffiliateTiers(constants.PreviousAffiliateTiers)
+	node.SetAffiliateParameters(constants.PreviousAffiliateParameters)
+	node.SetAffiliateWhitelist(constants.PreviousAffiliateWhitelist)
+}
 
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {}
 
-func postUpgradeChecks(node *containertest.Node, t *testing.T) {}
+func postUpgradeChecks(node *containertest.Node, t *testing.T) {
+	// Check that the affiliate tiers and parameters are set to the default values.
+	require.Equal(t, constants.DefaultAffiliateTiers, node.GetAffiliateTiers())
+	require.Equal(t, constants.DefaultAffiliateParameters, node.GetAffiliateParameters())
+	require.Equal(t, constants.DefaultAffiliateOverrides, node.GetAffiliateOverrides())
+}
