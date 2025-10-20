@@ -1,5 +1,6 @@
 syntax = "proto3";
 package dydxprotocol.feetiers;
+
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -113,7 +114,11 @@ message QueryUserStakingTierResponse {
   // The user's current fee tier name
   string fee_tier_name = 1;
   // Amount of tokens staked by the user (in base units)
-  string staked_base_tokens = 2;
+  bytes staked_base_tokens = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
   // The discount percentage in ppm that user qualifies for
   uint32 discount_ppm = 3;
 }

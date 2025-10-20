@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ func TestGetSetStakingTiers(t *testing.T) {
 					FeeTierName: "1",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "100",
+							MinStakedBaseTokens: dtypes.NewInt(100),
 							FeeDiscountPpm:      10000,
 						},
 					},
@@ -29,7 +30,7 @@ func TestGetSetStakingTiers(t *testing.T) {
 					FeeTierName: "2",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "200",
+							MinStakedBaseTokens: dtypes.NewInt(200),
 							FeeDiscountPpm:      20000,
 						},
 					},
@@ -40,7 +41,7 @@ func TestGetSetStakingTiers(t *testing.T) {
 					FeeTierName: "3",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "500",
+							MinStakedBaseTokens: dtypes.NewInt(500),
 							FeeDiscountPpm:      50000,
 						},
 					},
@@ -53,7 +54,7 @@ func TestGetSetStakingTiers(t *testing.T) {
 					FeeTierName: "1",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "100",
+							MinStakedBaseTokens: dtypes.NewInt(100),
 							FeeDiscountPpm:      10000,
 						},
 					},
@@ -125,7 +126,7 @@ func TestSetStakingTiers_ValidationError(t *testing.T) {
 					FeeTierName: "",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "100",
+							MinStakedBaseTokens: dtypes.NewInt(100),
 							FeeDiscountPpm:      10000,
 						},
 					},
@@ -146,27 +147,13 @@ func TestSetStakingTiers_ValidationError(t *testing.T) {
 			},
 			expectedError: "duplicate staking tier for fee tier: 1",
 		},
-		"invalid min staked tokens": {
-			stakingTiers: []*types.StakingTier{
-				{
-					FeeTierName: "1",
-					Levels: []*types.StakingLevel{
-						{
-							MinStakedBaseTokens: "not-a-number",
-							FeeDiscountPpm:      10000,
-						},
-					},
-				},
-			},
-			expectedError: "invalid min staked tokens for tier 1 level 0",
-		},
 		"negative min staked tokens": {
 			stakingTiers: []*types.StakingTier{
 				{
 					FeeTierName: "1",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "-100",
+							MinStakedBaseTokens: dtypes.NewInt(-100),
 							FeeDiscountPpm:      10000,
 						},
 					},
@@ -180,11 +167,11 @@ func TestSetStakingTiers_ValidationError(t *testing.T) {
 					FeeTierName: "1",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "1000",
+							MinStakedBaseTokens: dtypes.NewInt(1000),
 							FeeDiscountPpm:      10000,
 						},
 						{
-							MinStakedBaseTokens: "999",
+							MinStakedBaseTokens: dtypes.NewInt(999),
 							FeeDiscountPpm:      20000,
 						},
 					},
@@ -198,11 +185,11 @@ func TestSetStakingTiers_ValidationError(t *testing.T) {
 					FeeTierName: "1",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "1000",
+							MinStakedBaseTokens: dtypes.NewInt(1000),
 							FeeDiscountPpm:      10000,
 						},
 						{
-							MinStakedBaseTokens: "1000",
+							MinStakedBaseTokens: dtypes.NewInt(1000),
 							FeeDiscountPpm:      20000,
 						},
 					},
@@ -216,7 +203,7 @@ func TestSetStakingTiers_ValidationError(t *testing.T) {
 					FeeTierName: "1",
 					Levels: []*types.StakingLevel{
 						{
-							MinStakedBaseTokens: "100",
+							MinStakedBaseTokens: dtypes.NewInt(100),
 							FeeDiscountPpm:      1_000_001,
 						},
 					},

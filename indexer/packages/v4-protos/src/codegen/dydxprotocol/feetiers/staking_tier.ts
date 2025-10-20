@@ -31,7 +31,7 @@ export interface StakingTierSDKType {
 
 export interface StakingLevel {
   /** Minimum native tokens to stake (in base unit) */
-  minStakedBaseTokens: string;
+  minStakedBaseTokens: Uint8Array;
   /** Fee discount in ppm (e.g. 1_000_000 is 100% discount) */
 
   feeDiscountPpm: number;
@@ -43,7 +43,7 @@ export interface StakingLevel {
 
 export interface StakingLevelSDKType {
   /** Minimum native tokens to stake (in base unit) */
-  min_staked_base_tokens: string;
+  min_staked_base_tokens: Uint8Array;
   /** Fee discount in ppm (e.g. 1_000_000 is 100% discount) */
 
   fee_discount_ppm: number;
@@ -106,15 +106,15 @@ export const StakingTier = {
 
 function createBaseStakingLevel(): StakingLevel {
   return {
-    minStakedBaseTokens: "",
+    minStakedBaseTokens: new Uint8Array(),
     feeDiscountPpm: 0
   };
 }
 
 export const StakingLevel = {
   encode(message: StakingLevel, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.minStakedBaseTokens !== "") {
-      writer.uint32(10).string(message.minStakedBaseTokens);
+    if (message.minStakedBaseTokens.length !== 0) {
+      writer.uint32(10).bytes(message.minStakedBaseTokens);
     }
 
     if (message.feeDiscountPpm !== 0) {
@@ -134,7 +134,7 @@ export const StakingLevel = {
 
       switch (tag >>> 3) {
         case 1:
-          message.minStakedBaseTokens = reader.string();
+          message.minStakedBaseTokens = reader.bytes();
           break;
 
         case 2:
@@ -152,7 +152,7 @@ export const StakingLevel = {
 
   fromPartial(object: DeepPartial<StakingLevel>): StakingLevel {
     const message = createBaseStakingLevel();
-    message.minStakedBaseTokens = object.minStakedBaseTokens ?? "";
+    message.minStakedBaseTokens = object.minStakedBaseTokens ?? new Uint8Array();
     message.feeDiscountPpm = object.feeDiscountPpm ?? 0;
     return message;
   }

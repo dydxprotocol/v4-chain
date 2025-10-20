@@ -1,6 +1,8 @@
 syntax = "proto3";
 package dydxprotocol.feetiers;
 
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types";
 
 // StakingTier defines all staking levels of a fee tier
@@ -17,7 +19,11 @@ message StakingTier {
 // discount
 message StakingLevel {
   // Minimum native tokens to stake (in base unit)
-  string min_staked_base_tokens = 1;
+  bytes min_staked_base_tokens = 1 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 
   // Fee discount in ppm (e.g. 1_000_000 is 100% discount)
   uint32 fee_discount_ppm = 2;

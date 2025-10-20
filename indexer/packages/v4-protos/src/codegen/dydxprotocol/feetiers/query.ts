@@ -167,7 +167,7 @@ export interface QueryUserStakingTierResponse {
   feeTierName: string;
   /** Amount of tokens staked by the user (in base units) */
 
-  stakedBaseTokens: string;
+  stakedBaseTokens: Uint8Array;
   /** The discount percentage in ppm that user qualifies for */
 
   discountPpm: number;
@@ -182,7 +182,7 @@ export interface QueryUserStakingTierResponseSDKType {
   fee_tier_name: string;
   /** Amount of tokens staked by the user (in base units) */
 
-  staked_base_tokens: string;
+  staked_base_tokens: Uint8Array;
   /** The discount percentage in ppm that user qualifies for */
 
   discount_ppm: number;
@@ -663,7 +663,7 @@ export const QueryUserStakingTierRequest = {
 function createBaseQueryUserStakingTierResponse(): QueryUserStakingTierResponse {
   return {
     feeTierName: "",
-    stakedBaseTokens: "",
+    stakedBaseTokens: new Uint8Array(),
     discountPpm: 0
   };
 }
@@ -674,8 +674,8 @@ export const QueryUserStakingTierResponse = {
       writer.uint32(10).string(message.feeTierName);
     }
 
-    if (message.stakedBaseTokens !== "") {
-      writer.uint32(18).string(message.stakedBaseTokens);
+    if (message.stakedBaseTokens.length !== 0) {
+      writer.uint32(18).bytes(message.stakedBaseTokens);
     }
 
     if (message.discountPpm !== 0) {
@@ -699,7 +699,7 @@ export const QueryUserStakingTierResponse = {
           break;
 
         case 2:
-          message.stakedBaseTokens = reader.string();
+          message.stakedBaseTokens = reader.bytes();
           break;
 
         case 3:
@@ -718,7 +718,7 @@ export const QueryUserStakingTierResponse = {
   fromPartial(object: DeepPartial<QueryUserStakingTierResponse>): QueryUserStakingTierResponse {
     const message = createBaseQueryUserStakingTierResponse();
     message.feeTierName = object.feeTierName ?? "";
-    message.stakedBaseTokens = object.stakedBaseTokens ?? "";
+    message.stakedBaseTokens = object.stakedBaseTokens ?? new Uint8Array();
     message.discountPpm = object.discountPpm ?? 0;
     return message;
   }

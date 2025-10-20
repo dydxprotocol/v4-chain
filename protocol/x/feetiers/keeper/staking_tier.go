@@ -34,12 +34,8 @@ func (k Keeper) validateStakingTiers(ctx sdk.Context, stakingTiers []*types.Stak
 		// Validate staking levels
 		var prevMinStaked *big.Int
 		for i, level := range tier.Levels {
-			// Validate min staked tokens is a valid number
-			minStaked := new(big.Int)
-			if _, ok := minStaked.SetString(level.MinStakedBaseTokens, 10); !ok {
-				return fmt.Errorf("invalid min staked tokens for tier %s level %d: %s",
-					tier.FeeTierName, i, level.MinStakedBaseTokens)
-			}
+			// Get the min staked tokens as big.Int
+			minStaked := level.MinStakedBaseTokens.BigInt()
 
 			// Check that min staked is non-negative
 			if minStaked.Sign() < 0 {
