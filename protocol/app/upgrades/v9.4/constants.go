@@ -21,12 +21,22 @@ var (
 			{
 				ReqReferredVolumeQuoteQuantums: 0,
 				ReqStakedWholeCoins:            0,
-				TakerFeeSharePpm:               200_000,
+				TakerFeeSharePpm:               50_000,
 			},
 			{
-				ReqReferredVolumeQuoteQuantums: 2_000_000_000_000, // 1M volume
-				ReqStakedWholeCoins:            0,
-				TakerFeeSharePpm:               300_000,
+				ReqReferredVolumeQuoteQuantums: 1_000_000_000_000, // 1M volume
+				ReqStakedWholeCoins:            200,
+				TakerFeeSharePpm:               100_000,
+			},
+			{
+				ReqReferredVolumeQuoteQuantums: 5_000_000_000_000, // 5M volume
+				ReqStakedWholeCoins:            1_000,
+				TakerFeeSharePpm:               125_000,
+			},
+			{
+				ReqReferredVolumeQuoteQuantums: 25_000_000_000_000, // 25M volume
+				ReqStakedWholeCoins:            5_000,
+				TakerFeeSharePpm:               150_000,
 			},
 		},
 	}
@@ -41,8 +51,8 @@ var (
 		Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
 			{
 				Addresses: []string{
-					"dydx1affiliate1",
-					"dydx1affiliate2",
+					"dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4", // Carl
+					"dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs", // Dave
 				},
 				TakerFeeSharePpm: 200_000,
 			},
@@ -58,8 +68,8 @@ var (
 			},
 			{
 				ReqReferredVolumeQuoteQuantums: 1_000_000_000_000, // 1M volume
-				ReqStakedWholeCoins:            0,
-				TakerFeeSharePpm:               500_000,
+				ReqStakedWholeCoins:            200,
+				TakerFeeSharePpm:               400_000,
 			},
 		},
 	}

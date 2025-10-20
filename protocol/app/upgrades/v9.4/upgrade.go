@@ -60,10 +60,14 @@ func CreateUpgradeHandler(
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
-		// Set default affiliate tiers and parameters.
-		setDefaultAffiliateTiersForSlidingAffiliates(sdkCtx, affiliateKeeper)
-		setDefaultAffiliateParameters(sdkCtx, affiliateKeeper)
-		migrateAffiliateOverrides(sdkCtx, affiliateKeeper)
+		// // Set default affiliate tiers and parameters.
+		// setDefaultAffiliateTiersForSlidingAffiliates(sdkCtx, affiliateKeeper)
+
+		// // Set default affiliate parameters.
+		// setDefaultAffiliateParameters(sdkCtx, affiliateKeeper)
+
+		// // Migrate affiliate overrides.
+		// migrateAffiliateOverrides(sdkCtx, affiliateKeeper)
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }
