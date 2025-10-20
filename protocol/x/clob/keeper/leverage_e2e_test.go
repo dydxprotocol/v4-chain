@@ -19,10 +19,6 @@ import (
 // setupLeverageTest creates a test app with the necessary state for leverage testing
 func setupLeverageTest(t *testing.T) *testapp.TestApp {
 	tApp := testapp.NewTestAppBuilder(t).Build()
-
-	// Set up basic market data - use existing constants
-	// Markets, perpetuals, and liquidity tiers are already set up in the test app
-
 	return tApp
 }
 
@@ -33,10 +29,10 @@ func configureLeverage(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
-	leverage uint32,
+	imf_ppm uint32,
 ) {
 	leverageMap := map[uint32]uint32{
-		perpetualId: leverage,
+		perpetualId: imf_ppm,
 	}
 
 	err := tApp.App.ClobKeeper.UpdateLeverage(ctx, &subaccountId, leverageMap)
@@ -74,15 +70,15 @@ func TestLeverageKeeperSetup(t *testing.T) {
 
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)
-	leverage := uint32(5)
+	imf_ppm := uint32(50_000)
 
 	// Configure leverage first
-	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, leverage)
+	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, imf_ppm)
 
 	// Verify leverage was set
 	leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
 	require.True(t, exists)
-	require.Equal(t, leverage, leverageMap[perpetualId])
+	require.Equal(t, imf_ppm, leverageMap[perpetualId])
 
 	// Create a subaccount with some balance
 	createSubaccountWithBalance(tApp, ctx, subaccountId, big.NewInt(1000_000_000))
@@ -130,21 +126,21 @@ func TestLeverageBasicOrderPlacement(t *testing.T) {
 	// Test parameters
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)                   // BTC-USD
-	leverage := uint32(10)                     // 10x leverage
+	imf_ppm := uint32(100_000)                     // 10x leverage
 	initialBalance := big.NewInt(1000_000_000) // $1000 USDC (6 decimals)
 
 	// Set up subaccount with initial balance
 	createSubaccountWithBalance(tApp, ctx, subaccountId, initialBalance)
 
 	// Configure leverage
-	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, leverage)
+	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, imf_ppm)
 
 	// Verify leverage was set correctly
 	leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
 	require.True(t, exists)
-	require.Equal(t, leverage, leverageMap[perpetualId])
+	require.Equal(t, imf_ppm, leverageMap[perpetualId])
 
-	t.Logf("✅ Successfully configured and verified %dx leverage for subaccount", leverage)
+	t.Logf("✅ Successfully configured and verified %dx leverage for subaccount", imf_ppm)
 	t.Logf("   Subaccount: %v", subaccountId)
 	t.Logf("   Perpetual ID: %d", perpetualId)
 	t.Logf("   Initial balance: $%s", new(big.Int).Div(initialBalance, big.NewInt(1_000_000)))
@@ -160,23 +156,23 @@ func TestLeverageConfiguration(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		leverage uint32
+		imf_ppm uint32
 	}{
-		{"2x Leverage", 2},
-		{"10x Leverage", 10},
+		{"2x Leverage", 500_000},
+		{"10x Leverage", 100_000},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Configure leverage
-			configureLeverage(t, tApp, ctx, subaccountId, perpetualId, tc.leverage)
+			configureLeverage(t, tApp, ctx, subaccountId, perpetualId, tc.imf_ppm)
 
 			// Verify leverage was set correctly
 			leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
 			require.True(t, exists)
-			require.Equal(t, tc.leverage, leverageMap[perpetualId])
+			require.Equal(t, tc.imf_ppm, leverageMap[perpetualId])
 
-			t.Logf("✅ Successfully configured %dx leverage", tc.leverage)
+			t.Logf("✅ Successfully configured %dx leverage", tc.imf_ppm)
 		})
 	}
 }
@@ -190,13 +186,13 @@ func TestOrderPlacementFailsWithLeverageConfigured(t *testing.T) {
 	gotBob := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
 	require.Equal(t, gotAlice.AssetPositions, gotBob.AssetPositions, "Alice and Bob should have identical asset positions")
 
-	// Configure leverage for Alice: 2x on BTC perpetual
+	// Configure leverage for Alice: 1x on BTC perpetual
 	aliceLeverage := &clobtypes.MsgUpdateLeverage{
 		SubaccountId: &constants.Alice_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
 				ClobPairId: 0,
-				Leverage:   1,
+				ImfPpm:     1_000_000,
 			},
 		},
 	}

@@ -219,8 +219,8 @@ message MsgUpdateLiquidationsConfigResponse {}
 message LeverageEntry {
   // The clob pair ID.
   uint32 clob_pair_id = 1;
-  // The leverage amount.
-  uint32 leverage = 2;
+  // The user selected imf.
+  uint32 imf_ppm = 2;
 }
 
 // MsgUpdateLeverage is a request type used for updating leverage for

@@ -43,7 +43,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
-	leverage uint32,
+	imf_ppm uint32,
 ) (
 	risk margin.Risk,
 ) {
@@ -57,7 +57,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
-		leverage,
+		imf_ppm,
 	)
 	return margin.Risk{
 		NC:  nc,
@@ -74,7 +74,7 @@ func GetNetCollateralAndMarginRequirements(
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
 	quoteBalance *big.Int,
-	leverage uint32, // 0 means use default liquidity tier margins
+	imf_ppm uint32, // 0 means use default liquidity tier margins
 ) (
 	risk margin.Risk,
 ) {
@@ -83,7 +83,7 @@ func GetNetCollateralAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
-		leverage,
+		imf_ppm,
 	)
 	risk.NC.Add(risk.NC, quoteBalance)
 	return risk
@@ -119,7 +119,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	bigQuantums *big.Int,
-	leverage uint32, // 0 means use default liquidity tier margins
+	imf_ppm uint32, // 0 means use default liquidity tier margins
 ) (
 	bigInitialMarginQuoteQuantums *big.Int,
 	bigMaintenanceMarginQuoteQuantums *big.Int,
@@ -146,6 +146,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
 		bigQuoteQuantums,
 		big.NewInt(0), // pass in 0 as open interest to get base IMR.
+		big.NewInt(0), // pass in 0 to use the base IMR
 	)
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigMulPpm(
@@ -157,25 +158,8 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
 		bigQuoteQuantums,
 		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
+		lib.BigU(imf_ppm),
 	)
-
-	// Apply leverage scaling if configured
-	if leverage > 0 {
-		// Calculate max leverage: 1,000,000 / InitialMarginPpm
-		if liquidityTier.InitialMarginPpm == 0 {
-			panic("InitialMarginPpm cannot be zero for leverage calculation")
-		}
-		maxLeverage := lib.OneMillion / liquidityTier.InitialMarginPpm
-
-		// Scale IMR: baseIMR * (maxLeverage / userLeverage)
-		if leverage <= maxLeverage {
-			leverageRatio := maxLeverage / leverage
-			bigInitialMarginQuoteQuantums = new(big.Int).Mul(
-				bigInitialMarginQuoteQuantums,
-				big.NewInt(int64(leverageRatio)),
-			)
-		}
-	}
 
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }

@@ -121,7 +121,7 @@ type SubaccountsKeeper interface {
 		subaccountId *satypes.SubaccountId,
 		perpetualLeverage map[uint32]uint32,
 	) error
-	GetMaxLeverageForPerpetual(
+	GetMinImfForPerpetual(
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (uint32, error)

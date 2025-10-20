@@ -22,19 +22,19 @@ func (k Keeper) Leverage(
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	// Get leverage for the subaccount
-	leverage, exists := k.GetLeverage(ctx, &satypes.SubaccountId{
+	leverageMap, exists := k.GetLeverage(ctx, &satypes.SubaccountId{
 		Owner:  req.Owner,
 		Number: req.Number,
 	})
 	if !exists {
-		leverage = make(map[uint32]uint32)
+		leverageMap = make(map[uint32]uint32)
 	}
 
-	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverage))
-	for clobPairId, leverage := range leverage {
+	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverageMap))
+	for clobPairId, imf_ppm := range leverageMap {
 		clobPairLeverage = append(clobPairLeverage, &types.ClobPairLeverageInfo{
 			ClobPairId: clobPairId,
-			Leverage:   leverage,
+			ImfPpm:     imf_ppm,
 		})
 	}
 

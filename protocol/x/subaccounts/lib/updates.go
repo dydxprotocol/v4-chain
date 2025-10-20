@@ -367,10 +367,10 @@ func GetRiskForSubaccount(
 	for _, pos := range subaccount.PerpetualPositions {
 		perpInfo := perpInfos.MustGet(pos.PerpetualId)
 
-		// Get leverage for this perpetual (0 if not configured)
-		leverage := uint32(0)
+		// Get the configured imf for this perpetual (0 if not configured)
+		imf_ppm := uint32(0)
 		if leverageMap != nil {
-			leverage = leverageMap[pos.PerpetualId]
+			imf_ppm = leverageMap[pos.PerpetualId]
 		}
 
 		r := perplib.GetNetCollateralAndMarginRequirements(
@@ -379,7 +379,7 @@ func GetRiskForSubaccount(
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
 			pos.GetQuoteBalance(),
-			leverage,
+			imf_ppm,
 		)
 		risk.AddInPlace(r)
 	}

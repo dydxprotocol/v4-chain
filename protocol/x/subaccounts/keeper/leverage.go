@@ -6,7 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -58,8 +57,8 @@ func (k Keeper) UpdateLeverage(
 	perpetualLeverage map[uint32]uint32,
 ) error {
 	// Validate leverage against maximum allowed for each perpetual
-	for perpetualId, leverage := range perpetualLeverage {
-		maxLeverage, err := k.GetMaxLeverageForPerpetual(ctx, perpetualId)
+	for perpetualId, imf_ppm := range perpetualLeverage {
+		minImfPpm, err := k.GetMinImfForPerpetual(ctx, perpetualId)
 		if err != nil {
 			return errorsmod.Wrapf(
 				types.ErrInvalidLeverage,
@@ -69,12 +68,12 @@ func (k Keeper) UpdateLeverage(
 			)
 		}
 
-		if leverage > maxLeverage {
+		if imf_ppm < minImfPpm {
 			return errorsmod.Wrapf(
 				types.ErrLeverageExceedsMaximum,
-				"leverage %d exceeds maximum allowed %d for perpetual %d",
-				leverage,
-				maxLeverage,
+				"%d is less than minimum allowed imf (%d) for perpetual %d resulting in higher than allowed leverage",
+				imf_ppm,
+				minImfPpm,
 				perpetualId,
 			)
 		}
@@ -87,8 +86,8 @@ func (k Keeper) UpdateLeverage(
 	}
 
 	// Update with new leverage values
-	for perpetualId, leverage := range perpetualLeverage {
-		existingLeverage[perpetualId] = leverage
+	for perpetualId, imf_ppm := range perpetualLeverage {
+		existingLeverage[perpetualId] = imf_ppm
 	}
 
 	// Store updated leverage
@@ -96,10 +95,9 @@ func (k Keeper) UpdateLeverage(
 	return nil
 }
 
-// GetMaxLeverageForPerpetual calculates the maximum leverage allowed for a perpetual
+// GetMinImfForPerpetual returns the IMF ppm allowed for a perpetual
 // based on its liquidity tier's initial margin requirement.
-// Max leverage = 1,000,000 / initial_margin_ppm
-func (k Keeper) GetMaxLeverageForPerpetual(ctx sdk.Context, perpetualId uint32) (uint32, error) {
+func (k Keeper) GetMinImfForPerpetual(ctx sdk.Context, perpetualId uint32) (uint32, error) {
 	// Get the perpetual and its liquidity tier in one call
 	_, _, liquidityTier, err := k.perpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(ctx, perpetualId)
 	if err != nil {
@@ -111,6 +109,5 @@ func (k Keeper) GetMaxLeverageForPerpetual(ctx sdk.Context, perpetualId uint32) 
 		return 0, types.ErrInitialMarginPpmIsZero
 	}
 
-	maxLeverage := lib.OneMillion / liquidityTier.InitialMarginPpm
-	return maxLeverage, nil
+	return liquidityTier.InitialMarginPpm, nil
 }

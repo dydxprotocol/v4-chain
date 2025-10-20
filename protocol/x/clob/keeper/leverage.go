@@ -28,11 +28,3 @@ func (k Keeper) UpdateLeverage(
 ) error {
 	return k.subaccountsKeeper.UpdateLeverage(ctx, subaccountId, perpetualLeverage)
 }
-
-// GetMaxLeverageForPerpetual calculates the maximum leverage allowed for a perpetual
-// based on its liquidity tier's initial margin requirement.
-// Max leverage = 1,000,000 / initial_margin_ppm
-// Deprecated: Use subaccountsKeeper.GetMaxLeverageForPerpetual instead.
-func (k Keeper) GetMaxLeverageForPerpetual(ctx sdk.Context, perpetualId uint32) (uint32, error) {
-	return k.subaccountsKeeper.GetMaxLeverageForPerpetual(ctx, perpetualId)
-}

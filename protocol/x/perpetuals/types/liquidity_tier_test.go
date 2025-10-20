@@ -235,9 +235,9 @@ func BenchmarkGetInitialMarginQuoteQuantums(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums, oiLower)
-		_ = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums, oiUpper)
-		_ = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums, oiMiddle)
+		_ = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums, oiLower, big.NewInt(0))
+		_ = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums, oiUpper, big.NewInt(0))
+		_ = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums, oiMiddle, big.NewInt(0))
 	}
 }
 
@@ -357,7 +357,7 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 			if tc.openInterestNotional != nil {
 				openInterestNotional.Set(tc.openInterestNotional)
 			}
-			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums, openInterestNotional)
+			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums, openInterestNotional, big.NewInt(0))
 
 			require.Equal(t, tc.expectedInitialMarginQuoteQuantums, adjustedIMQuoteQuantums)
 		})

@@ -160,6 +160,5 @@ type ClobKeeper interface {
 	UpdateLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId, perpetualLeverage map[uint32]uint32) error
 	GetLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId) (map[uint32]uint32, bool)
 	RateLimitUpdateLeverage(ctx sdk.Context, msg *MsgUpdateLeverage) error
-	GetMaxLeverageForPerpetual(ctx sdk.Context, perpetualId uint32) (uint32, error)
 	GetSubaccountsKeeper() SubaccountsKeeper
 }

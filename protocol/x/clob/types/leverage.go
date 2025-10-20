@@ -28,7 +28,7 @@ func ValidateUpdateLeverageMsg(ctx sdk.Context, msg *MsgUpdateLeverage, clobKeep
 			return errorsmod.Wrap(ErrInvalidLeverage, "leverage entry cannot be nil")
 		}
 
-		if entry.Leverage == 0 {
+		if entry.ImfPpm == 0 {
 			return errorsmod.Wrap(
 				ErrInvalidLeverage,
 				fmt.Sprintf("leverage for clob pair %d cannot be zero", entry.ClobPairId),
@@ -68,7 +68,7 @@ func ValidateAndConstructPerpetualLeverageMap(
 	for _, entry := range msg.ClobPairLeverage {
 		clob, _ := clobKeeper.GetClobPair(ctx, ClobPairId(entry.ClobPairId))
 		perpetualId := clob.MustGetPerpetualId()
-		perpetualLeverageMap[perpetualId] = entry.Leverage
+		perpetualLeverageMap[perpetualId] = entry.ImfPpm
 	}
 
 	return perpetualLeverageMap, nil
