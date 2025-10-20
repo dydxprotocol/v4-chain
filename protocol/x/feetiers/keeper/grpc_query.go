@@ -105,3 +105,35 @@ func (k Keeper) AllMarketFeeDiscountParams(
 		Params: params,
 	}, nil
 }
+
+func (k Keeper) StakingTiers(
+	c context.Context,
+	req *types.QueryStakingTiersRequest,
+) (
+	*types.QueryStakingTiersResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	stakingTiers := k.GetAllStakingTiers(ctx)
+	return &types.QueryStakingTiersResponse{
+		StakingTiers: stakingTiers,
+	}, nil
+}
+
+func (k Keeper) UserStakingTier(
+	c context.Context,
+	req *types.QueryUserStakingTierRequest,
+) (
+	*types.QueryUserStakingTierResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	return nil, status.Error(codes.Unimplemented, "not implemented")
+}
