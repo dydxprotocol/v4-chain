@@ -110,15 +110,15 @@ export async function findAll(
   // Apply ordering with same expression
   let finalQuery = hourlyAggregateQuery;
   if (options.orderBy !== undefined) {
-  for (const [column, order] of options.orderBy) {
-    if (column === 'createdAtHeight') {
-      finalQuery = finalQuery.orderByRaw(`MAX("createdAtHeight"::bigint) ${order}`);
-    } else if (column === PnlColumns.createdAt) {
-      finalQuery = finalQuery.orderByRaw(`DATE_TRUNC('hour', "${column}") ${order}`);
-    } else {
-      finalQuery = finalQuery.orderBy(column as string, order);
+    for (const [column, order] of options.orderBy) {
+      if (column === 'createdAtHeight') {
+        finalQuery = finalQuery.orderByRaw(`MAX("createdAtHeight"::bigint) ${order}`);
+      } else if (column === PnlColumns.createdAt) {
+        finalQuery = finalQuery.orderByRaw(`DATE_TRUNC('hour', "${column}") ${order}`);
+      } else {
+        finalQuery = finalQuery.orderBy(column as string, order);
+      }
     }
-  }
   } else {
     finalQuery = finalQuery.orderByRaw('DATE_TRUNC(\'hour\', "createdAt") DESC');
   }
@@ -171,26 +171,30 @@ async function handleLimitAndPagination(
      * Also a casting of the ts type is required since the infer of the type
      * obtained from the count is not performed.
      */
-     const ModelClass = baseQuery.modelClass();
+    const ModelClass = baseQuery.modelClass();
     const aggregatedQueryKnex = baseQuery.clone().toKnexQuery();
-    
+
     // Build count query using Objection to preserve transaction
     const countQueryBuilder = ModelClass
       .query(Transaction.get(options.txId))
       .count('* as count')
       .from(aggregatedQueryKnex.as('subquery'))
       .first();
-    
-    const countResult = await countQueryBuilder as unknown as { count?: string | number } | undefined;
-    
-    const total = countResult?.count 
-      ? (typeof countResult.count === 'string' ? parseInt(countResult.count, 10) : countResult.count)
-      : 0;
-    
+
+    const countResult = await countQueryBuilder as unknown as { count?: string | number } |
+    undefined;
+
+    let total = 0;
+    if (countResult?.count) {
+      total = typeof countResult.count === 'string'
+        ? parseInt(countResult.count, 10)
+        : countResult.count as number;
+    }
+
     // Apply pagination
     const paginatedQuery = baseQuery.offset(offset).limit(limit);
     const results = (await paginatedQuery) as PnlFromDatabase[];
-     
+
     return {
       results,
       limit,
@@ -206,7 +210,7 @@ async function handleLimitAndPagination(
   }
 
   const results = (await query) as PnlFromDatabase[];
-  
+
   return {
     results,
   };
