@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType, QueryPerMarketFeeDiscountParamsRequest, QueryPerMarketFeeDiscountParamsResponseSDKType, QueryAllMarketFeeDiscountParamsRequest, QueryAllMarketFeeDiscountParamsResponseSDKType } from "./query";
+import { QueryPerpetualFeeParamsRequest, QueryPerpetualFeeParamsResponseSDKType, QueryUserFeeTierRequest, QueryUserFeeTierResponseSDKType, QueryPerMarketFeeDiscountParamsRequest, QueryPerMarketFeeDiscountParamsResponseSDKType, QueryAllMarketFeeDiscountParamsRequest, QueryAllMarketFeeDiscountParamsResponseSDKType, QueryStakingTiersRequest, QueryStakingTiersResponseSDKType, QueryUserStakingTierRequest, QueryUserStakingTierResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -13,6 +13,8 @@ export class LCDQueryClient {
     this.userFeeTier = this.userFeeTier.bind(this);
     this.perMarketFeeDiscountParams = this.perMarketFeeDiscountParams.bind(this);
     this.allMarketFeeDiscountParams = this.allMarketFeeDiscountParams.bind(this);
+    this.stakingTiers = this.stakingTiers.bind(this);
+    this.userStakingTier = this.userStakingTier.bind(this);
   }
   /* Queries the PerpetualFeeParams. */
 
@@ -50,6 +52,20 @@ export class LCDQueryClient {
   async allMarketFeeDiscountParams(_params: QueryAllMarketFeeDiscountParamsRequest = {}): Promise<QueryAllMarketFeeDiscountParamsResponseSDKType> {
     const endpoint = `dydxprotocol/v4/feetiers/market_fee_discount_params`;
     return await this.req.get<QueryAllMarketFeeDiscountParamsResponseSDKType>(endpoint);
+  }
+  /* Get all staking tiers */
+
+
+  async stakingTiers(_params: QueryStakingTiersRequest = {}): Promise<QueryStakingTiersResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/feetiers/staking_tiers`;
+    return await this.req.get<QueryStakingTiersResponseSDKType>(endpoint);
+  }
+  /* Get user's current staked amount and staking tier */
+
+
+  async userStakingTier(params: QueryUserStakingTierRequest): Promise<QueryUserStakingTierResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/feetiers/user_staking_tier/${params.address}`;
+    return await this.req.get<QueryUserStakingTierResponseSDKType>(endpoint);
   }
 
 }

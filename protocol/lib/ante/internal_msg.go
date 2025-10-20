@@ -96,6 +96,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*delaymsg.MsgDelayMessage,
 
 		// feetiers
+		*feetiers.MsgSetStakingTiers,
 		*feetiers.MsgUpdatePerpetualFeeParams,
 		*feetiers.MsgSetMarketFeeDiscountParams,
 
