@@ -47,7 +47,7 @@ func CmdUpdateLeverage() *cobra.Command {
 				}
 				clobPairLeverage = append(clobPairLeverage, &types.LeverageEntry{
 					ClobPairId: uint32(clobPairId),
-					ImfPpm:   imf_ppm,
+					ImfPpm:     imf_ppm,
 				})
 			}
 

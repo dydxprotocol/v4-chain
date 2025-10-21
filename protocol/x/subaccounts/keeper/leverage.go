@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,11 +22,19 @@ func (k Keeper) SetLeverage(ctx sdk.Context, subaccountId *types.SubaccountId, l
 	store := k.getLeverageStore(ctx)
 	key := leverageKey(subaccountId)
 
-	// Marshal and store the map using JSON
-	b, err := json.Marshal(leverageMap)
-	if err != nil {
-		panic(err)
+	var entries []*types.PerpetualLeverageEntry
+	for perpetualId, imfPpm := range leverageMap {
+		entries = append(entries, &types.PerpetualLeverageEntry{
+			PerpetualId: perpetualId,
+			ImfPpm:      imfPpm,
+		})
 	}
+
+	leverageData := &types.LeverageData{
+		Entries: entries,
+	}
+
+	b := k.cdc.MustMarshal(leverageData)
 	store.Set(key, b)
 }
 
@@ -42,9 +48,12 @@ func (k Keeper) GetLeverage(ctx sdk.Context, subaccountId *types.SubaccountId) (
 		return nil, false
 	}
 
-	var leverageMap map[uint32]uint32
-	if err := json.Unmarshal(b, &leverageMap); err != nil {
-		panic(err)
+	var leverageData types.LeverageData
+	k.cdc.MustUnmarshal(b, &leverageData)
+
+	leverageMap := make(map[uint32]uint32)
+	for _, entry := range leverageData.Entries {
+		leverageMap[entry.PerpetualId] = entry.ImfPpm
 	}
 
 	return leverageMap, true

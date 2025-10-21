@@ -357,7 +357,11 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 			if tc.openInterestNotional != nil {
 				openInterestNotional.Set(tc.openInterestNotional)
 			}
-			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums, openInterestNotional, big.NewInt(0))
+			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
+				tc.bigQuoteQuantums,
+				openInterestNotional,
+				big.NewInt(0), // no leverage configured
+			)
 
 			require.Equal(t, tc.expectedInitialMarginQuoteQuantums, adjustedIMQuoteQuantums)
 		})

@@ -270,8 +270,9 @@ func (k Keeper) getSettledUpdates(
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
 			settledSubaccount, fundingPayments = salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
-			// Only fetch leverage if there are perpetual updates (to avoid unnecessary gas consumption)
-			if len(u.PerpetualUpdates) > 0 {
+			// Only fetch leverage if there are perpetual updates or perpetual positions
+			// to avoid unnecessary gas consumption
+			if len(u.PerpetualUpdates) > 0 || len(settledSubaccount.PerpetualPositions) > 0 {
 				if leverage, found := k.GetLeverage(ctx, &u.SubaccountId); found {
 					leverageMap = leverage
 				}
@@ -281,8 +282,9 @@ func (k Keeper) getSettledUpdates(
 			idToLeverageMap[u.SubaccountId] = leverageMap
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
 		} else {
-			// Only reuse cached leverage map if there are perpetual updates
-			if len(u.PerpetualUpdates) > 0 {
+			// Reuse cached leverage map if there are perpetual updates
+			// or perpetual positions
+			if len(u.PerpetualUpdates) > 0 || len(settledSubaccount.PerpetualPositions) > 0 {
 				leverageMap = idToLeverageMap[u.SubaccountId]
 			}
 		}

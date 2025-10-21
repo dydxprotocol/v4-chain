@@ -322,7 +322,7 @@ var (
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
 				ClobPairId: 0,
-				ImfPpm:   5,
+				ImfPpm:     5,
 			},
 		},
 	}
@@ -331,7 +331,7 @@ var (
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
 				ClobPairId: 1,
-				ImfPpm:   10,
+				ImfPpm:     10,
 			},
 		},
 	}
@@ -340,7 +340,7 @@ var (
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
 				ClobPairId: 0,
-				ImfPpm:   3,
+				ImfPpm:     3,
 			},
 		},
 	}
@@ -349,7 +349,7 @@ var (
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
 				ClobPairId: 0,
-				ImfPpm:   5,
+				ImfPpm:     5,
 			},
 		},
 	}

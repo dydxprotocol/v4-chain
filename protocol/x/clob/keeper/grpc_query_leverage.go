@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -31,14 +32,15 @@ func (k Keeper) Leverage(
 	}
 
 	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverageMap))
-	for clobPairId, imf_ppm := range leverageMap {
+	for perpetualId, imf_ppm := range leverageMap {
+		clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, errorsmod.Wrap(err, "failed to get clob pair id for perpetual").Error())
+		}
 		clobPairLeverage = append(clobPairLeverage, &types.ClobPairLeverageInfo{
-			ClobPairId: clobPairId,
+			ClobPairId: clobPairId.ToUint32(),
 			ImfPpm:     imf_ppm,
 		})
 	}
-
-	return &types.QueryLeverageResponse{
-		ClobPairLeverage: clobPairLeverage,
-	}, nil
+	return &types.QueryLeverageResponse{ClobPairLeverage: clobPairLeverage}, nil
 }

@@ -126,7 +126,7 @@ func TestLeverageBasicOrderPlacement(t *testing.T) {
 	// Test parameters
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)                   // BTC-USD
-	imf_ppm := uint32(100_000)                     // 10x leverage
+	imf_ppm := uint32(100_000)                 // 10x leverage
 	initialBalance := big.NewInt(1000_000_000) // $1000 USDC (6 decimals)
 
 	// Set up subaccount with initial balance
@@ -155,7 +155,7 @@ func TestLeverageConfiguration(t *testing.T) {
 	perpetualId := uint32(0)
 
 	testCases := []struct {
-		name     string
+		name    string
 		imf_ppm uint32
 	}{
 		{"2x Leverage", 500_000},
