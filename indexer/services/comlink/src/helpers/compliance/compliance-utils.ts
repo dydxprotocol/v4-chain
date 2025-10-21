@@ -2,7 +2,7 @@ import {
   ExtendedSecp256k1Signature, Secp256k1, ripemd160, sha256,
 } from '@cosmjs/crypto';
 import { toBech32 } from '@cosmjs/encoding';
-import { CountryHeaders, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { GeoOriginHeaders, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
 import { ComplianceReason } from '@dydxprotocol-indexer/postgres';
 import { verifyADR36Amino } from '@keplr-wallet/cosmos';
 import express from 'express';
@@ -25,8 +25,10 @@ export enum AccountVerificationRequiredAction {
   UPDATE_CODE = 'UPDATE_CODE',
 }
 
+// TODO: deprecate this pattern.
+// Only the origin is pertinent, so store country or region, rather than encoding them.
 export function getGeoComplianceReason(
-  headers: CountryHeaders,
+  headers: GeoOriginHeaders,
 ): ComplianceReason | undefined {
   if (isRestrictedCountryHeaders(headers)) {
     const country: string | undefined = headers['cf-ipcountry'];

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -57,4 +58,82 @@ func (k Keeper) UserFeeTier(
 		Index: index,
 		Tier:  tier,
 	}, nil
+}
+
+// PerMarketFeeDiscountParams processes a query for fee discount parameters for a specific market/CLOB pair.
+func (k Keeper) PerMarketFeeDiscountParams(
+	c context.Context,
+	req *types.QueryPerMarketFeeDiscountParamsRequest,
+) (
+	*types.QueryPerMarketFeeDiscountParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	params, err := k.GetPerMarketFeeDiscountParams(ctx, req.ClobPairId)
+	if err != nil {
+		if errors.Is(err, types.ErrMarketFeeDiscountNotFound) {
+			return nil, status.Error(codes.NotFound, "fee discount not found for the specified market/CLOB pair")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get per-market fee discount: %v", err)
+	}
+
+	return &types.QueryPerMarketFeeDiscountParamsResponse{
+		Params: params,
+	}, nil
+}
+
+// AllMarketFeeDiscountParams processes a query for all market fee discount parameters.
+func (k Keeper) AllMarketFeeDiscountParams(
+	c context.Context,
+	req *types.QueryAllMarketFeeDiscountParamsRequest,
+) (
+	*types.QueryAllMarketFeeDiscountParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	params := k.GetAllMarketFeeDiscountParams(ctx)
+
+	return &types.QueryAllMarketFeeDiscountParamsResponse{
+		Params: params,
+	}, nil
+}
+
+func (k Keeper) StakingTiers(
+	c context.Context,
+	req *types.QueryStakingTiersRequest,
+) (
+	*types.QueryStakingTiersResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	stakingTiers := k.GetAllStakingTiers(ctx)
+	return &types.QueryStakingTiersResponse{
+		StakingTiers: stakingTiers,
+	}, nil
+}
+
+func (k Keeper) UserStakingTier(
+	c context.Context,
+	req *types.QueryUserStakingTierRequest,
+) (
+	*types.QueryUserStakingTierResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }

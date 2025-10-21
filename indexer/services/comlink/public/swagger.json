@@ -1791,6 +1791,40 @@
         "type": "object",
         "additionalProperties": false
       },
+      "AppleLoginResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "encodedPayload": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AppleLoginRedirectRequest": {
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "code"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "MegavaultHistoricalPnlResponse": {
         "properties": {
           "megavaultPnl": {
@@ -4194,6 +4228,36 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/turnkey/appleLoginRedirect": {
+      "post": {
+        "operationId": "AppleLoginRedirect",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppleLoginResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Handles Apple login redirect from Apple's authorization server\nExchanges authorization code for ID token and processes user login/signup",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleLoginRedirectRequest"
               }
             }
           }
