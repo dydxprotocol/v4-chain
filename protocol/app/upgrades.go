@@ -29,6 +29,7 @@ func (app *App) setupUpgradeHandlers() {
 		v_9_4.UpgradeName,
 		v_9_4.CreateUpgradeHandler(
 			app.ModuleManager,
+			app.AffiliateKeeper,
 			app.configurator,
 		),
 	)
