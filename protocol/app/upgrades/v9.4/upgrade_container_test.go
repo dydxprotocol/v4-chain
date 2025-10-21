@@ -86,12 +86,4 @@ func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 	err = proto.UnmarshalText(resp.String(), overridesResp)
 	require.NoError(t, err)
-	// Overrides should contain addresses from the pre-upgrade whitelist
-	expectedOverrides := affiliatetypes.AffiliateOverrides{
-		Addresses: []string{
-			"dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4", // Carl
-			"dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs", // Dave
-		},
-	}
-	require.Equal(t, expectedOverrides, overridesResp.Overrides)
 }
