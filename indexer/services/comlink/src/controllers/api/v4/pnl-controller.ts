@@ -80,13 +80,13 @@ class PnlController extends Controller {
     let pnlData: PaginationFromDatabase<PnlFromDatabase>;
 
     if (daily === true) {
-      pnlData = await PnlTable.findAllDailyPnl(
+      pnlData = await PnlTable.findAllDailyAggregate(
         queryParams,
         [QueryableField.LIMIT],
         DEFAULT_POSTGRES_OPTIONS,
       );
     } else {
-      pnlData = await PnlTable.findAll(
+      pnlData = await PnlTable.findAllHourlyAggregate(
         queryParams,
         [QueryableField.LIMIT],
         {
@@ -139,13 +139,13 @@ class PnlController extends Controller {
     let pnlData: PaginationFromDatabase<PnlFromDatabase>;
 
     if (daily === true) {
-      pnlData = await PnlTable.findAllDailyPnl(
+      pnlData = await PnlTable.findAllDailyAggregate(
         queryParams,
         [QueryableField.LIMIT],
         DEFAULT_POSTGRES_OPTIONS,
       );
     } else {
-      pnlData = await PnlTable.findAll(
+      pnlData = await PnlTable.findAllHourlyAggregate(
         queryParams,
         [QueryableField.LIMIT],
         {

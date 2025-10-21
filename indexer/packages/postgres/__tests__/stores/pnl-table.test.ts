@@ -67,7 +67,7 @@ describe('Pnl store', () => {
     await Promise.all(records.map((record) => PnlTable.create(record)));
 
     // Get hourly aggregated records
-    const hourlyResults = await PnlTable.findAll(
+    const hourlyResults = await PnlTable.findAllHourlyAggregate(
       { subaccountId: [defaultSubaccountId] },
       [],
       {},
@@ -116,7 +116,7 @@ describe('Pnl store', () => {
     await Promise.all(records.map((record) => PnlTable.create(record)));
 
     // Get aggregated hourly records for all subaccounts
-    const hourlyResults = await PnlTable.findAll(
+    const hourlyResults = await PnlTable.findAllHourlyAggregate(
       { subaccountId: subaccountIds },
       [],
       {},
@@ -174,7 +174,7 @@ describe('Pnl store', () => {
     await Promise.all(records.map((record) => PnlTable.create(record)));
 
     // Test with pagination - first page (3 records)
-    const hourlyPage1 = await PnlTable.findAll(
+    const hourlyPage1 = await PnlTable.findAllHourlyAggregate(
       {
         subaccountId: subaccountIds,
         page: 1,
@@ -190,7 +190,7 @@ describe('Pnl store', () => {
     expect(hourlyPage1.offset).toBe(0);
 
     // Test with pagination - second page (3 records)
-    const hourlyPage2 = await PnlTable.findAll(
+    const hourlyPage2 = await PnlTable.findAllHourlyAggregate(
       {
         subaccountId: subaccountIds,
         page: 2,
@@ -204,7 +204,7 @@ describe('Pnl store', () => {
     expect(hourlyPage2.offset).toBe(3);
 
     // Test with pagination - third page (remaining records)
-    const hourlyPage3 = await PnlTable.findAll(
+    const hourlyPage3 = await PnlTable.findAllHourlyAggregate(
       {
         subaccountId: subaccountIds,
         page: 3,
@@ -247,7 +247,7 @@ describe('Pnl store', () => {
 
     // Test with time range filter - createdOnOrAfter
     const startDate = new Date('2023-01-01T12:00:00.000Z'); // Start from hour 3 (noon on day 1)
-    const hourlyWithStartDate = await PnlTable.findAll(
+    const hourlyWithStartDate = await PnlTable.findAllHourlyAggregate(
       {
         subaccountId: subaccountIds,
         createdOnOrAfter: startDate.toISOString(),
@@ -260,7 +260,7 @@ describe('Pnl store', () => {
     expect(hourlyWithStartDate.results.length).toBe(9);
 
     // Test with height filters
-    const hourlyWithHeightRange = await PnlTable.findAll(
+    const hourlyWithHeightRange = await PnlTable.findAllHourlyAggregate(
       {
         subaccountId: subaccountIds,
         createdOnOrAfterHeight: '300', // Start from hour 3
@@ -326,7 +326,7 @@ describe('Pnl store', () => {
     await Promise.all(records.map((record) => PnlTable.create(record)));
 
     // Get daily records
-    const dailyResults = await PnlTable.findAllDailyPnl(
+    const dailyResults = await PnlTable.findAllDailyAggregate(
       { subaccountId: [defaultSubaccountId] },
       [],
       {},
@@ -399,7 +399,7 @@ describe('Pnl store', () => {
     await Promise.all(records.map((record) => PnlTable.create(record)));
 
     // Get aggregated daily records for all subaccounts
-    const dailyResults = await PnlTable.findAllDailyPnl(
+    const dailyResults = await PnlTable.findAllDailyAggregate(
       { subaccountId: subaccountIds },
       [],
       {},
@@ -461,7 +461,7 @@ describe('Pnl store', () => {
     await Promise.all(records.map((record) => PnlTable.create(record)));
 
     // Test with pagination - first page (2 records)
-    const dailyPage1 = await PnlTable.findAllDailyPnl(
+    const dailyPage1 = await PnlTable.findAllDailyAggregate(
       {
         subaccountId: subaccountIds,
         page: 1,
@@ -477,7 +477,7 @@ describe('Pnl store', () => {
     expect(dailyPage1.offset).toBe(0);
 
     // Test with pagination - second page (2 records)
-    const dailyPage2 = await PnlTable.findAllDailyPnl(
+    const dailyPage2 = await PnlTable.findAllDailyAggregate(
       {
         subaccountId: subaccountIds,
         page: 2,
@@ -491,7 +491,7 @@ describe('Pnl store', () => {
     expect(dailyPage2.offset).toBe(2);
 
     // Test with pagination - third page (should have the oldest data)
-    const dailyPage3 = await PnlTable.findAllDailyPnl(
+    const dailyPage3 = await PnlTable.findAllDailyAggregate(
       {
         subaccountId: subaccountIds,
         page: 3,
@@ -530,7 +530,7 @@ describe('Pnl store', () => {
 
     // Test with date range filter - createdOnOrAfter
     const startDate = new Date('2023-01-03T00:00:00.000Z');
-    const dailyWithStartDate = await PnlTable.findAllDailyPnl(
+    const dailyWithStartDate = await PnlTable.findAllDailyAggregate(
       {
         subaccountId: subaccountIds,
         createdOnOrAfter: startDate.toISOString(),
@@ -543,7 +543,7 @@ describe('Pnl store', () => {
     expect(dailyWithStartDate.results.length).toBe(3);
 
     // Test with height filters
-    const dailyWithHeightRange = await PnlTable.findAllDailyPnl(
+    const dailyWithHeightRange = await PnlTable.findAllDailyAggregate(
       {
         subaccountId: subaccountIds,
         createdOnOrAfterHeight: '2000',
