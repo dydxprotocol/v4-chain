@@ -28,10 +28,10 @@ func ValidateUpdateLeverageMsg(ctx sdk.Context, msg *MsgUpdateLeverage, clobKeep
 			return errorsmod.Wrap(ErrInvalidLeverage, "leverage entry cannot be nil")
 		}
 
-		if entry.ImfPpm == 0 {
+		if entry.ImfPpm == 0 || entry.ImfPpm > 1_000_000 {
 			return errorsmod.Wrap(
 				ErrInvalidLeverage,
-				fmt.Sprintf("leverage for clob pair %d cannot be zero", entry.ClobPairId),
+				fmt.Sprintf("imf ppm for clob pair %d must be between (0, 1,000,000]", entry.ClobPairId),
 			)
 		}
 
