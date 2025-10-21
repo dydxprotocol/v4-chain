@@ -16,10 +16,9 @@ BEGIN
     IF pos_size_before IS NULL OR pos_size_before = 0 THEN
         -- opening trade: only fees realize
         UPDATE perpetual_positions
-           SET "totalRealizedPnl" =
-                 (COALESCE(NULLIF("totalRealizedPnl",'')::numeric, 0)
-                  + COALESCE(fill_fee, 0))::text
-         WHERE "id" = position_id;
+            SET "totalRealizedPnl" =
+                COALESCE("totalRealizedPnl", 0) - COALESCE(fill_fee, 0)
+            WHERE "id" = position_id;
         RETURN;
     END IF;
 
@@ -29,10 +28,9 @@ BEGIN
     IF NOT is_reducing THEN
         -- increasing: fees only
         UPDATE perpetual_positions
-           SET "totalRealizedPnl" =
-                 (COALESCE(NULLIF("totalRealizedPnl",'')::numeric, 0)
-                  + COALESCE(fill_fee, 0))::text
-         WHERE "id" = position_id;
+            SET "totalRealizedPnl" =
+                COALESCE("totalRealizedPnl", 0) - COALESCE(fill_fee, 0)
+            WHERE "id" = position_id;
         RETURN;
     END IF;
 
@@ -45,10 +43,8 @@ BEGIN
     END IF;
 
     UPDATE perpetual_positions
-       SET "totalRealizedPnl" =
-             (COALESCE(NULLIF("totalRealizedPnl",'')::numeric, 0)
-              + COALESCE(pnl, 0)
-              + COALESCE(fill_fee, 0))::text
-     WHERE "id" = position_id;
+        SET "totalRealizedPnl" =
+            COALESCE("totalRealizedPnl", 0) + COALESCE(pnl, 0) - COALESCE(fill_fee, 0)
+        WHERE "id" = position_id;
 END;
 $$ LANGUAGE plpgsql;

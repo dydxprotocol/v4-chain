@@ -591,9 +591,9 @@ export async function expectFillInDatabase({
   builderFee = null,
   orderRouterAddress = null,
   orderRouterFee = null,
-  positionSideBefore = null,
-  entryPriceBefore = null,
-  positionSizeBefore = null,
+  positionSideBefore,
+  entryPriceBefore,
+  positionSizeBefore,
 }: {
   subaccountId: string,
   clientId: string,
@@ -646,9 +646,9 @@ export async function expectFillInDatabase({
     builderFee,
     orderRouterAddress,
     orderRouterFee,
-    positionSideBefore,
-    positionSizeBefore,
-    entryPriceBefore,
+    ...(positionSideBefore ? { positionSideBefore } : {}),
+    ...(positionSizeBefore ? { positionSizeBefore } : {}),
+    ...(entryPriceBefore ? { entryPriceBefore } : {}),
   }));
 }
 
@@ -687,7 +687,6 @@ export async function expectOrderInDatabase({
   interval,
   priceTolerance,
   orderType,
-  totalRealizedPnl,
 }: {
   subaccountId: string,
   clientId: string,
@@ -711,7 +710,6 @@ export async function expectOrderInDatabase({
   interval?: number,
   priceTolerance?: number,
   orderType?: OrderType,
-  totalRealizedPnl?: string,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -741,7 +739,6 @@ export async function expectOrderInDatabase({
     duration: duration ?? null,
     interval: interval ?? null,
     priceTolerance: priceTolerance ?? null,
-    totalRealizedPnl: totalRealizedPnl ?? null,
   }));
 }
 
