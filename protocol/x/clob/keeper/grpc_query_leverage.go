@@ -23,7 +23,7 @@ func (k Keeper) Leverage(
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	// Get leverage for the subaccount
-	leverageMap, exists := k.GetLeverage(ctx, &satypes.SubaccountId{
+	leverageMap, exists := k.subaccountsKeeper.GetLeverage(ctx, &satypes.SubaccountId{
 		Owner:  req.Owner,
 		Number: req.Number,
 	})

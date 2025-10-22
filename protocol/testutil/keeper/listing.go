@@ -174,8 +174,6 @@ func ListingKeepers(
 				transientStoreKey,
 			)
 
-			// No longer need to set leverageKeeper reference - leverage is now stored directly in subaccounts
-
 			// Create the listing keeper
 			keeper, storeKey, _ = createListingKeeper(
 				stateStore,

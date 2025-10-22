@@ -35,7 +35,7 @@ func configureLeverage(
 		perpetualId: custom_imf_ppm,
 	}
 
-	err := tApp.App.ClobKeeper.UpdateLeverage(ctx, &subaccountId, leverageMap)
+	err := tApp.App.SubaccountsKeeper.UpdateLeverage(ctx, &subaccountId, leverageMap)
 	require.NoError(t, err)
 }
 
@@ -76,7 +76,7 @@ func TestLeverageKeeperSetup(t *testing.T) {
 	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, custom_imf_ppm)
 
 	// Verify leverage was set
-	leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
+	leverageMap, exists := tApp.App.SubaccountsKeeper.GetLeverage(ctx, &subaccountId)
 	require.True(t, exists)
 	require.Equal(t, custom_imf_ppm, leverageMap[perpetualId])
 
@@ -136,7 +136,7 @@ func TestLeverageBasicOrderPlacement(t *testing.T) {
 	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, custom_imf_ppm)
 
 	// Verify leverage was set correctly
-	leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
+	leverageMap, exists := tApp.App.SubaccountsKeeper.GetLeverage(ctx, &subaccountId)
 	require.True(t, exists)
 	require.Equal(t, custom_imf_ppm, leverageMap[perpetualId])
 
@@ -168,7 +168,7 @@ func TestLeverageConfiguration(t *testing.T) {
 			configureLeverage(t, tApp, ctx, subaccountId, perpetualId, tc.custom_imf_ppm)
 
 			// Verify leverage was set correctly
-			leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
+			leverageMap, exists := tApp.App.SubaccountsKeeper.GetLeverage(ctx, &subaccountId)
 			require.True(t, exists)
 			require.Equal(t, tc.custom_imf_ppm, leverageMap[perpetualId])
 

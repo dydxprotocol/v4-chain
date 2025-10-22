@@ -456,14 +456,14 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		marketPrice,
 		liquidityTier,
 		psBig,
-		0, // No leverage for liquidations
+		0, // No custom IMF for liquidations
 	)
 	riskPosNew := perplib.GetPositionNetNotionalValueAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,
 		new(big.Int).Add(psBig, deltaQuantums),
-		0, // No leverage for liquidations
+		0, // No custom IMF for liquidations
 	)
 	// `DMMR = PMMRAD - PMMR`, where `PMMRAD` is the perpetual's maintenance margin requirement
 	// with a position size of `PS + deltaQuantums`.
@@ -548,7 +548,7 @@ func (k Keeper) GetFillablePrice(
 		marketPrice,
 		liquidityTier,
 		psBig,
-		0, // No leverage for liquidations
+		0, // No custom IMF for liquidations
 	)
 
 	riskTotal, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(

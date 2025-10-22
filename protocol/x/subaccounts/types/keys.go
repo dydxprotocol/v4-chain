@@ -27,5 +27,5 @@ const (
 	SafetyHeapLengthPrefix            = "Len/"
 
 	// Leverage
-	LeverageKeyPrefix = "Leverage:"
+	LeverageKeyPrefix = "Lev:"
 )

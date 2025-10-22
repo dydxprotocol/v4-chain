@@ -11,7 +11,7 @@ type SettledUpdate struct {
 	AssetUpdates []AssetUpdate
 	// A list of changes to make to any `PerpetualPositions` in the `Subaccount`.
 	PerpetualUpdates []PerpetualUpdate
-	// Leverage configuration for this subaccount (perpetualId -> leverage).
+	// Leverage configuration for this subaccount (perpetualId -> custom imf).
 	// nil means no leverage configured (use default margin requirements).
 	LeverageMap map[uint32]uint32
 }
