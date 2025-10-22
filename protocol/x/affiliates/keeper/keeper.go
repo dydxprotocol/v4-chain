@@ -251,7 +251,7 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 		}
 		// Check if the tiers are strictly increasing.
 		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
-			tiers[i].ReqStakedWholeCoins <= tiers[i-1].ReqStakedWholeCoins {
+			tiers[i].ReqStakedWholeCoins < tiers[i-1].ReqStakedWholeCoins {
 			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
 				"tiers values must be strictly increasing")
 		}

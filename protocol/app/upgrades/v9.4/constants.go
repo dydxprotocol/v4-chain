@@ -42,9 +42,9 @@ var (
 	}
 
 	UpdatedAffiliateParameters = affiliatetypes.AffiliateParameters{
-		Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums:   1_000_000_000_000, // 10M volume
+		Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums:   1_000_000_000_000, // 1M volume
 		RefereeMinimumFeeTierIdx:                                  1,
-		Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 1_000_000_000, // 10k volume
+		Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 10_000_000_000, // 10k volume
 	}
 
 	UpdatedAffiliateTiers = affiliatetypes.AffiliateTiers{
