@@ -35,14 +35,11 @@
           "req_referred_volume_quote_quantums": "25000000000000",
           "req_staked_whole_coins": 5000,
           "taker_fee_share_ppm": 150000
-<<<<<<< HEAD
-=======
         },
         {
           "req_referred_volume_quote_quantums": "50000000000000",
           "req_staked_whole_coins": 1e+08,
           "taker_fee_share_ppm": 250000
->>>>>>> c29eea29 (Dont attribute new revenue if user exceeds 30d max volume and deprecate AffiliateWhitelist (#3109))
         }
       ]
     }

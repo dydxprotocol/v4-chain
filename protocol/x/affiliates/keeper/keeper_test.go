@@ -1016,8 +1016,6 @@ func TestGetTierForAffiliateEmptyTiers(t *testing.T) {
 	require.Equal(t, uint32(0), tierLevel)
 	require.Equal(t, uint32(0), feeSharePpm)
 }
-<<<<<<< HEAD
-=======
 
 func TestUpdateAffiliateParameters(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
@@ -1124,4 +1122,3 @@ func TestOnStatsExpiredHook(t *testing.T) {
 		require.Equal(t, tc.expectedReferredVolume, referredVolume)
 	}
 }
->>>>>>> c29eea29 (Dont attribute new revenue if user exceeds 30d max volume and deprecate AffiliateWhitelist (#3109))

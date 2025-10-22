@@ -292,6 +292,190 @@ func (m *MsgUpdateAffiliateWhitelistResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateAffiliateWhitelistResponse proto.InternalMessageInfo
 
+// Message to update affiliate program parameters
+type MsgUpdateAffiliateParameters struct {
+	// Authority sending this message. Will be sent by gov
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Affiliate program parameters
+	AffiliateParameters AffiliateParameters `protobuf:"bytes,2,opt,name=affiliate_parameters,json=affiliateParameters,proto3" json:"affiliate_parameters"`
+}
+
+func (m *MsgUpdateAffiliateParameters) Reset()         { *m = MsgUpdateAffiliateParameters{} }
+func (m *MsgUpdateAffiliateParameters) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateAffiliateParameters) ProtoMessage()    {}
+func (*MsgUpdateAffiliateParameters) Descriptor() ([]byte, []int) {
+	return fileDescriptor_41c2f092a0ec6d7f, []int{6}
+}
+func (m *MsgUpdateAffiliateParameters) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateAffiliateParameters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateAffiliateParameters.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateAffiliateParameters) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAffiliateParameters.Merge(m, src)
+}
+func (m *MsgUpdateAffiliateParameters) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateAffiliateParameters) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAffiliateParameters.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateAffiliateParameters proto.InternalMessageInfo
+
+func (m *MsgUpdateAffiliateParameters) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateAffiliateParameters) GetAffiliateParameters() AffiliateParameters {
+	if m != nil {
+		return m.AffiliateParameters
+	}
+	return AffiliateParameters{}
+}
+
+// Response to MsgUpdateAffiliateParameters
+type MsgUpdateAffiliateParametersResponse struct {
+}
+
+func (m *MsgUpdateAffiliateParametersResponse) Reset()         { *m = MsgUpdateAffiliateParametersResponse{} }
+func (m *MsgUpdateAffiliateParametersResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateAffiliateParametersResponse) ProtoMessage()    {}
+func (*MsgUpdateAffiliateParametersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_41c2f092a0ec6d7f, []int{7}
+}
+func (m *MsgUpdateAffiliateParametersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateAffiliateParametersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateAffiliateParametersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateAffiliateParametersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAffiliateParametersResponse.Merge(m, src)
+}
+func (m *MsgUpdateAffiliateParametersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateAffiliateParametersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAffiliateParametersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateAffiliateParametersResponse proto.InternalMessageInfo
+
+// Message to update affiliate overrides
+type MsgUpdateAffiliateOverrides struct {
+	// Authority sending this message. Will be sent by gov
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Addresses that automatically have the maximum affiliate tier
+	AffiliateOverrides AffiliateOverrides `protobuf:"bytes,2,opt,name=affiliate_overrides,json=affiliateOverrides,proto3" json:"affiliate_overrides"`
+}
+
+func (m *MsgUpdateAffiliateOverrides) Reset()         { *m = MsgUpdateAffiliateOverrides{} }
+func (m *MsgUpdateAffiliateOverrides) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateAffiliateOverrides) ProtoMessage()    {}
+func (*MsgUpdateAffiliateOverrides) Descriptor() ([]byte, []int) {
+	return fileDescriptor_41c2f092a0ec6d7f, []int{8}
+}
+func (m *MsgUpdateAffiliateOverrides) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateAffiliateOverrides) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateAffiliateOverrides.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateAffiliateOverrides) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAffiliateOverrides.Merge(m, src)
+}
+func (m *MsgUpdateAffiliateOverrides) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateAffiliateOverrides) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAffiliateOverrides.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateAffiliateOverrides proto.InternalMessageInfo
+
+func (m *MsgUpdateAffiliateOverrides) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateAffiliateOverrides) GetAffiliateOverrides() AffiliateOverrides {
+	if m != nil {
+		return m.AffiliateOverrides
+	}
+	return AffiliateOverrides{}
+}
+
+// Response to MsgUpdateAffiliateOverrides
+type MsgUpdateAffiliateOverridesResponse struct {
+}
+
+func (m *MsgUpdateAffiliateOverridesResponse) Reset()         { *m = MsgUpdateAffiliateOverridesResponse{} }
+func (m *MsgUpdateAffiliateOverridesResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateAffiliateOverridesResponse) ProtoMessage()    {}
+func (*MsgUpdateAffiliateOverridesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_41c2f092a0ec6d7f, []int{9}
+}
+func (m *MsgUpdateAffiliateOverridesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateAffiliateOverridesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateAffiliateOverridesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateAffiliateOverridesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAffiliateOverridesResponse.Merge(m, src)
+}
+func (m *MsgUpdateAffiliateOverridesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateAffiliateOverridesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAffiliateOverridesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateAffiliateOverridesResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRegisterAffiliate)(nil), "dydxprotocol.affiliates.MsgRegisterAffiliate")
 	proto.RegisterType((*MsgRegisterAffiliateResponse)(nil), "dydxprotocol.affiliates.MsgRegisterAffiliateResponse")
@@ -299,42 +483,53 @@ func init() {
 	proto.RegisterType((*MsgUpdateAffiliateTiersResponse)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse")
 	proto.RegisterType((*MsgUpdateAffiliateWhitelist)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist")
 	proto.RegisterType((*MsgUpdateAffiliateWhitelistResponse)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse")
+	proto.RegisterType((*MsgUpdateAffiliateParameters)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateParameters")
+	proto.RegisterType((*MsgUpdateAffiliateParametersResponse)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse")
+	proto.RegisterType((*MsgUpdateAffiliateOverrides)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateOverrides")
+	proto.RegisterType((*MsgUpdateAffiliateOverridesResponse)(nil), "dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/affiliates/tx.proto", fileDescriptor_41c2f092a0ec6d7f) }
 
 var fileDescriptor_41c2f092a0ec6d7f = []byte{
-	// 473 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x4c, 0x4b, 0xcb, 0xcc, 0xc9, 0x4c,
-	0x2c, 0x49, 0x2d, 0xd6, 0x2f, 0xa9, 0xd0, 0x03, 0x0b, 0x0b, 0x89, 0x23, 0xab, 0xd0, 0x43, 0xa8,
-	0x90, 0x92, 0x4c, 0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x07, 0xcb, 0xe9, 0x43, 0x38, 0x10, 0x3d,
-	0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x10, 0x71, 0x10, 0x0b, 0x2a, 0xaa, 0x81, 0xcb, 0x2e, 0x04,
-	0x13, 0xaa, 0x52, 0x1c, 0x62, 0x9a, 0x7e, 0x6e, 0x71, 0xba, 0x7e, 0x99, 0x21, 0x88, 0x82, 0x48,
-	0x28, 0xcd, 0x60, 0xe4, 0x12, 0xf1, 0x2d, 0x4e, 0x0f, 0x4a, 0x4d, 0xcf, 0x2c, 0x2e, 0x49, 0x2d,
-	0x72, 0x84, 0x69, 0x14, 0x32, 0xe2, 0x62, 0x2f, 0x4a, 0x4d, 0x4b, 0x2d, 0x4a, 0x4d, 0x95, 0x60,
-	0x54, 0x60, 0xd4, 0xe0, 0x74, 0x92, 0xb8, 0xb4, 0x45, 0x57, 0x04, 0xea, 0x28, 0xc7, 0x94, 0x94,
-	0xa2, 0xd4, 0xe2, 0xe2, 0xe0, 0x92, 0xa2, 0xcc, 0xbc, 0xf4, 0x20, 0x98, 0x42, 0x21, 0x33, 0x2e,
-	0x4e, 0xb8, 0xcd, 0x12, 0x4c, 0x04, 0x74, 0x21, 0x94, 0x5a, 0x89, 0x74, 0x2c, 0x90, 0x67, 0x78,
-	0xb1, 0x40, 0x9e, 0xa1, 0xe9, 0xf9, 0x06, 0x2d, 0x98, 0x69, 0x4a, 0x72, 0x5c, 0x32, 0xd8, 0x5c,
-	0x16, 0x94, 0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0xaa, 0xb4, 0x8c, 0x91, 0x4b, 0xdc, 0xb7, 0x38,
-	0x3d, 0xb4, 0x20, 0x25, 0xb1, 0x24, 0x15, 0x2e, 0x1d, 0x92, 0x99, 0x5a, 0x54, 0x0c, 0x76, 0x49,
-	0x69, 0x49, 0x46, 0x7e, 0x51, 0x66, 0x49, 0x25, 0x41, 0xf7, 0x23, 0x94, 0x0a, 0x39, 0x73, 0xb1,
-	0x96, 0x80, 0x0c, 0x00, 0xbb, 0x9e, 0xdb, 0x48, 0x5d, 0x0f, 0x47, 0x5c, 0xe9, 0xa1, 0xda, 0xe7,
-	0xc4, 0x72, 0xe2, 0x9e, 0x3c, 0x43, 0x10, 0x44, 0xaf, 0x15, 0x1f, 0xc8, 0x1b, 0x08, 0x43, 0x95,
-	0x14, 0xb9, 0xe4, 0x71, 0xb8, 0x13, 0xee, 0x97, 0x6d, 0x8c, 0x5c, 0xd2, 0x98, 0x6a, 0xc2, 0x33,
-	0x32, 0x4b, 0x52, 0x73, 0x32, 0x8b, 0x4b, 0xc8, 0xf6, 0x8f, 0x3f, 0x17, 0x67, 0x39, 0xcc, 0x10,
-	0xa8, 0x9f, 0xb4, 0x09, 0xfb, 0x09, 0x6e, 0x2f, 0xd4, 0x5f, 0x08, 0x33, 0x30, 0xfc, 0xa6, 0xca,
-	0xa5, 0x8c, 0xc7, 0xdd, 0x30, 0xff, 0x19, 0x4d, 0x63, 0xe6, 0x62, 0xf6, 0x2d, 0x4e, 0x17, 0xaa,
-	0xe4, 0x12, 0xc4, 0x4c, 0x6a, 0xba, 0x38, 0x5d, 0x84, 0x2d, 0xfe, 0xa5, 0x4c, 0x49, 0x52, 0x0e,
-	0x73, 0x82, 0x50, 0x13, 0x23, 0x97, 0x08, 0xd6, 0xb4, 0x62, 0x80, 0xcf, 0x3c, 0x6c, 0x3a, 0xa4,
-	0x2c, 0x48, 0xd5, 0x01, 0x77, 0x44, 0x1f, 0x23, 0x97, 0x04, 0xce, 0x48, 0x36, 0x21, 0xc1, 0x58,
-	0xb8, 0x2e, 0x29, 0x1b, 0x72, 0x74, 0xc1, 0x1c, 0xe4, 0x14, 0x76, 0xe2, 0x91, 0x1c, 0xe3, 0x85,
-	0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3,
-	0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x36, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9,
-	0xfa, 0x28, 0xe5, 0x4c, 0x99, 0x89, 0x6e, 0x72, 0x46, 0x62, 0x66, 0x9e, 0x3e, 0x5c, 0xa4, 0x02,
-	0xa5, 0x9c, 0xab, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x4b, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff,
-	0xff, 0x18, 0x7b, 0xfd, 0xff, 0x0f, 0x05, 0x00, 0x00,
+	// 590 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xbd, 0x6f, 0xd3, 0x4e,
+	0x18, 0xf6, 0xfd, 0x7e, 0x14, 0x94, 0x43, 0x42, 0xc2, 0x58, 0x4a, 0x6a, 0x90, 0x53, 0xc2, 0x57,
+	0x05, 0xc4, 0x86, 0xd0, 0x22, 0x54, 0x95, 0xa1, 0x61, 0x8e, 0x8a, 0xc2, 0x97, 0xc4, 0x12, 0x39,
+	0xf1, 0xc5, 0x39, 0x29, 0xc9, 0x59, 0x77, 0xd7, 0x90, 0xac, 0x9d, 0x98, 0x10, 0x6c, 0x8c, 0x9d,
+	0x98, 0x19, 0x10, 0x0b, 0xff, 0x40, 0x19, 0x90, 0x2a, 0x26, 0x26, 0x84, 0x92, 0x01, 0xfe, 0x0c,
+	0x14, 0x7f, 0xdc, 0x11, 0x6c, 0x27, 0x75, 0x98, 0xe2, 0xdc, 0xfb, 0x3c, 0xcf, 0x3d, 0xcf, 0xbd,
+	0x7e, 0x7d, 0x70, 0xcd, 0x19, 0x39, 0x43, 0x8f, 0x12, 0x4e, 0x5a, 0xa4, 0x6b, 0xd9, 0xed, 0x36,
+	0xee, 0x62, 0x9b, 0x23, 0x66, 0xf1, 0xa1, 0xe9, 0x2f, 0xab, 0xf9, 0x3f, 0x11, 0xa6, 0x44, 0xe8,
+	0xab, 0x2d, 0xc2, 0x7a, 0x84, 0x35, 0xfc, 0x9a, 0x15, 0xfc, 0x09, 0x38, 0xba, 0xe6, 0x12, 0x97,
+	0x04, 0xeb, 0xd3, 0xa7, 0x70, 0x75, 0x3d, 0x6d, 0x2f, 0xf9, 0x18, 0x22, 0xf3, 0x81, 0x9a, 0xd5,
+	0x63, 0xae, 0x35, 0xb8, 0x3d, 0xfd, 0x09, 0x0a, 0xa5, 0xb7, 0x00, 0x6a, 0x35, 0xe6, 0xd6, 0x91,
+	0x8b, 0x19, 0x47, 0x74, 0x27, 0x22, 0xaa, 0x15, 0x78, 0x8a, 0xa2, 0x36, 0xa2, 0x08, 0x15, 0xc0,
+	0x1a, 0x58, 0xcf, 0x55, 0x0b, 0x5f, 0x3f, 0x94, 0xb5, 0xd0, 0xd4, 0x8e, 0xe3, 0x50, 0xc4, 0xd8,
+	0x23, 0x4e, 0x71, 0xdf, 0xad, 0x47, 0x40, 0xf5, 0x2e, 0xcc, 0x89, 0x9d, 0x0b, 0xff, 0x2d, 0x60,
+	0x49, 0xe8, 0x96, 0xf6, 0xf2, 0xa0, 0xa8, 0xfc, 0x3a, 0x28, 0x2a, 0xfb, 0x3f, 0xdf, 0x5f, 0x8f,
+	0xd4, 0x4a, 0x06, 0xbc, 0x90, 0xe4, 0xac, 0x8e, 0x98, 0x47, 0xfa, 0x0c, 0x95, 0xde, 0x01, 0x98,
+	0xaf, 0x31, 0xf7, 0x89, 0xe7, 0xd8, 0x1c, 0x89, 0xf2, 0x63, 0x8c, 0x28, 0xf3, 0x9d, 0xec, 0xf1,
+	0x0e, 0xa1, 0x98, 0x8f, 0x16, 0xfa, 0x97, 0x50, 0xf5, 0x01, 0x5c, 0xe1, 0x53, 0x01, 0xdf, 0xfd,
+	0xe9, 0xca, 0x35, 0x33, 0xa5, 0x57, 0xe6, 0xec, 0x7e, 0xd5, 0x13, 0x87, 0xdf, 0x8b, 0x4a, 0x3d,
+	0xe0, 0x6e, 0x9d, 0x99, 0xc6, 0x90, 0xa2, 0xa5, 0x8b, 0xb0, 0x98, 0xe2, 0x53, 0x64, 0xf9, 0x08,
+	0xe0, 0xf9, 0x38, 0xe6, 0x59, 0x07, 0x73, 0xd4, 0xc5, 0x8c, 0x2f, 0x9d, 0x67, 0x17, 0xe6, 0x5e,
+	0x44, 0x22, 0x61, 0xa6, 0x1b, 0x8b, 0x33, 0x89, 0x7d, 0xc3, 0x5c, 0x52, 0x23, 0x96, 0xed, 0x0a,
+	0xbc, 0x34, 0xc7, 0xb7, 0xc8, 0xf7, 0x05, 0xf8, 0xcd, 0xfc, 0x0b, 0xf7, 0xd0, 0xa6, 0x76, 0x0f,
+	0xf1, 0x7f, 0x69, 0x18, 0x82, 0x9a, 0x48, 0xd0, 0xf0, 0x84, 0x5e, 0x98, 0xf5, 0xe6, 0xe2, 0xac,
+	0xd2, 0x43, 0x18, 0xf6, 0x9c, 0x1d, 0x2f, 0xc5, 0x62, 0x5f, 0x85, 0x97, 0xe7, 0xc5, 0x11, 0xb9,
+	0x3f, 0x27, 0xf6, 0x75, 0x77, 0x80, 0x28, 0xc5, 0x0e, 0x5a, 0x3e, 0x76, 0x13, 0x4a, 0x9b, 0x0d,
+	0x12, 0xc9, 0x1d, 0xbf, 0xc3, 0xc2, 0x41, 0x18, 0x5a, 0xb5, 0x63, 0x95, 0xe3, 0xb5, 0x5a, 0xc0,
+	0xa3, 0xc8, 0x95, 0x4f, 0x2b, 0xf0, 0xff, 0x1a, 0x73, 0xd5, 0x11, 0x3c, 0x1b, 0xff, 0xaa, 0x94,
+	0x53, 0xad, 0x25, 0x8d, 0xba, 0xbe, 0x99, 0x09, 0x1e, 0x59, 0x50, 0xf7, 0x01, 0xd4, 0x12, 0x3f,
+	0x0b, 0xb7, 0xe6, 0xe9, 0x25, 0x31, 0xf4, 0x7b, 0x59, 0x19, 0xc2, 0xc4, 0x2b, 0x00, 0x0b, 0xa9,
+	0xf3, 0xbc, 0x91, 0x41, 0x56, 0xb0, 0xf4, 0xed, 0x65, 0x58, 0xc2, 0xd0, 0x1b, 0x00, 0x57, 0xd3,
+	0x07, 0x70, 0x33, 0x83, 0xb6, 0xa4, 0xe9, 0xf7, 0x97, 0xa2, 0xcd, 0x3b, 0x24, 0x39, 0x1c, 0x59,
+	0x0e, 0x49, 0xb0, 0x32, 0x1d, 0x52, 0xec, 0xed, 0xad, 0x3e, 0x3d, 0x1c, 0x1b, 0xe0, 0x68, 0x6c,
+	0x80, 0x1f, 0x63, 0x03, 0xbc, 0x9e, 0x18, 0xca, 0xd1, 0xc4, 0x50, 0xbe, 0x4d, 0x0c, 0xe5, 0xf9,
+	0xb6, 0x8b, 0x79, 0x67, 0xaf, 0x69, 0xb6, 0x48, 0xcf, 0x9a, 0xb9, 0x77, 0x07, 0x1b, 0xe5, 0x56,
+	0xc7, 0xc6, 0x7d, 0x4b, 0xac, 0x0c, 0x67, 0xee, 0xfd, 0x91, 0x87, 0x58, 0xf3, 0xa4, 0x5f, 0xbc,
+	0xf3, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x92, 0xe3, 0x83, 0x86, 0x1f, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -355,6 +550,10 @@ type MsgClient interface {
 	UpdateAffiliateTiers(ctx context.Context, in *MsgUpdateAffiliateTiers, opts ...grpc.CallOption) (*MsgUpdateAffiliateTiersResponse, error)
 	// UpdateAffiliateWhitelist updates affiliate whitelist
 	UpdateAffiliateWhitelist(ctx context.Context, in *MsgUpdateAffiliateWhitelist, opts ...grpc.CallOption) (*MsgUpdateAffiliateWhitelistResponse, error)
+	// UpdateAffiliateParameters updates affiliate program parameters
+	UpdateAffiliateParameters(ctx context.Context, in *MsgUpdateAffiliateParameters, opts ...grpc.CallOption) (*MsgUpdateAffiliateParametersResponse, error)
+	// UpdateAffiliateOverrides updates affiliate overrides
+	UpdateAffiliateOverrides(ctx context.Context, in *MsgUpdateAffiliateOverrides, opts ...grpc.CallOption) (*MsgUpdateAffiliateOverridesResponse, error)
 }
 
 type msgClient struct {
@@ -392,6 +591,24 @@ func (c *msgClient) UpdateAffiliateWhitelist(ctx context.Context, in *MsgUpdateA
 	return out, nil
 }
 
+func (c *msgClient) UpdateAffiliateParameters(ctx context.Context, in *MsgUpdateAffiliateParameters, opts ...grpc.CallOption) (*MsgUpdateAffiliateParametersResponse, error) {
+	out := new(MsgUpdateAffiliateParametersResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Msg/UpdateAffiliateParameters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateAffiliateOverrides(ctx context.Context, in *MsgUpdateAffiliateOverrides, opts ...grpc.CallOption) (*MsgUpdateAffiliateOverridesResponse, error) {
+	out := new(MsgUpdateAffiliateOverridesResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Msg/UpdateAffiliateOverrides", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RegisterAffiliate registers a referee-affiliate relationship
@@ -400,6 +617,10 @@ type MsgServer interface {
 	UpdateAffiliateTiers(context.Context, *MsgUpdateAffiliateTiers) (*MsgUpdateAffiliateTiersResponse, error)
 	// UpdateAffiliateWhitelist updates affiliate whitelist
 	UpdateAffiliateWhitelist(context.Context, *MsgUpdateAffiliateWhitelist) (*MsgUpdateAffiliateWhitelistResponse, error)
+	// UpdateAffiliateParameters updates affiliate program parameters
+	UpdateAffiliateParameters(context.Context, *MsgUpdateAffiliateParameters) (*MsgUpdateAffiliateParametersResponse, error)
+	// UpdateAffiliateOverrides updates affiliate overrides
+	UpdateAffiliateOverrides(context.Context, *MsgUpdateAffiliateOverrides) (*MsgUpdateAffiliateOverridesResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -414,6 +635,12 @@ func (*UnimplementedMsgServer) UpdateAffiliateTiers(ctx context.Context, req *Ms
 }
 func (*UnimplementedMsgServer) UpdateAffiliateWhitelist(ctx context.Context, req *MsgUpdateAffiliateWhitelist) (*MsgUpdateAffiliateWhitelistResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAffiliateWhitelist not implemented")
+}
+func (*UnimplementedMsgServer) UpdateAffiliateParameters(ctx context.Context, req *MsgUpdateAffiliateParameters) (*MsgUpdateAffiliateParametersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAffiliateParameters not implemented")
+}
+func (*UnimplementedMsgServer) UpdateAffiliateOverrides(ctx context.Context, req *MsgUpdateAffiliateOverrides) (*MsgUpdateAffiliateOverridesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAffiliateOverrides not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -474,6 +701,42 @@ func _Msg_UpdateAffiliateWhitelist_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateAffiliateParameters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateAffiliateParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateAffiliateParameters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Msg/UpdateAffiliateParameters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateAffiliateParameters(ctx, req.(*MsgUpdateAffiliateParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateAffiliateOverrides_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateAffiliateOverrides)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateAffiliateOverrides(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Msg/UpdateAffiliateOverrides",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateAffiliateOverrides(ctx, req.(*MsgUpdateAffiliateOverrides))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.affiliates.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -489,6 +752,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAffiliateWhitelist",
 			Handler:    _Msg_UpdateAffiliateWhitelist_Handler,
+		},
+		{
+			MethodName: "UpdateAffiliateParameters",
+			Handler:    _Msg_UpdateAffiliateParameters_Handler,
+		},
+		{
+			MethodName: "UpdateAffiliateOverrides",
+			Handler:    _Msg_UpdateAffiliateOverrides_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -681,6 +952,132 @@ func (m *MsgUpdateAffiliateWhitelistResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpdateAffiliateParameters) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateAffiliateParameters) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateAffiliateParameters) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.AffiliateParameters.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateAffiliateParametersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateAffiliateParametersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateAffiliateParametersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateAffiliateOverrides) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateAffiliateOverrides) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateAffiliateOverrides) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.AffiliateOverrides.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateAffiliateOverridesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateAffiliateOverridesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateAffiliateOverridesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -758,6 +1155,54 @@ func (m *MsgUpdateAffiliateWhitelist) Size() (n int) {
 }
 
 func (m *MsgUpdateAffiliateWhitelistResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateAffiliateParameters) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.AffiliateParameters.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateAffiliateParametersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateAffiliateOverrides) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.AffiliateOverrides.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateAffiliateOverridesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1243,6 +1688,336 @@ func (m *MsgUpdateAffiliateWhitelistResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateAffiliateWhitelistResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateAffiliateParameters) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateParameters: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateParameters: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AffiliateParameters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AffiliateParameters.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateAffiliateParametersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateParametersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateParametersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateAffiliateOverrides) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateOverrides: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateOverrides: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AffiliateOverrides", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AffiliateOverrides.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateAffiliateOverridesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateOverridesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateAffiliateOverridesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

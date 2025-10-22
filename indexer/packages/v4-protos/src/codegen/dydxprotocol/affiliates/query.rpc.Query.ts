@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { AffiliateInfoRequest, AffiliateInfoResponse, ReferredByRequest, ReferredByResponse, AllAffiliateTiersRequest, AllAffiliateTiersResponse, AffiliateWhitelistRequest, AffiliateWhitelistResponse } from "./query";
+import { AffiliateInfoRequest, AffiliateInfoResponse, ReferredByRequest, ReferredByResponse, AllAffiliateTiersRequest, AllAffiliateTiersResponse, AffiliateWhitelistRequest, AffiliateWhitelistResponse, AffiliateParametersRequest, AffiliateParametersResponse, AffiliateOverridesRequest, AffiliateOverridesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -16,6 +16,12 @@ export interface Query {
   /** Query AffiliateWhitelist returns the affiliate whitelist. */
 
   affiliateWhitelist(request?: AffiliateWhitelistRequest): Promise<AffiliateWhitelistResponse>;
+  /** Query AffiliateParameters returns the affiliate parameters. */
+
+  affiliateParameters(request?: AffiliateParametersRequest): Promise<AffiliateParametersResponse>;
+  /** Query AffiliateOverrides returns the affiliate overrides. */
+
+  affiliateOverrides(request?: AffiliateOverridesRequest): Promise<AffiliateOverridesResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -26,6 +32,8 @@ export class QueryClientImpl implements Query {
     this.referredBy = this.referredBy.bind(this);
     this.allAffiliateTiers = this.allAffiliateTiers.bind(this);
     this.affiliateWhitelist = this.affiliateWhitelist.bind(this);
+    this.affiliateParameters = this.affiliateParameters.bind(this);
+    this.affiliateOverrides = this.affiliateOverrides.bind(this);
   }
 
   affiliateInfo(request: AffiliateInfoRequest): Promise<AffiliateInfoResponse> {
@@ -52,6 +60,18 @@ export class QueryClientImpl implements Query {
     return promise.then(data => AffiliateWhitelistResponse.decode(new _m0.Reader(data)));
   }
 
+  affiliateParameters(request: AffiliateParametersRequest = {}): Promise<AffiliateParametersResponse> {
+    const data = AffiliateParametersRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Query", "AffiliateParameters", data);
+    return promise.then(data => AffiliateParametersResponse.decode(new _m0.Reader(data)));
+  }
+
+  affiliateOverrides(request: AffiliateOverridesRequest = {}): Promise<AffiliateOverridesResponse> {
+    const data = AffiliateOverridesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Query", "AffiliateOverrides", data);
+    return promise.then(data => AffiliateOverridesResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -71,6 +91,14 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     affiliateWhitelist(request?: AffiliateWhitelistRequest): Promise<AffiliateWhitelistResponse> {
       return queryService.affiliateWhitelist(request);
+    },
+
+    affiliateParameters(request?: AffiliateParametersRequest): Promise<AffiliateParametersResponse> {
+      return queryService.affiliateParameters(request);
+    },
+
+    affiliateOverrides(request?: AffiliateOverridesRequest): Promise<AffiliateOverridesResponse> {
+      return queryService.affiliateOverrides(request);
     }
 
   };

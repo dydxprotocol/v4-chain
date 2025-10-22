@@ -252,3 +252,44 @@ func TestAffiliateWhitelist(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, &types.AffiliateWhitelistResponse{Whitelist: whitelist}, res)
 }
+
+func TestAffiliateParameters(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	req := &types.AffiliateParametersRequest{}
+	err := k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
+		Authority:           constants.GovAuthority,
+		AffiliateParameters: types.DefaultAffiliateParameters,
+	})
+	require.NoError(t, err)
+
+	res, err := k.AffiliateParameters(ctx, req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, &types.AffiliateParametersResponse{Parameters: types.DefaultAffiliateParameters}, res)
+}
+
+func TestAffiliateOverrides(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	req := &types.AffiliateOverridesRequest{}
+	err := k.SetAffiliateOverrides(ctx, types.AffiliateOverrides{
+		Addresses: []string{
+			constants.AliceAccAddress.String(),
+		},
+	})
+	require.NoError(t, err)
+
+	res, err := k.AffiliateOverrides(ctx, req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, &types.AffiliateOverridesResponse{Overrides: types.AffiliateOverrides{
+		Addresses: []string{
+			constants.AliceAccAddress.String(),
+		},
+	}}, res)
+}
