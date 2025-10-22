@@ -14,7 +14,7 @@ import {
   Controller, Get, Path, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -59,7 +59,7 @@ class HistoricalTradingRewardAggregationsController extends Controller {
 
 router.get(
   '/:address',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   historicalTradingRewardAggregationsCacheControlMiddleware,
   ...CheckHistoricalBlockTradingRewardsSchema,
   ...checkSchema({
