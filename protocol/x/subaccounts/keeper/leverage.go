@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"sort"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -29,6 +32,11 @@ func (k Keeper) SetLeverage(ctx sdk.Context, subaccountId *types.SubaccountId, l
 			CustomImfPpm: CustomImfPpm,
 		})
 	}
+
+	// Sort the entries to ensure deterministic ordering in state
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].PerpetualId < entries[j].PerpetualId
+	})
 
 	leverageData := &types.LeverageData{
 		Entries: entries,
@@ -65,8 +73,12 @@ func (k Keeper) UpdateLeverage(
 	subaccountId *types.SubaccountId,
 	perpetualLeverage map[uint32]uint32,
 ) error {
-	// Validate leverage against maximum allowed for each perpetual
-	for perpetualId, custom_imf_ppm := range perpetualLeverage {
+	// Sort the perpetual IDs to ensure deterministic ordering
+	sortedPerpIds := lib.GetSortedKeys[lib.Sortable[uint32]](perpetualLeverage)
+
+	// Validate leverage against maximum allowed leverage for each perpetual
+	for _, perpetualId := range sortedPerpIds {
+		custom_imf_ppm := perpetualLeverage[perpetualId]
 		minImfPpm, err := k.GetMinImfForPerpetual(ctx, perpetualId)
 		if err != nil {
 			return errorsmod.Wrapf(
