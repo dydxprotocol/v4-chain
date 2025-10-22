@@ -1,8 +1,6 @@
 syntax = "proto3";
 package dydxprotocol.subaccounts;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types";
 
 // PerpetualLeverageEntry represents a single perpetual leverage setting for
