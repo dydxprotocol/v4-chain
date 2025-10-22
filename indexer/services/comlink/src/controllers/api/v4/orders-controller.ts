@@ -1,4 +1,4 @@
-import { logger, stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
@@ -12,8 +12,8 @@ import {
   OrderStatus,
   OrderTable,
   OrderType,
-  ParentSubaccount,
   PaginationFromDatabase,
+  ParentSubaccount,
   perpetualMarketRefresher,
   protocolTranslations,
   SubaccountTable,
@@ -85,6 +85,8 @@ async function listOrdersCommon(
   ticker?: string,
   side?: OrderSide,
   type?: OrderType,
+  includeTypes?: OrderType[],
+  excludeTypes?: OrderType[],
   status?: APIOrderStatus[],
   goodTilBlockBeforeOrAt?: number,
   goodTilBlockAfter?: number,
@@ -104,6 +106,8 @@ async function listOrdersCommon(
     clobPairId,
     side,
     type,
+    includeTypes,
+    excludeTypes,
     goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
     goodTilBlockAfter: goodTilBlockAfter?.toString(),
     goodTilBlockTimeBeforeOrAt,
@@ -127,21 +131,21 @@ async function listOrdersCommon(
     redisOrderMap,
     { results: postgresOrders },
   ]: [
-    RedisOrderMap,
-    PaginationFromDatabase<OrderFromDatabase>,
-  ] = await Promise.all([
-    getRedisOrderMapForSubaccountIds(
-      subaccountIds,
-      clobPairId,
-      side,
-      type,
-      goodTilBlockBeforeOrAt,
-      goodTilBlockAfter,
-      goodTilBlockTimeBeforeOrAt,
-      goodTilBlockTimeAfter,
-    ),
-    OrderTable.findAll(
-      orderQueryConfig, [], {
+      RedisOrderMap,
+      PaginationFromDatabase<OrderFromDatabase>,
+    ] = await Promise.all([
+      getRedisOrderMapForSubaccountIds(
+        subaccountIds,
+        clobPairId,
+        side,
+        type,
+        goodTilBlockBeforeOrAt,
+        goodTilBlockAfter,
+        goodTilBlockTimeBeforeOrAt,
+        goodTilBlockTimeAfter,
+      ),
+      OrderTable.findAll(
+        orderQueryConfig, [], {
         ...DEFAULT_POSTGRES_OPTIONS,
         orderBy: [
           // Order by `goodTilBlock` and then order by `goodTilBlockTime`
@@ -151,8 +155,8 @@ async function listOrdersCommon(
           [OrderColumns.goodTilBlockTime, ordering],
         ],
       },
-    ),
-  ]);
+      ),
+    ]);
 
   const redisOrderIds: string[] = _.map(
     Object.values(redisOrderMap),
@@ -214,17 +218,19 @@ class OrdersController extends Controller {
   @Get('/')
   async listOrders(
     @Query() address: string,
-      @Query() subaccountNumber: number,
-      @Query() limit?: number,
-      @Query() ticker?: string,
-      @Query() side?: OrderSide,
-      @Query() type?: OrderType,
-      @Query() status?: APIOrderStatus[],
-      @Query() goodTilBlockBeforeOrAt?: number,
-      @Query() goodTilBlockAfter?: number,
-      @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
-      @Query() goodTilBlockTimeAfter?: IsoString,
-      @Query() returnLatestOrders?: boolean,
+    @Query() subaccountNumber: number,
+    @Query() limit?: number,
+    @Query() ticker?: string,
+    @Query() side?: OrderSide,
+    @Query() type?: OrderType,
+    @Query() includeTypes?: OrderType[],
+    @Query() excludeTypes?: OrderType[],
+    @Query() status?: APIOrderStatus[],
+    @Query() goodTilBlockBeforeOrAt?: number,
+    @Query() goodTilBlockAfter?: number,
+    @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
+    @Query() goodTilBlockTimeAfter?: IsoString,
+    @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
 
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
@@ -236,6 +242,8 @@ class OrdersController extends Controller {
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -248,17 +256,19 @@ class OrdersController extends Controller {
   @Get('/parentSubaccountNumber')
   async listOrdersForParentSubaccount(
     @Query() address: string,
-      @Query() parentSubaccountNumber: number,
-      @Query() limit?: number,
-      @Query() ticker?: string,
-      @Query() side?: OrderSide,
-      @Query() type?: OrderType,
-      @Query() status?: APIOrderStatus[],
-      @Query() goodTilBlockBeforeOrAt?: number,
-      @Query() goodTilBlockAfter?: number,
-      @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
-      @Query() goodTilBlockTimeAfter?: IsoString,
-      @Query() returnLatestOrders?: boolean,
+    @Query() parentSubaccountNumber: number,
+    @Query() limit?: number,
+    @Query() ticker?: string,
+    @Query() side?: OrderSide,
+    @Query() type?: OrderType,
+    @Query() includeTypes?: OrderType[],
+    @Query() excludeTypes?: OrderType[],
+    @Query() status?: APIOrderStatus[],
+    @Query() goodTilBlockBeforeOrAt?: number,
+    @Query() goodTilBlockAfter?: number,
+    @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
+    @Query() goodTilBlockTimeAfter?: IsoString,
+    @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
     const childIdtoSubaccountNumber: Record<string, number> = {};
     getChildSubaccountNums(parentSubaccountNumber).forEach(
@@ -277,6 +287,8 @@ class OrdersController extends Controller {
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -294,12 +306,12 @@ class OrdersController extends Controller {
       postgresOrder,
       redisOrder,
     ]: [
-      OrderFromDatabase | undefined,
-      RedisOrder | null,
-    ] = await Promise.all([
-      OrderTable.findById(orderId),
-      OrdersCache.getOrder(orderId, redisReadOnlyClient),
-    ]);
+        OrderFromDatabase | undefined,
+        RedisOrder | null,
+      ] = await Promise.all([
+        OrderTable.findById(orderId),
+        OrdersCache.getOrder(orderId, redisReadOnlyClient),
+      ]);
 
     // Get subaccount number and subaccountId from either Redis or Postgres
     let subaccountNumber: number | undefined;
@@ -401,6 +413,28 @@ router.get(
       isBoolean: true,
       optional: true,
     },
+    includeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `includeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
+    excludeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `excludeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
   }),
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
@@ -416,6 +450,8 @@ router.get(
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -436,6 +472,8 @@ router.get(
         ticker,
         side,
         type,
+        includeTypes,
+        excludeTypes,
         status,
         goodTilBlockBeforeOrAt,
         goodTilBlockAfter,
@@ -529,6 +567,28 @@ router.get(
       isBoolean: true,
       optional: true,
     },
+    includeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `includeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
+    excludeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `excludeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
   }),
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
@@ -544,6 +604,8 @@ router.get(
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -564,6 +626,8 @@ router.get(
         ticker,
         side,
         type,
+        includeTypes,
+        excludeTypes,
         status,
         goodTilBlockBeforeOrAt,
         goodTilBlockAfter,
@@ -710,12 +774,12 @@ async function getRedisOrderMapForSubaccountIds(
       if (redisGoodTilBlockTime) {
         const redisGoodTilBlockTimeDateObj: DateTime = DateTime.fromISO(redisGoodTilBlockTime);
         if (goodTilBlockTimeBeforeOrAt !== undefined &&
-            redisGoodTilBlockTimeDateObj > DateTime.fromISO(goodTilBlockTimeBeforeOrAt)
+          redisGoodTilBlockTimeDateObj > DateTime.fromISO(goodTilBlockTimeBeforeOrAt)
         ) {
           return false;
         }
         if (goodTilBlockTimeAfter !== undefined &&
-            redisGoodTilBlockTimeDateObj <= DateTime.fromISO(goodTilBlockTimeAfter)
+          redisGoodTilBlockTimeDateObj <= DateTime.fromISO(goodTilBlockTimeAfter)
         ) {
           return false;
         }

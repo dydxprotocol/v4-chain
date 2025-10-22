@@ -95,7 +95,7 @@ export interface ParentSubaccountResponse {
   childSubaccounts: SubaccountResponseObject[],
 }
 
-export type SubaccountById = {[id: string]: SubaccountFromDatabase};
+export type SubaccountById = { [id: string]: SubaccountFromDatabase };
 
 /* ------- TIME TYPES ------- */
 
@@ -270,7 +270,7 @@ export interface PnlTicksResponseObject {
   blockTime: IsoString,
 }
 
-export interface AggregatedPnlTick{
+export interface AggregatedPnlTick {
   pnlTick: PnlTicksFromDatabase,
   numTicks: number,
 }
@@ -300,14 +300,14 @@ export interface HeightResponse {
 
 /* ------- MARKET TYPES ------- */
 
-export type AssetById = {[assetId: string]: AssetFromDatabase};
+export type AssetById = { [assetId: string]: AssetFromDatabase };
 
 export interface MarketAndType {
   marketType: MarketType,
   market: string,
 }
 
-export type MarketAndTypeByClobPairId = {[clobPairId: string]: MarketAndType};
+export type MarketAndTypeByClobPairId = { [clobPairId: string]: MarketAndType };
 
 export enum MarketType {
   PERPETUAL = 'PERPETUAL',
@@ -398,7 +398,7 @@ export interface CandleResponse {
   candles: CandleResponseObject[],
 }
 
-export interface CandleResponseObject extends Omit<CandleFromDatabase, CandleColumns.id> {}
+export interface CandleResponseObject extends Omit<CandleFromDatabase, CandleColumns.id> { }
 
 /* ------- CANDLE TYPES ------- */
 
@@ -456,7 +456,7 @@ interface CreatedBeforeRequest {
   createdBeforeOrAt?: IsoString,
 }
 
-export interface LimitAndCreatedBeforeRequest extends LimitRequest, CreatedBeforeRequest {}
+export interface LimitAndCreatedBeforeRequest extends LimitRequest, CreatedBeforeRequest { }
 
 export interface LimitAndEffectiveBeforeRequest extends LimitRequest {
   effectiveBeforeOrAtHeight?: number,
@@ -477,13 +477,13 @@ export interface ParentSubaccountPerpetualPositionRequest extends ParentSubaccou
   status: PerpetualPositionStatus[],
 }
 
-export interface AssetPositionRequest extends SubaccountRequest {}
+export interface AssetPositionRequest extends SubaccountRequest { }
 
 export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {
 }
 
 export interface TransferRequest
-  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {}
+  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest { }
 
 export interface ParentSubaccountTransferRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
@@ -500,12 +500,16 @@ export interface FillRequest
   extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
   market: string,
   marketType: MarketType,
+  includeTypes?: FillType[],
+  excludeTypes?: FillType[],
 }
 
 export interface ParentSubaccountFillRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
   market: string,
   marketType: MarketType,
+  includeTypes?: FillType[],
+  excludeTypes?: FillType[],
 }
 
 export interface TradeRequest extends LimitAndCreatedBeforeRequest, PaginationRequest {
@@ -517,7 +521,7 @@ export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {
 }
 
 export interface PnlTicksRequest
-  extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {}
+  extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest { }
 
 export interface ParentSubaccountPnlTicksRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
@@ -543,6 +547,8 @@ export interface GetOrderRequest {
 export interface ListOrderRequest extends SubaccountRequest, LimitRequest, TickerRequest {
   side?: OrderSide,
   type?: OrderType,
+  includeTypes?: OrderType[],
+  excludeTypes?: OrderType[],
   status?: OrderStatus[],
   goodTilBlockBeforeOrAt?: number,
   goodTilBlockAfter?: number,
@@ -555,6 +561,8 @@ export interface ParentSubaccountListOrderRequest
   extends ParentSubaccountRequest, LimitRequest, TickerRequest {
   side?: OrderSide,
   type?: OrderType,
+  includeTypes?: OrderType[],
+  excludeTypes?: OrderType[],
   status?: OrderStatus[],
   goodTilBlockBeforeOrAt?: number,
   goodTilBlockAfter?: number,
@@ -603,7 +611,7 @@ export interface ComplianceResponse {
   reason?: string,
 }
 
-export interface ComplianceRequest extends AddressRequest {}
+export interface ComplianceRequest extends AddressRequest { }
 
 export interface SetComplianceStatusRequest extends AddressRequest {
   status: ComplianceStatus,
@@ -711,29 +719,29 @@ export interface MegavaultHistoricalPnlRequest {
   resolution: PnlTickInterval,
 }
 
-export interface VaultsHistoricalPnlRequest extends MegavaultHistoricalPnlRequest {}
+export interface VaultsHistoricalPnlRequest extends MegavaultHistoricalPnlRequest { }
 
 export interface VaultMapping {
   [subaccountId: string]: VaultFromDatabase,
 }
 
 /* ------- Affiliates Types ------- */
-export interface AffiliateMetadataRequest{
+export interface AffiliateMetadataRequest {
   address: string,
 }
 
-export interface AffiliateAddressRequest{
+export interface AffiliateAddressRequest {
   referralCode: string,
 }
 
-export interface AffiliateSnapshotRequest{
+export interface AffiliateSnapshotRequest {
   addressFilter?: string[],
   limit?: number,
   offset?: number,
   sortByAffiliateEarning?: boolean,
 }
 
-export interface AffiliateTotalVolumeRequest{
+export interface AffiliateTotalVolumeRequest {
   address: string,
 }
 
@@ -883,7 +891,7 @@ export interface PnlResponseObject {
   createdAtHeight: string,
 }
 
-export interface AggregatedPnl{
+export interface AggregatedPnl {
   pnl: PnlFromDatabase,
   numPnls: number,
 }
