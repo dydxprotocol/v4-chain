@@ -200,7 +200,7 @@ message ClobPairLeverageInfo {
   // The clob pair ID.
   uint32 clob_pair_id = 1;
   // The user selected imf.
-  uint32 imf_ppm = 2;
+  uint32 custom_imf_ppm = 2;
 }
 
 // StreamOrderbookUpdatesRequest is a request message for the

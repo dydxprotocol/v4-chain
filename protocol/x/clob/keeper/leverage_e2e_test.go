@@ -29,10 +29,10 @@ func configureLeverage(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
-	imf_ppm uint32,
+	custom_imf_ppm uint32,
 ) {
 	leverageMap := map[uint32]uint32{
-		perpetualId: imf_ppm,
+		perpetualId: custom_imf_ppm,
 	}
 
 	err := tApp.App.ClobKeeper.UpdateLeverage(ctx, &subaccountId, leverageMap)
@@ -70,15 +70,15 @@ func TestLeverageKeeperSetup(t *testing.T) {
 
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)
-	imf_ppm := uint32(50_000)
+	custom_imf_ppm := uint32(50_000)
 
 	// Configure leverage first
-	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, imf_ppm)
+	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, custom_imf_ppm)
 
 	// Verify leverage was set
 	leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
 	require.True(t, exists)
-	require.Equal(t, imf_ppm, leverageMap[perpetualId])
+	require.Equal(t, custom_imf_ppm, leverageMap[perpetualId])
 
 	// Create a subaccount with some balance
 	createSubaccountWithBalance(tApp, ctx, subaccountId, big.NewInt(1000_000_000))
@@ -126,21 +126,21 @@ func TestLeverageBasicOrderPlacement(t *testing.T) {
 	// Test parameters
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)                   // BTC-USD
-	imf_ppm := uint32(100_000)                 // 10x leverage
+	custom_imf_ppm := uint32(100_000)          // 10x leverage
 	initialBalance := big.NewInt(1000_000_000) // $1000 USDC (6 decimals)
 
 	// Set up subaccount with initial balance
 	createSubaccountWithBalance(tApp, ctx, subaccountId, initialBalance)
 
 	// Configure leverage
-	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, imf_ppm)
+	configureLeverage(t, tApp, ctx, subaccountId, perpetualId, custom_imf_ppm)
 
 	// Verify leverage was set correctly
 	leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
 	require.True(t, exists)
-	require.Equal(t, imf_ppm, leverageMap[perpetualId])
+	require.Equal(t, custom_imf_ppm, leverageMap[perpetualId])
 
-	t.Logf("✅ Successfully configured and verified %dx leverage for subaccount", imf_ppm)
+	t.Logf("✅ Successfully configured and verified %dx leverage for subaccount", custom_imf_ppm)
 	t.Logf("   Subaccount: %v", subaccountId)
 	t.Logf("   Perpetual ID: %d", perpetualId)
 	t.Logf("   Initial balance: $%s", new(big.Int).Div(initialBalance, big.NewInt(1_000_000)))
@@ -155,8 +155,8 @@ func TestLeverageConfiguration(t *testing.T) {
 	perpetualId := uint32(0)
 
 	testCases := []struct {
-		name    string
-		imf_ppm uint32
+		name           string
+		custom_imf_ppm uint32
 	}{
 		{"2x Leverage", 500_000},
 		{"10x Leverage", 100_000},
@@ -165,14 +165,14 @@ func TestLeverageConfiguration(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Configure leverage
-			configureLeverage(t, tApp, ctx, subaccountId, perpetualId, tc.imf_ppm)
+			configureLeverage(t, tApp, ctx, subaccountId, perpetualId, tc.custom_imf_ppm)
 
 			// Verify leverage was set correctly
 			leverageMap, exists := tApp.App.ClobKeeper.GetLeverage(ctx, &subaccountId)
 			require.True(t, exists)
-			require.Equal(t, tc.imf_ppm, leverageMap[perpetualId])
+			require.Equal(t, tc.custom_imf_ppm, leverageMap[perpetualId])
 
-			t.Logf("✅ Successfully configured %dx leverage", tc.imf_ppm)
+			t.Logf("✅ Successfully configured %dx leverage", tc.custom_imf_ppm)
 		})
 	}
 }
@@ -191,8 +191,8 @@ func TestOrderPlacementFailsWithLeverageConfigured(t *testing.T) {
 		SubaccountId: &constants.Alice_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 0,
-				ImfPpm:     1_000_000,
+				ClobPairId:   0,
+				CustomImfPpm: 1_000_000,
 			},
 		},
 	}

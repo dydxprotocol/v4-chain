@@ -32,14 +32,14 @@ func (k Keeper) Leverage(
 	}
 
 	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverageMap))
-	for perpetualId, imf_ppm := range leverageMap {
+	for perpetualId, custom_imf_ppm := range leverageMap {
 		clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, errorsmod.Wrap(err, "failed to get clob pair id for perpetual").Error())
 		}
 		clobPairLeverage = append(clobPairLeverage, &types.ClobPairLeverageInfo{
-			ClobPairId: clobPairId.ToUint32(),
-			ImfPpm:     imf_ppm,
+			ClobPairId:   clobPairId.ToUint32(),
+			CustomImfPpm: custom_imf_ppm,
 		})
 	}
 	return &types.QueryLeverageResponse{ClobPairLeverage: clobPairLeverage}, nil

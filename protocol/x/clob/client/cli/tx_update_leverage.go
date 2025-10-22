@@ -40,14 +40,14 @@ func CmdUpdateLeverage() *cobra.Command {
 
 			// Convert string keys to uint32 and create LeverageEntry slice
 			var clobPairLeverage []*types.LeverageEntry
-			for clobPairIdStr, imf_ppm := range leverageMap {
+			for clobPairIdStr, custom_imf_ppm := range leverageMap {
 				clobPairId, err := strconv.ParseUint(clobPairIdStr, 10, 32)
 				if err != nil {
 					return fmt.Errorf("invalid clob pair ID %s: %w", clobPairIdStr, err)
 				}
 				clobPairLeverage = append(clobPairLeverage, &types.LeverageEntry{
-					ClobPairId: uint32(clobPairId),
-					ImfPpm:     imf_ppm,
+					ClobPairId:   uint32(clobPairId),
+					CustomImfPpm: custom_imf_ppm,
 				})
 			}
 

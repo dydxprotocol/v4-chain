@@ -23,10 +23,10 @@ func (k Keeper) SetLeverage(ctx sdk.Context, subaccountId *types.SubaccountId, l
 	key := leverageKey(subaccountId)
 
 	var entries []*types.PerpetualLeverageEntry
-	for perpetualId, imfPpm := range leverageMap {
+	for perpetualId, CustomImfPpm := range leverageMap {
 		entries = append(entries, &types.PerpetualLeverageEntry{
-			PerpetualId: perpetualId,
-			ImfPpm:      imfPpm,
+			PerpetualId:  perpetualId,
+			CustomImfPpm: CustomImfPpm,
 		})
 	}
 
@@ -53,7 +53,7 @@ func (k Keeper) GetLeverage(ctx sdk.Context, subaccountId *types.SubaccountId) (
 
 	leverageMap := make(map[uint32]uint32)
 	for _, entry := range leverageData.Entries {
-		leverageMap[entry.PerpetualId] = entry.ImfPpm
+		leverageMap[entry.PerpetualId] = entry.CustomImfPpm
 	}
 
 	return leverageMap, true
@@ -66,7 +66,7 @@ func (k Keeper) UpdateLeverage(
 	perpetualLeverage map[uint32]uint32,
 ) error {
 	// Validate leverage against maximum allowed for each perpetual
-	for perpetualId, imf_ppm := range perpetualLeverage {
+	for perpetualId, custom_imf_ppm := range perpetualLeverage {
 		minImfPpm, err := k.GetMinImfForPerpetual(ctx, perpetualId)
 		if err != nil {
 			return errorsmod.Wrapf(
@@ -77,11 +77,11 @@ func (k Keeper) UpdateLeverage(
 			)
 		}
 
-		if imf_ppm < minImfPpm {
+		if custom_imf_ppm < minImfPpm {
 			return errorsmod.Wrapf(
 				types.ErrLeverageExceedsMaximum,
 				"%d is less than minimum allowed imf (%d) for perpetual %d resulting in higher than allowed leverage",
-				imf_ppm,
+				custom_imf_ppm,
 				minImfPpm,
 				perpetualId,
 			)
@@ -95,8 +95,8 @@ func (k Keeper) UpdateLeverage(
 	}
 
 	// Update with new leverage values
-	for perpetualId, imf_ppm := range perpetualLeverage {
-		existingLeverage[perpetualId] = imf_ppm
+	for perpetualId, custom_imf_ppm := range perpetualLeverage {
+		existingLeverage[perpetualId] = custom_imf_ppm
 	}
 
 	// Store updated leverage

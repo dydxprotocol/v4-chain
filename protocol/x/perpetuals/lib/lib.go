@@ -43,7 +43,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
-	imf_ppm uint32,
+	custom_imf_ppm uint32,
 ) (
 	risk margin.Risk,
 ) {
@@ -57,7 +57,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
-		imf_ppm,
+		custom_imf_ppm,
 	)
 	return margin.Risk{
 		NC:  nc,
@@ -74,7 +74,7 @@ func GetNetCollateralAndMarginRequirements(
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
 	quoteBalance *big.Int,
-	imf_ppm uint32, // 0 means use default liquidity tier margins
+	custom_imf_ppm uint32, // 0 means use default liquidity tier margins
 ) (
 	risk margin.Risk,
 ) {
@@ -83,7 +83,7 @@ func GetNetCollateralAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
-		imf_ppm,
+		custom_imf_ppm,
 	)
 	risk.NC.Add(risk.NC, quoteBalance)
 	return risk
@@ -119,7 +119,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	bigQuantums *big.Int,
-	imf_ppm uint32, // 0 means use default liquidity tier margins
+	custom_imf_ppm uint32, // 0 means use default liquidity tier margins
 ) (
 	bigInitialMarginQuoteQuantums *big.Int,
 	bigMaintenanceMarginQuoteQuantums *big.Int,
@@ -158,7 +158,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
 		bigQuoteQuantums,
 		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
-		lib.BigU(imf_ppm),
+		lib.BigU(custom_imf_ppm),
 	)
 
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
