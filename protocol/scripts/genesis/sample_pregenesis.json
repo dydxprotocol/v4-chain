@@ -4091,7 +4091,11 @@
       ]
     }
   },
+<<<<<<< HEAD
   "app_version": "7.0.0-dev0-149-g12cfb908b",
+=======
+  "app_version": "9.0.0-47-gd399e2625",
+>>>>>>> 4d0c660c (9.4 update (#3166))
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
