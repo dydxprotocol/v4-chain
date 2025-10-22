@@ -23,7 +23,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
@@ -297,7 +297,7 @@ class TransfersController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   transfersCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
@@ -347,7 +347,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   transfersCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
@@ -400,7 +400,7 @@ router.get(
 
 router.get(
   '/between',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   transfersCacheControlMiddleware,
   ...CheckTransferBetweenSchema,
   handleValidationErrors,

@@ -18,7 +18,7 @@ import {
   Controller, Get, Path, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import {
@@ -90,7 +90,7 @@ class TradesController extends Controller {
 
 router.get(
   '/perpetualMarket/:ticker',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   tradesCacheControlMiddleware,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...CheckPaginationSchema,
