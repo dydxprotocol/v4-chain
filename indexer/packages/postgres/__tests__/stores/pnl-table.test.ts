@@ -3,6 +3,7 @@ import {
   PnlColumns,
 } from '../../src/types';
 import * as PnlTable from '../../src/stores/pnl-table';
+import * as BlockTable from '../../src/stores/block-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
 import {
@@ -12,7 +13,6 @@ import {
   defaultPnl2,
   defaultBlock,
 } from '../helpers/constants';
-import { BlockTable } from 'packages/postgres/src';
 
 describe('Pnl store', () => {
   beforeEach(async () => {
@@ -604,7 +604,7 @@ describe('Pnl store', () => {
       {},
     );
 
-    expect(dailyPage3.results.length).toBeGreaterThan(0);  // At least some results
+    expect(dailyPage3.results.length).toBe(1);  // Last page with remaining result
     expect(dailyPage3.offset).toBe(4);
   });
 
