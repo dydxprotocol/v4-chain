@@ -380,6 +380,27 @@ describe('Pnl store', () => {
     const maxHeight = Math.max(...heights);
     expect(minHeight).toBeGreaterThanOrEqual(300);
     expect(maxHeight).toBeLessThanOrEqual(900);
+
+    // Test ordering by equity
+    const hourlyOrderedByEquity = await PnlTable.findAllHourlyAggregate(
+      {
+        subaccountId: subaccountIds,
+      },
+      [],
+      { orderBy: [[PnlColumns.equity, Ordering.DESC]] },
+    );
+
+    expect(hourlyOrderedByEquity.results.length).toBe(12);
+
+    // Verify results are ordered by equity in descending order
+    const equities = hourlyOrderedByEquity.results.map((r) => Number(r.equity));
+    for (let i = 0; i < equities.length - 1; i++) {
+      expect(equities[i]).toBeGreaterThanOrEqual(equities[i + 1]);
+    }
+
+    // Verify the highest equity is from the last hour (hour 11)
+    // Hour 11 should have equity = (11 * 1000) + (11 * 1000 + 100) = 11000 + 11100 = 22100
+    expect(equities[0]).toBe(22100);
   });
 
   it('Successfully retrieves daily PNL records with first of each day for single subaccount', async () => {
