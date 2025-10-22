@@ -861,9 +861,9 @@ func TestUpdateAffiliateParameters(t *testing.T) {
 
 	affiliateParameters, err := k.GetAffiliateParameters(ctx)
 	require.NoError(t, err)
-	require.Equal(t, uint64(100), affiliateParameters.GetMaximum_30DAttributableRevenuePerAffiliateQuoteQuantums())
+	require.Equal(t, uint64(100), affiliateParameters.GetMaximum_30DAttributableVolumePerReferredUserNotional())
 	require.Equal(t, uint32(1), affiliateParameters.GetRefereeMinimumFeeTierIdx())
-	require.Equal(t, uint64(100), affiliateParameters.GetMaximum_30DCommissionPerReferredQuoteQuantums())
+	require.Equal(t, uint64(100), affiliateParameters.GetMaximum_30DAttributableRevenuePerReferredUserQuoteQuantums())
 }
 
 func TestGetTierForAffiliateOverrides(t *testing.T) {
