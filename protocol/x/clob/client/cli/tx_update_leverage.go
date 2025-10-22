@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -38,16 +39,23 @@ func CmdUpdateLeverage() *cobra.Command {
 				return fmt.Errorf("invalid leverage map JSON: %w", err)
 			}
 
-			// Convert string keys to uint32 and create LeverageEntry slice
+			// Sort the keys to ensure deterministic ordering
+			keys := make([]string, 0, len(leverageMap))
+			for clobPairIdStr := range leverageMap {
+				keys = append(keys, clobPairIdStr)
+			}
+			sort.Strings(keys)
+
 			var clobPairLeverage []*types.LeverageEntry
-			for clobPairIdStr, custom_imf_ppm := range leverageMap {
+			for _, clobPairIdStr := range keys {
 				clobPairId, err := strconv.ParseUint(clobPairIdStr, 10, 32)
 				if err != nil {
 					return fmt.Errorf("invalid clob pair ID %s: %w", clobPairIdStr, err)
 				}
+
 				clobPairLeverage = append(clobPairLeverage, &types.LeverageEntry{
 					ClobPairId:   uint32(clobPairId),
-					CustomImfPpm: custom_imf_ppm,
+					CustomImfPpm: leverageMap[clobPairIdStr],
 				})
 			}
 

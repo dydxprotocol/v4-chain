@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"sort"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -31,15 +32,24 @@ func (k Keeper) Leverage(
 		leverageMap = make(map[uint32]uint32)
 	}
 
+	// Sort the keys to ensure deterministic ordering
+	keys := make([]uint32, 0, len(leverageMap))
+	for perpetualId := range leverageMap {
+		keys = append(keys, perpetualId)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+
 	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverageMap))
-	for perpetualId, custom_imf_ppm := range leverageMap {
+	for _, perpetualId := range keys {
 		clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, errorsmod.Wrap(err, "failed to get clob pair id for perpetual").Error())
 		}
 		clobPairLeverage = append(clobPairLeverage, &types.ClobPairLeverageInfo{
 			ClobPairId:   clobPairId.ToUint32(),
-			CustomImfPpm: custom_imf_ppm,
+			CustomImfPpm: leverageMap[perpetualId],
 		})
 	}
 	return &types.QueryLeverageResponse{ClobPairLeverage: clobPairLeverage}, nil
