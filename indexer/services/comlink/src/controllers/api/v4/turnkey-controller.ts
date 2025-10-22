@@ -9,7 +9,7 @@ import {
 } from 'tsoa';
 import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
@@ -217,7 +217,7 @@ export class TurnkeyController extends Controller {
 
 router.post(
   '/signin',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   ...CheckSignInSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
@@ -260,7 +260,7 @@ router.post(
 
 router.post(
   '/uploadAddress',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   ...CheckUploadDydxAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
@@ -287,3 +287,45 @@ router.post(
     }
   },
 );
+<<<<<<< HEAD
+=======
+
+router.get(
+  '/appleLoginRedirect',
+  rateLimiterMiddleware(defaultRateLimiter),
+  ...CheckAppleLoginRedirectSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    try {
+      const query = matchedData(req) as AppleLoginRedirectRequest;
+      const controller: TurnkeyController = new TurnkeyController();
+      const response = await controller.appleLoginRedirect(query);
+
+      if (response.success && response.encodedPayload) {
+        const encodedPayload = encodeURIComponent(response.encodedPayload);
+        return res.redirect(`${config.APPLE_APP_SCHEME}:///onboard/turnkey?appleLogin=${encodedPayload}`);
+      } else {
+        // Handle error case - redirect with error
+        const errorUrl = `${config.APPLE_APP_SCHEME}:///onboard/turnkey?error=${encodeURIComponent(response.error || 'Unknown error')}`;
+        return res.redirect(errorUrl);
+      }
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController GET /appleLoginRedirect',
+        'Apple login redirect error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_appleLoginRedirect.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+>>>>>>> 19fb1175 (feat(comlink): Per-route rate limiters for candles, orders, fills, ... (#3167))
