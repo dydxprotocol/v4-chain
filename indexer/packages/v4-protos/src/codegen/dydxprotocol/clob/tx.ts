@@ -389,7 +389,7 @@ export interface LeverageEntry {
   clobPairId: number;
   /** The user selected imf. */
 
-  imfPpm: number;
+  customImfPpm: number;
 }
 /** LeverageEntry represents a single clob pair leverage setting. */
 
@@ -398,7 +398,7 @@ export interface LeverageEntrySDKType {
   clob_pair_id: number;
   /** The user selected imf. */
 
-  imf_ppm: number;
+  custom_imf_ppm: number;
 }
 /**
  * MsgUpdateLeverage is a request type used for updating leverage for
@@ -1388,7 +1388,7 @@ export const MsgUpdateLiquidationsConfigResponse = {
 function createBaseLeverageEntry(): LeverageEntry {
   return {
     clobPairId: 0,
-    imfPpm: 0
+    customImfPpm: 0
   };
 }
 
@@ -1398,8 +1398,8 @@ export const LeverageEntry = {
       writer.uint32(8).uint32(message.clobPairId);
     }
 
-    if (message.imfPpm !== 0) {
-      writer.uint32(16).uint32(message.imfPpm);
+    if (message.customImfPpm !== 0) {
+      writer.uint32(16).uint32(message.customImfPpm);
     }
 
     return writer;
@@ -1419,7 +1419,7 @@ export const LeverageEntry = {
           break;
 
         case 2:
-          message.imfPpm = reader.uint32();
+          message.customImfPpm = reader.uint32();
           break;
 
         default:
@@ -1434,7 +1434,7 @@ export const LeverageEntry = {
   fromPartial(object: DeepPartial<LeverageEntry>): LeverageEntry {
     const message = createBaseLeverageEntry();
     message.clobPairId = object.clobPairId ?? 0;
-    message.imfPpm = object.imfPpm ?? 0;
+    message.customImfPpm = object.customImfPpm ?? 0;
     return message;
   }
 

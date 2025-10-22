@@ -1,22 +1,28 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** PerpetualLeverageEntry represents a single perpetual leverage setting for internal storage */
+/**
+ * PerpetualLeverageEntry represents a single perpetual leverage setting for
+ * internal storage
+ */
 
 export interface PerpetualLeverageEntry {
   /** The perpetual ID (internal storage format) */
   perpetualId: number;
   /** The user selected IMF in parts per million */
 
-  imfPpm: number;
+  customImfPpm: number;
 }
-/** PerpetualLeverageEntry represents a single perpetual leverage setting for internal storage */
+/**
+ * PerpetualLeverageEntry represents a single perpetual leverage setting for
+ * internal storage
+ */
 
 export interface PerpetualLeverageEntrySDKType {
   /** The perpetual ID (internal storage format) */
   perpetual_id: number;
   /** The user selected IMF in parts per million */
 
-  imf_ppm: number;
+  custom_imf_ppm: number;
 }
 /** LeverageData represents the leverage settings for a subaccount */
 
@@ -34,7 +40,7 @@ export interface LeverageDataSDKType {
 function createBasePerpetualLeverageEntry(): PerpetualLeverageEntry {
   return {
     perpetualId: 0,
-    imfPpm: 0
+    customImfPpm: 0
   };
 }
 
@@ -44,8 +50,8 @@ export const PerpetualLeverageEntry = {
       writer.uint32(8).uint32(message.perpetualId);
     }
 
-    if (message.imfPpm !== 0) {
-      writer.uint32(16).uint32(message.imfPpm);
+    if (message.customImfPpm !== 0) {
+      writer.uint32(16).uint32(message.customImfPpm);
     }
 
     return writer;
@@ -65,7 +71,7 @@ export const PerpetualLeverageEntry = {
           break;
 
         case 2:
-          message.imfPpm = reader.uint32();
+          message.customImfPpm = reader.uint32();
           break;
 
         default:
@@ -80,7 +86,7 @@ export const PerpetualLeverageEntry = {
   fromPartial(object: DeepPartial<PerpetualLeverageEntry>): PerpetualLeverageEntry {
     const message = createBasePerpetualLeverageEntry();
     message.perpetualId = object.perpetualId ?? 0;
-    message.imfPpm = object.imfPpm ?? 0;
+    message.customImfPpm = object.customImfPpm ?? 0;
     return message;
   }
 
