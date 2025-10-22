@@ -23,7 +23,18 @@ var (
 				ReqStakedWholeCoins:            5_000,              // 5000 whole coins
 				TakerFeeSharePpm:               150_000,            // 15%
 			},
+			{
+				ReqReferredVolumeQuoteQuantums: 50_000_000_000_000, // 50 million USDC
+				ReqStakedWholeCoins:            100_000_000,        // 100m whole coins
+				TakerFeeSharePpm:               200_000,            // 20%
+			},
 		},
+	}
+
+	DefaultAffiliateParameters = AffiliateParameters{
+		Maximum_30DAttributableRevenuePerAffiliateQuoteQuantums: 100,
+		RefereeMinimumFeeTierIdx:                                1,
+		Maximum_30DCommissionPerReferredQuoteQuantums:           100,
 	}
 
 	AffiliatesRevSharePpmCap = uint32(500_000) // 50%
