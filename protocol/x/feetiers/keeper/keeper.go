@@ -122,7 +122,9 @@ func (k Keeper) getUserFeeTier(
 }
 
 // GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
-// It checks if there's an active fee discount for the specified CLOB pair.
+// It checks if
+// 1. there's an active fee discount for the specified CLOB pair.
+// 2. user qualifies for staking-based discounts.
 func (k Keeper) GetPerpetualFeePpm(
 	ctx sdk.Context,
 	address string,
@@ -138,13 +140,38 @@ func (k Keeper) GetPerpetualFeePpm(
 		baseFee = userTier.MakerFeePpm
 	}
 
-	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
-	discountPpm := k.GetDiscountedPpm(ctx, clobPairId)
+	// Get the per-market discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
+	perMarketDiscountPpm := k.GetDiscountedPpm(ctx, clobPairId)
 
-	// Calculate the discounted fee
+	// Calculate the fee after per-market discount
 	// For negative fees (rebates), we also apply the discount percentage
-	discountedFee := int32(int64(baseFee) * int64(discountPpm) / int64(types.MaxChargePpm))
-	return discountedFee
+	feeAfterMarketDiscount := int32(int64(baseFee) * int64(perMarketDiscountPpm) / int64(types.MaxChargePpm))
+
+	// Apply staking discount if fee is positive and user qualifies
+	if feeAfterMarketDiscount > 0 {
+		// Validate address before getting staked amount
+		_, err := sdk.AccAddressFromBech32(address)
+		if err != nil {
+			// Log error but do not fail fee calculation
+			k.Logger(ctx).Error(
+				"Failed to validate address for staking discount",
+				"address", address,
+				"error", err,
+			)
+		} else {
+			stakedAmount := k.statsKeeper.GetStakedAmount(ctx, address)
+			stakingDiscountPpm := k.GetStakingDiscountPpm(ctx, userTier.Name, stakedAmount)
+			if stakingDiscountPpm > 0 {
+				// Final fee
+				// = fee * (1 - staking_discount)
+				// = fee * (1_000_000 - staking_discount_ppm) / 1_000_000
+				remainingFeePpm := types.MaxChargePpm - stakingDiscountPpm
+				feeAfterMarketDiscount = int32(int64(feeAfterMarketDiscount) * int64(remainingFeePpm) / int64(types.MaxChargePpm))
+			}
+		}
+	}
+
+	return feeAfterMarketDiscount
 }
 
 // GetLowestMakerFee returns the lowest maker fee among any tiers.

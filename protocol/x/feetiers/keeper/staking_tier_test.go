@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -302,6 +303,222 @@ func TestGetStakingTier_NotFound(t *testing.T) {
 			if !tc.expectedFound {
 				require.Nil(t, tier)
 			}
+		})
+	}
+}
+
+func TestGetStakingDiscountPpm(t *testing.T) {
+	tests := map[string]struct {
+		// Setup
+		stakingTiers []*types.StakingTier
+
+		// Input
+		feeTierName      string
+		stakedBaseTokens *big.Int
+
+		// Expected
+		expectedDiscountPpm uint32
+	}{
+		"No staking tier configured": {
+			stakingTiers:        []*types.StakingTier{},
+			feeTierName:         "1",
+			stakedBaseTokens:    big.NewInt(1000),
+			expectedDiscountPpm: 0,
+		},
+		"Staking tier exists but no levels": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels:      []*types.StakingLevel{},
+				},
+			},
+			feeTierName:         "1",
+			stakedBaseTokens:    big.NewInt(1000),
+			expectedDiscountPpm: 0,
+		},
+		"User has zero staked tokens": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      50000, // 5%
+						},
+					},
+				},
+			},
+			feeTierName:         "1",
+			stakedBaseTokens:    big.NewInt(0),
+			expectedDiscountPpm: 0,
+		},
+		"User qualifies for first level": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "2",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      50000, // 5%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      100000, // 10%
+						},
+					},
+				},
+			},
+			feeTierName:         "2",
+			stakedBaseTokens:    big.NewInt(999),
+			expectedDiscountPpm: 50000,
+		},
+		"User qualifies for middle level": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "7",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      50000, // 5%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(500),
+							FeeDiscountPpm:      75000, // 7.5%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      100000, // 10%
+						},
+					},
+				},
+			},
+			feeTierName:         "7",
+			stakedBaseTokens:    big.NewInt(500),
+			expectedDiscountPpm: 75000,
+		},
+		"Two staking tiers": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "3",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      50000, // 5%
+						},
+					},
+				},
+				{
+					FeeTierName: "9",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(200),
+							FeeDiscountPpm:      75000, // 7.5%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(500),
+							FeeDiscountPpm:      100000, // 10%
+						},
+					},
+				},
+			},
+			feeTierName:         "9",
+			stakedBaseTokens:    big.NewInt(499),
+			expectedDiscountPpm: 75000,
+		},
+		"Maximum discount - 100%": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      50000, // 5%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(10000),
+							FeeDiscountPpm:      1000000, // 100%
+						},
+					},
+				},
+			},
+			feeTierName:         "1",
+			stakedBaseTokens:    big.NewInt(10000),
+			expectedDiscountPpm: 1000000,
+		},
+		"A tier with five levels": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "6",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(100),
+							FeeDiscountPpm:      20000, // 2%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(500),
+							FeeDiscountPpm:      40000, // 4%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      60000, // 6%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(5000),
+							FeeDiscountPpm:      80000, // 8%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(10000),
+							FeeDiscountPpm:      100000, // 10%
+						},
+					},
+				},
+			},
+			feeTierName:         "6",
+			stakedBaseTokens:    big.NewInt(7500),
+			expectedDiscountPpm: 80000,
+		},
+		"Large staked amount": {
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "5",
+					Levels: []*types.StakingLevel{
+						{
+							// 1e24
+							MinStakedBaseTokens: dtypes.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(24), nil)),
+							FeeDiscountPpm:      50000, // 5%
+						},
+						{
+							// 1e28
+							MinStakedBaseTokens: dtypes.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(28), nil)),
+							FeeDiscountPpm:      110000, // 11%
+						},
+						{
+							// 1e33
+							MinStakedBaseTokens: dtypes.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(33), nil)),
+							FeeDiscountPpm:      200000, // 20%
+						},
+					},
+				},
+			},
+			feeTierName:         "5",
+			stakedBaseTokens:    new(big.Int).Exp(big.NewInt(10), big.NewInt(30), nil), // 1e30
+			expectedDiscountPpm: 110000,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.FeeTiersKeeper
+
+			// Set staking tiers
+			err := k.SetStakingTiers(ctx, tc.stakingTiers)
+			require.NoError(t, err)
+
+			// Verify discount
+			discountPpm := k.GetStakingDiscountPpm(ctx, tc.feeTierName, tc.stakedBaseTokens)
+			require.Equal(t, tc.expectedDiscountPpm, discountPpm)
 		})
 	}
 }
