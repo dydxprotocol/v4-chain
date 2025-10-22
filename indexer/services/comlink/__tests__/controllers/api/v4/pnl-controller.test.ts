@@ -841,5 +841,123 @@ describe('pnl-controller#V4', () => {
       expect(defaultResponse.body.pnl[0].totalPnl).toEqual(response.body.pnl[0].totalPnl);
       expect(defaultResponse.body.pnl[0].netTransfers).toEqual(response.body.pnl[0].netTransfers);
     });
+
+    it('Get /pnl/parentSubaccountNumber performs efficiently with large datasets', async () => {
+      await testMocks.seedData();
+
+      // Create a large, realistic dataset: 3 years * 365 days * 24 hours
+      //   = 26,280 records per subaccount
+      // With 3 child subaccounts = 78,840 total records
+      const baseDate = new Date('2021-01-01T00:00:00.000Z');
+      const yearsToCreate = 3;
+      const hoursPerYear = 365 * 24;
+      const totalHours = yearsToCreate * hoursPerYear;
+      const apiLimit = 1000; // API has a default limit of 1000 records
+
+      // All three are child subaccounts of parent subaccount 0
+      const subaccountIds = [
+        testConstants.defaultSubaccountId, // subaccount 0
+        testConstants.isolatedSubaccountId, // subaccount 128
+        testConstants.isolatedSubaccountId2, // subaccount 256
+      ];
+
+      const largeDataset = [];
+
+      for (let hour = 0; hour < totalHours; hour++) {
+        const date = new Date(baseDate);
+        date.setUTCHours(baseDate.getUTCHours() + hour);
+
+        for (let i = 0; i < subaccountIds.length; i++) {
+          largeDataset.push({
+            ...testConstants.defaultPnl,
+            subaccountId: subaccountIds[i],
+            createdAt: date.toISOString(),
+            createdAtHeight: (10000 + hour + (i * 100000)).toString(),
+            equity: (1000 + hour + (i * 100)).toString(),
+            totalPnl: (100 + hour + (i * 10)).toString(),
+            netTransfers: (900 + hour + (i * 90)).toString(),
+          });
+        }
+      }
+
+      // Batch insert for better performance
+      const batchSize = 1000;
+      for (let i = 0; i < largeDataset.length; i += batchSize) {
+        const batch = largeDataset.slice(i, i + batchSize);
+        await Promise.all(batch.map((record) => PnlTable.create(record)));
+      }
+
+      // Test 1: Hourly aggregation performance (most expensive operation)
+      // Returns up to 1000 hourly records due to API limit
+      const startHourly = Date.now();
+      const hourlyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'false',
+        })}`,
+      });
+      const hourlyTime = Date.now() - startHourly;
+
+      // Should complete within 1 second for hourly aggregation even with large dataset
+      expect(hourlyTime).toBeLessThan(1000);
+      expect(hourlyResponse.body.pnl.length).toEqual(apiLimit);
+
+      // Verify we're getting the most recent records (descending order)
+      const firstHourlyRecord = hourlyResponse.body.pnl[0];
+      const lastHourlyRecord = hourlyResponse.body.pnl[hourlyResponse.body.pnl.length - 1];
+      expect(new Date(firstHourlyRecord.createdAt).getTime()).toBeGreaterThan(
+        new Date(lastHourlyRecord.createdAt).getTime(),
+      );
+
+      // Test 2: Daily aggregation performance
+      // Returns up to 1000 daily records due to API limit
+      const startDaily = Date.now();
+      const dailyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'true',
+        })}`,
+      });
+      const dailyTime = Date.now() - startDaily;
+
+      // Daily aggregation should complete within 1 second
+      const expectedDays = yearsToCreate * 365;
+      expect(dailyTime).toBeLessThan(1000);
+      // Should return 1000 days (API limit) even though we have more
+      expect(dailyResponse.body.pnl.length).toEqual(Math.min(apiLimit, expectedDays));
+
+      // Verify we're getting the most recent records (descending order)
+      const firstDailyRecord = dailyResponse.body.pnl[0];
+      const lastDailyRecord = dailyResponse.body.pnl[dailyResponse.body.pnl.length - 1];
+      expect(new Date(firstDailyRecord.createdAt).getTime()).toBeGreaterThan(
+        new Date(lastDailyRecord.createdAt).getTime(),
+      );
+
+      // Verify data integrity - check that aggregation is correct for the oldest record returned
+      // Since we have 1095 days but only get 1000, the oldest returned is day 95 (1095 - 1000)
+      // This would be 2021-01-01 + 95 days = 2021-04-06
+      const daysToSkip = expectedDays - apiLimit;
+      const oldestReturnedDate = new Date(baseDate.getTime() + daysToSkip * 24 * 60 * 60 * 1000);
+
+      expect(lastDailyRecord.createdAt).toBe(oldestReturnedDate.toISOString());
+
+      // Verify aggregation is correct for this day
+      // Hour offset for this day: (expectedDays - apiLimit) * 24
+      const hourOffset = daysToSkip * 24;
+      // S0: equity=1000+hourOffset, totalPnl=100+hourOffset, netTransfers=900+hourOffset
+      // S128: equity=1100+hourOffset, totalPnl=110+hourOffset, netTransfers=990+hourOffset
+      // S256: equity=1200+hourOffset, totalPnl=120+hourOffset, netTransfers=1080+hourOffset
+      const expectedEquity = 3300 + (hourOffset * 3);
+      const expectedTotalPnl = 330 + (hourOffset * 3);
+      const expectedNetTransfers = 2970 + (hourOffset * 3);
+
+      expect(Number(lastDailyRecord.equity)).toEqual(expectedEquity);
+      expect(Number(lastDailyRecord.totalPnl)).toEqual(expectedTotalPnl);
+      expect(Number(lastDailyRecord.netTransfers)).toEqual(expectedNetTransfers);
+    }, 120000);
   });
 });
