@@ -52,11 +52,16 @@ var (
 			{
 				ReqReferredVolumeQuoteQuantums: 0,
 				ReqStakedWholeCoins:            0,
-				TakerFeeSharePpm:               400_000,
+				TakerFeeSharePpm:               300_000,
 			},
 			{
 				ReqReferredVolumeQuoteQuantums: 1_000_000_000_000, // 1M volume
-				ReqStakedWholeCoins:            200,
+				ReqStakedWholeCoins:            0,
+				TakerFeeSharePpm:               400_000,
+			},
+			{
+				ReqReferredVolumeQuoteQuantums: 10_000_000_000_000, // 10M volume
+				ReqStakedWholeCoins:            0,
 				TakerFeeSharePpm:               500_000,
 			},
 		},
