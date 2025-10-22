@@ -244,9 +244,9 @@ describe('Pnl store', () => {
     // Equity: 1000 + 1100 = 2100
     // TotalPnl: 100 + 110 = 210
     // NetTransfers: 500 + 550 = 1050
-      expect(Number(result.equity)).toBeCloseTo(2100, 0);
-      expect(Number(result.totalPnl)).toBeCloseTo(210, 0);
-      expect(Number(result.netTransfers)).toBeCloseTo(1050, 0);
+      expect(result.equity).toBe('2100');
+      expect(result.totalPnl).toBe('210');
+      expect(result.netTransfers).toBe('1050');
     }
   });
 
@@ -328,9 +328,7 @@ describe('Pnl store', () => {
     // Create records for 12 hours (covering 2 days)
     for (let hour = 0; hour < 12; hour++) {
       const day = Math.floor(hour / 6) + 1; // Day 1 for hours 0-5, Day 2 for hours 6-11
-      // Fix the mixed operators error by using parentheses
       const hourOfDay = (hour % 6) * 4; // Hours 0, 4, 8, 12, 16, 20 of each day
-
       const date = new Date(`2023-01-0${day}T${hourOfDay.toString().padStart(2, '0')}:00:00.000Z`);
 
       // For each hour, create records for both subaccounts
@@ -525,17 +523,17 @@ describe('Pnl store', () => {
     // Equity sum: 2000 + 2100 = 4100
     // TotalPnl sum: 200 + 210 = 410
     // NetTransfers sum: 600 + 650 = 1250
-    expect(Number(day2Record?.equity)).toBeCloseTo(4100, 0);
-    expect(Number(day2Record?.totalPnl)).toBeCloseTo(410, 0);
-    expect(Number(day2Record?.netTransfers)).toBeCloseTo(1250, 0);
+    expect(day2Record?.equity).toBe('4100');
+    expect(day2Record?.totalPnl).toBe('410');
+    expect(day2Record?.netTransfers).toBe('1250');
 
     // Day 1 aggregated values
     // Equity sum: 1000 + 1100 = 2100
     // TotalPnl sum: 100 + 110 = 210
     // NetTransfers sum: 500 + 550 = 1050
-    expect(Number(day1Record?.equity)).toBeCloseTo(2100, 0);
-    expect(Number(day1Record?.totalPnl)).toBeCloseTo(210, 0);
-    expect(Number(day1Record?.netTransfers)).toBeCloseTo(1050, 0);
+    expect(day1Record?.equity).toBe('2100');
+    expect(day1Record?.totalPnl).toBe('210');
+    expect(day1Record?.netTransfers).toBe('1050');
   });
 
   it('Successfully paginates daily aggregated PNL records', async () => {
