@@ -939,13 +939,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
 				require.NoError(t, err)
 
-				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
-					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
-						{
-							Addresses:        []string{constants.BobAccAddress.String()},
-							TakerFeeSharePpm: 250_000, // 25%
-						},
-					},
+				err = affiliatesKeeper.SetAffiliateOverrides(ctx, affiliatetypes.AffiliateOverrides{
+					Addresses: []string{constants.BobAccAddress.String()},
 				})
 				require.NoError(t, err)
 			},
@@ -1018,13 +1013,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
 				require.NoError(t, err)
 
-				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
-					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
-						{
-							Addresses:        []string{constants.BobAccAddress.String()},
-							TakerFeeSharePpm: 250_000, // 25%
-						},
-					},
+				err = affiliatesKeeper.SetAffiliateOverrides(ctx, affiliatetypes.AffiliateOverrides{
+					Addresses: []string{constants.BobAccAddress.String()},
 				})
 				require.NoError(t, err)
 			},
@@ -1086,13 +1076,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
 				require.NoError(t, err)
 
-				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
-					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
-						{
-							Addresses:        []string{constants.BobAccAddress.String()},
-							TakerFeeSharePpm: 250_000, // 25%
-						},
-					},
+				err = affiliatesKeeper.SetAffiliateOverrides(ctx, affiliatetypes.AffiliateOverrides{
+					Addresses: []string{constants.BobAccAddress.String()},
 				})
 				require.NoError(t, err)
 			},
@@ -1163,13 +1148,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
 				require.NoError(t, err)
 
-				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
-					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
-						{
-							Addresses:        []string{constants.BobAccAddress.String()},
-							TakerFeeSharePpm: 250_000, // 25%
-						},
-					},
+				err = affiliatesKeeper.SetAffiliateOverrides(ctx, affiliatetypes.AffiliateOverrides{
+					Addresses: []string{constants.BobAccAddress.String()},
 				})
 				require.NoError(t, err)
 			},
@@ -1338,10 +1318,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			}
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
-			affiliateWhitelistMap, err := affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+			affiliateOverridesMap, err := affiliatesKeeper.GetAffiliateOverridesMap(ctx)
+			require.NoError(t, err)
+			affiliateParameters, err := affiliatesKeeper.GetAffiliateParameters(ctx)
 			require.NoError(t, err)
 
-			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill, affiliateWhitelistMap)
+			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill, affiliateOverridesMap, affiliateParameters)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRevSharesForFill, revSharesForFill)
@@ -1441,7 +1423,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			_, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
+			_, err := keeper.GetAllRevShares(ctx, fill, map[string]bool{}, affiliatetypes.AffiliateParameters{})
 
 			require.ErrorIs(t, err, tc.expectedError)
 		})
