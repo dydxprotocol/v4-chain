@@ -141,6 +141,7 @@ func ListingKeepers(
 				db,
 				cdc,
 			)
+			// Create subaccounts keeper first with nil leverageKeeper
 			subaccountsKeeper, _ = createSubaccountsKeeper(
 				stateStore,
 				db,
@@ -172,6 +173,7 @@ func ListingKeepers(
 				mockIndexerEventManager,
 				transientStoreKey,
 			)
+
 			// Create the listing keeper
 			keeper, storeKey, _ = createListingKeeper(
 				stateStore,
