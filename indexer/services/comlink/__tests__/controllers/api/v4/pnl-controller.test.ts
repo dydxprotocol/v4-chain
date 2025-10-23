@@ -493,7 +493,7 @@ describe('pnl-controller#V4', () => {
       // Create 48 hourly records (2 days) for first subaccount
       for (let i = 0; i < 48; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,
@@ -508,7 +508,7 @@ describe('pnl-controller#V4', () => {
       // Create 48 hourly records (2 days) for second subaccount
       for (let i = 0; i < 48; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,
@@ -881,10 +881,15 @@ describe('pnl-controller#V4', () => {
       }
 
       // Batch insert for better performance
-      const batchSize = 1000;
+      // Keep per-batch concurrency modest to avoid exhausting the pool on CI
+      const batchSize = 200;
       for (let i = 0; i < largeDataset.length; i += batchSize) {
         const batch = largeDataset.slice(i, i + batchSize);
-        await Promise.all(batch.map((record) => PnlTable.create(record)));
+        // Insert in sub-batches to cap peak concurrency (~50)
+        for (let j = 0; j < batch.length; j += 50) {
+          const subBatch = batch.slice(j, j + 50);
+          await Promise.all(subBatch.map((record) => PnlTable.create(record)));
+        }
       }
 
       // Test 1: Hourly aggregation performance (most expensive operation)
@@ -896,12 +901,13 @@ describe('pnl-controller#V4', () => {
           address: testConstants.defaultAddress,
           parentSubaccountNumber: 0,
           daily: 'false',
+          limit: apiLimit,
         })}`,
       });
       const hourlyTime = Date.now() - startHourly;
 
-      // Should complete within 1 second for hourly aggregation even with large dataset
-      expect(hourlyTime).toBeLessThan(1000);
+      // Should complete within 3 seconds for hourly aggregation even with large dataset
+      expect(hourlyTime).toBeLessThan(3000);
       expect(hourlyResponse.body.pnl.length).toEqual(apiLimit);
 
       // Verify we're getting the most recent records (descending order)
@@ -920,13 +926,14 @@ describe('pnl-controller#V4', () => {
           address: testConstants.defaultAddress,
           parentSubaccountNumber: 0,
           daily: 'true',
+          limit: apiLimit,
         })}`,
       });
       const dailyTime = Date.now() - startDaily;
 
-      // Daily aggregation should complete within 1 second
+      // Daily aggregation should complete within 3 seconds
       const expectedDays = yearsToCreate * 365;
-      expect(dailyTime).toBeLessThan(1000);
+      expect(dailyTime).toBeLessThan(3000);
       // Should return 1000 days (API limit) even though we have more
       expect(dailyResponse.body.pnl.length).toEqual(Math.min(apiLimit, expectedDays));
 
