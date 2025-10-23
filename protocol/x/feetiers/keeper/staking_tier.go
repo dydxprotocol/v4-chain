@@ -130,3 +130,35 @@ func (k Keeper) GetAllStakingTiers(ctx sdk.Context) []*types.StakingTier {
 
 	return stakingTiers
 }
+
+// GetStakingDiscountPpm returns the maximum discount (in PPM) that the given amount of staked tokens
+// qualifies for in the specified fee tier. Returns 0 if:
+// - The staking tier is not found
+// - No staking levels are configured for this tier
+// - The staked amount doesn't meet any level's requirement
+func (k Keeper) GetStakingDiscountPpm(ctx sdk.Context, feeTierName string, stakedBaseTokens *big.Int) uint32 {
+	// Get the staking tier for given fee tier
+	stakingTier, found := k.GetStakingTier(ctx, feeTierName)
+	if !found || stakingTier == nil {
+		return 0
+	}
+
+	// No discount if levels are empty
+	if len(stakingTier.Levels) == 0 {
+		return 0
+	}
+
+	// Find the highest level that `stakedBaseTokens` qualifies for
+	// Levels are in strictly increasing order of min staked tokens
+	maxDiscountPpm := uint32(0)
+	for _, level := range stakingTier.Levels {
+		minStaked := level.MinStakedBaseTokens.BigInt()
+		if stakedBaseTokens.Cmp(minStaked) >= 0 {
+			maxDiscountPpm = level.FeeDiscountPpm
+		} else {
+			break
+		}
+	}
+
+	return maxDiscountPpm
+}
