@@ -162,4 +162,3 @@ func (k Keeper) GetStakingDiscountPpm(ctx sdk.Context, feeTierName string, stake
 
 	return maxDiscountPpm
 }
-

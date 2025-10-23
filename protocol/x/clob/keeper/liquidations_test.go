@@ -290,7 +290,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 
-			ctx := ks.Ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
@@ -418,7 +418,7 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-			ctx := ks.Ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -1190,7 +1190,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			mockIndexerEventManager.On("Enabled").Return(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, bankKeeper, mockIndexerEventManager)
 
-			ctx := ks.Ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
 
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
@@ -2109,7 +2109,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			mockIndexerEventManager.On("Enabled").Return(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, bankKeeper, mockIndexerEventManager)
 
-			ctx := ks.Ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
 
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
@@ -2287,7 +2287,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	// CheckTx mode set correctly
-	ctx = ctx.WithIsCheckTx(true)
+	ctx = ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
 
 	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
@@ -4800,7 +4800,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				),
 			)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-			ctx := ks.Ctx.WithIsCheckTx(true)
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
