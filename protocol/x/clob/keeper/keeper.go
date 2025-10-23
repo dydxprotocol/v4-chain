@@ -161,6 +161,10 @@ func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingMa
 	return k.streamingManager
 }
 
+func (k Keeper) GetSubaccountsKeeper() types.SubaccountsKeeper {
+	return k.subaccountsKeeper
+}
+
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) *big.Int {
 	return k.subaccountsKeeper.GetCrossInsuranceFundBalance(ctx)
 }

@@ -315,6 +315,47 @@ var (
 		},
 		20,
 	)
+<<<<<<< HEAD
+=======
+
+	// Leverage update message constants
+	UpdateLeverage_Alice_Num0_PerpId0_Lev5 = clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Alice_Num0,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId:   0,
+				CustomImfPpm: 200_000,
+			},
+		},
+	}
+	UpdateLeverage_Alice_Num0_PerpId1_Lev10 = clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Alice_Num0,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId:   1,
+				CustomImfPpm: 100_000,
+			},
+		},
+	}
+	UpdateLeverage_Alice_Num1_PerpId0_Lev4 = clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Alice_Num1,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId:   0,
+				CustomImfPpm: 250_000,
+			},
+		},
+	}
+	UpdateLeverage_Bob_Num0_PerpId0_Lev5 = clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Bob_Num0,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId:   0,
+				CustomImfPpm: 200_000,
+			},
+		},
+	}
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))
 )
 
 func TestHydrationInPreBlocker(t *testing.T) {

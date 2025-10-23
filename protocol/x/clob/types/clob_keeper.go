@@ -155,4 +155,12 @@ type ClobKeeper interface {
 	// Migrate order expiration state (for upgrading to 5.2 only)
 	UnsafeMigrateOrderExpirationState(ctx sdk.Context)
 	SetNextClobPairID(ctx sdk.Context, nextID uint32)
+<<<<<<< HEAD
+=======
+
+	// Leverage methods
+	UpdateLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId, perpetualLeverage map[uint32]uint32) error
+	RateLimitUpdateLeverage(ctx sdk.Context, msg *MsgUpdateLeverage) error
+	GetSubaccountsKeeper() SubaccountsKeeper
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))
 }

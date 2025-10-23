@@ -211,3 +211,29 @@ message MsgUpdateLiquidationsConfig {
 
 // MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
 message MsgUpdateLiquidationsConfigResponse {}
+<<<<<<< HEAD
+=======
+
+// LeverageEntry represents a single clob pair leverage setting.
+message LeverageEntry {
+  // The clob pair ID.
+  uint32 clob_pair_id = 1;
+  // The user selected imf.
+  uint32 custom_imf_ppm = 2;
+}
+
+// MsgUpdateLeverage is a request type used for updating leverage for
+// clob pairs.
+message MsgUpdateLeverage {
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
+  // The subaccount that is updating leverage.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
+
+  // List of clob pair leverage settings.
+  repeated LeverageEntry clob_pair_leverage = 2;
+}
+
+// MsgUpdateLeverageResponse is a response type used for updating leverage.
+message MsgUpdateLeverageResponse {}
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))

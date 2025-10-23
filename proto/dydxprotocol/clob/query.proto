@@ -175,6 +175,31 @@ message QueryNextClobPairIdRequest {}
 // QueryNextClobPairIdResponse is a response message for the next clob pair id
 message QueryNextClobPairIdResponse { uint32 next_clob_pair_id = 1; }
 
+<<<<<<< HEAD
+=======
+// QueryLeverageRequest is a request message for Leverage.
+message QueryLeverageRequest {
+  // The address of the wallet that owns the subaccount.
+  string owner = 1;
+  // The unique number of the subaccount for the owner.
+  uint32 number = 2;
+}
+
+// QueryLeverageResponse is a response message that contains the leverage map.
+message QueryLeverageResponse {
+  // List of clob pair leverage settings.
+  repeated ClobPairLeverageInfo clob_pair_leverage = 1;
+}
+
+// ClobPairLeverageInfo represents the leverage setting for a single clob pair.
+message ClobPairLeverageInfo {
+  // The clob pair ID.
+  uint32 clob_pair_id = 1;
+  // The user selected imf.
+  uint32 custom_imf_ppm = 2;
+}
+
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))
 // StreamOrderbookUpdatesRequest is a request message for the
 // StreamOrderbookUpdates method.
 message StreamOrderbookUpdatesRequest {

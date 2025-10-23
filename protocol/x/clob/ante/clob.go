@@ -192,6 +192,38 @@ func (cd ClobDecorator) AnteHandle(
 				)
 				return ctx, err
 			}
+<<<<<<< HEAD
+=======
+		case *types.MsgUpdateLeverage:
+			// Process UpdateLeverage message - delegate to subaccounts keeper
+			// Convert from LeverageEntry slice to map
+			perpetualLeverageMap, err := types.ValidateAndConstructPerpetualLeverageMap(ctx, msg, cd.clobKeeper)
+			if err != nil {
+				return ctx, err
+			}
+
+			// Delegate to subaccounts keeper for leverage storage and validation
+			if err := cd.clobKeeper.GetSubaccountsKeeper().UpdateLeverage(
+				ctx,
+				msg.SubaccountId,
+				perpetualLeverageMap,
+			); err != nil {
+				log.DebugLog(
+					ctx,
+					"Failed to update leverage in ante handler",
+					log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+					log.Error, err,
+				)
+				return ctx, err
+			}
+
+			log.DebugLog(
+				ctx,
+				"Received new leverage update",
+				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				"subaccount", msg.SubaccountId.String(),
+			)
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))
 		}
 		if err != nil {
 			return ctx, err

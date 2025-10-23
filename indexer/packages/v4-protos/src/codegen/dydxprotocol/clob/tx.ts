@@ -382,6 +382,57 @@ export interface MsgUpdateLiquidationsConfigResponse {}
 /** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type. */
 
 export interface MsgUpdateLiquidationsConfigResponseSDKType {}
+<<<<<<< HEAD
+=======
+/** LeverageEntry represents a single clob pair leverage setting. */
+
+export interface LeverageEntry {
+  /** The clob pair ID. */
+  clobPairId: number;
+  /** The user selected imf. */
+
+  customImfPpm: number;
+}
+/** LeverageEntry represents a single clob pair leverage setting. */
+
+export interface LeverageEntrySDKType {
+  /** The clob pair ID. */
+  clob_pair_id: number;
+  /** The user selected imf. */
+
+  custom_imf_ppm: number;
+}
+/**
+ * MsgUpdateLeverage is a request type used for updating leverage for
+ * clob pairs.
+ */
+
+export interface MsgUpdateLeverage {
+  /** The subaccount that is updating leverage. */
+  subaccountId?: SubaccountId;
+  /** List of clob pair leverage settings. */
+
+  clobPairLeverage: LeverageEntry[];
+}
+/**
+ * MsgUpdateLeverage is a request type used for updating leverage for
+ * clob pairs.
+ */
+
+export interface MsgUpdateLeverageSDKType {
+  /** The subaccount that is updating leverage. */
+  subaccount_id?: SubaccountIdSDKType;
+  /** List of clob pair leverage settings. */
+
+  clob_pair_leverage: LeverageEntrySDKType[];
+}
+/** MsgUpdateLeverageResponse is a response type used for updating leverage. */
+
+export interface MsgUpdateLeverageResponse {}
+/** MsgUpdateLeverageResponse is a response type used for updating leverage. */
+
+export interface MsgUpdateLeverageResponseSDKType {}
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))
 
 function createBaseMsgCreateClobPair(): MsgCreateClobPair {
   return {
@@ -1335,4 +1386,151 @@ export const MsgUpdateLiquidationsConfigResponse = {
     return message;
   }
 
+<<<<<<< HEAD
+=======
+};
+
+function createBaseLeverageEntry(): LeverageEntry {
+  return {
+    clobPairId: 0,
+    customImfPpm: 0
+  };
+}
+
+export const LeverageEntry = {
+  encode(message: LeverageEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobPairId !== 0) {
+      writer.uint32(8).uint32(message.clobPairId);
+    }
+
+    if (message.customImfPpm !== 0) {
+      writer.uint32(16).uint32(message.customImfPpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LeverageEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLeverageEntry();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 2:
+          message.customImfPpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LeverageEntry>): LeverageEntry {
+    const message = createBaseLeverageEntry();
+    message.clobPairId = object.clobPairId ?? 0;
+    message.customImfPpm = object.customImfPpm ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateLeverage(): MsgUpdateLeverage {
+  return {
+    subaccountId: undefined,
+    clobPairLeverage: []
+  };
+}
+
+export const MsgUpdateLeverage = {
+  encode(message: MsgUpdateLeverage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
+    }
+
+    for (const v of message.clobPairLeverage) {
+      LeverageEntry.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateLeverage {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateLeverage();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.clobPairLeverage.push(LeverageEntry.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateLeverage>): MsgUpdateLeverage {
+    const message = createBaseMsgUpdateLeverage();
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    message.clobPairLeverage = object.clobPairLeverage?.map(e => LeverageEntry.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateLeverageResponse(): MsgUpdateLeverageResponse {
+  return {};
+}
+
+export const MsgUpdateLeverageResponse = {
+  encode(_: MsgUpdateLeverageResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateLeverageResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateLeverageResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateLeverageResponse>): MsgUpdateLeverageResponse {
+    const message = createBaseMsgUpdateLeverageResponse();
+    return message;
+  }
+
+>>>>>>> d5af215c (Check Leverage On Order Placement (#3141))
 };
