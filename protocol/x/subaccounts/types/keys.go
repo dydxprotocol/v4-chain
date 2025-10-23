@@ -25,4 +25,7 @@ const (
 	SafetyHeapSubaccountIdsPrefix     = "Heap/"
 	SafetyHeapSubaccountToIndexPrefix = "Idx/"
 	SafetyHeapLengthPrefix            = "Len/"
+
+	// Leverage
+	LeverageKeyPrefix = "Lev:"
 )
