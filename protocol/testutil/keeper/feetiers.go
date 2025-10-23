@@ -33,6 +33,7 @@ func createFeeTiersKeeper(
 		delaymsgtypes.ModuleAddress.String(),
 		lib.GovModuleAddress.String(),
 	}
+
 	k := keeper.NewKeeper(
 		cdc,
 		statsKeeper,
