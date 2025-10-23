@@ -23,7 +23,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
@@ -281,7 +281,7 @@ async function adjustAssetPositionsWithFunding(
 
 router.get(
   '/',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   assetPositionsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   handleValidationErrors,
@@ -324,7 +324,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   assetPositionsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   handleValidationErrors,

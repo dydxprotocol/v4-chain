@@ -24,7 +24,7 @@ import {
   Controller, Get, Path, Route,
 } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import {
@@ -133,7 +133,7 @@ class ComplianceV2Controller extends Controller {
 
 router.get(
   '/screen/:address',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   ...CheckAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),

@@ -47,7 +47,7 @@ import {
   Route,
 } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
@@ -378,7 +378,7 @@ class AddressesController extends Controller {
 
 router.get(
   '/:address',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   addressesCacheControlMiddleware,
   ...CheckAddressSchema,
   handleValidationErrors,
@@ -418,7 +418,7 @@ router.get(
 
 router.get(
   '/:address/subaccountNumber/:subaccountNumber',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   addressesCacheControlMiddleware,
   ...CheckSubaccountSchema,
   handleValidationErrors,
@@ -463,7 +463,7 @@ router.get(
 
 router.get(
   '/:address/parentSubaccountNumber/:parentSubaccountNumber',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   addressesCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   handleValidationErrors,
@@ -563,7 +563,7 @@ router.post(
 
 router.post(
   '/:address/testNotification',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   noCacheControlMiddleware,
   ...CheckAddressSchema,
   handleValidationErrors,

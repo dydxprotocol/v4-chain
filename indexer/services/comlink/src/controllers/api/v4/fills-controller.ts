@@ -21,7 +21,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { fillsRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
@@ -183,7 +183,7 @@ class FillsController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(fillsRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   fillsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
@@ -265,7 +265,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(fillsRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   fillsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,

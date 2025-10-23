@@ -29,7 +29,7 @@ import {
   Controller, Get, Path, Query, Route,
 } from 'tsoa';
 
-import { ordersRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
@@ -336,7 +336,7 @@ class OrdersController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(ordersRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   ordersCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitSchema,
@@ -464,7 +464,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(ordersRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   ordersCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitSchema,
