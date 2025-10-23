@@ -209,6 +209,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				test.marketPrice,
 				test.liquidityTier,
 				test.quantums,
+				0,
 			)
 			risk := lib.GetNetCollateralAndMarginRequirements(
 				test.perpetual,
@@ -216,6 +217,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				test.liquidityTier,
 				test.quantums,
 				test.quoteBalance,
+				0,
 			)
 			require.Equal(t, 0, new(big.Int).Add(enc, test.quoteBalance).Cmp(risk.NC))
 			require.Equal(t, eimr, risk.IMR)
@@ -314,6 +316,7 @@ func BenchmarkGetMarginRequirementsInQuoteQuantums(b *testing.B) {
 			marketPrice,
 			liquidityTier,
 			quantums,
+			0,
 		)
 	}
 }
@@ -399,6 +402,7 @@ func TestGetMarginRequirementsInQuoteQuantums(t *testing.T) {
 				test.marketPrice,
 				test.liquidityTier,
 				test.quantums,
+				0,
 			)
 			require.Equal(t, test.expectedImr, imr)
 			require.Equal(t, test.expectedMmr, mmr)
@@ -681,6 +685,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 				marketPrice,
 				liquidityTier,
 				tc.bigBaseQuantums,
+				0,
 			)
 
 			require.Equal(t, tc.bigExpectedInitialMargin, imr, "Initial margin mismatch")

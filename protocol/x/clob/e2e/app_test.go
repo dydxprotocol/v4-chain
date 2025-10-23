@@ -321,8 +321,8 @@ var (
 		SubaccountId: &constants.Alice_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 0,
-				Leverage:   5,
+				ClobPairId:   0,
+				CustomImfPpm: 200_000,
 			},
 		},
 	}
@@ -330,17 +330,17 @@ var (
 		SubaccountId: &constants.Alice_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 1,
-				Leverage:   10,
+				ClobPairId:   1,
+				CustomImfPpm: 100_000,
 			},
 		},
 	}
-	UpdateLeverage_Alice_Num1_PerpId0_Lev3 = clobtypes.MsgUpdateLeverage{
+	UpdateLeverage_Alice_Num1_PerpId0_Lev4 = clobtypes.MsgUpdateLeverage{
 		SubaccountId: &constants.Alice_Num1,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 0,
-				Leverage:   3,
+				ClobPairId:   0,
+				CustomImfPpm: 250_000,
 			},
 		},
 	}
@@ -348,8 +348,8 @@ var (
 		SubaccountId: &constants.Bob_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 0,
-				Leverage:   5,
+				ClobPairId:   0,
+				CustomImfPpm: 200_000,
 			},
 		},
 	}

@@ -77,13 +77,14 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 	quoteQuantums *big.Int,
 	oiQuoteQuantums *big.Int,
+	custom_imf_ppm *big.Int,
 ) *big.Int {
 	totalImfPpm := liquidityTier.GetAdjustedInitialMarginPpm(oiQuoteQuantums)
-	return lib.BigMulPpm(
-		quoteQuantums,
-		totalImfPpm,
-		true, // Round up initial margin.
-	)
+	if custom_imf_ppm.Sign() > 0 {
+		// use the configured IMF if it is greater than the OI scaled IMF
+		totalImfPpm = lib.BigMax(totalImfPpm, custom_imf_ppm)
+	}
+	return lib.BigMulPpm(quoteQuantums, totalImfPpm, true) // Round up initial margin.
 }
 
 // GetAdjustedInitialMarginPpm returns the adjusted initial margin (in ppm) based on the current open interest.
