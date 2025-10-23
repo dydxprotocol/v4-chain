@@ -3,7 +3,7 @@ import express from 'express';
 import { DateTime } from 'luxon';
 import { Controller, Get, Route } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -28,7 +28,7 @@ class TimeController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   timeCacheControlMiddleware,
   ExportResponseCodeStats({ controllerName }),
   (_req: express.Request, res: express.Response) => {

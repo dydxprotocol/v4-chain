@@ -57,23 +57,6 @@ export const configSchema = {
   // Expose setting compliance status, only set to true in dev/staging.
   EXPOSE_SET_COMPLIANCE_ENDPOINT: parseBoolean({ default: false }),
 
-  // TODO review and finalize per-route rate limits
-  // Rate limits for costly endpoints
-  RATE_LIMIT_ORDERS_POINTS: parseInteger({ default: 100 }),
-  RATE_LIMIT_ORDERS_DURATION_SECONDS: parseInteger({ default: 10 }),
-  RATE_LIMIT_FILLS_POINTS: parseInteger({ default: 100 }),
-  RATE_LIMIT_FILLS_DURATION_SECONDS: parseInteger({ default: 10 }),
-  RATE_LIMIT_CANDLES_POINTS: parseInteger({ default: 1000 }),
-  RATE_LIMIT_CANDLES_DURATION_SECONDS: parseInteger({ default: 10 }),
-  RATE_LIMIT_SPARKLINES_POINTS: parseInteger({ default: 100 }),
-  RATE_LIMIT_SPARKLINES_DURATION_SECONDS: parseInteger({ default: 10 }),
-  RATE_LIMIT_HISTORICAL_PNL_POINTS: parseInteger({ default: 100 }),
-  RATE_LIMIT_HISTORICAL_PNL_DURATION_SECONDS: parseInteger({ default: 10 }),
-  RATE_LIMIT_PNL_POINTS: parseInteger({ default: 100 }),
-  RATE_LIMIT_PNL_DURATION_SECONDS: parseInteger({ default: 10 }),
-  RATE_LIMIT_FUNDING_POINTS: parseInteger({ default: 100 }),
-  RATE_LIMIT_FUNDING_DURATION_SECONDS: parseInteger({ default: 10 }),
-
   // Affiliates config
   VOLUME_ELIGIBILITY_THRESHOLD: parseInteger({ default: 10_000 }),
 
