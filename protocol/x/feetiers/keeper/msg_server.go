@@ -41,3 +41,42 @@ func (k msgServer) UpdatePerpetualFeeParams(
 
 	return &types.MsgUpdatePerpetualFeeParamsResponse{}, nil
 }
+
+// SetMarketFeeDiscountParams sets or updates fee discount parameters for specific CLOB pairs
+func (k msgServer) SetMarketFeeDiscountParams(
+	goCtx context.Context,
+	msg *types.MsgSetMarketFeeDiscountParams,
+) (*types.MsgSetMarketFeeDiscountParamsResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errorsmod.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	// Process each market fee discount in the message
+	for _, marketDiscount := range msg.Params {
+		// Validate the fee discount parameters with the current block time
+		if err := marketDiscount.Validate(ctx.BlockTime()); err != nil {
+			return nil, errorsmod.Wrapf(
+				err,
+				"invalid market fee discount parameters for CLOB pair ID %d",
+				marketDiscount.ClobPairId,
+			)
+		}
+
+		// Set the market fee discount parameters
+		if err := k.Keeper.SetPerMarketFeeDiscountParams(ctx, marketDiscount); err != nil {
+			return nil, errorsmod.Wrapf(
+				err,
+				"failed to set market fee discount for CLOB pair ID %d",
+				marketDiscount.ClobPairId,
+			)
+		}
+	}
+
+	return &types.MsgSetMarketFeeDiscountParamsResponse{}, nil
+}
