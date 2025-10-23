@@ -21,6 +21,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -1747,7 +1748,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// shares/fees are distributed to the recipient’s bank balance and not settled at the subaccount level,
 		// and won’t affect the collateralization of future operations in the operations queue.
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
-			ctx, &matchWithOrders, map[string]uint32{})
+			ctx, &matchWithOrders, map[string]bool{}, affiliatetypes.AffiliateParameters{})
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.

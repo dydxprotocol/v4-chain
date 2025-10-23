@@ -192,7 +192,8 @@ func (k Keeper) ValidateRevShareSafety(
 func (k Keeper) GetAllRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-	affiliatesWhitelistMap map[string]uint32,
+	affiliateOverrides map[string]bool,
+	affiliateParameters affiliatetypes.AffiliateParameters,
 ) (types.RevSharesForFill, error) {
 	revShares := []types.RevShare{}
 	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
@@ -214,7 +215,8 @@ func (k Keeper) GetAllRevShares(
 		return types.RevSharesForFill{}, nil
 	}
 
-	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
+	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(
+		ctx, fill, affiliateOverrides, affiliateParameters)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
@@ -290,7 +292,8 @@ func (k Keeper) GetAllRevShares(
 func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-	affiliatesWhitelistMap map[string]uint32,
+	affiliateOverrides map[string]bool,
+	_ affiliatetypes.AffiliateParameters,
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
@@ -300,7 +303,7 @@ func (k Keeper) getAffiliateRevShares(
 	}
 
 	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(
-		ctx, takerAddr, affiliatesWhitelistMap)
+		ctx, takerAddr, affiliateOverrides)
 	if err != nil {
 		return nil, big.NewInt(0), err
 	}
