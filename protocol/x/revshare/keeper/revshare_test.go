@@ -1020,8 +1020,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-<<<<<<< HEAD
-=======
 			name: "Rev share populates order router rev share even if one is missing",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
@@ -1085,7 +1083,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
->>>>>>> c29eea29 (Dont attribute new revenue if user exceeds 30d max volume and deprecate AffiliateWhitelist (#3109))
 			name: "Rev share populates order router rev share if affiliates is empty",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
