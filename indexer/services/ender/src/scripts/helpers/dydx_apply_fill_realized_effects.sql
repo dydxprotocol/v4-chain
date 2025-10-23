@@ -22,8 +22,8 @@ BEGIN
         RETURN;
     END IF;
 
-    is_reducing := (pos_side_before = 'BUY'  AND fill_side = 'SELL')
-                OR (pos_side_before = 'SELL' AND fill_side = 'BUY');
+    is_reducing := (pos_side_before = 'LONG'  AND fill_side = 'SELL')
+                OR (pos_side_before = 'SHORT' AND fill_side = 'BUY');
 
     IF NOT is_reducing THEN
         -- increasing: fees only
@@ -36,7 +36,7 @@ BEGIN
 
     closing_amount := LEAST(fill_size, pos_size_before); -- cap to existing
 
-    IF pos_side_before = 'BUY' THEN
+    IF pos_side_before = 'LONG' THEN
         pnl := (fill_price - entry_price_before) * closing_amount;
     ELSE
         pnl := (entry_price_before - fill_price) * closing_amount;
