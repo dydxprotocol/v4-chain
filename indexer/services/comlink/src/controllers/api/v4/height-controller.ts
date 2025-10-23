@@ -3,7 +3,7 @@ import { BlockTable, BlockFromDatabase } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { Controller, Get, Route } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
@@ -32,7 +32,7 @@ class HeightController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
