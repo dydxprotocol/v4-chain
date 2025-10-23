@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -255,7 +256,8 @@ func TestProcessSingleMatch_IsolatedMarket_NegativeInsuranceFundDelta(t *testing
 	success, takerResult, makerResult, _, err := tApp.App.ClobKeeper.ProcessSingleMatch(
 		ctx,
 		matchWithOrders,
-		map[string]uint32{},
+		map[string]bool{},
+		affiliatetypes.AffiliateParameters{},
 	)
 
 	// Get pool balance after
