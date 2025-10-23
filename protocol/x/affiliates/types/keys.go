@@ -15,8 +15,6 @@ const (
 
 	ReferredVolumeInWindowKeyPrefix = "RVW:"
 
-	ReferredCommissionKeyPrefix = "RC:"
-
 	AffiliateTiersKey = "AT"
 
 	AffiliateWhitelistKey = "AW"

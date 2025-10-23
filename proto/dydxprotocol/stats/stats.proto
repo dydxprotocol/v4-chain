@@ -68,8 +68,11 @@ message UserStats {
   // Maker USDC in quantums
   uint64 maker_notional = 2;
 
-  // Affiliate revenue generated in quantums
-  uint64 affiliate_revenue_generated_quantums = 3;
+  // Affiliate revenue generated in quantums with this user being a referee
+  uint64 affiliate_30d_revenue_generated_quantums = 3;
+
+  // Referred volume in quote quantums with this user being an affiliate
+  uint64 affiliate_30d_referred_volume_quote_quantums = 4;
 }
 
 // CachedStakeAmount stores the last calculated total staked amount for address
