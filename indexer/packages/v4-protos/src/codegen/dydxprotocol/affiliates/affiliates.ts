@@ -77,32 +77,38 @@ export interface AffiliateWhitelist_TierSDKType {
 /** AffiliateParameters defines the parameters for the affiliate program. */
 
 export interface AffiliateParameters {
-  /** Maximum commission per referred user in a 30d rolling window in revenue */
-  maximum_30dCommissionPerReferredQuoteQuantums: Long;
-  /** Referee minimum fee tier index */
+  /**
+   * Maximum attributable volume for a referred user in a 30d rolling window in
+   * notional
+   */
+  maximum_30dAttributableVolumePerReferredUserNotional: Long;
+  /** Referred user automatically gets set to this fee tier */
 
   refereeMinimumFeeTierIdx: number;
   /**
-   * Maximum attributable revenue per affiliate in a 30d rolling window in
-   * revenue
+   * Maximum attributable revenue for a referred user in a 30d rolling window in
+   * quote quantums
    */
 
-  maximum_30dAttributableRevenuePerAffiliateQuoteQuantums: Long;
+  maximum_30dAttributableRevenuePerReferredUserQuoteQuantums: Long;
 }
 /** AffiliateParameters defines the parameters for the affiliate program. */
 
 export interface AffiliateParametersSDKType {
-  /** Maximum commission per referred user in a 30d rolling window in revenue */
-  maximum_30d_commission_per_referred_quote_quantums: Long;
-  /** Referee minimum fee tier index */
+  /**
+   * Maximum attributable volume for a referred user in a 30d rolling window in
+   * notional
+   */
+  maximum_30d_attributable_volume_per_referred_user_notional: Long;
+  /** Referred user automatically gets set to this fee tier */
 
   referee_minimum_fee_tier_idx: number;
   /**
-   * Maximum attributable revenue per affiliate in a 30d rolling window in
-   * revenue
+   * Maximum attributable revenue for a referred user in a 30d rolling window in
+   * quote quantums
    */
 
-  maximum_30d_attributable_revenue_per_affiliate_quote_quantums: Long;
+  maximum_30d_attributable_revenue_per_referred_user_quote_quantums: Long;
 }
 /** AffiliateOverrides defines the affiliate whitelist. */
 
@@ -335,24 +341,24 @@ export const AffiliateWhitelist_Tier = {
 
 function createBaseAffiliateParameters(): AffiliateParameters {
   return {
-    maximum_30dCommissionPerReferredQuoteQuantums: Long.UZERO,
+    maximum_30dAttributableVolumePerReferredUserNotional: Long.UZERO,
     refereeMinimumFeeTierIdx: 0,
-    maximum_30dAttributableRevenuePerAffiliateQuoteQuantums: Long.UZERO
+    maximum_30dAttributableRevenuePerReferredUserQuoteQuantums: Long.UZERO
   };
 }
 
 export const AffiliateParameters = {
   encode(message: AffiliateParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.maximum_30dCommissionPerReferredQuoteQuantums.isZero()) {
-      writer.uint32(8).uint64(message.maximum_30dCommissionPerReferredQuoteQuantums);
+    if (!message.maximum_30dAttributableVolumePerReferredUserNotional.isZero()) {
+      writer.uint32(8).uint64(message.maximum_30dAttributableVolumePerReferredUserNotional);
     }
 
     if (message.refereeMinimumFeeTierIdx !== 0) {
       writer.uint32(16).uint32(message.refereeMinimumFeeTierIdx);
     }
 
-    if (!message.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums.isZero()) {
-      writer.uint32(24).uint64(message.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums);
+    if (!message.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums.isZero()) {
+      writer.uint32(24).uint64(message.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums);
     }
 
     return writer;
@@ -368,7 +374,7 @@ export const AffiliateParameters = {
 
       switch (tag >>> 3) {
         case 1:
-          message.maximum_30dCommissionPerReferredQuoteQuantums = (reader.uint64() as Long);
+          message.maximum_30dAttributableVolumePerReferredUserNotional = (reader.uint64() as Long);
           break;
 
         case 2:
@@ -376,7 +382,7 @@ export const AffiliateParameters = {
           break;
 
         case 3:
-          message.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums = (reader.uint64() as Long);
+          message.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums = (reader.uint64() as Long);
           break;
 
         default:
@@ -390,9 +396,9 @@ export const AffiliateParameters = {
 
   fromPartial(object: DeepPartial<AffiliateParameters>): AffiliateParameters {
     const message = createBaseAffiliateParameters();
-    message.maximum_30dCommissionPerReferredQuoteQuantums = object.maximum_30dCommissionPerReferredQuoteQuantums !== undefined && object.maximum_30dCommissionPerReferredQuoteQuantums !== null ? Long.fromValue(object.maximum_30dCommissionPerReferredQuoteQuantums) : Long.UZERO;
+    message.maximum_30dAttributableVolumePerReferredUserNotional = object.maximum_30dAttributableVolumePerReferredUserNotional !== undefined && object.maximum_30dAttributableVolumePerReferredUserNotional !== null ? Long.fromValue(object.maximum_30dAttributableVolumePerReferredUserNotional) : Long.UZERO;
     message.refereeMinimumFeeTierIdx = object.refereeMinimumFeeTierIdx ?? 0;
-    message.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums = object.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums !== undefined && object.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums !== null ? Long.fromValue(object.maximum_30dAttributableRevenuePerAffiliateQuoteQuantums) : Long.UZERO;
+    message.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums = object.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums !== undefined && object.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums !== null ? Long.fromValue(object.maximum_30dAttributableRevenuePerReferredUserQuoteQuantums) : Long.UZERO;
     return message;
   }
 
