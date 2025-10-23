@@ -43,7 +43,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 import config from '../../../config';
 import { redisClient, redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
@@ -357,7 +357,7 @@ class VaultController extends Controller {
 
 router.get(
   '/v1/megavault/historicalPnl',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   vaultCacheControlMiddleware,
   ...checkSchema({
     resolution: {
@@ -401,7 +401,7 @@ router.get(
 
 router.get(
   '/v1/vaults/historicalPnl',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   vaultCacheControlMiddleware,
   ...checkSchema({
     resolution: {
@@ -445,7 +445,7 @@ router.get(
 
 router.get(
   '/v1/megavault/positions',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   vaultCacheControlMiddleware,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {

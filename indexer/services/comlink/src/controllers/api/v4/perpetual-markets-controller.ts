@@ -19,7 +19,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { InvalidParamError, NotFoundError } from '../../../lib/errors';
 import {
@@ -143,7 +143,7 @@ class PerpetualMarketsController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   perpetualMarketsCacheControlMiddleware,
   ...CheckLimitSchema,
   ...CheckTickerOptionalQuerySchema,

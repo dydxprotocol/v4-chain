@@ -14,7 +14,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { fundingRateLimiter } from '../../../caches/rate-limiters';
+import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import {
@@ -162,7 +162,7 @@ export class FundingPaymentController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(fundingRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   fundingPaymentsCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
@@ -218,7 +218,7 @@ router.get(
 
 router.get(
   '/parentSubaccount',
-  rateLimiterMiddleware(fundingRateLimiter),
+  rateLimiterMiddleware(getReqRateLimiter),
   fundingPaymentsCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
