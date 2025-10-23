@@ -210,7 +210,7 @@ BEGIN
     ORDER BY "openEventId" DESC
     LIMIT 1;
 
-    snap_size_before = COALESCE(ABS(perpetual_position_record."sumOpen"), 0);
+    snap_size_before = COALESCE(ABS(perpetual_position_record."size"), 0);
     snap_entry_before = NULLIF(perpetual_position_record."entryPrice", 0);
     snap_side_before = perpetual_position_record."side";
 
