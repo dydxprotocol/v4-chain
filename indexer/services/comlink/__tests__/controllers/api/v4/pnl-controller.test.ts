@@ -70,19 +70,26 @@ describe('pnl-controller#V4', () => {
 
     it('Get /pnl respects pagination', async () => {
       await testMocks.seedData();
-      const createdAt: string = '2000-05-25T00:00:00.000Z';
-      const createdAtHeight: string = '1';
-      const pnl2: PnlCreateObject = {
-        ...testConstants.defaultPnl,
-        createdAt,
-        createdAtHeight,
-      };
 
       await Promise.all([
-        PnlTable.create(testConstants.defaultPnl),
-        PnlTable.create(pnl2),
+        PnlTable.create({
+          ...testConstants.defaultPnl,
+          createdAt: '2023-01-01T10:00:00.000Z',
+          createdAtHeight: '1000',
+          equity: '5000.00',
+          totalPnl: '500.00',
+        }),
+
+        PnlTable.create({
+          ...testConstants.defaultPnl,
+          createdAt: '2023-01-01T11:00:00.000Z',
+          createdAtHeight: '1100',
+          equity: '5100.00',
+          totalPnl: '600.00',
+        }),
       ]);
 
+      // Test first page with limit 1
       const responsePage1: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/pnl?${getQueryString({
@@ -93,6 +100,15 @@ describe('pnl-controller#V4', () => {
         })}`,
       });
 
+      // Verify first page - should have the more recent record (11 AM)
+      expect(responsePage1.body.pageSize).toStrictEqual(1);
+      expect(responsePage1.body.offset).toStrictEqual(0);
+      expect(responsePage1.body.totalResults).toStrictEqual(2);
+      expect(responsePage1.body.pnl).toHaveLength(1);
+      expect(responsePage1.body.pnl[0].createdAtHeight).toEqual('1100');
+      expect(responsePage1.body.pnl[0].createdAt).toEqual('2023-01-01T11:00:00.000Z');
+
+      // Test second page with limit 1
       const responsePage2: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/pnl?${getQueryString({
@@ -103,39 +119,13 @@ describe('pnl-controller#V4', () => {
         })}`,
       });
 
-      const expectedPnlResponse: PnlResponseObject = pnlCreateObjectToResponseObject({
-        ...testConstants.defaultPnl,
-      });
-
-      const expectedPnl2Response: PnlResponseObject = pnlCreateObjectToResponseObject({
-        ...testConstants.defaultPnl,
-        createdAt,
-        createdAtHeight,
-      });
-
-      expect(responsePage1.body.pageSize).toStrictEqual(1);
-      expect(responsePage1.body.offset).toStrictEqual(0);
-      expect(responsePage1.body.totalResults).toStrictEqual(2);
-      expect(responsePage1.body.pnl).toHaveLength(1);
-      expect(responsePage1.body.pnl).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...expectedPnlResponse,
-          }),
-        ]),
-      );
-
+      // Verify second page - should have the earlier record (10 AM)
       expect(responsePage2.body.pageSize).toStrictEqual(1);
       expect(responsePage2.body.offset).toStrictEqual(1);
       expect(responsePage2.body.totalResults).toStrictEqual(2);
       expect(responsePage2.body.pnl).toHaveLength(1);
-      expect(responsePage2.body.pnl).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...expectedPnl2Response,
-          }),
-        ]),
-      );
+      expect(responsePage2.body.pnl[0].createdAtHeight).toEqual('1000');
+      expect(responsePage2.body.pnl[0].createdAt).toEqual('2023-01-01T10:00:00.000Z');
     });
 
     it('Get /pnl respects createdBeforeOrAt and createdBeforeOrAtHeight field', async () => {
@@ -291,12 +281,11 @@ describe('pnl-controller#V4', () => {
       for (let i = 0; i < 72; i++) {
         const date = new Date(baseDate);
         date.setUTCHours(baseDate.getUTCHours() + i);
-
         hourlyRecords.push({
           ...testConstants.defaultPnl,
           createdAt: date.toISOString(),
-          createdAtHeight: (1000 + i).toString(), // Incrementing heights
-          equity: (1000 + i).toString(), // Different equity values to verify correct records
+          createdAtHeight: (1000 + i).toString(),
+          equity: (1000 + i).toString(),
         });
       }
 
@@ -330,14 +319,9 @@ describe('pnl-controller#V4', () => {
 
       expect(dailyResponse.body.pnl.length).toEqual(3);
 
-      // Verify the record structure:
-      // 1. Latest record from day 3 (hour 71)
-      // 2. Earliest record from day 2 (hour 24)
-      // 3. Earliest record from day 1 (hour 0)
-
-      // First record should be latest from day 3 (hour 71)
-      expect(dailyResponse.body.pnl[0].createdAtHeight).toBe('1071');
-      expect(dailyResponse.body.pnl[0].createdAt).toBe('2023-01-03T23:00:00.000Z');
+      // First record should be earliest from day 3 (hour 48)
+      expect(dailyResponse.body.pnl[0].createdAtHeight).toBe('1048');
+      expect(dailyResponse.body.pnl[0].createdAt).toBe('2023-01-03T00:00:00.000Z');
 
       // Second record should be earliest from day 2 (hour 24)
       expect(dailyResponse.body.pnl[1].createdAtHeight).toBe('1024');
@@ -365,7 +349,7 @@ describe('pnl-controller#V4', () => {
       expect(dailyPageResponse.body.offset).toBe(0);
 
       // Should contain the first two daily records
-      expect(dailyPageResponse.body.pnl[0].createdAtHeight).toBe('1071');
+      expect(dailyPageResponse.body.pnl[0].createdAtHeight).toBe('1048');
       expect(dailyPageResponse.body.pnl[1].createdAtHeight).toBe('1024');
     });
 
@@ -490,9 +474,9 @@ describe('pnl-controller#V4', () => {
       expect(response.body.pnl).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            equity: '3000',
-            totalPnl: '300',
-            netTransfers: '2700',
+            equity: '3000.00',
+            totalPnl: '300.00',
+            netTransfers: '2700.00',
             createdAt: testConstants.defaultPnl.createdAt,
           }),
         ]),
@@ -509,7 +493,7 @@ describe('pnl-controller#V4', () => {
       // Create 48 hourly records (2 days) for first subaccount
       for (let i = 0; i < 48; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,
@@ -524,7 +508,7 @@ describe('pnl-controller#V4', () => {
       // Create 48 hourly records (2 days) for second subaccount
       for (let i = 0; i < 48; i++) {
         const date = new Date(baseDate);
-        date.setHours(baseDate.getHours() + i);
+        date.setUTCHours(baseDate.getUTCHours() + i);
 
         hourlyRecords.push({
           ...testConstants.defaultPnl,
@@ -568,9 +552,9 @@ describe('pnl-controller#V4', () => {
       expect(day2Record).toBeDefined();
 
       // Expected values for day 1 (the earliest/first hour of day 1)
-      // Earliest record for day 1 for first subaccount is i=0:
+      // First record for day 1 for first subaccount is i=0:
       //    equity=1000, totalPnl=100, netTransfers=900
-      // Earliest record for day 1 for second subaccount is i=0:
+      // First record for day 1 for second subaccount is i=0:
       //    equity=2000, totalPnl=200, netTransfers=1800
       // Total: equity=3000, totalPnl=300, netTransfers=2700
       expect(day1Record.createdAt).toBe('2023-01-01T00:00:00.000Z');
@@ -578,18 +562,16 @@ describe('pnl-controller#V4', () => {
       expect(Number(day1Record.totalPnl)).toEqual(300);
       expect(Number(day1Record.netTransfers)).toEqual(2700);
 
-      // Expected values for day 2 (the last hour of day 2)
-      // Last record for day 2 for first subaccount is i=47:
-      //    equity=1047, totalPnl=147, netTransfers=947
-      // Last record for day 2 for second subaccount is i=47:
-      //    equity=2047, totalPnl=247, netTransfers=1847
-      // Total: equity=3094, totalPnl=394, netTransfers=2794
-
-      // Verify day 2 values
-      expect(day2Record.createdAt).toBe('2023-01-02T23:00:00.000Z');
-      expect(Number(day2Record.equity)).toEqual(3094);
-      expect(Number(day2Record.totalPnl)).toEqual(394);
-      expect(Number(day2Record.netTransfers)).toEqual(2794);
+      // Expected values for day 2 (the first hour of day 2)
+      // First record for day 2 for first subaccount is i=24:
+      //    equity=1024, totalPnl=124, netTransfers=924
+      // First record for day 2 for second subaccount is i=24:
+      //    equity=2024, totalPnl=224, netTransfers=1824
+      // Total: equity=3048, totalPnl=348, netTransfers=2748
+      expect(day2Record.createdAt).toBe('2023-01-02T00:00:00.000Z');
+      expect(Number(day2Record.equity)).toEqual(3048);
+      expect(Number(day2Record.totalPnl)).toEqual(348);
+      expect(Number(day2Record.netTransfers)).toEqual(2748);
 
       // Verify the records are in descending order by date (day 2 should come before day 1)
       const timestamps = response.body.pnl.map(
@@ -741,7 +723,7 @@ describe('pnl-controller#V4', () => {
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No subaccounts found with address nonexistentaddress and parentSubaccountNumber 0',
+            msg: 'No PnL data found for address nonexistentaddress and parentSubaccountNumber 0',
           },
         ],
       });
@@ -758,7 +740,6 @@ describe('pnl-controller#V4', () => {
       for (let i = 0; i < 5; i++) {
         const date = new Date(baseDate);
         date.setUTCHours(baseDate.getUTCHours() + i);
-
         hourlyRecords.push({
           ...testConstants.defaultPnl,
           createdAt: date.toISOString(),
@@ -773,7 +754,6 @@ describe('pnl-controller#V4', () => {
       for (let i = 0; i < 5; i++) {
         const date = new Date(baseDate);
         date.setUTCHours(baseDate.getUTCHours() + i);
-
         hourlyRecords.push({
           ...testConstants.defaultPnl,
           subaccountId: testConstants.isolatedSubaccountId,
@@ -814,15 +794,26 @@ describe('pnl-controller#V4', () => {
       // Check that records are 1 hour apart
       for (let i = 0; i < timestamps.length - 1; i++) {
         const diffHours = (timestamps[i].getTime() - timestamps[i + 1].getTime()) /
-        (1000 * 60 * 60);
+      (1000 * 60 * 60);
         expect(diffHours).toBeCloseTo(1, 1); // Should be close to 1 hour apart
       }
+
+      // Check specific timestamps for a few records
+      // Since records are in descending order, latest hour (4) is at index 0
+      expect(response.body.pnl[0].createdAt).toEqual('2023-01-01T04:00:00.000Z'); // Hour 4
+      expect(response.body.pnl[2].createdAt).toEqual('2023-01-01T02:00:00.000Z'); // Hour 2
+      expect(response.body.pnl[4].createdAt).toEqual('2023-01-01T00:00:00.000Z'); // Hour 0
 
       // Verify the aggregated values for each hour
       // For hour 0 (first hour): 1000 + 2000 = 3000
       expect(Number(response.body.pnl[4].equity)).toEqual(3000); // index 4 since descending
       expect(Number(response.body.pnl[4].totalPnl)).toEqual(300);
       expect(Number(response.body.pnl[4].netTransfers)).toEqual(2700);
+
+      // For hour 2 (middle hour): 1002 + 2002 = 3004
+      expect(Number(response.body.pnl[2].equity)).toEqual(3004); // index 2 is hour 2
+      expect(Number(response.body.pnl[2].totalPnl)).toEqual(304);
+      expect(Number(response.body.pnl[2].netTransfers)).toEqual(2704);
 
       // For hour 4 (last hour): 1004 + 2004 = 3008
       expect(Number(response.body.pnl[0].equity)).toEqual(3008); // index 0 since descending
@@ -841,10 +832,139 @@ describe('pnl-controller#V4', () => {
       // Should also have 5 records when daily is omitted (default behavior)
       expect(defaultResponse.body.pnl.length).toEqual(5);
 
+      // Check that the same timestamps are returned with the default parameter
+      expect(defaultResponse.body.pnl[0].createdAt).toEqual('2023-01-01T04:00:00.000Z');
+      expect(defaultResponse.body.pnl[4].createdAt).toEqual('2023-01-01T00:00:00.000Z');
+
       // First record should match in both responses (same aggregation logic)
       expect(defaultResponse.body.pnl[0].equity).toEqual(response.body.pnl[0].equity);
       expect(defaultResponse.body.pnl[0].totalPnl).toEqual(response.body.pnl[0].totalPnl);
       expect(defaultResponse.body.pnl[0].netTransfers).toEqual(response.body.pnl[0].netTransfers);
     });
+
+    it('Get /pnl/parentSubaccountNumber performs efficiently with large datasets', async () => {
+      await testMocks.seedData();
+
+      // Create a large, realistic dataset: 3 years * 365 days * 24 hours
+      //   = 26,280 records per subaccount
+      // With 3 child subaccounts = 78,840 total records
+      const baseDate = new Date('2021-01-01T00:00:00.000Z');
+      const yearsToCreate = 3;
+      const hoursPerYear = 365 * 24;
+      const totalHours = yearsToCreate * hoursPerYear;
+      const apiLimit = 1000; // API has a default limit of 1000 records
+
+      // All three are child subaccounts of parent subaccount 0
+      const subaccountIds = [
+        testConstants.defaultSubaccountId, // subaccount 0
+        testConstants.isolatedSubaccountId, // subaccount 128
+        testConstants.isolatedSubaccountId2, // subaccount 256
+      ];
+
+      const largeDataset = [];
+
+      for (let hour = 0; hour < totalHours; hour++) {
+        const date = new Date(baseDate);
+        date.setUTCHours(baseDate.getUTCHours() + hour);
+
+        for (let i = 0; i < subaccountIds.length; i++) {
+          largeDataset.push({
+            ...testConstants.defaultPnl,
+            subaccountId: subaccountIds[i],
+            createdAt: date.toISOString(),
+            createdAtHeight: (10000 + hour + (i * 100000)).toString(),
+            equity: (1000 + hour + (i * 100)).toString(),
+            totalPnl: (100 + hour + (i * 10)).toString(),
+            netTransfers: (900 + hour + (i * 90)).toString(),
+          });
+        }
+      }
+
+      // Batch insert for better performance
+      // Keep per-batch concurrency modest to avoid exhausting the pool on CI
+      const batchSize = 200;
+      for (let i = 0; i < largeDataset.length; i += batchSize) {
+        const batch = largeDataset.slice(i, i + batchSize);
+        // Insert in sub-batches to cap peak concurrency (~50)
+        for (let j = 0; j < batch.length; j += 50) {
+          const subBatch = batch.slice(j, j + 50);
+          await Promise.all(subBatch.map((record) => PnlTable.create(record)));
+        }
+      }
+
+      // Test 1: Hourly aggregation performance (most expensive operation)
+      // Returns up to 1000 hourly records due to API limit
+      const startHourly = Date.now();
+      const hourlyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'false',
+          limit: apiLimit,
+        })}`,
+      });
+      const hourlyTime = Date.now() - startHourly;
+
+      // Should complete within 3 seconds for hourly aggregation even with large dataset
+      expect(hourlyTime).toBeLessThan(3000);
+      expect(hourlyResponse.body.pnl.length).toEqual(apiLimit);
+
+      // Verify we're getting the most recent records (descending order)
+      const firstHourlyRecord = hourlyResponse.body.pnl[0];
+      const lastHourlyRecord = hourlyResponse.body.pnl[hourlyResponse.body.pnl.length - 1];
+      expect(new Date(firstHourlyRecord.createdAt).getTime()).toBeGreaterThan(
+        new Date(lastHourlyRecord.createdAt).getTime(),
+      );
+
+      // Test 2: Daily aggregation performance
+      // Returns up to 1000 daily records due to API limit
+      const startDaily = Date.now();
+      const dailyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'true',
+          limit: apiLimit,
+        })}`,
+      });
+      const dailyTime = Date.now() - startDaily;
+
+      // Daily aggregation should complete within 3 seconds
+      const expectedDays = yearsToCreate * 365;
+      expect(dailyTime).toBeLessThan(3000);
+      // Should return 1000 days (API limit) even though we have more
+      expect(dailyResponse.body.pnl.length).toEqual(Math.min(apiLimit, expectedDays));
+
+      // Verify we're getting the most recent records (descending order)
+      const firstDailyRecord = dailyResponse.body.pnl[0];
+      const lastDailyRecord = dailyResponse.body.pnl[dailyResponse.body.pnl.length - 1];
+      expect(new Date(firstDailyRecord.createdAt).getTime()).toBeGreaterThan(
+        new Date(lastDailyRecord.createdAt).getTime(),
+      );
+
+      // Verify data integrity - check that aggregation is correct for the oldest record returned
+      // Since we have 1095 days but only get 1000, the oldest returned is day 95 (1095 - 1000)
+      // This would be 2021-01-01 + 95 days = 2021-04-06
+      const daysToSkip = expectedDays - apiLimit;
+      const oldestReturnedDate = new Date(baseDate.getTime() + daysToSkip * 24 * 60 * 60 * 1000);
+
+      expect(lastDailyRecord.createdAt).toBe(oldestReturnedDate.toISOString());
+
+      // Verify aggregation is correct for this day
+      // Hour offset for this day: (expectedDays - apiLimit) * 24
+      const hourOffset = daysToSkip * 24;
+      // S0: equity=1000+hourOffset, totalPnl=100+hourOffset, netTransfers=900+hourOffset
+      // S128: equity=1100+hourOffset, totalPnl=110+hourOffset, netTransfers=990+hourOffset
+      // S256: equity=1200+hourOffset, totalPnl=120+hourOffset, netTransfers=1080+hourOffset
+      const expectedEquity = 3300 + (hourOffset * 3);
+      const expectedTotalPnl = 330 + (hourOffset * 3);
+      const expectedNetTransfers = 2970 + (hourOffset * 3);
+
+      expect(Number(lastDailyRecord.equity)).toEqual(expectedEquity);
+      expect(Number(lastDailyRecord.totalPnl)).toEqual(expectedTotalPnl);
+      expect(Number(lastDailyRecord.netTransfers)).toEqual(expectedNetTransfers);
+    }, 120000);
   });
 });
