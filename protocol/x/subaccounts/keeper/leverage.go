@@ -26,16 +26,12 @@ func (k Keeper) SetLeverage(ctx sdk.Context, subaccountId *types.SubaccountId, l
 	key := leverageKey(subaccountId)
 
 	var entries []*types.PerpetualLeverageEntry
-<<<<<<< Updated upstream
-	for perpetualId, CustomImfPpm := range leverageMap {
-=======
 	sortedPerpIds := lib.GetSortedKeys[lib.Sortable[uint32]](leverageMap)
 	for _, perpetualId := range sortedPerpIds {
 		customImfPpm := leverageMap[perpetualId]
->>>>>>> Stashed changes
 		entries = append(entries, &types.PerpetualLeverageEntry{
 			PerpetualId:  perpetualId,
-			CustomImfPpm: CustomImfPpm,
+			CustomImfPpm: customImfPpm,
 		})
 	}
 
