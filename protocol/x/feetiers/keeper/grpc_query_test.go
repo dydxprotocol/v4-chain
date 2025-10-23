@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -10,7 +11,9 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 func TestParams(t *testing.T) {
@@ -339,6 +342,12 @@ func TestStakingTiers(t *testing.T) {
 
 func TestUserStakingTier(t *testing.T) {
 	tests := map[string]struct {
+		// Setup
+		userStats        *stattypes.UserStats
+		globalStats      *stattypes.GlobalStats
+		stakingTiers     []*types.StakingTier
+		userBondedTokens *big.Int
+
 		// Input
 		req *types.QueryUserStakingTierRequest
 
@@ -346,10 +355,162 @@ func TestUserStakingTier(t *testing.T) {
 		expectedError    error
 		expectedResponse *types.QueryUserStakingTierResponse
 	}{
-		// TODO: add valid test cases after implementation
 		"returns error for nil request": {
 			req:           nil,
 			expectedError: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+		"returns error for empty address": {
+			req: &types.QueryUserStakingTierRequest{
+				Address: "",
+			},
+			expectedError: status.Error(codes.InvalidArgument, "invalid bech32 address"),
+		},
+		"valid user with no bonded tokens (0 discount)": {
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      100_000,
+						},
+					},
+				},
+			},
+			userBondedTokens: nil,
+			req: &types.QueryUserStakingTierRequest{
+				Address: constants.BobAccAddress.String(),
+			},
+			expectedResponse: &types.QueryUserStakingTierResponse{
+				FeeTierName:      "1",
+				StakedBaseTokens: dtypes.NewInt(0),
+				DiscountPpm:      0,
+			},
+		},
+		"valid user with bonded tokens, no staking tiers": {
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers:     nil,
+			userBondedTokens: big.NewInt(5000),
+			req: &types.QueryUserStakingTierRequest{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedResponse: &types.QueryUserStakingTierResponse{
+				FeeTierName:      "1",
+				StakedBaseTokens: dtypes.NewInt(5000),
+				DiscountPpm:      0,
+			},
+		},
+		"valid user in first fee tier and qualifies for staking discount": {
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      100_000, // 10% discount
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(5000),
+							FeeDiscountPpm:      200_000, // 20% discount
+						},
+					},
+				},
+			},
+			userBondedTokens: big.NewInt(5000),
+			req: &types.QueryUserStakingTierRequest{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedResponse: &types.QueryUserStakingTierResponse{
+				FeeTierName:      "1",
+				StakedBaseTokens: dtypes.NewInt(5000),
+				DiscountPpm:      200_000,
+			},
+		},
+		"valid user in second fee tier and qualifies for staking discount": {
+			userStats: &stattypes.UserStats{
+				TakerNotional: 1_000_000_000_000,
+				MakerNotional: 150,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000_000_000_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "2",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      150_000, // 15%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(2000),
+							FeeDiscountPpm:      250_000, // 25%
+						},
+						{
+							MinStakedBaseTokens: dtypes.NewInt(3000),
+							FeeDiscountPpm:      350_000, // 35%
+						},
+					},
+				},
+			},
+			userBondedTokens: big.NewInt(2000),
+			req: &types.QueryUserStakingTierRequest{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedResponse: &types.QueryUserStakingTierResponse{
+				FeeTierName:      "2",
+				StakedBaseTokens: dtypes.NewInt(2000),
+				DiscountPpm:      250_000,
+			},
+		},
+		"valid user doesn't qualify for staking discount": {
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(10000),
+							FeeDiscountPpm:      200_000,
+						},
+					},
+				},
+			},
+			userBondedTokens: big.NewInt(500),
+			req: &types.QueryUserStakingTierRequest{
+				Address: constants.BobAccAddress.String(),
+			},
+			expectedResponse: &types.QueryUserStakingTierResponse{
+				FeeTierName:      "1",
+				StakedBaseTokens: dtypes.NewInt(500),
+				DiscountPpm:      0,
+			},
 		},
 	}
 
@@ -358,6 +519,32 @@ func TestUserStakingTier(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.FeeTiersKeeper
+
+			// Set up staking tiers
+			if tc.stakingTiers != nil {
+				err := k.SetStakingTiers(ctx, tc.stakingTiers)
+				require.NoError(t, err)
+			}
+
+			// Set up user stats
+			if tc.userStats != nil && tc.req != nil && tc.req.Address != "" {
+				statsKeeper := tApp.App.StatsKeeper
+				statsKeeper.SetUserStats(ctx, tc.req.Address, tc.userStats)
+				statsKeeper.SetGlobalStats(ctx, tc.globalStats)
+			}
+
+			// Set up user bonded tokens
+			if tc.req != nil && tc.req.Address != "" {
+				statsKeeper := tApp.App.StatsKeeper
+				bondedAmount := big.NewInt(0)
+				if tc.userBondedTokens != nil {
+					bondedAmount = tc.userBondedTokens
+				}
+				statsKeeper.UnsafeSetCachedStakedAmount(ctx, tc.req.Address, &stattypes.CachedStakeAmount{
+					StakedAmount: dtypes.NewIntFromBigInt(bondedAmount),
+					CachedAt:     ctx.BlockTime().Unix(),
+				})
+			}
 
 			// Verify query
 			resp, err := k.UserStakingTier(ctx, tc.req)

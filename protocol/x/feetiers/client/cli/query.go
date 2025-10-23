@@ -24,6 +24,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryPerpetualFeeParams())
 	cmd.AddCommand(CmdQueryUserFeeTier())
 	cmd.AddCommand(CmdQueryMarketFeeDiscountParams())
+	cmd.AddCommand(CmdQueryStakingTiers())
+	cmd.AddCommand(CmdQueryUserStakingTier())
 
 	return cmd
 }
@@ -115,6 +117,53 @@ func CmdQueryMarketFeeDiscountParams() *cobra.Command {
 				}
 				return clientCtx.PrintProto(res)
 			}
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdQueryStakingTiers() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "staking-tiers",
+		Short: "get all staking tiers",
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.StakingTiers(
+				context.Background(),
+				&types.QueryStakingTiersRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdQueryUserStakingTier() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "user-staking-tier [address]",
+		Short: "get the staking tier and discount of a user",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.UserStakingTier(
+				context.Background(),
+				&types.QueryUserStakingTierRequest{
+					Address: args[0],
+				},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
 		},
 	}
 
