@@ -341,6 +341,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	risk, err := salib.GetRiskForSubaccount(
 		settledSubaccount,
 		perpInfos,
+		nil, // No leverage needed for liquidation calculations
 	)
 
 	return risk.IsLiquidatable(), risk.NC.Sign() < 0, nil
