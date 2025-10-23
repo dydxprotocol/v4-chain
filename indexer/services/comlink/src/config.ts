@@ -124,13 +124,6 @@ export const configSchema = {
   // largest amount we will tolerate to swap in usdc.
   MAXIMUM_BRIDGE_AMOUNT_USDC: parseInteger({ default: 99_900 }),
 
-  // Apple Sign-In configuration
-  APPLE_TEAM_ID: parseString({ default: '' }),
-  APPLE_SERVICE_ID: parseString({ default: '' }),
-  APPLE_KEY_ID: parseString({ default: '' }),
-  APPLE_PRIVATE_KEY: parseString({ default: '' }),
-  APPLE_APP_SCHEME: parseString({ default: 'dydxV4' }),
-
   // webhook ids, defaults to the production webhook id.
   ETHEREUM_WEBHOOK_ID: parseString({ default: 'wh_ctbkt6y9hez91xr2' }),
   ARBITRUM_WEBHOOK_ID: parseString({ default: 'wh_ltwqwcsrx1b8lgry' }),
