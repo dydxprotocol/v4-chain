@@ -1105,7 +1105,16 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 		panic(types.ErrInvalidClob)
 	}
 	perpetualId := clobPair.MustGetPerpetualId()
-	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, subaccountId.Owner, false)
+	affiliateParameters, err := k.affiliatesKeeper.GetAffiliateParameters(ctx)
+	if err != nil {
+		panic(err)
+	}
+	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
+		ctx,
+		subaccountId.Owner,
+		false,
+		affiliateParameters.RefereeMinimumFeeTierIdx,
+	)
 	bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
 		order.Subticks,
 		order.RemainingQuantums,
