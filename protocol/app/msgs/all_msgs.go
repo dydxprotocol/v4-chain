@@ -151,12 +151,16 @@ var (
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       {},
 
 		// affiliates
-		"/dydxprotocol.affiliates.MsgRegisterAffiliate":                {},
-		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":        {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":             {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": {},
+		"/dydxprotocol.affiliates.MsgRegisterAffiliate":                 {},
+		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":         {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":              {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":      {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":          {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse":  {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateParameters":         {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse": {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides":          {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse":  {},
 
 		// accountplus
 		"/dydxprotocol.accountplus.MsgAddAuthenticator":            {},

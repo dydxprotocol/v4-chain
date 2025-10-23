@@ -89,9 +89,11 @@ type AffiliateInfoResponse struct {
 	// regular affiliate).
 	FeeSharePpm uint32 `protobuf:"varint,3,opt,name=fee_share_ppm,json=feeSharePpm,proto3" json:"fee_share_ppm,omitempty"`
 	// The affiliate's all-time referred volume in quote quantums.
-	ReferredVolume github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=referred_volume,json=referredVolume,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"referred_volume"`
+	ReferredVolume github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=referred_volume,json=referredVolume,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"referred_volume"` // Deprecated: Do not use.
 	// The affiliate's currently staked native tokens (in whole coins).
 	StakedAmount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,5,opt,name=staked_amount,json=stakedAmount,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"staked_amount"`
+	// The affiliate's 30d referred volume in quote quantums.
+	ReferredVolume_30DRolling github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,6,opt,name=referred_volume_30d_rolling,json=referredVolume30dRolling,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"referred_volume_30d_rolling"`
 }
 
 func (m *AffiliateInfoResponse) Reset()         { *m = AffiliateInfoResponse{} }
@@ -409,6 +411,174 @@ func (m *AffiliateWhitelistResponse) GetWhitelist() AffiliateWhitelist {
 	return AffiliateWhitelist{}
 }
 
+// AffiliateOverridesRequest is the request type for the
+// Query/AffiliateOverrides RPC method.
+type AffiliateOverridesRequest struct {
+}
+
+func (m *AffiliateOverridesRequest) Reset()         { *m = AffiliateOverridesRequest{} }
+func (m *AffiliateOverridesRequest) String() string { return proto.CompactTextString(m) }
+func (*AffiliateOverridesRequest) ProtoMessage()    {}
+func (*AffiliateOverridesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{8}
+}
+func (m *AffiliateOverridesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AffiliateOverridesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AffiliateOverridesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AffiliateOverridesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AffiliateOverridesRequest.Merge(m, src)
+}
+func (m *AffiliateOverridesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AffiliateOverridesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AffiliateOverridesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AffiliateOverridesRequest proto.InternalMessageInfo
+
+// AffiliateOverridesResponse is the response type for the
+// Query/AffiliateOverrides RPC method.
+type AffiliateOverridesResponse struct {
+	Overrides AffiliateOverrides `protobuf:"bytes,1,opt,name=overrides,proto3" json:"overrides"`
+}
+
+func (m *AffiliateOverridesResponse) Reset()         { *m = AffiliateOverridesResponse{} }
+func (m *AffiliateOverridesResponse) String() string { return proto.CompactTextString(m) }
+func (*AffiliateOverridesResponse) ProtoMessage()    {}
+func (*AffiliateOverridesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{9}
+}
+func (m *AffiliateOverridesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AffiliateOverridesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AffiliateOverridesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AffiliateOverridesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AffiliateOverridesResponse.Merge(m, src)
+}
+func (m *AffiliateOverridesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AffiliateOverridesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AffiliateOverridesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AffiliateOverridesResponse proto.InternalMessageInfo
+
+func (m *AffiliateOverridesResponse) GetOverrides() AffiliateOverrides {
+	if m != nil {
+		return m.Overrides
+	}
+	return AffiliateOverrides{}
+}
+
+// AffiliateParametersRequest is the request type for the
+// Query/AffiliateParameters RPC method.
+type AffiliateParametersRequest struct {
+}
+
+func (m *AffiliateParametersRequest) Reset()         { *m = AffiliateParametersRequest{} }
+func (m *AffiliateParametersRequest) String() string { return proto.CompactTextString(m) }
+func (*AffiliateParametersRequest) ProtoMessage()    {}
+func (*AffiliateParametersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{10}
+}
+func (m *AffiliateParametersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AffiliateParametersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AffiliateParametersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AffiliateParametersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AffiliateParametersRequest.Merge(m, src)
+}
+func (m *AffiliateParametersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AffiliateParametersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AffiliateParametersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AffiliateParametersRequest proto.InternalMessageInfo
+
+// AffiliateParametersResponse is the response type for the
+// Query/AffiliateParameters RPC method.
+type AffiliateParametersResponse struct {
+	Parameters AffiliateParameters `protobuf:"bytes,1,opt,name=parameters,proto3" json:"parameters"`
+}
+
+func (m *AffiliateParametersResponse) Reset()         { *m = AffiliateParametersResponse{} }
+func (m *AffiliateParametersResponse) String() string { return proto.CompactTextString(m) }
+func (*AffiliateParametersResponse) ProtoMessage()    {}
+func (*AffiliateParametersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{11}
+}
+func (m *AffiliateParametersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AffiliateParametersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AffiliateParametersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AffiliateParametersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AffiliateParametersResponse.Merge(m, src)
+}
+func (m *AffiliateParametersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AffiliateParametersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AffiliateParametersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AffiliateParametersResponse proto.InternalMessageInfo
+
+func (m *AffiliateParametersResponse) GetParameters() AffiliateParameters {
+	if m != nil {
+		return m.Parameters
+	}
+	return AffiliateParameters{}
+}
+
 func init() {
 	proto.RegisterType((*AffiliateInfoRequest)(nil), "dydxprotocol.affiliates.AffiliateInfoRequest")
 	proto.RegisterType((*AffiliateInfoResponse)(nil), "dydxprotocol.affiliates.AffiliateInfoResponse")
@@ -418,6 +588,10 @@ func init() {
 	proto.RegisterType((*AllAffiliateTiersResponse)(nil), "dydxprotocol.affiliates.AllAffiliateTiersResponse")
 	proto.RegisterType((*AffiliateWhitelistRequest)(nil), "dydxprotocol.affiliates.AffiliateWhitelistRequest")
 	proto.RegisterType((*AffiliateWhitelistResponse)(nil), "dydxprotocol.affiliates.AffiliateWhitelistResponse")
+	proto.RegisterType((*AffiliateOverridesRequest)(nil), "dydxprotocol.affiliates.AffiliateOverridesRequest")
+	proto.RegisterType((*AffiliateOverridesResponse)(nil), "dydxprotocol.affiliates.AffiliateOverridesResponse")
+	proto.RegisterType((*AffiliateParametersRequest)(nil), "dydxprotocol.affiliates.AffiliateParametersRequest")
+	proto.RegisterType((*AffiliateParametersResponse)(nil), "dydxprotocol.affiliates.AffiliateParametersResponse")
 }
 
 func init() {
@@ -425,49 +599,59 @@ func init() {
 }
 
 var fileDescriptor_2edc1b3ea39b05a9 = []byte{
-	// 672 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcb, 0x6e, 0xd3, 0x40,
-	0x14, 0x8d, 0x4b, 0x03, 0x74, 0xda, 0x14, 0x3a, 0x2a, 0xc2, 0x35, 0x28, 0xad, 0x8c, 0x10, 0x11,
-	0xa5, 0x36, 0x4d, 0x2b, 0x24, 0x24, 0x16, 0x24, 0x08, 0x41, 0xd9, 0x00, 0x2e, 0x2a, 0x12, 0x2c,
-	0x8c, 0x13, 0x5f, 0x27, 0x23, 0x6c, 0x8f, 0xeb, 0x99, 0x94, 0x06, 0xc4, 0x86, 0x2f, 0x40, 0x62,
-	0xcd, 0x07, 0xb0, 0x43, 0x82, 0x25, 0x1f, 0xd0, 0x65, 0x05, 0x9b, 0x8a, 0x45, 0x85, 0x5a, 0x3e,
-	0x04, 0x65, 0x3c, 0x71, 0x52, 0x5a, 0xab, 0x89, 0x60, 0x37, 0xbe, 0x8f, 0x73, 0x8e, 0xef, 0x9c,
-	0x3b, 0xe8, 0x92, 0xdb, 0x76, 0x37, 0xa3, 0x98, 0x72, 0x5a, 0xa7, 0xbe, 0xe9, 0x78, 0x1e, 0xf1,
-	0x89, 0xc3, 0x81, 0x99, 0xeb, 0x2d, 0x88, 0xdb, 0x86, 0xc8, 0xe0, 0xf3, 0xfd, 0x45, 0x46, 0xaf,
-	0x48, 0x9b, 0xa9, 0x53, 0x16, 0x50, 0x66, 0x8b, 0x9c, 0x99, 0x7c, 0x24, 0x3d, 0xda, 0x74, 0x83,
-	0x36, 0x68, 0x12, 0xef, 0x9c, 0x64, 0xb4, 0x94, 0x45, 0xd7, 0x3b, 0xca, 0xca, 0x8b, 0x0d, 0x4a,
-	0x1b, 0x3e, 0x98, 0x4e, 0x44, 0x4c, 0x27, 0x0c, 0x29, 0x77, 0x38, 0xa1, 0xa1, 0xcc, 0xea, 0x0f,
-	0xd0, 0x74, 0xa5, 0xdb, 0xb1, 0x12, 0x7a, 0xd4, 0x82, 0xf5, 0x16, 0x30, 0x8e, 0xcb, 0xe8, 0x94,
-	0xe3, 0xba, 0x31, 0x30, 0xa6, 0x2a, 0x73, 0x4a, 0x69, 0xac, 0xaa, 0x7e, 0xff, 0xba, 0x30, 0x2d,
-	0x85, 0x55, 0x92, 0xcc, 0x2a, 0x8f, 0x49, 0xd8, 0xb0, 0xba, 0x85, 0xfa, 0xce, 0x08, 0x3a, 0xf7,
-	0x17, 0x18, 0x8b, 0x68, 0xc8, 0x00, 0x5f, 0x46, 0x93, 0x84, 0xd9, 0xaf, 0x9a, 0x84, 0x83, 0x4f,
-	0x18, 0x07, 0x57, 0x80, 0x9e, 0xb6, 0x0a, 0x84, 0x3d, 0xed, 0x05, 0x31, 0x46, 0xa3, 0x9c, 0x40,
-	0xac, 0x8e, 0xcc, 0x29, 0xa5, 0x82, 0x25, 0xce, 0x58, 0x47, 0x05, 0x0f, 0xc0, 0x66, 0x4d, 0x27,
-	0x06, 0x3b, 0x8a, 0x02, 0xf5, 0x84, 0x48, 0x8e, 0x7b, 0x00, 0xab, 0x9d, 0xd8, 0xa3, 0x28, 0xc0,
-	0xeb, 0xe8, 0x4c, 0x0c, 0x1e, 0xc4, 0x31, 0xb8, 0xf6, 0x06, 0xf5, 0x5b, 0x01, 0xa8, 0xa3, 0x73,
-	0x4a, 0x69, 0xa2, 0x7a, 0x7f, 0x6b, 0x77, 0x36, 0xf7, 0x73, 0x77, 0xf6, 0x76, 0x83, 0xf0, 0x66,
-	0xab, 0x66, 0xd4, 0x69, 0x60, 0x1e, 0x18, 0xdc, 0xc6, 0xf2, 0x42, 0xbd, 0xe9, 0x90, 0xd0, 0x4c,
-	0x23, 0x2e, 0x6f, 0x47, 0xc0, 0x8c, 0x55, 0x88, 0x89, 0xe3, 0x93, 0xd7, 0x4e, 0xcd, 0x87, 0x95,
-	0x90, 0x5b, 0x93, 0x5d, 0x82, 0x35, 0x81, 0x8f, 0x03, 0x54, 0x60, 0xdc, 0x79, 0x09, 0xae, 0xed,
-	0x04, 0xb4, 0x15, 0x72, 0x35, 0xff, 0x9f, 0x09, 0x27, 0x12, 0xf8, 0x8a, 0x40, 0xd7, 0xef, 0xa1,
-	0x29, 0x4b, 0x0a, 0xa8, 0xb6, 0xff, 0xe5, 0x8e, 0x9e, 0x23, 0xdc, 0x0f, 0x24, 0xef, 0xe7, 0x2e,
-	0x9a, 0x4a, 0x7d, 0x63, 0x0f, 0x8a, 0x79, 0x36, 0x6d, 0x91, 0x71, 0x5d, 0x43, 0x6a, 0xc5, 0xf7,
-	0x53, 0x0b, 0x3c, 0x21, 0x10, 0x33, 0x29, 0x56, 0x7f, 0x81, 0x66, 0x8e, 0xc8, 0x49, 0xfe, 0x3b,
-	0x28, 0xdf, 0xb9, 0xec, 0x84, 0x73, 0xbc, 0x7c, 0xc5, 0xc8, 0xd8, 0x13, 0xe3, 0x60, 0x7f, 0x75,
-	0xb4, 0x33, 0x6e, 0x2b, 0xe9, 0xd5, 0x2f, 0xa0, 0x99, 0x34, 0x9d, 0xba, 0xaa, 0x4b, 0x1f, 0x20,
-	0xed, 0xa8, 0xa4, 0xe4, 0x7f, 0x88, 0xc6, 0x52, 0x73, 0x4a, 0x0d, 0xf3, 0xc7, 0x6b, 0x48, 0x71,
-	0xa4, 0x8e, 0x1e, 0x46, 0xf9, 0x5b, 0x1e, 0xe5, 0x1f, 0x77, 0x16, 0x1f, 0x7f, 0x52, 0x50, 0xe1,
-	0xc0, 0x52, 0xe0, 0x85, 0xe3, 0x91, 0xfb, 0x36, 0x51, 0x33, 0x06, 0x2d, 0x4f, 0xfe, 0x45, 0xbf,
-	0xf9, 0xee, 0xc7, 0xef, 0x0f, 0x23, 0x4b, 0x78, 0xd1, 0x3c, 0xf6, 0x89, 0xb0, 0x49, 0xe8, 0x51,
-	0xf3, 0x8d, 0xbc, 0xf0, 0xb7, 0xf8, 0xa3, 0x82, 0x50, 0xcf, 0x1d, 0xf8, 0x6a, 0x26, 0xf3, 0x21,
-	0x2f, 0x6a, 0xf3, 0x03, 0xd5, 0x4a, 0x89, 0x37, 0x84, 0xc4, 0xeb, 0xd8, 0xc8, 0x94, 0x98, 0xae,
-	0x73, 0xad, 0xdd, 0xa7, 0xef, 0xb3, 0x82, 0xa6, 0x0e, 0x99, 0x08, 0x2f, 0x66, 0x0f, 0x28, 0xc3,
-	0x8c, 0x5a, 0x79, 0x98, 0x16, 0x29, 0x7a, 0x59, 0x88, 0x36, 0xf0, 0xb5, 0xec, 0xb9, 0xfa, 0xbe,
-	0xdd, 0x9b, 0xad, 0x30, 0x25, 0xfe, 0xa2, 0x20, 0x7c, 0xd8, 0x30, 0xb8, 0x3c, 0x84, 0xbb, 0xba,
-	0xa2, 0x97, 0x86, 0xea, 0x19, 0x5c, 0x75, 0xaa, 0x38, 0xb5, 0x6f, 0x75, 0x6d, 0x6b, 0xaf, 0xa8,
-	0x6c, 0xef, 0x15, 0x95, 0x5f, 0x7b, 0x45, 0xe5, 0xfd, 0x7e, 0x31, 0xb7, 0xbd, 0x5f, 0xcc, 0xed,
-	0xec, 0x17, 0x73, 0xcf, 0x6e, 0x0d, 0xfe, 0xb0, 0x6d, 0xf6, 0xb3, 0x88, 0x47, 0xae, 0x76, 0x52,
-	0x24, 0x97, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0x9e, 0x0e, 0x60, 0x8f, 0x2d, 0x07, 0x00, 0x00,
+	// 822 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0xcf, 0x6f, 0xd3, 0x48,
+	0x14, 0xc7, 0xe3, 0xfe, 0xda, 0x76, 0xda, 0x74, 0xb7, 0xb3, 0x5d, 0xad, 0x9b, 0x56, 0x69, 0xe5,
+	0xd5, 0x6a, 0xa3, 0x6d, 0x63, 0xb7, 0x49, 0x77, 0x25, 0x24, 0x0e, 0x24, 0x08, 0x41, 0x7b, 0x69,
+	0x71, 0x51, 0x91, 0xe0, 0x60, 0x9c, 0x78, 0x92, 0x8c, 0xb0, 0x3d, 0xae, 0xc7, 0x29, 0x0d, 0x88,
+	0x0b, 0x17, 0xae, 0x48, 0x9c, 0xf9, 0x03, 0x90, 0x38, 0x20, 0x81, 0xc4, 0xbf, 0xd0, 0x63, 0x05,
+	0x17, 0xc4, 0xa1, 0x42, 0x6d, 0xff, 0x10, 0x14, 0x7b, 0x3c, 0x76, 0x9a, 0x44, 0x71, 0x44, 0x6f,
+	0xce, 0x7b, 0xf3, 0xde, 0xf7, 0xe3, 0x97, 0xf9, 0x3e, 0x83, 0xbf, 0x8c, 0x96, 0x71, 0xe4, 0xb8,
+	0xc4, 0x23, 0x55, 0x62, 0x2a, 0x7a, 0xad, 0x86, 0x4d, 0xac, 0x7b, 0x88, 0x2a, 0x07, 0x4d, 0xe4,
+	0xb6, 0x64, 0x3f, 0x03, 0xff, 0x8c, 0x1f, 0x92, 0xa3, 0x43, 0x99, 0x85, 0x2a, 0xa1, 0x16, 0xa1,
+	0x9a, 0x9f, 0x53, 0x82, 0x1f, 0x41, 0x4d, 0x66, 0xbe, 0x4e, 0xea, 0x24, 0x88, 0xb7, 0x9f, 0x58,
+	0x34, 0xd7, 0x4f, 0x2e, 0x7a, 0x64, 0x27, 0x97, 0xea, 0x84, 0xd4, 0x4d, 0xa4, 0xe8, 0x0e, 0x56,
+	0x74, 0xdb, 0x26, 0x9e, 0xee, 0x61, 0x62, 0xb3, 0xac, 0xb4, 0x0d, 0xe6, 0x4b, 0x61, 0xc5, 0x96,
+	0x5d, 0x23, 0x2a, 0x3a, 0x68, 0x22, 0xea, 0xc1, 0x02, 0xf8, 0x45, 0x37, 0x0c, 0x17, 0x51, 0x2a,
+	0x0a, 0x2b, 0x42, 0x6e, 0xaa, 0x2c, 0x7e, 0xfe, 0x98, 0x9f, 0x67, 0x60, 0xa5, 0x20, 0xb3, 0xe7,
+	0xb9, 0xd8, 0xae, 0xab, 0xe1, 0x41, 0xe9, 0x62, 0x14, 0xfc, 0x71, 0xa9, 0x19, 0x75, 0x88, 0x4d,
+	0x11, 0xfc, 0x1b, 0xcc, 0x62, 0xaa, 0x3d, 0x69, 0x60, 0x0f, 0x99, 0x98, 0x7a, 0xc8, 0xf0, 0x9b,
+	0x4e, 0xaa, 0x69, 0x4c, 0xef, 0x47, 0x41, 0x08, 0xc1, 0x98, 0x87, 0x91, 0x2b, 0x8e, 0xac, 0x08,
+	0xb9, 0xb4, 0xea, 0x3f, 0x43, 0x09, 0xa4, 0x6b, 0x08, 0x69, 0xb4, 0xa1, 0xbb, 0x48, 0x73, 0x1c,
+	0x4b, 0x1c, 0xf5, 0x93, 0xd3, 0x35, 0x84, 0xf6, 0xda, 0xb1, 0x5d, 0xc7, 0x82, 0x14, 0xfc, 0xea,
+	0xa2, 0x1a, 0x72, 0x5d, 0x64, 0x68, 0x87, 0xc4, 0x6c, 0x5a, 0x48, 0x1c, 0x5b, 0x11, 0x72, 0x33,
+	0xe5, 0xed, 0xe3, 0xd3, 0xe5, 0xd4, 0xb7, 0xd3, 0xe5, 0x1b, 0x75, 0xec, 0x35, 0x9a, 0x15, 0xb9,
+	0x4a, 0x2c, 0xa5, 0x63, 0x70, 0x87, 0x9b, 0xf9, 0x6a, 0x43, 0xc7, 0xb6, 0xc2, 0x23, 0x86, 0xd7,
+	0x72, 0x10, 0x95, 0xf7, 0x90, 0x8b, 0x75, 0x13, 0x3f, 0xd5, 0x2b, 0x26, 0xda, 0xb2, 0x3d, 0x51,
+	0x50, 0x67, 0x43, 0x89, 0x7d, 0x5f, 0x01, 0x5a, 0x20, 0x4d, 0x3d, 0xfd, 0x31, 0x32, 0x34, 0xdd,
+	0x22, 0x4d, 0xdb, 0x13, 0xc7, 0x7d, 0xc9, 0x3b, 0x57, 0x25, 0xa9, 0xce, 0x04, 0xed, 0x4b, 0x7e,
+	0x77, 0xf8, 0x52, 0x00, 0x8b, 0x97, 0x5e, 0x52, 0x2b, 0xae, 0x1b, 0x9a, 0x4b, 0x4c, 0x13, 0xdb,
+	0x75, 0x71, 0xe2, 0x8a, 0xd5, 0xc5, 0xce, 0xd7, 0x2d, 0xae, 0x1b, 0x6a, 0xa0, 0x24, 0xdd, 0x06,
+	0x73, 0x2a, 0xcb, 0x95, 0x5b, 0x3f, 0x73, 0x5f, 0x1e, 0x02, 0x18, 0x6f, 0xc4, 0xee, 0xca, 0x2d,
+	0x30, 0xc7, 0xef, 0xb0, 0x96, 0xb4, 0xe7, 0x6f, 0xbc, 0x84, 0xc5, 0xa5, 0x0c, 0x10, 0x4b, 0xa6,
+	0xc9, 0xaf, 0xe3, 0x3d, 0x8c, 0x5c, 0xca, 0x60, 0xa5, 0x47, 0x60, 0xa1, 0x47, 0x8e, 0xe9, 0xdf,
+	0x04, 0xe3, 0xed, 0x8b, 0x17, 0x68, 0x4e, 0x17, 0xfe, 0x91, 0xfb, 0x78, 0x56, 0xee, 0xac, 0x2f,
+	0x8f, 0xb5, 0x47, 0xaf, 0x06, 0xb5, 0xd2, 0x22, 0x58, 0xe0, 0x69, 0x7e, 0xc3, 0x43, 0x79, 0x0b,
+	0x64, 0x7a, 0x25, 0x99, 0xfe, 0x0e, 0x98, 0xe2, 0x46, 0x61, 0x0c, 0xab, 0x83, 0x19, 0x78, 0x1f,
+	0xc6, 0x11, 0xf5, 0xe8, 0x60, 0xd9, 0x39, 0x44, 0xae, 0x8b, 0x0d, 0x44, 0x7b, 0xb1, 0xc4, 0x92,
+	0x11, 0x0b, 0x09, 0x83, 0xc9, 0x59, 0x78, 0x9f, 0x90, 0x85, 0xf7, 0x90, 0x96, 0x62, 0x72, 0xbb,
+	0xba, 0xab, 0x5b, 0xc8, 0x8b, 0xfd, 0x2f, 0x07, 0x60, 0xb1, 0x67, 0x96, 0xd1, 0xa8, 0x00, 0x38,
+	0x3c, 0xca, 0x70, 0xd6, 0x06, 0xe3, 0x44, 0x9d, 0x18, 0x4f, 0xac, 0x4b, 0xe1, 0xdd, 0x24, 0x18,
+	0xbf, 0xdb, 0xde, 0xd0, 0xf0, 0xad, 0x00, 0xd2, 0x1d, 0xdb, 0x0b, 0xe6, 0x07, 0xf7, 0x8e, 0xad,
+	0xcc, 0x8c, 0x9c, 0xf4, 0x78, 0xf0, 0x3a, 0xd2, 0xb5, 0x17, 0x5f, 0x2e, 0x5e, 0x8f, 0x14, 0xe1,
+	0x86, 0x32, 0x70, 0x97, 0x6b, 0xd8, 0xae, 0x11, 0xe5, 0x19, 0x73, 0xc3, 0x73, 0xf8, 0x46, 0x00,
+	0x20, 0xb2, 0x0e, 0xfc, 0xb7, 0xaf, 0x72, 0x97, 0x51, 0x33, 0xab, 0x89, 0xce, 0x32, 0xc4, 0xff,
+	0x7d, 0xc4, 0x75, 0x28, 0xf7, 0x45, 0xe4, 0x2b, 0xa9, 0xd2, 0x8a, 0xf1, 0xbd, 0x17, 0xc0, 0x5c,
+	0x97, 0xc3, 0xe0, 0x46, 0xff, 0x01, 0xf5, 0x71, 0x6a, 0xa6, 0x30, 0x4c, 0x09, 0x83, 0xde, 0xf4,
+	0xa1, 0x65, 0xb8, 0xd6, 0x7f, 0xae, 0xa6, 0xa9, 0x45, 0xb3, 0xf5, 0x1d, 0x0b, 0x3f, 0x08, 0x00,
+	0x76, 0xbb, 0x09, 0x16, 0x86, 0xb0, 0x5e, 0x08, 0x5d, 0x1c, 0xaa, 0x26, 0x39, 0x35, 0x27, 0xe6,
+	0xde, 0x86, 0x9f, 0x04, 0xf0, 0x7b, 0x8f, 0x8b, 0x0e, 0x8b, 0xc3, 0xd8, 0x22, 0xe4, 0xde, 0x1c,
+	0xae, 0x88, 0x81, 0xff, 0xe7, 0x83, 0x2b, 0x30, 0x9f, 0x00, 0x3c, 0x32, 0x5e, 0xe7, 0xbc, 0xf9,
+	0xc6, 0x48, 0x32, 0xef, 0xcb, 0x3b, 0x2c, 0xc9, 0xbc, 0xbb, 0x56, 0xdb, 0x50, 0xf3, 0xe6, 0xfb,
+	0xab, 0xbc, 0x7f, 0x7c, 0x96, 0x15, 0x4e, 0xce, 0xb2, 0xc2, 0xf7, 0xb3, 0xac, 0xf0, 0xea, 0x3c,
+	0x9b, 0x3a, 0x39, 0xcf, 0xa6, 0xbe, 0x9e, 0x67, 0x53, 0x0f, 0xae, 0x27, 0xff, 0xe2, 0x1e, 0xc5,
+	0x55, 0xfc, 0xaf, 0x6f, 0x65, 0xc2, 0x4f, 0x16, 0x7f, 0x04, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x38,
+	0xfa, 0x6c, 0x46, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -490,6 +674,10 @@ type QueryClient interface {
 	AllAffiliateTiers(ctx context.Context, in *AllAffiliateTiersRequest, opts ...grpc.CallOption) (*AllAffiliateTiersResponse, error)
 	// Query AffiliateWhitelist returns the affiliate whitelist.
 	AffiliateWhitelist(ctx context.Context, in *AffiliateWhitelistRequest, opts ...grpc.CallOption) (*AffiliateWhitelistResponse, error)
+	// Query AffiliateParameters returns the affiliate parameters.
+	AffiliateParameters(ctx context.Context, in *AffiliateParametersRequest, opts ...grpc.CallOption) (*AffiliateParametersResponse, error)
+	// Query AffiliateOverrides returns the affiliate overrides.
+	AffiliateOverrides(ctx context.Context, in *AffiliateOverridesRequest, opts ...grpc.CallOption) (*AffiliateOverridesResponse, error)
 }
 
 type queryClient struct {
@@ -536,6 +724,24 @@ func (c *queryClient) AffiliateWhitelist(ctx context.Context, in *AffiliateWhite
 	return out, nil
 }
 
+func (c *queryClient) AffiliateParameters(ctx context.Context, in *AffiliateParametersRequest, opts ...grpc.CallOption) (*AffiliateParametersResponse, error) {
+	out := new(AffiliateParametersResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Query/AffiliateParameters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AffiliateOverrides(ctx context.Context, in *AffiliateOverridesRequest, opts ...grpc.CallOption) (*AffiliateOverridesResponse, error) {
+	out := new(AffiliateOverridesResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Query/AffiliateOverrides", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Query AffiliateInfo returns the affiliate info for a given address.
@@ -546,6 +752,10 @@ type QueryServer interface {
 	AllAffiliateTiers(context.Context, *AllAffiliateTiersRequest) (*AllAffiliateTiersResponse, error)
 	// Query AffiliateWhitelist returns the affiliate whitelist.
 	AffiliateWhitelist(context.Context, *AffiliateWhitelistRequest) (*AffiliateWhitelistResponse, error)
+	// Query AffiliateParameters returns the affiliate parameters.
+	AffiliateParameters(context.Context, *AffiliateParametersRequest) (*AffiliateParametersResponse, error)
+	// Query AffiliateOverrides returns the affiliate overrides.
+	AffiliateOverrides(context.Context, *AffiliateOverridesRequest) (*AffiliateOverridesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -563,6 +773,12 @@ func (*UnimplementedQueryServer) AllAffiliateTiers(ctx context.Context, req *All
 }
 func (*UnimplementedQueryServer) AffiliateWhitelist(ctx context.Context, req *AffiliateWhitelistRequest) (*AffiliateWhitelistResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AffiliateWhitelist not implemented")
+}
+func (*UnimplementedQueryServer) AffiliateParameters(ctx context.Context, req *AffiliateParametersRequest) (*AffiliateParametersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AffiliateParameters not implemented")
+}
+func (*UnimplementedQueryServer) AffiliateOverrides(ctx context.Context, req *AffiliateOverridesRequest) (*AffiliateOverridesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AffiliateOverrides not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -641,6 +857,42 @@ func _Query_AffiliateWhitelist_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AffiliateParameters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AffiliateParametersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AffiliateParameters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Query/AffiliateParameters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AffiliateParameters(ctx, req.(*AffiliateParametersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AffiliateOverrides_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AffiliateOverridesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AffiliateOverrides(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Query/AffiliateOverrides",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AffiliateOverrides(ctx, req.(*AffiliateOverridesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.affiliates.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -660,6 +912,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AffiliateWhitelist",
 			Handler:    _Query_AffiliateWhitelist_Handler,
+		},
+		{
+			MethodName: "AffiliateParameters",
+			Handler:    _Query_AffiliateParameters_Handler,
+		},
+		{
+			MethodName: "AffiliateOverrides",
+			Handler:    _Query_AffiliateOverrides_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -716,6 +976,16 @@ func (m *AffiliateInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.ReferredVolume_30DRolling.Size()
+		i -= size
+		if _, err := m.ReferredVolume_30DRolling.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
 	{
 		size := m.StakedAmount.Size()
 		i -= size
@@ -931,6 +1201,118 @@ func (m *AffiliateWhitelistResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *AffiliateOverridesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AffiliateOverridesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AffiliateOverridesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *AffiliateOverridesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AffiliateOverridesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AffiliateOverridesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Overrides.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *AffiliateParametersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AffiliateParametersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AffiliateParametersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *AffiliateParametersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AffiliateParametersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AffiliateParametersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Parameters.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -973,6 +1355,8 @@ func (m *AffiliateInfoResponse) Size() (n int) {
 	l = m.ReferredVolume.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	l = m.StakedAmount.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.ReferredVolume_30DRolling.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1039,6 +1423,46 @@ func (m *AffiliateWhitelistResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = m.Whitelist.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *AffiliateOverridesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AffiliateOverridesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Overrides.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *AffiliateParametersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AffiliateParametersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Parameters.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1281,6 +1705,39 @@ func (m *AffiliateInfoResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.StakedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReferredVolume_30DRolling", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ReferredVolume_30DRolling.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1711,6 +2168,272 @@ func (m *AffiliateWhitelistResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Whitelist.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AffiliateOverridesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AffiliateOverridesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AffiliateOverridesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AffiliateOverridesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AffiliateOverridesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AffiliateOverridesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Overrides", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Overrides.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AffiliateParametersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AffiliateParametersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AffiliateParametersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AffiliateParametersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AffiliateParametersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AffiliateParametersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Parameters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Parameters.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

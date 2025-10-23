@@ -48,7 +48,11 @@ func (k Keeper) UserFeeTier(
 	if _, err := sdk.AccAddressFromBech32(req.User); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
 	}
-	index, tier := k.getUserFeeTier(ctx, req.User)
+	affiliateParameters, err := k.affiliatesKeeper.GetAffiliateParameters(ctx)
+	if err != nil {
+		return nil, err
+	}
+	index, tier := k.getUserFeeTier(ctx, req.User, affiliateParameters.RefereeMinimumFeeTierIdx)
 	return &types.QueryUserFeeTierResponse{
 		Index: index,
 		Tier:  tier,
