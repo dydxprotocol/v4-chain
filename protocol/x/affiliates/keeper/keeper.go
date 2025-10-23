@@ -263,6 +263,15 @@ func (k Keeper) GetTierForAffiliate(
 	numTiers := uint32(len(tiers))
 	maxTierLevel := numTiers - 1
 	currentTier := uint32(0)
+
+	// Check whether the address is overridden, if it is then set the
+	// affiliate tier to the max
+	affiliateOverrides, err := k.GetAllAffilliateOverrides(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	for _, addr := range affiliateOverrides.Addresses {
+		if addr == affiliateAddr {
 			feeSharePpm = affiliateTiers.Tiers[maxTierLevel].TakerFeeSharePpm
 			return uint32(maxTierLevel), feeSharePpm, nil
 		}
