@@ -43,7 +43,7 @@ var (
 
 	UpdatedAffiliateParameters = affiliatetypes.AffiliateParameters{
 		Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums:   1_000_000_000_000, // 1M volume
-		RefereeMinimumFeeTierIdx:                                  1,
+		RefereeMinimumFeeTierIdx:                                  2,
 		Maximum_30DAttributableVolumePerReferredUserQuoteQuantums: 10_000_000_000, // 10k volume
 	}
 
