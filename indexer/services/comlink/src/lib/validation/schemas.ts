@@ -386,21 +386,6 @@ const uploadDydxAddressSchema: Record<string, ParamSchema> = {
   },
 };
 
-const appleLoginRedirectSchema: Record<string, ParamSchema> = {
-  state: {
-    in: ['query'],
-    isString: true,
-    notEmpty: true,
-    errorMessage: 'state (public key) is required and must be a non-empty string',
-  },
-  code: {
-    in: ['query'],
-    isString: true,
-    notEmpty: true,
-    errorMessage: 'code (authorization code) is required and must be a non-empty string',
-  },
-};
-
 const getDepositAddressSchema: Record<string, ParamSchema> = {
   dydxAddress: {
     in: ['params'],
@@ -411,8 +396,6 @@ const getDepositAddressSchema: Record<string, ParamSchema> = {
 export const CheckSignInSchema = checkSchema(signInSchema);
 
 export const CheckUploadDydxAddressSchema = checkSchema(uploadDydxAddressSchema);
-
-export const CheckAppleLoginRedirectSchema = checkSchema(appleLoginRedirectSchema);
 
 export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
 
