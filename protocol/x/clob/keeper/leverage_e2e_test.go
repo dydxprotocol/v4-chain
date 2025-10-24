@@ -290,7 +290,12 @@ func TestWithdrawalWithLeverage(t *testing.T) {
 	// Verify leverage was set immediately (ante handler sets it)
 	aliceLeverageMap, found := tApp.App.SubaccountsKeeper.GetLeverage(ctx, &constants.Alice_Num0)
 	require.True(t, found, "Alice's leverage should be set")
-	require.Equal(t, uint32(5), aliceLeverageMap[0], "Alice's leverage for perpetual 0 should be 5")
+	require.Equal(
+		t,
+		uint32(200_000),
+		aliceLeverageMap[0],
+		"Alice's custom imf ppm for perpetual 0 should be 200,000",
+	)
 
 	// Use orders large enough to have meaningful margin requirements
 	// Both Alice and Bob trade 1,000,000 quantums (0.0001 BTC) at price 5,000,000,000 subticks ($50,000/BTC)
