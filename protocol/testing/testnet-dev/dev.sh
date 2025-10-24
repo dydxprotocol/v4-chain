@@ -205,7 +205,7 @@ create_validators() {
 }
 
 setup_preupgrade_binary() {
-	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv4.1.0/dydxprotocold-v4.1.0-linux-amd64.tar.gz'
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv9.3.0/dydxprotocold-v9.3.0-linux-amd64.tar.gz'
 	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
 	mkdir -p /tmp/dydxprotocold
 	curl -vL $tar_url -o $tar_path
@@ -220,8 +220,8 @@ setup_cosmovisor() {
 		export DAEMON_HOME="$HOME/chain/.full-node-$i"
 
 		cosmovisor init $PREUPGRADE_BINARY_PATH
-		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/"
-		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/dydxprotocold"
+		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4.0/bin/"
+		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4.0/bin/dydxprotocold"
 	done
 
 	for i in "${!MONIKERS[@]}"; do
@@ -230,8 +230,8 @@ setup_cosmovisor() {
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
 		cosmovisor init $PREUPGRADE_BINARY_PATH
-		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/"
-		ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/dydxprotocold"
+		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v9.4.0/bin/"
+		ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v9.4.0/bin/dydxprotocold"
 	done
 }
 
