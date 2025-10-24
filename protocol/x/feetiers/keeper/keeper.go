@@ -122,22 +122,32 @@ func (k Keeper) getUserFeeTier(
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
 // It checks if
 // 1. there's an active fee discount for the specified CLOB pair.
 // 2. user qualifies for staking-based discounts.
 >>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+=======
+// GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
+// It checks if there's an active fee discount for the specified CLOB pair.
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
 func (k Keeper) GetPerpetualFeePpm(
 	ctx sdk.Context,
 	address string,
 	isTaker bool,
 	feeTierOverrideIdx uint32,
+	clobPairId uint32,
 ) int32 {
 	_, userTier := k.getUserFeeTier(ctx, address, feeTierOverrideIdx)
+	var baseFee int32
 	if isTaker {
-		return userTier.TakerFeePpm
+		baseFee = userTier.TakerFeePpm
+	} else {
+		baseFee = userTier.MakerFeePpm
 	}
+<<<<<<< HEAD
 <<<<<<< HEAD
 	return userTier.MakerFeePpm
 =======
@@ -175,6 +185,16 @@ func (k Keeper) GetPerpetualFeePpm(
 
 	return feeAfterMarketDiscount
 >>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+=======
+
+	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
+	discountPpm := k.GetDiscountedPpm(ctx, clobPairId)
+
+	// Calculate the discounted fee
+	// For negative fees (rebates), we also apply the discount percentage
+	discountedFee := int32(int64(baseFee) * int64(discountPpm) / int64(types.MaxChargePpm))
+	return discountedFee
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
 }
 
 // GetLowestMakerFee returns the lowest maker fee among any tiers.
