@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -262,5 +263,281 @@ func TestOrderPlacementFailsWithLeverageConfigured(t *testing.T) {
 	) {
 		resp := tApp.CheckTx(checkTx)
 		require.False(t, resp.IsOK(), "Expected Alice's CheckTx to fail due to leverage. Response: %+v", resp)
+	}
+}
+
+func TestWithdrawalWithLeverage(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Use CheckTx to set leverage (this goes through ante handler which persists it)
+	leverageMsg := &clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Alice_Num0,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId: 0,
+				Leverage:   5,
+			},
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *leverageMsg) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected leverage CheckTx to succeed. Response: %+v", resp)
+	}
+
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Verify leverage was set immediately (ante handler sets it)
+	aliceLeverageMap, found := tApp.App.SubaccountsKeeper.GetLeverage(ctx, &constants.Alice_Num0)
+	require.True(t, found, "Alice's leverage should be set")
+	require.Equal(t, uint32(5), aliceLeverageMap[0], "Alice's leverage for perpetual 0 should be 5")
+
+	// Use orders large enough to have meaningful margin requirements
+	// Both Alice and Bob trade 1,000,000 quantums (0.0001 BTC) at price 5,000,000,000 subticks ($50,000/BTC)
+	// This creates a $5 notional position which will have measurable IMR
+	// Quantums must be multiple of StepBaseQuantums = 10
+	// Subticks must be multiple of SubticksPerTick = 10000
+	aliceOrder := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_ShortTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: 1_000_000,     // 0.0001 BTC
+		Subticks: 5_000_000_000, // $50,000 per BTC
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+			GoodTilBlock: 20,
+		},
+	}
+
+	bobOrder := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Bob_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_ShortTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: 1_000_000,     // 0.0001 BTC
+		Subticks: 5_000_000_000, // $50,000 per BTC
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+			GoodTilBlock: 20,
+		},
+	}
+
+	carlSellOrder := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Carl_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_ShortTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_SELL,
+		Quantums: 2_000_000,     // 0.0002 BTC
+		Subticks: 5_000_000_000, // $50,000 per BTC
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+			GoodTilBlock: 20,
+		},
+	}
+
+	// Place all orders
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(carlSellOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Carl's order to succeed. Response: %+v", resp)
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(bobOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Bob's order to succeed. Response: %+v", resp)
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(aliceOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Alice's order to succeed. Response: %+v", resp)
+	}
+
+	// Advance to next block which matches the orders
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+	// Get final subaccount states
+	aliceAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	bobAfter := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
+
+	// Both should have positions now
+	require.Len(t, aliceAfter.PerpetualPositions, 1, "Alice should have 1 perpetual position")
+	require.Len(t, bobAfter.PerpetualPositions, 1, "Bob should have 1 perpetual position")
+
+	// Verify the positions are equal in size but opposite in direction
+	require.Equal(t, uint64(1_000_000), new(big.Int).Abs(aliceAfter.PerpetualPositions[0].GetBigQuantums()).Uint64())
+	require.Equal(t, uint64(1_000_000), new(big.Int).Abs(bobAfter.PerpetualPositions[0].GetBigQuantums()).Uint64())
+
+	// Get actual risk calculations to verify leverage is being applied
+	aliceRisk, err := tApp.App.SubaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		ctx,
+		satypes.Update{SubaccountId: constants.Alice_Num0},
+	)
+	require.NoError(t, err)
+
+	bobRisk, err := tApp.App.SubaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		ctx,
+		satypes.Update{SubaccountId: constants.Bob_Num0},
+	)
+	require.NoError(t, err)
+
+	// Alice's IMR should be higher due to lower leverage (more conservative)
+	require.True(t, aliceRisk.IMR.Cmp(bobRisk.IMR) > 0,
+		"Alice's IMR (%s) should be higher than Bob's IMR (%s) due to lower leverage setting (5x vs 20x)",
+		aliceRisk.IMR.String(), bobRisk.IMR.String())
+
+	// Calculate available collateral for new positions: NC - IMR
+	aliceAvailable := new(big.Int).Sub(aliceRisk.NC, aliceRisk.IMR)
+	bobAvailable := new(big.Int).Sub(bobRisk.NC, bobRisk.IMR)
+
+	// Verify Bob has more available collateral than Alice due to lower leverage requirements
+	require.True(t, bobAvailable.Cmp(aliceAvailable) > 0,
+		"Bob's available collateral (%s) should be greater than Alice's (%s) due to lower IMR from higher leverage",
+		bobAvailable.String(), aliceAvailable.String())
+
+	// Let's try to withdraw bob's available collateral from both subaccounts
+
+	bobWithdrawal := &sendingtypes.MsgWithdrawFromSubaccount{
+		Sender:    constants.Bob_Num0,
+		Recipient: constants.BobAccAddress.String(),
+		AssetId:   constants.Usdc.Id,
+		Quantums:  bobAvailable.Uint64(),
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Bob_Num0.Owner,
+			Gas:                  constants.TestGasLimit,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		bobWithdrawal,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Bob's withdrawal to succeed. Response: %+v", resp)
+	}
+
+	aliceWithdrawal := &sendingtypes.MsgWithdrawFromSubaccount{
+		Sender:    constants.Alice_Num0,
+		Recipient: constants.AliceAccAddress.String(),
+		AssetId:   constants.Usdc.Id,
+		Quantums:  bobAvailable.Uint64(), // using bob's available collateral which is greater than alice's
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Alice_Num0.Owner,
+			Gas:                  constants.TestGasLimit * 10,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		aliceWithdrawal,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.False(t, resp.IsOK(), "Expected Alice's withdrawal to fail. Response: %+v", resp)
+	}
+}
+
+func TestUpdateLeverageWithExistingPosition(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Place orders for both Alice and Bob that would require the entire margin if leverage was unchanged
+	orderSize := dtypes.NewIntFromBigInt(big.NewInt(5_500_000_000_000_000))
+
+	// Use the same price and clob pair as in the other test
+	price := uint64(2_000_000_000)
+
+	// Bob's order should succeed
+	bobOrder := &clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Bob_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_SELL,
+		Quantums: orderSize.BigInt().Uint64(),
+		Subticks: price,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 100),
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(*bobOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Bob's CheckTx to succeed. Response: %+v", resp)
+	}
+
+	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
+	require.True(t, bobSubaccount.AssetPositions != nil, "Bob should have a subaccount")
+
+	// Alice's order should fail due to leverage config
+	aliceOrder := &clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:     clobtypes.Order_SIDE_BUY,
+		Quantums: orderSize.BigInt().Uint64(),
+		Subticks: price,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 100),
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(*aliceOrder),
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected Alice's CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance to next block which matches the orders
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Configure leverage for Alice with an existing bitcoin position
+	// This should make the account fail against the IMR check
+	aliceLeverage := &clobtypes.MsgUpdateLeverage{
+		SubaccountId: &constants.Alice_Num0,
+		ClobPairLeverage: []*clobtypes.LeverageEntry{
+			{
+				ClobPairId: 0,
+				Leverage:   2,
+			},
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*aliceLeverage,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.False(t, resp.IsOK(), "Expected Alice's CheckTx to fail. Response: %+v", resp)
 	}
 }

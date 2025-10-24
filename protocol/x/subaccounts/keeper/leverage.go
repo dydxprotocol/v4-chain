@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"math/big"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -106,8 +108,47 @@ func (k Keeper) UpdateLeverage(
 		existingLeverage[perpetualId] = custom_imf_ppm
 	}
 
+	// Check if the new leverage values break margin requirements
+	err := k.checkNewLeverageAgainstMarginRequirements(ctx, subaccountId, perpetualLeverage)
+	if err != nil {
+		return err
+	}
+
 	// Store updated leverage
 	k.SetLeverage(ctx, subaccountId, existingLeverage)
+	return nil
+}
+
+// construct empty updates for each perpetual for which leverage is configured
+func (k Keeper) checkNewLeverageAgainstMarginRequirements(
+	ctx sdk.Context,
+	subaccountId *types.SubaccountId,
+	leverageMap map[uint32]uint32,
+) (err error) {
+	for perpetualId := range leverageMap {
+		update := types.Update{
+			SubaccountId: *subaccountId,
+			PerpetualUpdates: []types.PerpetualUpdate{
+				{
+					PerpetualId:      perpetualId,
+					BigQuantumsDelta: big.NewInt(0),
+				},
+			},
+		}
+
+		// check margin requirements with new leverage configuration
+		risk, err := k.GetNetCollateralAndMarginRequirementsWithLeverage(ctx, update, leverageMap)
+		if err != nil {
+			return err
+		}
+		if !risk.IsInitialCollateralized() {
+			return errorsmod.Wrapf(
+				types.ErrLeverageViolatesMarginRequirements,
+				"subaccount %s violates margin requirements with new leverage",
+				subaccountId.String(),
+			)
+		}
+	}
 	return nil
 }
 

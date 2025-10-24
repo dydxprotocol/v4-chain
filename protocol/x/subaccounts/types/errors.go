@@ -80,7 +80,8 @@ var (
 	ErrSafetyHeapSubaccountIndexNotFound = errorsmod.Register(ModuleName, 602, "subaccount index not found")
 
 	// 700 - 799: leverage related.
-	ErrInvalidLeverage        = errorsmod.Register(ModuleName, 700, "invalid leverage")
-	ErrLeverageExceedsMaximum = errorsmod.Register(ModuleName, 701, "leverage exceeds maximum allowed")
-	ErrInitialMarginPpmIsZero = errorsmod.Register(ModuleName, 702, "initial margin ppm cannot be zero")
+	ErrInvalidLeverage                    = errorsmod.Register(ModuleName, 700, "invalid leverage")
+	ErrLeverageExceedsMaximum             = errorsmod.Register(ModuleName, 701, "leverage exceeds maximum allowed")
+	ErrInitialMarginPpmIsZero             = errorsmod.Register(ModuleName, 702, "initial margin ppm cannot be zero")
+	ErrLeverageViolatesMarginRequirements = errorsmod.Register(ModuleName, 703, "leverage violates margin requirements")
 )
