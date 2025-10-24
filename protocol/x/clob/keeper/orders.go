@@ -1114,7 +1114,7 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 		subaccountId.Owner,
 		false,
 		affiliateParameters.RefereeMinimumFeeTierIdx,
-	)
+		clobPairId.ToUint32())
 	bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
 		order.Subticks,
 		order.RemainingQuantums,

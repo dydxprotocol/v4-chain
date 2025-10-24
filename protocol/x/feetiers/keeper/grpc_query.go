@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"google.golang.org/grpc/codes"
@@ -59,8 +59,6 @@ func (k Keeper) UserFeeTier(
 		Tier:  tier,
 	}, nil
 }
-<<<<<<< HEAD
-=======
 
 // PerMarketFeeDiscountParams processes a query for fee discount parameters for a specific market/CLOB pair.
 func (k Keeper) PerMarketFeeDiscountParams(
@@ -107,59 +105,3 @@ func (k Keeper) AllMarketFeeDiscountParams(
 		Params: params,
 	}, nil
 }
-
-func (k Keeper) StakingTiers(
-	c context.Context,
-	req *types.QueryStakingTiersRequest,
-) (
-	*types.QueryStakingTiersResponse,
-	error,
-) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
-	stakingTiers := k.GetAllStakingTiers(ctx)
-	return &types.QueryStakingTiersResponse{
-		StakingTiers: stakingTiers,
-	}, nil
-}
-
-func (k Keeper) UserStakingTier(
-	c context.Context,
-	req *types.QueryUserStakingTierRequest,
-) (
-	*types.QueryUserStakingTierResponse,
-	error,
-) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
-
-	// Validate address
-	_, err := sdk.AccAddressFromBech32(req.Address)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
-	}
-
-	// Get the user's fee tier
-	affiliateParameters, err := k.affiliatesKeeper.GetAffiliateParameters(ctx)
-	if err != nil {
-		return nil, err
-	}
-	_, userFeeTier := k.getUserFeeTier(ctx, req.Address, affiliateParameters.RefereeMinimumFeeTierIdx)
-
-	// Get user's staking info
-	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.Address)
-	discountPpm := k.GetStakingDiscountPpm(ctx, userFeeTier.Name, stakedAmount)
-
-	return &types.QueryUserStakingTierResponse{
-		FeeTierName:      userFeeTier.Name,
-		StakedBaseTokens: dtypes.NewIntFromBigInt(stakedAmount),
-		DiscountPpm:      discountPpm,
-	}, nil
-}
->>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))

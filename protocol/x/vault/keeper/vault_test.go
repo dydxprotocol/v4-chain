@@ -340,15 +340,15 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	))
 
 	// Vault in genesis state should be in best fee tier.
-	takerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, true, 2)
+	takerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, true, 2, uint32(1))
 	require.Equal(t, int32(11), takerFee)
-	makerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, false, 2)
+	makerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, false, 2, uint32(1))
 	require.Equal(t, int32(1), makerFee)
 
 	// A regular user Alice should be in worst fee tier.
-	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, true, 2)
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, true, 2, uint32(1))
 	require.Equal(t, int32(33), takerFee)
-	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false, 2)
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false, 2, uint32(1))
 	require.Equal(t, int32(3), makerFee)
 
 	// A newly allocated-to vault should be in best fee tier.
@@ -373,9 +373,9 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 		uint32(ctx.BlockHeight())+1,
 		testapp.AdvanceToBlockOptions{},
 	)
-	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true, 2)
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true, 2, uint32(1))
 	require.Equal(t, int32(11), takerFee)
-	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false, 2)
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false, 2, uint32(1))
 	require.Equal(t, int32(1), makerFee)
 }
 

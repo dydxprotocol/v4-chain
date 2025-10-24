@@ -121,60 +121,30 @@ func (k Keeper) getUserFeeTier(
 	return idx, tiers[idx]
 }
 
-<<<<<<< HEAD
-=======
 // GetPerpetualFeePpm returns the fee PPM (parts per million) for a user.
-// It checks if
-// 1. there's an active fee discount for the specified CLOB pair.
-// 2. user qualifies for staking-based discounts.
->>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+// It checks if there's an active fee discount for the specified CLOB pair.
 func (k Keeper) GetPerpetualFeePpm(
 	ctx sdk.Context,
 	address string,
 	isTaker bool,
 	feeTierOverrideIdx uint32,
+	clobPairId uint32,
 ) int32 {
 	_, userTier := k.getUserFeeTier(ctx, address, feeTierOverrideIdx)
+	var baseFee int32
 	if isTaker {
-		return userTier.TakerFeePpm
+		baseFee = userTier.TakerFeePpm
+	} else {
+		baseFee = userTier.MakerFeePpm
 	}
-<<<<<<< HEAD
-	return userTier.MakerFeePpm
-=======
 
-	// Get the per-market discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
-	perMarketDiscountPpm := k.GetDiscountedPpm(ctx, clobPairId)
+	// Get the discount PPM (returns MaxChargePpm = 1,000,000 = 100% if no active fee discount)
+	discountPpm := k.GetDiscountedPpm(ctx, clobPairId)
 
-	// Calculate the fee after per-market discount
+	// Calculate the discounted fee
 	// For negative fees (rebates), we also apply the discount percentage
-	feeAfterMarketDiscount := int32(int64(baseFee) * int64(perMarketDiscountPpm) / int64(types.MaxChargePpm))
-
-	// Apply staking discount if fee is positive and user qualifies
-	if feeAfterMarketDiscount > 0 {
-		// Validate address before getting staked amount
-		_, err := sdk.AccAddressFromBech32(address)
-		if err != nil {
-			// Log error but do not fail fee calculation
-			k.Logger(ctx).Error(
-				"Failed to validate address for staking discount",
-				"address", address,
-				"error", err,
-			)
-		} else {
-			stakedAmount := k.statsKeeper.GetStakedAmount(ctx, address)
-			stakingDiscountPpm := k.GetStakingDiscountPpm(ctx, userTier.Name, stakedAmount)
-			if stakingDiscountPpm > 0 {
-				// Final fee
-				// = fee * (1 - staking_discount)
-				// = fee * (1_000_000 - staking_discount_ppm) / 1_000_000
-				remainingFeePpm := types.MaxChargePpm - stakingDiscountPpm
-				feeAfterMarketDiscount = int32(int64(feeAfterMarketDiscount) * int64(remainingFeePpm) / int64(types.MaxChargePpm))
-			}
-		}
-	}
-
-	return feeAfterMarketDiscount
->>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+	discountedFee := int32(int64(baseFee) * int64(discountPpm) / int64(types.MaxChargePpm))
+	return discountedFee
 }
 
 // GetLowestMakerFee returns the lowest maker fee among any tiers.
