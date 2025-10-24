@@ -31,6 +31,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewardtypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -364,7 +365,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
 		},
-		"Can open an order with an invalid order router address": {
+		"Cannot open an order with an invalid order router address": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -387,12 +388,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				OrderRouterAddress: constants.CarlAccAddress.String(),
 			},
 
-			expectedOrderStatus: types.Success,
-			expectedFilledSize:  0,
-			expectedOpenInterests: map[uint32]*big.Int{
-				// unchanged, no match happened
-				constants.BtcUsd_100PercentMarginRequirement.Params.Id: big.NewInt(100_000_000),
-			},
+			expectedErr: revsharetypes.ErrOrderRouterRevShareNotFound,
 		},
 		`New order should be undercollateralized when matching when previous fills make it undercollateralized when using
 				maker orders subticks, but would be collateralized if using taker order subticks`: {
@@ -1211,7 +1207,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			},
 			expectedErr: "must be a multiple of the ClobPair's StepBaseQuantums",
 		},
-		"Still succeeds if Order router address is not found": {
+		"Fails if Order router address is not found": {
 			order: types.Order{
 				OrderId: types.OrderId{
 					ClientId:     0,
@@ -1224,6 +1220,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
 				OrderRouterAddress: constants.AliceAccAddress.String(),
 			},
+			expectedErr: "order router rev share not found",
 		},
 		"Fails if GoodTilBlock is in the past": {
 			order: types.Order{
