@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"google.golang.org/grpc/codes"
@@ -135,5 +136,28 @@ func (k Keeper) UserStakingTier(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	return nil, status.Error(codes.Unimplemented, "not implemented")
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+
+	// Validate address
+	_, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
+	}
+
+	// Get the user's fee tier
+	affiliateParameters, err := k.affiliatesKeeper.GetAffiliateParameters(ctx)
+	if err != nil {
+		return nil, err
+	}
+	_, userFeeTier := k.getUserFeeTier(ctx, req.Address, affiliateParameters.RefereeMinimumFeeTierIdx)
+
+	// Get user's staking info
+	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.Address)
+	discountPpm := k.GetStakingDiscountPpm(ctx, userFeeTier.Name, stakedAmount)
+
+	return &types.QueryUserStakingTierResponse{
+		FeeTierName:      userFeeTier.Name,
+		StakedBaseTokens: dtypes.NewIntFromBigInt(stakedAmount),
+		DiscountPpm:      discountPpm,
+	}, nil
 }
