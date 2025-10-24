@@ -97,7 +97,7 @@ func ListingKeepers(
 				db,
 				cdc,
 			)
-			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feeTiersKeeper, statsKeeper)
+			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feeTiersKeeper)
 			marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 				stateStore,

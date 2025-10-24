@@ -138,14 +138,11 @@ func (k Keeper) ProcessSingleMatch(
 		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
-	// Fee tier for affiliates
-	referreeIndexOverride := affiliateParameters.RefereeMinimumFeeTierIdx
-
 	// Calculate taker and maker fee ppms.
 	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true, referreeIndexOverride)
+		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true)
 	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false, referreeIndexOverride)
+		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
 
 	takerInsuranceFundDelta := new(big.Int)
 	if takerMatchableOrder.IsLiquidation() {

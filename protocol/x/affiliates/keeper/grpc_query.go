@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
 
@@ -38,16 +37,19 @@ func (k Keeper) AffiliateInfo(c context.Context,
 		return nil, err
 	}
 
-	userStats := k.statsKeeper.GetUserStats(ctx, addr.String())
-	referredVolume := userStats.Affiliate_30DReferredVolumeQuoteQuantums
+	referredVolume, err := k.GetReferredVolume(ctx, req.GetAddress())
+	if err != nil {
+		return nil, err
+	}
+
 	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.GetAddress())
 
 	return &types.AffiliateInfoResponse{
-		IsWhitelisted:             isWhitelisted,
-		Tier:                      tierLevel,
-		FeeSharePpm:               feeSharePpm,
-		StakedAmount:              dtypes.NewIntFromBigInt(stakedAmount),
-		ReferredVolume_30DRolling: dtypes.NewIntFromBigInt(lib.BigU(referredVolume)),
+		IsWhitelisted:  isWhitelisted,
+		Tier:           tierLevel,
+		FeeSharePpm:    feeSharePpm,
+		ReferredVolume: dtypes.NewIntFromBigInt(referredVolume),
+		StakedAmount:   dtypes.NewIntFromBigInt(stakedAmount),
 	}, nil
 }
 

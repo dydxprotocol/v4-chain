@@ -39,15 +39,10 @@ export interface AffiliateInfoResponse {
   feeSharePpm: number;
   /** The affiliate's all-time referred volume in quote quantums. */
 
-  /** @deprecated */
-
   referredVolume: Uint8Array;
   /** The affiliate's currently staked native tokens (in whole coins). */
 
   stakedAmount: Uint8Array;
-  /** The affiliate's 30d referred volume in quote quantums. */
-
-  referredVolume_30dRolling: Uint8Array;
 }
 /**
  * AffiliateInfoResponse is the response type for the Query/AffiliateInfo RPC
@@ -71,15 +66,10 @@ export interface AffiliateInfoResponseSDKType {
   fee_share_ppm: number;
   /** The affiliate's all-time referred volume in quote quantums. */
 
-  /** @deprecated */
-
   referred_volume: Uint8Array;
   /** The affiliate's currently staked native tokens (in whole coins). */
 
   staked_amount: Uint8Array;
-  /** The affiliate's 30d referred volume in quote quantums. */
-
-  referred_volume_30d_rolling: Uint8Array;
 }
 /** ReferredByRequest is the request type for the Query/ReferredBy RPC method. */
 
@@ -271,8 +261,7 @@ function createBaseAffiliateInfoResponse(): AffiliateInfoResponse {
     tier: 0,
     feeSharePpm: 0,
     referredVolume: new Uint8Array(),
-    stakedAmount: new Uint8Array(),
-    referredVolume_30dRolling: new Uint8Array()
+    stakedAmount: new Uint8Array()
   };
 }
 
@@ -296,10 +285,6 @@ export const AffiliateInfoResponse = {
 
     if (message.stakedAmount.length !== 0) {
       writer.uint32(42).bytes(message.stakedAmount);
-    }
-
-    if (message.referredVolume_30dRolling.length !== 0) {
-      writer.uint32(50).bytes(message.referredVolume_30dRolling);
     }
 
     return writer;
@@ -334,10 +319,6 @@ export const AffiliateInfoResponse = {
           message.stakedAmount = reader.bytes();
           break;
 
-        case 6:
-          message.referredVolume_30dRolling = reader.bytes();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -354,7 +335,6 @@ export const AffiliateInfoResponse = {
     message.feeSharePpm = object.feeSharePpm ?? 0;
     message.referredVolume = object.referredVolume ?? new Uint8Array();
     message.stakedAmount = object.stakedAmount ?? new Uint8Array();
-    message.referredVolume_30dRolling = object.referredVolume_30dRolling ?? new Uint8Array();
     return message;
   }
 
