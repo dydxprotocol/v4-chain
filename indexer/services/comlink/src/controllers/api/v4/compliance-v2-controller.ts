@@ -4,7 +4,7 @@ import {
   TooManyRequestsError,
 } from '@dydxprotocol-indexer/base';
 import {
-  CountryHeaders,
+  GeoOriginHeaders,
   isRestrictedCountryHeaders,
   isWhitelistedAddress,
 } from '@dydxprotocol-indexer/compliance';
@@ -24,7 +24,7 @@ import {
   Controller, Get, Path, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import {
@@ -133,7 +133,7 @@ class ComplianceV2Controller extends Controller {
 
 router.get(
   '/screen/:address',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   ...CheckAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
@@ -385,7 +385,7 @@ async function upsertComplianceStatus(
   updatedAt: string,
 ): Promise<ComplianceStatusFromDatabase | undefined> {
   if (complianceStatus.length === 0) {
-    if (!isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
+    if (!isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
       return ComplianceStatusTable.upsert({
         address,
         status: ComplianceStatus.COMPLIANT,
@@ -398,7 +398,7 @@ async function upsertComplianceStatus(
       return ComplianceStatusTable.upsert({
         address,
         status: ComplianceStatus.BLOCKED,
-        reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+        reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
         updatedAt,
       });
     }
@@ -406,7 +406,7 @@ async function upsertComplianceStatus(
     return ComplianceStatusTable.upsert({
       address,
       status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-      reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+      reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
       updatedAt,
     });
   }
@@ -416,13 +416,13 @@ async function upsertComplianceStatus(
     complianceStatus[0].status === ComplianceStatus.COMPLIANT
   ) {
     if (
-      isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
+      isRestrictedCountryHeaders(req.headers as GeoOriginHeaders) &&
       action === ComplianceAction.CONNECT
     ) {
       return ComplianceStatusTable.update({
         address,
         status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
-        reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+        reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
         updatedAt,
       });
     }

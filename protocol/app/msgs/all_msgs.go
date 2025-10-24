@@ -216,8 +216,12 @@ var (
 		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": {},
 
 		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":           {},
+		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":   {},
+		"/dydxprotocol.feetiers.MsgSetMarketFeeDiscountParams":         {},
+		"/dydxprotocol.feetiers.MsgSetMarketFeeDiscountParamsResponse": {},
+		"/dydxprotocol.feetiers.MsgSetStakingTiers":                    {},
+		"/dydxprotocol.feetiers.MsgSetStakingTiersResponse":            {},
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         {},

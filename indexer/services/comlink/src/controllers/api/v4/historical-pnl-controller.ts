@@ -16,7 +16,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { historicalPnlRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
@@ -179,7 +179,7 @@ class HistoricalPnlController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(historicalPnlRateLimiter),
   historicalPnlCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
@@ -233,7 +233,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(historicalPnlRateLimiter),
   historicalPnlCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,

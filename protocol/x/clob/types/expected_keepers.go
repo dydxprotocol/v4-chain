@@ -105,6 +105,26 @@ type SubaccountsKeeper interface {
 		revSharesForFill revsharetypes.RevSharesForFill,
 		fillForProcess FillForProcess,
 	) error
+
+	// Leverage methods
+	SetLeverage(
+		ctx sdk.Context,
+		subaccountId *satypes.SubaccountId,
+		leverageMap map[uint32]uint32,
+	)
+	GetLeverage(
+		ctx sdk.Context,
+		subaccountId *satypes.SubaccountId,
+	) (map[uint32]uint32, bool)
+	UpdateLeverage(
+		ctx sdk.Context,
+		subaccountId *satypes.SubaccountId,
+		perpetualLeverage map[uint32]uint32,
+	) error
+	GetMinImfForPerpetual(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (uint32, error)
 }
 
 type AssetsKeeper interface {
@@ -116,7 +136,7 @@ type BlockTimeKeeper interface {
 }
 
 type FeeTiersKeeper interface {
-	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool) int32
+	GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool, feeTierOverrideIdx uint32, clobPairId uint32) int32
 }
 
 type PerpetualsKeeper interface {

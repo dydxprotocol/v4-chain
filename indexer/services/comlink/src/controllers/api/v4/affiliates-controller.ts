@@ -16,7 +16,7 @@ import {
   Post,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
@@ -282,7 +282,7 @@ class AffiliatesController extends Controller {
 
 router.get(
   '/metadata',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesMetadataCacheControlMiddleware,
   ...checkSchema({
     address: {
@@ -322,7 +322,7 @@ router.get(
 
 router.get(
   '/address',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesCacheControlMiddleware,
   ...checkSchema({
     referralCode: {
@@ -468,7 +468,7 @@ router.post(
 
 router.get(
   '/snapshot',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesCacheControlMiddleware,
   ...checkSchema({
     addressFilter: {
@@ -554,7 +554,7 @@ router.get(
 
 router.get(
   '/total_volume',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesCacheControlMiddleware,
   ...checkSchema({
     address: {

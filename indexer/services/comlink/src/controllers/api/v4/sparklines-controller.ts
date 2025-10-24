@@ -14,7 +14,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { sparklinesRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP, SPARKLINE_TIME_PERIOD_TO_LOOKBACK_MAP } from '../../../lib/constants';
 import { handleControllerError } from '../../../lib/helpers';
@@ -57,7 +57,7 @@ class SparklinesController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(sparklinesRateLimiter),
   sparklinesCacheControlMiddleware,
   ...checkSchema({
     timePeriod: {

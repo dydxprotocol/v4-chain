@@ -1,3 +1,4 @@
+import { GeoOriginStatus } from '@dydxprotocol-indexer/compliance';
 import {
   dbHelpers,
   PermissionApprovalTable,
@@ -54,6 +55,12 @@ import * as skipHelpers from '../../../../src/helpers/skip-helper';
 import { RequestMethod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
 
+const geoOriginHeaders = {
+  'geo-origin-country': 'AR', // Argentina
+  'geo-origin-region': 'AR-V', // Tierra del Fuego
+  'geo-origin-status': GeoOriginStatus.OK,
+};
+
 describe('skip-bridge-controller#V4', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -93,6 +100,7 @@ describe('skip-bridge-controller#V4', () => {
           type: RequestMethod.GET,
           path: `/v4/bridging/getDepositAddress/${testDydxAddress2}`,
           expectedStatus: 200,
+          headers: geoOriginHeaders,
         });
 
         expect(response.body).toEqual({

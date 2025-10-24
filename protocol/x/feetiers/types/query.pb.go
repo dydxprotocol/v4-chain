@@ -10,6 +10,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -213,45 +214,448 @@ func (m *QueryUserFeeTierResponse) GetTier() *PerpetualFeeTier {
 	return nil
 }
 
+// QueryPerMarketFeeDiscountParamsRequest is the request type for the
+// Query/PerMarketFeeDiscountParams RPC method.
+type QueryPerMarketFeeDiscountParamsRequest struct {
+	ClobPairId uint32 `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
+}
+
+func (m *QueryPerMarketFeeDiscountParamsRequest) Reset() {
+	*m = QueryPerMarketFeeDiscountParamsRequest{}
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPerMarketFeeDiscountParamsRequest) ProtoMessage()    {}
+func (*QueryPerMarketFeeDiscountParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{4}
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest.Merge(m, src)
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPerMarketFeeDiscountParamsRequest proto.InternalMessageInfo
+
+func (m *QueryPerMarketFeeDiscountParamsRequest) GetClobPairId() uint32 {
+	if m != nil {
+		return m.ClobPairId
+	}
+	return 0
+}
+
+// QueryPerMarketFeeDiscountParamsResponse is the response type for the
+// Query/PerMarketFeeDiscountParams RPC method.
+type QueryPerMarketFeeDiscountParamsResponse struct {
+	Params PerMarketFeeDiscountParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *QueryPerMarketFeeDiscountParamsResponse) Reset() {
+	*m = QueryPerMarketFeeDiscountParamsResponse{}
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPerMarketFeeDiscountParamsResponse) ProtoMessage()    {}
+func (*QueryPerMarketFeeDiscountParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{5}
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse.Merge(m, src)
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPerMarketFeeDiscountParamsResponse proto.InternalMessageInfo
+
+func (m *QueryPerMarketFeeDiscountParamsResponse) GetParams() PerMarketFeeDiscountParams {
+	if m != nil {
+		return m.Params
+	}
+	return PerMarketFeeDiscountParams{}
+}
+
+// QueryAllMarketFeeDiscountParamsRequest is the request type for the
+// Query/AllMarketFeeDiscountParams RPC method.
+type QueryAllMarketFeeDiscountParamsRequest struct {
+}
+
+func (m *QueryAllMarketFeeDiscountParamsRequest) Reset() {
+	*m = QueryAllMarketFeeDiscountParamsRequest{}
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketFeeDiscountParamsRequest) ProtoMessage()    {}
+func (*QueryAllMarketFeeDiscountParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{6}
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest.Merge(m, src)
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllMarketFeeDiscountParamsRequest proto.InternalMessageInfo
+
+// QueryAllMarketFeeDiscountParamsResponse is the response type for the
+// Query/AllMarketFeeDiscountParams RPC method.
+type QueryAllMarketFeeDiscountParamsResponse struct {
+	Params []PerMarketFeeDiscountParams `protobuf:"bytes,1,rep,name=params,proto3" json:"params"`
+}
+
+func (m *QueryAllMarketFeeDiscountParamsResponse) Reset() {
+	*m = QueryAllMarketFeeDiscountParamsResponse{}
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllMarketFeeDiscountParamsResponse) ProtoMessage()    {}
+func (*QueryAllMarketFeeDiscountParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{7}
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse.Merge(m, src)
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllMarketFeeDiscountParamsResponse proto.InternalMessageInfo
+
+func (m *QueryAllMarketFeeDiscountParamsResponse) GetParams() []PerMarketFeeDiscountParams {
+	if m != nil {
+		return m.Params
+	}
+	return nil
+}
+
+// QueryStakingTiersRequest is a request type for the StakingTiers RPC method.
+type QueryStakingTiersRequest struct {
+}
+
+func (m *QueryStakingTiersRequest) Reset()         { *m = QueryStakingTiersRequest{} }
+func (m *QueryStakingTiersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryStakingTiersRequest) ProtoMessage()    {}
+func (*QueryStakingTiersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{8}
+}
+func (m *QueryStakingTiersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryStakingTiersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryStakingTiersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryStakingTiersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStakingTiersRequest.Merge(m, src)
+}
+func (m *QueryStakingTiersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryStakingTiersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStakingTiersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryStakingTiersRequest proto.InternalMessageInfo
+
+// QueryStakingTiersResponse is a response type for the StakingTiers RPC method.
+type QueryStakingTiersResponse struct {
+	StakingTiers []*StakingTier `protobuf:"bytes,1,rep,name=staking_tiers,json=stakingTiers,proto3" json:"staking_tiers,omitempty"`
+}
+
+func (m *QueryStakingTiersResponse) Reset()         { *m = QueryStakingTiersResponse{} }
+func (m *QueryStakingTiersResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryStakingTiersResponse) ProtoMessage()    {}
+func (*QueryStakingTiersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{9}
+}
+func (m *QueryStakingTiersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryStakingTiersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryStakingTiersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryStakingTiersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryStakingTiersResponse.Merge(m, src)
+}
+func (m *QueryStakingTiersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryStakingTiersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryStakingTiersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryStakingTiersResponse proto.InternalMessageInfo
+
+func (m *QueryStakingTiersResponse) GetStakingTiers() []*StakingTier {
+	if m != nil {
+		return m.StakingTiers
+	}
+	return nil
+}
+
+// QueryUserStakingTierRequest is a request type for the UserStakingTier RPC
+// method.
+type QueryUserStakingTierRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *QueryUserStakingTierRequest) Reset()         { *m = QueryUserStakingTierRequest{} }
+func (m *QueryUserStakingTierRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryUserStakingTierRequest) ProtoMessage()    {}
+func (*QueryUserStakingTierRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{10}
+}
+func (m *QueryUserStakingTierRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryUserStakingTierRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryUserStakingTierRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryUserStakingTierRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryUserStakingTierRequest.Merge(m, src)
+}
+func (m *QueryUserStakingTierRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryUserStakingTierRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryUserStakingTierRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryUserStakingTierRequest proto.InternalMessageInfo
+
+func (m *QueryUserStakingTierRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// QueryUserStakingTierResponse is a response type for the UserStakingTier RPC
+// method.
+type QueryUserStakingTierResponse struct {
+	// The user's current fee tier name
+	FeeTierName string `protobuf:"bytes,1,opt,name=fee_tier_name,json=feeTierName,proto3" json:"fee_tier_name,omitempty"`
+	// Amount of tokens staked by the user (in base units)
+	StakedBaseTokens github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=staked_base_tokens,json=stakedBaseTokens,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"staked_base_tokens"`
+	// The discount percentage in ppm that user qualifies for
+	DiscountPpm uint32 `protobuf:"varint,3,opt,name=discount_ppm,json=discountPpm,proto3" json:"discount_ppm,omitempty"`
+}
+
+func (m *QueryUserStakingTierResponse) Reset()         { *m = QueryUserStakingTierResponse{} }
+func (m *QueryUserStakingTierResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryUserStakingTierResponse) ProtoMessage()    {}
+func (*QueryUserStakingTierResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31456045d64644f, []int{11}
+}
+func (m *QueryUserStakingTierResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryUserStakingTierResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryUserStakingTierResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryUserStakingTierResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryUserStakingTierResponse.Merge(m, src)
+}
+func (m *QueryUserStakingTierResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryUserStakingTierResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryUserStakingTierResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryUserStakingTierResponse proto.InternalMessageInfo
+
+func (m *QueryUserStakingTierResponse) GetFeeTierName() string {
+	if m != nil {
+		return m.FeeTierName
+	}
+	return ""
+}
+
+func (m *QueryUserStakingTierResponse) GetDiscountPpm() uint32 {
+	if m != nil {
+		return m.DiscountPpm
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryPerpetualFeeParamsRequest)(nil), "dydxprotocol.feetiers.QueryPerpetualFeeParamsRequest")
 	proto.RegisterType((*QueryPerpetualFeeParamsResponse)(nil), "dydxprotocol.feetiers.QueryPerpetualFeeParamsResponse")
 	proto.RegisterType((*QueryUserFeeTierRequest)(nil), "dydxprotocol.feetiers.QueryUserFeeTierRequest")
 	proto.RegisterType((*QueryUserFeeTierResponse)(nil), "dydxprotocol.feetiers.QueryUserFeeTierResponse")
+	proto.RegisterType((*QueryPerMarketFeeDiscountParamsRequest)(nil), "dydxprotocol.feetiers.QueryPerMarketFeeDiscountParamsRequest")
+	proto.RegisterType((*QueryPerMarketFeeDiscountParamsResponse)(nil), "dydxprotocol.feetiers.QueryPerMarketFeeDiscountParamsResponse")
+	proto.RegisterType((*QueryAllMarketFeeDiscountParamsRequest)(nil), "dydxprotocol.feetiers.QueryAllMarketFeeDiscountParamsRequest")
+	proto.RegisterType((*QueryAllMarketFeeDiscountParamsResponse)(nil), "dydxprotocol.feetiers.QueryAllMarketFeeDiscountParamsResponse")
+	proto.RegisterType((*QueryStakingTiersRequest)(nil), "dydxprotocol.feetiers.QueryStakingTiersRequest")
+	proto.RegisterType((*QueryStakingTiersResponse)(nil), "dydxprotocol.feetiers.QueryStakingTiersResponse")
+	proto.RegisterType((*QueryUserStakingTierRequest)(nil), "dydxprotocol.feetiers.QueryUserStakingTierRequest")
+	proto.RegisterType((*QueryUserStakingTierResponse)(nil), "dydxprotocol.feetiers.QueryUserStakingTierResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/feetiers/query.proto", fileDescriptor_f31456045d64644f) }
 
 var fileDescriptor_f31456045d64644f = []byte{
-	// 440 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xc1, 0xae, 0xd2, 0x40,
-	0x14, 0x6d, 0x09, 0xef, 0x25, 0xce, 0x8b, 0x9b, 0x09, 0xc6, 0xda, 0x98, 0xbe, 0x67, 0x37, 0x48,
-	0x22, 0x1d, 0x83, 0xca, 0x42, 0x57, 0xb2, 0x80, 0x2d, 0x56, 0xdc, 0xb8, 0x21, 0xa5, 0xbd, 0x94,
-	0x31, 0xb4, 0x53, 0x66, 0xa6, 0x06, 0xb6, 0x7e, 0x81, 0x89, 0x1f, 0xe0, 0x4f, 0xb8, 0xf3, 0x07,
-	0x58, 0x12, 0xdd, 0xb8, 0x32, 0x06, 0x4c, 0xfc, 0x0d, 0xd3, 0x69, 0x51, 0xb4, 0x40, 0x78, 0xbb,
-	0xb9, 0x77, 0xce, 0x39, 0xf7, 0x9c, 0x3b, 0x83, 0xee, 0x05, 0x8b, 0x60, 0x9e, 0x70, 0x26, 0x99,
-	0xcf, 0xa6, 0x64, 0x0c, 0x20, 0x29, 0x70, 0x41, 0x66, 0x29, 0xf0, 0x85, 0xa3, 0xfa, 0xf8, 0xd6,
-	0x2e, 0xc4, 0xd9, 0x42, 0xcc, 0x3b, 0x3e, 0x13, 0x11, 0x13, 0x43, 0x75, 0x43, 0xf2, 0x22, 0x67,
-	0x98, 0xb5, 0x90, 0x85, 0x2c, 0xef, 0x67, 0xa7, 0xa2, 0x7b, 0x37, 0x64, 0x2c, 0x9c, 0x02, 0xf1,
-	0x12, 0x4a, 0xbc, 0x38, 0x66, 0xd2, 0x93, 0x94, 0xc5, 0x5b, 0x8e, 0xbd, 0xdf, 0x48, 0xe2, 0x71,
-	0x2f, 0x2a, 0x30, 0xf6, 0x15, 0xb2, 0x5e, 0x64, 0xc6, 0xfa, 0xc0, 0x13, 0x90, 0xa9, 0x37, 0xed,
-	0x02, 0xf4, 0x15, 0xc0, 0x85, 0x59, 0x0a, 0x42, 0xda, 0x6f, 0xd0, 0xe5, 0x41, 0x84, 0x48, 0x58,
-	0x2c, 0x00, 0xf7, 0xd0, 0x79, 0x2e, 0x6a, 0xe8, 0x57, 0xfa, 0xfd, 0x8b, 0x56, 0xc3, 0xd9, 0x9b,
-	0xcf, 0x29, 0x4b, 0x74, 0xaa, 0xcb, 0xef, 0x97, 0x9a, 0x5b, 0xd0, 0xed, 0x1e, 0xba, 0xad, 0x66,
-	0xbd, 0x12, 0xc0, 0xbb, 0x00, 0x03, 0x0a, 0xbc, 0xb0, 0x81, 0x1f, 0xa0, 0x6a, 0x2a, 0x80, 0xab,
-	0x09, 0x37, 0x3a, 0xc6, 0x97, 0x4f, 0xcd, 0x5a, 0xb1, 0xa0, 0xe7, 0x41, 0xc0, 0x41, 0x88, 0x97,
-	0x92, 0xd3, 0x38, 0x74, 0x15, 0xca, 0x8e, 0x90, 0x51, 0x16, 0x2a, 0xdc, 0xd6, 0xd0, 0x19, 0x8d,
-	0x03, 0x98, 0x2b, 0xa9, 0x9b, 0x6e, 0x5e, 0xe0, 0x67, 0xa8, 0x9a, 0x99, 0x34, 0x2a, 0x2a, 0x41,
-	0xfd, 0x84, 0x04, 0x4a, 0x54, 0x91, 0x5a, 0xbf, 0x2a, 0xe8, 0x4c, 0xcd, 0xc3, 0x9f, 0x75, 0x84,
-	0xcb, 0x31, 0xf1, 0x93, 0x03, 0x7a, 0xc7, 0x77, 0x6f, 0xb6, 0xaf, 0x4b, 0xcb, 0x23, 0xda, 0xed,
-	0x77, 0x5f, 0x7f, 0x7e, 0xa8, 0x3c, 0xc4, 0x0e, 0xf9, 0xe7, 0x0b, 0xbc, 0x7d, 0xbc, 0xf3, 0x0b,
-	0xb6, 0xec, 0xe1, 0x18, 0x60, 0x98, 0xef, 0x1f, 0x7f, 0xd4, 0xd1, 0xc5, 0xce, 0xca, 0xb0, 0x73,
-	0x6c, 0x7e, 0xf9, 0x91, 0x4c, 0x72, 0x32, 0xbe, 0x30, 0x4a, 0x94, 0xd1, 0x06, 0xae, 0x1f, 0x36,
-	0x9a, 0xbd, 0xa7, 0xf2, 0x98, 0x95, 0x9d, 0xc1, 0x72, 0x6d, 0xe9, 0xab, 0xb5, 0xa5, 0xff, 0x58,
-	0x5b, 0xfa, 0xfb, 0x8d, 0xa5, 0xad, 0x36, 0x96, 0xf6, 0x6d, 0x63, 0x69, 0xaf, 0x9f, 0x86, 0x54,
-	0x4e, 0xd2, 0x91, 0xe3, 0xb3, 0xe8, 0x7f, 0xb1, 0xa6, 0x3f, 0xf1, 0x68, 0x4c, 0xfe, 0x74, 0xe6,
-	0x7f, 0xd5, 0xe5, 0x22, 0x01, 0x31, 0x3a, 0x57, 0x57, 0x8f, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff,
-	0x05, 0x23, 0x9b, 0x30, 0xbb, 0x03, 0x00, 0x00,
+	// 844 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x4d, 0x4f, 0xe3, 0x46,
+	0x18, 0x8e, 0xf9, 0xaa, 0x98, 0x04, 0xb5, 0x1a, 0x51, 0x35, 0xb8, 0x28, 0x80, 0x0f, 0x05, 0xa4,
+	0x62, 0xd3, 0xf0, 0x51, 0xa9, 0x2d, 0x55, 0x49, 0x5b, 0x28, 0xad, 0xda, 0x86, 0x40, 0x2f, 0xbd,
+	0x58, 0x93, 0xf8, 0x25, 0xb8, 0xd8, 0x1e, 0xe3, 0x71, 0x10, 0x1f, 0xe2, 0xd2, 0x3f, 0xd0, 0x4a,
+	0xfd, 0x01, 0x95, 0xfa, 0x1b, 0x7a, 0xa9, 0xfa, 0x07, 0x38, 0xa2, 0xdd, 0xcb, 0xee, 0x4a, 0x8b,
+	0x56, 0xb0, 0x87, 0xfd, 0x19, 0x2b, 0x8f, 0xc7, 0x59, 0x27, 0xb1, 0x9d, 0x80, 0xf6, 0x16, 0xcf,
+	0xbc, 0x1f, 0xcf, 0xf3, 0xbe, 0xcf, 0x3c, 0x41, 0x73, 0xc6, 0x99, 0x71, 0xea, 0x7a, 0xd4, 0xa7,
+	0x0d, 0x6a, 0x69, 0x07, 0x00, 0xbe, 0x09, 0x1e, 0xd3, 0x8e, 0x5b, 0xe0, 0x9d, 0xa9, 0xfc, 0x1c,
+	0xbf, 0x1f, 0x0f, 0x51, 0xa3, 0x10, 0x79, 0xaa, 0x41, 0x99, 0x4d, 0x99, 0xce, 0x6f, 0xb4, 0xf0,
+	0x23, 0xcc, 0x90, 0x27, 0x9b, 0xb4, 0x49, 0xc3, 0xf3, 0xe0, 0x97, 0x38, 0x9d, 0x6e, 0x52, 0xda,
+	0xb4, 0x40, 0x23, 0xae, 0xa9, 0x11, 0xc7, 0xa1, 0x3e, 0xf1, 0x4d, 0xea, 0x44, 0x39, 0x4a, 0x32,
+	0x10, 0x97, 0x78, 0xc4, 0x8e, 0x62, 0x56, 0x52, 0x62, 0xc0, 0xd3, 0x6d, 0xe2, 0x1d, 0x81, 0xaf,
+	0x1f, 0x00, 0xe8, 0x86, 0xc9, 0x1a, 0xb4, 0xe5, 0xf8, 0x22, 0x69, 0x21, 0x39, 0x89, 0xf9, 0xe4,
+	0xc8, 0x74, 0x9a, 0x7a, 0xf0, 0x15, 0x46, 0x2a, 0xb3, 0xa8, 0xb4, 0x1b, 0xf0, 0xae, 0x82, 0xe7,
+	0x82, 0xdf, 0x22, 0xd6, 0x16, 0x40, 0x95, 0xf7, 0xaf, 0xc1, 0x71, 0x0b, 0x98, 0xaf, 0xfc, 0x86,
+	0x66, 0x52, 0x23, 0x98, 0x4b, 0x1d, 0x06, 0x78, 0x1b, 0x8d, 0x85, 0x98, 0x8b, 0xd2, 0xac, 0xb4,
+	0x90, 0x2f, 0x2f, 0xaa, 0x89, 0xe3, 0x53, 0x7b, 0x4b, 0x54, 0x46, 0xae, 0x6e, 0x66, 0x72, 0x35,
+	0x91, 0xae, 0x6c, 0xa3, 0x0f, 0x78, 0xaf, 0x5f, 0x18, 0x78, 0x5b, 0x00, 0xfb, 0x26, 0x78, 0x02,
+	0x06, 0xfe, 0x18, 0x8d, 0xb4, 0x18, 0x78, 0xbc, 0xc3, 0x78, 0xa5, 0xf8, 0xe8, 0xdf, 0xa5, 0x49,
+	0x31, 0xff, 0x4d, 0xc3, 0xf0, 0x80, 0xb1, 0x3d, 0xdf, 0x33, 0x9d, 0x66, 0x8d, 0x47, 0x29, 0x36,
+	0x2a, 0xf6, 0x16, 0x12, 0x68, 0x27, 0xd1, 0xa8, 0xe9, 0x18, 0x70, 0xca, 0x4b, 0x4d, 0xd4, 0xc2,
+	0x0f, 0xfc, 0x39, 0x1a, 0x09, 0x40, 0x16, 0x87, 0x38, 0x83, 0xf9, 0x01, 0x18, 0xf0, 0xa2, 0x3c,
+	0x49, 0xf9, 0x1e, 0x7d, 0x14, 0xcd, 0xe8, 0x47, 0xbe, 0x94, 0x2d, 0x80, 0x6f, 0xc4, 0x4a, 0x3a,
+	0xa6, 0x89, 0x67, 0x51, 0xa1, 0x61, 0xd1, 0xba, 0xee, 0x12, 0xd3, 0xd3, 0x4d, 0x43, 0x60, 0x40,
+	0xc1, 0x59, 0x95, 0x98, 0xde, 0x8e, 0xa1, 0x9c, 0xa3, 0xf9, 0xbe, 0xb5, 0x04, 0x93, 0x9f, 0xbb,
+	0xe6, 0xfe, 0x49, 0x3a, 0xea, 0x94, 0x52, 0x5d, 0xf3, 0x5f, 0x10, 0x3c, 0x36, 0x2d, 0x2b, 0x9b,
+	0x47, 0x1b, 0x65, 0x56, 0x64, 0x02, 0xca, 0xe1, 0xb7, 0x81, 0x52, 0x16, 0xcb, 0xdd, 0x0b, 0xe5,
+	0x1c, 0xec, 0xa1, 0x8d, 0xcb, 0x40, 0x53, 0x09, 0x77, 0x6d, 0x9d, 0x4e, 0xc4, 0x9f, 0x40, 0x04,
+	0x48, 0x49, 0x01, 0x14, 0xab, 0x51, 0x2b, 0xb0, 0x58, 0x41, 0x65, 0x17, 0x7d, 0xd8, 0x96, 0x57,
+	0x3c, 0x4a, 0x2c, 0xb9, 0x8c, 0xde, 0x21, 0xa1, 0x28, 0xfb, 0xca, 0x35, 0x0a, 0x54, 0x9e, 0x4b,
+	0x68, 0x3a, 0xb9, 0xa6, 0x00, 0xaf, 0xa0, 0x89, 0xe0, 0xa5, 0x07, 0xd0, 0x74, 0x87, 0xd8, 0x10,
+	0x96, 0xae, 0xe5, 0x0f, 0x42, 0x25, 0xfe, 0x44, 0x6c, 0xc0, 0x27, 0x08, 0x07, 0x38, 0xc1, 0xd0,
+	0xeb, 0x84, 0x81, 0xee, 0xd3, 0x23, 0x70, 0x18, 0x97, 0x74, 0xa1, 0xf2, 0x5d, 0x30, 0xc3, 0x67,
+	0x37, 0x33, 0x5f, 0x35, 0x4d, 0xff, 0xb0, 0x55, 0x57, 0x1b, 0xd4, 0xd6, 0x3a, 0x6c, 0xe2, 0x64,
+	0x75, 0xa9, 0x71, 0x48, 0x4c, 0x47, 0x6b, 0x9f, 0x18, 0xfe, 0x99, 0x0b, 0x4c, 0xdd, 0x03, 0xcf,
+	0x24, 0x96, 0x79, 0x4e, 0xea, 0x16, 0xec, 0x38, 0x7e, 0xed, 0xbd, 0xb0, 0x47, 0x85, 0x30, 0xd8,
+	0xe7, 0x1d, 0xf0, 0x1c, 0x2a, 0x44, 0x0e, 0xa4, 0xbb, 0xae, 0x5d, 0x1c, 0xe6, 0xaa, 0xce, 0x47,
+	0x67, 0x55, 0xd7, 0x2e, 0xff, 0x31, 0x8e, 0x46, 0x39, 0x3f, 0xfc, 0xbf, 0x84, 0x70, 0xaf, 0x13,
+	0xe0, 0xb5, 0x94, 0x2d, 0x64, 0xdb, 0x93, 0xbc, 0x7e, 0xdf, 0xb4, 0x70, 0x9c, 0xca, 0xfa, 0xef,
+	0x8f, 0x5f, 0xfe, 0x35, 0xb4, 0x8c, 0xd5, 0xee, 0x21, 0x74, 0x78, 0x6c, 0x98, 0xcd, 0x2d, 0x36,
+	0x14, 0x1f, 0xfe, 0x5b, 0x42, 0xf9, 0x98, 0xab, 0x60, 0x35, 0xab, 0x7f, 0xaf, 0x8f, 0xc9, 0xda,
+	0xc0, 0xf1, 0x02, 0xa8, 0xc6, 0x81, 0x2e, 0xe2, 0xf9, 0x74, 0xa0, 0x81, 0xe5, 0xe9, 0x91, 0x38,
+	0xf0, 0x2b, 0x09, 0xc9, 0xe9, 0x6f, 0x09, 0x6f, 0xf4, 0x19, 0x58, 0xf6, 0xc3, 0x97, 0xbf, 0x7c,
+	0x68, 0xba, 0xa0, 0xf3, 0x03, 0xa7, 0xf3, 0x2d, 0xfe, 0x3a, 0x9d, 0x4e, 0xc2, 0xff, 0x9a, 0x98,
+	0xbe, 0x76, 0x11, 0x37, 0xcf, 0x4b, 0xfc, 0x54, 0x42, 0x72, 0xba, 0x03, 0x65, 0x53, 0xed, 0xeb,
+	0x71, 0xd9, 0x54, 0xfb, 0x1b, 0x9f, 0xf2, 0x05, 0xa7, 0xba, 0x8e, 0x57, 0x1f, 0x42, 0x15, 0xff,
+	0x23, 0xa1, 0x42, 0xdc, 0xc5, 0x70, 0xa6, 0x72, 0x12, 0xbc, 0x50, 0x5e, 0x1e, 0x3c, 0x61, 0x70,
+	0xad, 0x75, 0x18, 0x28, 0xfe, 0x4f, 0x42, 0xef, 0x76, 0x19, 0x16, 0x2e, 0xf7, 0x53, 0x78, 0xaf,
+	0x63, 0xca, 0x2b, 0xf7, 0xca, 0x11, 0x68, 0x37, 0x38, 0xda, 0x4f, 0xf1, 0x5a, 0x9f, 0x97, 0x11,
+	0x87, 0xac, 0x5d, 0x08, 0xc3, 0xbd, 0xac, 0xec, 0x5f, 0xdd, 0x96, 0xa4, 0xeb, 0xdb, 0x92, 0xf4,
+	0xe2, 0xb6, 0x24, 0xfd, 0x79, 0x57, 0xca, 0x5d, 0xdf, 0x95, 0x72, 0x4f, 0xee, 0x4a, 0xb9, 0x5f,
+	0x3f, 0x1b, 0xdc, 0x22, 0x4f, 0xdf, 0xf4, 0xe2, 0x66, 0x59, 0x1f, 0xe3, 0x57, 0x2b, 0xaf, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0xff, 0x9d, 0x38, 0xea, 0x65, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -270,6 +674,15 @@ type QueryClient interface {
 	PerpetualFeeParams(ctx context.Context, in *QueryPerpetualFeeParamsRequest, opts ...grpc.CallOption) (*QueryPerpetualFeeParamsResponse, error)
 	// Queries a user's fee tier
 	UserFeeTier(ctx context.Context, in *QueryUserFeeTierRequest, opts ...grpc.CallOption) (*QueryUserFeeTierResponse, error)
+	// PerMarketFeeDiscountParams queries fee discount parameters for a
+	// specific market/CLOB pair.
+	PerMarketFeeDiscountParams(ctx context.Context, in *QueryPerMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryPerMarketFeeDiscountParamsResponse, error)
+	// AllMarketFeeDiscountParams queries all per-market fee discount parameters.
+	AllMarketFeeDiscountParams(ctx context.Context, in *QueryAllMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryAllMarketFeeDiscountParamsResponse, error)
+	// Get all staking tiers
+	StakingTiers(ctx context.Context, in *QueryStakingTiersRequest, opts ...grpc.CallOption) (*QueryStakingTiersResponse, error)
+	// Get user's current staked amount and staking tier
+	UserStakingTier(ctx context.Context, in *QueryUserStakingTierRequest, opts ...grpc.CallOption) (*QueryUserStakingTierResponse, error)
 }
 
 type queryClient struct {
@@ -298,12 +711,57 @@ func (c *queryClient) UserFeeTier(ctx context.Context, in *QueryUserFeeTierReque
 	return out, nil
 }
 
+func (c *queryClient) PerMarketFeeDiscountParams(ctx context.Context, in *QueryPerMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryPerMarketFeeDiscountParamsResponse, error) {
+	out := new(QueryPerMarketFeeDiscountParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/PerMarketFeeDiscountParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllMarketFeeDiscountParams(ctx context.Context, in *QueryAllMarketFeeDiscountParamsRequest, opts ...grpc.CallOption) (*QueryAllMarketFeeDiscountParamsResponse, error) {
+	out := new(QueryAllMarketFeeDiscountParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/AllMarketFeeDiscountParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) StakingTiers(ctx context.Context, in *QueryStakingTiersRequest, opts ...grpc.CallOption) (*QueryStakingTiersResponse, error) {
+	out := new(QueryStakingTiersResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/StakingTiers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) UserStakingTier(ctx context.Context, in *QueryUserStakingTierRequest, opts ...grpc.CallOption) (*QueryUserStakingTierResponse, error) {
+	out := new(QueryUserStakingTierResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.feetiers.Query/UserStakingTier", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Queries the PerpetualFeeParams.
 	PerpetualFeeParams(context.Context, *QueryPerpetualFeeParamsRequest) (*QueryPerpetualFeeParamsResponse, error)
 	// Queries a user's fee tier
 	UserFeeTier(context.Context, *QueryUserFeeTierRequest) (*QueryUserFeeTierResponse, error)
+	// PerMarketFeeDiscountParams queries fee discount parameters for a
+	// specific market/CLOB pair.
+	PerMarketFeeDiscountParams(context.Context, *QueryPerMarketFeeDiscountParamsRequest) (*QueryPerMarketFeeDiscountParamsResponse, error)
+	// AllMarketFeeDiscountParams queries all per-market fee discount parameters.
+	AllMarketFeeDiscountParams(context.Context, *QueryAllMarketFeeDiscountParamsRequest) (*QueryAllMarketFeeDiscountParamsResponse, error)
+	// Get all staking tiers
+	StakingTiers(context.Context, *QueryStakingTiersRequest) (*QueryStakingTiersResponse, error)
+	// Get user's current staked amount and staking tier
+	UserStakingTier(context.Context, *QueryUserStakingTierRequest) (*QueryUserStakingTierResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -315,6 +773,18 @@ func (*UnimplementedQueryServer) PerpetualFeeParams(ctx context.Context, req *Qu
 }
 func (*UnimplementedQueryServer) UserFeeTier(ctx context.Context, req *QueryUserFeeTierRequest) (*QueryUserFeeTierResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserFeeTier not implemented")
+}
+func (*UnimplementedQueryServer) PerMarketFeeDiscountParams(ctx context.Context, req *QueryPerMarketFeeDiscountParamsRequest) (*QueryPerMarketFeeDiscountParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PerMarketFeeDiscountParams not implemented")
+}
+func (*UnimplementedQueryServer) AllMarketFeeDiscountParams(ctx context.Context, req *QueryAllMarketFeeDiscountParamsRequest) (*QueryAllMarketFeeDiscountParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllMarketFeeDiscountParams not implemented")
+}
+func (*UnimplementedQueryServer) StakingTiers(ctx context.Context, req *QueryStakingTiersRequest) (*QueryStakingTiersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StakingTiers not implemented")
+}
+func (*UnimplementedQueryServer) UserStakingTier(ctx context.Context, req *QueryUserStakingTierRequest) (*QueryUserStakingTierResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserStakingTier not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -357,6 +827,78 @@ func _Query_UserFeeTier_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PerMarketFeeDiscountParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPerMarketFeeDiscountParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PerMarketFeeDiscountParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Query/PerMarketFeeDiscountParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PerMarketFeeDiscountParams(ctx, req.(*QueryPerMarketFeeDiscountParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllMarketFeeDiscountParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllMarketFeeDiscountParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllMarketFeeDiscountParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Query/AllMarketFeeDiscountParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllMarketFeeDiscountParams(ctx, req.(*QueryAllMarketFeeDiscountParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_StakingTiers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryStakingTiersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).StakingTiers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Query/StakingTiers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).StakingTiers(ctx, req.(*QueryStakingTiersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_UserStakingTier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryUserStakingTierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).UserStakingTier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.feetiers.Query/UserStakingTier",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).UserStakingTier(ctx, req.(*QueryUserStakingTierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.feetiers.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -368,6 +910,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserFeeTier",
 			Handler:    _Query_UserFeeTier_Handler,
+		},
+		{
+			MethodName: "PerMarketFeeDiscountParams",
+			Handler:    _Query_PerMarketFeeDiscountParams_Handler,
+		},
+		{
+			MethodName: "AllMarketFeeDiscountParams",
+			Handler:    _Query_AllMarketFeeDiscountParams_Handler,
+		},
+		{
+			MethodName: "StakingTiers",
+			Handler:    _Query_StakingTiers_Handler,
+		},
+		{
+			MethodName: "UserStakingTier",
+			Handler:    _Query_UserStakingTier_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -500,6 +1058,262 @@ func (m *QueryUserFeeTierResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryPerMarketFeeDiscountParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPerMarketFeeDiscountParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPerMarketFeeDiscountParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ClobPairId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ClobPairId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPerMarketFeeDiscountParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPerMarketFeeDiscountParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPerMarketFeeDiscountParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllMarketFeeDiscountParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllMarketFeeDiscountParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllMarketFeeDiscountParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllMarketFeeDiscountParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllMarketFeeDiscountParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllMarketFeeDiscountParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Params) > 0 {
+		for iNdEx := len(m.Params) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Params[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryStakingTiersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryStakingTiersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryStakingTiersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryStakingTiersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryStakingTiersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryStakingTiersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.StakingTiers) > 0 {
+		for iNdEx := len(m.StakingTiers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StakingTiers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryUserStakingTierRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryUserStakingTierRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryUserStakingTierRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryUserStakingTierResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryUserStakingTierResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryUserStakingTierResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DiscountPpm != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DiscountPpm))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size := m.StakedBaseTokens.Size()
+		i -= size
+		if _, err := m.StakedBaseTokens.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.FeeTierName) > 0 {
+		i -= len(m.FeeTierName)
+		copy(dAtA[i:], m.FeeTierName)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.FeeTierName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -556,6 +1370,108 @@ func (m *QueryUserFeeTierResponse) Size() (n int) {
 	if m.Tier != nil {
 		l = m.Tier.Size()
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPerMarketFeeDiscountParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ClobPairId != 0 {
+		n += 1 + sovQuery(uint64(m.ClobPairId))
+	}
+	return n
+}
+
+func (m *QueryPerMarketFeeDiscountParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAllMarketFeeDiscountParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllMarketFeeDiscountParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Params) > 0 {
+		for _, e := range m.Params {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryStakingTiersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryStakingTiersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.StakingTiers) > 0 {
+		for _, e := range m.StakingTiers {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryUserStakingTierRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryUserStakingTierResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.FeeTierName)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = m.StakedBaseTokens.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	if m.DiscountPpm != 0 {
+		n += 1 + sovQuery(uint64(m.DiscountPpm))
 	}
 	return n
 }
@@ -865,6 +1781,642 @@ func (m *QueryUserFeeTierResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPerMarketFeeDiscountParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClobPairId", wireType)
+			}
+			m.ClobPairId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ClobPairId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPerMarketFeeDiscountParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPerMarketFeeDiscountParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllMarketFeeDiscountParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllMarketFeeDiscountParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllMarketFeeDiscountParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Params = append(m.Params, PerMarketFeeDiscountParams{})
+			if err := m.Params[len(m.Params)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryStakingTiersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryStakingTiersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryStakingTiersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryStakingTiersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryStakingTiersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryStakingTiersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingTiers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingTiers = append(m.StakingTiers, &StakingTier{})
+			if err := m.StakingTiers[len(m.StakingTiers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryUserStakingTierRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryUserStakingTierRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryUserStakingTierRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryUserStakingTierResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryUserStakingTierResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryUserStakingTierResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeTierName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FeeTierName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakedBaseTokens", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.StakedBaseTokens.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DiscountPpm", wireType)
+			}
+			m.DiscountPpm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DiscountPpm |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

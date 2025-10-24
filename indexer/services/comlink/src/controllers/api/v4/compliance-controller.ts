@@ -18,7 +18,7 @@ import {
 } from 'tsoa';
 
 import {
-  getReqRateLimiter,
+  defaultRateLimiter,
   screenProviderGlobalLimiter,
   screenProviderLimiter,
 } from '../../../caches/rate-limiters';
@@ -120,7 +120,7 @@ export class ComplianceControllerHelper extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   ...checkSchema({
     address: {
       in: ['query'],
