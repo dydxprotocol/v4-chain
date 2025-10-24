@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -11,6 +13,7 @@ import (
 type StatsKeeper interface {
 	GetUserStats(ctx sdk.Context, address string) *statstypes.UserStats
 	GetGlobalStats(ctx sdk.Context) *statstypes.GlobalStats
+	GetStakedAmount(ctx sdk.Context, delegatorAddr string) *big.Int
 }
 
 // VaultKeeper defines the expected vault keeper.
