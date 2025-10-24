@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgBatchCancel, MsgBatchCancelResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgBatchCancel, MsgBatchCancelResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse, MsgUpdateLeverage, MsgUpdateLeverageResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -44,6 +44,12 @@ export interface Msg {
   /** UpdateLiquidationsConfig updates the liquidations configuration in state. */
 
   updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse>;
+  /**
+   * UpdateLeverage allows accounts to update their desired leverage for
+   * clob pairs.
+   */
+
+  updateLeverage(request: MsgUpdateLeverage): Promise<MsgUpdateLeverageResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -59,6 +65,7 @@ export class MsgClientImpl implements Msg {
     this.updateEquityTierLimitConfiguration = this.updateEquityTierLimitConfiguration.bind(this);
     this.updateBlockRateLimitConfiguration = this.updateBlockRateLimitConfiguration.bind(this);
     this.updateLiquidationsConfig = this.updateLiquidationsConfig.bind(this);
+    this.updateLeverage = this.updateLeverage.bind(this);
   }
 
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse> {
@@ -113,6 +120,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdateLiquidationsConfig.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateLiquidationsConfig", data);
     return promise.then(data => MsgUpdateLiquidationsConfigResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateLeverage(request: MsgUpdateLeverage): Promise<MsgUpdateLeverageResponse> {
+    const data = MsgUpdateLeverage.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateLeverage", data);
+    return promise.then(data => MsgUpdateLeverageResponse.decode(new _m0.Reader(data)));
   }
 
 }

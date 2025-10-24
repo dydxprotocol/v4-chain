@@ -1143,6 +1143,10 @@ func New(
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
 	memClob.SetGenerateOrderbookUpdates(app.FullNodeStreamingManager.Enabled())
 
+	// Create rate limiters
+	placeCancelOrderRateLimiter := rate_limit.NewPanicRateLimiter[sdk.Msg]()
+	updateLeverageRateLimiter := rate_limit.NewPanicRateLimiter[string]()
+
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
 		keys[clobmoduletypes.StoreKey],
@@ -1169,7 +1173,8 @@ func New(
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
-		rate_limit.NewPanicRateLimiter[sdk.Msg](),
+		placeCancelOrderRateLimiter,
+		updateLeverageRateLimiter,
 		daemonLiquidationInfo,
 		app.RevShareKeeper,
 	)

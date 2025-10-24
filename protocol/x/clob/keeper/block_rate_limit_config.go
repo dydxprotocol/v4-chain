@@ -24,8 +24,8 @@ func (k Keeper) GetBlockRateLimitConfiguration(
 	return config
 }
 
-// InitalizeBlockRateLimitFromStateIfExists initializes the `placeOrderRateLimiter` and `cancelOrderRateLimiter`
-// from state. Should be invoked during application start and before CLOB genesis.
+// InitalizeBlockRateLimitFromStateIfExists initializes the `placeOrderRateLimiter`, `cancelOrderRateLimiter`,
+// and `updateLeverageRateLimiter` from state. Should be invoked during application start and before CLOB genesis.
 func (k *Keeper) InitalizeBlockRateLimitFromStateIfExists(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(types.BlockRateLimitConfigKey))
@@ -38,12 +38,13 @@ func (k *Keeper) InitalizeBlockRateLimitFromStateIfExists(ctx sdk.Context) {
 	k.cdc.MustUnmarshal(b, &config)
 
 	k.placeCancelOrderRateLimiter = rate_limit.NewPlaceCancelOrderRateLimiter(config)
+	k.updateLeverageRateLimiter = rate_limit.NewUpdateLeverageRateLimiter(config)
 }
 
 // InitializeBlockRateLimit initializes the block rate limit configuration in state and uses
-// the configuration to initialize the `placeOrderRateLimiter` and `cancelOrderRateLimiter`.
-// This function should only be called from CLOB genesis or when a block rate limit configuration
-// change is accepted via governance.
+// the configuration to initialize the `placeOrderRateLimiter`, `cancelOrderRateLimiter`, and
+// `updateLeverageRateLimiter`. This function should only be called from CLOB genesis or when a
+// block rate limit configuration change is accepted via governance.
 //
 // Note that any previously tracked rates will be reset.
 func (k *Keeper) InitializeBlockRateLimit(
@@ -61,6 +62,7 @@ func (k *Keeper) InitializeBlockRateLimit(
 	store.Set([]byte(types.BlockRateLimitConfigKey), b)
 
 	k.placeCancelOrderRateLimiter = rate_limit.NewPlaceCancelOrderRateLimiter(config)
+	k.updateLeverageRateLimiter = rate_limit.NewUpdateLeverageRateLimiter(config)
 
 	return nil
 }

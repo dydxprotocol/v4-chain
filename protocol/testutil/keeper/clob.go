@@ -277,7 +277,8 @@ func createClobKeeper(
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
-		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
+		rate_limit.NewNoOpRateLimiter[sdk.Msg](), // PlaceCancelOrder Rate Limiter
+		rate_limit.NewNoOpRateLimiter[string](),  // UpdateLeverage Rate Limiter
 		liquidationtypes.NewDaemonLiquidationInfo(),
 		revShareKeeper,
 	)

@@ -264,6 +264,54 @@ export interface QueryNextClobPairIdResponseSDKType {
   /** QueryNextClobPairIdResponse is a response message for the next clob pair id */
   next_clob_pair_id: number;
 }
+/** QueryLeverageRequest is a request message for Leverage. */
+
+export interface QueryLeverageRequest {
+  /** The address of the wallet that owns the subaccount. */
+  owner: string;
+  /** The unique number of the subaccount for the owner. */
+
+  number: number;
+}
+/** QueryLeverageRequest is a request message for Leverage. */
+
+export interface QueryLeverageRequestSDKType {
+  /** The address of the wallet that owns the subaccount. */
+  owner: string;
+  /** The unique number of the subaccount for the owner. */
+
+  number: number;
+}
+/** QueryLeverageResponse is a response message that contains the leverage map. */
+
+export interface QueryLeverageResponse {
+  /** List of clob pair leverage settings. */
+  clobPairLeverage: ClobPairLeverageInfo[];
+}
+/** QueryLeverageResponse is a response message that contains the leverage map. */
+
+export interface QueryLeverageResponseSDKType {
+  /** List of clob pair leverage settings. */
+  clob_pair_leverage: ClobPairLeverageInfoSDKType[];
+}
+/** ClobPairLeverageInfo represents the leverage setting for a single clob pair. */
+
+export interface ClobPairLeverageInfo {
+  /** The clob pair ID. */
+  clobPairId: number;
+  /** The leverage amount. */
+
+  leverage: number;
+}
+/** ClobPairLeverageInfo represents the leverage setting for a single clob pair. */
+
+export interface ClobPairLeverageInfoSDKType {
+  /** The clob pair ID. */
+  clob_pair_id: number;
+  /** The leverage amount. */
+
+  leverage: number;
+}
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
  * StreamOrderbookUpdates method.
@@ -1303,6 +1351,161 @@ export const QueryNextClobPairIdResponse = {
   fromPartial(object: DeepPartial<QueryNextClobPairIdResponse>): QueryNextClobPairIdResponse {
     const message = createBaseQueryNextClobPairIdResponse();
     message.nextClobPairId = object.nextClobPairId ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryLeverageRequest(): QueryLeverageRequest {
+  return {
+    owner: "",
+    number: 0
+  };
+}
+
+export const QueryLeverageRequest = {
+  encode(message: QueryLeverageRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.owner !== "") {
+      writer.uint32(10).string(message.owner);
+    }
+
+    if (message.number !== 0) {
+      writer.uint32(16).uint32(message.number);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryLeverageRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLeverageRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.owner = reader.string();
+          break;
+
+        case 2:
+          message.number = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryLeverageRequest>): QueryLeverageRequest {
+    const message = createBaseQueryLeverageRequest();
+    message.owner = object.owner ?? "";
+    message.number = object.number ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryLeverageResponse(): QueryLeverageResponse {
+  return {
+    clobPairLeverage: []
+  };
+}
+
+export const QueryLeverageResponse = {
+  encode(message: QueryLeverageResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.clobPairLeverage) {
+      ClobPairLeverageInfo.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryLeverageResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLeverageResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.clobPairLeverage.push(ClobPairLeverageInfo.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryLeverageResponse>): QueryLeverageResponse {
+    const message = createBaseQueryLeverageResponse();
+    message.clobPairLeverage = object.clobPairLeverage?.map(e => ClobPairLeverageInfo.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseClobPairLeverageInfo(): ClobPairLeverageInfo {
+  return {
+    clobPairId: 0,
+    leverage: 0
+  };
+}
+
+export const ClobPairLeverageInfo = {
+  encode(message: ClobPairLeverageInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobPairId !== 0) {
+      writer.uint32(8).uint32(message.clobPairId);
+    }
+
+    if (message.leverage !== 0) {
+      writer.uint32(16).uint32(message.leverage);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ClobPairLeverageInfo {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseClobPairLeverageInfo();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 2:
+          message.leverage = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<ClobPairLeverageInfo>): ClobPairLeverageInfo {
+    const message = createBaseClobPairLeverageInfo();
+    message.clobPairId = object.clobPairId ?? 0;
+    message.leverage = object.leverage ?? 0;
     return message;
   }
 
