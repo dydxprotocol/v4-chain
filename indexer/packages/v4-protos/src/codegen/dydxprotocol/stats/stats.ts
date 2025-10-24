@@ -21,19 +21,9 @@ export interface BlockStats_Fill {
   /** Maker wallet address */
 
   maker: string;
-  /**
-   * Notional USDC filled in quantums
-   * Used to calculate fee tier, and affiliate revenue attributed for taker
-   */
+  /** Notional USDC filled in quantums */
 
   notional: Long;
-  /**
-   * Affiliate fee generated in quantums of the taker fee for the affiliate
-   * Used to calculate affiliate revenue attributed for taker. This is dynamic
-   * per affiliate tier
-   */
-
-  affiliateFeeGeneratedQuantums: Long;
 }
 /** Fill records data about a fill on this block. */
 
@@ -43,19 +33,9 @@ export interface BlockStats_FillSDKType {
   /** Maker wallet address */
 
   maker: string;
-  /**
-   * Notional USDC filled in quantums
-   * Used to calculate fee tier, and affiliate revenue attributed for taker
-   */
+  /** Notional USDC filled in quantums */
 
   notional: Long;
-  /**
-   * Affiliate fee generated in quantums of the taker fee for the affiliate
-   * Used to calculate affiliate revenue attributed for taker. This is dynamic
-   * per affiliate tier
-   */
-
-  affiliate_fee_generated_quantums: Long;
 }
 /** StatsMetadata stores metadata for the x/stats module */
 
@@ -105,22 +85,19 @@ export interface EpochStats_UserWithStatsSDKType {
   user: string;
   stats?: UserStatsSDKType;
 }
-/** GlobalStats stores global stats for the rolling window (default 30d). */
+/** GlobalStats stores global stats */
 
 export interface GlobalStats {
   /** Notional USDC traded in quantums */
   notionalTraded: Long;
 }
-/** GlobalStats stores global stats for the rolling window (default 30d). */
+/** GlobalStats stores global stats */
 
 export interface GlobalStatsSDKType {
   /** Notional USDC traded in quantums */
   notional_traded: Long;
 }
-/**
- * UserStats stores stats for a User. This is the sum of all stats for a user in
- * the rolling window (default 30d).
- */
+/** UserStats stores stats for a User */
 
 export interface UserStats {
   /** Taker USDC in quantums */
@@ -128,14 +105,8 @@ export interface UserStats {
   /** Maker USDC in quantums */
 
   makerNotional: Long;
-  /** Affiliate revenue generated in quantums */
-
-  affiliateRevenueGeneratedQuantums: Long;
 }
-/**
- * UserStats stores stats for a User. This is the sum of all stats for a user in
- * the rolling window (default 30d).
- */
+/** UserStats stores stats for a User */
 
 export interface UserStatsSDKType {
   /** Taker USDC in quantums */
@@ -143,9 +114,6 @@ export interface UserStatsSDKType {
   /** Maker USDC in quantums */
 
   maker_notional: Long;
-  /** Affiliate revenue generated in quantums */
-
-  affiliate_revenue_generated_quantums: Long;
 }
 /** CachedStakeAmount stores the last calculated total staked amount for address */
 
@@ -221,8 +189,7 @@ function createBaseBlockStats_Fill(): BlockStats_Fill {
   return {
     taker: "",
     maker: "",
-    notional: Long.UZERO,
-    affiliateFeeGeneratedQuantums: Long.UZERO
+    notional: Long.UZERO
   };
 }
 
@@ -238,10 +205,6 @@ export const BlockStats_Fill = {
 
     if (!message.notional.isZero()) {
       writer.uint32(24).uint64(message.notional);
-    }
-
-    if (!message.affiliateFeeGeneratedQuantums.isZero()) {
-      writer.uint32(32).uint64(message.affiliateFeeGeneratedQuantums);
     }
 
     return writer;
@@ -268,10 +231,6 @@ export const BlockStats_Fill = {
           message.notional = (reader.uint64() as Long);
           break;
 
-        case 4:
-          message.affiliateFeeGeneratedQuantums = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -286,7 +245,6 @@ export const BlockStats_Fill = {
     message.taker = object.taker ?? "";
     message.maker = object.maker ?? "";
     message.notional = object.notional !== undefined && object.notional !== null ? Long.fromValue(object.notional) : Long.UZERO;
-    message.affiliateFeeGeneratedQuantums = object.affiliateFeeGeneratedQuantums !== undefined && object.affiliateFeeGeneratedQuantums !== null ? Long.fromValue(object.affiliateFeeGeneratedQuantums) : Long.UZERO;
     return message;
   }
 
@@ -495,8 +453,7 @@ export const GlobalStats = {
 function createBaseUserStats(): UserStats {
   return {
     takerNotional: Long.UZERO,
-    makerNotional: Long.UZERO,
-    affiliateRevenueGeneratedQuantums: Long.UZERO
+    makerNotional: Long.UZERO
   };
 }
 
@@ -508,10 +465,6 @@ export const UserStats = {
 
     if (!message.makerNotional.isZero()) {
       writer.uint32(16).uint64(message.makerNotional);
-    }
-
-    if (!message.affiliateRevenueGeneratedQuantums.isZero()) {
-      writer.uint32(24).uint64(message.affiliateRevenueGeneratedQuantums);
     }
 
     return writer;
@@ -534,10 +487,6 @@ export const UserStats = {
           message.makerNotional = (reader.uint64() as Long);
           break;
 
-        case 3:
-          message.affiliateRevenueGeneratedQuantums = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -551,7 +500,6 @@ export const UserStats = {
     const message = createBaseUserStats();
     message.takerNotional = object.takerNotional !== undefined && object.takerNotional !== null ? Long.fromValue(object.takerNotional) : Long.UZERO;
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
-    message.affiliateRevenueGeneratedQuantums = object.affiliateRevenueGeneratedQuantums !== undefined && object.affiliateRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliateRevenueGeneratedQuantums) : Long.UZERO;
     return message;
   }
 

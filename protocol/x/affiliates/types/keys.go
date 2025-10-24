@@ -13,9 +13,7 @@ const (
 const (
 	ReferredByKeyPrefix = "RB:"
 
-	ReferredVolumeInWindowKeyPrefix = "RVW:"
-
-	ReferredCommissionKeyPrefix = "RC:"
+	ReferredVolumeKeyPrefix = "RV:"
 
 	AffiliateTiersKey = "AT"
 
