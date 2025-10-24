@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -328,8 +327,7 @@ func (f *FakeMemClobKeeper) addFakeFillAmount(
 func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
-	affiliateOverrides map[string]bool,
-	affiliateParameters affiliatetypes.AffiliateParameters,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,

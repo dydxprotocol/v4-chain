@@ -131,14 +131,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
-		revShareKeeper, _, _ := createRevShareKeeper(
-			stateStore,
-			db,
-			cdc,
-			ks.AffiliatesKeeper,
-			ks.FeeTiersKeeper,
-			ks.StatsKeeper,
-		)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, ks.AffiliatesKeeper, ks.FeeTiersKeeper)
 		ks.FeeTiersKeeper.SetRevShareKeeper(revShareKeeper)
 		ks.AffiliatesKeeper.SetFeetiersKeeper(ks.FeeTiersKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)

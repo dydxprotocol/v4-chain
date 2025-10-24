@@ -22,7 +22,6 @@ type VaultKeeper interface {
 type AffiliatesKeeper interface {
 	GetReferredBy(ctx sdk.Context, referee string) (string, bool)
 	GetAllAffiliateTiers(ctx sdk.Context) (affiliatetypes.AffiliateTiers, error)
-	GetAffiliateParameters(ctx sdk.Context) (affiliatetypes.AffiliateParameters, error)
 }
 
 // RevShareKeeper defines the expected revshare keeper.

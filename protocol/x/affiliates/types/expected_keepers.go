@@ -10,8 +10,6 @@ import (
 type StatsKeeper interface {
 	GetStakedAmount(ctx sdk.Context, delegatorAddr string) *big.Int
 	GetBlockStats(ctx sdk.Context) *stattypes.BlockStats
-	GetUserStats(ctx sdk.Context, address string) *stattypes.UserStats
-	SetUserStats(ctx sdk.Context, address string, userStats *stattypes.UserStats)
 }
 
 type FeetiersKeeper interface {

@@ -38,13 +38,8 @@ BEGIN
     subaccount_record."subaccountNumber" = jsonb_extract_path(event_data, 'subaccountId', 'number')::int;
     subaccount_record."updatedAtHeight" = block_height;
     subaccount_record."updatedAt" = block_time;
-    INSERT INTO subaccounts (
-        "id", "address", "subaccountNumber", "updatedAtHeight", "updatedAt"
-    ) VALUES (
-        subaccount_record."id", subaccount_record."address", 
-        subaccount_record."subaccountNumber", subaccount_record."updatedAtHeight", 
-        subaccount_record."updatedAt"
-    )
+    INSERT INTO subaccounts
+    VALUES (subaccount_record.*)
     ON CONFLICT ("id") DO UPDATE
         SET "updatedAtHeight" = subaccount_record."updatedAtHeight", "updatedAt" = subaccount_record."updatedAt";
 

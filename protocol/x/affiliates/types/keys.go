@@ -13,13 +13,9 @@ const (
 const (
 	ReferredByKeyPrefix = "RB:"
 
-	ReferredVolumeInWindowKeyPrefix = "RVW:"
+	ReferredVolumeKeyPrefix = "RV:"
 
 	AffiliateTiersKey = "AT"
 
 	AffiliateWhitelistKey = "AW"
-
-	AffiliateParametersKey = "AP"
-
-	AffiliateOverridesKey = "AO"
 )

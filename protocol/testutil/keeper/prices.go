@@ -73,7 +73,7 @@ func PricesKeepers(t testing.TB) (
 		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 		vaultKeeper, _ := createVaultKeeper(stateStore, db, cdc, transientStoreKey)
 		feetiersKeeper, _ := createFeeTiersKeeper(stateStore, statsKeeper, vaultKeeper, affiliatesKeeper, db, cdc)
-		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper, statsKeeper)
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
 		marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =

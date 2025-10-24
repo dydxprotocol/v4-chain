@@ -29,15 +29,11 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
-				IsWhitelisted: false,
-				Tier:          0,
-				FeeSharePpm:   types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
-				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(
-					types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums,
-				),
-				StakedAmount: dtypes.NewIntFromUint64(
-					uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18,
-				),
+				IsWhitelisted:  false,
+				Tier:           0,
+				FeeSharePpm:    types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
+				ReferredVolume: dtypes.NewIntFromUint64(types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums),
+				StakedAmount:   dtypes.NewIntFromUint64(uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18),
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
@@ -63,15 +59,11 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
-				IsWhitelisted: false,
-				Tier:          0,
-				FeeSharePpm:   types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
-				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(
-					types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums,
-				),
-				StakedAmount: dtypes.NewIntFromUint64(
-					uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18,
-				),
+				IsWhitelisted:  false,
+				Tier:           0,
+				FeeSharePpm:    types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
+				ReferredVolume: dtypes.NewIntFromUint64(types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums),
+				StakedAmount:   dtypes.NewIntFromUint64(uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18),
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				stakingKeeper := tApp.App.StakingKeeper
@@ -104,11 +96,11 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
-				IsWhitelisted:             true,
-				Tier:                      4,
-				FeeSharePpm:               250_000,
-				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(0),
-				StakedAmount:              dtypes.NewIntFromUint64(0),
+				IsWhitelisted:  true,
+				Tier:           0,
+				FeeSharePpm:    120_000,
+				ReferredVolume: dtypes.NewIntFromUint64(0),
+				StakedAmount:   dtypes.NewIntFromUint64(0),
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
@@ -125,10 +117,15 @@ func TestAffiliateInfo(t *testing.T) {
 				)
 				require.NoError(t, err)
 
-				affiliateOverrides := types.AffiliateOverrides{
-					Addresses: []string{constants.AliceAccAddress.String()},
+				affiliatesWhitelist := types.AffiliateWhitelist{
+					Tiers: []types.AffiliateWhitelist_Tier{
+						{
+							Addresses:        []string{constants.AliceAccAddress.String()},
+							TakerFeeSharePpm: 120_000, // 12%
+						},
+					},
 				}
-				err = k.SetAffiliateOverrides(ctx, affiliateOverrides)
+				err = k.SetAffiliateWhitelist(ctx, affiliatesWhitelist)
 				require.NoError(t, err)
 			},
 		},
@@ -259,45 +256,4 @@ func TestAffiliateWhitelist(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, &types.AffiliateWhitelistResponse{Whitelist: whitelist}, res)
-}
-
-func TestAffiliateParameters(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.AffiliatesKeeper
-
-	req := &types.AffiliateParametersRequest{}
-	err := k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
-		Authority:           constants.GovAuthority,
-		AffiliateParameters: types.DefaultAffiliateParameters,
-	})
-	require.NoError(t, err)
-
-	res, err := k.AffiliateParameters(ctx, req)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, &types.AffiliateParametersResponse{Parameters: types.DefaultAffiliateParameters}, res)
-}
-
-func TestAffiliateOverrides(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.AffiliatesKeeper
-
-	req := &types.AffiliateOverridesRequest{}
-	err := k.SetAffiliateOverrides(ctx, types.AffiliateOverrides{
-		Addresses: []string{
-			constants.AliceAccAddress.String(),
-		},
-	})
-	require.NoError(t, err)
-
-	res, err := k.AffiliateOverrides(ctx, req)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, &types.AffiliateOverridesResponse{Overrides: types.AffiliateOverrides{
-		Addresses: []string{
-			constants.AliceAccAddress.String(),
-		},
-	}}, res)
 }

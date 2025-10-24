@@ -43,13 +43,7 @@ BEGIN
     oracle_price_record."marketId" = market_record_id;
     oracle_price_record."price" = oracle_price;
 
-    INSERT INTO oracle_prices (
-        "id", "marketId", "price", "effectiveAt", "effectiveAtHeight"
-    ) VALUES (
-        oracle_price_record."id", oracle_price_record."marketId", 
-        oracle_price_record."price", oracle_price_record."effectiveAt", 
-        oracle_price_record."effectiveAtHeight"
-    );
+    INSERT INTO oracle_prices VALUES (oracle_price_record.*);
 
     RETURN jsonb_build_object(
         'market',
