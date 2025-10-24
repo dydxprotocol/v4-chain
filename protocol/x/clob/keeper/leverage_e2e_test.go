@@ -275,8 +275,8 @@ func TestWithdrawalWithLeverage(t *testing.T) {
 		SubaccountId: &constants.Alice_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 0,
-				Leverage:   5,
+				ClobPairId:   0,
+				CustomImfPpm: 200_000,
 			},
 		},
 	}
@@ -494,7 +494,7 @@ func TestUpdateLeverageWithExistingPosition(t *testing.T) {
 	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
 	require.True(t, bobSubaccount.AssetPositions != nil, "Bob should have a subaccount")
 
-	// Alice's order should fail due to leverage config
+	// Alice's order should succeed (no leverage configured yet)
 	aliceOrder := &clobtypes.Order{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: constants.Alice_Num0,
@@ -527,8 +527,8 @@ func TestUpdateLeverageWithExistingPosition(t *testing.T) {
 		SubaccountId: &constants.Alice_Num0,
 		ClobPairLeverage: []*clobtypes.LeverageEntry{
 			{
-				ClobPairId: 0,
-				Leverage:   2,
+				ClobPairId:   0,
+				CustomImfPpm: 500_000,
 			},
 		},
 	}
