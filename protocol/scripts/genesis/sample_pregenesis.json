@@ -24,11 +24,6 @@
             "req_referred_volume_quote_quantums": "25000000000000",
             "req_staked_whole_coins": 5000,
             "taker_fee_share_ppm": 150000
-          },
-          {
-            "req_referred_volume_quote_quantums": "50000000000000",
-            "req_staked_whole_coins": 100000000,
-            "taker_fee_share_ppm": 200000
           }
         ]
       }
@@ -4096,7 +4091,7 @@
       ]
     }
   },
-  "app_version": "9.0.0-47-g397804ddc",
+  "app_version": "7.0.0-dev0-149-g12cfb908b",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

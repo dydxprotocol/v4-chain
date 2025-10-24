@@ -175,23 +175,6 @@ func (k Keeper) GetAllAffiliateTiers(ctx sdk.Context) (types.AffiliateTiers, err
 	return affiliateTiers, nil
 }
 
-func (k Keeper) GetAllAffilliateOverrides(ctx sdk.Context) (types.AffiliateOverrides, error) {
-	store := ctx.KVStore(k.storeKey)
-	affiliateOverridesBytes := store.Get([]byte(types.AffiliateOverridesKey))
-
-	var affiliateOverrides types.AffiliateOverrides
-	if affiliateOverridesBytes == nil {
-		// Return empty overrides if not initialized.
-		return types.AffiliateOverrides{}, nil
-	}
-	err := k.cdc.Unmarshal(affiliateOverridesBytes, &affiliateOverrides)
-	if err != nil {
-		return affiliateOverrides, err
-	}
-
-	return affiliateOverrides, nil
-}
-
 // GetTakerFeeShare returns the taker fee share for an address based on the affiliate tiers.
 // If the address is in the whitelist, the fee share ppm is overridden.
 func (k Keeper) GetTakerFeeShare(
@@ -234,7 +217,6 @@ func (k Keeper) GetTierForAffiliate(
 	if err != nil {
 		return 0, 0, err
 	}
-
 	tiers := affiliateTiers.GetTiers()
 	// Return 0 tier if no tiers are set.
 	if len(tiers) == 0 {
@@ -243,21 +225,6 @@ func (k Keeper) GetTierForAffiliate(
 	numTiers := uint32(len(tiers))
 	maxTierLevel := numTiers - 1
 	currentTier := uint32(0)
-
-	// Check whether the address is overridden, if it is then set the
-	// affiliate tier to the max
-	affiliateOverrides, err := k.GetAllAffilliateOverrides(ctx)
-	if err != nil {
-		return 0, 0, err
-	}
-	for _, addr := range affiliateOverrides.Addresses {
-		if addr == affiliateAddr {
-			feeSharePpm = affiliateTiers.Tiers[maxTierLevel].TakerFeeSharePpm
-			return uint32(maxTierLevel), feeSharePpm, nil
-		}
-	}
-
-	// If not then set it normally
 	referredVolume, err := k.GetReferredVolume(ctx, affiliateAddr)
 	if err != nil {
 		return 0, 0, err
@@ -381,59 +348,6 @@ func (k Keeper) GetAffiliateWhitelist(ctx sdk.Context) (types.AffiliateWhitelist
 		return types.AffiliateWhitelist{}, err
 	}
 	return affiliateWhitelist, nil
-}
-
-func (k Keeper) UpdateAffiliateParameters(
-	ctx sdk.Context,
-	msg *types.MsgUpdateAffiliateParameters,
-) error {
-	store := ctx.KVStore(k.storeKey)
-
-	affiliateParametersBytes, err := k.cdc.Marshal(&msg.AffiliateParameters)
-	if err != nil {
-		return err
-	}
-	store.Set([]byte(types.AffiliateParametersKey), affiliateParametersBytes)
-
-	return nil
-}
-
-func (k Keeper) GetAffiliateParameters(ctx sdk.Context) (types.AffiliateParameters, error) {
-	store := ctx.KVStore(k.storeKey)
-	affiliateParametersBytes := store.Get([]byte(types.AffiliateParametersKey))
-	if affiliateParametersBytes == nil {
-		return types.AffiliateParameters{}, nil
-	}
-	affiliateParameters := types.AffiliateParameters{}
-	err := k.cdc.Unmarshal(affiliateParametersBytes, &affiliateParameters)
-	if err != nil {
-		return types.AffiliateParameters{}, err
-	}
-	return affiliateParameters, nil
-}
-
-func (k Keeper) SetAffiliateOverrides(ctx sdk.Context, overrides types.AffiliateOverrides) error {
-	store := ctx.KVStore(k.storeKey)
-	affiliateOverridesBytes, err := k.cdc.Marshal(&overrides)
-	if err != nil {
-		return err
-	}
-	store.Set([]byte(types.AffiliateOverridesKey), affiliateOverridesBytes)
-	return nil
-}
-
-func (k Keeper) GetAffiliateOverrides(ctx sdk.Context) (types.AffiliateOverrides, error) {
-	store := ctx.KVStore(k.storeKey)
-	affiliateOverridesBytes := store.Get([]byte(types.AffiliateOverridesKey))
-	if affiliateOverridesBytes == nil {
-		return types.AffiliateOverrides{}, nil
-	}
-	affiliateOverrides := types.AffiliateOverrides{}
-	err := k.cdc.Unmarshal(affiliateOverridesBytes, &affiliateOverrides)
-	if err != nil {
-		return types.AffiliateOverrides{}, err
-	}
-	return affiliateOverrides, nil
 }
 
 func (k Keeper) AggregateAffiliateReferredVolumeForFills(
