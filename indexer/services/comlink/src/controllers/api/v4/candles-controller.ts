@@ -8,7 +8,7 @@ import {
   Controller, Get, Path, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { candlesRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -52,7 +52,7 @@ class CandleController extends Controller {
 
 router.get(
   '/perpetualMarkets/:ticker',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(candlesRateLimiter),
   candlesCacheControlMiddleware,
   ...CheckLimitSchema,
   ...CheckTickerParamSchema,
