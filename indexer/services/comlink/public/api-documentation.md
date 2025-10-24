@@ -4136,6 +4136,99 @@ fetch(`${baseURL}/turnkey/signin`,
 This operation does not require authentication
 </aside>
 
+## AppleLoginRedirect
+
+<a id="opIdAppleLoginRedirect"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/appleLoginRedirect', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "state": "string",
+  "code": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/appleLoginRedirect`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/appleLoginRedirect`
+
+Handles Apple login redirect from Apple's authorization server
+Exchanges authorization code for ID token and processes user login/signup
+
+> Body parameter
+
+```json
+{
+  "state": "string",
+  "code": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[AppleLoginRedirectRequest](#schemaappleloginredirectrequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true,
+  "encodedPayload": "string",
+  "error": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AppleLoginResponse](#schemaappleloginresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetMegavaultHistoricalPnl
 
 <a id="opIdGetMegavaultHistoricalPnl"></a>
@@ -6977,6 +7070,52 @@ Request interface for user sign-in operations
 |» clientDataJson|string|true|none|none|
 |» credentialId|string|true|none|none|
 |magicLink|string|false|none|Optional magic link template URL for email authentication|
+
+## AppleLoginResponse
+
+<a id="schemaappleloginresponse"></a>
+<a id="schema_AppleLoginResponse"></a>
+<a id="tocSappleloginresponse"></a>
+<a id="tocsappleloginresponse"></a>
+
+```json
+{
+  "success": true,
+  "encodedPayload": "string",
+  "error": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|success|boolean|true|none|none|
+|encodedPayload|string|false|none|none|
+|error|string|false|none|none|
+
+## AppleLoginRedirectRequest
+
+<a id="schemaappleloginredirectrequest"></a>
+<a id="schema_AppleLoginRedirectRequest"></a>
+<a id="tocSappleloginredirectrequest"></a>
+<a id="tocsappleloginredirectrequest"></a>
+
+```json
+{
+  "state": "string",
+  "code": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|state|string|true|none|none|
+|code|string|true|none|none|
 
 ## MegavaultHistoricalPnlResponse
 
