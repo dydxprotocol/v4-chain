@@ -23,5 +23,9 @@ type FeeTiersKeeper interface {
 		ctx sdk.Context,
 		feeHoliday PerMarketFeeDiscountParams,
 	) error
+	SetStakingTiers(
+		ctx sdk.Context,
+		stakingTiers []*StakingTier,
+	) error
 	HasAuthority(authority string) bool
 }

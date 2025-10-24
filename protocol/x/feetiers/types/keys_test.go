@@ -14,4 +14,5 @@ func TestModuleKeys(t *testing.T) {
 
 func TestStateKeys(t *testing.T) {
 	require.Equal(t, "PerpParams", types.PerpetualFeeParamsKey)
+	require.Equal(t, "StakingTier:", types.StakingTierKeyPrefix)
 }

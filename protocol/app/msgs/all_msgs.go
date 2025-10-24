@@ -218,6 +218,8 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse":   {},
 		"/dydxprotocol.feetiers.MsgSetMarketFeeDiscountParams":         {},
 		"/dydxprotocol.feetiers.MsgSetMarketFeeDiscountParamsResponse": {},
+		"/dydxprotocol.feetiers.MsgSetStakingTiers":                    {},
+		"/dydxprotocol.feetiers.MsgSetStakingTiersResponse":            {},
 
 		// govplus
 		"/dydxprotocol.govplus.MsgSlashValidator":         {},
