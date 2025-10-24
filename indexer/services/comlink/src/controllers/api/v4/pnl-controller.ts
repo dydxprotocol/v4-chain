@@ -12,10 +12,13 @@ import {
 import express from 'express';
 import { matchedData } from 'express-validator';
 import {
-  Controller, Get, Query, Route,
+  Controller,
+  Get,
+  Query,
+  Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { pnlRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
@@ -171,7 +174,7 @@ class PnlController extends Controller {
 
 router.get(
   '/',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(pnlRateLimiter),
   pnlCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
@@ -238,7 +241,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(pnlRateLimiter),
   pnlCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
