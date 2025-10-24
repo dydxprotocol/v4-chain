@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
@@ -26,8 +28,20 @@ func TestLogger(t *testing.T) {
 func TestGetPerpetualFeePpm(t *testing.T) {
 	tests := map[string]struct {
 		user                string
+<<<<<<< HEAD
 		UserStats           *stattypes.UserStats
 		GlobalStats         *stattypes.GlobalStats
+=======
+		userStats           *stattypes.UserStats
+		globalStats         *stattypes.GlobalStats
+		setupFeeDiscount    bool
+		discountParams      types.PerMarketFeeDiscountParams
+		setupTime           *time.Time
+		blockTime           time.Time
+		clobPairId          uint32
+		stakingTiers        []*types.StakingTier
+		userBondedTokens    *big.Int
+>>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
 		expectedTakerFeePpm int32
 		expectedMakerFeePpm int32
 	}{
@@ -91,6 +105,175 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			30,
 			3,
 		},
+		{
+			name: "staking discount applies to positive maker fees in tier 3",
+			user: constants.AliceAccAddress.String(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 1_000,
+				MakerNotional: 1_000_000_000,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 2_000_000_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "3",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      500_000, // 50% discount
+						},
+					},
+				},
+			},
+			userBondedTokens:    big.NewInt(1000),
+			blockTime:           time.Now().UTC(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 15, // 30 * 0.5 = 15
+			expectedMakerFeePpm: 1,  // 3 * 0.5 = 1.5, rounded to 1
+		},
+		{
+			name: "staking discount combined with per-market discount",
+			user: constants.AliceAccAddress.String(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			setupFeeDiscount: true,
+			discountParams: types.PerMarketFeeDiscountParams{
+				ClobPairId: 1,
+				StartTime:  time.Unix(1000, 0).UTC(),
+				EndTime:    time.Unix(3000, 0).UTC(),
+				ChargePpm:  500_000, // 50% per-market discount
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      200_000, // 20% staking discount
+						},
+					},
+				},
+			},
+			userBondedTokens:    big.NewInt(1000),
+			blockTime:           time.Unix(2000, 0).UTC(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 4, // 10 * 0.5 (market) * 0.8 (staking) = 4
+			expectedMakerFeePpm: 0, // 1 * 0.5 * 0.8 = 0.4, rounded to 0
+		},
+		{
+			name: "higher tier with 20% staking discount",
+			user: constants.AliceAccAddress.String(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 1_000,
+				MakerNotional: 150,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "2",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(5000),
+							FeeDiscountPpm:      200_000, // 20% discount
+						},
+					},
+				},
+			},
+			userBondedTokens:    big.NewInt(5000),
+			blockTime:           time.Now().UTC(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 16, // 20 * 0.8 = 16
+			expectedMakerFeePpm: 1,  // 2 * 0.8 = 1.6, rounded to 1
+		},
+		{
+			name: "100% staking discount",
+			user: constants.AliceAccAddress.String(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(10000),
+							FeeDiscountPpm:      1_000_000, // 100% discount (free)
+						},
+					},
+				},
+			},
+			userBondedTokens:    big.NewInt(10000),
+			blockTime:           time.Now().UTC(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 0, // 10 * 0 = 0
+			expectedMakerFeePpm: 0, // 1 * 0 = 0
+		},
+		{
+			name: "doesn't qualify for staking discount",
+			user: constants.BobAccAddress.String(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(10000),
+							FeeDiscountPpm:      200_000, // 20% discount
+						},
+					},
+				},
+			},
+			userBondedTokens:    big.NewInt(500), // Not enough to qualify
+			blockTime:           time.Now().UTC(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 10, // No discount applied
+			expectedMakerFeePpm: 1,  // No discount applied
+		},
+		{
+			name: "user with no bonded tokens",
+			user: constants.CarlAccAddress.String(),
+			userStats: &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			globalStats: &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			stakingTiers: []*types.StakingTier{
+				{
+					FeeTierName: "1",
+					Levels: []*types.StakingLevel{
+						{
+							MinStakedBaseTokens: dtypes.NewInt(1000),
+							FeeDiscountPpm:      200_000, // 20% discount
+						},
+					},
+				},
+			},
+			userBondedTokens:    big.NewInt(0),
+			blockTime:           time.Now().UTC(),
+			clobPairId:          1,
+			expectedTakerFeePpm: 10, // No discount applied
+			expectedMakerFeePpm: 1,  // No discount applied
+		},
 	}
 
 	for name, tc := range tests {
@@ -132,12 +315,50 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			)
 			require.NoError(t, err)
 
+<<<<<<< HEAD
+=======
+			// Setup fee discount if needed
+			if tc.setupFeeDiscount {
+				// Use setupCtx with the appropriate time for setting up the discount
+				err = k.SetPerMarketFeeDiscountParams(setupCtx, tc.discountParams)
+				require.NoError(t, err)
+
+				// Verify fee discount was set correctly
+				params, err := k.GetPerMarketFeeDiscountParams(ctx, tc.discountParams.ClobPairId)
+				require.NoError(t, err)
+				require.Equal(t, tc.discountParams.ClobPairId, params.ClobPairId)
+				require.Equal(t, tc.discountParams.StartTime, params.StartTime)
+				require.Equal(t, tc.discountParams.EndTime, params.EndTime)
+				require.Equal(t, tc.discountParams.ChargePpm, params.ChargePpm)
+			}
+
+			// Set up staking tiers if needed
+			if tc.stakingTiers != nil {
+				err = k.SetStakingTiers(ctx, tc.stakingTiers)
+				require.NoError(t, err)
+			}
+
+			// Set up stats
+>>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
 			statsKeeper := tApp.App.StatsKeeper
 			statsKeeper.SetUserStats(ctx, tc.user, tc.UserStats)
 			statsKeeper.SetGlobalStats(ctx, tc.GlobalStats)
 
+<<<<<<< HEAD
 			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true, 2))
 			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false, 2))
+=======
+			// Set up user bonded tokens
+			if tc.userBondedTokens != nil {
+				statsKeeper.UnsafeSetCachedStakedAmount(ctx, tc.user, &stattypes.CachedStakeAmount{
+					StakedAmount: dtypes.NewIntFromBigInt(tc.userBondedTokens),
+					CachedAt:     ctx.BlockTime().Unix(),
+				})
+			}
+
+			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true, 2, tc.clobPairId))
+			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false, 2, tc.clobPairId))
+>>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
 		})
 	}
 }
