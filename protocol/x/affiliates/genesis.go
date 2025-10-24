@@ -12,13 +12,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err != nil {
 		panic(err)
 	}
-
-	err = k.UpdateAffiliateParameters(ctx, &types.MsgUpdateAffiliateParameters{
-		AffiliateParameters: genState.AffiliateParameters,
-	})
-	if err != nil {
-		panic(err)
-	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -28,13 +21,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 
-	affiliateParameters, err := k.GetAffiliateParameters(ctx)
-	if err != nil {
-		panic(err)
-	}
-
 	return &types.GenesisState{
-		AffiliateTiers:      affiliateTiers,
-		AffiliateParameters: affiliateParameters,
+		AffiliateTiers: affiliateTiers,
 	}
 }

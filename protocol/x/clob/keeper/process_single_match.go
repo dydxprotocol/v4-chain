@@ -12,7 +12,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -43,8 +42,7 @@ import (
 func (k Keeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
-	affiliateOverrides map[string]bool,
-	affiliateParameters affiliatetypes.AffiliateParameters,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
@@ -138,14 +136,11 @@ func (k Keeper) ProcessSingleMatch(
 		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
-	// Fee tier for affiliates
-	referreeIndexOverride := affiliateParameters.RefereeMinimumFeeTierIdx
-
 	// Calculate taker and maker fee ppms.
 	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true, referreeIndexOverride)
+		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true)
 	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false, referreeIndexOverride)
+		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
 
 	takerInsuranceFundDelta := new(big.Int)
 	if takerMatchableOrder.IsLiquidation() {
@@ -231,8 +226,7 @@ func (k Keeper) ProcessSingleMatch(
 		makerFeePpm,
 		bigFillQuoteQuantums,
 		takerInsuranceFundDelta,
-		affiliateOverrides,
-		affiliateParameters,
+		affiliatesWhitelistMap,
 	)
 
 	if err != nil {
@@ -338,8 +332,7 @@ func (k Keeper) persistMatchedOrders(
 	makerFeePpm int32,
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
-	affiliateOverrides map[string]bool,
-	affiliateParameters affiliatetypes.AffiliateParameters,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
@@ -542,12 +535,7 @@ func (k Keeper) persistMatchedOrders(
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(
-		ctx,
-		fillForProcess,
-		affiliateOverrides,
-		affiliateParameters,
-	)
+	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess, affiliatesWhitelistMap)
 	if err != nil {
 		revSharesForFill = revsharetypes.RevSharesForFill{}
 		log.ErrorLogWithError(ctx, "error getting rev shares for fill", err)
@@ -587,7 +575,6 @@ func (k Keeper) persistMatchedOrders(
 		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
 		bigFillQuoteQuantums,
-		affiliateRevSharesQuoteQuantums,
 	)
 
 	takerOrderRouterFeeQuoteQuantums := big.NewInt(0)
