@@ -7,7 +7,7 @@ import {
   Controller, Get, Path, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
 import { NotFoundError } from '../../../lib/errors';
@@ -55,7 +55,7 @@ class OrderbookController extends Controller {
 
 router.get(
   '/perpetualMarket/:ticker',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   orderbookCacheControlMiddleware,
   ...checkSchema({
     ticker: {
