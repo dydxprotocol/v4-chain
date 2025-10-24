@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
@@ -209,13 +210,16 @@ func initRootCmd(
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
+		snapshot.Cmd(newApp),
 	)
 
 	server.AddCommands(
 		rootCmd,
 		dydxapp.DefaultNodeHome,
 		func(logger log.Logger, db dbm.DB, writer io.Writer, options servertypes.AppOptions) servertypes.Application {
-			return appInterceptor(newApp(logger, db, writer, options))
+			//TODO: cleanup app appInterceptor
+			app := newApp(logger, db, writer, options)
+			return appInterceptor(app.(*dydxapp.App))
 		},
 		appExport,
 		func(cmd *cobra.Command) {
@@ -351,7 +355,7 @@ func newApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) *dydxapp.App {
+) servertypes.Application {
 	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
