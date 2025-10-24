@@ -840,6 +840,35 @@ export enum SigninMethod {
   PASSKEY = 'passkey',
 }
 
+/* ------- APPLE LOGIN TYPES ------- */
+
+export interface AppleLoginRedirectRequest {
+  state: string, // public key from client
+  code: string,  // auth code from Apple
+}
+
+export interface AppleTokenResponse {
+  access_token: string,
+  token_type: string,
+  expires_in: number,
+  refresh_token?: string,
+  id_token: string,
+}
+
+export interface AppleJWTClaims {
+  iss: string,   // Team ID
+  iat: number,   // Issued at
+  exp: number,   // Expires at
+  aud: string,   // Audience (https://appleid.apple.com)
+  sub: string,   // Service ID (client_id)
+}
+
+export interface AppleLoginResponse {
+  success: boolean,
+  encodedPayload?: string,
+  error?: string,
+}
+
 /* ------- PNL TYPES ------- */
 
 export interface PnlResponse extends PaginationResponse {
