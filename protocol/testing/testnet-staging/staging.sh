@@ -283,6 +283,7 @@ setup_cosmovisor() {
 
 		cosmovisor init $PREUPGRADE_BINARY_PATH
 		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/"
+		rm -rf "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/dydxprotocold"
 		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/dydxprotocold"
 	done
 }
