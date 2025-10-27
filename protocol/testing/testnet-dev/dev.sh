@@ -102,7 +102,7 @@ PREUPGRADE_BINARY_PATH="/bin/dydxprotocold_preupgrade"
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
-	apk add dasel jq
+	apk add curl dasel jq
 }
 
 # Create all validators for the chain including a full-node.
@@ -248,5 +248,7 @@ edit_config() {
 }
 
 install_prerequisites
+setup_preupgrade_binary
+
 create_validators
 setup_cosmovisor
