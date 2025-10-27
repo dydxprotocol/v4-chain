@@ -47,6 +47,9 @@ service Msg {
   // UpdateLiquidationsConfig updates the liquidations configuration in state.
   rpc UpdateLiquidationsConfig(MsgUpdateLiquidationsConfig)
       returns (MsgUpdateLiquidationsConfigResponse);
+  // UpdateLeverage allows accounts to update their desired leverage for
+  // clob pairs.
+  rpc UpdateLeverage(MsgUpdateLeverage) returns (MsgUpdateLeverageResponse);
 }
 
 // MsgCreateClobPair is a message used by x/gov for creating a new clob pair.
@@ -211,3 +214,26 @@ message MsgUpdateLiquidationsConfig {
 
 // MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
 message MsgUpdateLiquidationsConfigResponse {}
+
+// LeverageEntry represents a single clob pair leverage setting.
+message LeverageEntry {
+  // The clob pair ID.
+  uint32 clob_pair_id = 1;
+  // The leverage amount.
+  uint32 leverage = 2;
+}
+
+// MsgUpdateLeverage is a request type used for updating leverage for
+// clob pairs.
+message MsgUpdateLeverage {
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
+  // The subaccount that is updating leverage.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
+
+  // List of clob pair leverage settings.
+  repeated LeverageEntry clob_pair_leverage = 2;
+}
+
+// MsgUpdateLeverageResponse is a response type used for updating leverage.
+message MsgUpdateLeverageResponse {}

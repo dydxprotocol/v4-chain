@@ -333,6 +333,36 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 	return r0
 }
 
+// GetLeverage provides a mock function with given fields: ctx, subaccountId
+func (_m *ClobKeeper) GetLeverage(ctx types.Context, subaccountId *subaccountstypes.SubaccountId) (map[uint32]uint32, bool) {
+	ret := _m.Called(ctx, subaccountId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLeverage")
+	}
+
+	var r0 map[uint32]uint32
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId) (map[uint32]uint32, bool)); ok {
+		return rf(ctx, subaccountId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId) map[uint32]uint32); ok {
+		r0 = rf(ctx, subaccountId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint32]uint32)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *subaccountstypes.SubaccountId) bool); ok {
+		r1 = rf(ctx, subaccountId)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetLiquidationInsuranceFundDelta provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
 func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
@@ -446,6 +476,34 @@ func (_m *ClobKeeper) GetMaxAndMinPositionNotionalLiquidatable(ctx types.Context
 	}
 
 	return r0, r1, r2
+}
+
+// GetMaxLeverageForPerpetual provides a mock function with given fields: ctx, perpetualId
+func (_m *ClobKeeper) GetMaxLeverageForPerpetual(ctx types.Context, perpetualId uint32) (uint32, error) {
+	ret := _m.Called(ctx, perpetualId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMaxLeverageForPerpetual")
+	}
+
+	var r0 uint32
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (uint32, error)); ok {
+		return rf(ctx, perpetualId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) uint32); ok {
+		r0 = rf(ctx, perpetualId)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+		r1 = rf(ctx, perpetualId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
@@ -1090,6 +1148,24 @@ func (_m *ClobKeeper) RateLimitPlaceOrder(ctx types.Context, order *clobtypes.Ms
 	return r0
 }
 
+// RateLimitUpdateLeverage provides a mock function with given fields: ctx, msg
+func (_m *ClobKeeper) RateLimitUpdateLeverage(ctx types.Context, msg *clobtypes.MsgUpdateLeverage) error {
+	ret := _m.Called(ctx, msg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RateLimitUpdateLeverage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgUpdateLeverage) error); ok {
+		r0 = rf(ctx, msg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveClobPair provides a mock function with given fields: ctx, id
 func (_m *ClobKeeper) RemoveClobPair(ctx types.Context, id clobtypes.ClobPairId) {
 	_m.Called(ctx, id)
@@ -1136,6 +1212,24 @@ func (_m *ClobKeeper) UpdateClobPair(ctx types.Context, clobPair clobtypes.ClobP
 	var r0 error
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPair) error); ok {
 		r0 = rf(ctx, clobPair)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateLeverage provides a mock function with given fields: ctx, subaccountId, perpetualLeverage
+func (_m *ClobKeeper) UpdateLeverage(ctx types.Context, subaccountId *subaccountstypes.SubaccountId, perpetualLeverage map[uint32]uint32) error {
+	ret := _m.Called(ctx, subaccountId, perpetualLeverage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateLeverage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId, map[uint32]uint32) error); ok {
+		r0 = rf(ctx, subaccountId, perpetualLeverage)
 	} else {
 		r0 = ret.Error(0)
 	}

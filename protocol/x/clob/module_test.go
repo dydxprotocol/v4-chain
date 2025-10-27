@@ -150,7 +150,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 18)
+	require.Len(t, fv.MapKeys(), 20)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
@@ -168,7 +168,8 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
-	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
+	expected += `{"max_leverage_updates_per_n_blocks":[],`
+	expected += `"max_short_term_orders_and_cancels_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
 	expected += `"max_short_term_order_cancellations_per_n_blocks":[],"max_short_term_orders_per_n_blocks":[]},`
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[], "stateful_order_equity_tiers":[]}}`
 
@@ -242,10 +243,11 @@ func TestAppModuleBasic_GetTxCmd(t *testing.T) {
 
 	cmd := am.GetTxCmd()
 	require.Equal(t, "clob", cmd.Use)
-	require.Equal(t, 3, len(cmd.Commands()))
+	require.Equal(t, 4, len(cmd.Commands()))
 	require.Equal(t, "batch-cancel", cmd.Commands()[0].Name())
 	require.Equal(t, "cancel-order", cmd.Commands()[1].Name())
 	require.Equal(t, "place-order", cmd.Commands()[2].Name())
+	require.Equal(t, "update-leverage", cmd.Commands()[3].Name())
 }
 
 func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
@@ -253,13 +255,14 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "clob", cmd.Use)
-	require.Equal(t, 6, len(cmd.Commands()))
+	require.Equal(t, 7, len(cmd.Commands()))
 	require.Equal(t, "get-block-rate-limit-config", cmd.Commands()[0].Name())
 	require.Equal(t, "get-equity-tier-limit-config", cmd.Commands()[1].Name())
 	require.Equal(t, "get-liquidations-config", cmd.Commands()[2].Name())
-	require.Equal(t, "list-clob-pair", cmd.Commands()[3].Name())
-	require.Equal(t, "show-clob-pair", cmd.Commands()[4].Name())
-	require.Equal(t, "stateful-order", cmd.Commands()[5].Name())
+	require.Equal(t, "leverage", cmd.Commands()[3].Name())
+	require.Equal(t, "list-clob-pair", cmd.Commands()[4].Name())
+	require.Equal(t, "show-clob-pair", cmd.Commands()[5].Name())
+	require.Equal(t, "stateful-order", cmd.Commands()[6].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
@@ -433,7 +436,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
-	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
+	expected += `{"max_leverage_updates_per_n_blocks":[],`
+	expected += `"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
 	expected += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},`
 	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_n_blocks":[],`
 	expected += `"max_short_term_orders_per_n_blocks":[]},`
