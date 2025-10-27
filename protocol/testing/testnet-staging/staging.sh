@@ -273,7 +273,9 @@ setup_cosmovisor() {
 		export DAEMON_NAME=dydxprotocold
 		export DAEMON_HOME="$HOME/chain/.full-node-$i"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init $PREUPGRADE_BINARY_PATH
+		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/"
+		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/dydxprotocold"
 	done
 
 	for i in "${!MONIKERS[@]}"; do
@@ -283,7 +285,6 @@ setup_cosmovisor() {
 
 		cosmovisor init $PREUPGRADE_BINARY_PATH
 		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/"
-		rm -rf "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/dydxprotocold"
 		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v9.4/bin/dydxprotocold"
 	done
 }
