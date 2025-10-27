@@ -35,18 +35,8 @@
           "req_referred_volume_quote_quantums": "25000000000000",
           "req_staked_whole_coins": 5000,
           "taker_fee_share_ppm": 150000
-        },
-        {
-          "req_referred_volume_quote_quantums": "50000000000000",
-          "req_staked_whole_coins": 1e+08,
-          "taker_fee_share_ppm": 250000
         }
       ]
-    },
-    "affiliate_parameters": {
-      "maximum_30d_affiliate_revenue_per_referred_user_quote_quantums": "10000000000",
-      "maximum_30d_attributable_volume_per_referred_user_quote_quantums": "100000000000000",
-      "referee_minimum_fee_tier_idx": 2
     }
   },
   "auth": {
@@ -285,8 +275,7 @@
           "taker_fee_ppm": 250
         }
       ]
-    },
-    "staking_tiers": []
+    }
   },
   "genutil": {
     "gen_txs": []
