@@ -299,18 +299,18 @@ export interface QueryLeverageResponseSDKType {
 export interface ClobPairLeverageInfo {
   /** The clob pair ID. */
   clobPairId: number;
-  /** The leverage amount. */
+  /** The user selected imf. */
 
-  leverage: number;
+  customImfPpm: number;
 }
 /** ClobPairLeverageInfo represents the leverage setting for a single clob pair. */
 
 export interface ClobPairLeverageInfoSDKType {
   /** The clob pair ID. */
   clob_pair_id: number;
-  /** The leverage amount. */
+  /** The user selected imf. */
 
-  leverage: number;
+  custom_imf_ppm: number;
 }
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
@@ -1459,7 +1459,7 @@ export const QueryLeverageResponse = {
 function createBaseClobPairLeverageInfo(): ClobPairLeverageInfo {
   return {
     clobPairId: 0,
-    leverage: 0
+    customImfPpm: 0
   };
 }
 
@@ -1469,8 +1469,8 @@ export const ClobPairLeverageInfo = {
       writer.uint32(8).uint32(message.clobPairId);
     }
 
-    if (message.leverage !== 0) {
-      writer.uint32(16).uint32(message.leverage);
+    if (message.customImfPpm !== 0) {
+      writer.uint32(16).uint32(message.customImfPpm);
     }
 
     return writer;
@@ -1490,7 +1490,7 @@ export const ClobPairLeverageInfo = {
           break;
 
         case 2:
-          message.leverage = reader.uint32();
+          message.customImfPpm = reader.uint32();
           break;
 
         default:
@@ -1505,7 +1505,7 @@ export const ClobPairLeverageInfo = {
   fromPartial(object: DeepPartial<ClobPairLeverageInfo>): ClobPairLeverageInfo {
     const message = createBaseClobPairLeverageInfo();
     message.clobPairId = object.clobPairId ?? 0;
-    message.leverage = object.leverage ?? 0;
+    message.customImfPpm = object.customImfPpm ?? 0;
     return message;
   }
 

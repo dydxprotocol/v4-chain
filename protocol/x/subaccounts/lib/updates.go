@@ -343,6 +343,7 @@ func CalculateUpdatedSubaccount(
 func GetRiskForSubaccount(
 	subaccount types.Subaccount,
 	perpInfos perptypes.PerpInfos,
+	leverageMap map[uint32]uint32, // leverage per perpetual, nil means no leverage configured
 ) (
 	risk margin.Risk,
 	err error,
@@ -365,15 +366,37 @@ func GetRiskForSubaccount(
 	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
 	for _, pos := range subaccount.PerpetualPositions {
 		perpInfo := perpInfos.MustGet(pos.PerpetualId)
+
+		// Get the configured imf for this perpetual (0 if not configured)
+		custom_imf_ppm := uint32(0)
+		if leverageMap != nil {
+			custom_imf_ppm = leverageMap[pos.PerpetualId]
+		}
+
 		r := perplib.GetNetCollateralAndMarginRequirements(
 			perpInfo.Perpetual,
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
 			pos.GetQuoteBalance(),
+			custom_imf_ppm,
 		)
 		risk.AddInPlace(r)
 	}
 
 	return risk, nil
+}
+
+// GetRiskForSettledUpdate returns the risk value for a SettledUpdate with embedded leverage.
+// This is a convenience function that extracts the leverage from the SettledUpdate and
+// calls GetRiskForSubaccount with the updated subaccount.
+func GetRiskForSettledUpdate(
+	settledUpdate types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
+) (
+	risk margin.Risk,
+	err error,
+) {
+	updatedSubaccount := CalculateUpdatedSubaccount(settledUpdate, perpInfos)
+	return GetRiskForSubaccount(updatedSubaccount, perpInfos, settledUpdate.LeverageMap)
 }
