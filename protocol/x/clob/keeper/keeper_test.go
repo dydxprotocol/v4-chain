@@ -79,3 +79,4 @@ func TestInitMemStore_StatefulOrderCount(t *testing.T) {
 	ks.ClobKeeper.InitMemStore(ks.Ctx)
 	require.Equal(t, uint32(3), ks.ClobKeeper.GetStatefulOrderCount(ks.Ctx, constants.Alice_Num0))
 }
+// Test CI trigger
