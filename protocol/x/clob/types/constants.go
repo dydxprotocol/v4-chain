@@ -6,7 +6,7 @@ import (
 
 // ShortBlockWindow represents the maximum number of blocks past the current block height that a
 // `MsgPlaceOrder` or `MsgCancelOrder` message will be considered valid by the validator.
-const ShortBlockWindow uint32 = 20
+const ShortBlockWindow uint32 = 30
 
 // MaxMsgBatchCancelBatchSize represents the maximum number of cancels that a MsgBatchCancel
 // can have in one Msg.
