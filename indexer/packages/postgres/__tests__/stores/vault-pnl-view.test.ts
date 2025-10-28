@@ -101,7 +101,7 @@ describe('VaultPnl store', () => {
 
     // Should return the most recent PNL for each subaccount
     expect(latestPnl).toHaveLength(2);
-    
+
     const subaccount1Pnl = latestPnl.find(
       (pnl) => pnl.subaccountId === defaultSubaccountId,
     );
@@ -111,7 +111,7 @@ describe('VaultPnl store', () => {
 
     expect(subaccount1Pnl).toBeDefined();
     expect(subaccount1Pnl?.equity).toBe('1100');
-    
+
     expect(subaccount2Pnl).toBeDefined();
     expect(subaccount2Pnl?.equity).toBe('200');
   });

@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+
 import { knexReadReplica } from '../helpers/knex';
 import { rawQuery } from '../helpers/stores-helpers';
 import { PnlFromDatabase, PnlInterval } from '../types';
@@ -32,7 +33,7 @@ export async function refreshDailyView(): Promise<void> {
 
 /**
  * Get vault PNL data for a given interval and time window.
- * 
+ *
  * @param interval - The PNL tick interval (hour or day)
  * @param timeWindowSeconds - The time window in seconds
  * @param earliestDate - The earliest date to fetch data from
@@ -43,9 +44,15 @@ export async function getVaultsPnl(
   timeWindowSeconds: number,
   earliestDate: DateTime,
 ): Promise<PnlFromDatabase[]> {
-  const viewName: string = interval === PnlInterval.hour
-    ? VAULT_HOURLY_PNL_VIEW
-    : VAULT_DAILY_PNL_VIEW;
+  const VIEW_BY_INTERVAL: Record<PnlInterval, string> = {
+    [PnlInterval.hour]: VAULT_HOURLY_PNL_VIEW,
+    [PnlInterval.day]: VAULT_DAILY_PNL_VIEW,
+  };
+  const viewName = VIEW_BY_INTERVAL[interval];
+  if (!Number.isFinite(timeWindowSeconds) || timeWindowSeconds <= 0) {
+    throw new Error('timeWindowSeconds must be a positive number');
+  }
+  const earliest = earliestDate.toUTC().toJSDate(); // lets pg type it as timestamptz
 
   const result: {
     rows: PnlFromDatabase[],
@@ -60,10 +67,11 @@ export async function getVaultsPnl(
         "createdAtHeight"
       FROM ${viewName}
       WHERE
-        "createdAt" >= '${earliestDate.toUTC().toISO()}'::timestamp AND
-        "createdAt" > NOW() - INTERVAL '${timeWindowSeconds} second'
+        "createdAt" >= ? AND
+        "createdAt" > NOW() - make_interval(secs => ?)
       ORDER BY "subaccountId", "createdAt";
     `,
+    [earliest, Math.trunc(timeWindowSeconds)],
   ) as unknown as {
     rows: PnlFromDatabase[],
   };
@@ -73,7 +81,7 @@ export async function getVaultsPnl(
 
 /**
  * Get the latest vault PNL snapshot for each vault.
- * 
+ *
  * @returns Array of latest vault PNL records, one per vault
  */
 export async function getLatestVaultPnl(): Promise<PnlFromDatabase[]> {

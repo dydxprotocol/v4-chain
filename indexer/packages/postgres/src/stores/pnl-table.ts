@@ -377,10 +377,11 @@ export async function createMany(
   pnls: PnlCreateObject[],
   options: Options = { txId: undefined },
 ): Promise<PnlFromDatabase[]> {
-  return PnlModel
-    .query(Transaction.get(options.txId))
-    .insert(pnls)
-    .returning('*');
+  if (!Array.isArray(pnls) || pnls.length === 0) {
+    return [];
+  }
+  const qb = PnlModel.query(Transaction.get(options.txId));
+  return qb.insert(pnls).returning('*');
 }
 
 export async function findById(
