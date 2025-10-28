@@ -35,4 +35,19 @@ var (
 		405,
 		"Rev share safety violation",
 	)
+	ErrInvalidTimeRange = errorsmod.Register(
+		ModuleName,
+		406,
+		"Invalid time range for market fee discount",
+	)
+	ErrMarketFeeDiscountNotFound = errorsmod.Register(
+		ModuleName,
+		407,
+		"Market fee discount not found for the specified CLOB pair",
+	)
+	ErrInvalidChargePpm = errorsmod.Register(
+		ModuleName,
+		408,
+		"Invalid charge PPM value",
+	)
 )

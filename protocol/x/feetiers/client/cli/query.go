@@ -24,11 +24,15 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryPerpetualFeeParams())
 	cmd.AddCommand(CmdQueryUserFeeTier())
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 	cmd.AddCommand(CmdQueryMarketFeeDiscountParams())
 	cmd.AddCommand(CmdQueryStakingTiers())
 	cmd.AddCommand(CmdQueryUserStakingTier())
 >>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+=======
+	cmd.AddCommand(CmdQueryMarketFeeDiscountParams())
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
 
 	return cmd
 }
@@ -82,7 +86,10 @@ func CmdQueryUserFeeTier() *cobra.Command {
 	return cmd
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
 
 func CmdQueryMarketFeeDiscountParams() *cobra.Command {
 	cmd := &cobra.Command{
@@ -128,6 +135,7 @@ func CmdQueryMarketFeeDiscountParams() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
+<<<<<<< HEAD
 
 func CmdQueryStakingTiers() *cobra.Command {
 	cmd := &cobra.Command{
@@ -176,3 +184,5 @@ func CmdQueryUserStakingTier() *cobra.Command {
 	return cmd
 }
 >>>>>>> c667de27 (consider staking tiers when calculating fees (#3195))
+=======
+>>>>>>> 33a4abb2 (Add market fee discount to protocol (#3130))
