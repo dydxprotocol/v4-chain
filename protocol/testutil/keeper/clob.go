@@ -123,7 +123,14 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			cdc,
 			indexerEventsTransientStoreKey,
 		)
-		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(stateStore, ks.StatsKeeper, ks.VaultKeeper, ks.AffiliatesKeeper, db, cdc)
+		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
+			stateStore,
+			ks.StatsKeeper,
+			ks.VaultKeeper,
+			ks.AffiliatesKeeper,
+			db,
+			cdc,
+		)
 		revShareKeeper, _, _ := createRevShareKeeper(
 			stateStore,
 			db,
