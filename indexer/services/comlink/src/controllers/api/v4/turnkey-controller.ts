@@ -9,7 +9,7 @@ import {
 } from 'tsoa';
 import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
@@ -217,7 +217,7 @@ export class TurnkeyController extends Controller {
 
 router.post(
   '/signin',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   ...CheckSignInSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
@@ -260,7 +260,7 @@ router.post(
 
 router.post(
   '/uploadAddress',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   ...CheckUploadDydxAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
