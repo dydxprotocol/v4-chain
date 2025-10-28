@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"math/big"
 	"testing"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -859,7 +858,7 @@ func TestRecordMevMetrics(t *testing.T) {
 				mockBankKeeper,
 				indexer_manager.NewIndexerEventManagerNoop(),
 			)
-			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
+			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
@@ -1254,7 +1253,7 @@ func TestGetMidPrices(t *testing.T) {
 			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
+			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
