@@ -251,6 +251,7 @@ func (k Keeper) getSettledUpdates(
 	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
+	var idToLeverageMap = make(map[types.SubaccountId]map[uint32]uint32)
 	settledUpdates = make([]types.SettledUpdate, len(updates))
 	subaccountIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
 
@@ -258,25 +259,41 @@ func (k Keeper) getSettledUpdates(
 	for i, u := range updates {
 		settledSubaccount, exists := idToSettledSubaccount[u.SubaccountId]
 		var fundingPayments map[uint32]dtypes.SerializableInt
+		var leverageMap map[uint32]uint32
 
 		if exists && requireUniqueSubaccount {
 			return nil, nil, types.ErrNonUniqueUpdatesSubaccount
 		}
 
-		// Get and store the settledSubaccount if SubaccountId doesn't exist in
-		// idToSettledSubaccount map.
+		// Get and store the settledSubaccount and leverage if SubaccountId doesn't exist in maps.
 		if !exists {
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
 			settledSubaccount, fundingPayments = salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
+			// Only fetch leverage if there are perpetual updates or perpetual positions
+			// to avoid unnecessary gas consumption
+			if len(u.PerpetualUpdates) > 0 || len(settledSubaccount.PerpetualPositions) > 0 {
+				if leverage, found := k.GetLeverage(ctx, &u.SubaccountId); found {
+					leverageMap = leverage
+				}
+			}
+
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
+			idToLeverageMap[u.SubaccountId] = leverageMap
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
+		} else {
+			// Reuse cached leverage map if there are perpetual updates
+			// or perpetual positions
+			if len(u.PerpetualUpdates) > 0 || len(settledSubaccount.PerpetualPositions) > 0 {
+				leverageMap = idToLeverageMap[u.SubaccountId]
+			}
 		}
 
 		settledUpdate := types.SettledUpdate{
 			SettledSubaccount: settledSubaccount,
 			AssetUpdates:      u.AssetUpdates,
 			PerpetualUpdates:  u.PerpetualUpdates,
+			LeverageMap:       leverageMap,
 		}
 
 		settledUpdates[i] = settledUpdate
@@ -366,7 +383,7 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(
+	success, successPerUpdate, err = k.internalCanUpdateSubaccountsWithLeverage(
 		ctx,
 		settledUpdates,
 		updateType,
@@ -479,6 +496,9 @@ func (k Keeper) UpdateSubaccounts(
 // with the same `SubaccountId`, they are validated without respect to each
 // other.
 //
+// This method automatically fetches leverage configuration for all subaccounts
+// being updated and applies leverage-aware margin requirements.
+//
 // Returns a `success` value of `true` if all updates are valid.
 // Returns a `successPerUpdates` value, which is a slice of `UpdateResult`.
 // These map to the updates and are used to indicate which of the updates
@@ -511,23 +531,11 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, perpInfos)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccountsWithLeverage(ctx, settledUpdates, updateType, perpInfos)
 	return success, successPerUpdate, err
 }
 
-// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
-// if any of the updates led to an isolated perpetual position being opened or closed.
-// The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
-// Each update is considered in isolation. Thus if two updates are provided
-// with the same `Subaccount`, they are validated without respect to each
-// other.
-// The input subaccounts must be settled.
-//
-// Returns a `success` value of `true` if all updates are valid.
-// Returns a `successPerUpdates` value, which is a slice of `UpdateResult`.
-// These map to the updates and are used to indicate which of the updates
-// caused a failure, if any.
-func (k Keeper) internalCanUpdateSubaccounts(
+func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 	ctx sdk.Context,
 	settledUpdates []types.SettledUpdate,
 	updateType types.UpdateType,
@@ -673,11 +681,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
-		updatedSubaccount := salib.CalculateUpdatedSubaccount(u, perpInfos)
-		riskNew, err := salib.GetRiskForSubaccount(
-			updatedSubaccount,
-			perpInfos,
-		)
+		riskNew, err := salib.GetRiskForSettledUpdate(u, perpInfos)
 		if err != nil {
 			return false, nil, err
 		}
@@ -699,6 +703,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				riskCurMap[saKey], err = salib.GetRiskForSubaccount(
 					u.SettledSubaccount,
 					perpInfos,
+					u.LeverageMap,
 				)
 				if err != nil {
 					return false, nil, err
@@ -723,6 +728,22 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	return success, successPerUpdate, nil
 }
 
+func (k Keeper) GetNetCollateralAndMarginRequirements(
+	ctx sdk.Context,
+	update types.Update,
+) (
+	risk margin.Risk,
+	err error,
+) {
+	// Get leverage configuration for this subaccount
+	var leverageMap map[uint32]uint32
+	if leverage, found := k.GetLeverage(ctx, &update.SubaccountId); found {
+		leverageMap = leverage
+	}
+
+	return k.GetNetCollateralAndMarginRequirementsWithLeverage(ctx, update, leverageMap)
+}
+
 // GetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin requirement,
 // and total maintenance margin requirement for the subaccount as if the `update` was applied.
 // It is used to get information about speculative changes to the subaccount.
@@ -733,9 +754,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 // If two position updates reference the same position, an error is returned.
 //
 // All return values are denoted in quote quantums.
-func (k Keeper) GetNetCollateralAndMarginRequirements(
+func (k Keeper) GetNetCollateralAndMarginRequirementsWithLeverage(
 	ctx sdk.Context,
 	update types.Update,
+	leverageMap map[uint32]uint32,
 ) (
 	risk margin.Risk,
 	err error,
@@ -758,6 +780,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	return salib.GetRiskForSubaccount(
 		updatedSubaccount,
 		perpInfos,
+		leverageMap,
 	)
 }
 

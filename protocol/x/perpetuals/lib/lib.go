@@ -43,6 +43,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
+	custom_imf_ppm uint32,
 ) (
 	risk margin.Risk,
 ) {
@@ -56,6 +57,7 @@ func GetPositionNetNotionalValueAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
+		custom_imf_ppm,
 	)
 	return margin.Risk{
 		NC:  nc,
@@ -72,6 +74,7 @@ func GetNetCollateralAndMarginRequirements(
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
 	quoteBalance *big.Int,
+	custom_imf_ppm uint32, // 0 means use default liquidity tier margins
 ) (
 	risk margin.Risk,
 ) {
@@ -80,6 +83,7 @@ func GetNetCollateralAndMarginRequirements(
 		marketPrice,
 		liquidityTier,
 		quantums,
+		custom_imf_ppm,
 	)
 	risk.NC.Add(risk.NC, quoteBalance)
 	return risk
@@ -109,11 +113,13 @@ func GetNetNotionalInQuoteQuantums(
 
 // GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
 // in quote quantums, given the position size in base quantums.
+// If leverage > 0, scales the margin requirements based on maxLeverage/userLeverage ratio.
 func GetMarginRequirementsInQuoteQuantums(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
 	bigQuantums *big.Int,
+	custom_imf_ppm uint32, // 0 means use default liquidity tier margins
 ) (
 	bigInitialMarginQuoteQuantums *big.Int,
 	bigMaintenanceMarginQuoteQuantums *big.Int,
@@ -140,6 +146,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
 		bigQuoteQuantums,
 		big.NewInt(0), // pass in 0 as open interest to get base IMR.
+		big.NewInt(0), // pass in 0 to use the base IMR
 	)
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigMulPpm(
@@ -151,6 +158,8 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
 		bigQuoteQuantums,
 		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
+		lib.BigU(custom_imf_ppm),
 	)
+
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }

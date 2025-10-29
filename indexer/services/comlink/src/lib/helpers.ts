@@ -25,7 +25,6 @@ import {
   AssetColumns,
   MarketColumns,
   VaultFromDatabase, VaultTable, perpetualMarketRefresher,
-  PnlFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -39,7 +38,6 @@ import {
   subaccountToResponseObject,
 } from '../request-helpers/request-transformer';
 import {
-  AggregatedPnl,
   AggregatedPnlTick,
   AssetById,
   AssetPositionResponseObject,
@@ -734,60 +732,6 @@ export function aggregateHourlyPnlTicks(
     return {
       pnlTick: hourlyPnlTicks.get(hour) as PnlTicksFromDatabase,
       numTicks: (hourlySubaccountIds.get(hour) as Set<string>).size,
-    };
-  });
-}
-
-/**
- * Aggregates PNL records by time period (hour), combining values from different subaccounts.
- * For each unique hour, sums the equity, totalPnl, and netTransfers across all subaccounts.
- * Returns a map of aggregated PNL records and the number of subaccounts included in each.
- *
- * @param allPnls - Array of PNL records to aggregate
- * @returns Array of aggregated PNL records with counts
- */
-export function aggregatePnl(
-  allPnls: PnlFromDatabase[],
-): AggregatedPnl[] {
-  const timeGroupedPnl: Map<string, PnlFromDatabase> = new Map();
-  const timeGroupedSubaccountIds: Map<string, Set<string>> = new Map();
-
-  for (const pnl of allPnls) {
-    // Group by hour - this works whether the records are hourly or daily
-    // as it will preserve the original time granularity
-    const truncatedTime: string = DateTime.fromISO(pnl.createdAt).startOf('hour').toISO();
-
-    if (timeGroupedPnl.has(truncatedTime)) {
-      const subaccountIds: Set<string> = timeGroupedSubaccountIds.get(truncatedTime) as Set<string>;
-      if (subaccountIds.has(pnl.subaccountId)) {
-        continue; // Skip duplicate records for the same subaccount in the same time period
-      }
-
-      subaccountIds.add(pnl.subaccountId);
-      const aggregatedPnl: PnlFromDatabase = timeGroupedPnl.get(
-        truncatedTime,
-      ) as PnlFromDatabase;
-
-      timeGroupedPnl.set(
-        truncatedTime,
-        {
-          ...aggregatedPnl,
-          equity: Big(aggregatedPnl.equity).plus(pnl.equity).toString(),
-          totalPnl: Big(aggregatedPnl.totalPnl).plus(pnl.totalPnl).toString(),
-          netTransfers: Big(aggregatedPnl.netTransfers).plus(pnl.netTransfers).toString(),
-        },
-      );
-      timeGroupedSubaccountIds.set(truncatedTime, subaccountIds);
-    } else {
-      timeGroupedPnl.set(truncatedTime, pnl);
-      timeGroupedSubaccountIds.set(truncatedTime, new Set([pnl.subaccountId]));
-    }
-  }
-
-  return Array.from(timeGroupedPnl.keys()).map((timeKey: string): AggregatedPnl => {
-    return {
-      pnl: timeGroupedPnl.get(timeKey) as PnlFromDatabase,
-      numPnls: (timeGroupedSubaccountIds.get(timeKey) as Set<string>).size,
     };
   });
 }

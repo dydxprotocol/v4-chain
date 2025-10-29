@@ -89,14 +89,7 @@ func ListingKeepers(
 				cdc,
 				transientStoreKey,
 			)
-			feeTiersKeeper, _ := createFeeTiersKeeper(
-				stateStore,
-				statsKeeper,
-				vaultKeeper,
-				affiliatesKeeper,
-				db,
-				cdc,
-			)
+			feeTiersKeeper, _ := createFeeTiersKeeper(stateStore, statsKeeper, vaultKeeper, affiliatesKeeper, db, cdc)
 			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feeTiersKeeper, statsKeeper)
 			marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
@@ -141,6 +134,7 @@ func ListingKeepers(
 				db,
 				cdc,
 			)
+			// Create subaccounts keeper first with nil leverageKeeper
 			subaccountsKeeper, _ = createSubaccountsKeeper(
 				stateStore,
 				db,
@@ -172,6 +166,7 @@ func ListingKeepers(
 				mockIndexerEventManager,
 				transientStoreKey,
 			)
+
 			// Create the listing keeper
 			keeper, storeKey, _ = createListingKeeper(
 				stateStore,

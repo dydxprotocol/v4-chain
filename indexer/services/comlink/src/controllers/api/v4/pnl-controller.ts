@@ -8,20 +8,21 @@ import {
   QueryableField,
   SubaccountTable,
   PnlTable,
-  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
-import _ from 'lodash';
 import {
-  Controller, Get, Query, Route,
+  Controller,
+  Get,
+  Query,
+  Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { pnlRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { aggregatePnl, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
+import { getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckDailyOptionalSchema,
@@ -82,13 +83,13 @@ class PnlController extends Controller {
     let pnlData: PaginationFromDatabase<PnlFromDatabase>;
 
     if (daily === true) {
-      pnlData = await PnlTable.findAllDailyPnl(
+      pnlData = await PnlTable.findAllDailyAggregate(
         queryParams,
         [QueryableField.LIMIT],
         DEFAULT_POSTGRES_OPTIONS,
       );
     } else {
-      pnlData = await PnlTable.findAll(
+      pnlData = await PnlTable.findAllHourlyAggregate(
         queryParams,
         [QueryableField.LIMIT],
         {
@@ -128,10 +129,7 @@ class PnlController extends Controller {
     const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
 
     const queryParams = {
-      parentSubaccount: {
-        address,
-        subaccountNumber: parentSubaccountNumber,
-      },
+      subaccountId: childSubaccountIds,
       limit,
       createdBeforeOrAtHeight:
     createdBeforeOrAtHeight != null ? String(createdBeforeOrAtHeight) : undefined,
@@ -141,58 +139,42 @@ class PnlController extends Controller {
       createdOnOrAfter,
     };
 
-    const [subaccounts, pnlData]: [
-      SubaccountFromDatabase[],
-      PaginationFromDatabase<PnlFromDatabase>,
-    ] = await Promise.all([
-      // Query to find all subaccounts
-      SubaccountTable.findAll(
+    let pnlData: PaginationFromDatabase<PnlFromDatabase>;
+
+    if (daily === true) {
+      pnlData = await PnlTable.findAllDailyAggregate(
+        queryParams,
+        [QueryableField.LIMIT],
+        DEFAULT_POSTGRES_OPTIONS,
+      );
+    } else {
+      pnlData = await PnlTable.findAllHourlyAggregate(
+        queryParams,
+        [QueryableField.LIMIT],
         {
-          id: childSubaccountIds,
+          ...DEFAULT_POSTGRES_OPTIONS,
+          orderBy: [[QueryableField.CREATED_AT_HEIGHT, Ordering.DESC]],
         },
-        [QueryableField.ID],
-      ),
-
-      daily === true
-        ? PnlTable.findAllDailyPnl(
-          queryParams,
-          [QueryableField.LIMIT],
-          DEFAULT_POSTGRES_OPTIONS,
-        )
-        : PnlTable.findAll(
-          queryParams,
-          [QueryableField.LIMIT],
-          {
-            ...DEFAULT_POSTGRES_OPTIONS,
-            orderBy: [[QueryableField.CREATED_AT_HEIGHT, Ordering.DESC]],
-          },
-        ),
-    ]);
-
-    if (subaccounts.length === 0) {
-      throw new NotFoundError(
-        `No subaccounts found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
       );
     }
 
-    // Aggregate PNL records for all subaccounts
-    const aggregatedPnl: PnlFromDatabase[] = _.map(
-      aggregatePnl(pnlData.results),
-      'pnl',
-    );
+    if (pnlData.results.length === 0) {
+      throw new NotFoundError(
+        `No PnL data found for address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
+      );
+    }
 
     return {
-      pnl: aggregatedPnl.map(
-        (pnl: PnlFromDatabase) => {
-          return pnlToResponseObject(pnl);
-        }),
+      pnl: pnlData.results.map(pnlToResponseObject),
+      totalResults: pnlData.total,
+      offset: pnlData.offset,
     };
   }
 }
 
 router.get(
   '/',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(pnlRateLimiter),
   pnlCacheControlMiddleware,
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
@@ -259,7 +241,7 @@ router.get(
 
 router.get(
   '/parentSubaccountNumber',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(pnlRateLimiter),
   pnlCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
