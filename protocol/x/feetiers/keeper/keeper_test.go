@@ -504,9 +504,9 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 
 			// Set up user bonded tokens
 			if tc.userBondedTokens != nil {
-				statsKeeper.UnsafeSetCachedStakedAmount(ctx, tc.user, &stattypes.CachedStakeAmount{
-					StakedAmount: dtypes.NewIntFromBigInt(tc.userBondedTokens),
-					CachedAt:     ctx.BlockTime().Unix(),
+				statsKeeper.UnsafeSetCachedStakedBaseTokens(ctx, tc.user, &stattypes.CachedStakedBaseTokens{
+					StakedBaseTokens: dtypes.NewIntFromBigInt(tc.userBondedTokens),
+					CachedAt:         ctx.BlockTime().Unix(),
 				})
 			}
 
