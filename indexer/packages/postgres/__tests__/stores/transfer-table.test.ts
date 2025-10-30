@@ -1,6 +1,8 @@
 import {
+  BlockCreateObject,
   Ordering,
   SubaccountAssetNetTransferMap,
+  TendermintEventCreateObject,
   TransferColumns,
   TransferCreateObject,
   TransferFromDatabase,
@@ -35,7 +37,7 @@ import {
 import Big from 'big.js';
 import { CheckViolationError } from 'objection';
 import { DateTime } from 'luxon';
-import { USDC_ASSET_ID } from '../../src';
+import { BlockTable, TendermintEventTable, USDC_ASSET_ID } from '../../src';
 
 describe('Transfer store', () => {
   beforeEach(async () => {
@@ -665,22 +667,6 @@ describe('Transfer store', () => {
   });
 
   describe('findAllToOrFromParentSubaccount', () => {
-    beforeEach(async () => {
-      await seedData();
-    });
-
-    beforeAll(async () => {
-      await migrate();
-    });
-
-    afterEach(async () => {
-      await clearData();
-    });
-
-    afterAll(async () => {
-      await teardown();
-    });
-
     it('Successfully excludes transfers between child subaccounts of the same parent', async () => {
     // defaultSubaccount (subaccount 0) -> isolatedSubaccount (subaccount 128)
     // Both have parent subaccount 0 (0 % 128 = 0, 128 % 128 = 0)
@@ -824,93 +810,142 @@ describe('Transfer store', () => {
       expect(transfers[0]).toEqual(expect.objectContaining(withdrawal));
     });
 
-    // it('Successfully respects limit parameter', async () => {
-    //   const transfers: TransferCreateObject[] = [];
-    //   for (let i = 0; i < 5; i++) {
-    //     const eventIdBuffer = Buffer.from(defaultTendermintEventId);
-    //     eventIdBuffer.writeUInt32BE(i, eventIdBuffer.length - 4);
+    it('Successfully respects limit parameter', async () => {
+      // Create 5 blocks first
+      const blocks: BlockCreateObject[] = [];
+      for (let i = 0; i < 5; i++) {
+        blocks.push({
+          blockHeight: (3 + i).toString(),
+          time: createdDateTime.plus({ minutes: i }).toISO(),
+        });
+      }
+      await Promise.all(blocks.map((b) => BlockTable.create(b)));
 
-    //     transfers.push({
-    //       senderSubaccountId: defaultSubaccountId,
-    //       recipientSubaccountId: defaultSubaccountId2,
-    //       assetId: defaultAsset.id,
-    //       size: `${i + 1}`,
-    //       eventId: eventIdBuffer,
-    //       transactionHash: `hash${i}`,
-    //       createdAt: createdDateTime.plus({ minutes: i }).toISO(),
-    //       createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
-    //     });
-    //   }
+      // Create 5 TendermintEvents
+      const events: TendermintEventCreateObject[] = [];
+      for (let i = 0; i < 5; i++) {
+        events.push({
+          blockHeight: (3 + i).toString(),
+          transactionIndex: 0,
+          eventIndex: 0,
+        });
+      }
+      await Promise.all(events.map((e) => TendermintEventTable.create(e)));
 
-    //   await Promise.all(transfers.map((t) => TransferTable.create(t)));
+      // Create 5 transfers
+      const transfers: TransferCreateObject[] = [];
+      for (let i = 0; i < 5; i++) {
+        const eventId = TendermintEventTable.createEventId(
+          events[i].blockHeight,
+          events[i].transactionIndex,
+          events[i].eventIndex,
+        );
 
-    //   const { results: resultTransfers } = await TransferTable.findAllToOrFromParentSubaccount(
-    //     {
-    //       subaccountId: [defaultSubaccountId],
-    //       address: defaultAddress,
-    //       parentSubaccountNumber: 0,
-    //       limit: 3,
-    //     },
-    //     [],
-    //   );
+        transfers.push({
+          senderSubaccountId: defaultSubaccountId,
+          recipientSubaccountId: defaultSubaccountId2,
+          assetId: defaultAsset.id,
+          size: `${i + 1}`,
+          eventId,
+          transactionHash: `hash${i}`,
+          createdAt: createdDateTime.plus({ minutes: i }).toISO(),
+          createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
+        });
+      }
+      await Promise.all(transfers.map((t) => TransferTable.create(t)));
 
-    //   expect(resultTransfers.length).toEqual(3);
-    // });
+      const { results: resultTransfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 3,
+        },
+        [],
+      );
 
-    // it('Successfully finds all transfers to and from parent subaccount using pagination', async () => {
-    //   const transfers: TransferCreateObject[] = [];
-    //   for (let i = 0; i < 4; i++) {
-    //     const eventIdBuffer = Buffer.from(defaultTendermintEventId);
-    //     eventIdBuffer.writeUInt32BE(i, eventIdBuffer.length - 4);
+      expect(resultTransfers.length).toEqual(3);
+    });
 
-    //     transfers.push({
-    //       senderSubaccountId: defaultSubaccountId,
-    //       recipientSubaccountId: defaultSubaccountId2,
-    //       assetId: defaultAsset.id,
-    //       size: `${i + 1}`,
-    //       eventId: eventIdBuffer,
-    //       transactionHash: `hash${i}`,
-    //       createdAt: createdDateTime.plus({ minutes: i }).toISO(),
-    //       createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
-    //     });
-    //   }
+    it('Successfully finds all transfers to and from parent subaccount using pagination', async () => {
+      // Create 4 blocks first
+      const blocks: BlockCreateObject[] = [];
+      for (let i = 0; i < 4; i++) {
+        blocks.push({
+          blockHeight: (3 + i).toString(),
+          time: createdDateTime.plus({ minutes: i }).toISO(),
+        });
+      }
+      await Promise.all(blocks.map((b) => BlockTable.create(b)));
 
-    //   await Promise.all(transfers.map((t) => TransferTable.create(t)));
+      // Create 4 TendermintEvents
+      const events: TendermintEventCreateObject[] = [];
+      for (let i = 0; i < 4; i++) {
+        events.push({
+          blockHeight: (3 + i).toString(),
+          transactionIndex: 0,
+          eventIndex: 0,
+        });
+      }
+      await Promise.all(events.map((e) => TendermintEventTable.create(e)));
 
-    //   const responsePageOne = await TransferTable.findAllToOrFromParentSubaccount(
-    //     {
-    //       subaccountId: [defaultSubaccountId],
-    //       address: defaultAddress,
-    //       parentSubaccountNumber: 0,
-    //       limit: 2,
-    //       page: 1,
-    //     },
-    //     [],
-    //     { orderBy: [[TransferColumns.id, Ordering.ASC]] },
-    //   );
+      // Create 4 transfers
+      const transfers: TransferCreateObject[] = [];
+      for (let i = 0; i < 4; i++) {
+        const eventId = TendermintEventTable.createEventId(
+          events[i].blockHeight,
+          events[i].transactionIndex,
+          events[i].eventIndex,
+        );
 
-    //   expect(responsePageOne.results.length).toEqual(2);
-    //   expect(responsePageOne.offset).toEqual(0);
-    //   expect(responsePageOne.total).toEqual(4);
-    //   expect(responsePageOne.limit).toEqual(2);
+        transfers.push({
+          senderSubaccountId: defaultSubaccountId,
+          recipientSubaccountId: defaultSubaccountId2,
+          assetId: defaultAsset.id,
+          size: `${i + 1}`,
+          eventId,
+          transactionHash: `hash${i}`,
+          createdAt: createdDateTime.plus({ minutes: i }).toISO(),
+          createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
+        });
+      }
 
-    //   const responsePageTwo = await TransferTable.findAllToOrFromParentSubaccount(
-    //     {
-    //       subaccountId: [defaultSubaccountId],
-    //       address: defaultAddress,
-    //       parentSubaccountNumber: 0,
-    //       limit: 2,
-    //       page: 2,
-    //     },
-    //     [],
-    //     { orderBy: [[TransferColumns.id, Ordering.ASC]] },
-    //   );
+      await Promise.all(transfers.map((t) => TransferTable.create(t)));
 
-    //   expect(responsePageTwo.results.length).toEqual(2);
-    //   expect(responsePageTwo.offset).toEqual(2);
-    //   expect(responsePageTwo.total).toEqual(4);
-    //   expect(responsePageTwo.limit).toEqual(2);
-    // });
+      const responsePageOne = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 2,
+          page: 1,
+        },
+        [],
+        { orderBy: [[TransferColumns.id, Ordering.ASC]] },
+      );
+
+      expect(responsePageOne.results.length).toEqual(2);
+      expect(responsePageOne.offset).toEqual(0);
+      expect(responsePageOne.total).toEqual(4);
+      expect(responsePageOne.limit).toEqual(2);
+
+      const responsePageTwo = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 2,
+          page: 2,
+        },
+        [],
+        { orderBy: [[TransferColumns.id, Ordering.ASC]] },
+      );
+
+      expect(responsePageTwo.results.length).toEqual(2);
+      expect(responsePageTwo.offset).toEqual(2);
+      expect(responsePageTwo.total).toEqual(4);
+      expect(responsePageTwo.limit).toEqual(2);
+    });
 
     it('Successfully finds all transfers before or at the height', async () => {
       const transfer1: TransferCreateObject = {

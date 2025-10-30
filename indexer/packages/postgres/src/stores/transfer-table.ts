@@ -425,7 +425,13 @@ export async function findAllToOrFromParentSubaccount(
     const currentPage: number = Math.max(1, page);
     const offset: number = (currentPage - 1) * limit;
 
-    const count: { count?: string } = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
+    const count: { count?: string } = await baseQuery
+      .clone()
+      .clearSelect()  // Add this
+      .clearOrder()
+      .count('transfers.id as count')
+      .first() as unknown as { count?: string };
+
     baseQuery = baseQuery.offset(offset).limit(limit);
 
     return {
