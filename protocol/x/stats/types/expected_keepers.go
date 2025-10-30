@@ -16,4 +16,5 @@ type EpochsKeeper interface {
 type StakingKeeper interface {
 	GetDelegatorDelegations(ctx context.Context,
 		delegator sdk.AccAddress, maxRetrieve uint16) ([]stakingtypes.Delegation, error)
+	GetValidator(ctx context.Context, addr sdk.ValAddress) (stakingtypes.Validator, error)
 }
