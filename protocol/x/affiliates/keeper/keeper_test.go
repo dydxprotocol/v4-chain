@@ -220,7 +220,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.Equal(t, types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(
-		time.Duration(statstypes.StakedAmountCacheDurationSeconds+1) * time.Second,
+		time.Duration(statstypes.StakedBaseTokensCacheDurationSeconds+1) * time.Second,
 	))
 	// Add more staked amount to upgrade tier
 	err = stakingKeeper.SetDelegation(ctx,
