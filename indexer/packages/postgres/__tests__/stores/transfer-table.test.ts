@@ -14,6 +14,7 @@ import { seedData } from '../helpers/mock-generators';
 import {
   createdDateTime,
   createdHeight,
+  defaultAddress,
   defaultAsset,
   defaultAsset2,
   defaultDeposit,
@@ -29,6 +30,7 @@ import {
   defaultTransfer3,
   defaultWalletAddress,
   defaultWithdrawal,
+  isolatedSubaccountId,
 } from '../helpers/constants';
 import Big from 'big.js';
 import { CheckViolationError } from 'objection';
@@ -659,6 +661,358 @@ describe('Transfer store', () => {
       );
 
       expect(netTransfers).toEqual('0');
+    });
+  });
+
+  describe('findAllToOrFromParentSubaccount', () => {
+    beforeEach(async () => {
+      await seedData();
+    });
+
+    beforeAll(async () => {
+      await migrate();
+    });
+
+    afterEach(async () => {
+      await clearData();
+    });
+
+    afterAll(async () => {
+      await teardown();
+    });
+
+    it('Successfully excludes transfers between child subaccounts of the same parent', async () => {
+    // defaultSubaccount (subaccount 0) -> isolatedSubaccount (subaccount 128)
+    // Both have parent subaccount 0 (0 % 128 = 0, 128 % 128 = 0)
+      const sameParentTransfer: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId,
+        recipientSubaccountId: isolatedSubaccountId,
+        assetId: defaultAsset.id,
+        size: '100',
+        eventId: defaultTendermintEventId,
+        transactionHash: '',
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+
+      // defaultSubaccount (parent 0) -> defaultSubaccount2 (parent 1)
+      const differentParentTransfer: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId,
+        recipientSubaccountId: defaultSubaccountId2,
+        assetId: defaultAsset.id,
+        size: '200',
+        eventId: defaultTendermintEventId2,
+        transactionHash: '',
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+
+      await Promise.all([
+        TransferTable.create(sameParentTransfer),
+        TransferTable.create(differentParentTransfer),
+      ]);
+
+      const subaccountIds = [defaultSubaccountId, isolatedSubaccountId];
+
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: subaccountIds,
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(1);
+      expect(transfers[0]).toEqual(expect.objectContaining(differentParentTransfer));
+    });
+
+    it('Successfully includes transfers from different addresses', async () => {
+      const crossAddressTransfer: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId2,
+        recipientSubaccountId: defaultSubaccountId,
+        assetId: defaultAsset.id,
+        size: '150',
+        eventId: defaultTendermintEventId,
+        transactionHash: '',
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+
+      await TransferTable.create(crossAddressTransfer);
+
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(1);
+      expect(transfers[0]).toEqual(expect.objectContaining(crossAddressTransfer));
+    });
+
+    it('Successfully includes deposits to child subaccounts', async () => {
+      await WalletTable.create({
+        address: defaultWalletAddress,
+        totalTradingRewards: '0',
+        totalVolume: '0',
+      });
+
+      const deposit: TransferCreateObject = {
+        senderWalletAddress: defaultWalletAddress,
+        recipientSubaccountId: isolatedSubaccountId,
+        assetId: defaultAsset.id,
+        size: '500',
+        eventId: defaultTendermintEventId,
+        transactionHash: '',
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+
+      await TransferTable.create(deposit);
+
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [isolatedSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(1);
+      expect(transfers[0]).toEqual(expect.objectContaining(deposit));
+    });
+
+    it('Successfully includes withdrawals from child subaccounts', async () => {
+      await WalletTable.create({
+        address: defaultWalletAddress,
+        totalTradingRewards: '0',
+        totalVolume: '0',
+      });
+
+      const withdrawal: TransferCreateObject = {
+        senderSubaccountId: isolatedSubaccountId,
+        recipientWalletAddress: defaultWalletAddress,
+        assetId: defaultAsset.id,
+        size: '300',
+        eventId: defaultTendermintEventId,
+        transactionHash: '',
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+
+      await TransferTable.create(withdrawal);
+
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [isolatedSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(1);
+      expect(transfers[0]).toEqual(expect.objectContaining(withdrawal));
+    });
+
+    // it('Successfully respects limit parameter', async () => {
+    //   const transfers: TransferCreateObject[] = [];
+    //   for (let i = 0; i < 5; i++) {
+    //     const eventIdBuffer = Buffer.from(defaultTendermintEventId);
+    //     eventIdBuffer.writeUInt32BE(i, eventIdBuffer.length - 4);
+
+    //     transfers.push({
+    //       senderSubaccountId: defaultSubaccountId,
+    //       recipientSubaccountId: defaultSubaccountId2,
+    //       assetId: defaultAsset.id,
+    //       size: `${i + 1}`,
+    //       eventId: eventIdBuffer,
+    //       transactionHash: `hash${i}`,
+    //       createdAt: createdDateTime.plus({ minutes: i }).toISO(),
+    //       createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
+    //     });
+    //   }
+
+    //   await Promise.all(transfers.map((t) => TransferTable.create(t)));
+
+    //   const { results: resultTransfers } = await TransferTable.findAllToOrFromParentSubaccount(
+    //     {
+    //       subaccountId: [defaultSubaccountId],
+    //       address: defaultAddress,
+    //       parentSubaccountNumber: 0,
+    //       limit: 3,
+    //     },
+    //     [],
+    //   );
+
+    //   expect(resultTransfers.length).toEqual(3);
+    // });
+
+    // it('Successfully finds all transfers to and from parent subaccount using pagination', async () => {
+    //   const transfers: TransferCreateObject[] = [];
+    //   for (let i = 0; i < 4; i++) {
+    //     const eventIdBuffer = Buffer.from(defaultTendermintEventId);
+    //     eventIdBuffer.writeUInt32BE(i, eventIdBuffer.length - 4);
+
+    //     transfers.push({
+    //       senderSubaccountId: defaultSubaccountId,
+    //       recipientSubaccountId: defaultSubaccountId2,
+    //       assetId: defaultAsset.id,
+    //       size: `${i + 1}`,
+    //       eventId: eventIdBuffer,
+    //       transactionHash: `hash${i}`,
+    //       createdAt: createdDateTime.plus({ minutes: i }).toISO(),
+    //       createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
+    //     });
+    //   }
+
+    //   await Promise.all(transfers.map((t) => TransferTable.create(t)));
+
+    //   const responsePageOne = await TransferTable.findAllToOrFromParentSubaccount(
+    //     {
+    //       subaccountId: [defaultSubaccountId],
+    //       address: defaultAddress,
+    //       parentSubaccountNumber: 0,
+    //       limit: 2,
+    //       page: 1,
+    //     },
+    //     [],
+    //     { orderBy: [[TransferColumns.id, Ordering.ASC]] },
+    //   );
+
+    //   expect(responsePageOne.results.length).toEqual(2);
+    //   expect(responsePageOne.offset).toEqual(0);
+    //   expect(responsePageOne.total).toEqual(4);
+    //   expect(responsePageOne.limit).toEqual(2);
+
+    //   const responsePageTwo = await TransferTable.findAllToOrFromParentSubaccount(
+    //     {
+    //       subaccountId: [defaultSubaccountId],
+    //       address: defaultAddress,
+    //       parentSubaccountNumber: 0,
+    //       limit: 2,
+    //       page: 2,
+    //     },
+    //     [],
+    //     { orderBy: [[TransferColumns.id, Ordering.ASC]] },
+    //   );
+
+    //   expect(responsePageTwo.results.length).toEqual(2);
+    //   expect(responsePageTwo.offset).toEqual(2);
+    //   expect(responsePageTwo.total).toEqual(4);
+    //   expect(responsePageTwo.limit).toEqual(2);
+    // });
+
+    it('Successfully finds all transfers before or at the height', async () => {
+      const transfer1: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId,
+        recipientSubaccountId: defaultSubaccountId2,
+        assetId: defaultAsset.id,
+        size: '100',
+        eventId: defaultTendermintEventId,
+        transactionHash: '',
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: '10',
+      };
+
+      const transfer2: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId,
+        recipientSubaccountId: defaultSubaccountId2,
+        assetId: defaultAsset.id,
+        size: '200',
+        eventId: defaultTendermintEventId2,
+        transactionHash: '',
+        createdAt: createdDateTime.plus({ minutes: 1 }).toISO(),
+        createdAtHeight: '20',
+      };
+
+      await Promise.all([
+        TransferTable.create(transfer1),
+        TransferTable.create(transfer2),
+      ]);
+
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+          createdBeforeOrAtHeight: '10',
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(1);
+      expect(transfers[0]).toEqual(expect.objectContaining(transfer1));
+    });
+
+    it('Successfully finds all transfers before or at the time', async () => {
+      const createdAt1 = '2000-01-01T00:00:00.000Z';
+      const createdAt2 = '2000-01-02T00:00:00.000Z';
+
+      const transfer1: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId,
+        recipientSubaccountId: defaultSubaccountId2,
+        assetId: defaultAsset.id,
+        size: '100',
+        eventId: defaultTendermintEventId,
+        transactionHash: '',
+        createdAt: createdAt1,
+        createdAtHeight: createdHeight,
+      };
+
+      const transfer2: TransferCreateObject = {
+        senderSubaccountId: defaultSubaccountId,
+        recipientSubaccountId: defaultSubaccountId2,
+        assetId: defaultAsset.id,
+        size: '200',
+        eventId: defaultTendermintEventId2,
+        transactionHash: '',
+        createdAt: createdAt2,
+        createdAtHeight: (parseInt(createdHeight, 10) + 1).toString(),
+      };
+
+      await Promise.all([
+        TransferTable.create(transfer1),
+        TransferTable.create(transfer2),
+      ]);
+
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+          createdBeforeOrAt: createdAt1,
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(1);
+      expect(transfers[0]).toEqual(expect.objectContaining(transfer1));
+    });
+
+    it('Successfully returns empty results when no transfers match criteria', async () => {
+      const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
+        {
+          subaccountId: [defaultSubaccountId],
+          address: defaultAddress,
+          parentSubaccountNumber: 0,
+          limit: 100,
+        },
+        [],
+      );
+
+      expect(transfers.length).toEqual(0);
     });
   });
 });

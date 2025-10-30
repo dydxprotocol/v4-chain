@@ -105,6 +105,7 @@ export enum QueryableField {
   SVM_ADDRESS = 'svm_address',
   EVM_ADDRESS = 'evm_address',
   DYDX_ADDRESS = 'dydx_address',
+  PARENT_SUBACCOUNT_NUMBER = 'parentSubaccountNumber',
 }
 
 export interface QueryConfig {
@@ -252,6 +253,16 @@ export interface ToAndFromSubaccountTransferQueryConfig extends QueryConfig {
   [QueryableField.CREATED_BEFORE_OR_AT]?: string | undefined,
   [QueryableField.CREATED_AFTER_HEIGHT]?: string | undefined,
   [QueryableField.CREATED_AFTER]?: string | undefined,
+}
+
+export interface ParentSubaccountTransferQueryConfig extends QueryConfig {
+  [QueryableField.SUBACCOUNT_ID]: string[],
+  [QueryableField.ADDRESS]: string,
+  [QueryableField.PARENT_SUBACCOUNT_NUMBER]: number,
+  [QueryableField.LIMIT]?: number,
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.PAGE]?: number,
 }
 
 export interface OraclePriceQueryConfig extends QueryConfig {
