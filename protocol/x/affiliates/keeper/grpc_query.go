@@ -40,7 +40,7 @@ func (k Keeper) AffiliateInfo(c context.Context,
 
 	userStats := k.statsKeeper.GetUserStats(ctx, addr.String())
 	referredVolume := userStats.Affiliate_30DReferredVolumeQuoteQuantums
-	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.GetAddress())
+	stakedAmount := k.statsKeeper.GetStakedBaseTokens(ctx, req.GetAddress())
 
 	return &types.AffiliateInfoResponse{
 		IsWhitelisted:             isWhitelisted,

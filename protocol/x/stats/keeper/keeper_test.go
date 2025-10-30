@@ -297,22 +297,36 @@ func TestExpireOldStats(t *testing.T) {
 	require.NotNil(t, k.GetEpochStatsOrNil(ctx, uint32(12)))
 }
 
-func TestGetStakedAmount(t *testing.T) {
+func TestGetStakedBaseTokens(t *testing.T) {
 	testCases := []struct {
-		name              string
-		wholeCoinsToStake uint32
+		name                 string
+		userShares           uint32
+		validatorTotalTokens uint32
+		validatorTotalShares uint32
 	}{
 		{
-			name:              "100 whole coins staked",
-			wholeCoinsToStake: 100,
+			name:                 "1 share = 1 base token",
+			userShares:           100,
+			validatorTotalTokens: 1000,
+			validatorTotalShares: 1000,
 		},
 		{
-			name:              "100,000 whole coins staked",
-			wholeCoinsToStake: 100_000,
+			name:                 "1 share = 1.5 base tokens",
+			userShares:           100,
+			validatorTotalTokens: 1500,
+			validatorTotalShares: 1000,
 		},
 		{
-			name:              "0 coins staked",
-			wholeCoinsToStake: 0,
+			name:                 "1 share = 2 base tokens",
+			userShares:           100,
+			validatorTotalTokens: 2000,
+			validatorTotalShares: 1000,
+		},
+		{
+			name:                 "1 share = 0.5 base tokens",
+			userShares:           100,
+			validatorTotalTokens: 500,
+			validatorTotalShares: 1000,
 		},
 	}
 
@@ -322,24 +336,43 @@ func TestGetStakedAmount(t *testing.T) {
 			ctx := tApp.InitChain()
 			statsKeeper := tApp.App.StatsKeeper
 			stakingKeeper := tApp.App.StakingKeeper
+
 			expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
-			coinsToStakeQuantums := new(big.Int).Mul(
-				lib.BigU(tc.wholeCoinsToStake),
-				expMultiplier,
-			)
-			delegation := stakingtypes.NewDelegation(
-				constants.AliceAccAddress.String(), constants.AliceValAddress.String(),
-				math.LegacyNewDecFromBigInt(coinsToStakeQuantums))
-			err := stakingKeeper.SetDelegation(ctx, delegation)
+
+			// Set validator's tokens and shares
+			validator, err := stakingKeeper.GetValidator(ctx, constants.AliceValAddress)
 			require.NoError(t, err)
 
-			receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
-			require.Equal(t, coinsToStakeQuantums, receivedCoins)
+			validator.Tokens = math.NewIntFromBigInt(
+				new(big.Int).Mul(lib.BigU(tc.validatorTotalTokens), expMultiplier),
+			)
+			validator.DelegatorShares = math.LegacyNewDecFromBigInt(
+				new(big.Int).Mul(lib.BigU(tc.validatorTotalShares), expMultiplier),
+			)
+			err = stakingKeeper.SetValidator(ctx, validator)
+			require.NoError(t, err)
+
+			// Create user delegation
+			userSharesBigInt := new(big.Int).Mul(lib.BigU(tc.userShares), expMultiplier)
+			delegation := stakingtypes.NewDelegation(
+				constants.AliceAccAddress.String(),
+				constants.AliceValAddress.String(),
+				math.LegacyNewDecFromBigInt(userSharesBigInt),
+			)
+			err = stakingKeeper.SetDelegation(ctx, delegation)
+			require.NoError(t, err)
+
+			// User should have `userShares * (validator tokens / validator shares)` number of base tokens
+			expectedTokens := new(big.Int).Mul(userSharesBigInt, lib.BigU(tc.validatorTotalTokens))
+			expectedTokens.Div(expectedTokens, lib.BigU(tc.validatorTotalShares))
+
+			actualTokens := statsKeeper.GetStakedBaseTokens(ctx, constants.AliceAccAddress.String())
+			require.Equal(t, expectedTokens, actualTokens)
 		})
 	}
 }
 
-func TestGetStakedAmount_Cache_Hit(t *testing.T) {
+func TestGetStakedBaseTokens_Cache_Hit(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	statsKeeper := tApp.App.StatsKeeper
@@ -348,16 +381,16 @@ func TestGetStakedAmount_Cache_Hit(t *testing.T) {
 		lib.BigI(100),
 		expMultiplier,
 	)
-	statsKeeper.UnsafeSetCachedStakedAmount(ctx, constants.AliceAccAddress.String(), &types.CachedStakeAmount{
-		StakedAmount: dtypes.NewIntFromBigInt(coinsToStakeQuantums),
-		CachedAt:     ctx.BlockTime().Unix(),
+	statsKeeper.UnsafeSetCachedStakedBaseTokens(ctx, constants.AliceAccAddress.String(), &types.CachedStakedBaseTokens{
+		StakedBaseTokens: dtypes.NewIntFromBigInt(coinsToStakeQuantums),
+		CachedAt:         ctx.BlockTime().Unix(),
 	})
 
-	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
+	receivedCoins := statsKeeper.GetStakedBaseTokens(ctx, constants.AliceAccAddress.String())
 	require.Equal(t, coinsToStakeQuantums, receivedCoins)
 }
 
-func TestGetStakedAmount_Cache_Miss(t *testing.T) {
+func TestGetStakedBaseTokens_Cache_Miss(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	statsKeeper := tApp.App.StatsKeeper
@@ -376,9 +409,9 @@ func TestGetStakedAmount_Cache_Miss(t *testing.T) {
 	)
 
 	// set expired delegation
-	statsKeeper.UnsafeSetCachedStakedAmount(ctx, constants.AliceAccAddress.String(), &types.CachedStakeAmount{
-		StakedAmount: dtypes.NewIntFromBigInt(expiredCoinsToStakeQuantums),
-		CachedAt:     ctx.BlockTime().Unix(),
+	statsKeeper.UnsafeSetCachedStakedBaseTokens(ctx, constants.AliceAccAddress.String(), &types.CachedStakedBaseTokens{
+		StakedBaseTokens: dtypes.NewIntFromBigInt(expiredCoinsToStakeQuantums),
+		CachedAt:         ctx.BlockTime().Unix(),
 	})
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(epochstypes.StatsEpochDuration+1) * time.Second))
@@ -389,6 +422,6 @@ func TestGetStakedAmount_Cache_Miss(t *testing.T) {
 	err := stakingKeeper.SetDelegation(ctx, delegation)
 	require.NoError(t, err)
 
-	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
+	receivedCoins := statsKeeper.GetStakedBaseTokens(ctx, constants.AliceAccAddress.String())
 	require.Equal(t, latestCoinsToStakeQuantums, receivedCoins)
 }
