@@ -468,7 +468,7 @@ describe('OrderHandler', () => {
           {
             sumClose: totalFilled,
             exitPrice: makerPrice,
-            totalRealizedPnl: '-2.5',
+            totalRealizedPnl: '-2.5000',
           },
         ),
         expectCandlesUpdated(),
@@ -2648,7 +2648,7 @@ describe('OrderHandler', () => {
 
     await onMessage(kafkaMessage);
 
-    const expectedRealizedPnl = '-2.5';
+    const expectedRealizedPnl = '-2.5000';
     const fillInHuman = '0.0001';
     const makerPriceHuman = '10000';
 
