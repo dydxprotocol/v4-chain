@@ -220,7 +220,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.Equal(t, types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(
-		time.Duration(statstypes.StakedAmountCacheDurationSeconds+1) * time.Second,
+		time.Duration(statstypes.StakedBaseTokensCacheDurationSeconds+1) * time.Second,
 	))
 	// Add more staked amount to upgrade tier
 	err = stakingKeeper.SetDelegation(ctx,
@@ -235,7 +235,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
-	require.Equal(t, types.DefaultAffiliateTiers.Tiers[1].TakerFeeSharePpm, feeSharePpm)
+	require.Equal(t, types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
 }
 
 // Test volume qualifies for tier 2 and stake qualifies for tier 3
@@ -288,8 +288,8 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, affiliate, map[string]bool{})
 	require.NoError(t, err)
 
-	require.Equal(t, uint32(3), tierLevel)
-	require.Equal(t, affiliateTiers.Tiers[3].TakerFeeSharePpm, feeSharePpm)
+	require.Equal(t, uint32(2), tierLevel)
+	require.Equal(t, affiliateTiers.Tiers[2].TakerFeeSharePpm, feeSharePpm)
 }
 
 func TestUpdateAffiliateTiers(t *testing.T) {
@@ -1116,8 +1116,8 @@ func TestGetTierForAffiliateOverrides(t *testing.T) {
 
 	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), map[string]bool{})
 	require.NoError(t, err)
-	require.Equal(t, uint32(3), tierLevel)
-	require.Equal(t, uint32(150_000), feeSharePpm)
+	require.Equal(t, uint32(0), tierLevel)
+	require.Equal(t, uint32(50_000), feeSharePpm)
 
 	tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String(), map[string]bool{
 		constants.AliceAccAddress.String(): true,

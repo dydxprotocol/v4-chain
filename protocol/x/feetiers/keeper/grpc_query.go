@@ -152,7 +152,7 @@ func (k Keeper) UserStakingTier(
 	_, userFeeTier := k.getUserFeeTier(ctx, req.Address, affiliateParameters.RefereeMinimumFeeTierIdx)
 
 	// Get user's staking info
-	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.Address)
+	stakedAmount := k.statsKeeper.GetStakedBaseTokens(ctx, req.Address)
 	discountPpm := k.GetStakingDiscountPpm(ctx, userFeeTier.Name, stakedAmount)
 
 	return &types.QueryUserStakingTierResponse{

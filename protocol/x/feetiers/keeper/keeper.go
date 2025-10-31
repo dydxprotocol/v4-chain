@@ -159,7 +159,7 @@ func (k Keeper) GetPerpetualFeePpm(
 				"error", err,
 			)
 		} else {
-			stakedAmount := k.statsKeeper.GetStakedAmount(ctx, address)
+			stakedAmount := k.statsKeeper.GetStakedBaseTokens(ctx, address)
 			stakingDiscountPpm := k.GetStakingDiscountPpm(ctx, userTier.Name, stakedAmount)
 			if stakingDiscountPpm > 0 {
 				// Final fee

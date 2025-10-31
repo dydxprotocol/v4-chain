@@ -215,23 +215,6 @@ func (k Keeper) GetTierForAffiliate(
 		currentTier = uint32(index)
 	}
 
-	if currentTier == maxTierLevel {
-		return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
-	}
-
-	numCoinsStaked := k.statsKeeper.GetStakedAmount(ctx, affiliateAddr)
-	for i := currentTier + 1; i < numTiers; i++ {
-		// required staked coins is strictly increasing as tiers are traversed in order.
-		expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
-		reqStakedCoins := new(big.Int).Mul(
-			lib.BigU(tiers[i].ReqStakedWholeCoins),
-			expMultiplier,
-		)
-		if numCoinsStaked.Cmp(reqStakedCoins) < 0 {
-			break
-		}
-		currentTier = i
-	}
 	return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
 }
 

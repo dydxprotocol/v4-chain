@@ -13,7 +13,7 @@ import (
 type StatsKeeper interface {
 	GetUserStats(ctx sdk.Context, address string) *statstypes.UserStats
 	GetGlobalStats(ctx sdk.Context) *statstypes.GlobalStats
-	GetStakedAmount(ctx sdk.Context, delegatorAddr string) *big.Int
+	GetStakedBaseTokens(ctx sdk.Context, delegatorAddr string) *big.Int
 }
 
 // VaultKeeper defines the expected vault keeper.
