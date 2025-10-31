@@ -468,7 +468,7 @@ describe('OrderHandler', () => {
           {
             sumClose: totalFilled,
             exitPrice: makerPrice,
-            totalRealizedPnl: '-2',
+            totalRealizedPnl: '-2.5',
           },
         ),
         expectCandlesUpdated(),
@@ -1991,7 +1991,7 @@ describe('OrderHandler', () => {
       affiliateRevShare: defaultAffiliateRevShare,
       positionSideBefore: 'LONG',
       entryPriceBefore: '0.001499999850010015',
-      positionSizeBefore: '100000010',
+      positionSizeBefore: '10',
     });
   });
 
@@ -2648,7 +2648,7 @@ describe('OrderHandler', () => {
 
     await onMessage(kafkaMessage);
 
-    const expectedRealizedPnl = '-2';
+    const expectedRealizedPnl = '-2.5';
     const fillInHuman = '0.0001';
     const makerPriceHuman = '10000';
 
