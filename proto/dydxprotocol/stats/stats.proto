@@ -75,10 +75,10 @@ message UserStats {
   uint64 affiliate_30d_referred_volume_quote_quantums = 4;
 }
 
-// CachedStakeAmount stores the last calculated total staked amount for address
-message CachedStakeAmount {
-  // Last calculated total staked amount by the delegator (in coin amount).
-  bytes staked_amount = 1 [
+// CachedStakedBaseTokens stores the last calculated total staked base tokens
+message CachedStakedBaseTokens {
+  // Last calculated total staked base tokens by the delegator.
+  bytes staked_base_tokens = 1 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
