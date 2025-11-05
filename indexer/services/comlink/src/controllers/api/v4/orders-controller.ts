@@ -131,21 +131,21 @@ async function listOrdersCommon(
     redisOrderMap,
     { results: postgresOrders },
   ]: [
-      RedisOrderMap,
-      PaginationFromDatabase<OrderFromDatabase>,
-    ] = await Promise.all([
-      getRedisOrderMapForSubaccountIds(
-        subaccountIds,
-        clobPairId,
-        side,
-        type,
-        goodTilBlockBeforeOrAt,
-        goodTilBlockAfter,
-        goodTilBlockTimeBeforeOrAt,
-        goodTilBlockTimeAfter,
-      ),
-      OrderTable.findAll(
-        orderQueryConfig, [], {
+    RedisOrderMap,
+    PaginationFromDatabase<OrderFromDatabase>,
+  ] = await Promise.all([
+    getRedisOrderMapForSubaccountIds(
+      subaccountIds,
+      clobPairId,
+      side,
+      type,
+      goodTilBlockBeforeOrAt,
+      goodTilBlockAfter,
+      goodTilBlockTimeBeforeOrAt,
+      goodTilBlockTimeAfter,
+    ),
+    OrderTable.findAll(
+      orderQueryConfig, [], {
         ...DEFAULT_POSTGRES_OPTIONS,
         orderBy: [
           // Order by `goodTilBlock` and then order by `goodTilBlockTime`
@@ -155,8 +155,8 @@ async function listOrdersCommon(
           [OrderColumns.goodTilBlockTime, ordering],
         ],
       },
-      ),
-    ]);
+    ),
+  ]);
 
   const redisOrderIds: string[] = _.map(
     Object.values(redisOrderMap),
@@ -218,19 +218,19 @@ class OrdersController extends Controller {
   @Get('/')
   async listOrders(
     @Query() address: string,
-    @Query() subaccountNumber: number,
-    @Query() limit?: number,
-    @Query() ticker?: string,
-    @Query() side?: OrderSide,
-    @Query() type?: OrderType,
-    @Query() includeTypes?: OrderType[],
-    @Query() excludeTypes?: OrderType[],
-    @Query() status?: APIOrderStatus[],
-    @Query() goodTilBlockBeforeOrAt?: number,
-    @Query() goodTilBlockAfter?: number,
-    @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
-    @Query() goodTilBlockTimeAfter?: IsoString,
-    @Query() returnLatestOrders?: boolean,
+      @Query() subaccountNumber: number,
+      @Query() limit?: number,
+      @Query() ticker?: string,
+      @Query() side?: OrderSide,
+      @Query() type?: OrderType,
+      @Query() includeTypes?: OrderType[],
+      @Query() excludeTypes?: OrderType[],
+      @Query() status?: APIOrderStatus[],
+      @Query() goodTilBlockBeforeOrAt?: number,
+      @Query() goodTilBlockAfter?: number,
+      @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
+      @Query() goodTilBlockTimeAfter?: IsoString,
+      @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
 
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
@@ -256,19 +256,19 @@ class OrdersController extends Controller {
   @Get('/parentSubaccountNumber')
   async listOrdersForParentSubaccount(
     @Query() address: string,
-    @Query() parentSubaccountNumber: number,
-    @Query() limit?: number,
-    @Query() ticker?: string,
-    @Query() side?: OrderSide,
-    @Query() type?: OrderType,
-    @Query() includeTypes?: OrderType[],
-    @Query() excludeTypes?: OrderType[],
-    @Query() status?: APIOrderStatus[],
-    @Query() goodTilBlockBeforeOrAt?: number,
-    @Query() goodTilBlockAfter?: number,
-    @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
-    @Query() goodTilBlockTimeAfter?: IsoString,
-    @Query() returnLatestOrders?: boolean,
+      @Query() parentSubaccountNumber: number,
+      @Query() limit?: number,
+      @Query() ticker?: string,
+      @Query() side?: OrderSide,
+      @Query() type?: OrderType,
+      @Query() includeTypes?: OrderType[],
+      @Query() excludeTypes?: OrderType[],
+      @Query() status?: APIOrderStatus[],
+      @Query() goodTilBlockBeforeOrAt?: number,
+      @Query() goodTilBlockAfter?: number,
+      @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
+      @Query() goodTilBlockTimeAfter?: IsoString,
+      @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
     const childIdtoSubaccountNumber: Record<string, number> = {};
     getChildSubaccountNums(parentSubaccountNumber).forEach(
@@ -306,12 +306,12 @@ class OrdersController extends Controller {
       postgresOrder,
       redisOrder,
     ]: [
-        OrderFromDatabase | undefined,
-        RedisOrder | null,
-      ] = await Promise.all([
-        OrderTable.findById(orderId),
-        OrdersCache.getOrder(orderId, redisReadOnlyClient),
-      ]);
+      OrderFromDatabase | undefined,
+      RedisOrder | null,
+    ] = await Promise.all([
+      OrderTable.findById(orderId),
+      OrdersCache.getOrder(orderId, redisReadOnlyClient),
+    ]);
 
     // Get subaccount number and subaccountId from either Redis or Postgres
     let subaccountNumber: number | undefined;
