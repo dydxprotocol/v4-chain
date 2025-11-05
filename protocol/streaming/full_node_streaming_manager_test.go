@@ -613,12 +613,28 @@ func TestDoFilterTakerOrderBySubaccount(t *testing.T) {
 		subaccountIds []satypes.SubaccountId
 		shouldFilter  bool
 	}{
-		"nilTakerOrder": {
+		"nilStreamUpdateTakerOrder": {
 			takerOrder:    nil,
 			subaccountIds: []satypes.SubaccountId{},
 			shouldFilter:  false,
 		},
-		"nilTakerOrderSubaccountId": {
+		"nilTakerOrder": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: nil,
+			},
+			subaccountIds: []satypes.SubaccountId{},
+			shouldFilter:  false,
+		},
+		"nilTakerOrderTakerOrder": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder{
+					TakerOrder: nil,
+				},
+			},
+			subaccountIds: []satypes.SubaccountId{},
+			shouldFilter:  false,
+		},
+		"nilOrder": {
 			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
 				TakerOrder: &clobtypes.StreamTakerOrder{
 					TakerOrder: &clobtypes.StreamTakerOrder_Order{
