@@ -1706,7 +1706,7 @@ describe('OrderHandler', () => {
       affiliateRevShare: defaultAffiliateRevShare,
       positionSideBefore: 'LONG',
       entryPriceBefore: '15000',
-      positionSizeBefore: '100000010',
+      positionSizeBefore: '10',
     });
 
     await Promise.all([
@@ -1991,7 +1991,7 @@ describe('OrderHandler', () => {
       affiliateRevShare: defaultAffiliateRevShare,
       positionSideBefore: 'LONG',
       entryPriceBefore: '0.001499999850010015',
-      positionSizeBefore: '10',
+      positionSizeBefore: '100000010',
     });
   });
 
