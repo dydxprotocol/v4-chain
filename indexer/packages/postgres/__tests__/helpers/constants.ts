@@ -47,6 +47,7 @@ import {
   PerpetualMarketType,
   PerpetualPositionCreateObject,
   PerpetualPositionStatus,
+  PnlCreateObject,
   PnlTicksCreateObject,
   PositionSide,
   SubaccountCreateObject,
@@ -62,6 +63,7 @@ import {
   PersistentCacheCreateObject,
   VaultCreateObject,
   VaultStatus,
+  BridgeInformationCreateObject,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 
@@ -1114,4 +1116,47 @@ export const defaultFundingPayment2 = {
   rate: '0.0002',
   payment: '-1.2',
   fundingIndex: '5.6',
+};
+
+// ==============  PnL  =================
+
+export const defaultPnl: PnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  createdAt: defaultBlock.time,
+  createdAtHeight: defaultBlock.blockHeight,
+  equity: '10031.25',
+  netTransfers: '10000.00',
+  totalPnl: '31.25',
+};
+
+export const defaultPnl2: PnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  createdAt: DateTime.utc(2022, 6, 5).toISO(),
+  createdAtHeight: '5',
+  equity: '10013.00',
+  netTransfers: '10000.00',
+  totalPnl: '13.00',
+};
+
+// ============== Bridge Information ==============
+export const defaultBridgeInformation: BridgeInformationCreateObject = {
+  from_address: '0x1234567890abcdef1234567890abcdef12345678',
+  chain_id: 'ethereum',
+  amount: '1000000',
+  created_at: createdDateTime.toISO(),
+};
+
+export const defaultBridgeInformation2: BridgeInformationCreateObject = {
+  from_address: '0x9876543210fedcba9876543210fedcba98765432',
+  chain_id: 'polygon',
+  amount: '2000000',
+  transaction_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+  created_at: DateTime.utc(2023, 1, 2).toISO(),
+};
+
+export const defaultBridgeInformation3: BridgeInformationCreateObject = {
+  from_address: '0x1234567890abcdef1234567890abcdef12345678',
+  chain_id: 'avalanche',
+  amount: '3000000',
+  created_at: DateTime.utc(2023, 1, 3).toISO(),
 };

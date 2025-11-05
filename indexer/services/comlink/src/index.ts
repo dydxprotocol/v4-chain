@@ -9,6 +9,7 @@ import { startVaultStartPnlCache } from './caches/vault-start-pnl';
 import config from './config';
 import IndexV4 from './controllers/api/index-v4';
 import { connect as connectToRedis, connectReadOnly as connectToRedisReadOnly } from './helpers/redis/redis-controller';
+import { initializeAmplitude } from './lib/amplitude-helpers';
 import Server from './request-helpers/server';
 
 process.on('SIGTERM', () => {
@@ -35,6 +36,9 @@ function startServer() {
 
 async function start() {
   startBugsnag();
+
+  // Initialize Amplitude
+  initializeAmplitude();
 
   // Initialize PerpetualMarkets cache
   await Promise.all([

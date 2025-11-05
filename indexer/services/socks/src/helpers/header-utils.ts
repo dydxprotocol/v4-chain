@@ -1,8 +1,12 @@
-import { CountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { GeoOriginHeaders } from '@dydxprotocol-indexer/compliance';
 
 import { IncomingMessage } from '../types';
 
-export function getCountry(req: IncomingMessage): string | undefined {
-  const countryHeaders: CountryHeaders = req.headers as CountryHeaders;
-  return countryHeaders['cf-ipcountry'];
+export function getGeoOriginHeaders(req: IncomingMessage): GeoOriginHeaders {
+  const geoOriginHeaders = req.headers as GeoOriginHeaders;
+  return {
+    'geo-origin-country': geoOriginHeaders['geo-origin-country'],
+    'geo-origin-region': geoOriginHeaders['geo-origin-region'],
+    'geo-origin-status': geoOriginHeaders['geo-origin-status'],
+  } as GeoOriginHeaders;
 }

@@ -51,7 +51,7 @@ import {
   VaultMapping,
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
-import { InvalidParamError, NotFoundError } from './errors';
+import { InvalidParamError, NotFoundError, TurnkeyError } from './errors';
 
 /* ------- GENERIC HELPERS ------- */
 
@@ -74,6 +74,9 @@ export function handleControllerError(
   }
   if (error instanceof InvalidParamError) {
     return handleInvalidParamError(error.message, res);
+  }
+  if (error instanceof TurnkeyError) {
+    return handleTurnkeyError(error, res);
   }
   return handleInternalServerError(
     at,
@@ -125,6 +128,18 @@ function handleNotFoundError(
   return res.status(404).json({
     errors: [{
       msg: message,
+    }],
+  });
+}
+
+function handleTurnkeyError(
+  error: TurnkeyError,
+  res: express.Response,
+): express.Response {
+  return res.status(400).json({
+    errors: [{
+      msg: error.message,
+      type: 'TURNKEY_ERROR',
     }],
   });
 }
@@ -702,11 +717,9 @@ export function aggregateHourlyPnlTicks(
         truncatedTime,
         {
           ...aggregatedTick,
-          equity: (parseFloat(aggregatedTick.equity) + parseFloat(pnlTick.equity)).toString(),
-          totalPnl: (parseFloat(aggregatedTick.totalPnl) + parseFloat(pnlTick.totalPnl)).toString(),
-          netTransfers: (
-            parseFloat(aggregatedTick.netTransfers) + parseFloat(pnlTick.netTransfers)
-          ).toString(),
+          equity: Big(aggregatedTick.equity).plus(pnlTick.equity).toString(),
+          totalPnl: Big(aggregatedTick.totalPnl).plus(pnlTick.totalPnl).toString(),
+          netTransfers: Big(aggregatedTick.netTransfers).plus(pnlTick.netTransfers).toString(),
         },
       );
       hourlySubaccountIds.set(truncatedTime, subaccountIds);

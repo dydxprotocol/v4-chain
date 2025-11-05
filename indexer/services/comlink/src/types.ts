@@ -18,6 +18,7 @@ import {
   PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PnlFromDatabase,
   PnlTickInterval,
   PnlTicksFromDatabase,
   PositionSide,
@@ -28,6 +29,7 @@ import {
   VaultFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { TurnkeyApiTypes } from '@turnkey/sdk-server';
 import Big from 'big.js';
 import express from 'express';
 
@@ -521,6 +523,15 @@ export interface ParentSubaccountPnlTicksRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
 }
 
+export interface PnlRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {
+  daily?: boolean,
+}
+
+export interface ParentSubaccountPnlRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
+}
+
 export interface OrderbookRequest {
   ticker: string,
 }
@@ -788,4 +799,91 @@ export interface FundingPaymentResponseObject {
 
 export interface FundingPaymentResponse extends PaginationResponse {
   fundingPayments: FundingPaymentResponseObject[],
+}
+
+/* ------- TURNKEY TYPES ------- */
+export interface TurnkeyAuthResponse {
+  dydxAddress?: string,
+  organizationId?: string,
+  apiKeyId?: string,
+  userId?: string,
+  session?: string,
+  salt: string,
+  alreadyExists?: boolean,
+}
+
+export interface TurnkeyCreateSuborgResponse {
+  subOrgId: string,
+  apiKeyId?: string,
+  userId?: string,
+  dydxAddress?: string,
+  salt: string,
+}
+
+export interface CreateSuborgParams {
+  email?: string,
+  providerName?: string,
+  oidcToken?: string,
+  authenticatorName?: string,
+  challenge?: string,
+  attestation?: TurnkeyApiTypes['v1Attestation'],
+}
+export interface GetSuborgParams {
+  email?: string,
+  oidcToken?: string,
+  credentialId?: string,
+}
+
+export enum SigninMethod {
+  EMAIL = 'email',
+  SOCIAL = 'social',
+  PASSKEY = 'passkey',
+}
+
+/* ------- APPLE LOGIN TYPES ------- */
+
+export interface AppleLoginRedirectRequest {
+  state: string, // public key from client
+  code: string,  // auth code from Apple
+}
+
+export interface AppleTokenResponse {
+  access_token: string,
+  token_type: string,
+  expires_in: number,
+  refresh_token?: string,
+  id_token: string,
+}
+
+export interface AppleJWTClaims {
+  iss: string,   // Team ID
+  iat: number,   // Issued at
+  exp: number,   // Expires at
+  aud: string,   // Audience (https://appleid.apple.com)
+  sub: string,   // Service ID (client_id)
+}
+
+export interface AppleLoginResponse {
+  success: boolean,
+  encodedPayload?: string,
+  error?: string,
+}
+
+/* ------- PNL TYPES ------- */
+
+export interface PnlResponse extends PaginationResponse {
+  pnl: PnlResponseObject[],
+}
+
+export interface PnlResponseObject {
+  equity: string,
+  netTransfers: string,
+  totalPnl: string,
+  createdAt: string,
+  createdAtHeight: string,
+}
+
+export interface AggregatedPnl{
+  pnl: PnlFromDatabase,
+  numPnls: number,
 }

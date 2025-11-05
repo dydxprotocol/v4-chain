@@ -3088,6 +3088,195 @@ fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&paren
 This operation does not require authentication
 </aside>
 
+## GetPnl
+
+<a id="opIdGetPnl"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/pnl', params={
+  'address': 'string',  'subaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/pnl?address=string&subaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /pnl`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|subaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|createdOnOrAfterHeight|query|number(double)|false|none|
+|createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
+|daily|query|boolean|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "pnl": [
+    {
+      "equity": "string",
+      "netTransfers": "string",
+      "totalPnl": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[PnlResponse](#schemapnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetPnlForParentSubaccount
+
+<a id="opIdGetPnlForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/pnl/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/pnl/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /pnl/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|createdOnOrAfterHeight|query|number(double)|false|none|
+|createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
+|daily|query|boolean|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "pnl": [
+    {
+      "equity": "string",
+      "netTransfers": "string",
+      "totalPnl": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[PnlResponse](#schemapnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SearchTrader
 
 <a id="opIdSearchTrader"></a>
@@ -3719,6 +3908,322 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TransferBetweenResponse](#schematransferbetweenresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## UploadAddress
+
+<a id="opIdUploadAddress"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/uploadAddress', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signature": "string",
+  "dydxAddress": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/uploadAddress`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/uploadAddress`
+
+Uploads the dydx address to the turnkey table.
+
+Backend won't have this information when we create account for user since you need signature
+to derive dydx address. Just wait for fe to uplaod to kick off the policy setup.
+
+> Body parameter
+
+```json
+{
+  "signature": "string",
+  "dydxAddress": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|true|none|
+|» signature|body|string|true|none|
+|» dydxAddress|body|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|Inline|
+
+### Response Schema
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» success|boolean|true|none|none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## SignIn
+
+<a id="opIdSignIn"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/signin', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  },
+  "magicLink": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/signin`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/signin`
+
+> Body parameter
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  },
+  "magicLink": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[SignInRequest](#schemasigninrequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "dydxAddress": "string",
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
+  "salt": "string",
+  "alreadyExists": true
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TurnkeyAuthResponse](#schematurnkeyauthresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## AppleLoginRedirect
+
+<a id="opIdAppleLoginRedirect"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/appleLoginRedirect', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "state": "string",
+  "code": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/appleLoginRedirect`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/appleLoginRedirect`
+
+Handles Apple login redirect from Apple's authorization server
+Exchanges authorization code for ID token and processes user login/signup
+
+> Body parameter
+
+```json
+{
+  "state": "string",
+  "code": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[AppleLoginRedirectRequest](#schemaappleloginredirectrequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "success": true,
+  "encodedPayload": "string",
+  "error": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AppleLoginResponse](#schemaappleloginresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -5974,6 +6479,68 @@ or
 |---|---|---|---|---|
 |positions|[[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)]|true|none|none|
 
+## PnlResponseObject
+
+<a id="schemapnlresponseobject"></a>
+<a id="schema_PnlResponseObject"></a>
+<a id="tocSpnlresponseobject"></a>
+<a id="tocspnlresponseobject"></a>
+
+```json
+{
+  "equity": "string",
+  "netTransfers": "string",
+  "totalPnl": "string",
+  "createdAt": "string",
+  "createdAtHeight": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|equity|string|true|none|none|
+|netTransfers|string|true|none|none|
+|totalPnl|string|true|none|none|
+|createdAt|string|true|none|none|
+|createdAtHeight|string|true|none|none|
+
+## PnlResponse
+
+<a id="schemapnlresponse"></a>
+<a id="schema_PnlResponse"></a>
+<a id="tocSpnlresponse"></a>
+<a id="tocspnlresponse"></a>
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "pnl": [
+    {
+      "equity": "string",
+      "netTransfers": "string",
+      "totalPnl": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|pageSize|integer(int32)|false|none|none|
+|totalResults|integer(int32)|false|none|none|
+|offset|integer(int32)|false|none|none|
+|pnl|[[PnlResponseObject](#schemapnlresponseobject)]|true|none|none|
+
 ## TraderSearchResponseObject
 
 <a id="schematradersearchresponseobject"></a>
@@ -6398,6 +6965,157 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## TurnkeyAuthResponse
+
+<a id="schematurnkeyauthresponse"></a>
+<a id="schema_TurnkeyAuthResponse"></a>
+<a id="tocSturnkeyauthresponse"></a>
+<a id="tocsturnkeyauthresponse"></a>
+
+```json
+{
+  "dydxAddress": "string",
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
+  "salt": "string",
+  "alreadyExists": true
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|dydxAddress|string|false|none|none|
+|organizationId|string|false|none|none|
+|apiKeyId|string|false|none|none|
+|userId|string|false|none|none|
+|session|string|false|none|none|
+|salt|string|true|none|none|
+|alreadyExists|boolean|false|none|none|
+
+## SigninMethod
+
+<a id="schemasigninmethod"></a>
+<a id="schema_SigninMethod"></a>
+<a id="tocSsigninmethod"></a>
+<a id="tocssigninmethod"></a>
+
+```json
+"email"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|email|
+|*anonymous*|social|
+|*anonymous*|passkey|
+
+## SignInRequest
+
+<a id="schemasigninrequest"></a>
+<a id="schema_SignInRequest"></a>
+<a id="tocSsigninrequest"></a>
+<a id="tocssigninrequest"></a>
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  },
+  "magicLink": "string"
+}
+
+```
+
+Request interface for user sign-in operations
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|signinMethod|[SigninMethod](#schemasigninmethod)|true|none|The authentication method to use (EMAIL, SOCIAL, or PASSKEY)|
+|userEmail|string|false|none|User's email address (required for EMAIL signin method)|
+|targetPublicKey|string|false|none|Target public key for authentication (required for EMAIL and SOCIAL signin methods)|
+|provider|string|false|none|OAuth provider name (required for SOCIAL signin method)|
+|oidcToken|string|false|none|OIDC token from OAuth provider (required for SOCIAL signin method)|
+|challenge|string|false|none|Challenge string for passkey authentication (required for PASSKEY signin method)|
+|attestation|object|false|none|Attestation object for passkey authentication (required for PASSKEY signin method)|
+|» transports|[string]|true|none|none|
+|» attestationObject|string|true|none|none|
+|» clientDataJson|string|true|none|none|
+|» credentialId|string|true|none|none|
+|magicLink|string|false|none|Optional magic link template URL for email authentication|
+
+## AppleLoginResponse
+
+<a id="schemaappleloginresponse"></a>
+<a id="schema_AppleLoginResponse"></a>
+<a id="tocSappleloginresponse"></a>
+<a id="tocsappleloginresponse"></a>
+
+```json
+{
+  "success": true,
+  "encodedPayload": "string",
+  "error": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|success|boolean|true|none|none|
+|encodedPayload|string|false|none|none|
+|error|string|false|none|none|
+
+## AppleLoginRedirectRequest
+
+<a id="schemaappleloginredirectrequest"></a>
+<a id="schema_AppleLoginRedirectRequest"></a>
+<a id="tocSappleloginredirectrequest"></a>
+<a id="tocsappleloginredirectrequest"></a>
+
+```json
+{
+  "state": "string",
+  "code": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|state|string|true|none|none|
+|code|string|true|none|none|
 
 ## MegavaultHistoricalPnlResponse
 

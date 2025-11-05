@@ -3,18 +3,30 @@ import { Channel, OutgoingMessageType } from '../../src/types';
 import { Subscriptions } from '../../src/lib/subscription';
 import { sendMessage, sendMessageString } from '../../src/helpers/wss';
 import { RateLimiter } from '../../src/lib/rate-limit';
+import { GeoOriginStatus } from '@dydxprotocol-indexer/compliance';
 import {
-  dbHelpers,
-  testMocks,
-  perpetualMarketRefresher,
-  CandleResolution,
-  MAX_PARENT_SUBACCOUNTS,
   blockHeightRefresher,
+  CandleResolution,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+  dbHelpers,
+  MAX_PARENT_SUBACCOUNTS,
+  perpetualMarketRefresher,
+  testMocks,
 } from '@dydxprotocol-indexer/postgres';
-import { btcTicker, invalidChannel, invalidTicker } from '../constants';
+import {
+  btcTicker, ethTicker, invalidChannel, invalidTicker,
+} from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
-import { AxiosSafeServerError, makeAxiosSafeServerError } from '@dydxprotocol-indexer/base';
+import {
+  AxiosSafeServerError, makeAxiosSafeServerError, stats, setInstanceId,
+} from '@dydxprotocol-indexer/base';
 import { BlockedError } from '../../src/lib/errors';
+import config from '../../src/config';
+
+import 'jest-extended';
+import * as matchers from 'jest-extended';
+
+expect.extend(matchers);
 
 jest.mock('ws');
 jest.mock('../../src/helpers/wss');
@@ -26,15 +38,20 @@ describe('Subscriptions', () => {
   let mockWs: WebSocket;
   let sendMessageMock: jest.Mock;
   let sendMessageStringMock: jest.Mock;
+  let decrementSubscriptionsSpy: jest.SpyInstance;
+  let incrementSubscriptionsSpy: jest.SpyInstance;
+  let removeSubscriptionsSpy: jest.SpyInstance;
   let rateLimiterSpy: jest.SpyInstance;
   let axiosRequestMock: jest.Mock;
 
   const connectionId: string = 'connectionId';
   const initialMsgId: number = 1;
   const defaultId: string = 'id';
+  const defaultId1: string = 'id1';
   const mockSubaccountId: string = 'address/0';
+  const mockSubaccountId1: string = 'address/1';
   const invalidCandleResolution: string = 'candleResolution';
-  const validIds: Record<Channel, string> = {
+  const singleIds: Record<Channel, string> = {
     [Channel.V4_ACCOUNTS]: mockSubaccountId,
     [Channel.V4_CANDLES]: `${btcTicker}/${CandleResolution.ONE_DAY}`,
     [Channel.V4_MARKETS]: defaultId,
@@ -43,8 +60,16 @@ describe('Subscriptions', () => {
     [Channel.V4_PARENT_ACCOUNTS]: mockSubaccountId,
     [Channel.V4_BLOCK_HEIGHT]: defaultId,
   };
-  const invalidIdsMap:
-  Record<Exclude<Channel, Channel.V4_MARKETS | Channel.V4_BLOCK_HEIGHT>, string[]> = {
+  const multipleIds: Record<Channel, string[]> = {
+    [Channel.V4_ACCOUNTS]: [mockSubaccountId, mockSubaccountId1],
+    [Channel.V4_CANDLES]: [`${btcTicker}/${CandleResolution.ONE_DAY}`, `${btcTicker}/${CandleResolution.ONE_DAY}`],
+    [Channel.V4_MARKETS]: [defaultId, defaultId1],
+    [Channel.V4_ORDERBOOK]: [btcTicker, ethTicker],
+    [Channel.V4_TRADES]: [btcTicker, ethTicker],
+    [Channel.V4_PARENT_ACCOUNTS]: [mockSubaccountId, mockSubaccountId1],
+    [Channel.V4_BLOCK_HEIGHT]: [defaultId, defaultId1],
+  };
+  const invalidIdsMap: Record<Channel, string[]> = {
     [Channel.V4_ACCOUNTS]: [invalidTicker],
     [Channel.V4_CANDLES]: [
       `${invalidTicker}/${CandleResolution.ONE_DAY}`,
@@ -54,6 +79,8 @@ describe('Subscriptions', () => {
     [Channel.V4_ORDERBOOK]: [invalidTicker],
     [Channel.V4_TRADES]: [invalidTicker],
     [Channel.V4_PARENT_ACCOUNTS]: [`address/${MAX_PARENT_SUBACCOUNTS}`],
+    [Channel.V4_BLOCK_HEIGHT]: ['unused'],
+    [Channel.V4_MARKETS]: ['unused'],
   };
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
@@ -73,7 +100,11 @@ describe('Subscriptions', () => {
     [Channel.V4_BLOCK_HEIGHT]: ['v4/height'],
   };
   const initialMessage: Object = ['a', 'b'];
-  const country: string = 'AR';
+  const geoOriginHeaders = {
+    'geo-origin-country': 'AR', // Argentina
+    'geo-origin-region': 'AR-V', // Tierra del Fuego
+    'geo-origin-status': GeoOriginStatus.OK,
+  };
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -82,6 +113,8 @@ describe('Subscriptions', () => {
       perpetualMarketRefresher.updatePerpetualMarkets(),
       blockHeightRefresher.updateBlockHeight(),
     ]);
+    config.SERVICE_NAME = 'socks-test';
+    await setInstanceId('test-instance-id');
   });
 
   afterAll(async () => {
@@ -90,27 +123,39 @@ describe('Subscriptions', () => {
   });
 
   beforeEach(() => {
+    jest.useFakeTimers();
     (WebSocket as unknown as jest.Mock).mockClear();
     subscriptions = new Subscriptions();
     subscriptions.start(jest.fn());
     mockWs = new WebSocket(null);
     sendMessageMock = (sendMessage as jest.Mock);
     sendMessageStringMock = (sendMessageString as jest.Mock);
+    decrementSubscriptionsSpy = jest.spyOn(Subscriptions.prototype, 'decrementSubscriptions');
+    incrementSubscriptionsSpy = jest.spyOn(Subscriptions.prototype, 'incrementSubscriptions');
+    removeSubscriptionsSpy = jest.spyOn(Subscriptions.prototype, 'removeSubscriptions');
     rateLimiterSpy = jest.spyOn(RateLimiter.prototype, 'rateLimit');
     axiosRequestMock = (axiosRequest as jest.Mock);
     axiosRequestMock.mockClear();
     axiosRequestMock.mockImplementation(() => (JSON.stringify(initialMessage)));
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+    decrementSubscriptionsSpy.mockRestore();
+    incrementSubscriptionsSpy.mockRestore();
+    removeSubscriptionsSpy.mockRestore();
+    rateLimiterSpy.mockRestore();
+  });
+
   describe('subscribe', () => {
     it.each([
-      [Channel.V4_ACCOUNTS, validIds[Channel.V4_ACCOUNTS]],
-      [Channel.V4_CANDLES, validIds[Channel.V4_CANDLES]],
-      [Channel.V4_MARKETS, validIds[Channel.V4_MARKETS]],
-      [Channel.V4_ORDERBOOK, validIds[Channel.V4_ORDERBOOK]],
-      [Channel.V4_TRADES, validIds[Channel.V4_TRADES]],
-      [Channel.V4_PARENT_ACCOUNTS, validIds[Channel.V4_PARENT_ACCOUNTS]],
-      [Channel.V4_BLOCK_HEIGHT, validIds[Channel.V4_BLOCK_HEIGHT]],
+      [Channel.V4_ACCOUNTS, singleIds[Channel.V4_ACCOUNTS]],
+      [Channel.V4_CANDLES, singleIds[Channel.V4_CANDLES]],
+      [Channel.V4_MARKETS, singleIds[Channel.V4_MARKETS]],
+      [Channel.V4_ORDERBOOK, singleIds[Channel.V4_ORDERBOOK]],
+      [Channel.V4_TRADES, singleIds[Channel.V4_TRADES]],
+      [Channel.V4_PARENT_ACCOUNTS, singleIds[Channel.V4_PARENT_ACCOUNTS]],
+      [Channel.V4_BLOCK_HEIGHT, singleIds[Channel.V4_BLOCK_HEIGHT]],
     ])('handles valid subscription request to channel %s', async (
       channel: Channel,
       id: string,
@@ -122,7 +167,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        country,
+        geoOriginHeaders,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -142,9 +187,7 @@ describe('Subscriptions', () => {
         for (const urlPattern of urlPatterns) {
           expect(axiosRequestMock).toHaveBeenCalledWith(expect.objectContaining({
             url: expect.stringMatching(RegExp(urlPattern)),
-            headers: {
-              'cf-ipcountry': country,
-            },
+            headers: geoOriginHeaders,
           }));
         }
       } else {
@@ -201,6 +244,80 @@ describe('Subscriptions', () => {
           );
         },
       ).rejects.toEqual(new Error(`Invalid channel: ${invalidChannel}`));
+    });
+
+    it('sends error message if v4_accounts channel subscription limit exceeded', async () => {
+      const limit = config.V4_ACCOUNTS_CHANNEL_LIMIT;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      await subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ACCOUNTS,
+        connectionId,
+        initialMsgId,
+        mockSubaccountId,
+        false,
+      );
+
+      expect(incrementSubscriptionsSpy).toHaveBeenCalledTimes(1);
+      expect(incrementSubscriptionsSpy).toHaveBeenCalledWith(Channel.V4_ACCOUNTS, connectionId);
+
+      expect(sendMessageMock).toHaveBeenCalledTimes(1);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Per-connection subscription limit reached for ${Channel.V4_ACCOUNTS} (limit=${limit}).`,
+          ),
+        }),
+      );
+    });
+
+    it('sends error message if v4_accounts channel subscription limit exceeded by inflight requests', async () => {
+      const limit = config.V4_ACCOUNTS_CHANNEL_LIMIT;
+      incrementSubscriptionsSpy.mockReturnValueOnce(limit);
+      incrementSubscriptionsSpy.mockReturnValueOnce(limit + 1);
+      incrementSubscriptionsSpy.mockReturnValueOnce(limit + 2);
+      await Promise.all([
+        subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          connectionId,
+          initialMsgId,
+          mockSubaccountId,
+          false,
+        ),
+        subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          connectionId,
+          initialMsgId + 1,
+          mockSubaccountId1,
+          false,
+        ),
+        subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          connectionId,
+          initialMsgId + 2,
+          mockSubaccountId1,
+          false,
+        ),
+      ]);
+
+      expect(sendMessageMock).toHaveBeenCalledTimes(2);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Per-connection subscription limit reached for ${Channel.V4_ACCOUNTS} (limit=${limit}).`,
+          ),
+        }),
+      );
+
+      expect(decrementSubscriptionsSpy).toHaveBeenCalledTimes(2);
+      expect(decrementSubscriptionsSpy).toHaveBeenCalledWith(Channel.V4_ACCOUNTS, connectionId);
     });
 
     it('sends error message if rate limit exceeded', async () => {
@@ -271,7 +388,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        country,
+        geoOriginHeaders,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -300,7 +417,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        country,
+        geoOriginHeaders,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -321,12 +438,12 @@ describe('Subscriptions', () => {
 
   describe('unsubscribe', () => {
     it.each([
-      [Channel.V4_ACCOUNTS, validIds[Channel.V4_ACCOUNTS]],
-      [Channel.V4_CANDLES, validIds[Channel.V4_CANDLES]],
-      [Channel.V4_MARKETS, validIds[Channel.V4_MARKETS]],
-      [Channel.V4_ORDERBOOK, validIds[Channel.V4_ORDERBOOK]],
-      [Channel.V4_TRADES, validIds[Channel.V4_TRADES]],
-      [Channel.V4_BLOCK_HEIGHT, validIds[Channel.V4_BLOCK_HEIGHT]],
+      [Channel.V4_ACCOUNTS, singleIds[Channel.V4_ACCOUNTS]],
+      [Channel.V4_CANDLES, singleIds[Channel.V4_CANDLES]],
+      [Channel.V4_MARKETS, singleIds[Channel.V4_MARKETS]],
+      [Channel.V4_ORDERBOOK, singleIds[Channel.V4_ORDERBOOK]],
+      [Channel.V4_TRADES, singleIds[Channel.V4_TRADES]],
+      [Channel.V4_BLOCK_HEIGHT, singleIds[Channel.V4_BLOCK_HEIGHT]],
     ])('handles valid unsubscription request to channel %s', async (
       channel: Channel,
       id: string,
@@ -338,7 +455,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        country,
+        geoOriginHeaders,
       );
       subscriptions.unsubscribe(
         connectionId,
@@ -358,7 +475,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        country,
+        geoOriginHeaders,
       );
       subscriptions.unsubscribe(
         connectionId,
@@ -372,6 +489,38 @@ describe('Subscriptions', () => {
     });
   });
 
+  describe('validateSubscriptionForChannel', () => {
+    it.each([
+      `address/${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}`,
+      'address/junk/1',
+      'address/abc123',
+      'address/123f',
+    ])('error if invalid subaccount id', async (invalidSubaccountId: string) => {
+      await subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ACCOUNTS,
+        connectionId,
+        initialMsgId,
+        invalidSubaccountId,
+        false,
+        geoOriginHeaders,
+      );
+
+      expect(sendMessageMock).toHaveBeenCalledTimes(1);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Invalid subscription id for channel: (${Channel.V4_ACCOUNTS}-${invalidSubaccountId})`,
+          ),
+        }),
+      );
+      expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+    });
+  });
+
   describe('remove', () => {
     it('removes connection id from all subscriptions', async () => {
       await Promise.all(Object.values(Channel).map((channel: Channel): Promise<void> => {
@@ -380,14 +529,14 @@ describe('Subscriptions', () => {
           channel,
           connectionId,
           initialMsgId,
-          validIds[channel],
+          singleIds[channel],
           false,
         );
       }));
 
       for (const channel of Object.values(Channel)) {
-        expect(subscriptions.subscriptions[channel][validIds[channel]]).toHaveLength(1);
-        expect(subscriptions.subscriptions[channel][validIds[channel]]).toContainEqual(
+        expect(subscriptions.subscriptions[channel][singleIds[channel]]).toHaveLength(1);
+        expect(subscriptions.subscriptions[channel][singleIds[channel]]).toContainEqual(
           expect.objectContaining({ connectionId }),
         );
       }
@@ -397,10 +546,134 @@ describe('Subscriptions', () => {
 
       subscriptions.remove(connectionId);
 
+      expect(removeSubscriptionsSpy).toHaveBeenCalledWith(connectionId);
+
       for (const channel of Object.values(Channel)) {
-        expect(subscriptions.subscriptions[channel][validIds[channel]]).toHaveLength(0);
+        expect(subscriptions.subscriptions[channel][singleIds[channel]]).toHaveLength(0);
+        expect(subscriptions.subsByChannelByConnectionId[channel][connectionId]).toBe(undefined);
       }
       expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+    });
+  });
+
+  describe('emitLargestSubscriberMetric', () => {
+
+    it('emits metrics for largest subscriber per channel', async () => {
+      const statsSpy = jest.spyOn(stats, 'gauge');
+
+      // Subscribe connection 1 to multiple channels
+      const channels = [
+        Channel.V4_ACCOUNTS,
+        Channel.V4_TRADES,
+        Channel.V4_ORDERBOOK,
+      ];
+      for (const channel of channels) {
+        await subscriptions.subscribe(
+          mockWs,
+          channel,
+          'connection1',
+          initialMsgId,
+          singleIds[channel],
+          false,
+        );
+      }
+
+      // verify largest_subscriber updated after interval
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      for (const channel of channels) {
+        expect(statsSpy).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.subscriptions.channel_size`,
+          1,
+          {
+            channel,
+            instance: 'test-instance-id',
+          },
+        );
+        expect(statsSpy).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.largest_subscriber`,
+          1,
+          {
+            channel,
+            instance: 'test-instance-id',
+          },
+        );
+      }
+
+      // Subscribe connection 2 to multiple channels
+      for (const id of multipleIds[Channel.V4_ACCOUNTS]) {
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ACCOUNTS,
+          'connection2',
+          initialMsgId,
+          id,
+          false,
+        );
+      }
+      // for each id in multipleIds[Channel.V4_TRADES], subscribe to the channel
+      for (const id of multipleIds[Channel.V4_TRADES]) {
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_TRADES,
+          'connection2',
+          initialMsgId,
+          id,
+          false,
+        );
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(statsSpy).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.subscriptions.channel_size`,
+        multipleIds[Channel.V4_ACCOUNTS].length + 1,
+        {
+          channel: Channel.V4_ACCOUNTS,
+          instance: 'test-instance-id',
+        },
+      );
+
+      expect(statsSpy).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.largest_subscriber`,
+        multipleIds[Channel.V4_ACCOUNTS].length,
+        {
+          channel: Channel.V4_ACCOUNTS,
+          instance: 'test-instance-id',
+        },
+      );
+
+      expect(statsSpy).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.subscriptions.channel_size`,
+        multipleIds[Channel.V4_TRADES].length + 1,
+        {
+          channel: Channel.V4_TRADES,
+          instance: 'test-instance-id',
+        },
+      );
+
+      expect(statsSpy).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.largest_subscriber`,
+        multipleIds[Channel.V4_TRADES].length,
+        {
+          channel: Channel.V4_TRADES,
+          instance: 'test-instance-id',
+        },
+      );
+    });
+
+    it('does not emit metrics when no subscriptions exist', () => {
+      const statsSpy = jest.spyOn(stats, 'gauge');
+
+      // Advance timers to trigger metric emission
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      // Should not emit any largest_subscriber metrics
+      expect(statsSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('largest_subscriber'),
+        expect.anything(),
+        expect.anything(),
+      );
     });
   });
 });

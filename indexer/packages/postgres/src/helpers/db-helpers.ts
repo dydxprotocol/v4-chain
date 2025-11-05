@@ -11,6 +11,9 @@ const layer2Tables = [
   'leaderboard_pnl',
   'funding_payments',
   'subaccounts',
+  'turnkey_users',
+  'permission_approval',
+  'bridge_information',
 ];
 
 const layer1Tables = [
@@ -166,7 +169,7 @@ export async function reset() {
   await rollback();
 }
 
-async function rollback() {
+export async function rollback() {
   await knexPrimary.migrate.rollback({ loadExtensions: ['.js'] });
 }
 

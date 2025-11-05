@@ -16,7 +16,7 @@ import {
   Post,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
@@ -43,6 +43,9 @@ const router: express.Router = express.Router();
 const controllerName: string = 'affiliates-controller';
 const affiliatesCacheControlMiddleware = cacheControlMiddleware(
   config.CACHE_CONTROL_DIRECTIVE_AFFILIATES,
+);
+const affiliatesMetadataCacheControlMiddleware = cacheControlMiddleware(
+  config.CACHE_CONTROL_DIRECTIVE_AFFILIATES_METADATA,
 );
 
 // TODO(OTE-731): replace api stubs with real logic
@@ -279,8 +282,8 @@ class AffiliatesController extends Controller {
 
 router.get(
   '/metadata',
-  rateLimiterMiddleware(getReqRateLimiter),
-  affiliatesCacheControlMiddleware,
+  rateLimiterMiddleware(defaultRateLimiter),
+  affiliatesMetadataCacheControlMiddleware,
   ...checkSchema({
     address: {
       in: ['query'],
@@ -319,7 +322,7 @@ router.get(
 
 router.get(
   '/address',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesCacheControlMiddleware,
   ...checkSchema({
     referralCode: {
@@ -465,7 +468,7 @@ router.post(
 
 router.get(
   '/snapshot',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesCacheControlMiddleware,
   ...checkSchema({
     addressFilter: {
@@ -551,7 +554,7 @@ router.get(
 
 router.get(
   '/total_volume',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   affiliatesCacheControlMiddleware,
   ...checkSchema({
     address: {

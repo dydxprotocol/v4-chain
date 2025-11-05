@@ -14,7 +14,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { defaultRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import { checkIfValidDydxAddress, handleControllerError } from '../../../lib/helpers';
@@ -72,7 +72,7 @@ class SocialTradingController extends Controller {
 }
 
 router.get('/search',
-  rateLimiterMiddleware(getReqRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter),
   socialTradingCacheControlMiddleware,
   ...checkSchema({
     searchParam: {

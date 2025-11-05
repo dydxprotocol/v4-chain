@@ -36,6 +36,7 @@ export async function findAll(
     createdOnOrAfter,
     page,
     parentSubaccount,
+    distinctFields,
   }: FundingPaymentsQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -57,6 +58,7 @@ export async function findAll(
       createdBeforeOrAt,
       createdOnOrAfterHeight,
       createdOnOrAfter,
+      distinctFields,
     } as QueryConfig,
     requiredFields,
   );
@@ -117,6 +119,16 @@ export async function findAll(
 
   if (createdOnOrAfter !== undefined) {
     baseQuery = baseQuery.where(FundingPaymentsColumns.createdAt, '>=', createdOnOrAfter);
+  }
+
+  if (distinctFields !== undefined) {
+    for (const field of distinctFields) {
+      // eslint-disable-next-line max-len
+      if (!Object.values(FundingPaymentsColumns).includes(field as FundingPaymentsColumns)) {
+        throw new Error(`Invalid distinct field: ${field}`);
+      }
+      baseQuery = baseQuery.distinct(field);
+    }
   }
 
   if (options.orderBy !== undefined) {

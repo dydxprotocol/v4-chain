@@ -22,6 +22,7 @@ export { default as PersistentCacheModel } from './models/persistent-cache-model
 export { default as AffiliateReferredUsersModel } from './models/affiliate-referred-users-model';
 export { default as AffiliateInfoModel } from './models/affiliate-info-model';
 export { default as VaultModel } from './models/vault-model';
+export { default as BridgeInformationModel } from './models/bridge-information-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -53,7 +54,11 @@ export * as FirebaseNotificationTokenTable from './stores/firebase-notification-
 export * as AffiliateInfoTable from './stores/affiliate-info-table';
 export * as VaultTable from './stores/vault-table';
 export * as FundingPaymentsTable from './stores/funding-payments-table';
+export * as TurnkeyUsersTable from './stores/turnkey-users-table';
 export * as VaultPnlTicksView from './stores/vault-pnl-ticks-view';
+export * as PermissionApprovalTable from './stores/permission-approval-table';
+export * as PnlTable from './stores/pnl-table';
+export * as BridgeInformationTable from './stores/bridge-information-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';

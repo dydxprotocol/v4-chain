@@ -1315,6 +1315,61 @@
         "type": "object",
         "additionalProperties": false
       },
+      "PnlResponseObject": {
+        "properties": {
+          "equity": {
+            "type": "string"
+          },
+          "netTransfers": {
+            "type": "string"
+          },
+          "totalPnl": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "equity",
+          "netTransfers",
+          "totalPnl",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "PnlResponse": {
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalResults": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "pnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TraderSearchResponseObject": {
         "properties": {
           "address": {
@@ -1613,6 +1668,150 @@
         "required": [
           "transfersSubset",
           "totalNetTransfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TurnkeyAuthResponse": {
+        "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "apiKeyId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "salt": {
+            "type": "string"
+          },
+          "alreadyExists": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "salt"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SigninMethod": {
+        "enum": [
+          "email",
+          "social",
+          "passkey"
+        ],
+        "type": "string"
+      },
+      "SignInRequest": {
+        "description": "Request interface for user sign-in operations",
+        "properties": {
+          "signinMethod": {
+            "$ref": "#/components/schemas/SigninMethod",
+            "description": "The authentication method to use (EMAIL, SOCIAL, or PASSKEY)"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "User's email address (required for EMAIL signin method)"
+          },
+          "targetPublicKey": {
+            "type": "string",
+            "description": "Target public key for authentication (required for EMAIL and SOCIAL signin methods)"
+          },
+          "provider": {
+            "type": "string",
+            "description": "OAuth provider name (required for SOCIAL signin method)"
+          },
+          "oidcToken": {
+            "type": "string",
+            "description": "OIDC token from OAuth provider (required for SOCIAL signin method)"
+          },
+          "challenge": {
+            "type": "string",
+            "description": "Challenge string for passkey authentication (required for PASSKEY signin method)"
+          },
+          "attestation": {
+            "properties": {
+              "transports": {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "AUTHENTICATOR_TRANSPORT_BLE",
+                    "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                    "AUTHENTICATOR_TRANSPORT_NFC",
+                    "AUTHENTICATOR_TRANSPORT_USB",
+                    "AUTHENTICATOR_TRANSPORT_HYBRID"
+                  ]
+                },
+                "type": "array"
+              },
+              "attestationObject": {
+                "type": "string"
+              },
+              "clientDataJson": {
+                "type": "string"
+              },
+              "credentialId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transports",
+              "attestationObject",
+              "clientDataJson",
+              "credentialId"
+            ],
+            "type": "object",
+            "description": "Attestation object for passkey authentication (required for PASSKEY signin method)"
+          },
+          "magicLink": {
+            "type": "string",
+            "description": "Optional magic link template URL for email authentication"
+          }
+        },
+        "required": [
+          "signinMethod"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AppleLoginResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "encodedPayload": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AppleLoginRedirectRequest": {
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "code"
         ],
         "type": "object",
         "additionalProperties": false
@@ -3409,6 +3608,191 @@
         ]
       }
     },
+    "/pnl": {
+      "get": {
+        "operationId": "GetPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfterHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "daily",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ]
+      }
+    },
+    "/pnl/parentSubaccountNumber": {
+      "get": {
+        "operationId": "GetPnlForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfterHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "daily",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ]
+      }
+    },
     "/trader/search": {
       "get": {
         "operationId": "SearchTrader",
@@ -3760,6 +4144,115 @@
             }
           }
         ]
+      }
+    },
+    "/turnkey/uploadAddress": {
+      "post": {
+        "operationId": "UploadAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "description": "Uploads the dydx address to the turnkey table.\n\nBackend won't have this information when we create account for user since you need signature\nto derive dydx address. Just wait for fe to uplaod to kick off the policy setup.",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "signature": {
+                    "type": "string"
+                  },
+                  "dydxAddress": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "signature",
+                  "dydxAddress"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/turnkey/signin": {
+      "post": {
+        "operationId": "SignIn",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnkeyAuthResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/turnkey/appleLoginRedirect": {
+      "post": {
+        "operationId": "AppleLoginRedirect",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppleLoginResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Handles Apple login redirect from Apple's authorization server\nExchanges authorization code for ID token and processes user login/signup",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleLoginRedirectRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/vault/v1/megavault/historicalPnl": {

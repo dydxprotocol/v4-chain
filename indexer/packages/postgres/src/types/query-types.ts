@@ -90,6 +90,7 @@ export enum QueryableField {
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
   REASON = 'reason',
   USERNAME = 'username',
+  EMAIL = 'email',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
   AFFILIATE_ADDRESS = 'affiliateAddress',
@@ -100,6 +101,10 @@ export enum QueryableField {
   PARENT_SUBACCOUNT = 'parentSubaccount',
   DISTINCT_FIELDS = 'distinctFields',
   ZERO_PAYMENTS = 'zeroPayments',
+  SUBORG_ID = 'suborg_id',
+  SVM_ADDRESS = 'svm_address',
+  EVM_ADDRESS = 'evm_address',
+  DYDX_ADDRESS = 'dydx_address',
 }
 
 export interface QueryConfig {
@@ -379,4 +384,16 @@ export interface FundingPaymentsQueryConfig extends QueryConfig {
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
   [QueryableField.ZERO_PAYMENTS]?: boolean,
+  [QueryableField.DISTINCT_FIELDS]?: string[],
+}
+
+export interface PnlQueryConfig extends QueryConfig {
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.CREATED_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_AT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
 }
