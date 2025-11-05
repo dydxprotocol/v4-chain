@@ -864,6 +864,123 @@ func TestRemoveExpiredStatefulOrders(t *testing.T) {
 	}
 }
 
+func TestRemoveExpiredStatefulOrders_WithCap(t *testing.T) {
+	tests := map[string]struct {
+		// Setup.
+		timeSlicesToOrderIds             map[time.Time][]types.OrderId
+		maxStatefulOrderRemovalsPerBlock uint32
+
+		// Parameters.
+		blockTime time.Time
+
+		expectedFirstBatchCount  int
+		expectedSecondBatchCount int
+		expectedTotalOrderIds    []types.OrderId
+	}{
+		"Respects cap when more orders expire than max": {
+			timeSlicesToOrderIds: map[time.Time][]types.OrderId{
+				constants.Time_21st_Feb_2021: {
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+				},
+			},
+			maxStatefulOrderRemovalsPerBlock: 2,
+
+			blockTime:                constants.Time_21st_Feb_2021.Add(1_000_000_000_000),
+			expectedFirstBatchCount:  2,
+			expectedSecondBatchCount: 1,
+			expectedTotalOrderIds: []types.OrderId{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+			},
+		},
+		"Removes all orders when count is below cap": {
+			timeSlicesToOrderIds: map[time.Time][]types.OrderId{
+				constants.Time_21st_Feb_2021: {
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
+				},
+			},
+			maxStatefulOrderRemovalsPerBlock: 10,
+
+			blockTime:                constants.Time_21st_Feb_2021.Add(1_000_000_000_000),
+			expectedFirstBatchCount:  2,
+			expectedSecondBatchCount: 0,
+			expectedTotalOrderIds: []types.OrderId{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
+			},
+		},
+		"Processes orders across multiple time slices respecting cap": {
+			timeSlicesToOrderIds: map[time.Time][]types.OrderId{
+				constants.Time_21st_Feb_2021: {
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+					constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
+				},
+				constants.Time_21st_Feb_2021.Add(1): {
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30.OrderId,
+				},
+				constants.Time_21st_Feb_2021.Add(2): {
+					constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
+				},
+			},
+			maxStatefulOrderRemovalsPerBlock: 3,
+
+			blockTime:                constants.Time_21st_Feb_2021.Add(1_000_000_000_000),
+			expectedFirstBatchCount:  3,
+			expectedSecondBatchCount: 2,
+			expectedTotalOrderIds: []types.OrderId{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
+				constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15.OrderId,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell50_Price5_GTB30.OrderId,
+				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state and test parameters.
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+			// Set the max stateful order removals per block flag.
+			ks.ClobKeeper.Flags.MaxStatefulOrderRemovalsPerBlock = tc.maxStatefulOrderRemovalsPerBlock
+
+			// Create all order IDs in state.
+			for timestamp, orderIds := range tc.timeSlicesToOrderIds {
+				for _, orderId := range orderIds {
+					ks.ClobKeeper.AddStatefulOrderIdExpiration(ks.Ctx, timestamp, orderId)
+				}
+			}
+
+			// Run the test - first batch should respect the cap.
+			firstBatchExpiredOrderIds := ks.ClobKeeper.RemoveExpiredStatefulOrders(ks.Ctx, tc.blockTime)
+
+			// Verify the first batch removed the expected number of orders and respects the cap.
+			require.Equal(t, tc.expectedFirstBatchCount, len(firstBatchExpiredOrderIds),
+				"First batch should contain exactly %d orders", tc.expectedFirstBatchCount)
+			require.LessOrEqual(t, len(firstBatchExpiredOrderIds), int(tc.maxStatefulOrderRemovalsPerBlock))
+
+			// Run again to get the second batch (remaining orders).
+			secondBatchExpiredOrderIds := ks.ClobKeeper.RemoveExpiredStatefulOrders(ks.Ctx, tc.blockTime)
+
+			// Verify the second batch removed the expected number of remaining orders.
+			require.Equal(t, tc.expectedSecondBatchCount, len(secondBatchExpiredOrderIds),
+				"Second batch should contain exactly %d orders", tc.expectedSecondBatchCount)
+
+			// Verify that all orders across both batches match the expected total.
+			allExpiredOrderIds := append(firstBatchExpiredOrderIds, secondBatchExpiredOrderIds...)
+			require.ElementsMatch(t, tc.expectedTotalOrderIds, allExpiredOrderIds,
+				"Total orders across both batches should match expected")
+		})
+	}
+}
+
 func TestRemoveLongTermOrder_PanicsIfNotFound(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)

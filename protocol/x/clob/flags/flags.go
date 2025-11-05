@@ -14,6 +14,7 @@ type ClobFlags struct {
 	MaxLiquidationAttemptsPerBlock      uint32
 	MaxDeleveragingAttemptsPerBlock     uint32
 	MaxDeleveragingSubaccountsToIterate uint32
+	MaxStatefulOrderRemovalsPerBlock    uint32
 
 	MevTelemetryEnabled    bool
 	MevTelemetryHosts      []string
@@ -26,6 +27,7 @@ const (
 	MaxLiquidationAttemptsPerBlock      = "max-liquidation-attempts-per-block"
 	MaxDeleveragingAttemptsPerBlock     = "max-deleveraging-attempts-per-block"
 	MaxDeleveragingSubaccountsToIterate = "max-deleveraging-subaccounts-to-iterate"
+	MaxStatefulOrderRemovalsPerBlock    = "max-stateful-order-removals-per-block"
 
 	// Mev.
 	MevTelemetryEnabled    = "mev-telemetry-enabled"
@@ -39,6 +41,7 @@ const (
 	DefaultMaxLiquidationAttemptsPerBlock      = 50
 	DefaultMaxDeleveragingAttemptsPerBlock     = 10
 	DefaultMaxDeleveragingSubaccountsToIterate = 500
+	DefaultMaxStatefulOrderRemovalsPerBlock    = 100
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHostsFlag  = ""
@@ -75,6 +78,14 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 			DefaultMaxDeleveragingSubaccountsToIterate,
 		),
 	)
+	cmd.Flags().Uint32(
+		MaxStatefulOrderRemovalsPerBlock,
+		DefaultMaxStatefulOrderRemovalsPerBlock,
+		fmt.Sprintf(
+			"Sets the maximum number of expired stateful orders to remove per block. Default = %d",
+			DefaultMaxStatefulOrderRemovalsPerBlock,
+		),
+	)
 	cmd.Flags().Bool(
 		MevTelemetryEnabled,
 		DefaultMevTelemetryEnabled,
@@ -97,6 +108,7 @@ func GetDefaultClobFlags() ClobFlags {
 		MaxLiquidationAttemptsPerBlock:      DefaultMaxLiquidationAttemptsPerBlock,
 		MaxDeleveragingAttemptsPerBlock:     DefaultMaxDeleveragingAttemptsPerBlock,
 		MaxDeleveragingSubaccountsToIterate: DefaultMaxDeleveragingSubaccountsToIterate,
+		MaxStatefulOrderRemovalsPerBlock:    DefaultMaxStatefulOrderRemovalsPerBlock,
 		MevTelemetryEnabled:                 DefaultMevTelemetryEnabled,
 		MevTelemetryHosts:                   DefaultMevTelemetryHosts,
 		MevTelemetryIdentifier:              DefaultMevTelemetryIdentifier,
@@ -145,6 +157,12 @@ func GetClobFlagValuesFromOptions(
 	if option := appOpts.Get(MaxDeleveragingSubaccountsToIterate); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.MaxDeleveragingSubaccountsToIterate = v
+		}
+	}
+
+	if option := appOpts.Get(MaxStatefulOrderRemovalsPerBlock); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.MaxStatefulOrderRemovalsPerBlock = v
 		}
 	}
 
