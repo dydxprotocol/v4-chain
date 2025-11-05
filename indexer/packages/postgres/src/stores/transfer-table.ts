@@ -431,7 +431,7 @@ export async function findAllToOrFromParentSubaccount(
 
     const count: { count?: string } = await baseQuery
       .clone()
-      .clearSelect()  // Add this
+      .clearSelect()
       .clearOrder()
       .count('transfers.id as count')
       .first() as unknown as { count?: string };
