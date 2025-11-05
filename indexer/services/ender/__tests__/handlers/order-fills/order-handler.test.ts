@@ -1706,7 +1706,7 @@ describe('OrderHandler', () => {
       affiliateRevShare: defaultAffiliateRevShare,
       positionSideBefore: 'LONG',
       entryPriceBefore: '15000',
-      positionSizeBefore: '10',
+      positionSizeBefore: '100000010',
     });
 
     await Promise.all([
