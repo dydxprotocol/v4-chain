@@ -34,6 +34,7 @@ DECLARE
     order_record orders%ROWTYPE;
     fill_record fills%ROWTYPE;
     perpetual_position_record perpetual_positions%ROWTYPE;
+    read_perpetual_position_record perpetual_positions%ROWTYPE;
     asset_record assets%ROWTYPE;
     order_uuid uuid;
     order_side text;
@@ -203,16 +204,16 @@ BEGIN
     END IF;
 
     -- Retrieve the latest perpetual position record.
-    SELECT * INTO perpetual_position_record
+    SELECT * INTO read_perpetual_position_record
     FROM perpetual_positions
     WHERE "subaccountId" = subaccount_uuid
       AND "perpetualId" = perpetual_market_record."id"
     ORDER BY "openEventId" DESC
     LIMIT 1;
 
-    snap_size_before = COALESCE(ABS(perpetual_position_record."sumOpen"), 0);
-    snap_entry_before = NULLIF(perpetual_position_record."entryPrice", 0);
-    snap_side_before = perpetual_position_record."side";
+    snap_size_before = COALESCE(ABS(read_perpetual_position_record."sumOpen"), 0) - COALESCE(ABS(read_perpetual_position_record."sumClose"), 0);
+    snap_entry_before = NULLIF(read_perpetual_position_record."entryPrice", 0);
+    snap_side_before = read_perpetual_position_record."side";
 
     /* Insert the associated fill record for this order_fill event. */
     event_id = dydx_event_id_from_parts(
