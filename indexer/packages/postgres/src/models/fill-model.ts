@@ -93,7 +93,7 @@ export default class FillModel extends Model {
         builderAddress: { type: ['string', 'null'], default: null },
         orderRouterAddress: { type: ['string', 'null'], default: null },
         orderRouterFee: { type: ['string', 'null'], default: null },
-        positionSizeBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
+        positionSizeBefore: { type: ['string', 'null'], pattern: NumericPattern, default: null },
         entryPriceBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
         positionSideBefore: { type: ['string', 'null'], enum: [...Object.values(PositionSide), null], default: null },
       },
