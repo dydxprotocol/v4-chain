@@ -332,14 +332,20 @@ export async function findAllToOrFromSubaccountId(
 }
 
 /**
- * Finds all transfers to or from a parent subaccount and its children,
+ * Finds all transfers to or from child subaccounts of a parent subaccount,
  * excluding transfers between child subaccounts of the same parent.
+ *
+ * @param subaccountId - Array of all child subaccount IDs for the parent
+ * @param limit - Maximum number of results to return
+ * @param createdBeforeOrAtHeight - Filter transfers created at or before this height
+ * @param createdBeforeOrAt - Filter transfers created at or before this time
+ * @param page - Page number for pagination
+ *
+ * @returns Paginated list of transfers with same-parent transfers filtered out
  */
 export async function findAllToOrFromParentSubaccount(
   {
     subaccountId,
-    address,
-    parentSubaccountNumber,
     limit,
     createdBeforeOrAtHeight,
     createdBeforeOrAt,
@@ -352,8 +358,6 @@ export async function findAllToOrFromParentSubaccount(
     {
       [QueryableField.LIMIT]: limit,
       [QueryableField.SUBACCOUNT_ID]: subaccountId,
-      [QueryableField.ADDRESS]: address,
-      [QueryableField.PARENT_SUBACCOUNT_NUMBER]: parentSubaccountNumber,
       [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]: createdBeforeOrAtHeight,
       [QueryableField.CREATED_BEFORE_OR_AT]: createdBeforeOrAt,
     } as QueryConfig,

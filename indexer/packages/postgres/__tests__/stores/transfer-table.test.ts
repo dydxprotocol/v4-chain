@@ -16,7 +16,6 @@ import { seedData } from '../helpers/mock-generators';
 import {
   createdDateTime,
   createdHeight,
-  defaultAddress,
   defaultAsset,
   defaultAsset2,
   defaultDeposit,
@@ -698,13 +697,9 @@ describe('Transfer store', () => {
         TransferTable.create(differentParentTransfer),
       ]);
 
-      const subaccountIds = [defaultSubaccountId, isolatedSubaccountId];
-
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
-          subaccountId: subaccountIds,
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
+          subaccountId: [defaultSubaccountId, isolatedSubaccountId],
           limit: 100,
         },
         [],
@@ -731,8 +726,6 @@ describe('Transfer store', () => {
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 100,
         },
         [],
@@ -765,8 +758,6 @@ describe('Transfer store', () => {
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [isolatedSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 100,
         },
         [],
@@ -799,8 +790,6 @@ describe('Transfer store', () => {
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [isolatedSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 100,
         },
         [],
@@ -811,7 +800,7 @@ describe('Transfer store', () => {
     });
 
     it('Successfully respects limit parameter', async () => {
-      // Create 5 blocks first
+    // Create 5 blocks first
       const blocks: BlockCreateObject[] = [];
       for (let i = 0; i < 5; i++) {
         blocks.push({
@@ -852,13 +841,12 @@ describe('Transfer store', () => {
           createdAtHeight: (parseInt(createdHeight, 10) + i).toString(),
         });
       }
+
       await Promise.all(transfers.map((t) => TransferTable.create(t)));
 
       const { results: resultTransfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 3,
         },
         [],
@@ -868,7 +856,7 @@ describe('Transfer store', () => {
     });
 
     it('Successfully finds all transfers to and from parent subaccount using pagination', async () => {
-      // Create 4 blocks first
+    // Create 4 blocks first
       const blocks: BlockCreateObject[] = [];
       for (let i = 0; i < 4; i++) {
         blocks.push({
@@ -915,8 +903,6 @@ describe('Transfer store', () => {
       const responsePageOne = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 2,
           page: 1,
         },
@@ -932,8 +918,6 @@ describe('Transfer store', () => {
       const responsePageTwo = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 2,
           page: 2,
         },
@@ -978,8 +962,6 @@ describe('Transfer store', () => {
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 100,
           createdBeforeOrAtHeight: '10',
         },
@@ -1024,8 +1006,6 @@ describe('Transfer store', () => {
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 100,
           createdBeforeOrAt: createdAt1,
         },
@@ -1040,8 +1020,6 @@ describe('Transfer store', () => {
       const { results: transfers } = await TransferTable.findAllToOrFromParentSubaccount(
         {
           subaccountId: [defaultSubaccountId],
-          address: defaultAddress,
-          parentSubaccountNumber: 0,
           limit: 100,
         },
         [],

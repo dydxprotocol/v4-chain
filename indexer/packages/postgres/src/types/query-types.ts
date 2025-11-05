@@ -257,8 +257,6 @@ export interface ToAndFromSubaccountTransferQueryConfig extends QueryConfig {
 
 export interface ParentSubaccountTransferQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_ID]: string[],
-  [QueryableField.ADDRESS]: string,
-  [QueryableField.PARENT_SUBACCOUNT_NUMBER]: number,
   [QueryableField.LIMIT]?: number,
   [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
   [QueryableField.CREATED_BEFORE_OR_AT]?: string,

@@ -170,15 +170,13 @@ class TransfersController extends Controller {
       ),
       TransferTable.findAllToOrFromParentSubaccount(
         {
-          [QueryableField.SUBACCOUNT_ID]: subaccountIds,
-          [QueryableField.ADDRESS]: address,
-          [QueryableField.PARENT_SUBACCOUNT_NUMBER]: parentSubaccountNumber,
-          [QueryableField.LIMIT]: limit,
-          [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]: createdBeforeOrAtHeight
+          subaccountId: subaccountIds,
+          limit,
+          createdBeforeOrAtHeight: createdBeforeOrAtHeight
             ? createdBeforeOrAtHeight.toString()
             : undefined,
-          [QueryableField.CREATED_BEFORE_OR_AT]: createdBeforeOrAt,
-          [QueryableField.PAGE]: page,
+          createdBeforeOrAt,
+          page,
         },
         [QueryableField.LIMIT],
         {
@@ -227,7 +225,6 @@ class TransfersController extends Controller {
           parentSubaccountNumber);
       });
 
-    // No filtering needed - it's done at the SQL level now
     return {
       transfers: transfersResponse,
       pageSize,
