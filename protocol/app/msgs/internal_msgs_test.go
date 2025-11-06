@@ -168,6 +168,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// sending
 		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
 		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
+		"/dydxprotocol.sending.MsgSendFromAccountToAccount",
+		"/dydxprotocol.sending.MsgSendFromAccountToAccountResponse",
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams",

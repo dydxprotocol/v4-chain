@@ -55,6 +55,18 @@ export interface MsgSendFromModuleToAccountResponse {}
  */
 
 export interface MsgSendFromModuleToAccountResponseSDKType {}
+/**
+ * MsgSendFromAccountToAccountResponse is a response type used for new
+ * account-to-account transfers.
+ */
+
+export interface MsgSendFromAccountToAccountResponse {}
+/**
+ * MsgSendFromAccountToAccountResponse is a response type used for new
+ * account-to-account transfers.
+ */
+
+export interface MsgSendFromAccountToAccountResponseSDKType {}
 
 function createBaseMsgCreateTransfer(): MsgCreateTransfer {
   return {
@@ -232,6 +244,40 @@ export const MsgSendFromModuleToAccountResponse = {
 
   fromPartial(_: DeepPartial<MsgSendFromModuleToAccountResponse>): MsgSendFromModuleToAccountResponse {
     const message = createBaseMsgSendFromModuleToAccountResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSendFromAccountToAccountResponse(): MsgSendFromAccountToAccountResponse {
+  return {};
+}
+
+export const MsgSendFromAccountToAccountResponse = {
+  encode(_: MsgSendFromAccountToAccountResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSendFromAccountToAccountResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSendFromAccountToAccountResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSendFromAccountToAccountResponse>): MsgSendFromAccountToAccountResponse {
+    const message = createBaseMsgSendFromAccountToAccountResponse();
     return message;
   }
 
