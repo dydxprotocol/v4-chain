@@ -836,6 +836,9 @@ func TestRemoveExpiredStatefulOrders(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
+			// Note: We don't set BlockLimitsConfig, so it uses the default (no cap).
+			// This simulates the behavior of existing chains before this parameter was added.
+
 			// Create all order IDs in state.
 			for timestamp, orderIds := range tc.timeSlicesToOrderIds {
 				for _, orderId := range orderIds {
@@ -948,8 +951,15 @@ func TestRemoveExpiredStatefulOrders_WithCap(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
-			// Set the max stateful order removals per block flag.
-			ks.ClobKeeper.Flags.MaxStatefulOrderRemovalsPerBlock = tc.maxStatefulOrderRemovalsPerBlock
+			// Set the max stateful order removals per block config on-chain via UpdateBlockLimitsConfig
+			// (simulating what governance would do).
+			err := ks.ClobKeeper.UpdateBlockLimitsConfig(
+				ks.Ctx,
+				types.BlockLimitsConfig{
+					MaxStatefulOrderRemovalsPerBlock: tc.maxStatefulOrderRemovalsPerBlock,
+				},
+			)
+			require.NoError(t, err)
 
 			// Create all order IDs in state.
 			for timestamp, orderIds := range tc.timeSlicesToOrderIds {

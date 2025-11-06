@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponse, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponse, QueryStatefulOrderRequest, QueryStatefulOrderResponse, QueryNextClobPairIdRequest, QueryNextClobPairIdResponse, QueryLeverageRequest, QueryLeverageResponse, StreamOrderbookUpdatesRequest, StreamOrderbookUpdatesResponse } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponse, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponse, QueryBlockLimitsConfigurationRequest, QueryBlockLimitsConfigurationResponse, QueryStatefulOrderRequest, QueryStatefulOrderResponse, QueryNextClobPairIdRequest, QueryNextClobPairIdResponse, QueryLeverageRequest, QueryLeverageResponse, StreamOrderbookUpdatesRequest, StreamOrderbookUpdatesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -22,6 +22,9 @@ export interface Query {
   /** Queries LiquidationsConfiguration. */
 
   liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse>;
+  /** Queries BlockLimitsConfiguration. */
+
+  blockLimitsConfiguration(request?: QueryBlockLimitsConfigurationRequest): Promise<QueryBlockLimitsConfigurationResponse>;
   /** Queries the stateful order for a given order id. */
 
   statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse>;
@@ -49,6 +52,7 @@ export class QueryClientImpl implements Query {
     this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
     this.blockRateLimitConfiguration = this.blockRateLimitConfiguration.bind(this);
     this.liquidationsConfiguration = this.liquidationsConfiguration.bind(this);
+    this.blockLimitsConfiguration = this.blockLimitsConfiguration.bind(this);
     this.statefulOrder = this.statefulOrder.bind(this);
     this.nextClobPairId = this.nextClobPairId.bind(this);
     this.leverage = this.leverage.bind(this);
@@ -91,6 +95,12 @@ export class QueryClientImpl implements Query {
     const data = QueryLiquidationsConfigurationRequest.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Query", "LiquidationsConfiguration", data);
     return promise.then(data => QueryLiquidationsConfigurationResponse.decode(new _m0.Reader(data)));
+  }
+
+  blockLimitsConfiguration(request: QueryBlockLimitsConfigurationRequest = {}): Promise<QueryBlockLimitsConfigurationResponse> {
+    const data = QueryBlockLimitsConfigurationRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "BlockLimitsConfiguration", data);
+    return promise.then(data => QueryBlockLimitsConfigurationResponse.decode(new _m0.Reader(data)));
   }
 
   statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse> {
@@ -144,6 +154,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse> {
       return queryService.liquidationsConfiguration(request);
+    },
+
+    blockLimitsConfiguration(request?: QueryBlockLimitsConfigurationRequest): Promise<QueryBlockLimitsConfigurationResponse> {
+      return queryService.blockLimitsConfiguration(request);
     },
 
     statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse> {

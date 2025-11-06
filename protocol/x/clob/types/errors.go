@@ -348,6 +348,11 @@ var (
 		1022,
 		"Liquidation conflicts with ClobPair status",
 	)
+	ErrInvalidBlockLimitsConfig = errorsmod.Register(
+		ModuleName,
+		1023,
+		"Proposed BlockLimitsConfig is invalid",
+	)
 
 	// Advanced order type errors.
 	ErrFokOrderCouldNotBeFullyFilled = errorsmod.Register(

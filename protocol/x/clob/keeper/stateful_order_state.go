@@ -224,12 +224,20 @@ func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time
 	)
 	defer it.Close()
 
-	// Process at most MaxStatefulOrderRemovalsPerBlock orders per block to prevent
-	// EndBlocker from being slowed down by a surge of expired orders.
-	maxRemovals := k.Flags.MaxStatefulOrderRemovalsPerBlock
+	// Check if there's a cap on order removals per block.
+	// A value of 0 means no cap (process all expired orders).
+	// This is retrieved from on-chain governance-controlled config.
+	blockLimitsConfig := k.GetBlockLimitsConfig(ctx)
+	maxRemovals := blockLimitsConfig.MaxStatefulOrderRemovalsPerBlock
+	hasCap := maxRemovals > 0
 	numRemoved := uint32(0)
 
-	for ; it.Valid() && numRemoved < maxRemovals; it.Next() {
+	// Process orders up to the cap (if set), otherwise process all
+	for ; it.Valid(); it.Next() {
+		// If there's a cap and we've reached it, stop processing
+		if hasCap && numRemoved >= maxRemovals {
+			break
+		}
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(it.Value(), &orderId)
 		expiredOrderIds = append(expiredOrderIds, orderId)

@@ -4,6 +4,7 @@ import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
+import { BlockLimitsConfig, BlockLimitsConfigSDKType } from "./block_limits_config";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
@@ -382,6 +383,48 @@ export interface MsgUpdateLiquidationsConfigResponse {}
 /** MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type. */
 
 export interface MsgUpdateLiquidationsConfigResponseSDKType {}
+/**
+ * MsgUpdateBlockLimitsConfig is a request type for updating the block limits
+ * configuration.
+ */
+
+export interface MsgUpdateBlockLimitsConfig {
+  /** Authority is the address that may send this message. */
+  authority: string;
+  /**
+   * Defines the block limits configuration to update to. All fields must be
+   * set.
+   */
+
+  blockLimitsConfig?: BlockLimitsConfig;
+}
+/**
+ * MsgUpdateBlockLimitsConfig is a request type for updating the block limits
+ * configuration.
+ */
+
+export interface MsgUpdateBlockLimitsConfigSDKType {
+  /** Authority is the address that may send this message. */
+  authority: string;
+  /**
+   * Defines the block limits configuration to update to. All fields must be
+   * set.
+   */
+
+  block_limits_config?: BlockLimitsConfigSDKType;
+}
+/**
+ * MsgUpdateBlockLimitsConfigResponse is a response type for updating the
+ * block limits configuration.
+ */
+
+export interface MsgUpdateBlockLimitsConfigResponse {}
+/**
+ * MsgUpdateBlockLimitsConfigResponse is a response type for updating the
+ * block limits configuration.
+ */
+
+export interface MsgUpdateBlockLimitsConfigResponseSDKType {}
 /** LeverageEntry represents a single clob pair leverage setting. */
 
 export interface LeverageEntry {
@@ -1380,6 +1423,95 @@ export const MsgUpdateLiquidationsConfigResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateLiquidationsConfigResponse>): MsgUpdateLiquidationsConfigResponse {
     const message = createBaseMsgUpdateLiquidationsConfigResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateBlockLimitsConfig(): MsgUpdateBlockLimitsConfig {
+  return {
+    authority: "",
+    blockLimitsConfig: undefined
+  };
+}
+
+export const MsgUpdateBlockLimitsConfig = {
+  encode(message: MsgUpdateBlockLimitsConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.blockLimitsConfig !== undefined) {
+      BlockLimitsConfig.encode(message.blockLimitsConfig, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateBlockLimitsConfig {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateBlockLimitsConfig();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.blockLimitsConfig = BlockLimitsConfig.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateBlockLimitsConfig>): MsgUpdateBlockLimitsConfig {
+    const message = createBaseMsgUpdateBlockLimitsConfig();
+    message.authority = object.authority ?? "";
+    message.blockLimitsConfig = object.blockLimitsConfig !== undefined && object.blockLimitsConfig !== null ? BlockLimitsConfig.fromPartial(object.blockLimitsConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateBlockLimitsConfigResponse(): MsgUpdateBlockLimitsConfigResponse {
+  return {};
+}
+
+export const MsgUpdateBlockLimitsConfigResponse = {
+  encode(_: MsgUpdateBlockLimitsConfigResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateBlockLimitsConfigResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateBlockLimitsConfigResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateBlockLimitsConfigResponse>): MsgUpdateBlockLimitsConfigResponse {
+    const message = createBaseMsgUpdateBlockLimitsConfigResponse();
     return message;
   }
 
