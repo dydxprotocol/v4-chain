@@ -1,4 +1,4 @@
-import { logger, stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
+import { cacheControlMiddleware, logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
@@ -12,8 +12,8 @@ import {
   OrderStatus,
   OrderTable,
   OrderType,
-  ParentSubaccount,
   PaginationFromDatabase,
+  ParentSubaccount,
   perpetualMarketRefresher,
   protocolTranslations,
   SubaccountTable,
@@ -85,6 +85,8 @@ async function listOrdersCommon(
   ticker?: string,
   side?: OrderSide,
   type?: OrderType,
+  includeTypes?: OrderType[],
+  excludeTypes?: OrderType[],
   status?: APIOrderStatus[],
   goodTilBlockBeforeOrAt?: number,
   goodTilBlockAfter?: number,
@@ -104,6 +106,8 @@ async function listOrdersCommon(
     clobPairId,
     side,
     type,
+    includeTypes,
+    excludeTypes,
     goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
     goodTilBlockAfter: goodTilBlockAfter?.toString(),
     goodTilBlockTimeBeforeOrAt,
@@ -219,6 +223,8 @@ class OrdersController extends Controller {
       @Query() ticker?: string,
       @Query() side?: OrderSide,
       @Query() type?: OrderType,
+      @Query() includeTypes?: OrderType[],
+      @Query() excludeTypes?: OrderType[],
       @Query() status?: APIOrderStatus[],
       @Query() goodTilBlockBeforeOrAt?: number,
       @Query() goodTilBlockAfter?: number,
@@ -236,6 +242,8 @@ class OrdersController extends Controller {
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -253,6 +261,8 @@ class OrdersController extends Controller {
       @Query() ticker?: string,
       @Query() side?: OrderSide,
       @Query() type?: OrderType,
+      @Query() includeTypes?: OrderType[],
+      @Query() excludeTypes?: OrderType[],
       @Query() status?: APIOrderStatus[],
       @Query() goodTilBlockBeforeOrAt?: number,
       @Query() goodTilBlockAfter?: number,
@@ -277,6 +287,8 @@ class OrdersController extends Controller {
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -401,6 +413,28 @@ router.get(
       isBoolean: true,
       optional: true,
     },
+    includeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `includeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
+    excludeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `excludeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
   }),
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
@@ -416,6 +450,8 @@ router.get(
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -436,6 +472,8 @@ router.get(
         ticker,
         side,
         type,
+        includeTypes,
+        excludeTypes,
         status,
         goodTilBlockBeforeOrAt,
         goodTilBlockAfter,
@@ -529,6 +567,28 @@ router.get(
       isBoolean: true,
       optional: true,
     },
+    includeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `includeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
+    excludeTypes: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(OrderType)),
+        errorMessage: `excludeTypes must be one of ${Object.values(OrderType)}`,
+      },
+    },
   }),
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
@@ -544,6 +604,8 @@ router.get(
       ticker,
       side,
       type,
+      includeTypes,
+      excludeTypes,
       status,
       goodTilBlockBeforeOrAt,
       goodTilBlockAfter,
@@ -564,6 +626,8 @@ router.get(
         ticker,
         side,
         type,
+        includeTypes,
+        excludeTypes,
         status,
         goodTilBlockBeforeOrAt,
         goodTilBlockAfter,
@@ -710,12 +774,12 @@ async function getRedisOrderMapForSubaccountIds(
       if (redisGoodTilBlockTime) {
         const redisGoodTilBlockTimeDateObj: DateTime = DateTime.fromISO(redisGoodTilBlockTime);
         if (goodTilBlockTimeBeforeOrAt !== undefined &&
-            redisGoodTilBlockTimeDateObj > DateTime.fromISO(goodTilBlockTimeBeforeOrAt)
+          redisGoodTilBlockTimeDateObj > DateTime.fromISO(goodTilBlockTimeBeforeOrAt)
         ) {
           return false;
         }
         if (goodTilBlockTimeAfter !== undefined &&
-            redisGoodTilBlockTimeDateObj <= DateTime.fromISO(goodTilBlockTimeAfter)
+          redisGoodTilBlockTimeDateObj <= DateTime.fromISO(goodTilBlockTimeAfter)
         ) {
           return false;
         }
