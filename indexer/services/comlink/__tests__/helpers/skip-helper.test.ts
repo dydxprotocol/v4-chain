@@ -20,7 +20,7 @@ jest.mock('../../src/config', () => ({
   TURNKEY_API_SENDER_PUBLIC_KEY: 'test-public-key',
   TURNKEY_API_SENDER_PRIVATE_KEY: 'test-private-key',
   SKIP_SLIPPAGE_TOLERANCE_USDC: 100,
-  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: '0.1', // 10%
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: '0.1',
 }));
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
