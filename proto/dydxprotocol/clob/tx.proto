@@ -229,8 +229,7 @@ message MsgUpdateBlockLimitsConfig {
 
   // Defines the block limits configuration to update to. All fields must be
   // set.
-  BlockLimitsConfig block_limits_config = 2
-      [ (gogoproto.nullable) = false ];
+  BlockLimitsConfig block_limits_config = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgUpdateBlockLimitsConfigResponse is a response type for updating the

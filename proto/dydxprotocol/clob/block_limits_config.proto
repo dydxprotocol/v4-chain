@@ -12,4 +12,3 @@ message BlockLimitsConfig {
   // processing a large number of expired orders.
   uint32 max_stateful_order_removals_per_block = 1;
 }
-
