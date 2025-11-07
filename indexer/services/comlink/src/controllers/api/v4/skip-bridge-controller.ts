@@ -42,7 +42,7 @@ import {
   chains,
   getEOAAddressFromSmartAccountAddress,
   isSupportedEVMChainId,
-  getRPCEndpoint,
+  getZeroDevRPCEndpoint,
   publicClients,
   alchemyNetworkToChainIdMap,
 } from '../../../helpers/alchemy-helpers';
@@ -502,14 +502,14 @@ class BridgeController extends Controller {
 
     const zerodevPaymaster = createZeroDevPaymasterClient({
       chain: chains[chainId],
-      transport: http(getRPCEndpoint(chainId)),
+      transport: http(getZeroDevRPCEndpoint(chainId)),
     });
 
     const kernelClient = createKernelAccountClient({
       account,
       chain: chains[chainId],
       client: publicClients[chainId],
-      bundlerTransport: http(getRPCEndpoint(chainId)),
+      bundlerTransport: http(getZeroDevRPCEndpoint(chainId)),
       paymaster: zerodevPaymaster,
       userOperation: {
         estimateFeesPerGas: async ({ bundlerClient }) => {
