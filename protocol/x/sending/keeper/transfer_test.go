@@ -633,3 +633,186 @@ func TestSendFromModuleToAccount_InvalidRecipient(t *testing.T) {
 	)
 	require.ErrorContains(t, err, "Account address is invalid")
 }
+
+func TestSendFromAccountToAccount(t *testing.T) {
+	testDenom := "TestSendFromAccountToAccount/Coin"
+	testModuleName := "bridge"
+	tests := map[string]struct {
+		// Setup.
+		initialSenderBalance int64
+		balanceToSend        int64
+		senderAddress        string
+		recipientAddress     string
+		// Expectations
+		expectedErrContains string
+	}{
+		"Success - send between user accounts": {
+			initialSenderBalance: 1000,
+			balanceToSend:        100,
+			senderAddress:        constants.AliceAccAddress.String(),
+			recipientAddress:     constants.BobAccAddress.String(),
+		},
+		"Success - send to module account": {
+			initialSenderBalance: 1000,
+			balanceToSend:        100,
+			senderAddress:        constants.AliceAccAddress.String(),
+			recipientAddress:     authtypes.NewModuleAddress("community_treasury").String(),
+		},
+		"Success - send to self": {
+			initialSenderBalance: 1000,
+			balanceToSend:        100,
+			senderAddress:        constants.AliceAccAddress.String(),
+			recipientAddress:     constants.AliceAccAddress.String(),
+		},
+		"Success - send 0 amount": {
+			initialSenderBalance: 700,
+			balanceToSend:        0,
+			senderAddress:        constants.AliceAccAddress.String(),
+			recipientAddress:     constants.BobAccAddress.String(),
+		},
+		"Error - insufficient funds": {
+			initialSenderBalance: 100,
+			balanceToSend:        101,
+			senderAddress:        constants.AliceAccAddress.String(),
+			recipientAddress:     constants.BobAccAddress.String(),
+			expectedErrContains:  "insufficient funds",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initiate keepers and fund sender with initial balance.
+			ks := keepertest.SendingKeepers(t)
+			ctx, sendingKeeper, bankKeeper := ks.Ctx, ks.SendingKeeper, ks.BankKeeper
+
+			senderAddr := sdk.MustAccAddressFromBech32(tc.senderAddress)
+
+			// Mint coins to bridging module and transfer to sender account
+			err := bankKeeper.MintCoins(
+				ctx,
+				testModuleName,
+				sdk.NewCoins(sdk.NewCoin(testDenom, sdkmath.NewInt(tc.initialSenderBalance))),
+			)
+			require.NoError(t, err)
+			err = bankKeeper.SendCoinsFromModuleToAccount(
+				ctx,
+				testModuleName,
+				senderAddr,
+				sdk.NewCoins(sdk.NewCoin(testDenom, sdkmath.NewInt(tc.initialSenderBalance))),
+			)
+			require.NoError(t, err)
+
+			startingSenderBalance := bankKeeper.GetBalance(
+				ctx,
+				senderAddr,
+				testDenom,
+			)
+			startingRecipientBalance := bankKeeper.GetBalance(
+				ctx,
+				sdk.MustAccAddressFromBech32(tc.recipientAddress),
+				testDenom,
+			)
+
+			// Send coins from account to account.
+			err = sendingKeeper.SendFromAccountToAccount(
+				ctx,
+				&types.MsgSendFromAccountToAccount{
+					Authority: lib.GovModuleAddress.String(),
+					Sender:    tc.senderAddress,
+					Recipient: tc.recipientAddress,
+					Coin:      sdk.NewCoin(testDenom, sdkmath.NewInt(tc.balanceToSend)),
+				},
+			)
+
+			// Verify ending balances and error.
+			endingSenderBalance := bankKeeper.GetBalance(
+				ctx,
+				senderAddr,
+				testDenom,
+			)
+			endingRecipientBalance := bankKeeper.GetBalance(
+				ctx,
+				sdk.MustAccAddressFromBech32(tc.recipientAddress),
+				testDenom,
+			)
+
+			if tc.expectedErrContains != "" { // if error should occur.
+				// Verify that error is as expected.
+				require.ErrorContains(t, err, tc.expectedErrContains)
+				// Verify that sender balance is unchanged.
+				require.Equal(
+					t,
+					startingSenderBalance.Amount.Int64(),
+					endingSenderBalance.Amount.Int64(),
+				)
+				// Verify that recipient balance is unchanged.
+				require.Equal(
+					t,
+					startingRecipientBalance.Amount.Int64(),
+					endingRecipientBalance.Amount.Int64(),
+				)
+			} else { // if send should succeed.
+				// Verify that no error occurred.
+				require.NoError(t, err)
+				if tc.senderAddress == tc.recipientAddress {
+					// If account sent to itself, verify that balance is unchanged.
+					require.Equal(t, startingSenderBalance, endingSenderBalance)
+				} else {
+					// Otherwise, verify that sender balance is reduced by amount sent.
+					require.Equal(
+						t,
+						startingSenderBalance.Amount.Int64()-tc.balanceToSend,
+						endingSenderBalance.Amount.Int64(),
+					)
+					// Verify that recipient balance is increased by amount sent.
+					require.Equal(
+						t,
+						startingRecipientBalance.Amount.Int64()+tc.balanceToSend,
+						endingRecipientBalance.Amount.Int64(),
+					)
+				}
+			}
+		})
+	}
+}
+
+func TestSendFromAccountToAccount_InvalidMsg(t *testing.T) {
+	msgEmptySender := &types.MsgSendFromAccountToAccount{
+		Authority: lib.GovModuleAddress.String(),
+		Sender:    "",
+		Recipient: constants.AliceAccAddress.String(),
+		Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+	}
+
+	ks := keepertest.SendingKeepers(t)
+	err := ks.SendingKeeper.SendFromAccountToAccount(ks.Ctx, msgEmptySender)
+	require.ErrorContains(t, err, "Account address is invalid")
+}
+
+func TestSendFromAccountToAccount_InvalidRecipient(t *testing.T) {
+	ks := keepertest.SendingKeepers(t)
+	err := ks.SendingKeeper.SendFromAccountToAccount(
+		ks.Ctx,
+		&types.MsgSendFromAccountToAccount{
+			Authority: lib.GovModuleAddress.String(),
+			Sender:    constants.AliceAccAddress.String(),
+			Recipient: "dydx1abc", // invalid recipient address
+			Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
+		},
+	)
+	require.ErrorContains(t, err, "Account address is invalid")
+}
+
+func TestSendFromAccountToAccount_InvalidSender(t *testing.T) {
+	ks := keepertest.SendingKeepers(t)
+	err := ks.SendingKeeper.SendFromAccountToAccount(
+		ks.Ctx,
+		&types.MsgSendFromAccountToAccount{
+			Authority: lib.GovModuleAddress.String(),
+			Sender:    "dydx1abc", // invalid sender address
+			Recipient: constants.AliceAccAddress.String(),
+			Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
+		},
+	)
+	require.ErrorContains(t, err, "Account address is invalid")
+}
