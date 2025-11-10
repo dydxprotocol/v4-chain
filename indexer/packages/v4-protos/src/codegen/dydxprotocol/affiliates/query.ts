@@ -1,4 +1,4 @@
-import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType } from "./affiliates";
+import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType, AffiliateOverrides, AffiliateOverridesSDKType, AffiliateParameters, AffiliateParametersSDKType } from "./affiliates";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -39,10 +39,15 @@ export interface AffiliateInfoResponse {
   feeSharePpm: number;
   /** The affiliate's all-time referred volume in quote quantums. */
 
+  /** @deprecated */
+
   referredVolume: Uint8Array;
   /** The affiliate's currently staked native tokens (in whole coins). */
 
   stakedAmount: Uint8Array;
+  /** The affiliate's 30d referred volume in quote quantums. */
+
+  referredVolume_30dRolling: Uint8Array;
 }
 /**
  * AffiliateInfoResponse is the response type for the Query/AffiliateInfo RPC
@@ -66,10 +71,15 @@ export interface AffiliateInfoResponseSDKType {
   fee_share_ppm: number;
   /** The affiliate's all-time referred volume in quote quantums. */
 
+  /** @deprecated */
+
   referred_volume: Uint8Array;
   /** The affiliate's currently staked native tokens (in whole coins). */
 
   staked_amount: Uint8Array;
+  /** The affiliate's 30d referred volume in quote quantums. */
+
+  referred_volume_30d_rolling: Uint8Array;
 }
 /** ReferredByRequest is the request type for the Query/ReferredBy RPC method. */
 
@@ -153,6 +163,62 @@ export interface AffiliateWhitelistResponse {
 export interface AffiliateWhitelistResponseSDKType {
   whitelist?: AffiliateWhitelistSDKType;
 }
+/**
+ * AffiliateOverridesRequest is the request type for the
+ * Query/AffiliateOverrides RPC method.
+ */
+
+export interface AffiliateOverridesRequest {}
+/**
+ * AffiliateOverridesRequest is the request type for the
+ * Query/AffiliateOverrides RPC method.
+ */
+
+export interface AffiliateOverridesRequestSDKType {}
+/**
+ * AffiliateOverridesResponse is the response type for the
+ * Query/AffiliateOverrides RPC method.
+ */
+
+export interface AffiliateOverridesResponse {
+  overrides?: AffiliateOverrides;
+}
+/**
+ * AffiliateOverridesResponse is the response type for the
+ * Query/AffiliateOverrides RPC method.
+ */
+
+export interface AffiliateOverridesResponseSDKType {
+  overrides?: AffiliateOverridesSDKType;
+}
+/**
+ * AffiliateParametersRequest is the request type for the
+ * Query/AffiliateParameters RPC method.
+ */
+
+export interface AffiliateParametersRequest {}
+/**
+ * AffiliateParametersRequest is the request type for the
+ * Query/AffiliateParameters RPC method.
+ */
+
+export interface AffiliateParametersRequestSDKType {}
+/**
+ * AffiliateParametersResponse is the response type for the
+ * Query/AffiliateParameters RPC method.
+ */
+
+export interface AffiliateParametersResponse {
+  parameters?: AffiliateParameters;
+}
+/**
+ * AffiliateParametersResponse is the response type for the
+ * Query/AffiliateParameters RPC method.
+ */
+
+export interface AffiliateParametersResponseSDKType {
+  parameters?: AffiliateParametersSDKType;
+}
 
 function createBaseAffiliateInfoRequest(): AffiliateInfoRequest {
   return {
@@ -205,7 +271,8 @@ function createBaseAffiliateInfoResponse(): AffiliateInfoResponse {
     tier: 0,
     feeSharePpm: 0,
     referredVolume: new Uint8Array(),
-    stakedAmount: new Uint8Array()
+    stakedAmount: new Uint8Array(),
+    referredVolume_30dRolling: new Uint8Array()
   };
 }
 
@@ -229,6 +296,10 @@ export const AffiliateInfoResponse = {
 
     if (message.stakedAmount.length !== 0) {
       writer.uint32(42).bytes(message.stakedAmount);
+    }
+
+    if (message.referredVolume_30dRolling.length !== 0) {
+      writer.uint32(50).bytes(message.referredVolume_30dRolling);
     }
 
     return writer;
@@ -263,6 +334,10 @@ export const AffiliateInfoResponse = {
           message.stakedAmount = reader.bytes();
           break;
 
+        case 6:
+          message.referredVolume_30dRolling = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -279,6 +354,7 @@ export const AffiliateInfoResponse = {
     message.feeSharePpm = object.feeSharePpm ?? 0;
     message.referredVolume = object.referredVolume ?? new Uint8Array();
     message.stakedAmount = object.stakedAmount ?? new Uint8Array();
+    message.referredVolume_30dRolling = object.referredVolume_30dRolling ?? new Uint8Array();
     return message;
   }
 
@@ -527,6 +603,164 @@ export const AffiliateWhitelistResponse = {
   fromPartial(object: DeepPartial<AffiliateWhitelistResponse>): AffiliateWhitelistResponse {
     const message = createBaseAffiliateWhitelistResponse();
     message.whitelist = object.whitelist !== undefined && object.whitelist !== null ? AffiliateWhitelist.fromPartial(object.whitelist) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseAffiliateOverridesRequest(): AffiliateOverridesRequest {
+  return {};
+}
+
+export const AffiliateOverridesRequest = {
+  encode(_: AffiliateOverridesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateOverridesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateOverridesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<AffiliateOverridesRequest>): AffiliateOverridesRequest {
+    const message = createBaseAffiliateOverridesRequest();
+    return message;
+  }
+
+};
+
+function createBaseAffiliateOverridesResponse(): AffiliateOverridesResponse {
+  return {
+    overrides: undefined
+  };
+}
+
+export const AffiliateOverridesResponse = {
+  encode(message: AffiliateOverridesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.overrides !== undefined) {
+      AffiliateOverrides.encode(message.overrides, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateOverridesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateOverridesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.overrides = AffiliateOverrides.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateOverridesResponse>): AffiliateOverridesResponse {
+    const message = createBaseAffiliateOverridesResponse();
+    message.overrides = object.overrides !== undefined && object.overrides !== null ? AffiliateOverrides.fromPartial(object.overrides) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseAffiliateParametersRequest(): AffiliateParametersRequest {
+  return {};
+}
+
+export const AffiliateParametersRequest = {
+  encode(_: AffiliateParametersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateParametersRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateParametersRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<AffiliateParametersRequest>): AffiliateParametersRequest {
+    const message = createBaseAffiliateParametersRequest();
+    return message;
+  }
+
+};
+
+function createBaseAffiliateParametersResponse(): AffiliateParametersResponse {
+  return {
+    parameters: undefined
+  };
+}
+
+export const AffiliateParametersResponse = {
+  encode(message: AffiliateParametersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.parameters !== undefined) {
+      AffiliateParameters.encode(message.parameters, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateParametersResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateParametersResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.parameters = AffiliateParameters.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateParametersResponse>): AffiliateParametersResponse {
+    const message = createBaseAffiliateParametersResponse();
+    message.parameters = object.parameters !== undefined && object.parameters !== null ? AffiliateParameters.fromPartial(object.parameters) : undefined;
     return message;
   }
 

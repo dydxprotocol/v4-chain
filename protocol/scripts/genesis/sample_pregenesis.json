@@ -3,6 +3,11 @@
   "app_name": "dydxprotocold",
   "app_state": {
     "affiliates": {
+      "affiliate_parameters": {
+        "maximum_30d_affiliate_revenue_per_referred_user_quote_quantums": "10000000000",
+        "maximum_30d_attributable_volume_per_referred_user_quote_quantums": "100000000000000",
+        "referee_minimum_fee_tier_idx": 2
+      },
       "affiliate_tiers": {
         "tiers": [
           {
@@ -24,6 +29,11 @@
             "req_referred_volume_quote_quantums": "25000000000000",
             "req_staked_whole_coins": 5000,
             "taker_fee_share_ppm": 150000
+          },
+          {
+            "req_referred_volume_quote_quantums": "50000000000000",
+            "req_staked_whole_coins": 100000000,
+            "taker_fee_share_ppm": 250000
           }
         ]
       }
@@ -4091,7 +4101,7 @@
       ]
     }
   },
-  "app_version": "7.0.0-dev0-149-g12cfb908b",
+  "app_version": "9.0.0-47-gd399e2625",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

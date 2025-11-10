@@ -32,6 +32,18 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/affiliates/affiliate_whitelist";
   };
+  // Query AffiliateParameters returns the affiliate parameters.
+  rpc AffiliateParameters(AffiliateParametersRequest)
+      returns (AffiliateParametersResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/affiliate_parameters";
+  };
+  // Query AffiliateOverrides returns the affiliate overrides.
+  rpc AffiliateOverrides(AffiliateOverridesRequest)
+      returns (AffiliateOverridesResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/affiliate_overrides";
+  };
 }
 
 // AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC
@@ -55,10 +67,17 @@ message AffiliateInfoResponse {
   bytes referred_volume = 4 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable) = false,
+    deprecated = true
   ];
   // The affiliate's currently staked native tokens (in whole coins).
   bytes staked_amount = 5 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // The affiliate's 30d referred volume in quote quantums.
+  bytes referred_volume_30d_rolling = 6 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
@@ -94,4 +113,22 @@ message AffiliateWhitelistRequest {}
 // Query/AffiliateWhitelist RPC method.
 message AffiliateWhitelistResponse {
   AffiliateWhitelist whitelist = 1 [ (gogoproto.nullable) = false ];
+}
+
+// AffiliateOverridesRequest is the request type for the
+// Query/AffiliateOverrides RPC method.
+message AffiliateOverridesRequest {}
+// AffiliateOverridesResponse is the response type for the
+// Query/AffiliateOverrides RPC method.
+message AffiliateOverridesResponse {
+  AffiliateOverrides overrides = 1 [ (gogoproto.nullable) = false ];
+}
+
+// AffiliateParametersRequest is the request type for the
+// Query/AffiliateParameters RPC method.
+message AffiliateParametersRequest {}
+// AffiliateParametersResponse is the response type for the
+// Query/AffiliateParameters RPC method.
+message AffiliateParametersResponse {
+  AffiliateParameters parameters = 1 [ (gogoproto.nullable) = false ];
 }

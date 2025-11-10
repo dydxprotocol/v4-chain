@@ -151,7 +151,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// affiliates
 		*affiliates.MsgUpdateAffiliateTiers,
-		*affiliates.MsgUpdateAffiliateWhitelist:
+		*affiliates.MsgUpdateAffiliateWhitelist,
+		*affiliates.MsgUpdateAffiliateOverrides,
+		*affiliates.MsgUpdateAffiliateParameters:
 
 		return true
 
