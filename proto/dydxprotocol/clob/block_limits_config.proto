@@ -1,8 +1,6 @@
 syntax = "proto3";
 package dydxprotocol.clob;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // BlockLimitsConfig stores global per-block limits for the CLOB module.
