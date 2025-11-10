@@ -501,7 +501,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			initialModuleBalance: 100,
 			balanceToSend:        101,
 			recipientAddress:     constants.AliceAccAddress.String(),
-			expectedErrContains:  "insufficient fund",
+			expectedErrContains:  "insufficient funds",
 		},
 	}
 	for name, tc := range tests {
