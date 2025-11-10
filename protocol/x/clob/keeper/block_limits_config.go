@@ -31,11 +31,6 @@ func (k Keeper) setBlockLimitsConfig(
 	ctx sdk.Context,
 	config types.BlockLimitsConfig,
 ) error {
-	// Validate the block limits config before writing it to state.
-	if err := config.Validate(); err != nil {
-		return err
-	}
-
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&config)
 	store.Set([]byte(types.BlockLimitsConfigKey), b)
