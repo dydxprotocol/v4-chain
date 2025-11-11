@@ -150,6 +150,21 @@ func (k msgServer) SendFromAccountToAccount(
 		)
 	}
 
+	// Validate sender address.
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return nil, types.ErrInvalidAccountAddress
+	}
+
+	// Validate recipient address.
+	if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+		return nil, types.ErrInvalidAccountAddress
+	}
+
+	// Validate coin.
+	if err := msg.Coin.Validate(); err != nil {
+		return nil, err
+	}
+
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	if err := k.Keeper.SendFromAccountToAccount(ctx, msg); err != nil {

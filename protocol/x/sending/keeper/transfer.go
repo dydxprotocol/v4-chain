@@ -223,10 +223,6 @@ func (k Keeper) SendFromAccountToAccount(
 	ctx sdk.Context,
 	msg *types.MsgSendFromAccountToAccount,
 ) (err error) {
-	if err = msg.ValidateBasic(); err != nil {
-		return err
-	}
-
 	senderAddr := sdk.MustAccAddressFromBech32(msg.GetSender())
 	recipientAddr := sdk.MustAccAddressFromBech32(msg.GetRecipient())
 
