@@ -325,3 +325,75 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgServerSendFromAccountToAccount_Validation(t *testing.T) {
+	tests := map[string]struct {
+		msg                 *types.MsgSendFromAccountToAccount
+		expectedErrContains string
+	}{
+		"invalid authority": {
+			msg: &types.MsgSendFromAccountToAccount{
+				Authority: "invalid",
+				Sender:    constants.AliceAccAddress.String(),
+				Recipient: constants.BobAccAddress.String(),
+				Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			expectedErrContains: "invalid authority",
+		},
+		"empty sender": {
+			msg: &types.MsgSendFromAccountToAccount{
+				Authority: lib.GovModuleAddress.String(),
+				Sender:    "",
+				Recipient: constants.BobAccAddress.String(),
+				Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			expectedErrContains: "Account address is invalid",
+		},
+		"invalid sender": {
+			msg: &types.MsgSendFromAccountToAccount{
+				Authority: lib.GovModuleAddress.String(),
+				Sender:    "invalid",
+				Recipient: constants.BobAccAddress.String(),
+				Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			expectedErrContains: "Account address is invalid",
+		},
+		"empty recipient": {
+			msg: &types.MsgSendFromAccountToAccount{
+				Authority: lib.GovModuleAddress.String(),
+				Sender:    constants.AliceAccAddress.String(),
+				Recipient: "",
+				Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			expectedErrContains: "Account address is invalid",
+		},
+		"invalid recipient": {
+			msg: &types.MsgSendFromAccountToAccount{
+				Authority: lib.GovModuleAddress.String(),
+				Sender:    constants.AliceAccAddress.String(),
+				Recipient: "invalid",
+				Coin:      sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			expectedErrContains: "Account address is invalid",
+		},
+		"invalid coin": {
+			msg: &types.MsgSendFromAccountToAccount{
+				Authority: lib.GovModuleAddress.String(),
+				Sender:    constants.AliceAccAddress.String(),
+				Recipient: constants.BobAccAddress.String(),
+				Coin:      sdk.Coin{Denom: "", Amount: sdkmath.NewInt(100)},
+			},
+			expectedErrContains: "invalid denom",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ks := keepertest.SendingKeepers(t)
+			msgServer := keeper.NewMsgServerImpl(ks.SendingKeeper)
+
+			_, err := msgServer.SendFromAccountToAccount(ks.Ctx, tc.msg)
+			require.ErrorContains(t, err, tc.expectedErrContains)
+		})
+	}
+}

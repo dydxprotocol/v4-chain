@@ -86,6 +86,24 @@ func (_m *SendingKeeper) ProcessWithdrawFromSubaccount(ctx cosmos_sdktypes.Conte
 	return r0
 }
 
+// SendFromAccountToAccount provides a mock function with given fields: ctx, msg
+func (_m *SendingKeeper) SendFromAccountToAccount(ctx cosmos_sdktypes.Context, msg *types.MsgSendFromAccountToAccount) error {
+	ret := _m.Called(ctx, msg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendFromAccountToAccount")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(cosmos_sdktypes.Context, *types.MsgSendFromAccountToAccount) error); ok {
+		r0 = rf(ctx, msg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SendFromModuleToAccount provides a mock function with given fields: ctx, msg
 func (_m *SendingKeeper) SendFromModuleToAccount(ctx cosmos_sdktypes.Context, msg *types.MsgSendFromModuleToAccount) error {
 	ret := _m.Called(ctx, msg)
