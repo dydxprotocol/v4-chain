@@ -83,4 +83,10 @@ type BankKeeper interface {
 		recipientAddr sdk.AccAddress,
 		amt sdk.Coins,
 	) error
+	SendCoins(
+		ctx context.Context,
+		fromAddr sdk.AccAddress,
+		toAddr sdk.AccAddress,
+		amt sdk.Coins,
+	) error
 }

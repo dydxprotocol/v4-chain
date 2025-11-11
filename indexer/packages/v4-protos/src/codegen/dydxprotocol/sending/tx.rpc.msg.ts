@@ -1,7 +1,7 @@
-import { MsgDepositToSubaccount, MsgWithdrawFromSubaccount, MsgSendFromModuleToAccount } from "./transfer";
+import { MsgDepositToSubaccount, MsgWithdrawFromSubaccount, MsgSendFromModuleToAccount, MsgSendFromAccountToAccount } from "./transfer";
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgCreateTransfer, MsgCreateTransferResponse, MsgDepositToSubaccountResponse, MsgWithdrawFromSubaccountResponse, MsgSendFromModuleToAccountResponse } from "./tx";
+import { MsgCreateTransfer, MsgCreateTransferResponse, MsgDepositToSubaccountResponse, MsgWithdrawFromSubaccountResponse, MsgSendFromModuleToAccountResponse, MsgSendFromAccountToAccountResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -25,6 +25,12 @@ export interface Msg {
    */
 
   sendFromModuleToAccount(request: MsgSendFromModuleToAccount): Promise<MsgSendFromModuleToAccountResponse>;
+  /**
+   * SendFromAccountToAccount initiates a new transfer from an `x/bank` account
+   * to another `x/bank` account (should only be executed by governance).
+   */
+
+  sendFromAccountToAccount(request: MsgSendFromAccountToAccount): Promise<MsgSendFromAccountToAccountResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -35,6 +41,7 @@ export class MsgClientImpl implements Msg {
     this.depositToSubaccount = this.depositToSubaccount.bind(this);
     this.withdrawFromSubaccount = this.withdrawFromSubaccount.bind(this);
     this.sendFromModuleToAccount = this.sendFromModuleToAccount.bind(this);
+    this.sendFromAccountToAccount = this.sendFromAccountToAccount.bind(this);
   }
 
   createTransfer(request: MsgCreateTransfer): Promise<MsgCreateTransferResponse> {
@@ -59,6 +66,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgSendFromModuleToAccount.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.sending.Msg", "SendFromModuleToAccount", data);
     return promise.then(data => MsgSendFromModuleToAccountResponse.decode(new _m0.Reader(data)));
+  }
+
+  sendFromAccountToAccount(request: MsgSendFromAccountToAccount): Promise<MsgSendFromAccountToAccountResponse> {
+    const data = MsgSendFromAccountToAccount.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.sending.Msg", "SendFromAccountToAccount", data);
+    return promise.then(data => MsgSendFromAccountToAccountResponse.decode(new _m0.Reader(data)));
   }
 
 }
