@@ -14,6 +14,7 @@ import { getUuid } from '../helpers/uuid';
 import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import FillModel from '../models/fill-model';
 import {
+  CostOfFills,
   FillColumns,
   FillCreateObject,
   FillFromDatabase,
@@ -26,7 +27,6 @@ import {
   OrderedFillsWithFundingIndices,
   Ordering,
   OrderSide,
-  CostOfFills,
   PaginationFromDatabase,
   QueryableField,
   QueryConfig,
@@ -96,6 +96,8 @@ export async function findAll(
     side,
     liquidity,
     type,
+    includeTypes,
+    excludeTypes,
     clobPairId,
     eventId,
     transactionHash,
@@ -163,6 +165,14 @@ export async function findAll(
 
   if (type !== undefined) {
     baseQuery = baseQuery.where(FillColumns.type, type);
+  }
+
+  if (includeTypes !== undefined && includeTypes.length > 0) {
+    baseQuery = baseQuery.whereIn(FillColumns.type, includeTypes);
+  }
+
+  if (excludeTypes !== undefined && excludeTypes.length > 0) {
+    baseQuery = baseQuery.whereNotIn(FillColumns.type, excludeTypes);
   }
 
   if (clobPairId !== undefined) {
@@ -246,8 +256,8 @@ export async function update(
 ): Promise<FillFromDatabase | undefined> {
   const fill = await FillModel.query(
     Transaction.get(options.txId),
-  // TODO fix expression typing so we dont have to use any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // TODO fix expression typing so we dont have to use any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ).findById(fields.id).patch(fields as any).returning('*');
   // The objection types mistakenly think the query returns an array of fills.
   return fill as unknown as (FillFromDatabase | undefined);
