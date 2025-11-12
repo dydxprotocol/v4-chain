@@ -49,13 +49,14 @@ func TestModifyPerpetual_Success(t *testing.T) {
 		ticker := fmt.Sprintf("foo_%v", i)
 		marketId := uint32(i*2) % numMarkets
 		defaultFundingPpm := int32(i * 2)
+		atopmicResolution := int32(i*3 + 2)
 		liquidityTier := uint32((i + 1) % numLiquidityTiers)
 		retItem, err := pc.PerpetualsKeeper.ModifyPerpetual(
 			pc.Ctx,
 			item.Params.Id,
 			ticker,
 			marketId,
-			item.Params.AtomicResolution,
+			atopmicResolution,
 			defaultFundingPpm,
 			liquidityTier,
 		)
@@ -66,7 +67,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			Id:                   item.Params.Id,
 			Ticker:               ticker,
 			MarketId:             marketId,
-			AtomicResolution:     item.Params.AtomicResolution,
+			AtomicResolution:     atopmicResolution,
 			LiquidityTier:        liquidityTier,
 			MarketType:           v1.ConvertToPerpetualMarketType(item.Params.MarketType),
 			DefaultFunding8HrPpm: defaultFundingPpm,
@@ -92,7 +93,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 		)
 		require.Equal(
 			t,
-			int32(i),
+			atopmicResolution,
 			newItem.Params.AtomicResolution,
 		)
 		require.Equal(
