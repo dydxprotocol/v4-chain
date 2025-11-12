@@ -55,6 +55,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			item.Params.Id,
 			ticker,
 			marketId,
+			item.Params.AtomicResolution,
 			defaultFundingPpm,
 			liquidityTier,
 		)
@@ -309,6 +310,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 				tc.id,
 				tc.ticker,
 				tc.marketId,
+				int32(-10),
 				tc.defaultFundingPpm,
 				tc.liquidityTier,
 			)
