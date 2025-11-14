@@ -101,8 +101,8 @@ func initTendermintConfig() *tmcfg.Config {
 	// a users rate limit if the entry is evicted from the mempool cache as it would be possible for the transaction
 	// to go through `CheckTx` again causing it to hit rate limit code against the users account.
 	cfg.Mempool.CacheSize = 5000 * int(clobtypes.ShortBlockWindow)
-	cfg.Mempool.Size = 50000
-	cfg.Mempool.TTLNumBlocks = 20 //nolint:staticcheck
+	cfg.Mempool.Size = 100000
+	cfg.Mempool.TTLNumBlocks = 40 //nolint:staticcheck
 	cfg.Mempool.KeepInvalidTxsInCache = true
 
 	// Enable pex.
