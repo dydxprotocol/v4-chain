@@ -340,7 +340,13 @@ export async function findAllDailyAggregate(
 
   // Step 2: Get all records at those earliest timestamps
   const dailySnapshotsQuery = baseQuery.clone()
-    .select('*')
+    .select(
+      PnlColumns.createdAt,
+      PnlColumns.createdAtHeight,
+      PnlColumns.equity,
+      PnlColumns.totalPnl,
+      PnlColumns.netTransfers,
+    )
     .innerJoin(
       earliestTimestampPerDay.as('earliest'),
       function joinCondition() {
