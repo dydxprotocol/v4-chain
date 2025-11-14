@@ -302,7 +302,7 @@ export async function findAllDailyAggregate(
   );
 
   const dailyBase = setupBaseQuery<PnlModel>(PnlModel, options);
-  const knex = dailyBase.toKnexQuery().client;
+  const knex = (dailyBase as unknown as { knex?: () => Knex }).knex?.() ?? PnlModel.knex();
   baseQuery = baseQuery.whereIn(PnlColumns.subaccountId, subaccountId);
 
   if (createdBeforeOrAtHeight !== undefined) {
@@ -331,6 +331,7 @@ export async function findAllDailyAggregate(
 
   // Step 1: Find the earliest timestamp for each day across ALL subaccounts
   const earliestTimestampPerDay = baseQuery.clone()
+    .clearSelect()
     .select(
       knex.raw('DATE_TRUNC(\'day\', "createdAt") as day_date'),
       knex.raw('MIN("createdAt") as earliest_timestamp'),
