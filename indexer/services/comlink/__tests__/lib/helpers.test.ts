@@ -807,10 +807,7 @@ describe('helpers', () => {
             maxSize: testConstants.defaultPerpetualPosition.maxSize,
             // 200000 + 10*(10000-10050)=199500
             netFunding: getFixedRepresentation('199500'),
-            // sumClose=0, so realized Pnl is the same as the net funding of the position.
-            // Unsettled funding is funding payments that already "happened" but not reflected
-            // in the subaccount's balance yet, so it's considered a part of realizedPnl.
-            realizedPnl: getFixedRepresentation('199500'),
+            realizedPnl: getFixedRepresentation('100'),
             // size * (index-entry) = 10*(15000-20000) = -50000
             unrealizedPnl: getFixedRepresentation(-50000),
             status: testConstants.defaultPerpetualPosition.status,

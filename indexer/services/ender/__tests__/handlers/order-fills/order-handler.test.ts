@@ -371,6 +371,9 @@ describe('OrderHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        positionSideBefore: 'LONG',
+        entryPriceBefore: '15000',
+        positionSizeBefore: '10',
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -390,6 +393,9 @@ describe('OrderHandler', () => {
         clientMetadata: takerOrderProto.clientMetadata.toString(),
         fee: defaultTakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        positionSideBefore: 'LONG',
+        entryPriceBefore: '15000',
+        positionSizeBefore: '10',
       });
 
       const expectedMakerOffchainUpdate: OffChainUpdateV1 = {
@@ -451,6 +457,7 @@ describe('OrderHandler', () => {
               makerPrice,
               totalFilled,
             ),
+            totalRealizedPnl: '-1',
           },
         ),
         expectPerpetualPosition(
@@ -461,6 +468,7 @@ describe('OrderHandler', () => {
           {
             sumClose: totalFilled,
             exitPrice: makerPrice,
+            totalRealizedPnl: '-2.5000',
           },
         ),
         expectCandlesUpdated(),
@@ -712,6 +720,9 @@ describe('OrderHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        positionSideBefore: 'LONG',
+        entryPriceBefore: '15000',
+        positionSizeBefore: '10',
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -731,6 +742,9 @@ describe('OrderHandler', () => {
         clientMetadata: takerOrderProto.clientMetadata.toString(),
         fee: defaultTakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        positionSideBefore: 'LONG',
+        entryPriceBefore: '15000',
+        positionSizeBefore: '10',
       });
 
       const expectedMakerUpdateOffchainUpdate: OffChainUpdateV1 = {
@@ -998,6 +1012,9 @@ describe('OrderHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        positionSideBefore: 'LONG',
+        entryPriceBefore: '15000',
+        positionSizeBefore: '10',
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -1017,6 +1034,9 @@ describe('OrderHandler', () => {
         clientMetadata: takerOrderProto.clientMetadata.toString(),
         fee: defaultTakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        positionSideBefore: 'LONG',
+        entryPriceBefore: '15000',
+        positionSizeBefore: '10',
       });
 
       const expectedMakerUpdateOffchainUpdate: OffChainUpdateV1 = {
@@ -1221,6 +1241,9 @@ describe('OrderHandler', () => {
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -1240,6 +1263,9 @@ describe('OrderHandler', () => {
       clientMetadata: takerOrderProto.clientMetadata.toString(),
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
 
     await Promise.all([
@@ -1425,6 +1451,9 @@ describe('OrderHandler', () => {
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -1444,6 +1473,9 @@ describe('OrderHandler', () => {
       clientMetadata: takerOrderProto.clientMetadata.toString(),
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
 
     await Promise.all([
@@ -1650,6 +1682,9 @@ describe('OrderHandler', () => {
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -1669,6 +1704,9 @@ describe('OrderHandler', () => {
       clientMetadata: takerOrderProto.clientMetadata.toString(),
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
 
     await Promise.all([
@@ -1922,6 +1960,9 @@ describe('OrderHandler', () => {
       clientMetadata: suborder1.clientMetadata.toString(),
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '15000',
+      positionSizeBefore: '10',
     });
 
     const eventId2: Buffer = TendermintEventTable.createEventId(
@@ -1948,6 +1989,9 @@ describe('OrderHandler', () => {
       clientMetadata: suborder2.clientMetadata.toString(),
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      positionSideBefore: 'LONG',
+      entryPriceBefore: '0.001499999850010015',
+      positionSizeBefore: '100000010',
     });
   });
 
@@ -2426,6 +2470,199 @@ describe('OrderHandler', () => {
     expect(makerOrder!.status).toEqual(status);
     // taker order is partially filled, and not in CanceledOrdersCache
     expect(takerOrder!.status).toEqual(OrderStatus.OPEN);
+  });
+
+  it('populates before position fields on fills for both maker and taker', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+
+    const makerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: 1_000_000,
+      subticks: 100_000_000,
+      goodTilOneof: { goodTilBlock: 10 },
+      clobPairId: defaultClobPairId,
+      orderFlags: ORDER_FLAG_LONG_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
+      reduceOnly: false,
+      clientMetadata: 0,
+    });
+
+    const takerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: 10_000_000,
+      subticks: 15_000_000,
+      goodTilOneof: { goodTilBlock: 15 },
+      clobPairId: defaultClobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+      reduceOnly: true,
+      clientMetadata: 0,
+    });
+
+    await Promise.all([
+      PerpetualPositionTable.create(defaultPerpetualPosition),
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        subaccountId: testConstants.defaultSubaccountId2,
+      }),
+    ]);
+
+    const fillAmount = 1_000_000;
+    const orderFillEvent = createOrderFillEvent(
+      makerOrderProto,
+      takerOrderProto,
+      fillAmount,
+      fillAmount,
+      fillAmount,
+    );
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await onMessage(kafkaMessage);
+
+    const eventId: Buffer = TendermintEventTable.createEventId(
+      defaultHeight,
+      transactionIndex,
+      eventIndex,
+    );
+
+    const positionSizeBefore = '10';
+    const entryPriceBefore = '15000';
+    const positionSideBefore = 'LONG';
+
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '0',
+      liquidity: Liquidity.MAKER,
+      size: '0.0001',
+      price: '10000',
+      quoteAmount: '1',
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIMIT,
+      clobPairId: makerOrderProto.orderId!.clobPairId.toString(),
+      side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
+      orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
+      clientMetadata: makerOrderProto.clientMetadata.toString(),
+      fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+      positionSizeBefore,
+      entryPriceBefore,
+      positionSideBefore,
+    });
+
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId2,
+      clientId: '0',
+      liquidity: Liquidity.TAKER,
+      size: '0.0001',
+      price: '10000',
+      quoteAmount: '1',
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIMIT,
+      clobPairId: defaultClobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(takerOrderProto.side),
+      orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
+      clientMetadata: takerOrderProto.clientMetadata.toString(),
+      fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+      positionSizeBefore,
+      entryPriceBefore,
+      positionSideBefore,
+    });
+  });
+
+  it('updates totalRealizedPnl when a reduce-only order closes and realizes PnL', async () => {
+    const transactionIndex = 0;
+    const eventIndex = 0;
+
+    await Promise.all([
+      PerpetualPositionTable.create(defaultPerpetualPosition),
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        subaccountId: testConstants.defaultSubaccountId2,
+      }),
+    ]);
+
+    const makerOrderProto = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: 1_000_000,
+      subticks: 100_000_000,
+      goodTilOneof: { goodTilBlock: 10 },
+      clobPairId: defaultClobPairId,
+      orderFlags: ORDER_FLAG_LONG_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
+      reduceOnly: false,
+      clientMetadata: 0,
+    });
+
+    const takerOrderProto = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: 1_000_000,
+      subticks: 15_000_000,
+      goodTilOneof: { goodTilBlock: 15 },
+      clobPairId: defaultClobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+      reduceOnly: true,
+      clientMetadata: 0,
+    });
+
+    const fillAmount = 1_000_000;
+    const orderFillEvent = createOrderFillEvent(
+      makerOrderProto,
+      takerOrderProto,
+      fillAmount,
+      fillAmount,
+      fillAmount,
+    );
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await onMessage(kafkaMessage);
+
+    const expectedRealizedPnl = '-2.5000';
+    const fillInHuman = '0.0001';
+    const makerPriceHuman = '10000';
+
+    await expectPerpetualPosition(
+      PerpetualPositionTable.uuid(
+        testConstants.defaultSubaccountId2,
+        defaultPerpetualPosition.openEventId,
+      ),
+      {
+        sumClose: fillInHuman,
+        exitPrice: makerPriceHuman,
+        totalRealizedPnl: expectedRealizedPnl,
+      },
+    );
   });
 
   async function expectDefaultOrderAndFillSubaccountKafkaMessages(

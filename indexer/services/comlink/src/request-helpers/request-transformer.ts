@@ -81,17 +81,8 @@ export function perpetualPositionToResponseObject(
   marketsMap: MarketsMap,
   subaccountNumber: number,
 ): PerpetualPositionResponseObject {
-  // Realized pnl is calculated from the difference in price between the average entry/exit price
-  // (order depending on side of the position) multiplied by amount of the position that was closed
-  // in addition to the funding payments.
-  const priceDiff: Big = (position.side === PositionSide.LONG)
-    ? Big(position.exitPrice ?? 0).minus(position.entryPrice)
-    : Big(position.entryPrice).minus(position.exitPrice ?? 0);
   const netFunding: Big = Big(position.settledFunding).plus(position.unsettledFunding);
-  const realizedPnl: string = priceDiff
-    .mul(position.sumClose)
-    .plus(netFunding)
-    .toFixed();
+  const realizedPnl: string = position.totalRealizedPnl ?? '0';
 
   return {
     market: perpetualMarketsMap[position.perpetualId].ticker,
@@ -169,6 +160,9 @@ export function fillToResponseObject(
     builderAddress: fill.builderAddress ?? undefined,
     orderRouterAddress: fill.orderRouterAddress ?? undefined,
     orderRouterFee: fill.orderRouterFee ?? undefined,
+    positionSizeBefore: fill.positionSizeBefore ?? undefined,
+    entryPriceBefore: fill.entryPriceBefore ?? undefined,
+    positionSideBefore: fill.positionSideBefore ?? undefined,
   };
 }
 

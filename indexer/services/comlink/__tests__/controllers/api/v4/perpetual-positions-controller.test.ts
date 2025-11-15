@@ -80,7 +80,7 @@ describe('perpetual-positions-controller#V4', () => {
         // sumClose=0, so realized Pnl is the same as the net funding of the position.
         // Unsettled funding is funding payments that already "happened" but not reflected
         // in the subaccount's balance yet, so it's considered a part of realizedPnl.
-        realizedPnl: getFixedRepresentation('199500'),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (long position):
         // index price = 15_000, entry price = 20_000, size = 10
         // unrealizedPnl = size * (index price - entry price)
@@ -132,7 +132,7 @@ describe('perpetual-positions-controller#V4', () => {
         // sumClose=0, so realized Pnl is the same as the net funding of the position.
         // Unsettled funding is funding payments that already "happened" but not reflected
         // in the subaccount's balance yet, so it's considered a part of realizedPnl.
-        realizedPnl: getFixedRepresentation('200500'),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (short position):
         // index price = 15_000, entry price = 20_000, size = -10
         // unrealizedPnl = size * (index price - entry price)
@@ -180,9 +180,7 @@ describe('perpetual-positions-controller#V4', () => {
         netFunding: getFixedRepresentation(
           testConstants.defaultPerpetualPosition.settledFunding,
         ),
-        realizedPnl: getFixedRepresentation(
-          testConstants.defaultPerpetualPosition.settledFunding,
-        ),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (short position):
         // index price = 15_000, entry price = 20_000, size = 10
         // unrealizedPnl = size * (index price - entry price)
@@ -293,7 +291,7 @@ describe('perpetual-positions-controller#V4', () => {
         // sumClose=0, so realized Pnl is the same as the net funding of the position.
         // Unsettled funding is funding payments that already "happened" but not reflected
         // in the subaccount's balance yet, so it's considered a part of realizedPnl.
-        realizedPnl: getFixedRepresentation('199500'),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (long position):
         // index price = 15_000, entry price = 20_000, size = 10
         // unrealizedPnl = size * (index price - entry price)
@@ -324,7 +322,7 @@ describe('perpetual-positions-controller#V4', () => {
         // sumClose=0, so realized Pnl is the same as the net funding of the position.
         // Unsettled funding is funding payments that already "happened" but not reflected
         // in the subaccount's balance yet, so it's considered a part of realizedPnl.
-        realizedPnl: getFixedRepresentation('202000'),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (short position):
         // index price = 1, entry price = 1.5, size = -10
         // unrealizedPnl = size * (index price - entry price)
@@ -382,9 +380,7 @@ describe('perpetual-positions-controller#V4', () => {
         netFunding: getFixedRepresentation(
           testConstants.defaultPerpetualPosition.settledFunding,
         ),
-        realizedPnl: getFixedRepresentation(
-          testConstants.defaultPerpetualPosition.settledFunding,
-        ),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (short position):
         // index price = 15_000, entry price = 20_000, size = 10
         // unrealizedPnl = size * (index price - entry price)
@@ -409,9 +405,7 @@ describe('perpetual-positions-controller#V4', () => {
         netFunding: getFixedRepresentation(
           testConstants.isolatedPerpetualPosition.settledFunding,
         ),
-        realizedPnl: getFixedRepresentation(
-          testConstants.isolatedPerpetualPosition.settledFunding,
-        ),
+        realizedPnl: getFixedRepresentation('100'),
         // For the calculation of the unrealized pnl (short position):
         // index price = 1, entry price = 1.5, size = -10
         // unrealizedPnl = size * (index price - entry price)

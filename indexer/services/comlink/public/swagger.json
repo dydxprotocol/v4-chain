@@ -636,6 +636,15 @@
           },
           "orderRouterFee": {
             "type": "string"
+          },
+          "positionSizeBefore": {
+            "type": "string"
+          },
+          "entryPriceBefore": {
+            "type": "string"
+          },
+          "positionSideBefore": {
+            "type": "string"
           }
         },
         "required": [
