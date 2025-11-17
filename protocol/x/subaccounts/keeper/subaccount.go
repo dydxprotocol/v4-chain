@@ -535,6 +535,29 @@ func (k Keeper) CanUpdateSubaccounts(
 	return success, successPerUpdate, err
 }
 
+func (k Keeper) checkDepositConstraints(
+	settledUpdates []types.SettledUpdate,
+) (
+	success bool,
+	successPerUpdate []types.UpdateResult,
+) {
+	success = true
+	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
+
+	for i, u := range settledUpdates {
+		for _, assetUpdate := range u.AssetUpdates {
+			if assetUpdate.AssetId == assettypes.AssetUsdc.Id &&
+				assetUpdate.BigQuantumsDelta.Cmp(big.NewInt(types.MIN_SUBACCOUNT_INITIAL_DEPOSIT_QUANTUMS)) < 0 &&
+				u.SettledSubaccount.GetUsdcPosition().Sign() == 0 {
+				successPerUpdate[i] = types.ViolatesDepositConstraints
+				success = false
+			}
+		}
+	}
+
+	return success, successPerUpdate
+}
+
 func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 	ctx sdk.Context,
 	settledUpdates []types.SettledUpdate,
@@ -557,11 +580,16 @@ func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 		return success, successPerUpdate, nil
 	}
 
-	// Block all withdrawals and transfers if either of the following is true within the last
-	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
-	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
-	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
+		success, successPerUpdate = k.checkDepositConstraints(settledUpdates)
+		if !success {
+			return success, successPerUpdate, nil
+		}
+
+		// Block all withdrawals and transfers if either of the following is true within the last
+		// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
+		// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
+		// - There was a chain outage that lasted at least five minutes.
 		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists, err := k.getLastBlockNegativeSubaccountSeen(
 			ctx,
 			settledUpdates,
