@@ -546,9 +546,13 @@ func (k Keeper) checkDepositConstraints(
 
 	for i, u := range settledUpdates {
 		for _, assetUpdate := range u.AssetUpdates {
+			// Reject deposit if the account the account is new (no perp position, no usdc position) and the deposit/transfer
+			// is less than the minimum initial deposit.
+			// TODO: we need to be careful this doesn't break any existing valid flows.
 			if assetUpdate.AssetId == assettypes.AssetUsdc.Id &&
 				assetUpdate.BigQuantumsDelta.Cmp(big.NewInt(types.MIN_SUBACCOUNT_INITIAL_DEPOSIT_QUANTUMS)) < 0 &&
-				u.SettledSubaccount.GetUsdcPosition().Sign() == 0 {
+				u.SettledSubaccount.GetUsdcPosition().Sign() == 0 &&
+				len(u.SettledSubaccount.PerpetualPositions) == 0 {
 				successPerUpdate[i] = types.ViolatesDepositConstraints
 				success = false
 			}
