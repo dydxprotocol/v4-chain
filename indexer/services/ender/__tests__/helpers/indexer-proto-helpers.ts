@@ -591,6 +591,9 @@ export async function expectFillInDatabase({
   builderFee = null,
   orderRouterAddress = null,
   orderRouterFee = null,
+  positionSideBefore,
+  entryPriceBefore,
+  positionSizeBefore,
 }: {
   subaccountId: string,
   clientId: string,
@@ -614,6 +617,9 @@ export async function expectFillInDatabase({
   builderFee?: string | null,
   orderRouterAddress?: string | null,
   orderRouterFee?: string | null,
+  positionSizeBefore?: string | null,
+  entryPriceBefore?: string | null,
+  positionSideBefore?: string | null,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -640,6 +646,9 @@ export async function expectFillInDatabase({
     builderFee,
     orderRouterAddress,
     orderRouterFee,
+    ...(positionSideBefore ? { positionSideBefore } : {}),
+    ...(positionSizeBefore ? { positionSizeBefore } : {}),
+    ...(entryPriceBefore ? { entryPriceBefore } : {}),
   }));
 }
 
@@ -978,6 +987,7 @@ export async function expectPerpetualPosition(
     sumClose?: string,
     entryPrice?: string,
     exitPrice?: string | null,
+    totalRealizedPnl?: string | null,
   },
 ) {
   const perpetualPosition:
@@ -998,6 +1008,9 @@ export async function expectPerpetualPosition(
   }
   if (fields.exitPrice !== undefined) {
     expect(perpetualPosition!.exitPrice).toEqual(fields.exitPrice);
+  }
+  if (fields.totalRealizedPnl !== undefined) {
+    expect(perpetualPosition!.totalRealizedPnl).toEqual(fields.totalRealizedPnl);
   }
 }
 
