@@ -34,6 +34,7 @@ export interface PerpetualPositionCreateObject {
   closedAtHeight?: string,
   closeEventId?: Buffer,
   exitPrice?: string,
+  totalRealizedPnl?: string,
 }
 
 export interface PerpetualPositionUpdateObject {
@@ -53,6 +54,7 @@ export interface PerpetualPositionUpdateObject {
   closeEventId?: Buffer | null,
   lastEventId?: Buffer,
   settledFunding?: string,
+  totalRealizedPnl?: string,
 }
 
 // Object used to update a subaccount's perpetual position in the SubaccountUpdateHandler
