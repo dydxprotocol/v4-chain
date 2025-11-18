@@ -1,7 +1,7 @@
 /* ------- QUERY TYPES ------- */
 
 import { CandleResolution } from './candle-types';
-import { Liquidity } from './fill-types';
+import { FillType, Liquidity } from './fill-types';
 import { OrderSide, OrderStatus, OrderType } from './order-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
@@ -29,6 +29,8 @@ export enum QueryableField {
   TYPE = 'type',
   STATUS = 'status',
   STATUSES = 'statuses',
+  INCLUDE_TYPES = 'includeTypes',
+  EXCLUDE_TYPES = 'excludeTypes',
   POST_ONLY = 'postOnly',
   REDUCE_ONLY = 'reduceOnly',
   PERPETUAL_ID = 'perpetualId',
@@ -149,6 +151,8 @@ export interface OrderQueryConfig extends QueryConfig {
   [QueryableField.TOTAL_FILLED]?: string,
   [QueryableField.PRICE]?: string,
   [QueryableField.TYPE]?: OrderType,
+  [QueryableField.INCLUDE_TYPES]?: OrderType[],
+  [QueryableField.EXCLUDE_TYPES]?: OrderType[],
   [QueryableField.STATUSES]?: OrderStatus[],
   [QueryableField.POST_ONLY]?: boolean,
   [QueryableField.REDUCE_ONLY]?: boolean,
@@ -173,7 +177,9 @@ export interface FillQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_ID]?: string[],
   [QueryableField.SIDE]?: OrderSide,
   [QueryableField.LIQUIDITY]?: Liquidity,
-  [QueryableField.TYPE]?: OrderType,
+  [QueryableField.TYPE]?: FillType,
+  [QueryableField.INCLUDE_TYPES]?: FillType[],
+  [QueryableField.EXCLUDE_TYPES]?: FillType[],
   [QueryableField.CLOB_PAIR_ID]?: string,
   [QueryableField.EVENT_ID]?: Buffer,
   [QueryableField.TRANSACTION_HASH]?: string,
@@ -252,6 +258,14 @@ export interface ToAndFromSubaccountTransferQueryConfig extends QueryConfig {
   [QueryableField.CREATED_BEFORE_OR_AT]?: string | undefined,
   [QueryableField.CREATED_AFTER_HEIGHT]?: string | undefined,
   [QueryableField.CREATED_AFTER]?: string | undefined,
+}
+
+export interface ParentSubaccountTransferQueryConfig extends QueryConfig {
+  [QueryableField.SUBACCOUNT_ID]: string[],
+  [QueryableField.LIMIT]?: number,
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.PAGE]?: number,
 }
 
 export interface OraclePriceQueryConfig extends QueryConfig {

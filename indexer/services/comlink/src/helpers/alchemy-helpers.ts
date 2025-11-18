@@ -47,9 +47,17 @@ export const chains: Record<string, Chain> = {
   [optimism.id.toString()]: optimism,
 };
 
+export const chainInAlchemy: Record<string, string> = {
+  [mainnet.id.toString()]: 'eth-mainnet',
+  [arbitrum.id.toString()]: 'arb-mainnet',
+  [avalanche.id.toString()]: 'avax-mainnet',
+  [base.id.toString()]: 'base-mainnet',
+  [optimism.id.toString()]: 'opt-mainnet',
+};
+
 export const publicClients = Object.keys(chains).reduce((acc, chainId) => {
   acc[chainId] = createPublicClient({
-    transport: http(getRPCEndpoint(chainId)),
+    transport: http(getAlchemyRPCEndpoint(chainId)),
     chain: chains[chainId],
   });
   return acc;
@@ -216,7 +224,7 @@ async function registerAddressWithAlchemyWebhookWithRetry(
  */
 export async function getSmartAccountAddress(address: string): Promise<string> {
   const publicAvalancheClient = createPublicClient({
-    transport: http(getRPCEndpoint(avalanche.id.toString())),
+    transport: http(getAlchemyRPCEndpoint(avalanche.id.toString())),
     chain: avalanche,
   });
 
@@ -265,11 +273,18 @@ export function isSupportedEVMChainId(chainId: string): boolean {
   return Object.keys(chains).includes(chainId);
 }
 
-export function getRPCEndpoint(chainId: string): string {
+export function getZeroDevRPCEndpoint(chainId: string): string {
   if (!isSupportedEVMChainId(chainId)) {
     throw new Error(`Unsupported chainId: ${chainId}`);
   }
   return `${config.ZERODEV_API_BASE_URL}/${config.ZERODEV_API_KEY}/chain/${chainId}`;
+}
+
+export function getAlchemyRPCEndpoint(chainId: string): string {
+  if (!isSupportedEVMChainId(chainId)) {
+    throw new Error(`Unsupported chainId: ${chainId}`);
+  }
+  return `https://${chainInAlchemy[chainId]}.g.alchemy.com/v2/${config.ALCHEMY_API_KEY}`;
 }
 
 // TODO: Verify that this function is 1000% correct. @RUI and @TYLER and @JARED

@@ -136,3 +136,42 @@ func (k msgServer) SendFromModuleToAccount(
 
 	return &types.MsgSendFromModuleToAccountResponse{}, nil
 }
+
+// SendFromAccountToAccount sends coins from one account to another account.
+func (k msgServer) SendFromAccountToAccount(
+	goCtx context.Context,
+	msg *types.MsgSendFromAccountToAccount,
+) (*types.MsgSendFromAccountToAccountResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errors.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	// Validate sender address.
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return nil, types.ErrInvalidAccountAddress
+	}
+
+	// Validate recipient address.
+	if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+		return nil, types.ErrInvalidAccountAddress
+	}
+
+	// Validate coin.
+	if err := msg.Coin.Validate(); err != nil {
+		return nil, err
+	}
+
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	if err := k.Keeper.SendFromAccountToAccount(ctx, msg); err != nil {
+		telemetry.IncrCounter(1, types.ModuleName, metrics.SendFromAccountToAccount, metrics.Error)
+		return nil, err
+	}
+	telemetry.IncrCounter(1, types.ModuleName, metrics.SendFromAccountToAccount, metrics.Success)
+
+	return &types.MsgSendFromAccountToAccountResponse{}, nil
+}

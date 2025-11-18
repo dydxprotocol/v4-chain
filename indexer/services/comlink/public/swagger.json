@@ -2519,6 +2519,28 @@
           },
           {
             "in": "query",
+            "name": "includeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/FillType"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/FillType"
+              }
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -2587,6 +2609,28 @@
             "schema": {
               "format": "double",
               "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/FillType"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/FillType"
+              }
             }
           },
           {
@@ -3216,6 +3260,28 @@
           },
           {
             "in": "query",
+            "name": "includeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/OrderType"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/OrderType"
+              }
+            }
+          },
+          {
+            "in": "query",
             "name": "status",
             "required": false,
             "schema": {
@@ -3338,6 +3404,28 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/OrderType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/OrderType"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "excludeTypes",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/OrderType"
+              }
             }
           },
           {

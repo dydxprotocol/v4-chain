@@ -65,6 +65,8 @@ export async function findAll(
     totalFilled,
     price,
     type,
+    includeTypes,
+    excludeTypes,
     statuses,
     reduceOnly,
     orderFlags,
@@ -151,6 +153,14 @@ export async function findAll(
 
   if (type !== undefined) {
     baseQuery = baseQuery.where(OrderColumns.type, type);
+  }
+
+  if (includeTypes !== undefined && includeTypes.length > 0) {
+    baseQuery = baseQuery.whereIn(OrderColumns.type, includeTypes);
+  }
+
+  if (excludeTypes !== undefined && excludeTypes.length > 0) {
+    baseQuery = baseQuery.whereNotIn(OrderColumns.type, excludeTypes);
   }
 
   if (statuses !== undefined) {

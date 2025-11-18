@@ -1253,6 +1253,8 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
 |subaccountNumber|query|number(double)|true|none|
 |market|query|string|false|none|
 |marketType|query|[MarketType](#schemamarkettype)|false|none|
+|includeTypes|query|array[string]|false|none|
+|excludeTypes|query|array[string]|false|none|
 |limit|query|number(double)|false|none|
 |createdBeforeOrAtHeight|query|number(double)|false|none|
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
@@ -1264,6 +1266,18 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
 |---|---|
 |marketType|PERPETUAL|
 |marketType|SPOT|
+|includeTypes|LIMIT|
+|includeTypes|LIQUIDATED|
+|includeTypes|LIQUIDATION|
+|includeTypes|DELEVERAGED|
+|includeTypes|OFFSETTING|
+|includeTypes|TWAP_SUBORDER|
+|excludeTypes|LIMIT|
+|excludeTypes|LIQUIDATED|
+|excludeTypes|LIQUIDATION|
+|excludeTypes|DELEVERAGED|
+|excludeTypes|OFFSETTING|
+|excludeTypes|TWAP_SUBORDER|
 
 > Example responses
 
@@ -1369,8 +1383,27 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
 |---|---|---|---|---|
 |address|query|string|true|none|
 |parentSubaccountNumber|query|number(double)|true|none|
+|includeTypes|query|array[string]|false|none|
+|excludeTypes|query|array[string]|false|none|
 |limit|query|number(double)|false|none|
 |page|query|number(double)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|includeTypes|LIMIT|
+|includeTypes|LIQUIDATED|
+|includeTypes|LIQUIDATION|
+|includeTypes|DELEVERAGED|
+|includeTypes|OFFSETTING|
+|includeTypes|TWAP_SUBORDER|
+|excludeTypes|LIMIT|
+|excludeTypes|LIQUIDATED|
+|excludeTypes|LIQUIDATION|
+|excludeTypes|DELEVERAGED|
+|excludeTypes|OFFSETTING|
+|excludeTypes|TWAP_SUBORDER|
 
 > Example responses
 
@@ -2285,6 +2318,8 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 |ticker|query|string|false|none|
 |side|query|[OrderSide](#schemaorderside)|false|none|
 |type|query|[OrderType](#schemaordertype)|false|none|
+|includeTypes|query|array[string]|false|none|
+|excludeTypes|query|array[string]|false|none|
 |status|query|array[any]|false|none|
 |goodTilBlockBeforeOrAt|query|number(double)|false|none|
 |goodTilBlockAfter|query|number(double)|false|none|
@@ -2307,6 +2342,24 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 |type|TAKE_PROFIT_MARKET|
 |type|TWAP|
 |type|TWAP_SUBORDER|
+|includeTypes|LIMIT|
+|includeTypes|MARKET|
+|includeTypes|STOP_LIMIT|
+|includeTypes|STOP_MARKET|
+|includeTypes|TRAILING_STOP|
+|includeTypes|TAKE_PROFIT|
+|includeTypes|TAKE_PROFIT_MARKET|
+|includeTypes|TWAP|
+|includeTypes|TWAP_SUBORDER|
+|excludeTypes|LIMIT|
+|excludeTypes|MARKET|
+|excludeTypes|STOP_LIMIT|
+|excludeTypes|STOP_MARKET|
+|excludeTypes|TRAILING_STOP|
+|excludeTypes|TAKE_PROFIT|
+|excludeTypes|TAKE_PROFIT_MARKET|
+|excludeTypes|TWAP|
+|excludeTypes|TWAP_SUBORDER|
 
 > Example responses
 
@@ -2498,6 +2551,8 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
 |ticker|query|string|false|none|
 |side|query|[OrderSide](#schemaorderside)|false|none|
 |type|query|[OrderType](#schemaordertype)|false|none|
+|includeTypes|query|array[string]|false|none|
+|excludeTypes|query|array[string]|false|none|
 |status|query|array[any]|false|none|
 |goodTilBlockBeforeOrAt|query|number(double)|false|none|
 |goodTilBlockAfter|query|number(double)|false|none|
@@ -2520,6 +2575,24 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
 |type|TAKE_PROFIT_MARKET|
 |type|TWAP|
 |type|TWAP_SUBORDER|
+|includeTypes|LIMIT|
+|includeTypes|MARKET|
+|includeTypes|STOP_LIMIT|
+|includeTypes|STOP_MARKET|
+|includeTypes|TRAILING_STOP|
+|includeTypes|TAKE_PROFIT|
+|includeTypes|TAKE_PROFIT_MARKET|
+|includeTypes|TWAP|
+|includeTypes|TWAP_SUBORDER|
+|excludeTypes|LIMIT|
+|excludeTypes|MARKET|
+|excludeTypes|STOP_LIMIT|
+|excludeTypes|STOP_MARKET|
+|excludeTypes|TRAILING_STOP|
+|excludeTypes|TAKE_PROFIT|
+|excludeTypes|TAKE_PROFIT_MARKET|
+|excludeTypes|TWAP|
+|excludeTypes|TWAP_SUBORDER|
 
 > Example responses
 
