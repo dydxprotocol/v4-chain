@@ -97,6 +97,9 @@ import (
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 
+	// Project logging helper
+	applog "github.com/dydxprotocol/v4-chain/protocol/lib/log"
+
 	// App
 	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -1835,6 +1838,17 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	// Measure the lag between current timestamp and the end blocker time stamp
 	// as an indicator of whether the node is lagging behind.
 	metrics.ModuleMeasureSince(metrics.EndBlocker, metrics.EndBlockerLag, ctx.BlockTime())
+
+	// Log sync lag and a heuristic at_tip flag (threshold 3s; adjust if block interval differs).
+	const tipThresholdSeconds = 3
+	lag := time.Since(ctx.BlockTime())
+	applog.InfoLog(
+		ctx,
+		"PIERRICK: Sync lag",
+		"height", ctx.BlockHeight(),
+		"lag_ms", lag.Milliseconds(),
+		"at_tip", lag <= tipThresholdSeconds*time.Second,
+	)
 
 	ctx = ctx.WithExecMode(lib.ExecModeEndBlock)
 
