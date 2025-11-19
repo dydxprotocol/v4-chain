@@ -85,6 +85,7 @@ func (k Keeper) RecordFill(
 	makerAddress string,
 	notional *big.Int,
 	affiliateFeeGenerated *big.Int,
+	affiliateAttributions []*types.AffiliateRevenueAttribution,
 ) {
 	blockStats := k.GetBlockStats(ctx)
 	blockStats.Fills = append(
@@ -94,6 +95,7 @@ func (k Keeper) RecordFill(
 			Maker:                         makerAddress,
 			Notional:                      notional.Uint64(),
 			AffiliateFeeGeneratedQuantums: affiliateFeeGenerated.Uint64(),
+			AffiliateRevenueAttributions:  affiliateAttributions,
 		},
 	)
 	k.SetBlockStats(ctx, blockStats)
@@ -231,6 +233,28 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+
+		// Track affiliate revenue attributions if present (can include both taker and maker)
+		for _, attribution := range fill.AffiliateRevenueAttributions {
+			if attribution != nil {
+				referrer := attribution.ReferrerAddress
+				if _, ok := userStatsMap[referrer]; !ok {
+					userStatsMap[referrer] = &types.EpochStats_UserWithStats{
+						User:  referrer,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track affiliate referred volume for the referrer in this epoch snapshot
+				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums +=
+					attribution.ReferredVolumeQuoteQuantums
+				// Track affiliate referred volume for the referrer in UserStats
+				referrerUserStats := k.GetUserStats(ctx, referrer)
+				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums +=
+					attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referrer, referrerUserStats)
+			}
+		}
+
 		// Track affiliate revenue generated on the taker in this epoch snapshot
 		userStatsMap[fill.Taker].Stats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
@@ -282,8 +306,8 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
-		stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
 		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting
