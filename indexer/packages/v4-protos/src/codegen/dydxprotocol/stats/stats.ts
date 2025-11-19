@@ -1,12 +1,22 @@
 import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
 import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
+/** AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match. */
+
 export interface AffiliateRevenueAttribution {
+  /** Referrer address */
   referrerAddress: string;
+  /** Referred volume to attribute in quote quantums */
+
   referredVolumeQuoteQuantums: Long;
 }
+/** AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match. */
+
 export interface AffiliateRevenueAttributionSDKType {
+  /** Referrer address */
   referrer_address: string;
+  /** Referred volume to attribute in quote quantums */
+
   referred_volume_quote_quantums: Long;
 }
 /** BlockStats is used to store stats transiently within the scope of a block. */
