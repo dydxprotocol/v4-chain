@@ -223,27 +223,35 @@ func TestExpireOldStats(t *testing.T) {
 				{
 					User: "alice",
 					Stats: &types.UserStats{
-						TakerNotional: 1,
-						MakerNotional: 2,
+						TakerNotional:                            1,
+						MakerNotional:                            2,
+						Affiliate_30DReferredVolumeQuoteQuantums: 10_000_000_000,
+						Affiliate_30DRevenueGeneratedQuantums:    100_000_000,
 					},
 				},
 				{
 					User: "bob",
 					Stats: &types.UserStats{
-						TakerNotional: 2,
-						MakerNotional: 1,
+						TakerNotional:                            2,
+						MakerNotional:                            1,
+						Affiliate_30DReferredVolumeQuoteQuantums: 10_000_000_000,
+						Affiliate_30DRevenueGeneratedQuantums:    100_000_000,
 					},
 				},
 			},
 		})
 	}
 	k.SetUserStats(ctx, "alice", &types.UserStats{
-		TakerNotional: 30,
-		MakerNotional: 60,
+		TakerNotional:                            30,
+		MakerNotional:                            60,
+		Affiliate_30DReferredVolumeQuoteQuantums: 300_000_000_000,
+		Affiliate_30DRevenueGeneratedQuantums:    3_000_000_000,
 	})
 	k.SetUserStats(ctx, "bob", &types.UserStats{
-		TakerNotional: 60,
-		MakerNotional: 30,
+		TakerNotional:                            60,
+		MakerNotional:                            30,
+		Affiliate_30DReferredVolumeQuoteQuantums: 300_000_000_000,
+		Affiliate_30DRevenueGeneratedQuantums:    3_000_000_000,
 	})
 	k.SetGlobalStats(ctx, &types.GlobalStats{
 		NotionalTraded: 90,
@@ -260,12 +268,16 @@ func TestExpireOldStats(t *testing.T) {
 
 		k.ExpireOldStats(ctx)
 		require.Equal(t, &types.UserStats{
-			TakerNotional: 30 - uint64(i+1),
-			MakerNotional: 60 - 2*uint64(i+1),
+			TakerNotional:                            30 - uint64(i+1),
+			MakerNotional:                            60 - 2*uint64(i+1),
+			Affiliate_30DReferredVolumeQuoteQuantums: 300_000_000_000 - (uint64(i+1) * 10_000_000_000),
+			Affiliate_30DRevenueGeneratedQuantums:    3_000_000_000 - (uint64(i+1) * 100_000_000),
 		}, k.GetUserStats(ctx, "alice"))
 		require.Equal(t, &types.UserStats{
-			TakerNotional: 60 - 2*uint64(i+1),
-			MakerNotional: 30 - uint64(i+1),
+			TakerNotional:                            60 - 2*uint64(i+1),
+			MakerNotional:                            30 - uint64(i+1),
+			Affiliate_30DReferredVolumeQuoteQuantums: 300_000_000_000 - (uint64(i+1) * 10_000_000_000),
+			Affiliate_30DRevenueGeneratedQuantums:    3_000_000_000 - (uint64(i+1) * 100_000_000),
 		}, k.GetUserStats(ctx, "bob"))
 		require.Equal(t, &types.GlobalStats{
 			NotionalTraded: 90 - 3*uint64(i+1),
@@ -278,12 +290,16 @@ func TestExpireOldStats(t *testing.T) {
 
 		// Unchanged after pruning nil epoch
 		require.Equal(t, &types.UserStats{
-			TakerNotional: 30 - uint64(i+1),
-			MakerNotional: 60 - 2*uint64(i+1),
+			TakerNotional:                            30 - uint64(i+1),
+			MakerNotional:                            60 - 2*uint64(i+1),
+			Affiliate_30DReferredVolumeQuoteQuantums: 300_000_000_000 - (uint64(i+1) * 10_000_000_000),
+			Affiliate_30DRevenueGeneratedQuantums:    3_000_000_000 - (uint64(i+1) * 100_000_000),
 		}, k.GetUserStats(ctx, "alice"))
 		require.Equal(t, &types.UserStats{
-			TakerNotional: 60 - 2*uint64(i+1),
-			MakerNotional: 30 - uint64(i+1),
+			TakerNotional:                            60 - 2*uint64(i+1),
+			MakerNotional:                            30 - uint64(i+1),
+			Affiliate_30DReferredVolumeQuoteQuantums: 300_000_000_000 - (uint64(i+1) * 10_000_000_000),
+			Affiliate_30DRevenueGeneratedQuantums:    3_000_000_000 - (uint64(i+1) * 100_000_000),
 		}, k.GetUserStats(ctx, "bob"))
 		require.Equal(t, &types.GlobalStats{
 			NotionalTraded: 90 - 3*uint64(i+1),
