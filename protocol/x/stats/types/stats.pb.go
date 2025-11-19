@@ -28,7 +28,8 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match.
+// AffiliateRevenueAttribution stores the affiliate revenue attributed to a user
+// during match.
 type AffiliateRevenueAttribution struct {
 	// Referrer address
 	ReferrerAddress string `protobuf:"bytes,1,opt,name=referrer_address,json=referrerAddress,proto3" json:"referrer_address,omitempty"`
@@ -142,7 +143,8 @@ type BlockStats_Fill struct {
 	// Used to calculate affiliate revenue attributed for taker. This is dynamic
 	// per affiliate tier
 	AffiliateFeeGeneratedQuantums uint64 `protobuf:"varint,4,opt,name=affiliate_fee_generated_quantums,json=affiliateFeeGeneratedQuantums,proto3" json:"affiliate_fee_generated_quantums,omitempty"`
-	// Affiliate revenue attributions for this fill (can include both taker and maker)
+	// Affiliate revenue attributions for this fill (can include both taker and
+	// maker)
 	AffiliateRevenueAttributions []*AffiliateRevenueAttribution `protobuf:"bytes,5,rep,name=affiliate_revenue_attributions,json=affiliateRevenueAttributions,proto3" json:"affiliate_revenue_attributions,omitempty"`
 }
 
