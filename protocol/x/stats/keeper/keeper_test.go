@@ -604,6 +604,264 @@ func TestExpireOldStats(t *testing.T) {
 	require.NotNil(t, k.GetEpochStatsOrNil(ctx, uint32(12)))
 }
 
+// TestAffiliateAttribution_ConsistentlyHighVolumeTrader tests the scenario where a user
+// is consistently trading at high volume and hitting the attribution cap.
+// This test proves there is NO equilibrium trap - the user can continue getting
+// attribution as old stats expire, even while trading continuously.
+func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+
+	// Epochs start at block height 2
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(int64(1), 0).UTC(),
+	})
+
+	// Advance time so first 5 epochs will be ready to expire
+	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(0, 0).
+			Add(windowDuration).
+			Add((time.Duration(5*epochstypes.StatsEpochDuration) + 1) * time.Second).
+			UTC(),
+	})
+
+	// Now advance to a stable block and set up stats
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
+	k := tApp.App.StatsKeeper
+
+	// Scenario: User is a consistent high-volume trader
+	// - Cap is 100k
+	// - User has been trading 200k per epoch for 30 epochs
+	// - User has attributed 100k total (at cap)
+	// - Old epochs will expire, allowing new attribution
+
+	// Create 30 epochs of history where the user traded 200k each epoch
+	// but only 100k total was attributed (due to cap being reached early)
+	for i := 0; i < 30; i++ {
+		var attributedThisEpoch uint64
+		if i < 5 {
+			// First 5 epochs: 20k attributed per epoch = 100k total (reaches cap)
+			attributedThisEpoch = 20_000_000_000
+		} else {
+			// Epochs 6-30: 0 attributed (already at cap)
+			attributedThisEpoch = 0
+		}
+
+		k.SetEpochStats(ctx, uint32(i*2), &types.EpochStats{
+			EpochEndTime: time.Unix(0, 0).
+				Add(time.Duration(i*int(epochstypes.StatsEpochDuration)) * time.Second).
+				UTC(),
+			Stats: []*types.EpochStats_UserWithStats{
+				{
+					User: "highVolumeTrader",
+					Stats: &types.UserStats{
+						TakerNotional:                              200_000_000_000, // 200k traded
+						MakerNotional:                              0,
+						Affiliate_30DReferredVolumeQuoteQuantums:   0,
+						Affiliate_30DRevenueGeneratedQuantums:      0,
+						Affiliate_30DAttributedVolumeQuoteQuantums: attributedThisEpoch, // Only first 5 epochs have attribution
+					},
+				},
+				{
+					User: "someAffiliate",
+					Stats: &types.UserStats{
+						TakerNotional:                            0,
+						MakerNotional:                            0,
+						Affiliate_30DReferredVolumeQuoteQuantums: attributedThisEpoch, // Same as attributed (this is what the affiliate refers)
+						Affiliate_30DRevenueGeneratedQuantums:    0,
+					},
+				},
+			},
+		})
+	}
+
+	// User's current stats: 6000k traded (30 epochs × 200k), but only 100k attributed
+	k.SetUserStats(ctx, "highVolumeTrader", &types.UserStats{
+		TakerNotional:                              6000_000_000_000, // 6M total volume
+		MakerNotional:                              0,
+		Affiliate_30DReferredVolumeQuoteQuantums:   0,
+		Affiliate_30DRevenueGeneratedQuantums:      0,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 100_000_000_000, // At cap (100k)
+	})
+
+	k.SetStatsMetadata(ctx, &types.StatsMetadata{
+		TrailingEpoch: 0,
+	})
+
+	// Set up affiliate's initial referred volume (also at cap from same history)
+	k.SetUserStats(ctx, "someAffiliate", &types.UserStats{
+		TakerNotional:                            0,
+		MakerNotional:                            0,
+		Affiliate_30DReferredVolumeQuoteQuantums: 100_000_000_000, // Also at 100k
+		Affiliate_30DRevenueGeneratedQuantums:    0,
+	})
+
+	// BEFORE expiration: User is at cap (100k)
+	userStats := k.GetUserStats(ctx, "highVolumeTrader")
+	require.Equal(t, uint64(100_000_000_000), userStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"User should start at cap")
+
+	affiliateStats := k.GetUserStats(ctx, "someAffiliate")
+	require.Equal(t, uint64(100_000_000_000), affiliateStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Affiliate should start with 100k referred volume")
+
+	// NOW INTERWEAVE: Expire old stats while processing new blocks with attribution
+	// This simulates the realistic scenario where a high-volume trader continues trading
+	// as old attributed volume expires, keeping their attributed volume at/near the cap
+
+	// Expire first epoch (20k attributed removed) + Process new block (20k attributed added)
+	k.ExpireOldStats(ctx) // Removes 20k from epoch 0
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:    "highVolumeTrader",
+				Maker:    "someMaker",
+				Notional: 20_000_000_000,
+				AffiliateAttributions: []*types.AffiliateAttribution{
+					{
+						ReferrerAddress:             "someAffiliate",
+						RefereeAddress:              "highVolumeTrader",
+						ReferredVolumeQuoteQuantums: 20_000_000_000, // 20k new attribution
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	userStats = k.GetUserStats(ctx, "highVolumeTrader")
+	require.Equal(t, uint64(100_000_000_000), userStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Attributed volume stays at cap: 100k - 20k (expired) + 20k (new) = 100k")
+
+	affiliateStats = k.GetUserStats(ctx, "someAffiliate")
+	require.Equal(t, uint64(100_000_000_000), affiliateStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Affiliate referred volume stays at maximum: 100k")
+
+	// Skip nil epoch
+	k.ExpireOldStats(ctx)
+
+	// Expire second epoch (20k removed) + Process new block (20k added)
+	k.ExpireOldStats(ctx) // Removes 20k from epoch 2
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:    "highVolumeTrader",
+				Maker:    "someMaker",
+				Notional: 20_000_000_000,
+				AffiliateAttributions: []*types.AffiliateAttribution{
+					{
+						ReferrerAddress:             "someAffiliate",
+						RefereeAddress:              "highVolumeTrader",
+						ReferredVolumeQuoteQuantums: 20_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	userStats = k.GetUserStats(ctx, "highVolumeTrader")
+	require.Equal(t, uint64(100_000_000_000), userStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Attributed volume stays at cap: still 100k after second rotation")
+
+	affiliateStats = k.GetUserStats(ctx, "someAffiliate")
+	require.Equal(t, uint64(100_000_000_000), affiliateStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Affiliate referred volume stays at maximum: 100k")
+
+	// Skip nil epoch
+	k.ExpireOldStats(ctx)
+
+	// Expire third epoch (20k removed) + Process new block (20k added)
+	k.ExpireOldStats(ctx)
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:    "highVolumeTrader",
+				Maker:    "someMaker",
+				Notional: 20_000_000_000,
+				AffiliateAttributions: []*types.AffiliateAttribution{
+					{
+						ReferrerAddress:             "someAffiliate",
+						RefereeAddress:              "highVolumeTrader",
+						ReferredVolumeQuoteQuantums: 20_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	userStats = k.GetUserStats(ctx, "highVolumeTrader")
+	require.Equal(t, uint64(100_000_000_000), userStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Attributed volume stays at cap: still 100k after third rotation")
+
+	affiliateStats = k.GetUserStats(ctx, "someAffiliate")
+	require.Equal(t, uint64(100_000_000_000), affiliateStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Affiliate referred volume stays at maximum: 100k")
+
+	// Skip nil epoch
+	k.ExpireOldStats(ctx)
+
+	// Expire fourth epoch (20k removed) + Process new block (20k added)
+	k.ExpireOldStats(ctx)
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:    "highVolumeTrader",
+				Maker:    "someMaker",
+				Notional: 20_000_000_000,
+				AffiliateAttributions: []*types.AffiliateAttribution{
+					{
+						ReferrerAddress:             "someAffiliate",
+						RefereeAddress:              "highVolumeTrader",
+						ReferredVolumeQuoteQuantums: 20_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	userStats = k.GetUserStats(ctx, "highVolumeTrader")
+	require.Equal(t, uint64(100_000_000_000), userStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Attributed volume stays at cap: still 100k after fourth rotation")
+
+	affiliateStats = k.GetUserStats(ctx, "someAffiliate")
+	require.Equal(t, uint64(100_000_000_000), affiliateStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Affiliate referred volume stays at maximum: 100k")
+
+	// Skip nil epoch
+	k.ExpireOldStats(ctx)
+
+	// Expire fifth epoch (20k removed) + Process new block (20k added)
+	k.ExpireOldStats(ctx)
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:    "highVolumeTrader",
+				Maker:    "someMaker",
+				Notional: 20_000_000_000,
+				AffiliateAttributions: []*types.AffiliateAttribution{
+					{
+						ReferrerAddress:             "someAffiliate",
+						RefereeAddress:              "highVolumeTrader",
+						ReferredVolumeQuoteQuantums: 20_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	userStats = k.GetUserStats(ctx, "highVolumeTrader")
+	require.Equal(t, uint64(100_000_000_000), userStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Attributed volume STAYS AT MAXIMUM: 100k throughout the entire rotation!")
+
+	affiliateStats = k.GetUserStats(ctx, "someAffiliate")
+	require.Equal(t, uint64(100_000_000_000), affiliateStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Affiliate referred volume STAYS AT MAXIMUM: 100k throughout the entire rotation!")
+}
+
 func TestGetStakedBaseTokens(t *testing.T) {
 	testCases := []struct {
 		name                 string
