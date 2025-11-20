@@ -559,14 +559,16 @@ func TestExpireOldStats(t *testing.T) {
 			MakerNotional:                              60 - 2*uint64(i+1),
 			Affiliate_30DReferredVolumeQuoteQuantums:   300_000_000_000 - (uint64(i+1) * 10_000_000_000),
 			Affiliate_30DRevenueGeneratedQuantums:      3_000_000_000 - (uint64(i+1) * 100_000_000),
-			Affiliate_30DAttributedVolumeQuoteQuantums: 150_000_000_000 - (uint64(i+1) * 5_000_000_000), // Decreases by 5k per expired epoch
+			Affiliate_30DAttributedVolumeQuoteQuantums: 150_000_000_000 - (uint64(i+1) * 5_000_000_000),
+			// Decreases by 5k per expired epoch
 		}, k.GetUserStats(ctx, "alice"))
 		require.Equal(t, &types.UserStats{
 			TakerNotional:                              60 - 2*uint64(i+1),
 			MakerNotional:                              30 - uint64(i+1),
 			Affiliate_30DReferredVolumeQuoteQuantums:   300_000_000_000 - (uint64(i+1) * 10_000_000_000),
 			Affiliate_30DRevenueGeneratedQuantums:      3_000_000_000 - (uint64(i+1) * 100_000_000),
-			Affiliate_30DAttributedVolumeQuoteQuantums: 240_000_000_000 - (uint64(i+1) * 8_000_000_000), // Decreases by 8k per expired epoch
+			Affiliate_30DAttributedVolumeQuoteQuantums: 240_000_000_000 - (uint64(i+1) * 8_000_000_000),
+			// Decreases by 8k per expired epoch
 		}, k.GetUserStats(ctx, "bob"))
 		require.Equal(t, &types.GlobalStats{
 			NotionalTraded: 90 - 3*uint64(i+1),
@@ -618,7 +620,7 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 
 	// Advance time so first 5 epochs will be ready to expire
 	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
-	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 		BlockTime: time.Unix(0, 0).
 			Add(windowDuration).
 			Add((time.Duration(5*epochstypes.StatsEpochDuration) + 1) * time.Second).
@@ -626,7 +628,7 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 	})
 
 	// Now advance to a stable block and set up stats
-	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
+	tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
 	k := tApp.App.StatsKeeper
 
 	// Scenario: User is a consistent high-volume trader
@@ -659,7 +661,8 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 						MakerNotional:                              0,
 						Affiliate_30DReferredVolumeQuoteQuantums:   0,
 						Affiliate_30DRevenueGeneratedQuantums:      0,
-						Affiliate_30DAttributedVolumeQuoteQuantums: attributedThisEpoch, // Only first 5 epochs have attribution
+						Affiliate_30DAttributedVolumeQuoteQuantums: attributedThisEpoch, // Only first
+						// 5 epochs have attribution
 					},
 				},
 				{
@@ -667,8 +670,9 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 					Stats: &types.UserStats{
 						TakerNotional:                            0,
 						MakerNotional:                            0,
-						Affiliate_30DReferredVolumeQuoteQuantums: attributedThisEpoch, // Same as attributed (this is what the affiliate refers)
-						Affiliate_30DRevenueGeneratedQuantums:    0,
+						Affiliate_30DReferredVolumeQuoteQuantums: attributedThisEpoch, // Same as attributed
+						// (this is what the affiliate refers)
+						Affiliate_30DRevenueGeneratedQuantums: 0,
 					},
 				},
 			},
