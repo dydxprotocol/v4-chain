@@ -464,7 +464,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statsKeeper.Keeper) {
-
 				require.NoError(t, affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
 					AffiliateParameters: affiliatetypes.AffiliateParameters{
 						Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums: 1_000_000,
