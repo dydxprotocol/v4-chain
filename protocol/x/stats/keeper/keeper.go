@@ -327,6 +327,7 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
 		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
 		stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
+		stats.Affiliate_30DAttributedVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting
