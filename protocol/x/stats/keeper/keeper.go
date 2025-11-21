@@ -258,11 +258,10 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 					}
 				}
 				// Track affiliate referred volume for the referrer in this epoch snapshot
-				// Use fill notional as the attributed volume
-				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums += fill.Notional
+				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
 				// Track affiliate referred volume for the referrer in UserStats
 				referrerUserStats := k.GetUserStats(ctx, referrer)
-				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums += fill.Notional
+				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
 				k.SetUserStats(ctx, referrer, referrerUserStats)
 
 				// Initialize referee stats if needed
@@ -273,11 +272,10 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 					}
 				}
 				// Track attributed volume for the referee (the trader whose volume was attributed)
-				// Use fill notional as the attributed volume
-				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums += fill.Notional
+				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
 				// Track attributed volume for the referee in UserStats
 				refereeUserStats := k.GetUserStats(ctx, referee)
-				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums += fill.Notional
+				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
 				k.SetUserStats(ctx, referee, refereeUserStats)
 			}
 		}

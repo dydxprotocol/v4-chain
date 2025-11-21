@@ -19,6 +19,8 @@ message AffiliateAttribution {
   Role role = 1;
   // Referrer address (the affiliate receiving the fee)
   string referrer_address = 2;
+  // Referred volume in quote quantums (capped based on 30-day volume limits)
+  uint64 referred_volume_quote_quantums = 3;
 }
 
 // BlockStats is used to store stats transiently within the scope of a block.
