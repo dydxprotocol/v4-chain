@@ -1,6 +1,6 @@
 import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long, toTimestamp, fromTimestamp } from "../../helpers";
+import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
 /** Role indicates whether this attribution is for the taker or maker */
 
 export enum AffiliateAttribution_Role {
@@ -61,6 +61,9 @@ export interface AffiliateAttribution {
   /** Referrer address (the affiliate receiving the fee) */
 
   referrerAddress: string;
+  /** Referred volume in quote quantums (capped based on 30-day volume limits) */
+
+  referredVolumeQuoteQuantums: Long;
 }
 /** AffiliateAttribution represents the affiliate attribution for a fill. */
 
@@ -70,6 +73,9 @@ export interface AffiliateAttributionSDKType {
   /** Referrer address (the affiliate receiving the fee) */
 
   referrer_address: string;
+  /** Referred volume in quote quantums (capped based on 30-day volume limits) */
+
+  referred_volume_quote_quantums: Long;
 }
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
@@ -275,7 +281,8 @@ export interface CachedStakedBaseTokensSDKType {
 function createBaseAffiliateAttribution(): AffiliateAttribution {
   return {
     role: 0,
-    referrerAddress: ""
+    referrerAddress: "",
+    referredVolumeQuoteQuantums: Long.UZERO
   };
 }
 
@@ -287,6 +294,10 @@ export const AffiliateAttribution = {
 
     if (message.referrerAddress !== "") {
       writer.uint32(18).string(message.referrerAddress);
+    }
+
+    if (!message.referredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(24).uint64(message.referredVolumeQuoteQuantums);
     }
 
     return writer;
@@ -309,6 +320,10 @@ export const AffiliateAttribution = {
           message.referrerAddress = reader.string();
           break;
 
+        case 3:
+          message.referredVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -322,6 +337,7 @@ export const AffiliateAttribution = {
     const message = createBaseAffiliateAttribution();
     message.role = object.role ?? 0;
     message.referrerAddress = object.referrerAddress ?? "";
+    message.referredVolumeQuoteQuantums = object.referredVolumeQuoteQuantums !== undefined && object.referredVolumeQuoteQuantums !== null ? Long.fromValue(object.referredVolumeQuoteQuantums) : Long.UZERO;
     return message;
   }
 
