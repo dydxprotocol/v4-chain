@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -35,6 +36,7 @@ func TestAffiliateInfo(t *testing.T) {
 				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(
 					types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums,
 				),
+				AttributedVolume_30DRolling: dtypes.NewIntFromUint64(0),
 				StakedAmount: dtypes.NewIntFromUint64(
 					uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18,
 				),
@@ -69,6 +71,7 @@ func TestAffiliateInfo(t *testing.T) {
 				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(
 					types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums,
 				),
+				AttributedVolume_30DRolling: dtypes.NewIntFromUint64(0),
 				StakedAmount: dtypes.NewIntFromUint64(
 					uint64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins) * 1e18,
 				),
@@ -104,11 +107,12 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
-				IsWhitelisted:             true,
-				Tier:                      4,
-				FeeSharePpm:               250_000,
-				ReferredVolume_30DRolling: dtypes.NewIntFromUint64(0),
-				StakedAmount:              dtypes.NewIntFromUint64(0),
+				IsWhitelisted:               true,
+				Tier:                        4,
+				FeeSharePpm:                 250_000,
+				ReferredVolume_30DRolling:   dtypes.NewIntFromUint64(0),
+				AttributedVolume_30DRolling: dtypes.NewIntFromUint64(0),
+				StakedAmount:                dtypes.NewIntFromUint64(0),
 			},
 			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
 				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
@@ -129,6 +133,40 @@ func TestAffiliateInfo(t *testing.T) {
 					Addresses: []string{constants.AliceAccAddress.String()},
 				}
 				err = k.SetAffiliateOverrides(ctx, affiliateOverrides)
+				require.NoError(t, err)
+			},
+		},
+		"With Attributed Volume": {
+			req: &types.AffiliateInfoRequest{
+				Address: constants.AliceAccAddress.String(),
+			},
+			res: &types.AffiliateInfoResponse{
+				IsWhitelisted:               false,
+				Tier:                        0,
+				FeeSharePpm:                 types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
+				ReferredVolume_30DRolling:   dtypes.NewIntFromUint64(5_000_000),
+				AttributedVolume_30DRolling: dtypes.NewIntFromUint64(3_000_000),
+				StakedAmount:                dtypes.NewIntFromUint64(0),
+			},
+			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
+				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
+				require.NoError(t, err)
+
+				// Set user stats with both referred and attributed volume
+				statsKeeper := tApp.App.StatsKeeper
+				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &statstypes.UserStats{
+					Affiliate_30DReferredVolumeQuoteQuantums:   5_000_000,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 3_000_000,
+				})
+
+				stakingKeeper := tApp.App.StakingKeeper
+				err = stakingKeeper.SetDelegation(ctx,
+					stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
+						constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
+							big.NewInt(0),
+						),
+					),
+				)
 				require.NoError(t, err)
 			},
 		},

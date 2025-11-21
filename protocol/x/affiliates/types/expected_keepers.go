@@ -12,6 +12,8 @@ type StatsKeeper interface {
 	GetBlockStats(ctx sdk.Context) *stattypes.BlockStats
 	GetUserStats(ctx sdk.Context, address string) *stattypes.UserStats
 	SetUserStats(ctx sdk.Context, address string, userStats *stattypes.UserStats)
+	GetEpochStatsOrNil(ctx sdk.Context, epoch uint32) *stattypes.EpochStats
+	SetEpochStats(ctx sdk.Context, epoch uint32, epochStats *stattypes.EpochStats)
 }
 
 type FeetiersKeeper interface {

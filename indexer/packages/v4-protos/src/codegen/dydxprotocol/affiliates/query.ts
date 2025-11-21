@@ -48,6 +48,9 @@ export interface AffiliateInfoResponse {
   /** The affiliate's 30d referred volume in quote quantums. */
 
   referredVolume_30dRolling: Uint8Array;
+  /** The affiliate's 30d attributed volume in quote quantums (from referees). */
+
+  attributedVolume_30dRolling: Uint8Array;
 }
 /**
  * AffiliateInfoResponse is the response type for the Query/AffiliateInfo RPC
@@ -80,6 +83,9 @@ export interface AffiliateInfoResponseSDKType {
   /** The affiliate's 30d referred volume in quote quantums. */
 
   referred_volume_30d_rolling: Uint8Array;
+  /** The affiliate's 30d attributed volume in quote quantums (from referees). */
+
+  attributed_volume_30d_rolling: Uint8Array;
 }
 /** ReferredByRequest is the request type for the Query/ReferredBy RPC method. */
 
@@ -272,7 +278,8 @@ function createBaseAffiliateInfoResponse(): AffiliateInfoResponse {
     feeSharePpm: 0,
     referredVolume: new Uint8Array(),
     stakedAmount: new Uint8Array(),
-    referredVolume_30dRolling: new Uint8Array()
+    referredVolume_30dRolling: new Uint8Array(),
+    attributedVolume_30dRolling: new Uint8Array()
   };
 }
 
@@ -300,6 +307,10 @@ export const AffiliateInfoResponse = {
 
     if (message.referredVolume_30dRolling.length !== 0) {
       writer.uint32(50).bytes(message.referredVolume_30dRolling);
+    }
+
+    if (message.attributedVolume_30dRolling.length !== 0) {
+      writer.uint32(58).bytes(message.attributedVolume_30dRolling);
     }
 
     return writer;
@@ -338,6 +349,10 @@ export const AffiliateInfoResponse = {
           message.referredVolume_30dRolling = reader.bytes();
           break;
 
+        case 7:
+          message.attributedVolume_30dRolling = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -355,6 +370,7 @@ export const AffiliateInfoResponse = {
     message.referredVolume = object.referredVolume ?? new Uint8Array();
     message.stakedAmount = object.stakedAmount ?? new Uint8Array();
     message.referredVolume_30dRolling = object.referredVolume_30dRolling ?? new Uint8Array();
+    message.attributedVolume_30dRolling = object.attributedVolume_30dRolling ?? new Uint8Array();
     return message;
   }
 

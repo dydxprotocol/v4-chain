@@ -82,6 +82,12 @@ message AffiliateInfoResponse {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+  // The affiliate's 30d attributed volume in quote quantums (from referees).
+  bytes attributed_volume_30d_rolling = 7 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // ReferredByRequest is the request type for the Query/ReferredBy RPC method.

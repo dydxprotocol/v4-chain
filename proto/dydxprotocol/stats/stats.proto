@@ -6,6 +6,23 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
+// AffiliateAttribution represents the affiliate attribution for a fill.
+message AffiliateAttribution {
+  // Role indicates whether this attribution is for the taker or maker
+  enum Role {
+    ROLE_UNSPECIFIED = 0;
+    ROLE_TAKER = 1;
+    ROLE_MAKER = 2;
+  }
+
+  // Role of the trader (taker or maker) whose affiliate is being attributed
+  Role role = 1;
+  // Referrer address (the affiliate receiving the fee)
+  string referrer_address = 2;
+  // Referred volume in quote quantums (capped based on 30-day volume limits)
+  uint64 referred_volume_quote_quantums = 3;
+}
+
 // BlockStats is used to store stats transiently within the scope of a block.
 message BlockStats {
   // Fill records data about a fill on this block.
@@ -24,6 +41,10 @@ message BlockStats {
     // Used to calculate affiliate revenue attributed for taker. This is dynamic
     // per affiliate tier
     uint64 affiliate_fee_generated_quantums = 4;
+
+    // Affiliate revenue attributions for this fill (can include both taker and
+    // maker)
+    repeated AffiliateAttribution affiliate_attributions = 5;
   }
 
   // The fills that occured on this block.
@@ -73,6 +94,10 @@ message UserStats {
 
   // Referred volume in quote quantums with this user being an affiliate
   uint64 affiliate_30d_referred_volume_quote_quantums = 4;
+
+  // Attributed volume in quote quantums - volume from this user (as referee)
+  // that has been attributed to their affiliate in the last 30 days
+  uint64 affiliate_30d_attributed_volume_quote_quantums = 5;
 }
 
 // CachedStakedBaseTokens stores the last calculated total staked base tokens
