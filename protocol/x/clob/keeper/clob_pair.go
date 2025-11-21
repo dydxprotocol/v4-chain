@@ -595,10 +595,17 @@ func (k Keeper) UpdateClobPair(
 		)
 	}
 	if clobPair.StepBaseQuantums != oldClobPair.StepBaseQuantums {
-		return errorsmod.Wrapf(
-			types.ErrInvalidClobPairUpdate,
-			"UpdateClobPair: cannot update ClobPair step base quantums",
-		)
+		newSBQ := clobPair.StepBaseQuantums
+		oldSBQ := oldClobPair.StepBaseQuantums
+		// Allow decreasing step size only, and only to a divisor of the old value so all existing orders remain valid.
+		if newSBQ == 0 || newSBQ > oldSBQ || (oldSBQ%newSBQ) != 0 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidClobPairUpdate,
+				"UpdateClobPair: invalid StepBaseQuantums change from %d to %d; must be a positive divisor and not increase",
+				oldSBQ,
+				newSBQ,
+			)
+		}
 	}
 	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
 		return errorsmod.Wrapf(
