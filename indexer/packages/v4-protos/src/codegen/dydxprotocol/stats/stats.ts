@@ -1,35 +1,75 @@
 import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
-import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
-/**
- * AffiliateAttribution stores the affiliate revenue attributed to a user
- * during match.
- */
+import { DeepPartial, Long, toTimestamp, fromTimestamp } from "../../helpers";
+/** Role indicates whether this attribution is for the taker or maker */
+
+export enum AffiliateAttribution_Role {
+  ROLE_UNSPECIFIED = 0,
+  ROLE_TAKER = 1,
+  ROLE_MAKER = 2,
+  UNRECOGNIZED = -1,
+}
+/** Role indicates whether this attribution is for the taker or maker */
+
+export enum AffiliateAttribution_RoleSDKType {
+  ROLE_UNSPECIFIED = 0,
+  ROLE_TAKER = 1,
+  ROLE_MAKER = 2,
+  UNRECOGNIZED = -1,
+}
+export function affiliateAttribution_RoleFromJSON(object: any): AffiliateAttribution_Role {
+  switch (object) {
+    case 0:
+    case "ROLE_UNSPECIFIED":
+      return AffiliateAttribution_Role.ROLE_UNSPECIFIED;
+
+    case 1:
+    case "ROLE_TAKER":
+      return AffiliateAttribution_Role.ROLE_TAKER;
+
+    case 2:
+    case "ROLE_MAKER":
+      return AffiliateAttribution_Role.ROLE_MAKER;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return AffiliateAttribution_Role.UNRECOGNIZED;
+  }
+}
+export function affiliateAttribution_RoleToJSON(object: AffiliateAttribution_Role): string {
+  switch (object) {
+    case AffiliateAttribution_Role.ROLE_UNSPECIFIED:
+      return "ROLE_UNSPECIFIED";
+
+    case AffiliateAttribution_Role.ROLE_TAKER:
+      return "ROLE_TAKER";
+
+    case AffiliateAttribution_Role.ROLE_MAKER:
+      return "ROLE_MAKER";
+
+    case AffiliateAttribution_Role.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+/** AffiliateAttribution represents the affiliate attribution for a fill. */
 
 export interface AffiliateAttribution {
+  /** Role of the trader (taker or maker) whose affiliate is being attributed */
+  role: AffiliateAttribution_Role;
   /** Referrer address (the affiliate receiving the fee) */
+
   referrerAddress: string;
-  /** Referred volume to attribute in quote quantums */
-
-  referredVolumeQuoteQuantums: Long;
-  /** Referee address (the trader whose volume is being attributed) */
-
-  refereeAddress: string;
 }
-/**
- * AffiliateAttribution stores the affiliate revenue attributed to a user
- * during match.
- */
+/** AffiliateAttribution represents the affiliate attribution for a fill. */
 
 export interface AffiliateAttributionSDKType {
+  /** Role of the trader (taker or maker) whose affiliate is being attributed */
+  role: AffiliateAttribution_RoleSDKType;
   /** Referrer address (the affiliate receiving the fee) */
+
   referrer_address: string;
-  /** Referred volume to attribute in quote quantums */
-
-  referred_volume_quote_quantums: Long;
-  /** Referee address (the trader whose volume is being attributed) */
-
-  referee_address: string;
 }
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
@@ -234,24 +274,19 @@ export interface CachedStakedBaseTokensSDKType {
 
 function createBaseAffiliateAttribution(): AffiliateAttribution {
   return {
-    referrerAddress: "",
-    referredVolumeQuoteQuantums: Long.UZERO,
-    refereeAddress: ""
+    role: 0,
+    referrerAddress: ""
   };
 }
 
 export const AffiliateAttribution = {
   encode(message: AffiliateAttribution, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.role !== 0) {
+      writer.uint32(8).int32(message.role);
+    }
+
     if (message.referrerAddress !== "") {
-      writer.uint32(10).string(message.referrerAddress);
-    }
-
-    if (!message.referredVolumeQuoteQuantums.isZero()) {
-      writer.uint32(16).uint64(message.referredVolumeQuoteQuantums);
-    }
-
-    if (message.refereeAddress !== "") {
-      writer.uint32(26).string(message.refereeAddress);
+      writer.uint32(18).string(message.referrerAddress);
     }
 
     return writer;
@@ -267,15 +302,11 @@ export const AffiliateAttribution = {
 
       switch (tag >>> 3) {
         case 1:
-          message.referrerAddress = reader.string();
+          message.role = (reader.int32() as any);
           break;
 
         case 2:
-          message.referredVolumeQuoteQuantums = (reader.uint64() as Long);
-          break;
-
-        case 3:
-          message.refereeAddress = reader.string();
+          message.referrerAddress = reader.string();
           break;
 
         default:
@@ -289,9 +320,8 @@ export const AffiliateAttribution = {
 
   fromPartial(object: DeepPartial<AffiliateAttribution>): AffiliateAttribution {
     const message = createBaseAffiliateAttribution();
+    message.role = object.role ?? 0;
     message.referrerAddress = object.referrerAddress ?? "";
-    message.referredVolumeQuoteQuantums = object.referredVolumeQuoteQuantums !== undefined && object.referredVolumeQuoteQuantums !== null ? Long.fromValue(object.referredVolumeQuoteQuantums) : Long.UZERO;
-    message.refereeAddress = object.refereeAddress ?? "";
     return message;
   }
 

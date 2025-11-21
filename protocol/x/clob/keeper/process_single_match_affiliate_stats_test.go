@@ -119,11 +119,8 @@ func TestProcessSingleMatch_AffiliateAttribution_TakerOnly(t *testing.T) {
 	require.Len(t, fill.AffiliateAttributions, 1, "Should have exactly one attribution (taker only)")
 
 	attribution := fill.AffiliateAttributions[0]
+	require.Equal(t, statstypes.AffiliateAttribution_ROLE_TAKER, attribution.Role)
 	require.Equal(t, referrerAddr, attribution.ReferrerAddress)
-	require.Greater(t, attribution.ReferredVolumeQuoteQuantums, uint64(0), "Should have non-zero attributed volume")
-
-	// The notional should match the attributed volume (no cap hit)
-	require.Equal(t, fill.Notional, attribution.ReferredVolumeQuoteQuantums)
 }
 
 // TestProcessSingleMatch_AffiliateAttribution_BothTakerAndMaker tests that when both
@@ -236,12 +233,12 @@ func TestProcessSingleMatch_AffiliateAttribution_BothTakerAndMaker(t *testing.T)
 	// Verify we have TWO attributions
 	require.Len(t, fill.AffiliateAttributions, 2, "Should have two attributions (taker and maker)")
 
-	// Find taker and maker attributions (order may vary)
+	// Find taker and maker attributions by role
 	var takerAttribution, makerAttribution *statstypes.AffiliateAttribution
 	for _, attr := range fill.AffiliateAttributions {
-		if attr.ReferrerAddress == takerReferrerAddr {
+		if attr.Role == statstypes.AffiliateAttribution_ROLE_TAKER {
 			takerAttribution = attr
-		} else if attr.ReferrerAddress == makerReferrerAddr {
+		} else if attr.Role == statstypes.AffiliateAttribution_ROLE_MAKER {
 			makerAttribution = attr
 		}
 	}
@@ -249,11 +246,11 @@ func TestProcessSingleMatch_AffiliateAttribution_BothTakerAndMaker(t *testing.T)
 	require.NotNil(t, takerAttribution, "Should have taker attribution")
 	require.NotNil(t, makerAttribution, "Should have maker attribution")
 
-	// Both should have the same notional volume attributed
-	require.Equal(t, fill.Notional, takerAttribution.ReferredVolumeQuoteQuantums)
-	require.Equal(t, fill.Notional, makerAttribution.ReferredVolumeQuoteQuantums)
-	require.Greater(t, takerAttribution.ReferredVolumeQuoteQuantums, uint64(0))
-	require.Greater(t, makerAttribution.ReferredVolumeQuoteQuantums, uint64(0))
+	// Verify roles and referrers
+	require.Equal(t, statstypes.AffiliateAttribution_ROLE_TAKER, takerAttribution.Role)
+	require.Equal(t, takerReferrerAddr, takerAttribution.ReferrerAddress)
+	require.Equal(t, statstypes.AffiliateAttribution_ROLE_MAKER, makerAttribution.Role)
+	require.Equal(t, makerReferrerAddr, makerAttribution.ReferrerAddress)
 }
 
 // TestProcessSingleMatch_AffiliateAttribution_NoReferrers tests that when neither
@@ -452,16 +449,11 @@ func TestProcessSingleMatch_AffiliateAttribution_VolumeCapApplied(t *testing.T) 
 	require.Len(t, fill.AffiliateAttributions, 1)
 
 	attribution := fill.AffiliateAttributions[0]
+	require.Equal(t, statstypes.AffiliateAttribution_ROLE_TAKER, attribution.Role)
 	require.Equal(t, referrerAddr, attribution.ReferrerAddress)
 
 	// Verify the trade notional exceeds the cap
 	require.Greater(t, fill.Notional, lowCap, "Trade notional should exceed the cap for this test")
-
-	// The attributed volume should be CAPPED at lowCap, not the full notional
-	require.LessOrEqual(t, attribution.ReferredVolumeQuoteQuantums, lowCap,
-		"Attributed volume should not exceed the cap")
-	require.Less(t, attribution.ReferredVolumeQuoteQuantums, fill.Notional,
-		"Attributed volume should be less than full notional due to cap")
 }
 
 // TestProcessSingleMatch_AffiliateAttribution_AlreadyAtCap tests that when a user
@@ -893,12 +885,6 @@ func TestProcessSingleMatch_AffiliateAttribution_CapWithExpiration(t *testing.T)
 		"Second trade: Should have attribution after old stats expired")
 
 	attribution := fill2.AffiliateAttributions[0]
+	require.Equal(t, statstypes.AffiliateAttribution_ROLE_TAKER, attribution.Role)
 	require.Equal(t, referrerAddr, attribution.ReferrerAddress)
-	require.Greater(t, attribution.ReferredVolumeQuoteQuantums, uint64(0),
-		"Should have non-zero attributed volume after expiration freed up capacity")
-
-	// The attributed volume should be limited to remaining capacity (20k available)
-	// Since this trade is ~5k USDC, it should all be attributed
-	require.Equal(t, fill2.Notional, attribution.ReferredVolumeQuoteQuantums,
-		"Full notional should be attributed since within remaining capacity")
 }

@@ -238,7 +238,17 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		for _, attribution := range fill.AffiliateAttributions {
 			if attribution != nil {
 				referrer := attribution.ReferrerAddress
-				referee := attribution.RefereeAddress
+
+				// Determine referee address based on role
+				var referee string
+				if attribution.Role == types.AffiliateAttribution_ROLE_TAKER {
+					referee = fill.Taker
+				} else if attribution.Role == types.AffiliateAttribution_ROLE_MAKER {
+					referee = fill.Maker
+				} else {
+					// Skip invalid role
+					continue
+				}
 
 				// Initialize referrer stats if needed
 				if _, ok := userStatsMap[referrer]; !ok {
@@ -248,12 +258,11 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 					}
 				}
 				// Track affiliate referred volume for the referrer in this epoch snapshot
-				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums +=
-					attribution.ReferredVolumeQuoteQuantums
+				// Use fill notional as the attributed volume
+				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums += fill.Notional
 				// Track affiliate referred volume for the referrer in UserStats
 				referrerUserStats := k.GetUserStats(ctx, referrer)
-				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums +=
-					attribution.ReferredVolumeQuoteQuantums
+				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums += fill.Notional
 				k.SetUserStats(ctx, referrer, referrerUserStats)
 
 				// Initialize referee stats if needed
@@ -264,12 +273,11 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 					}
 				}
 				// Track attributed volume for the referee (the trader whose volume was attributed)
-				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums +=
-					attribution.ReferredVolumeQuoteQuantums
+				// Use fill notional as the attributed volume
+				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums += fill.Notional
 				// Track attributed volume for the referee in UserStats
 				refereeUserStats := k.GetUserStats(ctx, referee)
-				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums +=
-					attribution.ReferredVolumeQuoteQuantums
+				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums += fill.Notional
 				k.SetUserStats(ctx, referee, refereeUserStats)
 			}
 		}
