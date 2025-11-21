@@ -11,6 +11,7 @@ import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
+import "dydxprotocol/clob/block_limits_config.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
 // this line is used by starport scaffolding # proto/tx/import
@@ -47,6 +48,9 @@ service Msg {
   // UpdateLiquidationsConfig updates the liquidations configuration in state.
   rpc UpdateLiquidationsConfig(MsgUpdateLiquidationsConfig)
       returns (MsgUpdateLiquidationsConfigResponse);
+  // UpdateBlockLimitsConfig updates the block limits configuration in state.
+  rpc UpdateBlockLimitsConfig(MsgUpdateBlockLimitsConfig)
+      returns (MsgUpdateBlockLimitsConfigResponse);
   // UpdateLeverage allows accounts to update their desired leverage for
   // clob pairs.
   rpc UpdateLeverage(MsgUpdateLeverage) returns (MsgUpdateLeverageResponse);
@@ -214,6 +218,23 @@ message MsgUpdateLiquidationsConfig {
 
 // MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
 message MsgUpdateLiquidationsConfigResponse {}
+
+// MsgUpdateBlockLimitsConfig is a request type for updating the block limits
+// configuration.
+message MsgUpdateBlockLimitsConfig {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // Authority is the address that may send this message.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Defines the block limits configuration to update to. All fields must be
+  // set.
+  BlockLimitsConfig block_limits_config = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateBlockLimitsConfigResponse is a response type for updating the
+// block limits configuration.
+message MsgUpdateBlockLimitsConfigResponse {}
 
 // LeverageEntry represents a single clob pair leverage setting.
 message LeverageEntry {
