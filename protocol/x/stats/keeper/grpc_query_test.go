@@ -130,8 +130,11 @@ func TestUserStats(t *testing.T) {
 	k := tApp.App.StatsKeeper
 	user := "alice"
 	userStats := &types.UserStats{
-		TakerNotional: 10,
-		MakerNotional: 10,
+		TakerNotional:                              10,
+		MakerNotional:                              10,
+		Affiliate_30DRevenueGeneratedQuantums:      100,
+		Affiliate_30DReferredVolumeQuoteQuantums:   500,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 250,
 	}
 	k.SetUserStats(ctx, user, userStats)
 
@@ -149,6 +152,21 @@ func TestUserStats(t *testing.T) {
 			},
 			err: nil,
 		},
+		"Success with attributed volume": {
+			req: &types.QueryUserStatsRequest{
+				User: user,
+			},
+			res: &types.QueryUserStatsResponse{
+				Stats: &types.UserStats{
+					TakerNotional:                              10,
+					MakerNotional:                              10,
+					Affiliate_30DRevenueGeneratedQuantums:      100,
+					Affiliate_30DReferredVolumeQuoteQuantums:   500,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 250,
+				},
+			},
+			err: nil,
+		},
 		"Nil": {
 			req: nil,
 			res: nil,
@@ -162,6 +180,15 @@ func TestUserStats(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.res, res)
+				// Explicitly verify attributed volume field is present
+				if tc.res != nil && tc.res.Stats != nil {
+					require.Equal(
+						t,
+						tc.res.Stats.Affiliate_30DAttributedVolumeQuoteQuantums,
+						res.Stats.Affiliate_30DAttributedVolumeQuoteQuantums,
+						"Attributed volume should be included in response",
+					)
+				}
 			}
 		})
 	}
