@@ -6,7 +6,8 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-// AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match.
+// AffiliateRevenueAttribution stores the affiliate revenue attributed to a user
+// during match.
 message AffiliateRevenueAttribution {
   // Referrer address
   string referrer_address = 1;
@@ -33,7 +34,8 @@ message BlockStats {
     // per affiliate tier
     uint64 affiliate_fee_generated_quantums = 4;
 
-    // Affiliate revenue attributions for this fill (can include both taker and maker)
+    // Affiliate revenue attributions for this fill (can include both taker and
+    // maker)
     repeated AffiliateRevenueAttribution affiliate_revenue_attributions = 5;
   }
 
