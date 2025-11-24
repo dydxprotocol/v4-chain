@@ -85,6 +85,7 @@ func (k Keeper) RecordFill(
 	makerAddress string,
 	notional *big.Int,
 	affiliateFeeGenerated *big.Int,
+	affiliateAttributions []*types.AffiliateAttribution,
 ) {
 	blockStats := k.GetBlockStats(ctx)
 	blockStats.Fills = append(
@@ -94,6 +95,7 @@ func (k Keeper) RecordFill(
 			Maker:                         makerAddress,
 			Notional:                      notional.Uint64(),
 			AffiliateFeeGeneratedQuantums: affiliateFeeGenerated.Uint64(),
+			AffiliateAttributions:         affiliateAttributions,
 		},
 	)
 	k.SetBlockStats(ctx, blockStats)
@@ -231,6 +233,53 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+
+		// Track affiliate revenue attributions if present (can include both taker and maker)
+		for _, attribution := range fill.AffiliateAttributions {
+			if attribution != nil {
+				referrer := attribution.ReferrerAddress
+
+				// Determine referee address based on role
+				var referee string
+				if attribution.Role == types.AffiliateAttribution_ROLE_TAKER {
+					referee = fill.Taker
+				} else if attribution.Role == types.AffiliateAttribution_ROLE_MAKER {
+					referee = fill.Maker
+				} else {
+					ctx.Logger().Error("invalid affiliate attribution role. Skipping", "role", attribution.Role)
+					continue
+				}
+
+				// Initialize referrer stats if needed
+				if _, ok := userStatsMap[referrer]; !ok {
+					userStatsMap[referrer] = &types.EpochStats_UserWithStats{
+						User:  referrer,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track affiliate referred volume for the referrer in this epoch snapshot
+				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				// Track affiliate referred volume for the referrer in UserStats
+				referrerUserStats := k.GetUserStats(ctx, referrer)
+				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referrer, referrerUserStats)
+
+				// Initialize referee stats if needed
+				if _, ok := userStatsMap[referee]; !ok {
+					userStatsMap[referee] = &types.EpochStats_UserWithStats{
+						User:  referee,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track attributed volume for the referee (the trader whose volume was attributed)
+				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				// Track attributed volume for the referee in UserStats
+				refereeUserStats := k.GetUserStats(ctx, referee)
+				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referee, refereeUserStats)
+			}
+		}
+
 		// Track affiliate revenue generated on the taker in this epoch snapshot
 		userStatsMap[fill.Taker].Stats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
@@ -283,6 +332,8 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
 		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
+		stats.Affiliate_30DAttributedVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting
