@@ -1,6 +1,14 @@
 import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long, toTimestamp, fromTimestamp } from "../../helpers";
+import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
+export interface AffiliateRevenueAttribution {
+  referrerAddress: string;
+  referredVolumeQuoteQuantums: Long;
+}
+export interface AffiliateRevenueAttributionSDKType {
+  referrer_address: string;
+  referred_volume_quote_quantums: Long;
+}
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
 export interface BlockStats {
@@ -34,6 +42,9 @@ export interface BlockStats_Fill {
    */
 
   affiliateFeeGeneratedQuantums: Long;
+  /** Affiliate revenue attributions for this fill (can include both taker and maker) */
+
+  affiliateRevenueAttributions: AffiliateRevenueAttribution[];
 }
 /** Fill records data about a fill on this block. */
 
@@ -56,6 +67,9 @@ export interface BlockStats_FillSDKType {
    */
 
   affiliate_fee_generated_quantums: Long;
+  /** Affiliate revenue attributions for this fill (can include both taker and maker) */
+
+  affiliate_revenue_attributions: AffiliateRevenueAttributionSDKType[];
 }
 /** StatsMetadata stores metadata for the x/stats module */
 
@@ -178,6 +192,61 @@ export interface CachedStakedBaseTokensSDKType {
   cached_at: Long;
 }
 
+function createBaseAffiliateRevenueAttribution(): AffiliateRevenueAttribution {
+  return {
+    referrerAddress: "",
+    referredVolumeQuoteQuantums: Long.UZERO
+  };
+}
+
+export const AffiliateRevenueAttribution = {
+  encode(message: AffiliateRevenueAttribution, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.referrerAddress !== "") {
+      writer.uint32(10).string(message.referrerAddress);
+    }
+
+    if (!message.referredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(16).uint64(message.referredVolumeQuoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateRevenueAttribution {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateRevenueAttribution();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.referrerAddress = reader.string();
+          break;
+
+        case 2:
+          message.referredVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateRevenueAttribution>): AffiliateRevenueAttribution {
+    const message = createBaseAffiliateRevenueAttribution();
+    message.referrerAddress = object.referrerAddress ?? "";
+    message.referredVolumeQuoteQuantums = object.referredVolumeQuoteQuantums !== undefined && object.referredVolumeQuoteQuantums !== null ? Long.fromValue(object.referredVolumeQuoteQuantums) : Long.UZERO;
+    return message;
+  }
+
+};
+
 function createBaseBlockStats(): BlockStats {
   return {
     fills: []
@@ -228,7 +297,8 @@ function createBaseBlockStats_Fill(): BlockStats_Fill {
     taker: "",
     maker: "",
     notional: Long.UZERO,
-    affiliateFeeGeneratedQuantums: Long.UZERO
+    affiliateFeeGeneratedQuantums: Long.UZERO,
+    affiliateRevenueAttributions: []
   };
 }
 
@@ -248,6 +318,10 @@ export const BlockStats_Fill = {
 
     if (!message.affiliateFeeGeneratedQuantums.isZero()) {
       writer.uint32(32).uint64(message.affiliateFeeGeneratedQuantums);
+    }
+
+    for (const v of message.affiliateRevenueAttributions) {
+      AffiliateRevenueAttribution.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -278,6 +352,10 @@ export const BlockStats_Fill = {
           message.affiliateFeeGeneratedQuantums = (reader.uint64() as Long);
           break;
 
+        case 5:
+          message.affiliateRevenueAttributions.push(AffiliateRevenueAttribution.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -293,6 +371,7 @@ export const BlockStats_Fill = {
     message.maker = object.maker ?? "";
     message.notional = object.notional !== undefined && object.notional !== null ? Long.fromValue(object.notional) : Long.UZERO;
     message.affiliateFeeGeneratedQuantums = object.affiliateFeeGeneratedQuantums !== undefined && object.affiliateFeeGeneratedQuantums !== null ? Long.fromValue(object.affiliateFeeGeneratedQuantums) : Long.UZERO;
+    message.affiliateRevenueAttributions = object.affiliateRevenueAttributions?.map(e => AffiliateRevenueAttribution.fromPartial(e)) || [];
     return message;
   }
 
