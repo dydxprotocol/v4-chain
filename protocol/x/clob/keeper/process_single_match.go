@@ -16,6 +16,7 @@ import (
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
@@ -576,12 +577,57 @@ func (k Keeper) persistMatchedOrders(
 		revSharesForFill,
 	)
 
+	// Build affiliate revenue attributions array (can include both taker and maker)
+	var affiliateRevenueAttributions []*statstypes.AffiliateRevenueAttribution
+
+	// Add taker affiliate attribution if present
+	if revSharesForFill.AffiliateRevShare != nil &&
+		revSharesForFill.AffiliateRevShare.Recipient != "" &&
+		bigFillQuoteQuantums.Sign() > 0 {
+		// Calculate the attributable volume based on the taker's current 30-day volume
+		// and the maximum attributable volume cap from affiliate parameters
+		takerAttributableVolume := k.affiliatesKeeper.GetAttributableVolume(
+			ctx,
+			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums.Uint64(),
+		)
+		if takerAttributableVolume > 0 {
+			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateRevenueAttribution{
+				ReferrerAddress:             revSharesForFill.AffiliateRevShare.Recipient,
+				ReferredVolumeQuoteQuantums: takerAttributableVolume,
+			})
+		}
+	}
+
+	// Add maker affiliate attribution if present
+	// Check if maker has an affiliate referrer
+	makerReferrer, makerHasReferrer := k.affiliatesKeeper.GetReferredBy(
+		ctx,
+		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+	)
+	if makerHasReferrer && makerReferrer != "" && bigFillQuoteQuantums.Sign() > 0 {
+		// Calculate the attributable volume based on the maker's current 30-day volume
+		// and the maximum attributable volume cap from affiliate parameters
+		makerAttributableVolume := k.affiliatesKeeper.GetAttributableVolume(
+			ctx,
+			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums.Uint64(),
+		)
+		if makerAttributableVolume > 0 {
+			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateRevenueAttribution{
+				ReferrerAddress:             makerReferrer,
+				ReferredVolumeQuoteQuantums: makerAttributableVolume,
+			})
+		}
+	}
+
 	k.statsKeeper.RecordFill(
 		ctx,
 		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
 		bigFillQuoteQuantums,
 		affiliateRevSharesQuoteQuantums,
+		affiliateRevenueAttributions,
 	)
 
 	takerOrderRouterFeeQuoteQuantums := big.NewInt(0)

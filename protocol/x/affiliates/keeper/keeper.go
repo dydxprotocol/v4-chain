@@ -377,6 +377,42 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 	return affiliateOverridesMap, nil
 }
 
+// GetAttributableVolume calculates the attributable volume for a referee based on their current
+// trading volume and the maximum attributable volume cap. This does not modify any state.
+func (k Keeper) GetAttributableVolume(
+	ctx sdk.Context,
+	referee string,
+	volume uint64,
+) uint64 {
+	affiliateParams, err := k.GetAffiliateParameters(ctx)
+	if err != nil {
+		return 0
+	}
+
+	// Get the user stats from the referee
+	refereeUserStats := k.statsKeeper.GetUserStats(ctx, referee)
+	if refereeUserStats == nil {
+		return 0
+	}
+
+	previousVolume := refereeUserStats.TakerNotional + refereeUserStats.MakerNotional
+
+	// If parameter is 0 then no limit is applied
+	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums
+	if cap == 0 {
+		return volume
+	}
+
+	if previousVolume >= cap {
+		return 0
+	} else if previousVolume+volume > cap {
+		// Remainder of the volume to get them to the cap
+		return cap - previousVolume
+	}
+
+	return volume
+}
+
 func (k Keeper) addReferredVolumeIfQualified(
 	ctx sdk.Context,
 	referee string,
@@ -422,14 +458,7 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 	ctx sdk.Context,
 ) error {
 	blockStats := k.statsKeeper.GetBlockStats(ctx)
-	affiliateParams, err := k.GetAffiliateParameters(ctx)
-	if err != nil {
-		return err
-	}
 	referredByCache := make(map[string]string)
-
-	// Multiple fills within the same block can happen, so we want to keep track of those to properly attribute volume.
-	previouslyAttributedVolume := make(map[string]uint64)
 
 	for _, fill := range blockStats.Fills {
 		// Process taker's referred volume
@@ -441,19 +470,6 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 				referredByCache[fill.Taker] = referredByAddrTaker
 			}
 		}
-		if referredByAddrTaker != "" {
-			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
-			if err := k.addReferredVolumeIfQualified(
-				ctx,
-				fill.Taker,
-				referredByAddrTaker,
-				fill.Notional,
-				affiliateParams,
-				previouslyAttributedVolume,
-			); err != nil {
-				return err
-			}
-		}
 
 		// Process maker's referred volume
 		referredByAddrMaker, cached := referredByCache[fill.Maker]
@@ -462,18 +478,6 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 			referredByAddrMaker, found = k.GetReferredBy(ctx, fill.Maker)
 			if found {
 				referredByCache[fill.Maker] = referredByAddrMaker
-			}
-		}
-		if referredByAddrMaker != "" {
-			if err := k.addReferredVolumeIfQualified(
-				ctx,
-				fill.Maker,
-				referredByAddrMaker,
-				fill.Notional,
-				affiliateParams,
-				previouslyAttributedVolume,
-			); err != nil {
-				return err
 			}
 		}
 	}

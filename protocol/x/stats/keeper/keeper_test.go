@@ -26,10 +26,11 @@ func TestLogger(t *testing.T) {
 }
 
 type recordFillArgs struct {
-	taker        string
-	maker        string
-	notional     *big.Int
-	affiliateFee *big.Int
+	taker                 string
+	maker                 string
+	notional              *big.Int
+	affiliateFee          *big.Int
+	affiliateAttributions []*types.AffiliateRevenueAttribution
 }
 
 func TestRecordFill(t *testing.T) {
@@ -45,34 +46,88 @@ func TestRecordFill(t *testing.T) {
 		},
 		"single fill": {
 			[]recordFillArgs{
-				{"taker", "maker", new(big.Int).SetUint64(123), big.NewInt(0)},
+				{
+					taker:        "taker",
+					maker:        "maker",
+					notional:     new(big.Int).SetUint64(123),
+					affiliateFee: big.NewInt(0),
+					affiliateAttributions: []*types.AffiliateRevenueAttribution{
+						{
+							ReferrerAddress:             "referrer",
+							ReferredVolumeQuoteQuantums: 123,
+						},
+					},
+				},
 			},
 			&types.BlockStats{
 				Fills: []*types.BlockStats_Fill{
 					{
-						Taker:    "taker",
-						Maker:    "maker",
-						Notional: 123,
+						Taker:                         "taker",
+						Maker:                         "maker",
+						Notional:                      123,
+						AffiliateFeeGeneratedQuantums: 0,
+						AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+							{
+								ReferrerAddress:             "referrer",
+								ReferredVolumeQuoteQuantums: 123,
+							},
+						},
 					},
 				},
 			},
 		},
 		"multiple fills": {
 			[]recordFillArgs{
-				{"alice", "bob", new(big.Int).SetUint64(123), big.NewInt(0)},
-				{"bob", "alice", new(big.Int).SetUint64(321), big.NewInt(0)},
+				{
+					taker:        "alice",
+					maker:        "bob",
+					notional:     new(big.Int).SetUint64(123),
+					affiliateFee: big.NewInt(0),
+					affiliateAttributions: []*types.AffiliateRevenueAttribution{
+						{
+							ReferrerAddress:             "referrer",
+							ReferredVolumeQuoteQuantums: 123,
+						},
+					},
+				},
+				{
+					taker:        "bob",
+					maker:        "alice",
+					notional:     new(big.Int).SetUint64(321),
+					affiliateFee: big.NewInt(0),
+					affiliateAttributions: []*types.AffiliateRevenueAttribution{
+						{
+							ReferrerAddress:             "referrer",
+							ReferredVolumeQuoteQuantums: 321,
+						},
+					},
+				},
 			},
 			&types.BlockStats{
 				Fills: []*types.BlockStats_Fill{
 					{
-						Taker:    "alice",
-						Maker:    "bob",
-						Notional: 123,
+						Taker:                         "alice",
+						Maker:                         "bob",
+						Notional:                      123,
+						AffiliateFeeGeneratedQuantums: 0,
+						AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+							{
+								ReferrerAddress:             "referrer",
+								ReferredVolumeQuoteQuantums: 123,
+							},
+						},
 					},
 					{
-						Taker:    "bob",
-						Maker:    "alice",
-						Notional: 321,
+						Taker:                         "bob",
+						Maker:                         "alice",
+						Notional:                      321,
+						AffiliateFeeGeneratedQuantums: 0,
+						AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+							{
+								ReferrerAddress:             "referrer",
+								ReferredVolumeQuoteQuantums: 321,
+							},
+						},
 					},
 				},
 			},
@@ -86,7 +141,7 @@ func TestRecordFill(t *testing.T) {
 			k := tApp.App.StatsKeeper
 
 			for _, fill := range tc.args {
-				k.RecordFill(ctx, fill.taker, fill.maker, fill.notional, fill.affiliateFee)
+				k.RecordFill(ctx, fill.taker, fill.maker, fill.notional, fill.affiliateFee, fill.affiliateAttributions)
 			}
 			require.Equal(t, tc.expectedBlockStats, k.GetBlockStats(ctx))
 		})
@@ -192,6 +247,218 @@ func TestProcessBlockStats(t *testing.T) {
 			},
 		},
 	}, k.GetEpochStatsOrNil(ctx, 1))
+
+	// Test affiliate revenue attribution
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:                         "taker",
+				Maker:                         "maker",
+				Notional:                      100_000_000_000,
+				AffiliateFeeGeneratedQuantums: 50_000_000,
+				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+					{
+						ReferrerAddress:             "referrer",
+						ReferredVolumeQuoteQuantums: 100_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	// Verify referrer's UserStats has the referred volume
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 100_000_000_000,
+	}, k.GetUserStats(ctx, "referrer"))
+
+	// Verify taker has the affiliate fee generated
+	assert.Equal(t, &types.UserStats{
+		TakerNotional:                         100_000_000_000,
+		Affiliate_30DRevenueGeneratedQuantums: 50_000_000,
+	}, k.GetUserStats(ctx, "taker"))
+
+	// Verify maker stats
+	assert.Equal(t, &types.UserStats{
+		MakerNotional: 100_000_000_000,
+	}, k.GetUserStats(ctx, "maker"))
+
+	// Verify global stats includes the new fill
+	assert.Equal(t, &types.GlobalStats{
+		NotionalTraded: 100_000_000_025,
+	}, k.GetGlobalStats(ctx))
+
+	// Verify referrer is in epoch stats with correct referred volume
+	epochStats := k.GetEpochStatsOrNil(ctx, 1)
+	require.NotNil(t, epochStats)
+	var referrerFound bool
+	for _, userStats := range epochStats.Stats {
+		if userStats.User == "referrer" {
+			referrerFound = true
+			assert.Equal(t, uint64(100_000_000_000), userStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums)
+			break
+		}
+	}
+	require.True(t, referrerFound, "referrer should be in epoch stats")
+
+	// Test multiple fills with same referrer - referred volume should accumulate
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:                         "taker2",
+				Maker:                         "maker2",
+				Notional:                      50_000_000_000,
+				AffiliateFeeGeneratedQuantums: 25_000_000,
+				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+					{
+						ReferrerAddress:             "referrer",
+						ReferredVolumeQuoteQuantums: 50_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	// Verify referrer's referred volume accumulated
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 150_000_000_000,
+	}, k.GetUserStats(ctx, "referrer"))
+
+	// Verify referrer's epoch stats accumulated
+	epochStats = k.GetEpochStatsOrNil(ctx, 1)
+	require.NotNil(t, epochStats)
+	referrerFound = false
+	for _, userStats := range epochStats.Stats {
+		if userStats.User == "referrer" {
+			referrerFound = true
+			assert.Equal(t, uint64(150_000_000_000), userStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums)
+			break
+		}
+	}
+	require.True(t, referrerFound, "referrer should be in epoch stats")
+
+	// Test fill with capped attributable volume
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:                         "taker3",
+				Maker:                         "maker3",
+				Notional:                      100_000_000_000,
+				AffiliateFeeGeneratedQuantums: 50_000_000,
+				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+					{
+						ReferrerAddress:             "referrer2",
+						ReferredVolumeQuoteQuantums: 30_000_000_000, // Capped to 30k
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	// Verify referrer2's referred volume reflects the capped amount
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 30_000_000_000,
+	}, k.GetUserStats(ctx, "referrer2"))
+
+	// Verify referrer2's epoch stats has the capped amount
+	epochStats = k.GetEpochStatsOrNil(ctx, 1)
+	require.NotNil(t, epochStats)
+	var referrer2Found bool
+	for _, userStats := range epochStats.Stats {
+		if userStats.User == "referrer2" {
+			referrer2Found = true
+			assert.Equal(t, uint64(30_000_000_000), userStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums)
+			break
+		}
+	}
+	require.True(t, referrer2Found, "referrer2 should be in epoch stats")
+
+	// Test fill without affiliate revenue attribution - should not affect referrer stats
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:                         "taker4",
+				Maker:                         "maker4",
+				Notional:                      50_000_000_000,
+				AffiliateFeeGeneratedQuantums: 0,
+				AffiliateRevenueAttributions:  nil,
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	// Verify referrer stats unchanged
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 150_000_000_000,
+	}, k.GetUserStats(ctx, "referrer"))
+
+	// Verify referrer2 stats unchanged
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 30_000_000_000,
+	}, k.GetUserStats(ctx, "referrer2"))
+
+	// Test fill where both taker AND maker have affiliate attributions
+	k.SetBlockStats(ctx, &types.BlockStats{
+		Fills: []*types.BlockStats_Fill{
+			{
+				Taker:                         "taker5",
+				Maker:                         "maker5",
+				Notional:                      80_000_000_000,
+				AffiliateFeeGeneratedQuantums: 40_000_000,
+				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+					{
+						ReferrerAddress:             "referrer_for_taker",
+						ReferredVolumeQuoteQuantums: 80_000_000_000,
+					},
+					{
+						ReferrerAddress:             "referrer_for_maker",
+						ReferredVolumeQuoteQuantums: 80_000_000_000,
+					},
+				},
+			},
+		},
+	})
+	k.ProcessBlockStats(ctx)
+
+	// Verify taker's referrer received the attributed volume
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 80_000_000_000,
+	}, k.GetUserStats(ctx, "referrer_for_taker"))
+
+	// Verify maker's referrer also received the attributed volume
+	assert.Equal(t, &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums: 80_000_000_000,
+	}, k.GetUserStats(ctx, "referrer_for_maker"))
+
+	// Verify both referrers are in epoch stats
+	epochStats = k.GetEpochStatsOrNil(ctx, 1)
+	require.NotNil(t, epochStats)
+
+	var takerReferrerFound, makerReferrerFound bool
+	for _, userStats := range epochStats.Stats {
+		if userStats.User == "referrer_for_taker" {
+			takerReferrerFound = true
+			assert.Equal(t, uint64(80_000_000_000), userStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums)
+		}
+		if userStats.User == "referrer_for_maker" {
+			makerReferrerFound = true
+			assert.Equal(t, uint64(80_000_000_000), userStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums)
+		}
+	}
+	require.True(t, takerReferrerFound, "taker's referrer should be in epoch stats")
+	require.True(t, makerReferrerFound, "maker's referrer should be in epoch stats")
+
+	// Verify taker and maker stats
+	assert.Equal(t, &types.UserStats{
+		TakerNotional:                         80_000_000_000,
+		Affiliate_30DRevenueGeneratedQuantums: 40_000_000,
+	}, k.GetUserStats(ctx, "taker5"))
+
+	assert.Equal(t, &types.UserStats{
+		MakerNotional: 80_000_000_000,
+	}, k.GetUserStats(ctx, "maker5"))
 }
 
 func TestExpireOldStats(t *testing.T) {

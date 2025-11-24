@@ -6,6 +6,11 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
+message AffiliateRevenueAttribution {
+  string referrer_address = 1;
+  uint64 referred_volume_quote_quantums = 2;
+}
+
 // BlockStats is used to store stats transiently within the scope of a block.
 message BlockStats {
   // Fill records data about a fill on this block.
@@ -24,6 +29,9 @@ message BlockStats {
     // Used to calculate affiliate revenue attributed for taker. This is dynamic
     // per affiliate tier
     uint64 affiliate_fee_generated_quantums = 4;
+
+    // Affiliate revenue attributions for this fill (can include both taker and maker)
+    repeated AffiliateRevenueAttribution affiliate_revenue_attributions = 5;
   }
 
   // The fills that occured on this block.
