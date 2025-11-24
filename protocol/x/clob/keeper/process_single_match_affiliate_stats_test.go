@@ -832,7 +832,8 @@ func TestProcessSingleMatch_AffiliateAttribution_CapWithExpiration(t *testing.T)
 	tApp.App.StatsKeeper.SetUserStats(ctx, constants.Alice_Num0.Owner, &statstypes.UserStats{
 		TakerNotional: 150_000_000_000, // Still trading (down from 200k as old trades expired)
 		MakerNotional: 70_000_000_000,  // Still trading (down from 100k)
-		Affiliate_30DAttributedVolumeQuoteQuantums: 80_000_000_000, // 80k attributed (down from 150k - old attributions expired)
+		Affiliate_30DAttributedVolumeQuoteQuantums: 80_000_000_000, // 80k attributed (down from
+		// 150k - old attributions expired)
 		// 80k < 100k cap, so 20k capacity available
 	})
 
