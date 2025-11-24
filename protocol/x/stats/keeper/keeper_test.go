@@ -53,9 +53,8 @@ func TestRecordFill(t *testing.T) {
 					affiliateFee: big.NewInt(0),
 					affiliateAttributions: []*types.AffiliateAttribution{
 						{
-							ReferrerAddress:             "referrer",
-							ReferredVolumeQuoteQuantums: 123,
-							RefereeAddress:              "taker",
+							Role:            types.AffiliateAttribution_ROLE_TAKER,
+							ReferrerAddress: "referrer",
 						},
 					},
 				},
@@ -69,9 +68,8 @@ func TestRecordFill(t *testing.T) {
 						AffiliateFeeGeneratedQuantums: 0,
 						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
-								ReferrerAddress:             "referrer",
-								ReferredVolumeQuoteQuantums: 123,
-								RefereeAddress:              "taker",
+								Role:            types.AffiliateAttribution_ROLE_TAKER,
+								ReferrerAddress: "referrer",
 							},
 						},
 					},
@@ -87,9 +85,8 @@ func TestRecordFill(t *testing.T) {
 					affiliateFee: big.NewInt(0),
 					affiliateAttributions: []*types.AffiliateAttribution{
 						{
-							ReferrerAddress:             "referrer",
-							ReferredVolumeQuoteQuantums: 123,
-							RefereeAddress:              "alice",
+							Role:            types.AffiliateAttribution_ROLE_TAKER,
+							ReferrerAddress: "referrer",
 						},
 					},
 				},
@@ -100,9 +97,8 @@ func TestRecordFill(t *testing.T) {
 					affiliateFee: big.NewInt(0),
 					affiliateAttributions: []*types.AffiliateAttribution{
 						{
-							ReferrerAddress:             "referrer",
-							ReferredVolumeQuoteQuantums: 321,
-							RefereeAddress:              "bob",
+							Role:            types.AffiliateAttribution_ROLE_TAKER,
+							ReferrerAddress: "referrer",
 						},
 					},
 				},
@@ -116,9 +112,8 @@ func TestRecordFill(t *testing.T) {
 						AffiliateFeeGeneratedQuantums: 0,
 						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
-								ReferrerAddress:             "referrer",
-								ReferredVolumeQuoteQuantums: 123,
-								RefereeAddress:              "alice",
+								Role:            types.AffiliateAttribution_ROLE_TAKER,
+								ReferrerAddress: "referrer",
 							},
 						},
 					},
@@ -129,9 +124,8 @@ func TestRecordFill(t *testing.T) {
 						AffiliateFeeGeneratedQuantums: 0,
 						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
-								ReferrerAddress:             "referrer",
-								ReferredVolumeQuoteQuantums: 321,
-								RefereeAddress:              "bob",
+								Role:            types.AffiliateAttribution_ROLE_TAKER,
+								ReferrerAddress: "referrer",
 							},
 						},
 					},
@@ -264,9 +258,8 @@ func TestProcessBlockStats(t *testing.T) {
 				AffiliateFeeGeneratedQuantums: 50_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "referrer",
-						ReferredVolumeQuoteQuantums: 100_000_000_000,
-						RefereeAddress:              "taker",
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "referrer",
 					},
 				},
 			},
@@ -319,9 +312,8 @@ func TestProcessBlockStats(t *testing.T) {
 				AffiliateFeeGeneratedQuantums: 25_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "referrer",
-						ReferredVolumeQuoteQuantums: 50_000_000_000,
-						RefereeAddress:              "taker2",
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "referrer",
 					},
 				},
 			},
@@ -357,9 +349,8 @@ func TestProcessBlockStats(t *testing.T) {
 				AffiliateFeeGeneratedQuantums: 50_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "referrer2",
-						ReferredVolumeQuoteQuantums: 30_000_000_000, // Capped to 30k
-						RefereeAddress:              "taker3",
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "referrer2",
 					},
 				},
 			},
@@ -419,14 +410,12 @@ func TestProcessBlockStats(t *testing.T) {
 				AffiliateFeeGeneratedQuantums: 40_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "referrer_for_taker",
-						ReferredVolumeQuoteQuantums: 80_000_000_000,
-						RefereeAddress:              "taker5",
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "referrer_for_taker",
 					},
 					{
-						ReferrerAddress:             "referrer_for_maker",
-						ReferredVolumeQuoteQuantums: 80_000_000_000,
-						RefereeAddress:              "maker5",
+						Role:            types.AffiliateAttribution_ROLE_MAKER,
+						ReferrerAddress: "referrer_for_maker",
 					},
 				},
 			},
@@ -723,9 +712,8 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 				Notional: 20_000_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "someAffiliate",
-						RefereeAddress:              "highVolumeTrader",
-						ReferredVolumeQuoteQuantums: 20_000_000_000, // 20k new attribution
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "someAffiliate",
 					},
 				},
 			},
@@ -754,9 +742,8 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 				Notional: 20_000_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "someAffiliate",
-						RefereeAddress:              "highVolumeTrader",
-						ReferredVolumeQuoteQuantums: 20_000_000_000,
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "someAffiliate",
 					},
 				},
 			},
@@ -785,9 +772,8 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 				Notional: 20_000_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "someAffiliate",
-						RefereeAddress:              "highVolumeTrader",
-						ReferredVolumeQuoteQuantums: 20_000_000_000,
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "someAffiliate",
 					},
 				},
 			},
@@ -816,9 +802,8 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 				Notional: 20_000_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "someAffiliate",
-						RefereeAddress:              "highVolumeTrader",
-						ReferredVolumeQuoteQuantums: 20_000_000_000,
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "someAffiliate",
 					},
 				},
 			},
@@ -847,9 +832,8 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 				Notional: 20_000_000_000,
 				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
-						ReferrerAddress:             "someAffiliate",
-						RefereeAddress:              "highVolumeTrader",
-						ReferredVolumeQuoteQuantums: 20_000_000_000,
+						Role:            types.AffiliateAttribution_ROLE_TAKER,
+						ReferrerAddress: "someAffiliate",
 					},
 				},
 			},

@@ -6,15 +6,19 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-// AffiliateAttribution stores the affiliate revenue attributed to a user
-// during match.
+// AffiliateAttribution represents the affiliate attribution for a fill.
 message AffiliateAttribution {
+  // Role indicates whether this attribution is for the taker or maker
+  enum Role {
+    ROLE_UNSPECIFIED = 0;
+    ROLE_TAKER = 1;
+    ROLE_MAKER = 2;
+  }
+  
+  // Role of the trader (taker or maker) whose affiliate is being attributed
+  Role role = 1;
   // Referrer address (the affiliate receiving the fee)
-  string referrer_address = 1;
-  // Referred volume to attribute in quote quantums
-  uint64 referred_volume_quote_quantums = 2;
-  // Referee address (the trader whose volume is being attributed)
-  string referee_address = 3;
+  string referrer_address = 2;
 }
 
 // BlockStats is used to store stats transiently within the scope of a block.
