@@ -6,8 +6,11 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
+// AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match.
 message AffiliateRevenueAttribution {
+  // Referrer address
   string referrer_address = 1;
+  // Referred volume to attribute in quote quantums
   uint64 referred_volume_quote_quantums = 2;
 }
 

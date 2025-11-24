@@ -28,8 +28,11 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match.
 type AffiliateRevenueAttribution struct {
-	ReferrerAddress             string `protobuf:"bytes,1,opt,name=referrer_address,json=referrerAddress,proto3" json:"referrer_address,omitempty"`
+	// Referrer address
+	ReferrerAddress string `protobuf:"bytes,1,opt,name=referrer_address,json=referrerAddress,proto3" json:"referrer_address,omitempty"`
+	// Referred volume to attribute in quote quantums
 	ReferredVolumeQuoteQuantums uint64 `protobuf:"varint,2,opt,name=referred_volume_quote_quantums,json=referredVolumeQuoteQuantums,proto3" json:"referred_volume_quote_quantums,omitempty"`
 }
 
