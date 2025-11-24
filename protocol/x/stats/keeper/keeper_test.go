@@ -80,7 +80,6 @@ func TestRecordFill(t *testing.T) {
 		},
 		"multiple fills": {
 			[]recordFillArgs{
-
 				{
 					taker:        "alice",
 					maker:        "bob",

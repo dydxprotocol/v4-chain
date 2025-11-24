@@ -336,6 +336,30 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 			},
 			expectedError: types.ErrRevShareSafetyViolation,
 		},
+		{
+			name: "Valid tiers with req_staked_whole_coins set to 0 (deprecated field)",
+			affiliateTiers: types.AffiliateTiers{
+				Tiers: []types.AffiliateTiers_Tier{
+					{ReqReferredVolumeQuoteQuantums: 0, ReqStakedWholeCoins: 0, TakerFeeSharePpm: 50_000},            // 5%
+					{ReqReferredVolumeQuoteQuantums: 1_000_000, ReqStakedWholeCoins: 0, TakerFeeSharePpm: 100_000},   // 10%
+					{ReqReferredVolumeQuoteQuantums: 10_000_000, ReqStakedWholeCoins: 0, TakerFeeSharePpm: 150_000},  // 15%
+					{ReqReferredVolumeQuoteQuantums: 100_000_000, ReqStakedWholeCoins: 0, TakerFeeSharePpm: 200_000}, // 20%
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Valid tiers with mixed req_staked_whole_coins values including 0",
+			affiliateTiers: types.AffiliateTiers{
+				Tiers: []types.AffiliateTiers_Tier{
+					{ReqReferredVolumeQuoteQuantums: 0, ReqStakedWholeCoins: 0, TakerFeeSharePpm: 50_000},
+					{ReqReferredVolumeQuoteQuantums: 1_000_000, ReqStakedWholeCoins: 0, TakerFeeSharePpm: 100_000},
+					{ReqReferredVolumeQuoteQuantums: 10_000_000, ReqStakedWholeCoins: 100, TakerFeeSharePpm: 150_000},
+					{ReqReferredVolumeQuoteQuantums: 100_000_000, ReqStakedWholeCoins: 500, TakerFeeSharePpm: 200_000},
+				},
+			},
+			expectedError: nil,
+		},
 	}
 
 	for _, tc := range tests {

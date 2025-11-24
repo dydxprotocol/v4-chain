@@ -13,7 +13,10 @@ message AffiliateTiers {
     // Required all-time referred volume in quote quantums.
     uint64 req_referred_volume_quote_quantums = 1;
     // Required currently staked native tokens (in whole coins).
-    uint32 req_staked_whole_coins = 2;
+    // This is deprecated
+    uint32 req_staked_whole_coins = 2 [
+      deprecated = true
+    ];
     // Taker fee share in parts-per-million.
     uint32 taker_fee_share_ppm = 3;
   }

@@ -233,10 +233,9 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 				tiers[i].TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
 		}
 		// Check if the tiers are strictly increasing.
-		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
-			tiers[i].ReqStakedWholeCoins < tiers[i-1].ReqStakedWholeCoins {
+		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums {
 			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
-				"volume must be strictly increasing; staked coins must be non-decreasing")
+				"volume must be strictly increasing")
 		}
 	}
 	store.Set([]byte(types.AffiliateTiersKey), affiliateTiersBytes)
