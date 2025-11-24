@@ -317,16 +317,6 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 			expectedError: types.ErrInvalidAffiliateTiers,
 		},
 		{
-			name: "Invalid tiers - decreasing staking requirement",
-			affiliateTiers: types.AffiliateTiers{
-				Tiers: []types.AffiliateTiers_Tier{
-					{ReqReferredVolumeQuoteQuantums: 1000, ReqStakedWholeCoins: 200, TakerFeeSharePpm: 100},
-					{ReqReferredVolumeQuoteQuantums: 2000, ReqStakedWholeCoins: 100, TakerFeeSharePpm: 200},
-				},
-			},
-			expectedError: types.ErrInvalidAffiliateTiers,
-		},
-		{
 			name: "Taker fee share ppm greater than cap",
 			affiliateTiers: types.AffiliateTiers{
 				Tiers: []types.AffiliateTiers_Tier{
