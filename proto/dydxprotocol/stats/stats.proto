@@ -14,7 +14,7 @@ message AffiliateAttribution {
     ROLE_TAKER = 1;
     ROLE_MAKER = 2;
   }
-  
+
   // Role of the trader (taker or maker) whose affiliate is being attributed
   Role role = 1;
   // Referrer address (the affiliate receiving the fee)

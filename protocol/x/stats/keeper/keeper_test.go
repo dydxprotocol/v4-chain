@@ -69,8 +69,9 @@ func TestRecordFill(t *testing.T) {
 						AffiliateFeeGeneratedQuantums: 0,
 						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
-								Role:            types.AffiliateAttribution_ROLE_TAKER,
-								ReferrerAddress: "referrer",
+								Role:                        types.AffiliateAttribution_ROLE_TAKER,
+								ReferrerAddress:             "referrer",
+								ReferredVolumeQuoteQuantums: 123,
 							},
 						},
 					},
@@ -101,7 +102,7 @@ func TestRecordFill(t *testing.T) {
 						{
 							Role:                        types.AffiliateAttribution_ROLE_TAKER,
 							ReferrerAddress:             "referrer",
-							ReferredVolumeQuoteQuantums: 123,
+							ReferredVolumeQuoteQuantums: 321,
 						},
 					},
 				},
