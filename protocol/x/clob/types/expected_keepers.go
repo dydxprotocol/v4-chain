@@ -183,9 +183,14 @@ type PricesKeeper interface {
 }
 
 type StatsKeeper interface {
-	RecordFill(ctx sdk.Context, takerAddress string, makerAddress string,
-		notional *big.Int, affiliateFeeGenerated *big.Int,
-		affiliateAttributions []*stattypes.AffiliateAttribution)
+	RecordFill(
+		ctx sdk.Context,
+		takerAddress string,
+		makerAddress string,
+		notional *big.Int,
+		affiliateFeeGenerated *big.Int,
+		affiliateAttributions []*stattypes.AffiliateAttribution,
+	)
 	GetUserStats(ctx sdk.Context, address string) *stattypes.UserStats
 }
 
@@ -225,7 +230,6 @@ type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
 	GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, error)
 	GetAffiliateParameters(ctx sdk.Context) (affiliatetypes.AffiliateParameters, error)
-	GetAttributableVolume(ctx sdk.Context, referee string, volume uint64) uint64
 	GetReferredBy(ctx sdk.Context, referee string) (referrer string, found bool)
 }
 
