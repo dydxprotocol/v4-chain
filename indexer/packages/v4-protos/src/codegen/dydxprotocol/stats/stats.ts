@@ -2,11 +2,11 @@ import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
 import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
 /**
- * AffiliateRevenueAttribution stores the affiliate revenue attributed to a user
+ * AffiliateAttribution stores the affiliate revenue attributed to a user
  * during match.
  */
 
-export interface AffiliateRevenueAttribution {
+export interface AffiliateAttribution {
   /** Referrer address */
   referrerAddress: string;
   /** Referred volume to attribute in quote quantums */
@@ -14,11 +14,11 @@ export interface AffiliateRevenueAttribution {
   referredVolumeQuoteQuantums: Long;
 }
 /**
- * AffiliateRevenueAttribution stores the affiliate revenue attributed to a user
+ * AffiliateAttribution stores the affiliate revenue attributed to a user
  * during match.
  */
 
-export interface AffiliateRevenueAttributionSDKType {
+export interface AffiliateAttributionSDKType {
   /** Referrer address */
   referrer_address: string;
   /** Referred volume to attribute in quote quantums */
@@ -63,7 +63,7 @@ export interface BlockStats_Fill {
    * maker)
    */
 
-  affiliateRevenueAttributions: AffiliateRevenueAttribution[];
+  affiliateRevenueAttributions: AffiliateAttribution[];
 }
 /** Fill records data about a fill on this block. */
 
@@ -91,7 +91,7 @@ export interface BlockStats_FillSDKType {
    * maker)
    */
 
-  affiliate_revenue_attributions: AffiliateRevenueAttributionSDKType[];
+  affiliate_revenue_attributions: AffiliateAttributionSDKType[];
 }
 /** StatsMetadata stores metadata for the x/stats module */
 
@@ -214,15 +214,15 @@ export interface CachedStakedBaseTokensSDKType {
   cached_at: Long;
 }
 
-function createBaseAffiliateRevenueAttribution(): AffiliateRevenueAttribution {
+function createBaseAffiliateAttribution(): AffiliateAttribution {
   return {
     referrerAddress: "",
     referredVolumeQuoteQuantums: Long.UZERO
   };
 }
 
-export const AffiliateRevenueAttribution = {
-  encode(message: AffiliateRevenueAttribution, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const AffiliateAttribution = {
+  encode(message: AffiliateAttribution, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.referrerAddress !== "") {
       writer.uint32(10).string(message.referrerAddress);
     }
@@ -234,10 +234,10 @@ export const AffiliateRevenueAttribution = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateRevenueAttribution {
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateAttribution {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAffiliateRevenueAttribution();
+    const message = createBaseAffiliateAttribution();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -260,8 +260,8 @@ export const AffiliateRevenueAttribution = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<AffiliateRevenueAttribution>): AffiliateRevenueAttribution {
-    const message = createBaseAffiliateRevenueAttribution();
+  fromPartial(object: DeepPartial<AffiliateAttribution>): AffiliateAttribution {
+    const message = createBaseAffiliateAttribution();
     message.referrerAddress = object.referrerAddress ?? "";
     message.referredVolumeQuoteQuantums = object.referredVolumeQuoteQuantums !== undefined && object.referredVolumeQuoteQuantums !== null ? Long.fromValue(object.referredVolumeQuoteQuantums) : Long.UZERO;
     return message;
@@ -343,7 +343,7 @@ export const BlockStats_Fill = {
     }
 
     for (const v of message.affiliateRevenueAttributions) {
-      AffiliateRevenueAttribution.encode(v!, writer.uint32(42).fork()).ldelim();
+      AffiliateAttribution.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -375,7 +375,7 @@ export const BlockStats_Fill = {
           break;
 
         case 5:
-          message.affiliateRevenueAttributions.push(AffiliateRevenueAttribution.decode(reader, reader.uint32()));
+          message.affiliateRevenueAttributions.push(AffiliateAttribution.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -393,7 +393,7 @@ export const BlockStats_Fill = {
     message.maker = object.maker ?? "";
     message.notional = object.notional !== undefined && object.notional !== null ? Long.fromValue(object.notional) : Long.UZERO;
     message.affiliateFeeGeneratedQuantums = object.affiliateFeeGeneratedQuantums !== undefined && object.affiliateFeeGeneratedQuantums !== null ? Long.fromValue(object.affiliateFeeGeneratedQuantums) : Long.UZERO;
-    message.affiliateRevenueAttributions = object.affiliateRevenueAttributions?.map(e => AffiliateRevenueAttribution.fromPartial(e)) || [];
+    message.affiliateRevenueAttributions = object.affiliateRevenueAttributions?.map(e => AffiliateAttribution.fromPartial(e)) || [];
     return message;
   }
 

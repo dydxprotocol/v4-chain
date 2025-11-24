@@ -577,49 +577,12 @@ func (k Keeper) persistMatchedOrders(
 		revSharesForFill,
 	)
 
-	// Build affiliate revenue attributions array (can include both taker and maker)
-	var affiliateRevenueAttributions []*statstypes.AffiliateRevenueAttribution
-
-	// Add taker affiliate attribution if present
-	if revSharesForFill.AffiliateRevShare != nil &&
-		revSharesForFill.AffiliateRevShare.Recipient != "" &&
-		bigFillQuoteQuantums.Sign() > 0 {
-		// Calculate the attributable volume based on the taker's current 30-day volume
-		// and the maximum attributable volume cap from affiliate parameters
-		takerAttributableVolume := k.affiliatesKeeper.GetAttributableVolume(
-			ctx,
-			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-			bigFillQuoteQuantums.Uint64(),
-		)
-		if takerAttributableVolume > 0 {
-			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateRevenueAttribution{
-				ReferrerAddress:             revSharesForFill.AffiliateRevShare.Recipient,
-				ReferredVolumeQuoteQuantums: takerAttributableVolume,
-			})
-		}
-	}
-
-	// Add maker affiliate attribution if present
-	// Check if maker has an affiliate referrer
-	makerReferrer, makerHasReferrer := k.affiliatesKeeper.GetReferredBy(
+	attributableVolumeAttributions := k.buildAttributableVolumeAttributions(
 		ctx,
-		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+		revSharesForFill,
+		bigFillQuoteQuantums,
+		matchWithOrders,
 	)
-	if makerHasReferrer && makerReferrer != "" && bigFillQuoteQuantums.Sign() > 0 {
-		// Calculate the attributable volume based on the maker's current 30-day volume
-		// and the maximum attributable volume cap from affiliate parameters
-		makerAttributableVolume := k.affiliatesKeeper.GetAttributableVolume(
-			ctx,
-			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-			bigFillQuoteQuantums.Uint64(),
-		)
-		if makerAttributableVolume > 0 {
-			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateRevenueAttribution{
-				ReferrerAddress:             makerReferrer,
-				ReferredVolumeQuoteQuantums: makerAttributableVolume,
-			})
-		}
-	}
 
 	k.statsKeeper.RecordFill(
 		ctx,
@@ -627,7 +590,7 @@ func (k Keeper) persistMatchedOrders(
 		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
 		bigFillQuoteQuantums,
 		affiliateRevSharesQuoteQuantums,
-		affiliateRevenueAttributions,
+		attributableVolumeAttributions,
 	)
 
 	takerOrderRouterFeeQuoteQuantums := big.NewInt(0)
@@ -673,6 +636,61 @@ func (k Keeper) persistMatchedOrders(
 	)
 
 	return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, nil
+}
+
+func (k Keeper) buildAttributableVolumeAttributions(
+	ctx sdk.Context,
+	revSharesForFill revsharetypes.RevSharesForFill,
+	bigFillQuoteQuantums *big.Int,
+	matchWithOrders *types.MatchWithOrders,
+) []*statstypes.AffiliateAttribution {
+	// Build affiliate revenue attributions array (can include both taker and maker)
+	var affiliateRevenueAttributions []*statstypes.AffiliateAttribution
+
+	// Add taker affiliate attribution if present
+	if revSharesForFill.AffiliateRevShare != nil &&
+		revSharesForFill.AffiliateRevShare.Recipient != "" &&
+		bigFillQuoteQuantums.Sign() > 0 {
+		// Calculate the attributable volume based on the taker's current 30-day volume
+		// and the maximum attributable volume cap from affiliate parameters
+		takerAttributableVolume := k.affiliatesKeeper.GetAttributableVolume(
+			ctx,
+			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums.Uint64(),
+		)
+		if takerAttributableVolume > 0 {
+			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateAttribution{
+				ReferrerAddress:             revSharesForFill.AffiliateRevShare.Recipient,
+				ReferredVolumeQuoteQuantums: takerAttributableVolume,
+				RefereeAddress:              matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+			})
+		}
+	}
+
+	// Add maker affiliate attribution if present
+	// Check if maker has an affiliate referrer
+	makerReferrer, makerHasReferrer := k.affiliatesKeeper.GetReferredBy(
+		ctx,
+		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+	)
+	if makerHasReferrer && makerReferrer != "" && bigFillQuoteQuantums.Sign() > 0 {
+		// Calculate the attributable volume based on the maker's current 30-day volume
+		// and the maximum attributable volume cap from affiliate parameters
+		makerAttributableVolume := k.affiliatesKeeper.GetAttributableVolume(
+			ctx,
+			matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+			bigFillQuoteQuantums.Uint64(),
+		)
+		if makerAttributableVolume > 0 {
+			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateAttribution{
+				ReferrerAddress:             makerReferrer,
+				ReferredVolumeQuoteQuantums: makerAttributableVolume,
+				RefereeAddress:              matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+			})
+		}
+	}
+
+	return affiliateRevenueAttributions
 }
 
 func (k Keeper) setOrderFillAmountsAndPruning(

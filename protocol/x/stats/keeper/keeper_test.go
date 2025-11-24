@@ -30,7 +30,7 @@ type recordFillArgs struct {
 	maker                 string
 	notional              *big.Int
 	affiliateFee          *big.Int
-	affiliateAttributions []*types.AffiliateRevenueAttribution
+	affiliateAttributions []*types.AffiliateAttribution
 }
 
 func TestRecordFill(t *testing.T) {
@@ -51,10 +51,11 @@ func TestRecordFill(t *testing.T) {
 					maker:        "maker",
 					notional:     new(big.Int).SetUint64(123),
 					affiliateFee: big.NewInt(0),
-					affiliateAttributions: []*types.AffiliateRevenueAttribution{
+					affiliateAttributions: []*types.AffiliateAttribution{
 						{
 							ReferrerAddress:             "referrer",
 							ReferredVolumeQuoteQuantums: 123,
+							RefereeAddress:              "taker",
 						},
 					},
 				},
@@ -66,10 +67,11 @@ func TestRecordFill(t *testing.T) {
 						Maker:                         "maker",
 						Notional:                      123,
 						AffiliateFeeGeneratedQuantums: 0,
-						AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
 								ReferrerAddress:             "referrer",
 								ReferredVolumeQuoteQuantums: 123,
+								RefereeAddress:              "taker",
 							},
 						},
 					},
@@ -83,10 +85,11 @@ func TestRecordFill(t *testing.T) {
 					maker:        "bob",
 					notional:     new(big.Int).SetUint64(123),
 					affiliateFee: big.NewInt(0),
-					affiliateAttributions: []*types.AffiliateRevenueAttribution{
+					affiliateAttributions: []*types.AffiliateAttribution{
 						{
 							ReferrerAddress:             "referrer",
 							ReferredVolumeQuoteQuantums: 123,
+							RefereeAddress:              "alice",
 						},
 					},
 				},
@@ -95,10 +98,11 @@ func TestRecordFill(t *testing.T) {
 					maker:        "alice",
 					notional:     new(big.Int).SetUint64(321),
 					affiliateFee: big.NewInt(0),
-					affiliateAttributions: []*types.AffiliateRevenueAttribution{
+					affiliateAttributions: []*types.AffiliateAttribution{
 						{
 							ReferrerAddress:             "referrer",
 							ReferredVolumeQuoteQuantums: 321,
+							RefereeAddress:              "bob",
 						},
 					},
 				},
@@ -110,10 +114,11 @@ func TestRecordFill(t *testing.T) {
 						Maker:                         "bob",
 						Notional:                      123,
 						AffiliateFeeGeneratedQuantums: 0,
-						AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
 								ReferrerAddress:             "referrer",
 								ReferredVolumeQuoteQuantums: 123,
+								RefereeAddress:              "alice",
 							},
 						},
 					},
@@ -122,10 +127,11 @@ func TestRecordFill(t *testing.T) {
 						Maker:                         "alice",
 						Notional:                      321,
 						AffiliateFeeGeneratedQuantums: 0,
-						AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+						AffiliateAttributions: []*types.AffiliateAttribution{
 							{
 								ReferrerAddress:             "referrer",
 								ReferredVolumeQuoteQuantums: 321,
+								RefereeAddress:              "bob",
 							},
 						},
 					},
@@ -256,10 +262,11 @@ func TestProcessBlockStats(t *testing.T) {
 				Maker:                         "maker",
 				Notional:                      100_000_000_000,
 				AffiliateFeeGeneratedQuantums: 50_000_000,
-				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
 						ReferrerAddress:             "referrer",
 						ReferredVolumeQuoteQuantums: 100_000_000_000,
+						RefereeAddress:              "taker",
 					},
 				},
 			},
@@ -272,10 +279,11 @@ func TestProcessBlockStats(t *testing.T) {
 		Affiliate_30DReferredVolumeQuoteQuantums: 100_000_000_000,
 	}, k.GetUserStats(ctx, "referrer"))
 
-	// Verify taker has the affiliate fee generated
+	// Verify taker has the affiliate fee generated AND attributed volume
 	assert.Equal(t, &types.UserStats{
-		TakerNotional:                         100_000_000_000,
-		Affiliate_30DRevenueGeneratedQuantums: 50_000_000,
+		TakerNotional:                              100_000_000_000,
+		Affiliate_30DRevenueGeneratedQuantums:      50_000_000,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 100_000_000_000, // Taker's volume was attributed
 	}, k.GetUserStats(ctx, "taker"))
 
 	// Verify maker stats
@@ -309,10 +317,11 @@ func TestProcessBlockStats(t *testing.T) {
 				Maker:                         "maker2",
 				Notional:                      50_000_000_000,
 				AffiliateFeeGeneratedQuantums: 25_000_000,
-				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
 						ReferrerAddress:             "referrer",
 						ReferredVolumeQuoteQuantums: 50_000_000_000,
+						RefereeAddress:              "taker2",
 					},
 				},
 			},
@@ -346,10 +355,11 @@ func TestProcessBlockStats(t *testing.T) {
 				Maker:                         "maker3",
 				Notional:                      100_000_000_000,
 				AffiliateFeeGeneratedQuantums: 50_000_000,
-				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
 						ReferrerAddress:             "referrer2",
 						ReferredVolumeQuoteQuantums: 30_000_000_000, // Capped to 30k
+						RefereeAddress:              "taker3",
 					},
 				},
 			},
@@ -383,7 +393,7 @@ func TestProcessBlockStats(t *testing.T) {
 				Maker:                         "maker4",
 				Notional:                      50_000_000_000,
 				AffiliateFeeGeneratedQuantums: 0,
-				AffiliateRevenueAttributions:  nil,
+				AffiliateAttributions:         nil,
 			},
 		},
 	})
@@ -407,14 +417,16 @@ func TestProcessBlockStats(t *testing.T) {
 				Maker:                         "maker5",
 				Notional:                      80_000_000_000,
 				AffiliateFeeGeneratedQuantums: 40_000_000,
-				AffiliateRevenueAttributions: []*types.AffiliateRevenueAttribution{
+				AffiliateAttributions: []*types.AffiliateAttribution{
 					{
 						ReferrerAddress:             "referrer_for_taker",
 						ReferredVolumeQuoteQuantums: 80_000_000_000,
+						RefereeAddress:              "taker5",
 					},
 					{
 						ReferrerAddress:             "referrer_for_maker",
 						ReferredVolumeQuoteQuantums: 80_000_000_000,
+						RefereeAddress:              "maker5",
 					},
 				},
 			},
@@ -450,15 +462,19 @@ func TestProcessBlockStats(t *testing.T) {
 	require.True(t, takerReferrerFound, "taker's referrer should be in epoch stats")
 	require.True(t, makerReferrerFound, "maker's referrer should be in epoch stats")
 
-	// Verify taker and maker stats
+	// Verify taker5 and maker5 stats (they're different addresses)
+	taker5Stats := k.GetUserStats(ctx, "taker5")
 	assert.Equal(t, &types.UserStats{
-		TakerNotional:                         80_000_000_000,
-		Affiliate_30DRevenueGeneratedQuantums: 40_000_000,
-	}, k.GetUserStats(ctx, "taker5"))
+		TakerNotional:                              80_000_000_000,
+		Affiliate_30DRevenueGeneratedQuantums:      40_000_000,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 80_000_000_000, // Taker's volume attributed
+	}, taker5Stats)
 
+	maker5Stats := k.GetUserStats(ctx, "maker5")
 	assert.Equal(t, &types.UserStats{
 		MakerNotional: 80_000_000_000,
-	}, k.GetUserStats(ctx, "maker5"))
+		Affiliate_30DAttributedVolumeQuoteQuantums: 80_000_000_000, // Maker's volume attributed
+	}, maker5Stats)
 }
 
 func TestExpireOldStats(t *testing.T) {

@@ -377,8 +377,9 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 	return affiliateOverridesMap, nil
 }
 
-// GetAttributableVolume calculates the attributable volume for a referee based on their current
-// trading volume and the maximum attributable volume cap. This does not modify any state.
+// GetAttributableVolume calculates the attributable volume for a referee based on their
+// already-attributed volume in the last 30 days and the maximum attributable volume cap.
+// This does not modify any state.
 func (k Keeper) GetAttributableVolume(
 	ctx sdk.Context,
 	referee string,
@@ -395,7 +396,9 @@ func (k Keeper) GetAttributableVolume(
 		return 0
 	}
 
-	previousVolume := refereeUserStats.TakerNotional + refereeUserStats.MakerNotional
+	// Use the ATTRIBUTED volume (how much has already been attributed to their affiliate)
+	// NOT total trading volume (TakerNotional + MakerNotional)
+	previouslyAttributedVolume := refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums
 
 	// If parameter is 0 then no limit is applied
 	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums
@@ -403,11 +406,11 @@ func (k Keeper) GetAttributableVolume(
 		return volume
 	}
 
-	if previousVolume >= cap {
+	if previouslyAttributedVolume >= cap {
 		return 0
-	} else if previousVolume+volume > cap {
+	} else if previouslyAttributedVolume+volume > cap {
 		// Remainder of the volume to get them to the cap
-		return cap - previousVolume
+		return cap - previouslyAttributedVolume
 	}
 
 	return volume
