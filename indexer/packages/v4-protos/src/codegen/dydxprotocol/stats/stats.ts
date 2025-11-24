@@ -1,7 +1,10 @@
 import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
 import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
-/** AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match. */
+/**
+ * AffiliateRevenueAttribution stores the affiliate revenue attributed to a user
+ * during match.
+ */
 
 export interface AffiliateRevenueAttribution {
   /** Referrer address */
@@ -10,7 +13,10 @@ export interface AffiliateRevenueAttribution {
 
   referredVolumeQuoteQuantums: Long;
 }
-/** AffiliateRevenueAttribution stores the affiliate revenue attributed to a user during match. */
+/**
+ * AffiliateRevenueAttribution stores the affiliate revenue attributed to a user
+ * during match.
+ */
 
 export interface AffiliateRevenueAttributionSDKType {
   /** Referrer address */
@@ -52,7 +58,10 @@ export interface BlockStats_Fill {
    */
 
   affiliateFeeGeneratedQuantums: Long;
-  /** Affiliate revenue attributions for this fill (can include both taker and maker) */
+  /**
+   * Affiliate revenue attributions for this fill (can include both taker and
+   * maker)
+   */
 
   affiliateRevenueAttributions: AffiliateRevenueAttribution[];
 }
@@ -77,7 +86,10 @@ export interface BlockStats_FillSDKType {
    */
 
   affiliate_fee_generated_quantums: Long;
-  /** Affiliate revenue attributions for this fill (can include both taker and maker) */
+  /**
+   * Affiliate revenue attributions for this fill (can include both taker and
+   * maker)
+   */
 
   affiliate_revenue_attributions: AffiliateRevenueAttributionSDKType[];
 }
