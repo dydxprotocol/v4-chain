@@ -7,11 +7,14 @@ import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
  */
 
 export interface AffiliateAttribution {
-  /** Referrer address */
+  /** Referrer address (the affiliate receiving the fee) */
   referrerAddress: string;
   /** Referred volume to attribute in quote quantums */
 
   referredVolumeQuoteQuantums: Long;
+  /** Referee address (the trader whose volume is being attributed) */
+
+  refereeAddress: string;
 }
 /**
  * AffiliateAttribution stores the affiliate revenue attributed to a user
@@ -19,11 +22,14 @@ export interface AffiliateAttribution {
  */
 
 export interface AffiliateAttributionSDKType {
-  /** Referrer address */
+  /** Referrer address (the affiliate receiving the fee) */
   referrer_address: string;
   /** Referred volume to attribute in quote quantums */
 
   referred_volume_quote_quantums: Long;
+  /** Referee address (the trader whose volume is being attributed) */
+
+  referee_address: string;
 }
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
@@ -63,7 +69,7 @@ export interface BlockStats_Fill {
    * maker)
    */
 
-  affiliateRevenueAttributions: AffiliateAttribution[];
+  affiliateAttributions: AffiliateAttribution[];
 }
 /** Fill records data about a fill on this block. */
 
@@ -91,7 +97,7 @@ export interface BlockStats_FillSDKType {
    * maker)
    */
 
-  affiliate_revenue_attributions: AffiliateAttributionSDKType[];
+  affiliate_attributions: AffiliateAttributionSDKType[];
 }
 /** StatsMetadata stores metadata for the x/stats module */
 
@@ -170,6 +176,12 @@ export interface UserStats {
   /** Referred volume in quote quantums with this user being an affiliate */
 
   affiliate_30dReferredVolumeQuoteQuantums: Long;
+  /**
+   * Attributed volume in quote quantums - volume from this user (as referee)
+   * that has been attributed to their affiliate in the last 30 days
+   */
+
+  affiliate_30dAttributedVolumeQuoteQuantums: Long;
 }
 /**
  * UserStats stores stats for a User. This is the sum of all stats for a user in
@@ -188,6 +200,12 @@ export interface UserStatsSDKType {
   /** Referred volume in quote quantums with this user being an affiliate */
 
   affiliate_30d_referred_volume_quote_quantums: Long;
+  /**
+   * Attributed volume in quote quantums - volume from this user (as referee)
+   * that has been attributed to their affiliate in the last 30 days
+   */
+
+  affiliate_30d_attributed_volume_quote_quantums: Long;
 }
 /** CachedStakedBaseTokens stores the last calculated total staked base tokens */
 
@@ -217,7 +235,8 @@ export interface CachedStakedBaseTokensSDKType {
 function createBaseAffiliateAttribution(): AffiliateAttribution {
   return {
     referrerAddress: "",
-    referredVolumeQuoteQuantums: Long.UZERO
+    referredVolumeQuoteQuantums: Long.UZERO,
+    refereeAddress: ""
   };
 }
 
@@ -229,6 +248,10 @@ export const AffiliateAttribution = {
 
     if (!message.referredVolumeQuoteQuantums.isZero()) {
       writer.uint32(16).uint64(message.referredVolumeQuoteQuantums);
+    }
+
+    if (message.refereeAddress !== "") {
+      writer.uint32(26).string(message.refereeAddress);
     }
 
     return writer;
@@ -251,6 +274,10 @@ export const AffiliateAttribution = {
           message.referredVolumeQuoteQuantums = (reader.uint64() as Long);
           break;
 
+        case 3:
+          message.refereeAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -264,6 +291,7 @@ export const AffiliateAttribution = {
     const message = createBaseAffiliateAttribution();
     message.referrerAddress = object.referrerAddress ?? "";
     message.referredVolumeQuoteQuantums = object.referredVolumeQuoteQuantums !== undefined && object.referredVolumeQuoteQuantums !== null ? Long.fromValue(object.referredVolumeQuoteQuantums) : Long.UZERO;
+    message.refereeAddress = object.refereeAddress ?? "";
     return message;
   }
 
@@ -320,7 +348,7 @@ function createBaseBlockStats_Fill(): BlockStats_Fill {
     maker: "",
     notional: Long.UZERO,
     affiliateFeeGeneratedQuantums: Long.UZERO,
-    affiliateRevenueAttributions: []
+    affiliateAttributions: []
   };
 }
 
@@ -342,7 +370,7 @@ export const BlockStats_Fill = {
       writer.uint32(32).uint64(message.affiliateFeeGeneratedQuantums);
     }
 
-    for (const v of message.affiliateRevenueAttributions) {
+    for (const v of message.affiliateAttributions) {
       AffiliateAttribution.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
@@ -375,7 +403,7 @@ export const BlockStats_Fill = {
           break;
 
         case 5:
-          message.affiliateRevenueAttributions.push(AffiliateAttribution.decode(reader, reader.uint32()));
+          message.affiliateAttributions.push(AffiliateAttribution.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -393,7 +421,7 @@ export const BlockStats_Fill = {
     message.maker = object.maker ?? "";
     message.notional = object.notional !== undefined && object.notional !== null ? Long.fromValue(object.notional) : Long.UZERO;
     message.affiliateFeeGeneratedQuantums = object.affiliateFeeGeneratedQuantums !== undefined && object.affiliateFeeGeneratedQuantums !== null ? Long.fromValue(object.affiliateFeeGeneratedQuantums) : Long.UZERO;
-    message.affiliateRevenueAttributions = object.affiliateRevenueAttributions?.map(e => AffiliateAttribution.fromPartial(e)) || [];
+    message.affiliateAttributions = object.affiliateAttributions?.map(e => AffiliateAttribution.fromPartial(e)) || [];
     return message;
   }
 
@@ -604,7 +632,8 @@ function createBaseUserStats(): UserStats {
     takerNotional: Long.UZERO,
     makerNotional: Long.UZERO,
     affiliate_30dRevenueGeneratedQuantums: Long.UZERO,
-    affiliate_30dReferredVolumeQuoteQuantums: Long.UZERO
+    affiliate_30dReferredVolumeQuoteQuantums: Long.UZERO,
+    affiliate_30dAttributedVolumeQuoteQuantums: Long.UZERO
   };
 }
 
@@ -624,6 +653,10 @@ export const UserStats = {
 
     if (!message.affiliate_30dReferredVolumeQuoteQuantums.isZero()) {
       writer.uint32(32).uint64(message.affiliate_30dReferredVolumeQuoteQuantums);
+    }
+
+    if (!message.affiliate_30dAttributedVolumeQuoteQuantums.isZero()) {
+      writer.uint32(40).uint64(message.affiliate_30dAttributedVolumeQuoteQuantums);
     }
 
     return writer;
@@ -654,6 +687,10 @@ export const UserStats = {
           message.affiliate_30dReferredVolumeQuoteQuantums = (reader.uint64() as Long);
           break;
 
+        case 5:
+          message.affiliate_30dAttributedVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -669,6 +706,7 @@ export const UserStats = {
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
     message.affiliate_30dRevenueGeneratedQuantums = object.affiliate_30dRevenueGeneratedQuantums !== undefined && object.affiliate_30dRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliate_30dRevenueGeneratedQuantums) : Long.UZERO;
     message.affiliate_30dReferredVolumeQuoteQuantums = object.affiliate_30dReferredVolumeQuoteQuantums !== undefined && object.affiliate_30dReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliate_30dReferredVolumeQuoteQuantums) : Long.UZERO;
+    message.affiliate_30dAttributedVolumeQuoteQuantums = object.affiliate_30dAttributedVolumeQuoteQuantums !== undefined && object.affiliate_30dAttributedVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliate_30dAttributedVolumeQuoteQuantums) : Long.UZERO;
     return message;
   }
 
