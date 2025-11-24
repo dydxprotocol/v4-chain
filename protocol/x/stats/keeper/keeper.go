@@ -246,7 +246,7 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 				} else if attribution.Role == types.AffiliateAttribution_ROLE_MAKER {
 					referee = fill.Maker
 				} else {
-					// Skip invalid role
+					ctx.Logger().Error("invalid affiliate attribution role. Skipping", "role", attribution.Role)
 					continue
 				}
 
