@@ -628,7 +628,7 @@ func TestAffiliateAttribution_ConsistentlyHighVolumeTrader(t *testing.T) {
 	})
 
 	// Now advance to a stable block and set up stats
-	tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
 	k := tApp.App.StatsKeeper
 
 	// Scenario: User is a consistent high-volume trader
