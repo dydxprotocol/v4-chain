@@ -698,8 +698,9 @@ func (k Keeper) buildAttributableVolumeAttributions(
 		)
 		if takerAttributableVolume > 0 {
 			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateAttribution{
-				Role:            statstypes.AffiliateAttribution_ROLE_TAKER,
-				ReferrerAddress: revSharesForFill.AffiliateRevShare.Recipient,
+				Role:                        statstypes.AffiliateAttribution_ROLE_TAKER,
+				ReferrerAddress:             revSharesForFill.AffiliateRevShare.Recipient,
+				ReferredVolumeQuoteQuantums: takerAttributableVolume,
 			})
 		}
 	}
@@ -721,8 +722,9 @@ func (k Keeper) buildAttributableVolumeAttributions(
 		)
 		if makerAttributableVolume > 0 {
 			affiliateRevenueAttributions = append(affiliateRevenueAttributions, &statstypes.AffiliateAttribution{
-				Role:            statstypes.AffiliateAttribution_ROLE_MAKER,
-				ReferrerAddress: makerReferrer,
+				Role:                        statstypes.AffiliateAttribution_ROLE_MAKER,
+				ReferrerAddress:             makerReferrer,
+				ReferredVolumeQuoteQuantums: makerAttributableVolume,
 			})
 		}
 	}
