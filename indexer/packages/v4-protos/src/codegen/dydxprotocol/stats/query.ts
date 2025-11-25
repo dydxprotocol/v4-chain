@@ -1,5 +1,5 @@
 import { Params, ParamsSDKType } from "./params";
-import { StatsMetadata, StatsMetadataSDKType, GlobalStats, GlobalStatsSDKType, UserStats, UserStatsSDKType } from "./stats";
+import { StatsMetadata, StatsMetadataSDKType, GlobalStats, GlobalStatsSDKType, UserStats, UserStatsSDKType, EpochStats, EpochStatsSDKType } from "./stats";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** QueryParamsRequest is a request type for the Params RPC method. */
@@ -89,6 +89,30 @@ export interface QueryUserStatsResponse {
 export interface QueryUserStatsResponseSDKType {
   /** QueryUserStatsResponse is a request type for the UserStats RPC method. */
   stats?: UserStatsSDKType;
+}
+/** QueryEpochStatsRequest is a request type for the EpochStats RPC method. */
+
+export interface QueryEpochStatsRequest {
+  /** QueryEpochStatsRequest is a request type for the EpochStats RPC method. */
+  epoch: number;
+}
+/** QueryEpochStatsRequest is a request type for the EpochStats RPC method. */
+
+export interface QueryEpochStatsRequestSDKType {
+  /** QueryEpochStatsRequest is a request type for the EpochStats RPC method. */
+  epoch: number;
+}
+/** QueryEpochStatsResponse is a response type for the EpochStats RPC method. */
+
+export interface QueryEpochStatsResponse {
+  /** QueryEpochStatsResponse is a response type for the EpochStats RPC method. */
+  stats?: EpochStats;
+}
+/** QueryEpochStatsResponse is a response type for the EpochStats RPC method. */
+
+export interface QueryEpochStatsResponseSDKType {
+  /** QueryEpochStatsResponse is a response type for the EpochStats RPC method. */
+  stats?: EpochStatsSDKType;
 }
 
 function createBaseQueryParamsRequest(): QueryParamsRequest {
@@ -413,6 +437,96 @@ export const QueryUserStatsResponse = {
   fromPartial(object: DeepPartial<QueryUserStatsResponse>): QueryUserStatsResponse {
     const message = createBaseQueryUserStatsResponse();
     message.stats = object.stats !== undefined && object.stats !== null ? UserStats.fromPartial(object.stats) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryEpochStatsRequest(): QueryEpochStatsRequest {
+  return {
+    epoch: 0
+  };
+}
+
+export const QueryEpochStatsRequest = {
+  encode(message: QueryEpochStatsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.epoch !== 0) {
+      writer.uint32(8).uint32(message.epoch);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryEpochStatsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryEpochStatsRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.epoch = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryEpochStatsRequest>): QueryEpochStatsRequest {
+    const message = createBaseQueryEpochStatsRequest();
+    message.epoch = object.epoch ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryEpochStatsResponse(): QueryEpochStatsResponse {
+  return {
+    stats: undefined
+  };
+}
+
+export const QueryEpochStatsResponse = {
+  encode(message: QueryEpochStatsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.stats !== undefined) {
+      EpochStats.encode(message.stats, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryEpochStatsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryEpochStatsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.stats = EpochStats.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryEpochStatsResponse>): QueryEpochStatsResponse {
+    const message = createBaseQueryEpochStatsResponse();
+    message.stats = object.stats !== undefined && object.stats !== null ? EpochStats.fromPartial(object.stats) : undefined;
     return message;
   }
 
