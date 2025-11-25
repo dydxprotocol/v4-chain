@@ -30,6 +30,11 @@ service Query {
   rpc UserStats(QueryUserStatsRequest) returns (QueryUserStatsResponse) {
     option (google.api.http).get = "/dydxprotocol/v4/stats/user_stats";
   }
+
+  // Queries EpochStats for a specific epoch.
+  rpc EpochStats(QueryEpochStatsRequest) returns (QueryEpochStatsResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/stats/epoch_stats/{epoch}";
+  }
 }
 
 // QueryParamsRequest is a request type for the Params RPC method.
@@ -57,3 +62,8 @@ message QueryGlobalStatsResponse { GlobalStats stats = 1; }
 message QueryUserStatsRequest { string user = 1; }
 // QueryUserStatsResponse is a request type for the UserStats RPC method.
 message QueryUserStatsResponse { UserStats stats = 1; }
+
+// QueryEpochStatsRequest is a request type for the EpochStats RPC method.
+message QueryEpochStatsRequest { uint32 epoch = 1; }
+// QueryEpochStatsResponse is a response type for the EpochStats RPC method.
+message QueryEpochStatsResponse { EpochStats stats = 1; }
