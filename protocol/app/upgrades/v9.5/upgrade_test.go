@@ -12,13 +12,13 @@ import (
 
 func TestMigrate30dReferredVolumeToEpochStats(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
+	tApp.InitChain()
 
 	statsKeeper := tApp.App.StatsKeeper
 	epochsKeeper := tApp.App.EpochsKeeper
 
 	// Advance to the next epoch so we have a current epoch with some activity
-	ctx = tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
+	ctx := tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
 
 	// Get the current epoch before migration
 	statsEpochInfo := epochsKeeper.MustGetStatsEpochInfo(ctx)
@@ -125,13 +125,13 @@ func TestMigrate30dReferredVolumeToEpochStats(t *testing.T) {
 
 func TestMigrate30dReferredVolumeToEpochStats_EmptyEpochStats(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
+	tApp.InitChain()
 
 	statsKeeper := tApp.App.StatsKeeper
 	epochsKeeper := tApp.App.EpochsKeeper
 
 	// Advance to next epoch
-	ctx = tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
+	ctx := tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
 
 	// Setup: Create user stats with referred volume but no epoch stats
 	userStats := &statstypes.UserStats{
