@@ -3,7 +3,6 @@ package v_9_5
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -84,16 +83,11 @@ func migrate30dReferredVolumeToEpochStats(
 		))
 	}
 
-	// Convert map back to slice and sort for deterministic ordering
+	// Convert map back to slice
 	epochStats.Stats = make([]*statstypes.EpochStats_UserWithStats, 0, len(userStatsMap))
 	for _, userStats := range userStatsMap {
 		epochStats.Stats = append(epochStats.Stats, userStats)
 	}
-
-	// Sort by address for deterministic ordering
-	sort.Slice(epochStats.Stats, func(i, j int) bool {
-		return epochStats.Stats[i].User < epochStats.Stats[j].User
-	})
 
 	// Save the updated epoch stats
 	statsKeeper.SetEpochStats(ctx, currentEpoch, epochStats)
