@@ -14,9 +14,9 @@ import (
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
-// migrate30dReferredVolumeToEpochStats migrates all users' 30d referred volume
+// Migrate30dReferredVolumeToEpochStats migrates all users' 30d referred volume
 // to epoch stats in the current epoch.
-func migrate30dReferredVolumeToEpochStats(
+func Migrate30dReferredVolumeToEpochStats(
 	ctx sdk.Context,
 	statsKeeper statskeeper.Keeper,
 	epochsKeeper epochskeeper.Keeper,
@@ -110,7 +110,7 @@ func CreateUpgradeHandler(
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
 		// Migrate 30d referred volume to epoch stats
-		migrate30dReferredVolumeToEpochStats(sdkCtx, statsKeeper, epochsKeeper)
+		Migrate30dReferredVolumeToEpochStats(sdkCtx, statsKeeper, epochsKeeper)
 
 		sdkCtx.Logger().Info(fmt.Sprintf("Successfully completed %s Upgrade", UpgradeName))
 
