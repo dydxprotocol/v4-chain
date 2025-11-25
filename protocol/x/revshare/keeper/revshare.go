@@ -327,6 +327,20 @@ func (k Keeper) getAffiliateRevShares(
 		return nil, big.NewInt(0), nil
 	}
 	feesShared := lib.BigMulPpm(takerFee, lib.BigU(feeSharePpm), false)
+
+	// Cap the affiliate revenue share if it exceeds the maximum 30d affiliate revenue per referred user
+	if userStats != nil {
+		cap := affiliateParams.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums
+		if cap != 0 {
+			revenueGenerated := userStats.Affiliate_30DRevenueGeneratedQuantums
+			// We know revenueGenerated < cap here because of the check above
+			maxFee := new(big.Int).SetUint64(cap - revenueGenerated)
+			if feesShared.Cmp(maxFee) > 0 {
+				feesShared = maxFee
+			}
+		}
+	}
+
 	return []types.RevShare{
 		{
 			Recipient:         takerAffiliateAddr,

@@ -17,7 +17,12 @@ export interface AffiliateTiersSDKType {
 export interface AffiliateTiers_Tier {
   /** Required all-time referred volume in quote quantums. */
   reqReferredVolumeQuoteQuantums: Long;
-  /** Required currently staked native tokens (in whole coins). */
+  /**
+   * Required currently staked native tokens (in whole coins).
+   * This is deprecated
+   */
+
+  /** @deprecated */
 
   reqStakedWholeCoins: number;
   /** Taker fee share in parts-per-million. */
@@ -29,7 +34,12 @@ export interface AffiliateTiers_Tier {
 export interface AffiliateTiers_TierSDKType {
   /** Required all-time referred volume in quote quantums. */
   req_referred_volume_quote_quantums: Long;
-  /** Required currently staked native tokens (in whole coins). */
+  /**
+   * Required currently staked native tokens (in whole coins).
+   * This is deprecated
+   */
+
+  /** @deprecated */
 
   req_staked_whole_coins: number;
   /** Taker fee share in parts-per-million. */
