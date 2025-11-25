@@ -82,3 +82,13 @@ func TestQueryUserStats(t *testing.T) {
 	var resp types.QueryUserStatsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
+
+func TestQueryEpochStats(t *testing.T) {
+	net, ctx := setupNetwork(t)
+
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryEpochStats(), []string{"0"})
+
+	require.NoError(t, err)
+	var resp types.QueryEpochStatsResponse
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+}

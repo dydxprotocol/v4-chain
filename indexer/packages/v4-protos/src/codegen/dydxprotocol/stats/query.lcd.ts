@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType, QueryStatsMetadataRequest, QueryStatsMetadataResponseSDKType, QueryGlobalStatsRequest, QueryGlobalStatsResponseSDKType, QueryUserStatsRequest, QueryUserStatsResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, QueryStatsMetadataRequest, QueryStatsMetadataResponseSDKType, QueryGlobalStatsRequest, QueryGlobalStatsResponseSDKType, QueryUserStatsRequest, QueryUserStatsResponseSDKType, QueryEpochStatsRequest, QueryEpochStatsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -13,6 +13,7 @@ export class LCDQueryClient {
     this.statsMetadata = this.statsMetadata.bind(this);
     this.globalStats = this.globalStats.bind(this);
     this.userStats = this.userStats.bind(this);
+    this.epochStats = this.epochStats.bind(this);
   }
   /* Queries the Params. */
 
@@ -49,6 +50,13 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/v4/stats/user_stats`;
     return await this.req.get<QueryUserStatsResponseSDKType>(endpoint, options);
+  }
+  /* Queries EpochStats for a specific epoch. */
+
+
+  async epochStats(params: QueryEpochStatsRequest): Promise<QueryEpochStatsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/stats/epoch_stats/${params.epoch}`;
+    return await this.req.get<QueryEpochStatsResponseSDKType>(endpoint);
   }
 
 }
