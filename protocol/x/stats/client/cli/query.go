@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,6 +26,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryStatsMetadata())
 	cmd.AddCommand(CmdQueryGlobalStats())
 	cmd.AddCommand(CmdQueryUserStats())
+	cmd.AddCommand(CmdQueryEpochStats())
 
 	return cmd
 }
@@ -110,6 +112,37 @@ func CmdQueryUserStats() *cobra.Command {
 				context.Background(),
 				&types.QueryUserStatsRequest{
 					User: args[0],
+				},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryEpochStats() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-epoch-stats [epoch]",
+		Short: "get stats for a specific epoch",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			epochNum, err := strconv.ParseUint(args[0], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid epoch number: %w", err)
+			}
+
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.EpochStats(
+				context.Background(),
+				&types.QueryEpochStatsRequest{
+					Epoch: uint32(epochNum),
 				},
 			)
 			if err != nil {
