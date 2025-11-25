@@ -3,16 +3,15 @@ package v_9_5_test
 import (
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	v_9_5 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.5"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
+
 func TestMigrate30dReferredVolumeToEpochStats(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	tApp.InitChain()
@@ -23,7 +22,7 @@ func TestMigrate30dReferredVolumeToEpochStats(t *testing.T) {
 	// Advance to the next epoch so we have a current epoch with some activity
 	ctx := tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
 
-	// Get current epoch directly from keeper instead of using containertest.Query
+	// Query epochs info to get current epoch
 	statsEpochInfo := epochsKeeper.MustGetStatsEpochInfo(ctx)
 	currentEpoch := statsEpochInfo.CurrentEpoch
 
@@ -136,7 +135,7 @@ func TestMigrate30dReferredVolumeToEpochStats_EmptyEpochStats(t *testing.T) {
 	// Advance to next epoch
 	ctx := tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
 
-	// Get current epoch directly from keeper instead of using containertest.Query
+	// Query epochs info to get current epoch
 	statsEpochInfo := epochsKeeper.MustGetStatsEpochInfo(ctx)
 	currentEpoch := statsEpochInfo.CurrentEpoch
 
@@ -162,6 +161,15 @@ func TestMigrate30dReferredVolumeToEpochStats_EmptyEpochStats(t *testing.T) {
 		"Alice should be added to epoch stats because she has referred volume")
 
 	aliceStats := postUpgradeEpochStats.Stats[0]
+	require.Equal(t, constants.AliceAccAddress.String(), aliceStats.User)
+	require.Equal(t, uint64(1_000_000_000), aliceStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Alice's referred volume should be migrated")
+	require.Equal(t, uint64(0), aliceStats.Stats.TakerNotional,
+		"Alice's taker notional should be 0 (she wasn't trading)")
+	require.Equal(t, uint64(0), aliceStats.Stats.MakerNotional,
+		"Alice's maker notional should be 0 (she wasn't trading)")
+}
+
 func TestStateUpgrade(t *testing.T) {
 	testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
