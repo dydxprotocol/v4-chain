@@ -331,7 +331,12 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
-		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		// Clamp affiliate_30drevenue at 0 to prevent underflow (must compare before subtracting for uint64)
+		if stats.Affiliate_30DRevenueGeneratedQuantums > removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums {
+			stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		} else {
+			stats.Affiliate_30DRevenueGeneratedQuantums = 0
+		}
 
 		// Clamp affiliate fields at 0 to prevent underflow (must compare before subtracting for uint64)
 		if stats.Affiliate_30DReferredVolumeQuoteQuantums > removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums {
