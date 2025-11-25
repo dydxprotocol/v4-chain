@@ -607,12 +607,7 @@ func (k Keeper) UpdateClobPair(
 			)
 		}
 	}
-	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
-		return errorsmod.Wrapf(
-			types.ErrInvalidClobPairUpdate,
-			"UpdateClobPair: cannot update ClobPair subticks per tick",
-		)
-	}
+
 	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
 		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairUpdate,
