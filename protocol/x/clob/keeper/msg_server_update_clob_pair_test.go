@@ -307,6 +307,33 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
+		"Error: cannot decrease subticks per tick to a bad multiple": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: lib.GovModuleAddress.String(),
+				ClobPair: types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           4, // decrease from 5 -> 4 (should fail)
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext, _ *mocks.IndexerEventManager) {
+				// Existing clob pair with SubticksPerTick = 5 and status initializing.
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
+			},
+			expectedErr: types.ErrInvalidClobPairUpdate,
+		},
 		"Error: cannot update quantum conversion exponent": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: lib.GovModuleAddress.String(),
