@@ -136,7 +136,7 @@ export async function findAll(
       baseQuery = baseQuery.orderBy(column, order);
     }
   } else {
-    baseQuery = baseQuery.orderBy(FundingPaymentsColumns.createdAtHeight, Ordering.DESC);
+    baseQuery = baseQuery.orderBy(FundingPaymentsColumns.createdAt, Ordering.DESC);
   }
 
   return handleLimitAndPagination(baseQuery, limit, page);

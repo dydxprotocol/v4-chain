@@ -46,8 +46,8 @@ describe('funding payments store', () => {
     const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, [], {});
 
     expect(fundingPayments.length).toEqual(2);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment2));
-    expect(fundingPayments[1]).toEqual(expect.objectContaining(defaultFundingPayment));
+    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment));
+    expect(fundingPayments[1]).toEqual(expect.objectContaining(defaultFundingPayment2));
   });
 
   it('Successfully finds FundingPayments with createdAtHeight', async () => {
@@ -138,7 +138,7 @@ describe('funding payments store', () => {
       [],
     );
     expect(fundingPayments.length).toEqual(1);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment2));
+    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment));
     const { results: fundingPayments2 } = await FundingPaymentsTable.findAll(
       {
         page: 2,
@@ -147,7 +147,7 @@ describe('funding payments store', () => {
       [],
     );
     expect(fundingPayments2.length).toEqual(1);
-    expect(fundingPayments2[0]).toEqual(expect.objectContaining(defaultFundingPayment));
+    expect(fundingPayments2[0]).toEqual(expect.objectContaining(defaultFundingPayment2));
   });
 
   it('returns correct net funding payments for a subaccount between block heights', async () => {
