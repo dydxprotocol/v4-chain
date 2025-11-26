@@ -994,3 +994,228 @@ func TestGetStakedBaseTokens_Cache_Miss(t *testing.T) {
 	receivedCoins := statsKeeper.GetStakedBaseTokens(ctx, constants.AliceAccAddress.String())
 	require.Equal(t, latestCoinsToStakeQuantums, receivedCoins)
 }
+
+// TestExpireOldStats_UnderflowProtection tests that affiliate fields are properly
+// clamped to 0 when expiring epochs would cause underflow due to corrupted/inconsistent data.
+func TestExpireOldStats_UnderflowProtection(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+
+	// Epochs start at block height 2
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(int64(1), 0).UTC(),
+	})
+	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
+
+	// Advance time so epochs can expire
+	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(0, 0).
+			Add(windowDuration).
+			Add((time.Duration(2*epochstypes.StatsEpochDuration) + 1) * time.Second).
+			UTC(),
+	})
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
+	k := tApp.App.StatsKeeper
+
+	// Simulate a scenario where epoch stats have MORE volume than user's current stats
+	// This could happen after the v9.5 migration or other data inconsistencies
+
+	// Create epoch 0 with large affiliate volumes
+	k.SetEpochStats(ctx, 0, &types.EpochStats{
+		EpochEndTime: time.Unix(0, 0).UTC(),
+		Stats: []*types.EpochStats_UserWithStats{
+			{
+				User: "alice",
+				Stats: &types.UserStats{
+					TakerNotional:                              100,
+					MakerNotional:                              200,
+					Affiliate_30DReferredVolumeQuoteQuantums:   1_000_000_000_000, // 1M volume in epoch
+					Affiliate_30DAttributedVolumeQuoteQuantums: 500_000_000_000,   // 500k attributed
+				},
+			},
+		},
+	})
+
+	// Set user stats with LESS than what's in the epoch
+	// This simulates corrupted/inconsistent state
+	k.SetUserStats(ctx, "alice", &types.UserStats{
+		TakerNotional:                              50,              // Less than epoch
+		MakerNotional:                              100,             // Less than epoch
+		Affiliate_30DReferredVolumeQuoteQuantums:   100_000_000_000, // Only 100k, but epoch has 1M
+		Affiliate_30DAttributedVolumeQuoteQuantums: 50_000_000_000,  // Only 50k, but epoch has 500k
+	})
+
+	k.SetGlobalStats(ctx, &types.GlobalStats{
+		NotionalTraded: 150,
+	})
+
+	k.SetStatsMetadata(ctx, &types.StatsMetadata{
+		TrailingEpoch: 0,
+	})
+
+	// Expire the epoch - this should NOT cause underflow
+	k.ExpireOldStats(ctx)
+
+	// Verify that affiliate fields are clamped to 0, not wrapped around to huge numbers
+	aliceStats := k.GetUserStats(ctx, "alice")
+
+	// TakerNotional and MakerNotional can go negative (they wrap around for uint64)
+	// But we're testing that the affiliate fields with underflow protection work correctly
+
+	// These fields should be clamped to 0, not underflow
+	require.Equal(t, uint64(0), aliceStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Referred volume should be clamped to 0, not underflow")
+	require.Equal(t, uint64(0), aliceStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Attributed volume should be clamped to 0, not underflow")
+
+	// Verify the values aren't huge wrapped-around numbers
+	// If underflow occurred, these would be close to uint64 max (18446744073709551615)
+	require.Less(t, aliceStats.Affiliate_30DReferredVolumeQuoteQuantums, uint64(1000),
+		"Referred volume should not be a wrapped-around huge number")
+	require.Less(t, aliceStats.Affiliate_30DAttributedVolumeQuoteQuantums, uint64(1000),
+		"Attributed volume should not be a wrapped-around huge number")
+}
+
+// TestExpireOldStats_UnderflowProtection_EdgeCase tests the exact boundary case
+func TestExpireOldStats_UnderflowProtection_EdgeCase(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(int64(1), 0).UTC(),
+	})
+	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
+
+	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(0, 0).
+			Add(windowDuration).
+			Add((time.Duration(2*epochstypes.StatsEpochDuration) + 1) * time.Second).
+			UTC(),
+	})
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
+	k := tApp.App.StatsKeeper
+
+	// Test exact boundary: user has exactly the same amount as epoch
+	k.SetEpochStats(ctx, 0, &types.EpochStats{
+		EpochEndTime: time.Unix(0, 0).UTC(),
+		Stats: []*types.EpochStats_UserWithStats{
+			{
+				User: "bob",
+				Stats: &types.UserStats{
+					Affiliate_30DReferredVolumeQuoteQuantums:   1000,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 500,
+				},
+			},
+		},
+	})
+
+	k.SetUserStats(ctx, "bob", &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums:   1000, // Exactly the same
+		Affiliate_30DAttributedVolumeQuoteQuantums: 500,  // Exactly the same
+	})
+
+	k.SetStatsMetadata(ctx, &types.StatsMetadata{
+		TrailingEpoch: 0,
+	})
+
+	k.ExpireOldStats(ctx)
+
+	bobStats := k.GetUserStats(ctx, "bob")
+
+	// Should be exactly 0 after subtracting equal amounts
+	require.Equal(t, uint64(0), bobStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Should be exactly 0 after subtracting equal amounts")
+	require.Equal(t, uint64(0), bobStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Should be exactly 0 after subtracting equal amounts")
+}
+
+// TestExpireOldStats_UnderflowProtection_MultipleUsers tests that underflow
+// protection works correctly when multiple users have inconsistent data
+func TestExpireOldStats_UnderflowProtection_MultipleUsers(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(int64(1), 0).UTC(),
+	})
+	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
+
+	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: time.Unix(0, 0).
+			Add(windowDuration).
+			Add((time.Duration(2*epochstypes.StatsEpochDuration) + 1) * time.Second).
+			UTC(),
+	})
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
+	k := tApp.App.StatsKeeper
+
+	// Create epoch with multiple users having different underflow scenarios
+	k.SetEpochStats(ctx, 0, &types.EpochStats{
+		EpochEndTime: time.Unix(0, 0).UTC(),
+		Stats: []*types.EpochStats_UserWithStats{
+			{
+				User: "alice",
+				Stats: &types.UserStats{
+					Affiliate_30DReferredVolumeQuoteQuantums:   5_000_000_000,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 3_000_000_000,
+				},
+			},
+			{
+				User: "bob",
+				Stats: &types.UserStats{
+					Affiliate_30DReferredVolumeQuoteQuantums:   10_000_000_000,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 7_000_000_000,
+				},
+			},
+			{
+				User: "carl",
+				Stats: &types.UserStats{
+					Affiliate_30DReferredVolumeQuoteQuantums:   2_000_000_000,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 1_000_000_000,
+				},
+			},
+		},
+	})
+
+	// Alice: has more than epoch (normal case)
+	k.SetUserStats(ctx, "alice", &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums:   10_000_000_000,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 8_000_000_000,
+	})
+
+	// Bob: has less than epoch (should clamp to 0)
+	k.SetUserStats(ctx, "bob", &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums:   5_000_000_000,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 3_000_000_000,
+	})
+
+	// Carl: has exactly the same (should become 0)
+	k.SetUserStats(ctx, "carl", &types.UserStats{
+		Affiliate_30DReferredVolumeQuoteQuantums:   2_000_000_000,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 1_000_000_000,
+	})
+
+	k.SetStatsMetadata(ctx, &types.StatsMetadata{
+		TrailingEpoch: 0,
+	})
+
+	k.ExpireOldStats(ctx)
+
+	// Verify Alice: normal subtraction
+	aliceStats := k.GetUserStats(ctx, "alice")
+	require.Equal(t, uint64(5_000_000_000), aliceStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Alice should have 5B remaining (10B - 5B)")
+	require.Equal(t, uint64(5_000_000_000), aliceStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Alice should have 5B remaining (8B - 3B)")
+
+	// Verify Bob: clamped to 0
+	bobStats := k.GetUserStats(ctx, "bob")
+	require.Equal(t, uint64(0), bobStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Bob should be clamped to 0 (had 5B, tried to subtract 10B)")
+	require.Equal(t, uint64(0), bobStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Bob should be clamped to 0 (had 3B, tried to subtract 7B)")
+
+	// Verify Carl: exactly 0
+	carlStats := k.GetUserStats(ctx, "carl")
+	require.Equal(t, uint64(0), carlStats.Affiliate_30DReferredVolumeQuoteQuantums,
+		"Carl should be exactly 0 (had 2B, subtracted 2B)")
+	require.Equal(t, uint64(0), carlStats.Affiliate_30DAttributedVolumeQuoteQuantums,
+		"Carl should be exactly 0 (had 1B, subtracted 1B)")
+}
