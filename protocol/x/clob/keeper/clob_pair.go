@@ -608,6 +608,20 @@ func (k Keeper) UpdateClobPair(
 		}
 	}
 
+	// Only allow decreasing SubticksPerTick; it must remain positive.
+	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
+		newSPT := clobPair.SubticksPerTick
+		oldSPT := oldClobPair.SubticksPerTick
+		if newSPT == 0 || newSPT > oldSPT {
+			return errorsmod.Wrapf(
+				types.ErrInvalidClobPairUpdate,
+				"UpdateClobPair: invalid SubticksPerTick change from %d to %d; must decrease and remain > 0",
+				oldSPT,
+				newSPT,
+			)
+		}
+	}
+
 	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
 		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairUpdate,
