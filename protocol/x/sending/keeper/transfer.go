@@ -217,3 +217,19 @@ func (k Keeper) SendFromModuleToAccount(
 		sdk.NewCoins(msg.Coin),
 	)
 }
+
+// SendFromAccountToAccount sends coins from one `x/bank` account to another `x/bank` account.
+func (k Keeper) SendFromAccountToAccount(
+	ctx sdk.Context,
+	msg *types.MsgSendFromAccountToAccount,
+) (err error) {
+	senderAddr := sdk.MustAccAddressFromBech32(msg.GetSender())
+	recipientAddr := sdk.MustAccAddressFromBech32(msg.GetRecipient())
+
+	return k.bankKeeper.SendCoins(
+		ctx,
+		senderAddr,
+		recipientAddr,
+		sdk.NewCoins(msg.Coin),
+	)
+}

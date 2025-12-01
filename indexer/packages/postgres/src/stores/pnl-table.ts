@@ -302,7 +302,7 @@ export async function findAllDailyAggregate(
   );
 
   const dailyBase = setupBaseQuery<PnlModel>(PnlModel, options);
-  const knex = dailyBase.toKnexQuery().client;
+  const knex = (dailyBase as unknown as { knex?: () => Knex }).knex?.() ?? PnlModel.knex();
   baseQuery = baseQuery.whereIn(PnlColumns.subaccountId, subaccountId);
 
   if (createdBeforeOrAtHeight !== undefined) {
@@ -329,23 +329,33 @@ export async function findAllDailyAggregate(
     baseQuery = baseQuery.where(PnlColumns.createdAt, '>=', createdOnOrAfter);
   }
 
-  // Step 1: Get first record of each day for each subaccount
+  // Step 1: Find the earliest timestamp for each day across ALL subaccounts
+  const earliestTimestampPerDay = baseQuery.clone()
+    .clearSelect()
+    .select(
+      knex.raw('DATE_TRUNC(\'day\', "createdAt") as day_date'),
+      knex.raw('MIN("createdAt") as earliest_timestamp'),
+    )
+    .groupByRaw('DATE_TRUNC(\'day\', "createdAt")');
+
+  // Step 2: Get all records at those earliest timestamps
   const dailySnapshotsQuery = baseQuery.clone()
     .select(
-      knex.raw(`
-        DISTINCT ON ("subaccountId", DATE_TRUNC('day', "createdAt"))
-        "subaccountId",
-        "createdAt",
-        "createdAtHeight",
-        equity,
-        "totalPnl",
-        "netTransfers"
-      `),
+      PnlColumns.createdAt,
+      PnlColumns.createdAtHeight,
+      PnlColumns.equity,
+      PnlColumns.totalPnl,
+      PnlColumns.netTransfers,
     )
-    .orderByRaw('"subaccountId", DATE_TRUNC(\'day\', "createdAt")')
-    .orderBy(PnlColumns.createdAt, 'ASC'); // Earliest in day
+    .innerJoin(
+      earliestTimestampPerDay.as('earliest'),
+      function joinCondition() {
+        this.on(knex.raw('DATE_TRUNC(\'day\', "pnl"."createdAt") = "earliest"."day_date"'))
+          .andOn(knex.raw('"pnl"."createdAt" = "earliest"."earliest_timestamp"'));
+      },
+    );
 
-  // Step 2: Aggregate across subaccounts by day
+  // Step 3: Aggregate across subaccounts by day
   const aggregatedQuery = dailyBase
     .clearSelect()
     .with('daily_snapshots', dailySnapshotsQuery)
@@ -360,7 +370,6 @@ export async function findAllDailyAggregate(
     .groupByRaw('DATE_TRUNC(\'day\', "createdAt")')
     .orderByRaw('DATE_TRUNC(\'day\', "createdAt") DESC');
 
-  // Apply pagination if needed
   return handleLimitAndPagination(aggregatedQuery, limit, page, options);
 }
 

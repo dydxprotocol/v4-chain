@@ -262,14 +262,16 @@ var (
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": {},
 
 		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer":                  {},
-		"/dydxprotocol.sending.MsgCreateTransferResponse":          {},
-		"/dydxprotocol.sending.MsgDepositToSubaccount":             {},
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":     {},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":          {},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse":  {},
-		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         {},
-		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": {},
+		"/dydxprotocol.sending.MsgCreateTransfer":                   {},
+		"/dydxprotocol.sending.MsgCreateTransferResponse":           {},
+		"/dydxprotocol.sending.MsgDepositToSubaccount":              {},
+		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":      {},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":           {},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse":   {},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount":          {},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse":  {},
+		"/dydxprotocol.sending.MsgSendFromAccountToAccount":         {},
+		"/dydxprotocol.sending.MsgSendFromAccountToAccountResponse": {},
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         {},

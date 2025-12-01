@@ -12,6 +12,7 @@ import {
   defaultPnl,
   defaultPnl2,
   defaultBlock,
+  isolatedSubaccountId,
 } from '../helpers/constants';
 
 describe('Pnl store', () => {
@@ -555,6 +556,174 @@ describe('Pnl store', () => {
     expect(day1Record?.equity).toBe('2100');
     expect(day1Record?.totalPnl).toBe('210');
     expect(day1Record?.netTransfers).toBe('1050');
+  });
+
+  it('Successfully handles child subaccounts created mid-day by excluding them from daily aggregation', async () => {
+    const records = [];
+
+    // Parent subaccount (0) and child subaccount (128)
+    const parentSubaccountId = defaultSubaccountId; // subaccount 0
+    const childSubaccountId = isolatedSubaccountId; // subaccount 128 (child of 0)
+
+    // Day 1 (Jan 1): Only parent subaccount exists from 00:00
+    records.push({
+      ...defaultPnl,
+      subaccountId: parentSubaccountId,
+      createdAt: '2023-01-01T00:00:00.000Z',
+      createdAtHeight: '1000',
+      equity: '1000',
+      totalPnl: '100',
+      netTransfers: '500',
+    });
+
+    // Day 2 (Jan 2): Parent subaccount has records starting from 00:00
+    records.push({
+      ...defaultPnl,
+      subaccountId: parentSubaccountId,
+      createdAt: '2023-01-02T00:00:00.000Z',
+      createdAtHeight: '2000',
+      equity: '2000',
+      totalPnl: '200',
+      netTransfers: '600',
+    });
+
+    // Add more records throughout the day for parent subaccount
+    records.push({
+      ...defaultPnl,
+      subaccountId: parentSubaccountId,
+      createdAt: '2023-01-02T06:00:00.000Z',
+      createdAtHeight: '2060',
+      equity: '2100',
+      totalPnl: '210',
+      netTransfers: '610',
+    });
+
+    // Day 2 (Jan 2): Child subaccount 128 was created at 05:00
+    // This subaccount has NO 00:00 record because it didn't exist yet
+    records.push({
+      ...defaultPnl,
+      subaccountId: childSubaccountId,
+      createdAt: '2023-01-02T05:00:00.000Z',
+      createdAtHeight: '2050',
+      equity: '500', // First equity value for this new child subaccount
+      totalPnl: '50',
+      netTransfers: '100',
+    });
+
+    // Add more records for the newly created child subaccount
+    records.push({
+      ...defaultPnl,
+      subaccountId: childSubaccountId,
+      createdAt: '2023-01-02T06:00:00.000Z',
+      createdAtHeight: '2061',
+      equity: '550',
+      totalPnl: '55',
+      netTransfers: '105',
+    });
+
+    records.push({
+      ...defaultPnl,
+      subaccountId: childSubaccountId,
+      createdAt: '2023-01-02T12:00:00.000Z',
+      createdAtHeight: '2120',
+      equity: '600',
+      totalPnl: '60',
+      netTransfers: '110',
+    });
+
+    // Day 3 (Jan 3): Both parent and child subaccounts have records at 00:00
+    records.push({
+      ...defaultPnl,
+      subaccountId: parentSubaccountId,
+      createdAt: '2023-01-03T00:00:00.000Z',
+      createdAtHeight: '3000',
+      equity: '3000',
+      totalPnl: '300',
+      netTransfers: '700',
+    });
+
+    records.push({
+      ...defaultPnl,
+      subaccountId: childSubaccountId,
+      createdAt: '2023-01-03T00:00:00.000Z',
+      createdAtHeight: '3001',
+      equity: '800',
+      totalPnl: '80',
+      netTransfers: '150',
+    });
+
+    // Add more records throughout Day 3
+    records.push({
+      ...defaultPnl,
+      subaccountId: parentSubaccountId,
+      createdAt: '2023-01-03T06:00:00.000Z',
+      createdAtHeight: '3060',
+      equity: '3100',
+      totalPnl: '310',
+      netTransfers: '710',
+    });
+
+    records.push({
+      ...defaultPnl,
+      subaccountId: childSubaccountId,
+      createdAt: '2023-01-03T06:00:00.000Z',
+      createdAtHeight: '3061',
+      equity: '850',
+      totalPnl: '85',
+      netTransfers: '155',
+    });
+
+    // Insert all records
+    await Promise.all(records.map((record) => PnlTable.create(record)));
+
+    // Get aggregated daily records for parent subaccount and its children
+    // This simulates the parentSubaccountNumber endpoint
+    const dailyResults = await PnlTable.findAllDailyAggregate(
+      { subaccountId: [parentSubaccountId, childSubaccountId] },
+      [],
+      {},
+    );
+
+    // We should get exactly 3 records (one for each day)
+    expect(dailyResults.results.length).toBe(3);
+
+    // Verify Day 1 (only parent subaccount existed)
+    const day1Record = dailyResults.results.find((r) => r.createdAt.includes('2023-01-01'));
+    expect(day1Record).toBeDefined();
+    expect(day1Record?.equity).toBe('1000'); // Only parent
+    expect(day1Record?.totalPnl).toBe('100');
+    expect(day1Record?.netTransfers).toBe('500');
+    expect(day1Record?.createdAt).toBe('2023-01-01T00:00:00.000Z');
+
+    // Verify Day 2 (child created at 05:00, should be excluded)
+    const day2Record = dailyResults.results.find((r) => r.createdAt.includes('2023-01-02'));
+    expect(day2Record).toBeDefined();
+
+    // Critical: The aggregation should ONLY include records at 00:00:00
+    // Since childSubaccountId (128) has NO record at 00:00:00, it should be EXCLUDED
+    // Expected: equity = 2000 (only from parent subaccount 0 at 00:00)
+    // NOT: equity = 2000 + 500 = 2500 (mixing timestamps - this was the BUG)
+    expect(day2Record?.equity).toBe('2000');
+    expect(day2Record?.totalPnl).toBe('200');
+    expect(day2Record?.netTransfers).toBe('600');
+    expect(day2Record?.createdAt).toBe('2023-01-02T00:00:00.000Z');
+
+    // The height should be from 00:00, not from 05:00
+    expect(day2Record?.createdAtHeight).toBe('2000'); // MAX height from 00:00 records
+
+    // Verify Day 3 (both parent and child have 00:00 records - should aggregate both)
+    const day3Record = dailyResults.results.find((r) => r.createdAt.includes('2023-01-03'));
+    expect(day3Record).toBeDefined();
+
+    // Now both subaccounts should be included in the aggregation
+    // Equity: 3000 (parent) + 800 (child) = 3800
+    // TotalPnl: 300 (parent) + 80 (child) = 380
+    // NetTransfers: 700 (parent) + 150 (child) = 850
+    expect(day3Record?.equity).toBe('3800');
+    expect(day3Record?.totalPnl).toBe('380');
+    expect(day3Record?.netTransfers).toBe('850');
+    expect(day3Record?.createdAt).toBe('2023-01-03T00:00:00.000Z');
+    expect(day3Record?.createdAtHeight).toBe('3001'); // MAX height from 00:00 records
   });
 
   it('Successfully paginates daily aggregated PNL records', async () => {

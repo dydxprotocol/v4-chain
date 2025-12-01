@@ -1,6 +1,82 @@
 import { Timestamp } from "../../google/protobuf/timestamp";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long, toTimestamp, fromTimestamp } from "../../helpers";
+import { Long, DeepPartial, toTimestamp, fromTimestamp } from "../../helpers";
+/** Role indicates whether this attribution is for the taker or maker */
+
+export enum AffiliateAttribution_Role {
+  ROLE_UNSPECIFIED = 0,
+  ROLE_TAKER = 1,
+  ROLE_MAKER = 2,
+  UNRECOGNIZED = -1,
+}
+/** Role indicates whether this attribution is for the taker or maker */
+
+export enum AffiliateAttribution_RoleSDKType {
+  ROLE_UNSPECIFIED = 0,
+  ROLE_TAKER = 1,
+  ROLE_MAKER = 2,
+  UNRECOGNIZED = -1,
+}
+export function affiliateAttribution_RoleFromJSON(object: any): AffiliateAttribution_Role {
+  switch (object) {
+    case 0:
+    case "ROLE_UNSPECIFIED":
+      return AffiliateAttribution_Role.ROLE_UNSPECIFIED;
+
+    case 1:
+    case "ROLE_TAKER":
+      return AffiliateAttribution_Role.ROLE_TAKER;
+
+    case 2:
+    case "ROLE_MAKER":
+      return AffiliateAttribution_Role.ROLE_MAKER;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return AffiliateAttribution_Role.UNRECOGNIZED;
+  }
+}
+export function affiliateAttribution_RoleToJSON(object: AffiliateAttribution_Role): string {
+  switch (object) {
+    case AffiliateAttribution_Role.ROLE_UNSPECIFIED:
+      return "ROLE_UNSPECIFIED";
+
+    case AffiliateAttribution_Role.ROLE_TAKER:
+      return "ROLE_TAKER";
+
+    case AffiliateAttribution_Role.ROLE_MAKER:
+      return "ROLE_MAKER";
+
+    case AffiliateAttribution_Role.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+/** AffiliateAttribution represents the affiliate attribution for a fill. */
+
+export interface AffiliateAttribution {
+  /** Role of the trader (taker or maker) whose affiliate is being attributed */
+  role: AffiliateAttribution_Role;
+  /** Referrer address (the affiliate receiving the fee) */
+
+  referrerAddress: string;
+  /** Referred volume in quote quantums (capped based on 30-day volume limits) */
+
+  referredVolumeQuoteQuantums: Long;
+}
+/** AffiliateAttribution represents the affiliate attribution for a fill. */
+
+export interface AffiliateAttributionSDKType {
+  /** Role of the trader (taker or maker) whose affiliate is being attributed */
+  role: AffiliateAttribution_RoleSDKType;
+  /** Referrer address (the affiliate receiving the fee) */
+
+  referrer_address: string;
+  /** Referred volume in quote quantums (capped based on 30-day volume limits) */
+
+  referred_volume_quote_quantums: Long;
+}
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
 export interface BlockStats {
@@ -34,6 +110,12 @@ export interface BlockStats_Fill {
    */
 
   affiliateFeeGeneratedQuantums: Long;
+  /**
+   * Affiliate revenue attributions for this fill (can include both taker and
+   * maker)
+   */
+
+  affiliateAttributions: AffiliateAttribution[];
 }
 /** Fill records data about a fill on this block. */
 
@@ -56,6 +138,12 @@ export interface BlockStats_FillSDKType {
    */
 
   affiliate_fee_generated_quantums: Long;
+  /**
+   * Affiliate revenue attributions for this fill (can include both taker and
+   * maker)
+   */
+
+  affiliate_attributions: AffiliateAttributionSDKType[];
 }
 /** StatsMetadata stores metadata for the x/stats module */
 
@@ -134,6 +222,12 @@ export interface UserStats {
   /** Referred volume in quote quantums with this user being an affiliate */
 
   affiliate_30dReferredVolumeQuoteQuantums: Long;
+  /**
+   * Attributed volume in quote quantums - volume from this user (as referee)
+   * that has been attributed to their affiliate in the last 30 days
+   */
+
+  affiliate_30dAttributedVolumeQuoteQuantums: Long;
 }
 /**
  * UserStats stores stats for a User. This is the sum of all stats for a user in
@@ -152,12 +246,18 @@ export interface UserStatsSDKType {
   /** Referred volume in quote quantums with this user being an affiliate */
 
   affiliate_30d_referred_volume_quote_quantums: Long;
-}
-/** CachedStakeAmount stores the last calculated total staked amount for address */
+  /**
+   * Attributed volume in quote quantums - volume from this user (as referee)
+   * that has been attributed to their affiliate in the last 30 days
+   */
 
-export interface CachedStakeAmount {
-  /** Last calculated total staked amount by the delegator (in coin amount). */
-  stakedAmount: Uint8Array;
+  affiliate_30d_attributed_volume_quote_quantums: Long;
+}
+/** CachedStakedBaseTokens stores the last calculated total staked base tokens */
+
+export interface CachedStakedBaseTokens {
+  /** Last calculated total staked base tokens by the delegator. */
+  stakedBaseTokens: Uint8Array;
   /**
    * Block time at which the calculation is cached (in Unix Epoch seconds)
    * Rounded down to nearest second.
@@ -165,11 +265,11 @@ export interface CachedStakeAmount {
 
   cachedAt: Long;
 }
-/** CachedStakeAmount stores the last calculated total staked amount for address */
+/** CachedStakedBaseTokens stores the last calculated total staked base tokens */
 
-export interface CachedStakeAmountSDKType {
-  /** Last calculated total staked amount by the delegator (in coin amount). */
-  staked_amount: Uint8Array;
+export interface CachedStakedBaseTokensSDKType {
+  /** Last calculated total staked base tokens by the delegator. */
+  staked_base_tokens: Uint8Array;
   /**
    * Block time at which the calculation is cached (in Unix Epoch seconds)
    * Rounded down to nearest second.
@@ -177,6 +277,71 @@ export interface CachedStakeAmountSDKType {
 
   cached_at: Long;
 }
+
+function createBaseAffiliateAttribution(): AffiliateAttribution {
+  return {
+    role: 0,
+    referrerAddress: "",
+    referredVolumeQuoteQuantums: Long.UZERO
+  };
+}
+
+export const AffiliateAttribution = {
+  encode(message: AffiliateAttribution, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.role !== 0) {
+      writer.uint32(8).int32(message.role);
+    }
+
+    if (message.referrerAddress !== "") {
+      writer.uint32(18).string(message.referrerAddress);
+    }
+
+    if (!message.referredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(24).uint64(message.referredVolumeQuoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateAttribution {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateAttribution();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.role = (reader.int32() as any);
+          break;
+
+        case 2:
+          message.referrerAddress = reader.string();
+          break;
+
+        case 3:
+          message.referredVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateAttribution>): AffiliateAttribution {
+    const message = createBaseAffiliateAttribution();
+    message.role = object.role ?? 0;
+    message.referrerAddress = object.referrerAddress ?? "";
+    message.referredVolumeQuoteQuantums = object.referredVolumeQuoteQuantums !== undefined && object.referredVolumeQuoteQuantums !== null ? Long.fromValue(object.referredVolumeQuoteQuantums) : Long.UZERO;
+    return message;
+  }
+
+};
 
 function createBaseBlockStats(): BlockStats {
   return {
@@ -228,7 +393,8 @@ function createBaseBlockStats_Fill(): BlockStats_Fill {
     taker: "",
     maker: "",
     notional: Long.UZERO,
-    affiliateFeeGeneratedQuantums: Long.UZERO
+    affiliateFeeGeneratedQuantums: Long.UZERO,
+    affiliateAttributions: []
   };
 }
 
@@ -248,6 +414,10 @@ export const BlockStats_Fill = {
 
     if (!message.affiliateFeeGeneratedQuantums.isZero()) {
       writer.uint32(32).uint64(message.affiliateFeeGeneratedQuantums);
+    }
+
+    for (const v of message.affiliateAttributions) {
+      AffiliateAttribution.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -278,6 +448,10 @@ export const BlockStats_Fill = {
           message.affiliateFeeGeneratedQuantums = (reader.uint64() as Long);
           break;
 
+        case 5:
+          message.affiliateAttributions.push(AffiliateAttribution.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -293,6 +467,7 @@ export const BlockStats_Fill = {
     message.maker = object.maker ?? "";
     message.notional = object.notional !== undefined && object.notional !== null ? Long.fromValue(object.notional) : Long.UZERO;
     message.affiliateFeeGeneratedQuantums = object.affiliateFeeGeneratedQuantums !== undefined && object.affiliateFeeGeneratedQuantums !== null ? Long.fromValue(object.affiliateFeeGeneratedQuantums) : Long.UZERO;
+    message.affiliateAttributions = object.affiliateAttributions?.map(e => AffiliateAttribution.fromPartial(e)) || [];
     return message;
   }
 
@@ -503,7 +678,8 @@ function createBaseUserStats(): UserStats {
     takerNotional: Long.UZERO,
     makerNotional: Long.UZERO,
     affiliate_30dRevenueGeneratedQuantums: Long.UZERO,
-    affiliate_30dReferredVolumeQuoteQuantums: Long.UZERO
+    affiliate_30dReferredVolumeQuoteQuantums: Long.UZERO,
+    affiliate_30dAttributedVolumeQuoteQuantums: Long.UZERO
   };
 }
 
@@ -523,6 +699,10 @@ export const UserStats = {
 
     if (!message.affiliate_30dReferredVolumeQuoteQuantums.isZero()) {
       writer.uint32(32).uint64(message.affiliate_30dReferredVolumeQuoteQuantums);
+    }
+
+    if (!message.affiliate_30dAttributedVolumeQuoteQuantums.isZero()) {
+      writer.uint32(40).uint64(message.affiliate_30dAttributedVolumeQuoteQuantums);
     }
 
     return writer;
@@ -553,6 +733,10 @@ export const UserStats = {
           message.affiliate_30dReferredVolumeQuoteQuantums = (reader.uint64() as Long);
           break;
 
+        case 5:
+          message.affiliate_30dAttributedVolumeQuoteQuantums = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -568,22 +752,23 @@ export const UserStats = {
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
     message.affiliate_30dRevenueGeneratedQuantums = object.affiliate_30dRevenueGeneratedQuantums !== undefined && object.affiliate_30dRevenueGeneratedQuantums !== null ? Long.fromValue(object.affiliate_30dRevenueGeneratedQuantums) : Long.UZERO;
     message.affiliate_30dReferredVolumeQuoteQuantums = object.affiliate_30dReferredVolumeQuoteQuantums !== undefined && object.affiliate_30dReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliate_30dReferredVolumeQuoteQuantums) : Long.UZERO;
+    message.affiliate_30dAttributedVolumeQuoteQuantums = object.affiliate_30dAttributedVolumeQuoteQuantums !== undefined && object.affiliate_30dAttributedVolumeQuoteQuantums !== null ? Long.fromValue(object.affiliate_30dAttributedVolumeQuoteQuantums) : Long.UZERO;
     return message;
   }
 
 };
 
-function createBaseCachedStakeAmount(): CachedStakeAmount {
+function createBaseCachedStakedBaseTokens(): CachedStakedBaseTokens {
   return {
-    stakedAmount: new Uint8Array(),
+    stakedBaseTokens: new Uint8Array(),
     cachedAt: Long.ZERO
   };
 }
 
-export const CachedStakeAmount = {
-  encode(message: CachedStakeAmount, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.stakedAmount.length !== 0) {
-      writer.uint32(10).bytes(message.stakedAmount);
+export const CachedStakedBaseTokens = {
+  encode(message: CachedStakedBaseTokens, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.stakedBaseTokens.length !== 0) {
+      writer.uint32(10).bytes(message.stakedBaseTokens);
     }
 
     if (!message.cachedAt.isZero()) {
@@ -593,17 +778,17 @@ export const CachedStakeAmount = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): CachedStakeAmount {
+  decode(input: _m0.Reader | Uint8Array, length?: number): CachedStakedBaseTokens {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCachedStakeAmount();
+    const message = createBaseCachedStakedBaseTokens();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.stakedAmount = reader.bytes();
+          message.stakedBaseTokens = reader.bytes();
           break;
 
         case 2:
@@ -619,9 +804,9 @@ export const CachedStakeAmount = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<CachedStakeAmount>): CachedStakeAmount {
-    const message = createBaseCachedStakeAmount();
-    message.stakedAmount = object.stakedAmount ?? new Uint8Array();
+  fromPartial(object: DeepPartial<CachedStakedBaseTokens>): CachedStakedBaseTokens {
+    const message = createBaseCachedStakedBaseTokens();
+    message.stakedBaseTokens = object.stakedBaseTokens ?? new Uint8Array();
     message.cachedAt = object.cachedAt !== undefined && object.cachedAt !== null ? Long.fromValue(object.cachedAt) : Long.ZERO;
     return message;
   }

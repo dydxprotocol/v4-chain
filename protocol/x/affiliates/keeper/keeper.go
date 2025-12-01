@@ -215,23 +215,6 @@ func (k Keeper) GetTierForAffiliate(
 		currentTier = uint32(index)
 	}
 
-	if currentTier == maxTierLevel {
-		return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
-	}
-
-	numCoinsStaked := k.statsKeeper.GetStakedAmount(ctx, affiliateAddr)
-	for i := currentTier + 1; i < numTiers; i++ {
-		// required staked coins is strictly increasing as tiers are traversed in order.
-		expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
-		reqStakedCoins := new(big.Int).Mul(
-			lib.BigU(tiers[i].ReqStakedWholeCoins),
-			expMultiplier,
-		)
-		if numCoinsStaked.Cmp(reqStakedCoins) < 0 {
-			break
-		}
-		currentTier = i
-	}
 	return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
 }
 
@@ -250,10 +233,9 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 				tiers[i].TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
 		}
 		// Check if the tiers are strictly increasing.
-		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
-			tiers[i].ReqStakedWholeCoins < tiers[i-1].ReqStakedWholeCoins {
+		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums {
 			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
-				"volume must be strictly increasing; staked coins must be non-decreasing")
+				"volume must be strictly increasing")
 		}
 	}
 	store.Set([]byte(types.AffiliateTiersKey), affiliateTiersBytes)
@@ -392,107 +374,4 @@ func (k Keeper) GetAffiliateOverridesMap(ctx sdk.Context) (map[string]bool, erro
 		affiliateOverridesMap[address] = true
 	}
 	return affiliateOverridesMap, nil
-}
-
-func (k Keeper) addReferredVolumeIfQualified(
-	ctx sdk.Context,
-	referee string,
-	referrer string,
-	volume uint64,
-	affiliateParams types.AffiliateParameters,
-	previouslyAttributedVolume map[string]uint64,
-) error {
-	// Get the user stats from the referee
-	refereeUserStats := k.statsKeeper.GetUserStats(ctx, referee)
-	if refereeUserStats == nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
-			"referee %s, refereeUserStats is nil", referee)
-	}
-
-	previousVolume := (refereeUserStats.TakerNotional + refereeUserStats.MakerNotional +
-		previouslyAttributedVolume[referee])
-
-	// If parameter is 0 then no limit is applied
-	cap := affiliateParams.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums
-	if cap != 0 {
-		if previousVolume >= cap {
-			volume = 0
-		} else if previousVolume+volume > cap {
-			// Remainder of the volume to get them to the cap
-			volume = cap - previousVolume
-		}
-	}
-	previouslyAttributedVolume[referee] += volume
-
-	// Add the volume to the referrer on their 30d rolling window
-	if volume > 0 {
-		affiliateUserStats := k.statsKeeper.GetUserStats(ctx, referrer)
-		if affiliateUserStats != nil {
-			affiliateUserStats.Affiliate_30DReferredVolumeQuoteQuantums += volume
-		}
-		k.statsKeeper.SetUserStats(ctx, referrer, affiliateUserStats)
-	}
-	return nil
-}
-
-func (k Keeper) AggregateAffiliateReferredVolumeForFills(
-	ctx sdk.Context,
-) error {
-	blockStats := k.statsKeeper.GetBlockStats(ctx)
-	affiliateParams, err := k.GetAffiliateParameters(ctx)
-	if err != nil {
-		return err
-	}
-	referredByCache := make(map[string]string)
-
-	// Multiple fills within the same block can happen, so we want to keep track of those to properly attribute volume.
-	previouslyAttributedVolume := make(map[string]uint64)
-
-	for _, fill := range blockStats.Fills {
-		// Process taker's referred volume
-		referredByAddrTaker, cached := referredByCache[fill.Taker]
-		if !cached {
-			var found bool
-			referredByAddrTaker, found = k.GetReferredBy(ctx, fill.Taker)
-			if found {
-				referredByCache[fill.Taker] = referredByAddrTaker
-			}
-		}
-		if referredByAddrTaker != "" {
-			// Add referred volume, this decides affiliate tier and is limited by the maximum volume on a 30d window
-			if err := k.addReferredVolumeIfQualified(
-				ctx,
-				fill.Taker,
-				referredByAddrTaker,
-				fill.Notional,
-				affiliateParams,
-				previouslyAttributedVolume,
-			); err != nil {
-				return err
-			}
-		}
-
-		// Process maker's referred volume
-		referredByAddrMaker, cached := referredByCache[fill.Maker]
-		if !cached {
-			var found bool
-			referredByAddrMaker, found = k.GetReferredBy(ctx, fill.Maker)
-			if found {
-				referredByCache[fill.Maker] = referredByAddrMaker
-			}
-		}
-		if referredByAddrMaker != "" {
-			if err := k.addReferredVolumeIfQualified(
-				ctx,
-				fill.Maker,
-				referredByAddrMaker,
-				fill.Notional,
-				affiliateParams,
-				previouslyAttributedVolume,
-			); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

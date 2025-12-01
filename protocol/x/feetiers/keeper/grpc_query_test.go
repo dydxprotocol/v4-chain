@@ -540,9 +540,9 @@ func TestUserStakingTier(t *testing.T) {
 				if tc.userBondedTokens != nil {
 					bondedAmount = tc.userBondedTokens
 				}
-				statsKeeper.UnsafeSetCachedStakedAmount(ctx, tc.req.Address, &stattypes.CachedStakeAmount{
-					StakedAmount: dtypes.NewIntFromBigInt(bondedAmount),
-					CachedAt:     ctx.BlockTime().Unix(),
+				statsKeeper.UnsafeSetCachedStakedBaseTokens(ctx, tc.req.Address, &stattypes.CachedStakedBaseTokens{
+					StakedBaseTokens: dtypes.NewIntFromBigInt(bondedAmount),
+					CachedAt:         ctx.BlockTime().Unix(),
 				})
 			}
 

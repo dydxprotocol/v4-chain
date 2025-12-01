@@ -292,6 +292,7 @@ const (
 	ProcessDepositToSubaccount    = "process_deposit_to_subaccount"
 	ProcessWithdrawFromSubaccount = "process_withdraw_from_subaccount"
 	SendFromModuleToAccount       = "send_from_module_to_account"
+	SendFromAccountToAccount      = "send_from_account_to_account"
 	AssetId                       = "asset_id"
 	SenderAddress                 = "sender_address"
 	SenderModuleName              = "sender_module_name"

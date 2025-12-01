@@ -78,13 +78,13 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB27 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB47 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     5,
 			Subticks:     10,
-			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 27},
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 47},
 		},
 		testapp.DefaultGenesis(),
 	))
@@ -175,13 +175,13 @@ var (
 		},
 		20,
 	)
-	CancelOrder_Alice_Num0_Id0_Clob0_GTB27 = *clobtypes.NewMsgCancelOrderShortTerm(
+	CancelOrder_Alice_Num0_Id0_Clob0_GTB47 = *clobtypes.NewMsgCancelOrderShortTerm(
 		clobtypes.OrderId{
 			SubaccountId: constants.Alice_Num0,
 			ClientId:     0,
 			ClobPairId:   0,
 		},
-		27,
+		47,
 	)
 	CancelOrder_Alice_Num0_Id0_Clob0_GTB23 = *clobtypes.NewMsgCancelOrderShortTerm(
 		clobtypes.OrderId{
@@ -275,7 +275,7 @@ var (
 		},
 		5,
 	)
-	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB27 = *clobtypes.NewMsgBatchCancel(
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB47 = *clobtypes.NewMsgBatchCancel(
 		constants.Alice_Num0,
 		[]clobtypes.OrderBatch{
 			{
@@ -283,7 +283,7 @@ var (
 				ClientIds:  []uint32{1, 2, 3},
 			},
 		},
-		27,
+		47,
 	)
 	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
 		constants.Alice_Num0,

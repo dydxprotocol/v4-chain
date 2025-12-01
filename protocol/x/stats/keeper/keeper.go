@@ -85,6 +85,7 @@ func (k Keeper) RecordFill(
 	makerAddress string,
 	notional *big.Int,
 	affiliateFeeGenerated *big.Int,
+	affiliateAttributions []*types.AffiliateAttribution,
 ) {
 	blockStats := k.GetBlockStats(ctx)
 	blockStats.Fills = append(
@@ -94,6 +95,7 @@ func (k Keeper) RecordFill(
 			Maker:                         makerAddress,
 			Notional:                      notional.Uint64(),
 			AffiliateFeeGeneratedQuantums: affiliateFeeGenerated.Uint64(),
+			AffiliateAttributions:         affiliateAttributions,
 		},
 	)
 	k.SetBlockStats(ctx, blockStats)
@@ -231,6 +233,53 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+
+		// Track affiliate revenue attributions if present (can include both taker and maker)
+		for _, attribution := range fill.AffiliateAttributions {
+			if attribution != nil {
+				referrer := attribution.ReferrerAddress
+
+				// Determine referee address based on role
+				var referee string
+				if attribution.Role == types.AffiliateAttribution_ROLE_TAKER {
+					referee = fill.Taker
+				} else if attribution.Role == types.AffiliateAttribution_ROLE_MAKER {
+					referee = fill.Maker
+				} else {
+					ctx.Logger().Error("invalid affiliate attribution role. Skipping", "role", attribution.Role)
+					continue
+				}
+
+				// Initialize referrer stats if needed
+				if _, ok := userStatsMap[referrer]; !ok {
+					userStatsMap[referrer] = &types.EpochStats_UserWithStats{
+						User:  referrer,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track affiliate referred volume for the referrer in this epoch snapshot
+				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				// Track affiliate referred volume for the referrer in UserStats
+				referrerUserStats := k.GetUserStats(ctx, referrer)
+				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referrer, referrerUserStats)
+
+				// Initialize referee stats if needed
+				if _, ok := userStatsMap[referee]; !ok {
+					userStatsMap[referee] = &types.EpochStats_UserWithStats{
+						User:  referee,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track attributed volume for the referee (the trader whose volume was attributed)
+				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				// Track attributed volume for the referee in UserStats
+				refereeUserStats := k.GetUserStats(ctx, referee)
+				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referee, refereeUserStats)
+			}
+		}
+
 		// Track affiliate revenue generated on the taker in this epoch snapshot
 		userStatsMap[fill.Taker].Stats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
@@ -283,6 +332,8 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
 		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
+		stats.Affiliate_30DAttributedVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting
@@ -294,49 +345,49 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	k.SetStatsMetadata(ctx, metadata)
 }
 
-// GetStakedAmount returns the total staked amount for a delegator address.
+// GetStakedBaseTokens returns the total staked base tokens for a delegator address.
 // It maintains a cache to optimize performance. The function first checks
 // if there's a cached value that hasn't expired. If found, it returns the
 // cached amount. Otherwise, it calculates the staked amount by querying
-// the staking keeper, caches the result, and returns the calculated amount
-func (k Keeper) GetStakedAmount(ctx sdk.Context,
+// the staking keeper, caches the result, and returns the calculated amount.
+func (k Keeper) GetStakedBaseTokens(ctx sdk.Context,
 	delegatorAddr string) *big.Int {
 	startTime := time.Now()
-	stakedAmount := big.NewInt(0)
+	stakedBaseTokens := big.NewInt(0)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
 	bytes := store.Get([]byte(delegatorAddr))
 
 	// return cached value if it's not expired
 	if bytes != nil {
-		var cachedStakedAmount types.CachedStakeAmount
-		k.cdc.MustUnmarshal(bytes, &cachedStakedAmount)
+		var cachedStakedBaseTokens types.CachedStakedBaseTokens
+		k.cdc.MustUnmarshal(bytes, &cachedStakedBaseTokens)
 		// sanity checks
-		if cachedStakedAmount.CachedAt < 0 {
-			panic("cachedStakedAmount.CachedAt is negative")
+		if cachedStakedBaseTokens.CachedAt < 0 {
+			panic("cachedStakedBaseTokens.CachedAt is negative")
 		}
 		if ctx.BlockTime().Unix() < 0 {
 			panic("Invariant violation: ctx.BlockTime().Unix() is negative")
 		}
-		if cachedStakedAmount.CachedAt < 0 {
-			panic("Invariant violation: cachedStakedAmount.CachedAt is negative")
+		if cachedStakedBaseTokens.CachedAt < 0 {
+			panic("Invariant violation: cachedStakedBaseTokens.CachedAt is negative")
 		}
-		if cachedStakedAmount.CachedAt > ctx.BlockTime().Unix() {
-			panic("Invariant violation: cachedStakedAmount.CachedAt is greater than blocktime")
+		if cachedStakedBaseTokens.CachedAt > ctx.BlockTime().Unix() {
+			panic("Invariant violation: cachedStakedBaseTokens.CachedAt is greater than blocktime")
 		}
-		if ctx.BlockTime().Unix()-cachedStakedAmount.CachedAt <= types.StakedAmountCacheDurationSeconds {
-			stakedAmount.Set(cachedStakedAmount.StakedAmount.BigInt())
-			metrics.IncrCounterWithLabels(metrics.StatsGetStakedAmountCacheHit, 1)
+		if ctx.BlockTime().Unix()-cachedStakedBaseTokens.CachedAt <= types.StakedBaseTokensCacheDurationSeconds {
+			stakedBaseTokens.Set(cachedStakedBaseTokens.StakedBaseTokens.BigInt())
+			metrics.IncrCounterWithLabels(metrics.StatsGetStakedBaseTokensCacheHit, 1)
 			telemetry.MeasureSince(
 				startTime,
 				types.ModuleName,
-				metrics.StatsGetStakedAmountLatencyCacheHit,
+				metrics.StatsGetStakedBaseTokensLatencyCacheHit,
 				metrics.Latency,
 			)
-			return stakedAmount
+			return stakedBaseTokens
 		}
 	}
 
-	metrics.IncrCounterWithLabels(metrics.StatsGetStakedAmountCacheMiss, 1)
+	metrics.IncrCounterWithLabels(metrics.StatsGetStakedBaseTokensCacheMiss, 1)
 
 	// calculate staked amount
 	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
@@ -350,26 +401,41 @@ func (k Keeper) GetStakedAmount(ctx sdk.Context,
 	}
 
 	for _, delegation := range delegations {
-		stakedAmount.Add(stakedAmount, delegation.GetShares().RoundInt().BigInt())
+		// Get the validator to convert shares to tokens
+		valAddr, err := sdk.ValAddressFromBech32(delegation.GetValidatorAddr())
+		if err != nil {
+			// If invalid validator address, skip this delegation
+			continue
+		}
+
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			// If validator not found, skip this delegation
+			continue
+		}
+
+		// Convert shares to tokens using validator exchange rate
+		tokens := validator.TokensFromShares(delegation.GetShares())
+		stakedBaseTokens.Add(stakedBaseTokens, tokens.RoundInt().BigInt())
 	}
 
 	// update cache
-	cachedStakedAmount := types.CachedStakeAmount{
-		StakedAmount: dtypes.NewIntFromBigInt(stakedAmount),
-		CachedAt:     ctx.BlockTime().Unix(),
+	cachedStakedBaseTokens := types.CachedStakedBaseTokens{
+		StakedBaseTokens: dtypes.NewIntFromBigInt(stakedBaseTokens),
+		CachedAt:         ctx.BlockTime().Unix(),
 	}
-	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(&cachedStakedAmount))
+	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(&cachedStakedBaseTokens))
 	telemetry.MeasureSince(
 		startTime,
 		types.ModuleName,
-		metrics.StatsGetStakedAmountLatencyCacheMiss,
+		metrics.StatsGetStakedBaseTokensLatencyCacheMiss,
 		metrics.Latency,
 	)
-	return stakedAmount
+	return stakedBaseTokens
 }
 
-func (k Keeper) UnsafeSetCachedStakedAmount(ctx sdk.Context, delegatorAddr string,
-	cachedStakedAmount *types.CachedStakeAmount) {
+func (k Keeper) UnsafeSetCachedStakedBaseTokens(ctx sdk.Context, delegatorAddr string,
+	cachedStakedBaseTokens *types.CachedStakedBaseTokens) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
-	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(cachedStakedAmount))
+	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(cachedStakedBaseTokens))
 }
