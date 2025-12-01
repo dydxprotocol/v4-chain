@@ -3,6 +3,7 @@ package v_9_5
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,16 +78,23 @@ func Migrate30dReferredVolumeToEpochStats(
 		migratedCount++
 
 		ctx.Logger().Info(fmt.Sprintf(
-			"Migrated referred volume for address %s: %d",
+			"Migrated referred volume for address %s (%d of %d): Affiliate_30DReferredVolumeQuoteQuantums=%d",
 			address,
+			migratedCount,
+			len(allAddressesWithReferredVolume),
 			referredVolume,
 		))
 	}
 
-	// Convert map back to slice
+	// Convert map back to slice - must be deterministic to avoid state hash mismatch
+	keys := make([]string, 0, len(userStatsMap))
+	for k := range userStatsMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	epochStats.Stats = make([]*statstypes.EpochStats_UserWithStats, 0, len(userStatsMap))
-	for _, userStats := range userStatsMap {
-		epochStats.Stats = append(epochStats.Stats, userStats)
+	for _, k := range keys {
+		epochStats.Stats = append(epochStats.Stats, userStatsMap[k])
 	}
 
 	// Save the updated epoch stats
