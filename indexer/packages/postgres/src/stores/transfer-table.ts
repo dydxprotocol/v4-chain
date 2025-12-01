@@ -20,6 +20,7 @@ import {
   Options,
   QueryableField,
   ToAndFromSubaccountTransferQueryConfig,
+  ParentSubaccountTransferQueryConfig,
   SubaccountAssetNetTransferMap,
   PaginationFromDatabase,
 } from '../types';
@@ -314,6 +315,126 @@ export async function findAllToOrFromSubaccountId(
      * obtained from the count is not performed.
      */
     const count: { count?: string } = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
+
+    baseQuery = baseQuery.offset(offset).limit(limit);
+
+    return {
+      results: await baseQuery.returning('*'),
+      limit,
+      offset,
+      total: parseInt(count.count ?? '0', 10),
+    };
+  }
+
+  return {
+    results: await baseQuery.returning('*'),
+  };
+}
+
+/**
+ * Finds all transfers to or from child subaccounts of a parent subaccount,
+ * excluding transfers between child subaccounts of the same parent.
+ *
+ * @param subaccountId - Array of all child subaccount IDs for the parent
+ * @param limit - Maximum number of results to return
+ * @param createdBeforeOrAtHeight - Filter transfers created at or before this height
+ * @param createdBeforeOrAt - Filter transfers created at or before this time
+ * @param page - Page number for pagination
+ *
+ * @returns Paginated list of transfers with same-parent transfers filtered out
+ */
+export async function findAllToOrFromParentSubaccount(
+  {
+    subaccountId,
+    limit,
+    createdBeforeOrAtHeight,
+    createdBeforeOrAt,
+    page,
+  }: ParentSubaccountTransferQueryConfig,
+  requiredFields: QueryableField[],
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<PaginationFromDatabase<TransferFromDatabase>> {
+  verifyAllRequiredFields(
+    {
+      [QueryableField.LIMIT]: limit,
+      [QueryableField.SUBACCOUNT_ID]: subaccountId,
+      [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]: createdBeforeOrAtHeight,
+      [QueryableField.CREATED_BEFORE_OR_AT]: createdBeforeOrAt,
+    } as QueryConfig,
+    requiredFields,
+  );
+
+  let baseQuery: QueryBuilder<TransferModel> = setupBaseQuery<TransferModel>(
+    TransferModel,
+    options,
+  );
+
+  // Join with subaccounts to filter same-parent transfers
+  baseQuery = baseQuery
+    .leftJoin(
+      'subaccounts as sender_sa',
+      'transfers.senderSubaccountId',
+      'sender_sa.id',
+    )
+    .leftJoin(
+      'subaccounts as recipient_sa',
+      'transfers.recipientSubaccountId',
+      'recipient_sa.id',
+    )
+    // Exclude transfers where both sender and recipient are child subaccounts of the same parent
+    .whereRaw(`
+      NOT (
+        transfers."senderSubaccountId" IS NOT NULL 
+        AND transfers."recipientSubaccountId" IS NOT NULL
+        AND sender_sa.address = recipient_sa.address 
+        AND (sender_sa."subaccountNumber" % 128) = (recipient_sa."subaccountNumber" % 128)
+      )
+    `)
+    .select('transfers.*');
+
+  // Filter by child subaccount IDs
+  baseQuery = baseQuery.where((queryBuilder) => {
+    // eslint-disable-next-line no-void
+    void queryBuilder.whereIn(TransferColumns.recipientSubaccountId, subaccountId)
+      .orWhereIn(TransferColumns.senderSubaccountId, subaccountId);
+  });
+
+  if (createdBeforeOrAtHeight !== undefined) {
+    baseQuery = baseQuery.where(
+      TransferColumns.createdAtHeight,
+      '<=',
+      createdBeforeOrAtHeight,
+    );
+  }
+
+  if (createdBeforeOrAt !== undefined) {
+    baseQuery = baseQuery.where(TransferColumns.createdAt, '<=', createdBeforeOrAt);
+  }
+
+  if (options.orderBy !== undefined) {
+    for (const [column, order] of options.orderBy) {
+      baseQuery = baseQuery.orderBy(
+        column,
+        order,
+      );
+    }
+  }
+
+  if (limit !== undefined && page === undefined) {
+    baseQuery = baseQuery.limit(limit);
+  }
+
+  // Pagination
+  if (page !== undefined && limit !== undefined) {
+    const currentPage: number = Math.max(1, page);
+    const offset: number = (currentPage - 1) * limit;
+
+    const count: { count?: string } = await baseQuery
+      .clone()
+      .clearSelect()
+      .clearOrder()
+      .count('transfers.id as count')
+      .first() as unknown as { count?: string };
 
     baseQuery = baseQuery.offset(offset).limit(limit);
 
