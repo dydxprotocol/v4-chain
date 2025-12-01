@@ -20,7 +20,6 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
-
 ) *Keeper {
 	return &Keeper{
 		cdc:      cdc,

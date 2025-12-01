@@ -130,8 +130,11 @@ func TestUserStats(t *testing.T) {
 	k := tApp.App.StatsKeeper
 	user := "alice"
 	userStats := &types.UserStats{
-		TakerNotional: 10,
-		MakerNotional: 10,
+		TakerNotional:                              10,
+		MakerNotional:                              10,
+		Affiliate_30DRevenueGeneratedQuantums:      100,
+		Affiliate_30DReferredVolumeQuoteQuantums:   500,
+		Affiliate_30DAttributedVolumeQuoteQuantums: 250,
 	}
 	k.SetUserStats(ctx, user, userStats)
 
@@ -149,6 +152,21 @@ func TestUserStats(t *testing.T) {
 			},
 			err: nil,
 		},
+		"Success with attributed volume": {
+			req: &types.QueryUserStatsRequest{
+				User: user,
+			},
+			res: &types.QueryUserStatsResponse{
+				Stats: &types.UserStats{
+					TakerNotional:                              10,
+					MakerNotional:                              10,
+					Affiliate_30DRevenueGeneratedQuantums:      100,
+					Affiliate_30DReferredVolumeQuoteQuantums:   500,
+					Affiliate_30DAttributedVolumeQuoteQuantums: 250,
+				},
+			},
+			err: nil,
+		},
 		"Nil": {
 			req: nil,
 			res: nil,
@@ -157,6 +175,85 @@ func TestUserStats(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			res, err := k.UserStats(ctx, tc.req)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+				// Explicitly verify attributed volume field is present
+				if tc.res != nil && tc.res.Stats != nil {
+					require.Equal(
+						t,
+						tc.res.Stats.Affiliate_30DAttributedVolumeQuoteQuantums,
+						res.Stats.Affiliate_30DAttributedVolumeQuoteQuantums,
+						"Attributed volume should be included in response",
+					)
+				}
+			}
+		})
+	}
+}
+
+func TestEpochStats(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.StatsKeeper
+
+	// Create test epoch stats for epoch 5
+	epochNum := uint32(5)
+	epochStats := &types.EpochStats{
+		Stats: []*types.EpochStats_UserWithStats{
+			{
+				User: "alice",
+				Stats: &types.UserStats{
+					TakerNotional: 100,
+					MakerNotional: 200,
+				},
+			},
+			{
+				User: "bob",
+				Stats: &types.UserStats{
+					TakerNotional: 50,
+					MakerNotional: 75,
+				},
+			},
+		},
+	}
+	k.SetEpochStats(ctx, epochNum, epochStats)
+
+	for name, tc := range map[string]struct {
+		req *types.QueryEpochStatsRequest
+		res *types.QueryEpochStatsResponse
+		err error
+	}{
+		"Success - existing epoch": {
+			req: &types.QueryEpochStatsRequest{
+				Epoch: epochNum,
+			},
+			res: &types.QueryEpochStatsResponse{
+				Stats: epochStats,
+			},
+			err: nil,
+		},
+		"Success - non-existent epoch returns empty stats": {
+			req: &types.QueryEpochStatsRequest{
+				Epoch: 999,
+			},
+			res: &types.QueryEpochStatsResponse{
+				Stats: &types.EpochStats{
+					Stats: []*types.EpochStats_UserWithStats{},
+				},
+			},
+			err: nil,
+		},
+		"Nil request": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			res, err := k.EpochStats(ctx, tc.req)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
