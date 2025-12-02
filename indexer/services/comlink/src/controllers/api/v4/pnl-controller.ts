@@ -8,9 +8,11 @@ import {
   QueryableField,
   SubaccountTable,
   PnlTable,
+  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
+import _ from 'lodash';
 import {
   Controller,
   Get,
@@ -22,7 +24,7 @@ import { pnlRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
+import { aggregatePnl, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckDailyOptionalSchema,
@@ -83,13 +85,13 @@ class PnlController extends Controller {
     let pnlData: PaginationFromDatabase<PnlFromDatabase>;
 
     if (daily === true) {
-      pnlData = await PnlTable.findAllDailyAggregate(
+      pnlData = await PnlTable.findAllDailyPnl(
         queryParams,
         [QueryableField.LIMIT],
         DEFAULT_POSTGRES_OPTIONS,
       );
     } else {
-      pnlData = await PnlTable.findAllHourlyAggregate(
+      pnlData = await PnlTable.findAll(
         queryParams,
         [QueryableField.LIMIT],
         {
@@ -129,7 +131,10 @@ class PnlController extends Controller {
     const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
 
     const queryParams = {
-      subaccountId: childSubaccountIds,
+      parentSubaccount: {
+        address,
+        subaccountNumber: parentSubaccountNumber,
+      },
       limit,
       createdBeforeOrAtHeight:
     createdBeforeOrAtHeight != null ? String(createdBeforeOrAtHeight) : undefined,
@@ -139,35 +144,51 @@ class PnlController extends Controller {
       createdOnOrAfter,
     };
 
-    let pnlData: PaginationFromDatabase<PnlFromDatabase>;
-
-    if (daily === true) {
-      pnlData = await PnlTable.findAllDailyAggregate(
-        queryParams,
-        [QueryableField.LIMIT],
-        DEFAULT_POSTGRES_OPTIONS,
-      );
-    } else {
-      pnlData = await PnlTable.findAllHourlyAggregate(
-        queryParams,
-        [QueryableField.LIMIT],
+    const [subaccounts, pnlData]: [
+      SubaccountFromDatabase[],
+      PaginationFromDatabase<PnlFromDatabase>,
+    ] = await Promise.all([
+      // Query to find all subaccounts
+      SubaccountTable.findAll(
         {
-          ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[QueryableField.CREATED_AT_HEIGHT, Ordering.DESC]],
+          id: childSubaccountIds,
         },
+        [QueryableField.ID],
+      ),
+
+      daily === true
+        ? PnlTable.findAllDailyPnl(
+          queryParams,
+          [QueryableField.LIMIT],
+          DEFAULT_POSTGRES_OPTIONS,
+        )
+        : PnlTable.findAll(
+          queryParams,
+          [QueryableField.LIMIT],
+          {
+            ...DEFAULT_POSTGRES_OPTIONS,
+            orderBy: [[QueryableField.CREATED_AT_HEIGHT, Ordering.DESC]],
+          },
+        ),
+    ]);
+
+    if (subaccounts.length === 0) {
+      throw new NotFoundError(
+        `No subaccounts found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
       );
     }
 
-    if (pnlData.results.length === 0) {
-      throw new NotFoundError(
-        `No PnL data found for address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
-      );
-    }
+    // Aggregate PNL records for all subaccounts
+    const aggregatedPnl: PnlFromDatabase[] = _.map(
+      aggregatePnl(pnlData.results),
+      'pnl',
+    );
 
     return {
-      pnl: pnlData.results.map(pnlToResponseObject),
-      totalResults: pnlData.total,
-      offset: pnlData.offset,
+      pnl: aggregatedPnl.map(
+        (pnl: PnlFromDatabase) => {
+          return pnlToResponseObject(pnl);
+        }),
     };
   }
 }
