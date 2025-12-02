@@ -254,14 +254,6 @@ export interface ToAndFromSubaccountTransferQueryConfig extends QueryConfig {
   [QueryableField.CREATED_AFTER]?: string | undefined,
 }
 
-export interface ParentSubaccountTransferQueryConfig extends QueryConfig {
-  [QueryableField.SUBACCOUNT_ID]: string[],
-  [QueryableField.LIMIT]?: number,
-  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
-  [QueryableField.PAGE]?: number,
-}
-
 export interface OraclePriceQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[],
   [QueryableField.MARKET_ID]?: number[],

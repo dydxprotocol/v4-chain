@@ -148,7 +148,8 @@ class TransfersController extends Controller {
       @Query() createdBeforeOrAt?: IsoString,
       @Query() page?: number,
   ): Promise<ParentSubaccountTransferResponse> {
-  // get all child subaccountIds for the parent subaccount number
+
+    // get all child subaccountIds for the parent subaccount number
     const subaccountIds: string[] = getChildSubaccountNums(parentSubaccountNumber).map(
       (childSubaccountNumber: number) => SubaccountTable.uuid(address, childSubaccountNumber),
     );
@@ -163,12 +164,13 @@ class TransfersController extends Controller {
       SubaccountFromDatabase[] | undefined,
       PaginationFromDatabase<TransferFromDatabase>,
       AssetById,
-    ] = await Promise.all([
+    ] = await
+    Promise.all([
       SubaccountTable.findAll(
         { id: subaccountIds },
         [],
       ),
-      TransferTable.findAllToOrFromParentSubaccount(
+      TransferTable.findAllToOrFromSubaccountId(
         {
           subaccountId: subaccountIds,
           limit,
@@ -191,13 +193,11 @@ class TransfersController extends Controller {
       ),
       getAssetById(),
     ]);
-
     if (subaccounts === undefined || subaccounts.length === 0) {
       throw new NotFoundError(
         `No subaccount found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
       );
     }
-
     const recipientSubaccountIds: string[] = _
       .map(transfers, TransferColumns.recipientSubaccountId)
       .filter(
@@ -215,7 +215,7 @@ class TransfersController extends Controller {
     ]);
     const idToSubaccount: SubaccountById = await idToSubaccountFromSubaccountIds(allSubaccountIds);
 
-    const transfersResponse: ParentSubaccountTransferResponseObject[] = transfers.map(
+    const transfersWithParentSubaccount: ParentSubaccountTransferResponseObject[] = transfers.map(
       (transfer: TransferFromDatabase) => {
         return transferToParentSubaccountResponseObject(
           transfer,
@@ -225,8 +225,16 @@ class TransfersController extends Controller {
           parentSubaccountNumber);
       });
 
+    // Filter out transfers where the sender and recipient parent subaccount numbers are the same
+    const transfersFiltered:
+    ParentSubaccountTransferResponseObject[] = transfersWithParentSubaccount.filter(
+      (transfer) => {
+        return transfer.sender.address !== transfer.recipient.address ||
+            transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
+      });
+
     return {
-      transfers: transfersResponse,
+      transfers: transfersFiltered,
       pageSize,
       totalResults: total,
       offset,
