@@ -615,7 +615,7 @@ func (k Keeper) UpdateClobPair(
 		if newSPT == 0 || newSPT > oldSPT || (oldSPT%newSPT) != 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidClobPairUpdate,
-				"UpdateClobPair: invalid SubticksPerTick change from %d to %d; must decrease and remain > 0; must be a psoitive divisor and decrease",
+				"UpdateClobPair: invalid SubticksPerTick change from %d to %d; must decrease and remain a positive divisor",
 				oldSPT,
 				newSPT,
 			)
