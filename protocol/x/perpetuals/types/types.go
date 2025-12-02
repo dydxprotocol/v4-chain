@@ -74,7 +74,6 @@ type PerpetualsKeeper interface {
 		id uint32,
 		ticker string,
 		marketId uint32,
-		atomicResolution int32,
 		defaultFundingPpm int32,
 		liquidityTier uint32,
 	) (Perpetual, error)
