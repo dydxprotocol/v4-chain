@@ -1,0 +1,991 @@
+{
+  "@type": "/cosmos.gov.v1.MsgSubmitProposal",
+  "messages": [
+    {
+      "@type": "/slinky.marketmap.v1.MsgUpsertMarkets",
+      "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+      "markets": [
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "VOXEL",
+              "Quote": "USD"
+            },
+            "decimals": "11",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":6329505608,\"liquidity\":302079,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"15678\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "VOXELUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "VOXEL-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "VOXELUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "VVV",
+              "Quote": "USD"
+            },
+            "decimals": "9",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":2614967056,\"liquidity\":145336,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"35509\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "VVVUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "VVV-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "W",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "3",
+            "enabled": true,
+            "metadata_JSON": "{\"reference_price\":9585372464,\"liquidity\":2860973,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"29587\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "WUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "W-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "crypto_dot_com_ws",
+              "off_chain_ticker": "W_USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "huobi_ws",
+              "off_chain_ticker": "wusdt",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "WUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "W-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "WUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "W-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "WAL",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":4381934136,\"liquidity\":518265,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"36119\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WALUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "crypto_dot_com_ws",
+              "off_chain_ticker": "WAL_USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "WALUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "WAL-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "WALUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "WCT",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":3149871620,\"liquidity\":2834821,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"33152\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "WCTUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WCTUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "WCT-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "WCT-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "WCTUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "WCT-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "WIF",
+              "Quote": "USD"
+            },
+            "decimals": "9",
+            "min_provider_count": "3",
+            "enabled": true,
+            "metadata_JSON": "{\"reference_price\":1458861471,\"liquidity\":9022799,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"28752\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "WIFBTC",
+              "normalize_by_pair": {
+                "Base": "BTC",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "WIFUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "WIF-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WIFUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "WIF-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "crypto_dot_com_ws",
+              "off_chain_ticker": "WIF_USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "gate_ws",
+              "off_chain_ticker": "WIF_USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "huobi_ws",
+              "off_chain_ticker": "wifusdt",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "WLD",
+              "Quote": "USD"
+            },
+            "decimals": "9",
+            "min_provider_count": "3",
+            "enabled": true,
+            "metadata_JSON": ""
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "WLDUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WLDUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "gate_ws",
+              "off_chain_ticker": "WLD_USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "huobi_ws",
+              "off_chain_ticker": "wldusdt",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "WLD-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "WLDUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "WLD-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "WLFI",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":2207765608,\"liquidity\":13242117,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"33251\"}],\"cross_launch\":true}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "WLFIUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WLFIUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "WLFI-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "crypto_dot_com_ws",
+              "off_chain_ticker": "WLFI_USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "huobi_ws",
+              "off_chain_ticker": "wlfiusdt",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "WLFIUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "WLFI-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "WLFIUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "WLFI-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "uniswapv3_api-ethereum",
+              "off_chain_ticker": "WLFI,UNISWAP_V3,0XDA5E1988097297DCDC1F90D4DFE7909E847CBEF6/USDT,UNISWAP_V3,0XDAC17F958D2EE523A2206206994597C13D831EC7",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": "{\"address\":\"0x238f00fcfd4f0c5930028237c6a1b395f4c0fc74\",\"base_decimals\":18,\"quote_decimals\":6,\"invert\":false}"
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "WOO",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "3",
+            "enabled": true,
+            "metadata_JSON": "{\"reference_price\":6972255088,\"liquidity\":918153,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"7501\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "WOOUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "WOOUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "WOO-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "WOOUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "WOO-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "XAI",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":5154537544,\"liquidity\":815377,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"28933\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "XAIUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "XAIUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "XAI-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "XAIUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "XCH",
+              "Quote": "USD"
+            },
+            "decimals": "8",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":9809769728,\"liquidity\":138005,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"9258\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "XCH-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "XCH-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "XCN",
+              "Quote": "USD"
+            },
+            "decimals": "11",
+            "min_provider_count": "1",
+            "enabled": true,
+            "metadata_JSON": "{\"reference_price\":1151198770,\"liquidity\":461653,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"18679\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "XCN-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "XCNUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "XCN-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "XDC",
+              "Quote": "USD"
+            },
+            "decimals": "11",
+            "min_provider_count": "1",
+            "enabled": false,
+            "metadata_JSON": "{\"reference_price\":7733198456,\"liquidity\":2302833,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"2634\"}]}"
+          },
+          "provider_configs": [
+            {
+              "name": "bitfinex_ws",
+              "off_chain_ticker": "XDCUST",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bitstamp_api",
+              "off_chain_ticker": "XDC/USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "XDCUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "huobi_ws",
+              "off_chain_ticker": "xdcusdt",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "XDCUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "XDC-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "XDCUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "XLM",
+              "Quote": "USD"
+            },
+            "decimals": "10",
+            "min_provider_count": "3",
+            "enabled": true,
+            "metadata_JSON": ""
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "XLMUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "XLMUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "XLM-USD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "XXLMZUSD",
+              "normalize_by_pair": {
+                "Base": "USDC",
+                "Quote": "USD"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "XLM-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "mexc_ws",
+              "off_chain_ticker": "XLMUSDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "XLM-USDT",
+              "normalize_by_pair": {
+                "Base": "USDT",
+                "Quote": "USDC"
+              },
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": "USDC migration batch 19 of 22: Markets 361-380",
+  "deposit": "10000000adv4tnt",
+  "title": "USDC Migration - Batch 19/22",
+  "summary": "Update markets to use USDC/USD and USDT/USDC normalizations"
+}
