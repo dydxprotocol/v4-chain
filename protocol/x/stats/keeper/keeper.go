@@ -331,9 +331,26 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
-		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
-		stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
-		stats.Affiliate_30DAttributedVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums
+		// Clamp affiliate_30drevenue at 0 to prevent underflow (must compare before subtracting for uint64)
+		if stats.Affiliate_30DRevenueGeneratedQuantums > removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums {
+			stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		} else {
+			stats.Affiliate_30DRevenueGeneratedQuantums = 0
+		}
+
+		// Clamp affiliate fields at 0 to prevent underflow (must compare before subtracting for uint64)
+		if stats.Affiliate_30DReferredVolumeQuoteQuantums > removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums {
+			stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
+		} else {
+			stats.Affiliate_30DReferredVolumeQuoteQuantums = 0
+		}
+
+		if stats.Affiliate_30DAttributedVolumeQuoteQuantums > removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums {
+			stats.Affiliate_30DAttributedVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums
+		} else {
+			stats.Affiliate_30DAttributedVolumeQuoteQuantums = 0
+		}
+
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting
@@ -438,4 +455,24 @@ func (k Keeper) UnsafeSetCachedStakedBaseTokens(ctx sdk.Context, delegatorAddr s
 	cachedStakedBaseTokens *types.CachedStakedBaseTokens) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
 	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(cachedStakedBaseTokens))
+}
+
+// GetAllAddressesWithReferredVolume returns all addresses that have non-zero referred volume.
+// This is useful for migrations.
+func (k Keeper) GetAllAddressesWithReferredVolume(ctx sdk.Context) []string {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStatsKeyPrefix))
+	iterator := store.Iterator(nil, nil)
+	defer iterator.Close()
+
+	addresses := make([]string, 0)
+	for ; iterator.Valid(); iterator.Next() {
+		var userStats types.UserStats
+		k.cdc.MustUnmarshal(iterator.Value(), &userStats)
+
+		if userStats.Affiliate_30DReferredVolumeQuoteQuantums > 0 {
+			addresses = append(addresses, string(iterator.Key()))
+		}
+	}
+
+	return addresses
 }
