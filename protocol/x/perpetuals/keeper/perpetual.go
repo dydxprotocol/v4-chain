@@ -153,7 +153,6 @@ func (k Keeper) ModifyPerpetual(
 	// Modify perpetual.
 	perpetual.Params.Ticker = ticker
 	perpetual.Params.MarketId = marketId
-	perpetual.Params.AtomicResolution = atomicResolution
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
 

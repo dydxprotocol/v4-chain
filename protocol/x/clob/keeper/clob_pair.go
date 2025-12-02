@@ -601,7 +601,7 @@ func (k Keeper) UpdateClobPair(
 		if newSBQ == 0 || newSBQ > oldSBQ || (oldSBQ%newSBQ) != 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidClobPairUpdate,
-				"UpdateClobPair: invalid StepBaseQuantums change from %d to %d; must be a positive divisor and not increase",
+				"UpdateClobPair: invalid StepBaseQuantums change from %d to %d; must be a positive divisor and decrease",
 				oldSBQ,
 				newSBQ,
 			)
@@ -615,7 +615,7 @@ func (k Keeper) UpdateClobPair(
 		if newSPT == 0 || newSPT > oldSPT || (oldSPT%newSPT) != 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidClobPairUpdate,
-				"UpdateClobPair: invalid SubticksPerTick change from %d to %d; must decrease and remain > 0",
+				"UpdateClobPair: invalid SubticksPerTick change from %d to %d; must decrease and remain > 0; must be a psoitive divisor and decrease",
 				oldSPT,
 				newSPT,
 			)
