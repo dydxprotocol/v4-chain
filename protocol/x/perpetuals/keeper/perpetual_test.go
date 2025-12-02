@@ -65,7 +65,6 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			Id:                   item.Params.Id,
 			Ticker:               ticker,
 			MarketId:             marketId,
-			AtomicResolution:     item.Params.AtomicResolution,
 			LiquidityTier:        liquidityTier,
 			MarketType:           v1.ConvertToPerpetualMarketType(item.Params.MarketType),
 			DefaultFunding8HrPpm: defaultFundingPpm,
@@ -88,11 +87,6 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			t,
 			marketId,
 			newItem.Params.MarketId,
-		)
-		require.Equal(
-			t,
-			int32(i),
-			newItem.Params.AtomicResolution,
 		)
 		require.Equal(
 			t,
