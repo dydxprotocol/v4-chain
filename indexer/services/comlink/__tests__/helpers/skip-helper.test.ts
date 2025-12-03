@@ -3,6 +3,7 @@ import {
   nobleToHex,
   encodeToHexAndPad,
   nobleToSolana,
+  getSlippageTolerancePercent,
 } from '../../src/helpers/skip-helper';
 import { getETHPrice } from '../../src/helpers/alchemy-helpers';
 import { ethDenomByChainId, ETH_WEI_QUANTUM, ETH_USDC_QUANTUM } from '../../src/lib/smart-contract-constants';
@@ -18,6 +19,8 @@ jest.mock('../../src/config', () => ({
   TURNKEY_API_BASE_URL: 'https://api.turnkey.com',
   TURNKEY_API_SENDER_PUBLIC_KEY: 'test-public-key',
   TURNKEY_API_SENDER_PRIVATE_KEY: 'test-private-key',
+  SKIP_SLIPPAGE_TOLERANCE_USDC: 100,
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: '0.1',
 }));
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
@@ -429,6 +432,29 @@ describe('skip-helper', () => {
       const result = nobleToSolana(nobleAddress);
 
       expect(result).toMatch(/^[1-9A-Za-z0]{44}$/);
+    });
+  });
+
+  describe('getSlippageTolerancePercent', () => {
+    it('should return the percentage-based tolerance when it is smaller than USDC-based tolerance', () => {
+      // When estimatedAmountOut is large, USDC-based tolerance becomes very small
+      const estimatedAmountOut = '1000000000'; // 1000 USDC (assuming 6 decimals)
+      // USDC-based: 100 * 100000000 / 1000000000 = 0.1 (10%)
+      const result = getSlippageTolerancePercent(estimatedAmountOut);
+
+      // Should return the smaller value: 0.1% default.
+      expect(result).toBe('0.1');
+    });
+
+    it('should return the USDC-based tolerance when it is smaller than percentage-based tolerance', () => {
+      // When estimatedAmountOut is small, USDC-based tolerance becomes large
+      const estimatedAmountOut = '1000000000000'; // 1,000,000 USDC (1 million with 6 decimals)
+      const result = getSlippageTolerancePercent(estimatedAmountOut);
+
+      // USDC-based: 10_000_000_000 / 1_000_000_000_000 = 0.01 (1%)
+      // Percentage-based: 0.1 (10%)
+      // Should return the smaller value: 0.01 (1%)
+      expect(result).toBe('0.01');
     });
   });
 
