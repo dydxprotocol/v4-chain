@@ -1,0 +1,29 @@
+{
+  "name": "main_folder",
+  "version": "1.0.0",
+  "scripts": {
+    "compile": "forge build",
+    "test": "forge test",
+    "test:verbose": "forge test -vvv",
+    "deploy:local": "node scripts/deploy-foundry.js",
+    "deploy:base": "RPC_URL=https://sepolia.base.org node scripts/deploy-foundry.js",
+    "deploy:demo": "node scripts/deploy-foundry.js",
+    "user:approve": "node scripts/user-approve.js",
+    "user:deposit": "node scripts/user-deposit.js",
+    "demo:order": "node scripts/demo-batch-order.js",
+    "anvil": "anvil",
+    "anvil:stop": "pkill -f 'anvil --port 8545' || true",
+    "anvil:restart": "pnpm run anvil:stop && sleep 1 && pnpm run anvil",
+    "anvil:check": "lsof -i :8545 || echo 'Anvil is not running on port 8545'",
+    "verify:pre": "node .dev/scripts/verify-before-migration.js",
+    "verify:post": "node .dev/scripts/verify-after-migration.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.15.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1"
+  }
+}

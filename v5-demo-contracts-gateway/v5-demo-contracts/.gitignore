@@ -1,0 +1,24 @@
+node_modules
+.env
+.env.arbitrum
+.env.base
+.env.original
+env.testnet
+artifacts
+out
+cache
+coverage
+typechain
+*.zip
+*.backup
+logs.txt
+activity.log
+.dev/
+
+# Temporary files
+*.pid
+*.log
+*_flattened.sol
+temp.*
+*.bak
+.env.original

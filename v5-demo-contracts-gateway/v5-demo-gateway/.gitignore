@@ -1,0 +1,12 @@
+gateway
+*.zip
+.env
+.env.arbitrum
+.env.bak
+.env.base
+.dev/
+
+# Temporary files
+*.pid
+*.log
+*.bak

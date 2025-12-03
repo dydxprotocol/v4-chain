@@ -1,0 +1,21 @@
+{
+  "84532": {
+    "name": "Base Sepolia",
+    "addresses": {
+      "mockToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "vault": "0xe0f16C0B95098CAD7a8bC7Db966C5464E1a24bEA",
+      "oracle": "0xC00209d9Aaf599526e4D0c2edfCbFB385c62Cd5c",
+      "engine": "0x3DBA9Ab9d23664Da7bFEfACc0017d55576c5e4D3"
+    },
+    "markets": [
+      {
+        "id": "0x4254432d55534400000000000000000000000000000000000000000000000000",
+        "name": "BTC-USD"
+      },
+      {
+        "id": "0x4554482d55534400000000000000000000000000000000000000000000000000",
+        "name": "ETH-USD"
+      }
+    ]
+  }
+}
