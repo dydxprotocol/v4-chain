@@ -32,6 +32,7 @@ import * as athenaOraclePrices from '../lib/athena-ddl-tables/oracle_prices';
 import * as athenaOrders from '../lib/athena-ddl-tables/orders';
 import * as athenaPerpetualMarkets from '../lib/athena-ddl-tables/perpetual_markets';
 import * as athenaPerpetualPositions from '../lib/athena-ddl-tables/perpetual_positions';
+import * as athenaPnl from '../lib/athena-ddl-tables/pnl';
 import * as athenaPnlTicks from '../lib/athena-ddl-tables/pnl_ticks';
 import * as athenaSubaccountUsernames from '../lib/athena-ddl-tables/subaccount_usernames';
 import * as athenaSubaccounts from '../lib/athena-ddl-tables/subaccounts';
@@ -55,6 +56,7 @@ export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
   perpetual_markets: athenaPerpetualMarkets,
   perpetual_positions: athenaPerpetualPositions,
   pnl_ticks: athenaPnlTicks,
+  pnl: athenaPnl,
   subaccounts: athenaSubaccounts,
   tendermint_events: athenaTendermintEvents,
   trading_rewards: athenaTradingRewards,
