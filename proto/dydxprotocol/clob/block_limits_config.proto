@@ -1,0 +1,12 @@
+syntax = "proto3";
+package dydxprotocol.clob;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+
+// BlockLimitsConfig stores global per-block limits for the CLOB module.
+message BlockLimitsConfig {
+  // The maximum number of expired stateful orders that can be removed from
+  // state in a single block. This prevents performance degradation when
+  // processing a large number of expired orders.
+  uint32 max_stateful_order_removals_per_block = 1;
+}
