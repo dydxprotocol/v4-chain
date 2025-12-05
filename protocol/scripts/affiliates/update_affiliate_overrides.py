@@ -87,9 +87,7 @@ def main():
     parser = argparse.ArgumentParser(description='Parse market map and sync markets')
     parser.add_argument('--chain-id', default=staging_chain, help='Chain ID, default is dydxprotocol-testnet')
     parser.add_argument('--node', default=staging_node, help='Node URL, default is https://validator.v4staging.dydx.exchange:443')
-    parser.add_argument('--max-30d-commission', type=int, required=True, help='Maximum 30d commission per referred')
-    parser.add_argument('--referee-min-fee-tier', type=int, required=True, help='Referee minimum fee tier idx')
-    parser.add_argument('--max-30d-revenue', type=int, required=True, help='Maximum 30d affiliate revenue per affiliate')
+    parser.add_argument('--addresses', type=str, required=True, help='Addresses to update')
     args = parser.parse_args()
 
     counter = 0
@@ -100,19 +98,17 @@ def main():
                 affiliate_parameters_msg = {
                     "messages": [
                         {
-                            "@type": "/dydxprotocol.affiliates.MsgUpdateAffiliateParameters",
+                            "@type": "/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides",
                             "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
-                            "affiliate_parameters": {
-                                "maximum_30d_commission_per_referred_quote_quantums": int(args.max_30d_commission),
-                                "referee_minimum_fee_tier_idx": int(args.referee_min_fee_tier),
-                                "maximum_30d_affiliate_revenue_per_affiliate_quote_quantums": int(args.max_30d_revenue),
+                            "affiliate_overrides": {
+                                "addresses": args.addresses
                             }
 			            }
                     ],
                     "deposit": "10000000000000000000000adv4tnt",
                     "metadata": "",
-                    "title": "Update affiliate parameters",
-                    "summary": f"Update affiliate parameters: max_30d_commission={args.max_30d_commission}, referee_min_fee_tier={args.referee_min_fee_tier}, max_30d_revenue={args.max_30d_revenue}"
+                    "title": "Update affiliate overrides",
+                    "summary": f"Update affiliate overrides"
                 }
                 json.dump(affiliate_parameters_msg, tmp_file, indent=2)
                 print(affiliate_parameters_msg)
