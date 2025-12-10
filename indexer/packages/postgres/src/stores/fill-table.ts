@@ -11,7 +11,6 @@ import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
-import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import FillModel from '../models/fill-model';
 import {
   CostOfFills,
@@ -31,6 +30,7 @@ import {
   QueryableField,
   QueryConfig,
 } from '../types';
+import { findIdsForParentSubaccount } from './subaccount-table';
 
 export function uuid(eventId: Buffer, liquidity: Liquidity): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
@@ -149,10 +149,11 @@ export async function findAll(
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(FillColumns.subaccountId, subaccountId);
   } else if (parentSubaccount !== undefined) {
-    baseQuery = baseQuery.whereIn(
-      FillColumns.subaccountId,
-      getSubaccountQueryForParent(parentSubaccount),
-    );
+    // PERFORMANCE CRITICAL: Resolve subaccountIds to concrete UUIDs before querying.
+    // Using IN (subquery) causes Postgres to misestimate cardinality and scan millions
+    // of rows. With explicit UUIDs, Postgres uses optimal index scans per subaccount.
+    const subaccountIds = await findIdsForParentSubaccount(parentSubaccount);
+    baseQuery = baseQuery.whereIn(FillColumns.subaccountId, subaccountIds);
   }
 
   if (side !== undefined) {
