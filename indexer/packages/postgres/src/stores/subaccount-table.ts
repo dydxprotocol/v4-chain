@@ -224,12 +224,12 @@ export async function findIdsForParentSubaccount(
     [],
     options,
   );
-  
+
   // Filter for subaccounts that match the parent relationship
   // (subaccountNumber - parentSubaccountNumber) % MAX_PARENT_SUBACCOUNTS = 0
   return subaccounts
-    .filter((subaccount) => 
-      (subaccount.subaccountNumber - parentSubaccount.subaccountNumber) % MAX_PARENT_SUBACCOUNTS === 0
+    .filter((subaccount) => (subaccount.subaccountNumber - parentSubaccount.subaccountNumber) %
+     MAX_PARENT_SUBACCOUNTS === 0,
     )
     .map((subaccount) => subaccount.id);
 }
