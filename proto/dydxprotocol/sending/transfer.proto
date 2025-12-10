@@ -83,3 +83,21 @@ message MsgSendFromModuleToAccount {
   // The coin to transfer, which specifies both denom and amount.
   cosmos.base.v1beta1.Coin coin = 4 [ (gogoproto.nullable) = false ];
 }
+
+// MsgSendFromAccountToAccount represents a single transfer from one
+// `x/bank` account to another `x/bank` account.
+// Should only be executed by governance.
+message MsgSendFromAccountToAccount {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The sender account address.
+  string sender = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The recipient account address.
+  string recipient = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The coin to transfer, which specifies both denom and amount.
+  cosmos.base.v1beta1.Coin coin = 4 [ (gogoproto.nullable) = false ];
+}

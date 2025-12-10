@@ -85,6 +85,7 @@ func (k Keeper) RecordFill(
 	makerAddress string,
 	notional *big.Int,
 	affiliateFeeGenerated *big.Int,
+	affiliateAttributions []*types.AffiliateAttribution,
 ) {
 	blockStats := k.GetBlockStats(ctx)
 	blockStats.Fills = append(
@@ -94,6 +95,7 @@ func (k Keeper) RecordFill(
 			Maker:                         makerAddress,
 			Notional:                      notional.Uint64(),
 			AffiliateFeeGeneratedQuantums: affiliateFeeGenerated.Uint64(),
+			AffiliateAttributions:         affiliateAttributions,
 		},
 	)
 	k.SetBlockStats(ctx, blockStats)
@@ -231,6 +233,53 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		}
 		userStatsMap[fill.Taker].Stats.TakerNotional += fill.Notional
 		userStatsMap[fill.Maker].Stats.MakerNotional += fill.Notional
+
+		// Track affiliate revenue attributions if present (can include both taker and maker)
+		for _, attribution := range fill.AffiliateAttributions {
+			if attribution != nil {
+				referrer := attribution.ReferrerAddress
+
+				// Determine referee address based on role
+				var referee string
+				if attribution.Role == types.AffiliateAttribution_ROLE_TAKER {
+					referee = fill.Taker
+				} else if attribution.Role == types.AffiliateAttribution_ROLE_MAKER {
+					referee = fill.Maker
+				} else {
+					ctx.Logger().Error("invalid affiliate attribution role. Skipping", "role", attribution.Role)
+					continue
+				}
+
+				// Initialize referrer stats if needed
+				if _, ok := userStatsMap[referrer]; !ok {
+					userStatsMap[referrer] = &types.EpochStats_UserWithStats{
+						User:  referrer,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track affiliate referred volume for the referrer in this epoch snapshot
+				userStatsMap[referrer].Stats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				// Track affiliate referred volume for the referrer in UserStats
+				referrerUserStats := k.GetUserStats(ctx, referrer)
+				referrerUserStats.Affiliate_30DReferredVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referrer, referrerUserStats)
+
+				// Initialize referee stats if needed
+				if _, ok := userStatsMap[referee]; !ok {
+					userStatsMap[referee] = &types.EpochStats_UserWithStats{
+						User:  referee,
+						Stats: &types.UserStats{},
+					}
+				}
+				// Track attributed volume for the referee (the trader whose volume was attributed)
+				userStatsMap[referee].Stats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				// Track attributed volume for the referee in UserStats
+				refereeUserStats := k.GetUserStats(ctx, referee)
+				refereeUserStats.Affiliate_30DAttributedVolumeQuoteQuantums += attribution.ReferredVolumeQuoteQuantums
+				k.SetUserStats(ctx, referee, refereeUserStats)
+			}
+		}
+
 		// Track affiliate revenue generated on the taker in this epoch snapshot
 		userStatsMap[fill.Taker].Stats.Affiliate_30DRevenueGeneratedQuantums += fill.AffiliateFeeGeneratedQuantums
 
@@ -282,7 +331,26 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 		stats := k.GetUserStats(ctx, removedStats.User)
 		stats.TakerNotional -= removedStats.Stats.TakerNotional
 		stats.MakerNotional -= removedStats.Stats.MakerNotional
-		stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		// Clamp affiliate_30drevenue at 0 to prevent underflow (must compare before subtracting for uint64)
+		if stats.Affiliate_30DRevenueGeneratedQuantums > removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums {
+			stats.Affiliate_30DRevenueGeneratedQuantums -= removedStats.Stats.Affiliate_30DRevenueGeneratedQuantums
+		} else {
+			stats.Affiliate_30DRevenueGeneratedQuantums = 0
+		}
+
+		// Clamp affiliate fields at 0 to prevent underflow (must compare before subtracting for uint64)
+		if stats.Affiliate_30DReferredVolumeQuoteQuantums > removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums {
+			stats.Affiliate_30DReferredVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DReferredVolumeQuoteQuantums
+		} else {
+			stats.Affiliate_30DReferredVolumeQuoteQuantums = 0
+		}
+
+		if stats.Affiliate_30DAttributedVolumeQuoteQuantums > removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums {
+			stats.Affiliate_30DAttributedVolumeQuoteQuantums -= removedStats.Stats.Affiliate_30DAttributedVolumeQuoteQuantums
+		} else {
+			stats.Affiliate_30DAttributedVolumeQuoteQuantums = 0
+		}
+
 		k.SetUserStats(ctx, removedStats.User, stats)
 
 		// Just remove TakerNotional to avoid double counting
@@ -387,4 +455,24 @@ func (k Keeper) UnsafeSetCachedStakedBaseTokens(ctx sdk.Context, delegatorAddr s
 	cachedStakedBaseTokens *types.CachedStakedBaseTokens) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
 	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(cachedStakedBaseTokens))
+}
+
+// GetAllAddressesWithReferredVolume returns all addresses that have non-zero referred volume.
+// This is useful for migrations.
+func (k Keeper) GetAllAddressesWithReferredVolume(ctx sdk.Context) []string {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStatsKeyPrefix))
+	iterator := store.Iterator(nil, nil)
+	defer iterator.Close()
+
+	addresses := make([]string, 0)
+	for ; iterator.Valid(); iterator.Next() {
+		var userStats types.UserStats
+		k.cdc.MustUnmarshal(iterator.Value(), &userStats)
+
+		if userStats.Affiliate_30DReferredVolumeQuoteQuantums > 0 {
+			addresses = append(addresses, string(iterator.Key()))
+		}
+	}
+
+	return addresses
 }

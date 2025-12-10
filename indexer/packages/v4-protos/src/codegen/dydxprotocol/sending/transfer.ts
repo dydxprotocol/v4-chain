@@ -148,6 +148,42 @@ export interface MsgSendFromModuleToAccountSDKType {
 
   coin?: CoinSDKType;
 }
+/**
+ * MsgSendFromAccountToAccount represents a single transfer from one
+ * `x/bank` account to another `x/bank` account.
+ * Should only be executed by governance.
+ */
+
+export interface MsgSendFromAccountToAccount {
+  authority: string;
+  /** The sender account address. */
+
+  sender: string;
+  /** The recipient account address. */
+
+  recipient: string;
+  /** The coin to transfer, which specifies both denom and amount. */
+
+  coin?: Coin;
+}
+/**
+ * MsgSendFromAccountToAccount represents a single transfer from one
+ * `x/bank` account to another `x/bank` account.
+ * Should only be executed by governance.
+ */
+
+export interface MsgSendFromAccountToAccountSDKType {
+  authority: string;
+  /** The sender account address. */
+
+  sender: string;
+  /** The recipient account address. */
+
+  recipient: string;
+  /** The coin to transfer, which specifies both denom and amount. */
+
+  coin?: CoinSDKType;
+}
 
 function createBaseTransfer(): Transfer {
   return {
@@ -442,6 +478,81 @@ export const MsgSendFromModuleToAccount = {
     const message = createBaseMsgSendFromModuleToAccount();
     message.authority = object.authority ?? "";
     message.senderModuleName = object.senderModuleName ?? "";
+    message.recipient = object.recipient ?? "";
+    message.coin = object.coin !== undefined && object.coin !== null ? Coin.fromPartial(object.coin) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgSendFromAccountToAccount(): MsgSendFromAccountToAccount {
+  return {
+    authority: "",
+    sender: "",
+    recipient: "",
+    coin: undefined
+  };
+}
+
+export const MsgSendFromAccountToAccount = {
+  encode(message: MsgSendFromAccountToAccount, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.sender !== "") {
+      writer.uint32(18).string(message.sender);
+    }
+
+    if (message.recipient !== "") {
+      writer.uint32(26).string(message.recipient);
+    }
+
+    if (message.coin !== undefined) {
+      Coin.encode(message.coin, writer.uint32(34).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSendFromAccountToAccount {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSendFromAccountToAccount();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.sender = reader.string();
+          break;
+
+        case 3:
+          message.recipient = reader.string();
+          break;
+
+        case 4:
+          message.coin = Coin.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSendFromAccountToAccount>): MsgSendFromAccountToAccount {
+    const message = createBaseMsgSendFromAccountToAccount();
+    message.authority = object.authority ?? "";
+    message.sender = object.sender ?? "";
     message.recipient = object.recipient ?? "";
     message.coin = object.coin !== undefined && object.coin !== null ? Coin.fromPartial(object.coin) : undefined;
     return message;

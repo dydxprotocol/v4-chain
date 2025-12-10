@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryParamsRequest, QueryParamsResponse, QueryStatsMetadataRequest, QueryStatsMetadataResponse, QueryGlobalStatsRequest, QueryGlobalStatsResponse, QueryUserStatsRequest, QueryUserStatsResponse } from "./query";
+import { QueryParamsRequest, QueryParamsResponse, QueryStatsMetadataRequest, QueryStatsMetadataResponse, QueryGlobalStatsRequest, QueryGlobalStatsResponse, QueryUserStatsRequest, QueryUserStatsResponse, QueryEpochStatsRequest, QueryEpochStatsResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -16,6 +16,9 @@ export interface Query {
   /** Queries UserStats. */
 
   userStats(request: QueryUserStatsRequest): Promise<QueryUserStatsResponse>;
+  /** Queries EpochStats for a specific epoch. */
+
+  epochStats(request: QueryEpochStatsRequest): Promise<QueryEpochStatsResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -26,6 +29,7 @@ export class QueryClientImpl implements Query {
     this.statsMetadata = this.statsMetadata.bind(this);
     this.globalStats = this.globalStats.bind(this);
     this.userStats = this.userStats.bind(this);
+    this.epochStats = this.epochStats.bind(this);
   }
 
   params(request: QueryParamsRequest = {}): Promise<QueryParamsResponse> {
@@ -52,6 +56,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryUserStatsResponse.decode(new _m0.Reader(data)));
   }
 
+  epochStats(request: QueryEpochStatsRequest): Promise<QueryEpochStatsResponse> {
+    const data = QueryEpochStatsRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.stats.Query", "EpochStats", data);
+    return promise.then(data => QueryEpochStatsResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -71,6 +81,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     userStats(request: QueryUserStatsRequest): Promise<QueryUserStatsResponse> {
       return queryService.userStats(request);
+    },
+
+    epochStats(request: QueryEpochStatsRequest): Promise<QueryEpochStatsResponse> {
+      return queryService.epochStats(request);
     }
 
   };

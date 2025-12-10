@@ -133,6 +133,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// sending
 		*sending.MsgSendFromModuleToAccount,
+		*sending.MsgSendFromAccountToAccount,
 
 		// stats
 		*stats.MsgUpdateParams,
