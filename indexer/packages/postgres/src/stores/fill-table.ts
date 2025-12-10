@@ -152,7 +152,7 @@ export async function findAll(
     // PERFORMANCE CRITICAL: Resolve subaccountIds to concrete UUIDs before querying.
     // Using IN (subquery) causes Postgres to misestimate cardinality and scan millions
     // of rows. With explicit UUIDs, Postgres uses optimal index scans per subaccount.
-    const subaccountIds = await findIdsForParentSubaccount(parentSubaccount, options);
+    const subaccountIds = await findIdsForParentSubaccount(parentSubaccount);
     baseQuery = baseQuery.whereIn(FillColumns.subaccountId, subaccountIds);
   }
 
