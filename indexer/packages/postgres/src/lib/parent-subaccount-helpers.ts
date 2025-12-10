@@ -33,3 +33,25 @@ export function getSubaccountQueryForParent(parentSubaccount: {
       [parentSubaccount.subaccountNumber, MAX_PARENT_SUBACCOUNTS],
     );
 }
+
+/**
+ * Retrieves all subaccount IDs associated with a parent subaccount.
+ * Executes the query and returns the resulting subaccount IDs as an array.
+ *
+ * @param parentSubaccount The parent subaccount object with address and subaccountNumber
+ * @returns A promise that resolves to an array of subaccount ID strings
+ */
+export async function getSubaccountIdsForParent(parentSubaccount: {
+  address: string,
+  subaccountNumber: number,
+}): Promise<string[]> {
+  const result = await knexReadReplica.getConnection()
+    .select('id')
+    .from('subaccounts')
+    .where('address', parentSubaccount.address)
+    .andWhereRaw(
+      '("subaccountNumber" - ?) % ? = 0',
+      [parentSubaccount.subaccountNumber, MAX_PARENT_SUBACCOUNTS],
+    );
+  return result.map((row: { id: string }) => row.id);
+}
