@@ -56,6 +56,7 @@ export * as VaultTable from './stores/vault-table';
 export * as FundingPaymentsTable from './stores/funding-payments-table';
 export * as TurnkeyUsersTable from './stores/turnkey-users-table';
 export * as VaultPnlTicksView from './stores/vault-pnl-ticks-view';
+export * as VaultPnlView from './stores/vault-pnl-view';
 export * as PermissionApprovalTable from './stores/permission-approval-table';
 export * as PnlTable from './stores/pnl-table';
 export * as BridgeInformationTable from './stores/bridge-information-table';

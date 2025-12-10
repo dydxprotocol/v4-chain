@@ -382,6 +382,17 @@ export async function create(
   ).insert(pnlToCreate).returning('*');
 }
 
+export async function createMany(
+  pnls: PnlCreateObject[],
+  options: Options = { txId: undefined },
+): Promise<PnlFromDatabase[]> {
+  if (!Array.isArray(pnls) || pnls.length === 0) {
+    return [];
+  }
+  const qb = PnlModel.query(Transaction.get(options.txId));
+  return qb.insert(pnls).returning('*');
+}
+
 export async function findById(
   subaccountId: string,
   createdAt: string,
