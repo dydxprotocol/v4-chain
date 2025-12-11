@@ -24,10 +24,10 @@ import { getIpAddr, isIndexerIp } from './utils';
  * Checks if the address in the request is blocked or not.
  *
  * IF the address is in the compliance_status table and has the status CLOSE_ONLY,
- * return data for the endpoint ELSE
- * IF the address has compliance_status of BLOCKED block access to the endpoint (return 403) ELSE
- * IF the origin country is restricted geography, block access to the endpoint (return 403) ELSE
  * return data for the endpoint
+ * ELSE IF the address has compliance_status of BLOCKED block access to the endpoint (return 403)
+ * ELSE IF the origin country is restricted geography, block access to the endpoint (return 403)
+ * ELSE return data for the endpoint
  * NOTE: This middleware must be used after `checkSchema` to ensure `matchData` can get the
  * address parameter from the request.
  */
