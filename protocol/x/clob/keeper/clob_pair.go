@@ -595,17 +595,33 @@ func (k Keeper) UpdateClobPair(
 		)
 	}
 	if clobPair.StepBaseQuantums != oldClobPair.StepBaseQuantums {
-		return errorsmod.Wrapf(
-			types.ErrInvalidClobPairUpdate,
-			"UpdateClobPair: cannot update ClobPair step base quantums",
-		)
+		newSBQ := clobPair.StepBaseQuantums
+		oldSBQ := oldClobPair.StepBaseQuantums
+		// Allow decreasing step size only, and only to a divisor of the old value so all existing orders remain valid.
+		if newSBQ == 0 || newSBQ > oldSBQ || (oldSBQ%newSBQ) != 0 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidClobPairUpdate,
+				"UpdateClobPair: invalid StepBaseQuantums change from %d to %d; must be a positive divisor and decrease",
+				oldSBQ,
+				newSBQ,
+			)
+		}
 	}
+
+	// Only allow decreasing SubticksPerTick; it must remain positive.
 	if clobPair.SubticksPerTick != oldClobPair.SubticksPerTick {
-		return errorsmod.Wrapf(
-			types.ErrInvalidClobPairUpdate,
-			"UpdateClobPair: cannot update ClobPair subticks per tick",
-		)
+		newSPT := clobPair.SubticksPerTick
+		oldSPT := oldClobPair.SubticksPerTick
+		if newSPT == 0 || newSPT > oldSPT || (oldSPT%newSPT) != 0 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidClobPairUpdate,
+				"UpdateClobPair: invalid SubticksPerTick change from %d to %d; must decrease and remain a positive divisor",
+				oldSPT,
+				newSPT,
+			)
+		}
 	}
+
 	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
 		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairUpdate,
