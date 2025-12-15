@@ -7,6 +7,7 @@ import {
   GeoOriginHeaders,
   isRestrictedCountryHeaders,
   isWhitelistedAddress,
+  INDEXER_GEOBLOCKED_PAYLOAD,
 } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
@@ -18,7 +19,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
-import _ from 'lodash';
 import { DateTime } from 'luxon';
 import {
   Controller, Get, Path, Route,
@@ -28,7 +28,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import {
-  ComplianceAction, getGeoComplianceReason, validateSignature, validateSignatureKeplr,
+  ComplianceAction, validateSignature, validateSignatureKeplr,
 } from '../../../helpers/compliance/compliance-utils';
 import { DYDX_ADDRESS_PREFIX } from '../../../lib/constants';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
@@ -38,17 +38,15 @@ import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
-  ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest,
+  BlockedCode,
+  ComplianceRequest,
+  ComplianceV2Response,
+  SetComplianceStatusRequest,
 } from '../../../types';
 import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-v2-controller';
-
-const COMPLIANCE_PROGRESSION: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
-  [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-  [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
-};
 
 @Route('compliance')
 class ComplianceV2Controller extends Controller {
@@ -285,6 +283,15 @@ async function checkCompliance(
     });
   }
 
+  if (isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
+    return create4xxResponse(
+      res,
+      INDEXER_GEOBLOCKED_PAYLOAD,
+      403,
+      { code: BlockedCode.GEOBLOCKED },
+    );
+  }
+
   const [
     complianceStatus,
     wallet,
@@ -333,7 +340,7 @@ async function checkCompliance(
 }
 
 function handleError(
-  error: Error, endpointName: string, message:string, req: express.Request, res: express.Response,
+  error: Error, endpointName: string, message: string, req: express.Request, res: express.Response,
 ): express.Response {
   logger.error({
     at: `ComplianceV2Controller POST /${endpointName}`,
@@ -351,29 +358,13 @@ function handleError(
 
 /**
  * If the address doesn't exist in the compliance table:
- * - if the request is from a restricted country:
- *  - if the action is CONNECT and no wallet, set the status to BLOCKED
- *  - if the action is CONNECT and wallet exists, set the status to FIRST_STRIKE_CLOSE_ONLY
+ * - if the request is from a restricted country
+ *  - the request must be blocked upstream
  * - else if the request is from a non-restricted country:
  *  - set the status to COMPLIANT
- *
- * if the address is COMPLIANT:
- * - the ONLY action should be CONNECT. VALID_SURVEY/INVALID_SURVEY are no-ops.
- * - if the request is from a restricted country:
- *  - set the status to FIRST_STRIKE_CLOSE_ONLY
- *
- * if the address is FIRST_STRIKE_CLOSE_ONLY:
- * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT. CONNECT
- * are no-ops.
- * - if the action is VALID_SURVEY:
- *   - set the status to FIRST_STRIKE
- * - if the action is INVALID_SURVEY:
- *   - set the status to CLOSE_ONLY
- *
- * if the address is FIRST_STRIKE:
- * - the ONLY action should be CONNECT. VALID_SURVEY/INVALID_SURVEY are no-ops.
- * - if the request is from a restricted country:
- *  - set the status to CLOSE_ONLY
+ *  - return compliant status
+ * If the address does exist in the compliance table:
+ * - return the existing status
  */
 // eslint-disable-next-line @typescript-eslint/require-await
 async function upsertComplianceStatus(
@@ -384,62 +375,13 @@ async function upsertComplianceStatus(
   complianceStatus: ComplianceStatusFromDatabase[],
   updatedAt: string,
 ): Promise<ComplianceStatusFromDatabase | undefined> {
+
   if (complianceStatus.length === 0) {
-    if (!isRestrictedCountryHeaders(req.headers as GeoOriginHeaders)) {
-      return ComplianceStatusTable.upsert({
-        address,
-        status: ComplianceStatus.COMPLIANT,
-        updatedAt,
-      });
-    }
-
-    // If address is restricted and is not onboarded then block
-    if (_.isUndefined(wallet)) {
-      return ComplianceStatusTable.upsert({
-        address,
-        status: ComplianceStatus.BLOCKED,
-        reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
-        updatedAt,
-      });
-    }
-
     return ComplianceStatusTable.upsert({
       address,
-      status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-      reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
+      status: ComplianceStatus.COMPLIANT,
       updatedAt,
     });
-  }
-
-  if (
-    complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
-    complianceStatus[0].status === ComplianceStatus.COMPLIANT
-  ) {
-    if (
-      isRestrictedCountryHeaders(req.headers as GeoOriginHeaders) &&
-      action === ComplianceAction.CONNECT
-    ) {
-      return ComplianceStatusTable.update({
-        address,
-        status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
-        reason: getGeoComplianceReason(req.headers as GeoOriginHeaders)!,
-        updatedAt,
-      });
-    }
-  } else if (complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY) {
-    if (action === ComplianceAction.VALID_SURVEY) {
-      return ComplianceStatusTable.update({
-        address,
-        status: ComplianceStatus.FIRST_STRIKE,
-        updatedAt,
-      });
-    } else if (action === ComplianceAction.INVALID_SURVEY) {
-      return ComplianceStatusTable.update({
-        address,
-        status: ComplianceStatus.CLOSE_ONLY,
-        updatedAt,
-      });
-    }
   }
 
   return complianceStatus[0];
