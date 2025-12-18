@@ -100,6 +100,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_protocol_market_type_to_perpetual_market_type.sql',
   'dydx_protocol_vault_status_to_vault_status.sql',
   'dydx_order_flags.sql',
+  'dydx_apply_fill_realized_effects.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [
