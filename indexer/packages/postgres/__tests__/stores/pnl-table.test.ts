@@ -917,5 +917,4 @@ describe('Pnl store', () => {
 
     expect(dailyResults.results).toEqual([]);
   });
-
 });

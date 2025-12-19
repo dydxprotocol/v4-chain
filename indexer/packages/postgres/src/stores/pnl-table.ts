@@ -263,11 +263,7 @@ export async function findAllHourlyAggregate(
     finalQuery = finalQuery.orderByRaw('DATE_TRUNC(\'hour\', "createdAt") DESC');
   }
 
-  try {
-    return await handleLimitAndPagination(finalQuery, limit, page, options);
-  } catch (error) {
-    return { results: [] };
-  }
+  return handleLimitAndPagination(finalQuery, limit, page, options);
 }
 
 export async function findAllDailyAggregate(
@@ -375,7 +371,6 @@ export async function findAllDailyAggregate(
     .orderByRaw('DATE_TRUNC(\'day\', "createdAt") DESC');
 
   return handleLimitAndPagination(aggregatedQuery, limit, page, options);
-
 }
 
 export async function create(
