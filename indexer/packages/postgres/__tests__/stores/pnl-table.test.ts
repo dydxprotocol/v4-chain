@@ -853,4 +853,68 @@ describe('Pnl store', () => {
     expect(minHeight).toBeGreaterThanOrEqual(2000);
     expect(maxHeight).toBeLessThanOrEqual(4000);
   });
+
+  it('Returns empty array when no data exists for multiple subaccounts with date filter', async () => {
+    const subaccountIds = [defaultSubaccountId, defaultSubaccountId2];
+
+    // Create some records but with dates after our filter
+    const records = [];
+    for (let i = 0; i < subaccountIds.length; i++) {
+      records.push({
+        ...defaultPnl,
+        subaccountId: subaccountIds[i],
+        createdAt: '2024-01-01T00:00:00.000Z',
+        createdAtHeight: (1000 + i).toString(),
+        equity: (1000 + i).toString(),
+      });
+    }
+
+    await Promise.all(records.map((record) => PnlTable.create(record)));
+
+    // Query with a date filter that excludes all records
+    const hourlyResults = await PnlTable.findAllHourlyAggregate(
+      {
+        subaccountId: subaccountIds,
+        createdBeforeOrAt: '2023-01-01T00:00:00.000Z', // Before any records exist
+      },
+      [],
+      {},
+    );
+
+    expect(hourlyResults.results).toEqual([]);
+
+    const dailyResults = await PnlTable.findAllDailyAggregate(
+      {
+        subaccountId: subaccountIds,
+        createdBeforeOrAt: '2023-01-01T00:00:00.000Z', // Before any records exist
+      },
+      [],
+      {},
+    );
+
+    expect(dailyResults.results).toEqual([]);
+  });
+
+  it('Returns empty array when no data exists for multiple subaccounts', async () => {
+  // Use subaccount IDs that have no PNL records at all
+    const subaccountIds = [defaultSubaccountId, defaultSubaccountId2];
+
+    // Don't create any records - just query
+
+    const hourlyResults = await PnlTable.findAllHourlyAggregate(
+      { subaccountId: subaccountIds },
+      [],
+      {},
+    );
+
+    expect(hourlyResults.results).toEqual([]);
+
+    const dailyResults = await PnlTable.findAllDailyAggregate(
+      { subaccountId: subaccountIds },
+      [],
+      {},
+    );
+
+    expect(dailyResults.results).toEqual([]);
+  });
 });
