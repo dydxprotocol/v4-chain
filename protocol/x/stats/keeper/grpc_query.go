@@ -83,3 +83,29 @@ func (k Keeper) UserStats(
 		Stats: userStats,
 	}, nil
 }
+
+func (k Keeper) EpochStats(
+	c context.Context,
+	req *types.QueryEpochStatsRequest,
+) (
+	*types.QueryEpochStatsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	epochStats := k.GetEpochStatsOrNil(ctx, req.Epoch)
+
+	// Return empty stats if epoch not found
+	if epochStats == nil {
+		epochStats = &types.EpochStats{
+			Stats: []*types.EpochStats_UserWithStats{},
+		}
+	}
+
+	return &types.QueryEpochStatsResponse{
+		Stats: epochStats,
+	}, nil
+}

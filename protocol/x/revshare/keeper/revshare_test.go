@@ -422,6 +422,66 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
+			name: "Affiliates has about to go over the edge",
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(50_000),
+						RevSharePpm:       50_000,
+					},
+				},
+				AffiliateRevShare: &types.RevShare{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(50_000),
+					RevSharePpm:       50_000,
+				},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(50_000), // affiliate rev share fees
+					// unconditional + market mapper rev shares fees
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
+					types.REV_SHARE_FEE_SOURCE_MAKER_FEE:            big.NewInt(0),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            50_000, // affiliate rev share fee ppm
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0,      // unconditional + market mapper rev share fee ppm
+					types.REV_SHARE_FEE_SOURCE_MAKER_FEE:            0,
+				},
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         perpetualId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+				MarketId:                          marketId,
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statsKeeper.Keeper) {
+				require.NoError(t, affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
+					AffiliateParameters: affiliatetypes.AffiliateParameters{
+						Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums: 1_000_000,
+					},
+				}))
+
+				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &statstypes.UserStats{
+					Affiliate_30DRevenueGeneratedQuantums: 950_000,
+				})
+
+				err := affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+					constants.BobAccAddress.String())
+				require.NoError(t, err)
+			},
+		},
+		{
 			name: "Valid rev-share from affiliates, negative maker fee and unconditional and market mapper",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
@@ -1376,15 +1436,15 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			keeper := tApp.App.RevShareKeeper
 			affiliatesKeeper := tApp.App.AffiliatesKeeper
 			statsKeeper := tApp.App.StatsKeeper
-			if tc.setup != nil {
-				tc.setup(tApp, ctx, &keeper, &affiliatesKeeper, &statsKeeper)
-			}
-
 			require.NoError(t, affiliatesKeeper.UpdateAffiliateParameters(ctx, &affiliatetypes.MsgUpdateAffiliateParameters{
 				AffiliateParameters: affiliatetypes.AffiliateParameters{
 					Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums: 1_000_000_000_000,
 				},
 			}))
+
+			if tc.setup != nil {
+				tc.setup(tApp, ctx, &keeper, &affiliatesKeeper, &statsKeeper)
+			}
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 			affiliateOverridesMap, err := affiliatesKeeper.GetAffiliateOverridesMap(ctx)
