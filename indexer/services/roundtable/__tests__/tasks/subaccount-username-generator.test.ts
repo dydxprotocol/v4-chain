@@ -2,10 +2,8 @@ import {
   SubaccountUsernamesTable,
   SubaccountTable,
   QueryableField,
-
   testMocks,
   dbHelpers,
-  SubaccountUsernamesFromDatabase,
   SubaccountFromDatabase,
   testConstants,
 } from '@dydxprotocol-indexer/postgres';
@@ -21,8 +19,12 @@ describe('subaccount-username-generator', () => {
     await testMocks.seedData();
     await testMocks.seedAdditionalSubaccounts();
     // delete all usernames that were seeded
-    await SubaccountUsernamesTable.deleteBySubaccountId(testConstants.defaultSubaccountId);
-    await SubaccountUsernamesTable.deleteBySubaccountId(testConstants.defaultSubaccountId2);
+    await SubaccountUsernamesTable.deleteBySubaccountId(
+      testConstants.defaultSubaccountId,
+    );
+    await SubaccountUsernamesTable.deleteBySubaccountId(
+      testConstants.defaultSubaccountId2,
+    );
   });
 
   afterAll(async () => {
@@ -36,21 +38,28 @@ describe('subaccount-username-generator', () => {
   });
 
   it('Successfully creates a username for all subaccount', async () => {
-    const subaccounts: SubaccountFromDatabase[] = await
-    SubaccountTable.findAll({
-      subaccountNumber: 0,
-    }, [QueryableField.SUBACCOUNT_NUMBER], {});
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        subaccountNumber: 0,
+      },
+      [QueryableField.SUBACCOUNT_NUMBER],
+      {},
+    );
 
     const subaccountsLength: number = subaccounts.length;
-    const subaccountsWithUsernames: SubaccountUsernamesFromDatabase[] = await
-    SubaccountUsernamesTable.findAll(
-      {}, [], {});
-    expect(subaccountsWithUsernames.length).toEqual(0);
+    const subaccountsWithUsernames = await SubaccountUsernamesTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(subaccountsWithUsernames.length).toEqual(2);
 
     await subaccountUsernameGenerator();
-    const subaccountsWithUsernamesAfter: SubaccountUsernamesFromDatabase[] = await
-    SubaccountUsernamesTable.findAll(
-      {}, [], {});
+    const subaccountsWithUsernamesAfter = await SubaccountUsernamesTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
 
     const expectedUsernames = [
       'BubblyEarH5Y', // dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf
@@ -59,7 +68,9 @@ describe('subaccount-username-generator', () => {
     ];
     expect(subaccountsWithUsernamesAfter.length).toEqual(subaccountsLength);
     for (let i = 0; i < expectedUsernames.length; i++) {
-      expect(subaccountsWithUsernamesAfter[i].username).toEqual(expectedUsernames[i]);
+      expect(subaccountsWithUsernamesAfter[i].username).toEqual(
+        expectedUsernames[i],
+      );
     }
   });
 });

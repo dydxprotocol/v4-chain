@@ -1,8 +1,6 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   SubaccountUsernamesTable,
-  SubaccountsWithoutUsernamesResult,
-  Transaction,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 
@@ -12,9 +10,7 @@ import { generateUsernameForSubaccount } from '../helpers/usernames-helper';
 export default async function runTask(): Promise<void> {
   const taskStart: number = Date.now();
 
-  const subaccountZerosWithoutUsername:
-  SubaccountsWithoutUsernamesResult[] = await
-  SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
+  const targetSubaccounts = await SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
     config.SUBACCOUNT_USERNAME_BATCH_SIZE,
   );
   stats.timing(
@@ -22,11 +18,10 @@ export default async function runTask(): Promise<void> {
     Date.now() - taskStart,
   );
 
-  const txId: number = await Transaction.start();
   const txnStart: number = Date.now();
+  let successCount: number = 0;
   try {
-    let successCount: number = 0;
-    for (const subaccount of subaccountZerosWithoutUsername) {
+    for (const subaccount of targetSubaccounts) {
       for (let i = 0; i < config.ATTEMPT_PER_SUBACCOUNT; i++) {
         const username: string = generateUsernameForSubaccount(
           subaccount.address,
@@ -41,7 +36,7 @@ export default async function runTask(): Promise<void> {
           await SubaccountUsernamesTable.create({
             username,
             subaccountId: subaccount.subaccountId,
-          }, { txId });
+          });
           // If success, break from loop and move to next subaccount.
           successCount += 1;
           break;
@@ -50,7 +45,9 @@ export default async function runTask(): Promise<void> {
           // so the chance of collision is very low.
           if (e instanceof Error && e.name === 'UniqueViolationError') {
             stats.increment(
-              `${config.SERVICE_NAME}.subaccount-username-generator.collision`, 1);
+              `${config.SERVICE_NAME}.subaccount-username-generator.collision`,
+              1,
+            );
             logger.info({
               at: 'subaccount-username-generator#runTask',
               message: 'username collision',
@@ -72,9 +69,8 @@ export default async function runTask(): Promise<void> {
         }
       }
     }
-    await Transaction.commit(txId);
     const subaccountAddresses = _.map(
-      subaccountZerosWithoutUsername,
+      targetSubaccounts,
       (subaccount) => subaccount.address,
     );
     stats.timing(
@@ -84,16 +80,15 @@ export default async function runTask(): Promise<void> {
     logger.info({
       at: 'subaccount-username-generator#runTask',
       message: 'Generated usernames',
-      batchSize: subaccountZerosWithoutUsername.length,
+      batchSize: targetSubaccounts.length,
       successCount,
       addressSample: subaccountAddresses.slice(0, 10),
       duration: Date.now() - taskStart,
     });
   } catch (error) {
-    await Transaction.rollback(txId);
     logger.error({
       at: 'subaccount-username-generator#runTask',
-      message: 'Error when updating totalVolume in wallets table',
+      message: 'Error when generating usernames for subaccounts',
       error,
     });
   }
