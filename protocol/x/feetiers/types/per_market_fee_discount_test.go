@@ -240,7 +240,6 @@ func TestPerMarketFeeDiscountParams_ChargePpmEdgeCases(t *testing.T) {
 	}
 }
 
-// Test for edge cases around the MaxFeeDiscountDuration constant
 func TestPerMarketFeeDiscountParams_DurationEdgeCases(t *testing.T) {
 	currentTime := time.Unix(1000, 0).UTC()
 
