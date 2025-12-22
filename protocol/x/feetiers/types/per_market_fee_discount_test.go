@@ -58,12 +58,12 @@ func TestPerMarketFeeDiscountParams_Validate(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "valid params - maximum duration",
+			name: "valid params - no maximum duration",
 			params: types.PerMarketFeeDiscountParams{
 				ClobPairId: 1,
 				StartTime:  time.Unix(1100, 0).UTC(),
-				EndTime:    time.Unix(1100, 0).Add(time.Duration(types.MaxFeeDiscountDuration) * time.Second).UTC(),
-				ChargePpm:  500_000, // 50% discount
+				EndTime:    time.Unix(1100, 0).Add(365 * 24 * time.Hour).UTC(), // 1 year duration
+				ChargePpm:  500_000,                                            // 50% discount
 			},
 			wantErr: nil,
 		},
@@ -103,16 +103,6 @@ func TestPerMarketFeeDiscountParams_Validate(t *testing.T) {
 				ClobPairId: 1,
 				StartTime:  time.Unix(900, 0).UTC(),
 				EndTime:    time.Unix(1000, 0).UTC(), // Equal to current time
-				ChargePpm:  500_000,
-			},
-			wantErr: types.ErrInvalidTimeRange,
-		},
-		{
-			name: "invalid params - duration exceeds maximum",
-			params: types.PerMarketFeeDiscountParams{
-				ClobPairId: 1,
-				StartTime:  time.Unix(1100, 0).UTC(),
-				EndTime:    time.Unix(1100, 0).Add(time.Duration(types.MaxFeeDiscountDuration+1) * time.Second).UTC(),
 				ChargePpm:  500_000,
 			},
 			wantErr: types.ErrInvalidTimeRange,
@@ -275,19 +265,9 @@ func TestPerMarketFeeDiscountParams_DurationEdgeCases(t *testing.T) {
 			wantErr:  nil,
 		},
 		{
-			name:     "maximum duration (90 days)",
-			duration: time.Duration(types.MaxFeeDiscountDuration) * time.Second,
+			name:     "365 days duration",
+			duration: 365 * 24 * time.Hour,
 			wantErr:  nil,
-		},
-		{
-			name:     "duration just over maximum (90 days + 1 second)",
-			duration: time.Duration(types.MaxFeeDiscountDuration+1) * time.Second,
-			wantErr:  types.ErrInvalidTimeRange,
-		},
-		{
-			name:     "large duration (180 days)",
-			duration: 180 * 24 * time.Hour,
-			wantErr:  types.ErrInvalidTimeRange,
 		},
 	}
 	for _, tt := range tests {
