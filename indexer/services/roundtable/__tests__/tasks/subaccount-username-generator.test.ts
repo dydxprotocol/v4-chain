@@ -47,15 +47,15 @@ describe('subaccount-username-generator', () => {
     );
 
     const subaccountsLength: number = subaccounts.length;
-    const subaccountsWithUsernames = await SubaccountUsernamesTable.findAll(
+    const before = await SubaccountUsernamesTable.findAll(
       {},
       [],
       { readReplica: true },
     );
-    expect(subaccountsWithUsernames.length).toEqual(2);
+    expect(before.length).toEqual(0);
 
     await subaccountUsernameGenerator();
-    const subaccountsWithUsernamesAfter = await SubaccountUsernamesTable.findAll(
+    const after = await SubaccountUsernamesTable.findAll(
       {},
       [],
       { readReplica: true },
@@ -66,11 +66,58 @@ describe('subaccount-username-generator', () => {
       'GreenSnowWTT', // dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf
       'LunarMatFK5', // dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4
     ];
-    expect(subaccountsWithUsernamesAfter.length).toEqual(subaccountsLength);
+    expect(after.length).toEqual(subaccountsLength);
     for (let i = 0; i < expectedUsernames.length; i++) {
-      expect(subaccountsWithUsernamesAfter[i].username).toEqual(
-        expectedUsernames[i],
-      );
+      expect(after[i].username).toEqual(expectedUsernames[i]);
     }
+  });
+
+  it('Falls back to a second username when there is a conflict on the first attempt', async () => {
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        subaccountNumber: 0,
+      },
+      [QueryableField.SUBACCOUNT_NUMBER],
+      {},
+    );
+    const targetSubaccount = subaccounts[0];
+    const otherSubaccount = subaccounts[1];
+
+    const { generateUsernameForSubaccount } = require('../../src/helpers/usernames-helper');
+
+    const usernameAttempt0 = generateUsernameForSubaccount(
+      targetSubaccount.address,
+      0,
+      0,
+    );
+    await SubaccountUsernamesTable.create({
+      username: usernameAttempt0,
+      subaccountId: otherSubaccount.id,
+    });
+
+    const afterPreInsert = await SubaccountUsernamesTable.findAll(
+      { subaccountId: [targetSubaccount.id] }, [QueryableField.SUBACCOUNT_ID], {},
+    );
+    expect(afterPreInsert.length).toBe(0);
+
+    await subaccountUsernameGenerator();
+
+    const created = await SubaccountUsernamesTable.findAll(
+      { subaccountId: [targetSubaccount.id] }, [QueryableField.SUBACCOUNT_ID], {},
+    );
+    expect(created.length).toBe(1);
+
+    const fallbackUsername = generateUsernameForSubaccount(
+      targetSubaccount.address,
+      0,
+      1,
+    );
+    expect(created[0].username).toEqual(fallbackUsername);
+
+    const conflict = await SubaccountUsernamesTable.findAll(
+      { username: [usernameAttempt0] }, [QueryableField.USERNAME], {},
+    );
+    expect(conflict.length).toBe(1);
+    expect(conflict[0].subaccountId).not.toEqual(targetSubaccount.id);
   });
 });
