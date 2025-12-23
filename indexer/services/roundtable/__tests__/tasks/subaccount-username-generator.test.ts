@@ -120,4 +120,72 @@ describe('subaccount-username-generator', () => {
     expect(conflict.length).toBe(1);
     expect(conflict[0].subaccountId).not.toEqual(targetSubaccount.id);
   });
+
+  it('Handles batch where one username succeeds and the other needs a fallback', async () => {
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        subaccountNumber: 0,
+      },
+      [QueryableField.SUBACCOUNT_NUMBER],
+      {},
+    );
+    expect(subaccounts.length).toBeGreaterThanOrEqual(2);
+
+    const sub0 = subaccounts[0];
+    const sub1 = subaccounts[1];
+
+    const { generateUsernameForSubaccount } = require('../../src/helpers/usernames-helper');
+
+    const sub0Attempt0 = generateUsernameForSubaccount(sub0.address, 0, 0);
+    await SubaccountUsernamesTable.create({
+      username: sub0Attempt0,
+      subaccountId: sub1.id,
+    });
+
+    // pre-run checks
+    const preUsernames = await SubaccountUsernamesTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+    expect(
+      preUsernames.find((u: any) => u.username === sub0Attempt0),
+    ).toBeDefined();
+    expect(preUsernames.filter((u: any) => u.subaccountId === sub0.id).length).toBe(0);
+    expect(preUsernames.filter(
+      (u: any) => u.subaccountId === sub1.id && u.username !== sub0Attempt0,
+    ).length).toBe(0);
+
+    // run generator
+    await subaccountUsernameGenerator();
+
+    // fetch results
+    const after = await SubaccountUsernamesTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+
+    // sub0 should have fallback username
+    const sub0UsernameRow = after.find((u: any) => u.subaccountId === sub0.id);
+    const sub0ExpectedFallback = generateUsernameForSubaccount(sub0.address, 0, 1);
+    expect(sub0UsernameRow).toBeDefined();
+    if (sub0UsernameRow) {
+      expect(sub0UsernameRow.username).toEqual(sub0ExpectedFallback);
+    }
+    const sub1UsernameRow = after.find(
+      (u: any) => u.subaccountId === sub1.id && u.username !== sub0Attempt0);
+    if (sub1UsernameRow) {
+      expect(sub1UsernameRow).toBeDefined();
+    }
+
+    // There should not be two usernames with the same value
+    const usernameCounts = after.reduce((acc: Record<string, number>, u: any) => {
+      acc[u.username] = (acc[u.username] || 0) + 1;
+      return acc;
+    }, {});
+    for (const count of Object.values(usernameCounts)) {
+      expect(count).toBe(1);
+    }
+  });
 });
