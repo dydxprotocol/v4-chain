@@ -1,7 +1,6 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   SubaccountUsernamesTable,
-  SubaccountsWithoutUsernamesResult,
   Transaction,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
@@ -12,9 +11,7 @@ import { generateUsernameForSubaccount } from '../helpers/usernames-helper';
 export default async function runTask(): Promise<void> {
   const taskStart: number = Date.now();
 
-  const subaccountZerosWithoutUsername:
-  SubaccountsWithoutUsernamesResult[] = await
-  SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
+  const targetAccounts = await SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
     config.SUBACCOUNT_USERNAME_BATCH_SIZE,
   );
   stats.timing(
@@ -26,7 +23,7 @@ export default async function runTask(): Promise<void> {
   const txnStart: number = Date.now();
   try {
     let successCount: number = 0;
-    for (const subaccount of subaccountZerosWithoutUsername) {
+    for (const subaccount of targetAccounts) {
       for (let i = 0; i < config.ATTEMPT_PER_SUBACCOUNT; i++) {
         const username: string = generateUsernameForSubaccount(
           subaccount.address,
@@ -38,43 +35,42 @@ export default async function runTask(): Promise<void> {
           i,
         );
         try {
-          await SubaccountUsernamesTable.create({
+          const count: number = await SubaccountUsernamesTable.insertAndReturnCount(
             username,
-            subaccountId: subaccount.subaccountId,
-          }, { txId });
-          // If success, break from loop and move to next subaccount.
-          successCount += 1;
-          break;
-        } catch (e) {
-          // There are roughly ~225 million possible usernames
-          // so the chance of collision is very low.
-          if (e instanceof Error && e.name === 'UniqueViolationError') {
-            stats.increment(
-              `${config.SERVICE_NAME}.subaccount-username-generator.collision`, 1);
-            logger.info({
-              at: 'subaccount-username-generator#runTask',
-              message: 'username collision',
-              address: subaccount.address,
-              subaccountId: subaccount.subaccountId,
-              username,
-              error: e,
-            });
+            subaccount.subaccountId,
+            { txId },
+          );
+          if (count > 0) {
+            successCount += 1;
+            break;
           } else {
+            // if count is 0, log error and continue to next iteration
+            // which will bump the nonce and try again with a new username
             logger.error({
               at: 'subaccount-username-generator#runTask',
               message: 'Failed to insert username for subaccount',
               address: subaccount.address,
               subaccountId: subaccount.subaccountId,
               username,
-              error: e,
+              error: new Error('Username already exists'),
             });
           }
+        } catch (e) {
+          logger.error({
+            at: 'subaccount-username-generator#runTask',
+            message: 'Failed to insert username for subaccount',
+            address: subaccount.address,
+            subaccountId: subaccount.subaccountId,
+            username,
+            error: e,
+          });
+          throw e;
         }
       }
     }
     await Transaction.commit(txId);
     const subaccountAddresses = _.map(
-      subaccountZerosWithoutUsername,
+      targetAccounts,
       (subaccount) => subaccount.address,
     );
     stats.timing(
@@ -84,7 +80,7 @@ export default async function runTask(): Promise<void> {
     logger.info({
       at: 'subaccount-username-generator#runTask',
       message: 'Generated usernames',
-      batchSize: subaccountZerosWithoutUsername.length,
+      batchSize: targetAccounts.length,
       successCount,
       addressSample: subaccountAddresses.slice(0, 10),
       duration: Date.now() - taskStart,
@@ -93,7 +89,7 @@ export default async function runTask(): Promise<void> {
     await Transaction.rollback(txId);
     logger.error({
       at: 'subaccount-username-generator#runTask',
-      message: 'Error when updating totalVolume in wallets table',
+      message: 'Error when generating usernames for subaccounts',
       error,
     });
   }
