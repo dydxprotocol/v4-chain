@@ -53,6 +53,8 @@ interface SignInRequest {
   challenge?: string,
   /** Attestation object for passkey authentication (required for PASSKEY signin method) */
   attestation?: TurnkeyApiTypes['v1Attestation'],
+  /** Optional magic link template URL for email authentication */
+  magicLink?: string,
 }
 
 @Route('turnkey')
@@ -292,6 +294,7 @@ router.post(
         signinMethod: SigninMethod,
         userEmail: string,
         targetPublicKey: string,
+        magicLink: string,
         provider: string,
         oidcToken: string,
         challenge: string,
