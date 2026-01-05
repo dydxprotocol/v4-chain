@@ -263,6 +263,7 @@ export class TurnkeyHelpers {
   async emailSignin(
     userEmail: string,
     targetPublicKey: string,
+    magicLink?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // lowercase email address.
     const lowerEmail = userEmail.trim().toLowerCase();
@@ -275,7 +276,7 @@ export class TurnkeyHelpers {
       });
     }
 
-    const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE;
+    const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink;
     const emailAuthResponse = await this.turnkeyApiClient.emailAuth({
       email: lowerEmail,
       targetPublicKey,
