@@ -275,7 +275,7 @@ export class TurnkeyHelpers {
       });
     }
 
-    const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE || magicLink;
+    const magicLinkTemplate = config.TURNKEY_MAGIC_LINK_TEMPLATE;
     const emailAuthResponse = await this.turnkeyApiClient.emailAuth({
       email: lowerEmail,
       targetPublicKey,
