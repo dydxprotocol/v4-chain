@@ -150,7 +150,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 20)
+	require.Len(t, fv.MapKeys(), 22)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
@@ -255,14 +255,15 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "clob", cmd.Use)
-	require.Equal(t, 7, len(cmd.Commands()))
-	require.Equal(t, "get-block-rate-limit-config", cmd.Commands()[0].Name())
-	require.Equal(t, "get-equity-tier-limit-config", cmd.Commands()[1].Name())
-	require.Equal(t, "get-liquidations-config", cmd.Commands()[2].Name())
-	require.Equal(t, "leverage", cmd.Commands()[3].Name())
-	require.Equal(t, "list-clob-pair", cmd.Commands()[4].Name())
-	require.Equal(t, "show-clob-pair", cmd.Commands()[5].Name())
-	require.Equal(t, "stateful-order", cmd.Commands()[6].Name())
+	require.Equal(t, 8, len(cmd.Commands()))
+	require.Equal(t, "get-block-limits-config", cmd.Commands()[0].Name())
+	require.Equal(t, "get-block-rate-limit-config", cmd.Commands()[1].Name())
+	require.Equal(t, "get-equity-tier-limit-config", cmd.Commands()[2].Name())
+	require.Equal(t, "get-liquidations-config", cmd.Commands()[3].Name())
+	require.Equal(t, "leverage", cmd.Commands()[4].Name())
+	require.Equal(t, "list-clob-pair", cmd.Commands()[5].Name())
+	require.Equal(t, "show-clob-pair", cmd.Commands()[6].Name())
+	require.Equal(t, "stateful-order", cmd.Commands()[7].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
