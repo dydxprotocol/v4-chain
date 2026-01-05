@@ -168,8 +168,8 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail and targetPublicKey are required for email signin');
       }
       if (magicLink) {
-        if (magicLink !== config.TURNKEY_MOBILE_MAGIC_LINK_TEMPLATE &&
-          magicLink !== config.TURNKEY_MAGIC_LINK_TEMPLATE) {
+        const isValidMagicLink = magicLink.startsWith(config.TURNKEY_MAGIC_LINK_VALIDATION);
+        if (!isValidMagicLink) {
           throw new Error('Invalid magic link template');
         }
       }
