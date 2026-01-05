@@ -160,7 +160,6 @@ export class TurnkeyController extends Controller {
       oidcToken,
       challenge,
       attestation,
-      magicLink,
     } = body;
     // Determine authentication method
     if (signinMethod === SigninMethod.EMAIL) {
@@ -168,7 +167,7 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail and targetPublicKey are required for email signin');
       }
       try {
-        const resp = await this.turnkeyHelpers.emailSignin(userEmail, targetPublicKey!, magicLink);
+        const resp = await this.turnkeyHelpers.emailSignin(userEmail, targetPublicKey!);
         if (resp.userId === undefined || resp.apiKeyId === undefined) {
           throw new Error('Could not send email auth bundle');
         }
