@@ -167,6 +167,12 @@ export class TurnkeyController extends Controller {
       if (!userEmail || !targetPublicKey) {
         throw new Error('userEmail and targetPublicKey are required for email signin');
       }
+      if (magicLink) {
+        const isValidMagicLink = magicLink.startsWith(config.TURNKEY_MAGIC_LINK_VALIDATION);
+        if (!isValidMagicLink) {
+          throw new Error('Invalid magic link template');
+        }
+      }
       try {
         const resp = await this.turnkeyHelpers.emailSignin(userEmail, targetPublicKey!, magicLink);
         if (resp.userId === undefined || resp.apiKeyId === undefined) {
@@ -229,7 +235,7 @@ export class TurnkeyController extends Controller {
 
     // Validate Apple configuration
     if (!config.APPLE_TEAM_ID || !config.APPLE_SERVICE_ID ||
-        !config.APPLE_KEY_ID || !config.APPLE_PRIVATE_KEY) {
+      !config.APPLE_KEY_ID || !config.APPLE_PRIVATE_KEY) {
       throw new TurnkeyError('Apple Sign-In configuration is incomplete');
     }
 

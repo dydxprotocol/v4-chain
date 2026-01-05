@@ -120,6 +120,7 @@ export const configSchema = {
   TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
   TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
+  TURNKEY_MAGIC_LINK_VALIDATION: parseString({ default: 'https://dydx.trade' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
   SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
