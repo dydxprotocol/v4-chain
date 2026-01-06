@@ -28,7 +28,6 @@ func (k msgServer) UpdatePerpetualParams(
 		msg.PerpetualParams.Id,
 		msg.PerpetualParams.Ticker,
 		msg.PerpetualParams.MarketId,
-		msg.PerpetualParams.AtomicResolution,
 		msg.PerpetualParams.DefaultFundingPpm,
 		msg.PerpetualParams.LiquidityTier,
 	)
