@@ -259,7 +259,7 @@ create_validators() {
 }
 
 setup_preupgrade_binary() {
-	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv9.5.0/dydxprotocold-v9.5.0-linux-amd64.tar.gz'
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv9.6.0/dydxprotocold-v9.6.0-linux-amd64.tar.gz'
 	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
 	mkdir -p /tmp/dydxprotocold
 	curl -vL $tar_url -o $tar_path
