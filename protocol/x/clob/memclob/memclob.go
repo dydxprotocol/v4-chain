@@ -167,6 +167,46 @@ func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
 	return true
 }
 
+// SyncSubticksPerTick syncs the subticks per tick and step base quantums for the memclob with the ClobPair state.
+// This is used to ensure the existing memclob has the up to date params after modifying the ClobPair
+// subticks per tick in state.
+func (m *MemClobPriceTimePriority) SyncOrderbookState(
+	clobPair types.ClobPair,
+) {
+	clobPairId := clobPair.GetClobPairId()
+	orderbook, exists := m.orderbooks[clobPairId]
+	if !exists {
+		panic(fmt.Sprintf("SyncSubticksPerTick: Orderbook for ClobPair ID %d does not exist", clobPairId))
+	}
+
+	subticksPerTick := clobPair.GetClobPairSubticksPerTick()
+	if subticksPerTick == 0 {
+		panic("subticksPerTick must be greater than zero")
+	}
+	// if subticksPerTick is increased or not a divisor of the previous subticksPerTick, then we're screwed
+	// since this is registered in state.
+	if subticksPerTick > orderbook.SubticksPerTick ||
+		orderbook.SubticksPerTick%subticksPerTick != 0 {
+		panic(fmt.Sprintf("clob %d SubticksPerTick increased and/or not a divisor of the previous",
+			clobPairId))
+	}
+
+	minOrderBaseQuantums := clobPair.GetClobPairMinOrderBaseQuantums()
+	if minOrderBaseQuantums == 0 {
+		panic("minOrderBaseQuantums must be greater than zero")
+	}
+	// if minOrderBaseQuantums is increased or not a divisor of the previous minOrderBaseQuantums, then we're screwed
+	// since this is registered in state.
+	if minOrderBaseQuantums > orderbook.MinOrderBaseQuantums ||
+		orderbook.MinOrderBaseQuantums%minOrderBaseQuantums != 0 {
+		panic(fmt.Sprintf("clob %d stepBaseQuantums increased and/or not a divisor of the previous",
+			clobPairId))
+	}
+
+	orderbook.SubticksPerTick = subticksPerTick
+	orderbook.MinOrderBaseQuantums = minOrderBaseQuantums
+}
+
 // CreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 // This function will panic if `clobPairId` already exists in any of the memclob's internal data structures.
 func (m *MemClobPriceTimePriority) CreateOrderbook(
@@ -490,7 +530,10 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}()
 
 	offchainUpdates = types.NewOffchainUpdates()
-
+	m.clobKeeper.Logger(ctx).Error(
+		"PlaceOrder: validateNewOrder",
+		"order", order.GetOrderTextString(),
+	)
 	// Validate the order and return an error if any validation fails.
 	if err := m.validateNewOrder(ctx, order); err != nil {
 		return 0, 0, offchainUpdates, err
@@ -1443,6 +1486,17 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
 	// is considered fully filled and cannot be placed/replaced.
 	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
+	m.clobKeeper.Logger(ctx).Error(
+		"validateNewOrder: checked order remaining amount",
+		"remainingAmount", remainingAmount,
+		"hasRemainingAmount", hasRemainingAmount,
+		"orderbook.MinOrderBaseQuantums", orderbook.MinOrderBaseQuantums,
+		"orderId", orderId.String(),
+	)
+	m.clobKeeper.Logger(ctx).Error(
+		"validateNewOrder: ClobPair stepBaseQuantums",
+		"clobPairId", order.GetClobPairId(),
+	)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
 		return errorsmod.Wrapf(
 			types.ErrOrderFullyFilled,

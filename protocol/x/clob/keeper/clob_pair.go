@@ -563,6 +563,8 @@ func (k Keeper) UpdateClobPair(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 ) error {
+
+	syncMemClobState := false
 	oldClobPair, found := k.GetClobPair(ctx, types.ClobPairId(clobPair.Id))
 	if !found {
 		return errorsmod.Wrapf(
@@ -606,6 +608,7 @@ func (k Keeper) UpdateClobPair(
 				newSBQ,
 			)
 		}
+		syncMemClobState = true
 	}
 
 	// Only allow decreasing SubticksPerTick; it must remain positive.
@@ -620,6 +623,7 @@ func (k Keeper) UpdateClobPair(
 				newSPT,
 			)
 		}
+		syncMemClobState = true
 	}
 
 	if clobPair.QuantumConversionExponent != oldClobPair.QuantumConversionExponent {
@@ -645,6 +649,10 @@ func (k Keeper) UpdateClobPair(
 	}
 
 	k.SetClobPair(ctx, clobPair)
+
+	if syncMemClobState {
+		k.MemClob.SyncOrderbookState(clobPair)
+	}
 
 	// Send UpdateClobPair to indexer.
 	k.GetIndexerEventManager().AddTxnEvent(
