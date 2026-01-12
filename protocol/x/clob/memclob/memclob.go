@@ -167,9 +167,9 @@ func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
 	return true
 }
 
-// SyncSubticksPerTick syncs the subticks per tick and step base quantums for the memclob with the ClobPair state.
+// SyncOrderbookState syncs the subticks per tick and step base quantums for the memclob with the ClobPair state.
 // This is used to ensure the existing memclob has the up to date params after modifying the ClobPair
-// subticks per tick in state.
+// subticks per tick/step base quantums in state.
 func (m *MemClobPriceTimePriority) SyncOrderbookState(
 	clobPair types.ClobPair,
 ) {
