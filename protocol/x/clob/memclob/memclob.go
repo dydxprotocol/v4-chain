@@ -530,10 +530,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}()
 
 	offchainUpdates = types.NewOffchainUpdates()
-	m.clobKeeper.Logger(ctx).Error(
-		"PlaceOrder: validateNewOrder",
-		"order", order.GetOrderTextString(),
-	)
+
 	// Validate the order and return an error if any validation fails.
 	if err := m.validateNewOrder(ctx, order); err != nil {
 		return 0, 0, offchainUpdates, err
@@ -1486,17 +1483,6 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
 	// is considered fully filled and cannot be placed/replaced.
 	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
-	m.clobKeeper.Logger(ctx).Error(
-		"validateNewOrder: checked order remaining amount",
-		"remainingAmount", remainingAmount,
-		"hasRemainingAmount", hasRemainingAmount,
-		"orderbook.MinOrderBaseQuantums", orderbook.MinOrderBaseQuantums,
-		"orderId", orderId.String(),
-	)
-	m.clobKeeper.Logger(ctx).Error(
-		"validateNewOrder: ClobPair stepBaseQuantums",
-		"clobPairId", order.GetClobPairId(),
-	)
 	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
 		return errorsmod.Wrapf(
 			types.ErrOrderFullyFilled,
