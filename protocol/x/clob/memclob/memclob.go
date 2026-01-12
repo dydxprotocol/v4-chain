@@ -176,7 +176,7 @@ func (m *MemClobPriceTimePriority) SyncOrderbookState(
 	clobPairId := clobPair.GetClobPairId()
 	orderbook, exists := m.orderbooks[clobPairId]
 	if !exists {
-		panic(fmt.Sprintf("SyncSubticksPerTick: Orderbook for ClobPair ID %d does not exist", clobPairId))
+		panic(fmt.Sprintf("SyncOrderbookState: Orderbook for ClobPair ID %d does not exist", clobPairId))
 	}
 
 	subticksPerTick := clobPair.GetClobPairSubticksPerTick()
