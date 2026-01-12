@@ -563,7 +563,6 @@ func (k Keeper) UpdateClobPair(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 ) error {
-
 	shouldSyncMemClobState := false
 	oldClobPair, found := k.GetClobPair(ctx, types.ClobPairId(clobPair.Id))
 	if !found {
