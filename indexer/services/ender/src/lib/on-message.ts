@@ -95,14 +95,20 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     );
     const kafkaPublisher: KafkaPublisher = await blockProcessor.process();
 
+    // TODO: KafkaPublisher is not idempotent, so we can't send non-candles messages here
+
     const candlesGenerator: CandlesGenerator = new CandlesGenerator(
       kafkaPublisher,
       DateTime.fromJSDate(indexerTendermintBlock.time!),
       txId,
     );
     const candles: CandleFromDatabase[] = await candlesGenerator.updateCandles();
+
+    // TODO: ideally, use a candles-only kafka publisher to send here
+
     await Transaction.commit(txId);
     stats.gauge(`${config.SERVICE_NAME}.processing_block_height`, indexerTendermintBlock.height);
+
     // Update caches after transaction is committed
     updateBlockCache(blockHeight);
     _.forEach(candles, updateCandleCacheWithCandle);
@@ -114,13 +120,16 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
         'kafkaPublisher.publish',
       );
     }
+
     logger.info({
       at: 'onMessage#onMessage',
       message: 'Successfully processed block',
       height: blockHeight,
     });
     success = true;
+
   } catch (error) {
+
     await Transaction.rollback(txId);
     await refreshDataCaches();
     stats.increment(`${config.SERVICE_NAME}.update_event_tables.failure`, 1);
@@ -143,6 +152,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     }
     // Throw error so the message is not acked and will be reprocessed
     throw error;
+
   } finally {
     const done: number = Date.now();
     stats.timing(

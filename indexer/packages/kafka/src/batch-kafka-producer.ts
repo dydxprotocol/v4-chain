@@ -72,9 +72,20 @@ export class BatchKafkaProducer {
         this.producer.send({ topic: this.topic, messages: this.producerMessages }),
       );
     }
+    const elapsed = Date.now() - startTime;
+
     logger.info({
       at: 'BatchMessenger#sendBatch',
       message: 'Produced kafka batch',
+      currentSize: this.currentSize,
+      topic: this.topic,
+      sendTime: elapsed,
+    });
+
+    // avoid logging encoded message contents at INFO level
+    logger.debug({
+      at: 'BatchMessenger#sendBatch',
+      message: 'Produced kafka batch with messages',
       currentSize: this.currentSize,
       producerMessages: JSON.stringify(this.producerMessages),
       recalculatedCurrentSize: this.producerMessages.reduce(
@@ -82,10 +93,13 @@ export class BatchKafkaProducer {
         0,
       ),
       topic: this.topic,
-      sendTime: Date.now() - startTime,
+      sendTime: elapsed,
     });
+
     stats.gauge(`${config.SERVICE_NAME}.kafka_batch_size`, this.currentSize);
+    // TODO: this metric is useless it only captures creation of promises
     stats.timing(`${config.SERVICE_NAME}.kafka_batch_send_time`, Date.now() - startTime);
+
     this.producerMessages = [];
     this.currentSize = 0;
   }
