@@ -608,6 +608,11 @@ func (_m *MemClob) SetMemclobGauges(ctx types.Context) {
 	_m.Called(ctx)
 }
 
+// SyncOrderbookState provides a mock function with given fields: clobPair
+func (_m *MemClob) SyncOrderbookState(clobPair clobtypes.ClobPair) {
+	_m.Called(clobPair)
+}
+
 // NewMemClob creates a new instance of MemClob. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMemClob(t interface {
