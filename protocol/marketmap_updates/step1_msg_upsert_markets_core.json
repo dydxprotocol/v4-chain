@@ -1,0 +1,211 @@
+{
+  "@type": "/cosmos.gov.v1.MsgSubmitProposal",
+  "messages": [
+    {
+      "@type": "/slinky.marketmap.v1.MsgUpsertMarkets",
+      "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+      "markets": [
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "BTC",
+              "Quote": "USDC"
+            },
+            "decimals": "5",
+            "min_provider_count": "3",
+            "enabled": false,
+            "metadata_JSON": ""
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "BTCUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "BTCUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "BTC-USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "gate_ws",
+              "off_chain_ticker": "BTC_USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "ETH",
+              "Quote": "USDC"
+            },
+            "decimals": "6",
+            "min_provider_count": "3",
+            "enabled": false,
+            "metadata_JSON": ""
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "ETHUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "ETHUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "ETH-USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "gate_ws",
+              "off_chain_ticker": "ETH_USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "SOL",
+              "Quote": "USDC"
+            },
+            "decimals": "8",
+            "min_provider_count": "3",
+            "enabled": false,
+            "metadata_JSON": ""
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "SOLUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "SOLUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "SOL-USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "gate_ws",
+              "off_chain_ticker": "SOL_USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "SOLUSDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            }
+          ]
+        },
+        {
+          "ticker": {
+            "currency_pair": {
+              "Base": "USDT",
+              "Quote": "USDC"
+            },
+            "decimals": "6",
+            "min_provider_count": "3",
+            "enabled": false,
+            "metadata_JSON": ""
+          },
+          "provider_configs": [
+            {
+              "name": "binance_ws",
+              "off_chain_ticker": "USDCUSDT",
+              "normalize_by_pair": null,
+              "invert": true,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "bybit_ws",
+              "off_chain_ticker": "USDCUSDT",
+              "normalize_by_pair": null,
+              "invert": true,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "coinbase_ws",
+              "off_chain_ticker": "USDT-USDC",
+              "normalize_by_pair": null,
+              "invert": false,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "huobi_ws",
+              "off_chain_ticker": "usdcusdt",
+              "normalize_by_pair": null,
+              "invert": true,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kraken_api",
+              "off_chain_ticker": "USDCUSDT",
+              "normalize_by_pair": null,
+              "invert": true,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "kucoin_ws",
+              "off_chain_ticker": "USDC-USDT",
+              "normalize_by_pair": null,
+              "invert": true,
+              "metadata_JSON": ""
+            },
+            {
+              "name": "okx_ws",
+              "off_chain_ticker": "USDC-USDT",
+              "normalize_by_pair": null,
+              "invert": true,
+              "metadata_JSON": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": "Create helper markets for USDC-based normalization",
+  "deposit": "10000000adv4tnt",
+  "title": "Create USDC Helper Markets",
+  "summary": "Create BTC/USDC, ETH/USDC, SOL/USDC, and USDT/USDC markets (enabled: false) for use as normalization sources"
+}

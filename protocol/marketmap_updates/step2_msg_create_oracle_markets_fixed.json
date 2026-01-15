@@ -1,0 +1,57 @@
+{
+  "@type": "/cosmos.gov.v1.MsgSubmitProposal",
+  "messages": [
+    {
+      "@type": "/dydxprotocol.prices.MsgCreateOracleMarket",
+      "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+      "params": {
+        "id": 9000,
+        "pair": "BTC-USDC",
+        "exponent": -5,
+        "min_exchanges": 3,
+        "min_price_change_ppm": 500,
+        "exchange_config_json": "{\"exchanges\":[]}"
+      }
+    },
+    {
+      "@type": "/dydxprotocol.prices.MsgCreateOracleMarket",
+      "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+      "params": {
+        "id": 9001,
+        "pair": "ETH-USDC",
+        "exponent": -6,
+        "min_exchanges": 3,
+        "min_price_change_ppm": 500,
+        "exchange_config_json": "{\"exchanges\":[]}"
+      }
+    },
+    {
+      "@type": "/dydxprotocol.prices.MsgCreateOracleMarket",
+      "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+      "params": {
+        "id": 9002,
+        "pair": "SOL-USDC",
+        "exponent": -8,
+        "min_exchanges": 3,
+        "min_price_change_ppm": 500,
+        "exchange_config_json": "{\"exchanges\":[]}"
+      }
+    },
+    {
+      "@type": "/dydxprotocol.prices.MsgCreateOracleMarket",
+      "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+      "params": {
+        "id": 9003,
+        "pair": "USDT-USDC",
+        "exponent": -6,
+        "min_exchanges": 3,
+        "min_price_change_ppm": 10,
+        "exchange_config_json": "{\"exchanges\":[]}"
+      }
+    }
+  ],
+  "metadata": "Enable BTC/USDC, ETH/USDC, SOL/USDC, USDT/USDC markets for price normalization",
+  "title": "Enable USDC Helper Markets",
+  "summary": "Create and enable BTC/USDC, ETH/USDC, SOL/USDC, and USDT/USDC markets in x/prices to enable USDC-based price normalization across all markets",
+  "deposit": "10000000adv4tnt"
+}
