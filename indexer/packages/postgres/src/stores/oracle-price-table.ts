@@ -230,10 +230,10 @@ export async function findLatestPricesBeforeOrAtHeight(
     FROM "markets" m
     JOIN LATERAL (
       SELECT "price"
-      FROM "oracle_prices" op
-      WHERE op."marketId" = m."id"
-      AND op."effectiveAtHeight" <= $1
-      ORDER BY op."effectiveAtHeight" DESC
+      FROM "oracle_prices" p
+      WHERE p."marketId" = m."id"
+      AND p."effectiveAtHeight" <= ?::bigint
+      ORDER BY p."effectiveAtHeight" DESC
       LIMIT 1
     ) op ON true;
   `;
