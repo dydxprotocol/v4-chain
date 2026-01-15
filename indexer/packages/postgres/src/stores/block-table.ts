@@ -1,7 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { QueryBuilder } from 'objection';
 
-import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import { DEFAULT_POSTGRES_OPTIONS, USE_MASTER_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import BlockModel from '../models/block-model';
@@ -110,7 +110,7 @@ export async function findByBlockHeight(
 }
 
 export async function getLatest(
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
+  options: Options = USE_MASTER_POSTGRES_OPTIONS,
 ): Promise<BlockFromDatabase> {
   const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
     BlockModel,
