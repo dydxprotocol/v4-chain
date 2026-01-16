@@ -2,7 +2,7 @@ import * as Knex from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   await knex.raw(
-    'DROP INDEX CONCURRENTLY IF EXISTS "transfers_sendersubaccountid_createdatheight_index";',
+    'DROP INDEX IF EXISTS "transfers_sendersubaccountid_createdatheight_index";',
   );
 
   await knex.raw(
@@ -12,7 +12,7 @@ export async function up(knex: Knex): Promise<void> {
   );
 
   await knex.raw(
-    'DROP INDEX CONCURRENTLY IF EXISTS "transfers_recipientsubaccountid_createdatheight_index";',
+    'DROP INDEX IF EXISTS "transfers_recipientsubaccountid_createdatheight_index";',
   );
 
   await knex.raw(
