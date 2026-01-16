@@ -1,5 +1,5 @@
 /* ------- UTILITY TYPES ------- */
-import { RawBinding } from 'knex';
+import { RawBinding, ValueDict } from 'knex';
 
 export type IsoString = string;
 
@@ -19,7 +19,7 @@ export interface Options {
   orderBy?: [string, Ordering][],
   readReplica?: boolean,
   random?: boolean,
-  bindings?: readonly RawBinding[],
+  bindings?: readonly RawBinding[] | ValueDict,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sqlOptions?: Readonly<{ [key: string]: any }>,
 }
