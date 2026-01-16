@@ -114,19 +114,24 @@ export async function getSubaccountsWithTransfers(
       SELECT 1
       FROM transfers t
       WHERE t."senderSubaccountId" = s.id
-        AND t."createdAtHeight" <= '${createdBeforeOrAtHeight}'
+        AND t."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     )
     OR EXISTS (
       SELECT 1
       FROM transfers t
       WHERE t."recipientSubaccountId" = s.id
-        AND t."createdAtHeight" <= '${createdBeforeOrAtHeight}'
+        AND t."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     )
   `;
 
+  const newOptions: Options = {
+    ...options,
+    bindings: {createdBeforeOrAtHeight}
+  };
+
   const result: {
     rows: SubaccountFromDatabase[],
-  } = await rawQuery(queryString, options);
+  } = await rawQuery(queryString, newOptions);
 
   return result.rows;
 }

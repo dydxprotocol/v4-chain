@@ -528,7 +528,7 @@ export async function getNetTransfersPerSubaccount(
       "id"
     FROM
       "transfers"
-    WHERE "transfers"."createdAtHeight" <= ${createdBeforeOrAtHeight}
+    WHERE "transfers"."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     UNION
     SELECT DISTINCT
       "recipientSubaccountId" AS "subaccountId",
@@ -537,18 +537,23 @@ export async function getNetTransfersPerSubaccount(
       "id"
     FROM
       "transfers"
-    WHERE "transfers"."createdAtHeight" <= ${createdBeforeOrAtHeight}
+    WHERE "transfers"."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
   ) AS sub
   GROUP BY
     sub."subaccountId",
     sub."assetId";
   `;
 
+  const newOptions: Options = {
+    ...options,
+    bindings: {createdBeforeOrAtHeight}
+  };
+
   const result: {
     rows: SubaccountAssetNetTransfer[],
-  } = await rawQuery(queryString, options);
-
+  } = await rawQuery(queryString, newOptions);
   const assetsPerSubaccount: SubaccountAssetNetTransfer[] = result.rows;
+
   return convertToSubaccountAssetMap(assetsPerSubaccount);
 }
 
