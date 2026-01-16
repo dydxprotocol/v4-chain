@@ -384,9 +384,9 @@ export async function findAllToOrFromParentSubaccount(
     // Exclude transfers where both sender and recipient are child subaccounts of the same parent
     .whereRaw(`
       NOT (
-        transfers."senderSubaccountId" IS NOT NULL 
+        transfers."senderSubaccountId" IS NOT NULL
         AND transfers."recipientSubaccountId" IS NOT NULL
-        AND sender_sa.address = recipient_sa.address 
+        AND sender_sa.address = recipient_sa.address
         AND (sender_sa."subaccountNumber" % 128) = (recipient_sa."subaccountNumber" % 128)
       )
     `)
@@ -476,24 +476,24 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetTransferMap> {
   const queryString: string = `
-    SELECT 
+    SELECT
       "assetId",
       SUM(
-        CASE 
+        CASE
           WHEN "senderSubaccountId" = '${subaccountId}' THEN -"size"
           ELSE "size"
         END
       ) AS "totalSize"
-    FROM 
+    FROM
       "transfers"
-    WHERE 
+    WHERE
       (
-        "senderSubaccountId" = '${subaccountId}' 
+        "senderSubaccountId" = '${subaccountId}'
         OR "recipientSubaccountId" = '${subaccountId}'
       )
-      AND "createdAtHeight" > ${createdAfterHeight} 
+      AND "createdAtHeight" > ${createdAfterHeight}
       AND "createdAtHeight" <= ${createdBeforeOrAtHeight}
-    GROUP BY 
+    GROUP BY
       "assetId";
   `;
 
@@ -516,30 +516,30 @@ export async function getNetTransfersPerSubaccount(
   // for all subaccounts. If a subaccount is sending an asset, the value will be negative.
   // If a subaccount is receiving an asset, the value will be positive.
   const queryString: string = `
-  SELECT 
+  SELECT
     sub."subaccountId",
     sub."assetId",
     SUM(sub."size") AS "totalSize"
   FROM (
-    SELECT DISTINCT 
+    SELECT DISTINCT
       "senderSubaccountId" AS "subaccountId",
       "assetId",
       -"size" AS "size",
       "id"
-    FROM 
+    FROM
       "transfers"
     WHERE "transfers"."createdAtHeight" <= ${createdBeforeOrAtHeight}
-    UNION 
-    SELECT DISTINCT 
+    UNION
+    SELECT DISTINCT
       "recipientSubaccountId" AS "subaccountId",
       "assetId",
       "size" AS "size",
       "id"
-    FROM 
+    FROM
       "transfers"
     WHERE "transfers"."createdAtHeight" <= ${createdBeforeOrAtHeight}
   ) AS sub
-  GROUP BY 
+  GROUP BY
     sub."subaccountId",
     sub."assetId";
   `;
@@ -559,22 +559,22 @@ export async function getNetTransfersBetweenSubaccountIds(
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string> {
   const queryString: string = `
-  SELECT 
+  SELECT
     COALESCE(SUM(sub."size"), '0') AS "totalSize"
   FROM (
-    SELECT DISTINCT 
+    SELECT DISTINCT
       "size" AS "size",
       "id"
-    FROM 
+    FROM
       "transfers"
     WHERE "transfers"."assetId" = '${assetId}'
     AND "transfers"."senderSubaccountId" = '${sourceSubaccountId}'
     AND "transfers"."recipientSubaccountId" = '${recipientSubaccountId}'
-    UNION 
-    SELECT DISTINCT 
+    UNION
+    SELECT DISTINCT
       -"size" AS "size",
       "id"
-    FROM 
+    FROM
       "transfers"
     WHERE "transfers"."assetId" = '${assetId}'
     AND "transfers"."senderSubaccountId" = '${recipientSubaccountId}'

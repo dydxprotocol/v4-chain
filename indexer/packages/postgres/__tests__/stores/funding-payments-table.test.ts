@@ -46,8 +46,10 @@ describe('funding payments store', () => {
     const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, [], {});
 
     expect(fundingPayments.length).toEqual(2);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment));
-    expect(fundingPayments[1]).toEqual(expect.objectContaining(defaultFundingPayment2));
+    expect(fundingPayments).toEqual(expect.arrayContaining([
+      expect.objectContaining(defaultFundingPayment),
+      expect.objectContaining(defaultFundingPayment2),
+    ]));
   });
 
   it('Successfully finds FundingPayments with createdAtHeight', async () => {
