@@ -38,18 +38,15 @@ describe('funding payments store', () => {
   });
 
   it('Successfully finds all FundingPayments', async () => {
-    await Promise.all([
-      FundingPaymentsTable.create(defaultFundingPayment),
-      FundingPaymentsTable.create(defaultFundingPayment2),
-    ]);
+    await FundingPaymentsTable.create(defaultFundingPayment);
+    await FundingPaymentsTable.create(defaultFundingPayment2);
 
     const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, [], {});
 
     expect(fundingPayments.length).toEqual(2);
-    expect(fundingPayments).toEqual(expect.arrayContaining([
-      expect.objectContaining(defaultFundingPayment),
-      expect.objectContaining(defaultFundingPayment2),
-    ]));
+    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment));
+    expect(fundingPayments[1]).toEqual(expect.objectContaining(defaultFundingPayment2));
+
   });
 
   it('Successfully finds FundingPayments with createdAtHeight', async () => {
@@ -127,10 +124,9 @@ describe('funding payments store', () => {
   });
 
   it('supports pagination', async () => {
-    await Promise.all([
-      FundingPaymentsTable.create(defaultFundingPayment),
-      FundingPaymentsTable.create(defaultFundingPayment2),
-    ]);
+    // funding payment insertion order is an invariant
+    await FundingPaymentsTable.create(defaultFundingPayment);
+    await FundingPaymentsTable.create(defaultFundingPayment2);
 
     const { results: fundingPayments } = await FundingPaymentsTable.findAll(
       {
