@@ -108,14 +108,19 @@ export async function getSubaccountsWithTransfers(
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase[]> {
   const queryString: string = `
-    SELECT *
-    FROM subaccounts
-    WHERE id IN (
-      SELECT "senderSubaccountId" FROM transfers
-      WHERE "createdAtHeight" <= '${createdBeforeOrAtHeight}'
-      UNION
-      SELECT "recipientSubaccountId" FROM transfers
-      WHERE "createdAtHeight" <= '${createdBeforeOrAtHeight}'
+    SELECT s.*
+    FROM subaccounts s
+    WHERE EXISTS (
+      SELECT 1
+      FROM transfers t
+      WHERE t."senderSubaccountId" = s.id
+        AND t."createdAtHeight" <= '${createdBeforeOrAtHeight}'
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM transfers t
+      WHERE t."recipientSubaccountId" = s.id
+        AND t."createdAtHeight" <= '${createdBeforeOrAtHeight}'
     )
   `;
 
