@@ -38,6 +38,7 @@ describe('funding payments store', () => {
   });
 
   it('Successfully finds all FundingPayments', async () => {
+    // funding payment insertion order is expected
     await FundingPaymentsTable.create(defaultFundingPayment);
     await FundingPaymentsTable.create(defaultFundingPayment2);
 
@@ -124,7 +125,7 @@ describe('funding payments store', () => {
   });
 
   it('supports pagination', async () => {
-    // funding payment insertion order is an invariant
+    // funding payment insertion order is expected
     await FundingPaymentsTable.create(defaultFundingPayment);
     await FundingPaymentsTable.create(defaultFundingPayment2);
 

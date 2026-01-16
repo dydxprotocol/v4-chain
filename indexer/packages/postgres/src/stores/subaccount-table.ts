@@ -126,7 +126,7 @@ export async function getSubaccountsWithTransfers(
 
   const newOptions: Options = {
     ...options,
-    bindings: {createdBeforeOrAtHeight}
+    bindings: { createdBeforeOrAtHeight },
   };
 
   const result: {
