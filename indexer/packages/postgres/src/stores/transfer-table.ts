@@ -475,12 +475,18 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
   createdBeforeOrAtHeight: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetTransferMap> {
-  const queryString: string = `
-    SELECT
+
+  const result: {
+    rows: {
+      assetId: string,
+      totalSize: string,
+    }[],
+  } = await rawQuery(
+    `SELECT
       "assetId",
       SUM(
         CASE
-          WHEN "senderSubaccountId" = '${subaccountId}' THEN -"size"
+          WHEN "senderSubaccountId" = :subaccountId::uuid THEN -"size"
           ELSE "size"
         END
       ) AS "totalSize"
@@ -488,21 +494,19 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
       "transfers"
     WHERE
       (
-        "senderSubaccountId" = '${subaccountId}'
-        OR "recipientSubaccountId" = '${subaccountId}'
+        "senderSubaccountId" = :subaccountId::uuid
+        OR "recipientSubaccountId" = :subaccountId::uuid
       )
-      AND "createdAtHeight" > ${createdAfterHeight}
-      AND "createdAtHeight" <= ${createdBeforeOrAtHeight}
+      AND "createdAtHeight" > :createdAfterHeight::bigint
+      AND "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     GROUP BY
-      "assetId";
-  `;
+      "assetId";`,
+    {
+      ...options,
+      bindings: { subaccountId, createdAfterHeight, createdBeforeOrAtHeight },
+    },
+  );
 
-  const result: {
-    rows: {
-      assetId: string,
-      totalSize: string,
-    }[],
-  } = await rawQuery(queryString, options);
   return _.mapValues(_.keyBy(result.rows, 'assetId'), (row: { assetId: string, totalSize: string }) => {
     return Big(row.totalSize);
   });
@@ -518,8 +522,8 @@ export async function getNetTransfersPerSubaccount(
 
   const result: {
     rows: SubaccountAssetNetTransfer[],
-  } = await rawQuery(`
-    SELECT s."subaccountId",
+  } = await rawQuery(
+    `SELECT s."subaccountId",
         s."assetId",
         SUM(s."size") AS "totalSize"
     FROM (
@@ -538,10 +542,10 @@ export async function getNetTransfersPerSubaccount(
       WHERE "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     ) AS s
     GROUP BY s."subaccountId", s."assetId";`,
-  {
-    ...options,
-    bindings: { createdBeforeOrAtHeight },
-  },
+    {
+      ...options,
+      bindings: { createdBeforeOrAtHeight },
+    },
   );
   const assetsPerSubaccount: SubaccountAssetNetTransfer[] = result.rows;
 
@@ -554,35 +558,37 @@ export async function getNetTransfersBetweenSubaccountIds(
   assetId: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string> {
-  const queryString: string = `
-  SELECT
-    COALESCE(SUM(s."size"), '0') AS "totalSize"
-  FROM (
-    SELECT DISTINCT
-      "size" AS "size",
-      "id"
-    FROM
-      "transfers"
-    WHERE "transfers"."assetId" = '${assetId}'
-    AND "transfers"."senderSubaccountId" = '${sourceSubaccountId}'
-    AND "transfers"."recipientSubaccountId" = '${recipientSubaccountId}'
-    UNION
-    SELECT DISTINCT
-      -"size" AS "size",
-      "id"
-    FROM
-      "transfers"
-    WHERE "transfers"."assetId" = '${assetId}'
-    AND "transfers"."senderSubaccountId" = '${recipientSubaccountId}'
-    AND "transfers"."recipientSubaccountId" = '${sourceSubaccountId}'
-  ) AS s
-  `;
 
   const result: {
     rows: { totalSize: string }[],
-  } = await rawQuery(queryString, options);
+  } = await rawQuery(
+    `SELECT
+      COALESCE(SUM(s."size"), '0') AS "totalSize"
+    FROM (
+      SELECT DISTINCT
+        "size" AS "size",
+        "id"
+      FROM
+        "transfers"
+      WHERE "transfers"."assetId" = :assetId
+      AND "transfers"."senderSubaccountId" = :sourceSubaccountId::uuid
+      AND "transfers"."recipientSubaccountId" = :recipientSubaccountId::uuid
+      UNION
+      SELECT DISTINCT
+        -"size" AS "size",
+        "id"
+      FROM
+        "transfers"
+      WHERE "transfers"."assetId" = :assetId
+      AND "transfers"."senderSubaccountId" = :recipientSubaccountId::uuid
+      AND "transfers"."recipientSubaccountId" = :sourceSubaccountId::uuid
+    ) AS s;`,
+    {
+      ...options,
+      bindings: { assetId, sourceSubaccountId, recipientSubaccountId },
+    },
+  );
 
-  // Should only ever return a single row
   return result.rows[0].totalSize;
 }
 
