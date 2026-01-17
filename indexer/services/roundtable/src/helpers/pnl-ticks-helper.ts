@@ -56,7 +56,7 @@ export async function getPnlTicksCreateObjects(
 ): Promise<PnlTicksCreateObject[]> {
   const startGetPnlTicksCreateObjects: number = Date.now();
   const latestBlock: BlockFromDatabase = await BlockTable.getLatest({
-    readReplica: true,
+    readReplica: false,
     txId,
   });
   const blockHeight: string = latestBlock.blockHeight;

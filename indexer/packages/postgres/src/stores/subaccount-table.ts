@@ -12,7 +12,6 @@ import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
 import SubaccountModel from '../models/subaccount-model';
 import {
-  IsolationLevel,
   Options,
   Ordering,
   QueryableField,
