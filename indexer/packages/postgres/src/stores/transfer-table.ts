@@ -528,14 +528,14 @@ export async function getNetTransfersPerSubaccount(
         "assetId",
         -"size" AS "size"
       FROM transfers
-      WHERE "createdAtHeight" <= 100000000::bigint
+      WHERE "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
       UNION ALL
       SELECT
         "recipientSubaccountId" AS "subaccountId",
         "assetId",
-        "size" AS "size"
+        "size"
       FROM transfers
-      WHERE "createdAtHeight" <= 100000000::bigint
+      WHERE "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     ) AS s
     GROUP BY s."subaccountId", s."assetId";
     `,
