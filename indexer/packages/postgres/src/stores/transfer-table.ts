@@ -515,43 +515,35 @@ export async function getNetTransfersPerSubaccount(
   // Get the net value of transfers since beginning of time up until createdBeforeOrAtHeight
   // for all subaccounts. If a subaccount is sending an asset, the value will be negative.
   // If a subaccount is receiving an asset, the value will be positive.
-  const queryString: string = `
-  SELECT
-    sub."subaccountId",
-    sub."assetId",
-    SUM(sub."size") AS "totalSize"
-  FROM (
-    SELECT DISTINCT
-      "senderSubaccountId" AS "subaccountId",
-      "assetId",
-      -"size" AS "size",
-      "id"
-    FROM
-      "transfers"
-    WHERE "transfers"."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
-    UNION
-    SELECT DISTINCT
-      "recipientSubaccountId" AS "subaccountId",
-      "assetId",
-      "size" AS "size",
-      "id"
-    FROM
-      "transfers"
-    WHERE "transfers"."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
-  ) AS sub
-  GROUP BY
-    sub."subaccountId",
-    sub."assetId";
-  `;
-
-  const newOptions: Options = {
-    ...options,
-    bindings: { createdBeforeOrAtHeight },
-  };
 
   const result: {
     rows: SubaccountAssetNetTransfer[],
-  } = await rawQuery(queryString, newOptions);
+  } = await rawQuery(`
+    SELECT s."subaccountId",
+        s."assetId",
+        SUM(s."size") AS "totalSize"
+    FROM (
+      SELECT
+        "senderSubaccountId" AS "subaccountId",
+        "assetId",
+        -"size" AS "size"
+      FROM transfers
+      WHERE "createdAtHeight" <= 100000000::bigint
+      UNION ALL
+      SELECT
+        "recipientSubaccountId" AS "subaccountId",
+        "assetId",
+        "size" AS "size"
+      FROM transfers
+      WHERE "createdAtHeight" <= 100000000::bigint
+    ) AS s
+    GROUP BY s."subaccountId", s."assetId";
+    `,
+    {
+      ...options,
+      bindings: { createdBeforeOrAtHeight },
+    },
+  );
   const assetsPerSubaccount: SubaccountAssetNetTransfer[] = result.rows;
 
   return convertToSubaccountAssetMap(assetsPerSubaccount);
@@ -565,7 +557,7 @@ export async function getNetTransfersBetweenSubaccountIds(
 ): Promise<string> {
   const queryString: string = `
   SELECT
-    COALESCE(SUM(sub."size"), '0') AS "totalSize"
+    COALESCE(SUM(s."size"), '0') AS "totalSize"
   FROM (
     SELECT DISTINCT
       "size" AS "size",
@@ -584,7 +576,7 @@ export async function getNetTransfersBetweenSubaccountIds(
     WHERE "transfers"."assetId" = '${assetId}'
     AND "transfers"."senderSubaccountId" = '${recipientSubaccountId}'
     AND "transfers"."recipientSubaccountId" = '${sourceSubaccountId}'
-  ) AS sub
+  ) AS s
   `;
 
   const result: {
