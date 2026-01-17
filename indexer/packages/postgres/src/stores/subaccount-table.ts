@@ -12,14 +12,15 @@ import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
 import SubaccountModel from '../models/subaccount-model';
 import {
-  QueryConfig,
-  SubaccountFromDatabase,
-  SubaccountQueryConfig,
-  SubaccountColumns,
-  SubaccountCreateObject,
+  IsolationLevel,
   Options,
   Ordering,
   QueryableField,
+  QueryConfig,
+  SubaccountColumns,
+  SubaccountCreateObject,
+  SubaccountFromDatabase,
+  SubaccountQueryConfig,
   SubaccountUpdateObject,
 } from '../types';
 
@@ -107,33 +108,44 @@ export async function getSubaccountsWithTransfers(
   createdBeforeOrAtHeight: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase[]> {
-  const queryString: string = `
-    SELECT s.*
-    FROM subaccounts s
-    WHERE EXISTS (
-      SELECT 1
-      FROM transfers t
-      WHERE t."senderSubaccountId" = s.id
-        AND t."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
-    )
-    OR EXISTS (
-      SELECT 1
-      FROM transfers t
-      WHERE t."recipientSubaccountId" = s.id
-        AND t."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
-    )
-  `;
 
-  const newOptions: Options = {
+  const txId: number = await Transaction.start();
+  const txOptions: Options = {
     ...options,
-    bindings: { createdBeforeOrAtHeight },
+    txId,
   };
 
-  const result: {
-    rows: SubaccountFromDatabase[],
-  } = await rawQuery(queryString, newOptions);
+  try {
+    await rawQuery('SET LOCAL work_mem = \'64MB\';', txOptions);
 
-  return result.rows;
+    const result: { rows: SubaccountFromDatabase[] } = await rawQuery(`
+      SELECT s.*
+      FROM subaccounts s
+      WHERE EXISTS (
+        SELECT 1
+        FROM transfers t
+        WHERE t."senderSubaccountId" = s.id
+          AND t."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
+      )
+      OR EXISTS (
+        SELECT 1
+        FROM transfers t
+        WHERE t."recipientSubaccountId" = s.id
+          AND t."createdAtHeight" <= :createdBeforeOrAtHeight::bigint
+      )`,
+    {
+      ...txOptions,
+      bindings: { createdBeforeOrAtHeight },
+    });
+
+    await Transaction.commit(txId);
+
+    return result.rows;
+
+  } catch (error) {
+    await Transaction.rollback(txId);
+    throw error;
+  }
 }
 
 export async function create(
@@ -239,7 +251,7 @@ export async function findIdsForParentSubaccount(
   // (subaccountNumber - parentSubaccountNumber) % MAX_PARENT_SUBACCOUNTS = 0
   return subaccounts
     .filter((subaccount) => (subaccount.subaccountNumber - parentSubaccount.subaccountNumber) %
-     MAX_PARENT_SUBACCOUNTS === 0,
+      MAX_PARENT_SUBACCOUNTS === 0,
     )
     .map((subaccount) => subaccount.id);
 }
