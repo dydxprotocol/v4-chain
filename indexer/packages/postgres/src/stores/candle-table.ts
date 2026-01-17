@@ -192,7 +192,7 @@ export async function findCandlesMap(
     SELECT DISTINCT ON (
       ticker,
       resolution
-    ) candles.* FROM 
+    ) candles.* FROM
       candles
     WHERE
       "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
@@ -215,7 +215,7 @@ export async function findCandlesMap(
     SELECT DISTINCT ON (
       ticker,
       resolution
-    ) candles.* FROM 
+    ) candles.* FROM
       candles
     WHERE
       "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND

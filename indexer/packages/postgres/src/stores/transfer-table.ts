@@ -384,9 +384,9 @@ export async function findAllToOrFromParentSubaccount(
     // Exclude transfers where both sender and recipient are child subaccounts of the same parent
     .whereRaw(`
       NOT (
-        transfers."senderSubaccountId" IS NOT NULL 
+        transfers."senderSubaccountId" IS NOT NULL
         AND transfers."recipientSubaccountId" IS NOT NULL
-        AND sender_sa.address = recipient_sa.address 
+        AND sender_sa.address = recipient_sa.address
         AND (sender_sa."subaccountNumber" % 128) = (recipient_sa."subaccountNumber" % 128)
       )
     `)
@@ -475,34 +475,38 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
   createdBeforeOrAtHeight: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AssetTransferMap> {
-  const queryString: string = `
-    SELECT 
-      "assetId",
-      SUM(
-        CASE 
-          WHEN "senderSubaccountId" = '${subaccountId}' THEN -"size"
-          ELSE "size"
-        END
-      ) AS "totalSize"
-    FROM 
-      "transfers"
-    WHERE 
-      (
-        "senderSubaccountId" = '${subaccountId}' 
-        OR "recipientSubaccountId" = '${subaccountId}'
-      )
-      AND "createdAtHeight" > ${createdAfterHeight} 
-      AND "createdAtHeight" <= ${createdBeforeOrAtHeight}
-    GROUP BY 
-      "assetId";
-  `;
 
   const result: {
     rows: {
       assetId: string,
       totalSize: string,
     }[],
-  } = await rawQuery(queryString, options);
+  } = await rawQuery(
+    `SELECT
+      "assetId",
+      SUM(
+        CASE
+          WHEN "senderSubaccountId" = :subaccountId::uuid THEN -"size"
+          ELSE "size"
+        END
+      ) AS "totalSize"
+    FROM
+      "transfers"
+    WHERE
+      (
+        "senderSubaccountId" = :subaccountId::uuid
+        OR "recipientSubaccountId" = :subaccountId::uuid
+      )
+      AND "createdAtHeight" > :createdAfterHeight::bigint
+      AND "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
+    GROUP BY
+      "assetId";`,
+    {
+      ...options,
+      bindings: { subaccountId, createdAfterHeight, createdBeforeOrAtHeight },
+    },
+  );
+
   return _.mapValues(_.keyBy(result.rows, 'assetId'), (row: { assetId: string, totalSize: string }) => {
     return Big(row.totalSize);
   });
@@ -515,40 +519,36 @@ export async function getNetTransfersPerSubaccount(
   // Get the net value of transfers since beginning of time up until createdBeforeOrAtHeight
   // for all subaccounts. If a subaccount is sending an asset, the value will be negative.
   // If a subaccount is receiving an asset, the value will be positive.
-  const queryString: string = `
-  SELECT 
-    sub."subaccountId",
-    sub."assetId",
-    SUM(sub."size") AS "totalSize"
-  FROM (
-    SELECT DISTINCT 
-      "senderSubaccountId" AS "subaccountId",
-      "assetId",
-      -"size" AS "size",
-      "id"
-    FROM 
-      "transfers"
-    WHERE "transfers"."createdAtHeight" <= ${createdBeforeOrAtHeight}
-    UNION 
-    SELECT DISTINCT 
-      "recipientSubaccountId" AS "subaccountId",
-      "assetId",
-      "size" AS "size",
-      "id"
-    FROM 
-      "transfers"
-    WHERE "transfers"."createdAtHeight" <= ${createdBeforeOrAtHeight}
-  ) AS sub
-  GROUP BY 
-    sub."subaccountId",
-    sub."assetId";
-  `;
 
   const result: {
     rows: SubaccountAssetNetTransfer[],
-  } = await rawQuery(queryString, options);
-
+  } = await rawQuery(
+    `SELECT s."subaccountId",
+        s."assetId",
+        SUM(s."size") AS "totalSize"
+    FROM (
+      SELECT
+        "senderSubaccountId" AS "subaccountId",
+        "assetId",
+        -"size" AS "size"
+      FROM transfers
+      WHERE "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
+      UNION ALL
+      SELECT
+        "recipientSubaccountId" AS "subaccountId",
+        "assetId",
+        "size"
+      FROM transfers
+      WHERE "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
+    ) AS s
+    GROUP BY s."subaccountId", s."assetId";`,
+    {
+      ...options,
+      bindings: { createdBeforeOrAtHeight },
+    },
+  );
   const assetsPerSubaccount: SubaccountAssetNetTransfer[] = result.rows;
+
   return convertToSubaccountAssetMap(assetsPerSubaccount);
 }
 
@@ -558,35 +558,37 @@ export async function getNetTransfersBetweenSubaccountIds(
   assetId: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string> {
-  const queryString: string = `
-  SELECT 
-    COALESCE(SUM(sub."size"), '0') AS "totalSize"
-  FROM (
-    SELECT DISTINCT 
-      "size" AS "size",
-      "id"
-    FROM 
-      "transfers"
-    WHERE "transfers"."assetId" = '${assetId}'
-    AND "transfers"."senderSubaccountId" = '${sourceSubaccountId}'
-    AND "transfers"."recipientSubaccountId" = '${recipientSubaccountId}'
-    UNION 
-    SELECT DISTINCT 
-      -"size" AS "size",
-      "id"
-    FROM 
-      "transfers"
-    WHERE "transfers"."assetId" = '${assetId}'
-    AND "transfers"."senderSubaccountId" = '${recipientSubaccountId}'
-    AND "transfers"."recipientSubaccountId" = '${sourceSubaccountId}'
-  ) AS sub
-  `;
 
   const result: {
     rows: { totalSize: string }[],
-  } = await rawQuery(queryString, options);
+  } = await rawQuery(
+    `SELECT
+      COALESCE(SUM(s."size"), '0') AS "totalSize"
+    FROM (
+      SELECT DISTINCT
+        "size" AS "size",
+        "id"
+      FROM
+        "transfers"
+      WHERE "transfers"."assetId" = :assetId
+      AND "transfers"."senderSubaccountId" = :sourceSubaccountId::uuid
+      AND "transfers"."recipientSubaccountId" = :recipientSubaccountId::uuid
+      UNION
+      SELECT DISTINCT
+        -"size" AS "size",
+        "id"
+      FROM
+        "transfers"
+      WHERE "transfers"."assetId" = :assetId
+      AND "transfers"."senderSubaccountId" = :recipientSubaccountId::uuid
+      AND "transfers"."recipientSubaccountId" = :sourceSubaccountId::uuid
+    ) AS s;`,
+    {
+      ...options,
+      bindings: { assetId, sourceSubaccountId, recipientSubaccountId },
+    },
+  );
 
-  // Should only ever return a single row
   return result.rows[0].totalSize;
 }
 
