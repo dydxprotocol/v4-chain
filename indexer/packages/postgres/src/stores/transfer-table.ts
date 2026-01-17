@@ -537,12 +537,11 @@ export async function getNetTransfersPerSubaccount(
       FROM transfers
       WHERE "createdAtHeight" <= :createdBeforeOrAtHeight::bigint
     ) AS s
-    GROUP BY s."subaccountId", s."assetId";
-    `,
-    {
-      ...options,
-      bindings: { createdBeforeOrAtHeight },
-    },
+    GROUP BY s."subaccountId", s."assetId";`,
+  {
+    ...options,
+    bindings: { createdBeforeOrAtHeight },
+  },
   );
   const assetsPerSubaccount: SubaccountAssetNetTransfer[] = result.rows;
 
