@@ -150,4 +150,7 @@ type MemClob interface {
 		takerOrder MatchableOrder,
 		makerOrders []Order,
 	) StreamOrderbookFill
+	SyncOrderbookState(
+		clobPair ClobPair,
+	)
 }

@@ -89,6 +89,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				},
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				ks.ClobKeeper.MemClob.CreateOrderbook(constants.ClobPair_Btc)
 				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Existing clob pair with StepBaseQuantums = 5 and status initializing.
@@ -256,6 +257,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state (initializing, SPT=5)
+				ks.ClobKeeper.MemClob.CreateOrderbook(constants.ClobPair_Btc)
 				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				clobPair := constants.ClobPair_Btc
