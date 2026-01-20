@@ -256,16 +256,6 @@ BEGIN
             fill_amount,
             maker_price);
 
-    PERFORM dydx_apply_fill_realized_effects(
-        perpetual_position_record."id",
-        order_side,
-        fill_amount,
-        maker_price,
-        fee,
-        snap_side_before,
-        snap_size_before,
-        snap_entry_before);
-
     RETURN jsonb_build_object(
             'order',
             dydx_to_jsonb(order_record),
