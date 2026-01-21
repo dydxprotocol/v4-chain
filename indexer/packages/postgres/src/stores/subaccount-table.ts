@@ -2,7 +2,7 @@ import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import config from '../config';
-import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, MAX_PARENT_SUBACCOUNTS } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -200,4 +200,36 @@ export async function deleteById(
   await SubaccountModel.query(
     Transaction.get(options.txId),
   ).deleteById(id);
+}
+
+/**
+ * Retrieves all subaccount IDs associated with a parent subaccount.
+ * A subaccount is considered a child of the parent if it has the same address
+ * and its subaccount number follows the modulo relationship with the parent.
+ *
+ * @param parentSubaccount The parent subaccount object with address and subaccountNumber
+ * @param options Query options including transaction ID
+ * @returns A promise that resolves to an array of subaccount ID strings
+ */
+export async function findIdsForParentSubaccount(
+  parentSubaccount: {
+    address: string,
+    subaccountNumber: number,
+  },
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<string[]> {
+  // Get all subaccounts for the address
+  const subaccounts = await findAll(
+    { address: parentSubaccount.address },
+    [],
+    options,
+  );
+
+  // Filter for subaccounts that match the parent relationship
+  // (subaccountNumber - parentSubaccountNumber) % MAX_PARENT_SUBACCOUNTS = 0
+  return subaccounts
+    .filter((subaccount) => (subaccount.subaccountNumber - parentSubaccount.subaccountNumber) %
+     MAX_PARENT_SUBACCOUNTS === 0,
+    )
+    .map((subaccount) => subaccount.id);
 }

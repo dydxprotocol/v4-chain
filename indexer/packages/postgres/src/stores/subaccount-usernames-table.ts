@@ -85,6 +85,25 @@ export async function create(
   }).returning('*');
 }
 
+export async function insertAndReturnCount(
+  username: string,
+  subaccountId: string,
+  options: Options = { txId: undefined },
+): Promise<number> {
+  const queryString: string = `
+    INSERT INTO subaccount_usernames (username, "subaccountId")
+    VALUES (?, ?)
+    ON CONFLICT (username) DO NOTHING
+    RETURNING username, "subaccountId";
+  `;
+
+  const result: {
+    rows: { username: string, subaccountId: string }[],
+  } = await rawQuery(queryString, { ...options, bindings: [username, subaccountId] });
+
+  return result.rows.length;
+}
+
 export async function findByUsername(
   username: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,

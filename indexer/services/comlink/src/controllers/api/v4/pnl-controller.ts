@@ -126,6 +126,16 @@ class PnlController extends Controller {
       @Query() createdOnOrAfter?: IsoString,
       @Query() daily?: boolean,
   ): Promise<PnlResponse> {
+    // Check if the parent subaccount exists first
+    const parentSubaccountId: string = SubaccountTable.uuid(address, parentSubaccountNumber);
+    const parentSubaccount = await SubaccountTable.findById(parentSubaccountId);
+
+    if (parentSubaccount === undefined) {
+      throw new NotFoundError(
+        `No subaccount found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
+      );
+    }
+
     const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
 
     const queryParams = {
@@ -155,12 +165,6 @@ class PnlController extends Controller {
           ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [[QueryableField.CREATED_AT_HEIGHT, Ordering.DESC]],
         },
-      );
-    }
-
-    if (pnlData.results.length === 0) {
-      throw new NotFoundError(
-        `No PnL data found for address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
       );
     }
 

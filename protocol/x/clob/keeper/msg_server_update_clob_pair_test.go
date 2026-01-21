@@ -72,6 +72,50 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			expectedResp: &types.MsgUpdateClobPairResponse{},
 		},
+		"Success: decrease step base quantums to divisor": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: lib.GovModuleAddress.String(),
+				ClobPair: types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          1, // decrease from 5 -> 1 (divides old)
+					SubticksPerTick:           5,
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				ks.ClobKeeper.MemClob.CreateOrderbook(constants.ClobPair_Btc)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
+				// Existing clob pair with StepBaseQuantums = 5 and status initializing.
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
+
+				// Expect event with new step size = 1 and updated status.
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeUpdateClobPair,
+					indexerevents.UpdateClobPairEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewUpdateClobPairEvent(
+							types.ClobPairId(clobPair.Id),
+							types.ClobPair_STATUS_ACTIVE,
+							clobPair.QuantumConversionExponent,
+							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+							satypes.BaseQuantums(1),
+						),
+					),
+				).Once().Return()
+			},
+			expectedResp: &types.MsgUpdateClobPairResponse{},
+		},
 		"Error: unsupported status transition from active to initializing": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: lib.GovModuleAddress.String(),
@@ -195,28 +239,99 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
-		"Error: cannot update subticks per tick": {
+		"Success: update subticks per tick (decrease)": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
 						PerpetualClobMetadata: &types.PerpetualClobMetadata{
-							PerpetualId: 1,
+							PerpetualId: 0,
 						},
 					},
 					StepBaseQuantums:          5,
-					SubticksPerTick:           10,
+					SubticksPerTick:           1, // decrease from 5 -> 1
 					QuantumConversionExponent: -8,
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
-				// write default btc clob pair to state
+				// write default btc clob pair to state (initializing, SPT=5)
+				ks.ClobKeeper.MemClob.CreateOrderbook(constants.ClobPair_Btc)
 				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
-				// Write clob pair to state with clob pair id 0 and status initializing.
-				b := cdc.MustMarshal(&constants.ClobPair_Btc)
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
+				// Expect event with updated subticks per tick = 1
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeUpdateClobPair,
+					indexerevents.UpdateClobPairEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewUpdateClobPairEvent(
+							types.ClobPairId(clobPair.Id),
+							types.ClobPair_STATUS_ACTIVE,
+							clobPair.QuantumConversionExponent,
+							types.SubticksPerTick(1),
+							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+						),
+					),
+				).Once().Return()
+			},
+			expectedResp: &types.MsgUpdateClobPairResponse{},
+		},
+		"Error: cannot increase subticks per tick": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: lib.GovModuleAddress.String(),
+				ClobPair: types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           10, // increase from 5 -> 10 (should fail)
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext, _ *mocks.IndexerEventManager) {
+				// Existing clob pair with SubticksPerTick = 5 and status initializing.
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
+			},
+			expectedErr: types.ErrInvalidClobPairUpdate,
+		},
+		"Error: cannot decrease subticks per tick to a bad multiple": {
+			msg: &types.MsgUpdateClobPair{
+				Authority: lib.GovModuleAddress.String(),
+				ClobPair: types.ClobPair{
+					Id: 0,
+					Metadata: &types.ClobPair_PerpetualClobMetadata{
+						PerpetualClobMetadata: &types.PerpetualClobMetadata{
+							PerpetualId: 0,
+						},
+					},
+					StepBaseQuantums:          5,
+					SubticksPerTick:           4, // decrease from 5 -> 4 (should fail)
+					QuantumConversionExponent: -8,
+					Status:                    types.ClobPair_STATUS_ACTIVE,
+				},
+			},
+			setup: func(ks keepertest.ClobKeepersTestContext, _ *mocks.IndexerEventManager) {
+				// Existing clob pair with SubticksPerTick = 5 and status initializing.
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
+				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
+				clobPair := constants.ClobPair_Btc
+				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
+				b := cdc.MustMarshal(&clobPair)
 				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,

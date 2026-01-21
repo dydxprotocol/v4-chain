@@ -54,6 +54,7 @@ export class CandlesGenerator {
   txId: number;
   writeOptions: Options;
   resolutionStartTimes: Map<CandleResolution, DateTime>;
+  resolutionStartTimesISO: Map<CandleResolution, string>;
 
   constructor(
     kafkaPublisher: KafkaPublisher,
@@ -71,6 +72,13 @@ export class CandlesGenerator {
           CandlesGenerator.calculateNormalizedCandleStartTime(this.blockTimestamp, resolution),
         ];
       }));
+    this.resolutionStartTimesISO = new Map(
+      Object.values(CandleResolution).map((resolution: CandleResolution) => {
+        return [
+          resolution,
+          this.resolutionStartTimes.get(resolution)!.toISO(),
+        ];
+      }));
   }
 
   /**
@@ -83,24 +91,16 @@ export class CandlesGenerator {
    */
   public async updateCandles(): Promise<CandleFromDatabase[]> {
     const start: number = Date.now();
-    // 1. Sort trade messages by order in the block
+
     this.kafkaPublisher.sortEvents(this.kafkaPublisher.tradeMessages);
-
-    // 2. Generate BlockCandleUpdatesMap
-    const blockCandleUpdatesMap: BlockCandleUpdatesMap = this.generateBlockCandleUpdatesMap();
-
-    // 3. Update and Create Candles in postgres
-    const candles: CandleFromDatabase[] = await this.createOrUpdatePostgresCandles(
-      blockCandleUpdatesMap,
-    );
-
-    // 4. Add Candle kafka messages to KafkaPublisher
+    const candles: CandleFromDatabase[] = await this.createOrUpdatePostgresCandles();
     this.addCandleKafkaMessages(candles);
 
     stats.timing(
       `${config.SERVICE_NAME}.update_candles.timing`,
       Date.now() - start,
     );
+
     return candles;
   }
 
@@ -173,17 +173,23 @@ export class CandlesGenerator {
     };
   }
 
-  private async createOrUpdatePostgresCandles(
-    blockCandleUpdatesMap: BlockCandleUpdatesMap,
-  ): Promise<CandleFromDatabase[]> {
+  private async createOrUpdatePostgresCandles(): Promise<CandleFromDatabase[]> {
     const start: number = Date.now();
+    const blockCandleUpdatesMap: BlockCandleUpdatesMap = this.generateBlockCandleUpdatesMap();
     const promises: Promise<CandleFromDatabase | undefined>[] = [];
 
-    const openInterestMap: OpenInterestMap = await this.getOpenInterestMap();
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = Object.values(
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+    );
+    const perpetualMarketTickers: string[] = _.map(
+      perpetualMarkets,
+      PerpetualMarketColumns.ticker,
+    );
+    const openInterestMap: OpenInterestMap = await this.getOpenInterestMap(perpetualMarketTickers);
     const orderbookMidPriceMap = getOrderbookMidPriceMap();
 
     _.forEach(
-      Object.values(perpetualMarketRefresher.getPerpetualMarketsMap()),
+      perpetualMarkets,
       (perpetualMarket: PerpetualMarketFromDatabase) => {
         const blockCandleUpdate: BlockCandleUpdate | undefined = blockCandleUpdatesMap[
           perpetualMarket.ticker
@@ -198,7 +204,7 @@ export class CandlesGenerator {
               resolution,
               openInterestMap,
               orderbookMidPriceMap[perpetualMarket.ticker],
-              this.resolutionStartTimes.get(resolution)!,
+              this.resolutionStartTimesISO.get(resolution)!,
             ));
           },
         );
@@ -237,7 +243,7 @@ export class CandlesGenerator {
     resolution: CandleResolution,
     openInterestMap: OpenInterestMap,
     orderbookMidPrice: OrderbookMidPrice,
-    currentStartTime: DateTime,
+    currentStartTimeISO: string,
   ): Promise<CandleFromDatabase | undefined>[] {
 
     const existingCandle: CandleFromDatabase | undefined = getCandle(
@@ -252,7 +258,7 @@ export class CandlesGenerator {
       }
       // - Candle doesn't exist & there is a block update - create candle
       return [this.createCandleInPostgres(
-        currentStartTime,
+        currentStartTimeISO,
         blockCandleUpdate,
         ticker,
         resolution,
@@ -261,7 +267,7 @@ export class CandlesGenerator {
       )];
     }
 
-    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO();
+    const sameStartTime: boolean = existingCandle.startedAt === currentStartTimeISO;
     if (!sameStartTime) {
       // - Candle exists & !sameStartTime & there is a block update - create candle
       //   update previous candle orderbookMidPriceClose
@@ -273,7 +279,7 @@ export class CandlesGenerator {
 
       if (blockCandleUpdate !== undefined) {
         return [previousCandleUpdate, this.createCandleInPostgres(
-          currentStartTime,
+          currentStartTimeISO,
           blockCandleUpdate,
           ticker,
           resolution,
@@ -284,7 +290,7 @@ export class CandlesGenerator {
       // - Candle exists & !sameStartTime & there is no block update - create empty candle
       //   update previous candle orderbookMidPriceClose/Open
       return [previousCandleUpdate, this.createEmptyCandleInPostgres(
-        currentStartTime,
+        currentStartTimeISO,
         ticker,
         resolution,
         openInterestMap,
@@ -308,18 +314,14 @@ export class CandlesGenerator {
    * therefore require open interest to be calculated.
    */
   // eslint-disable-next-line @typescript-eslint/require-await
-  private async getOpenInterestMap(): Promise<OpenInterestMap> {
+  private async getOpenInterestMap(perpetualMarketTickers: string[]): Promise<OpenInterestMap> {
     const start: number = Date.now();
-    const allTickers: string[] = _.map(
-      Object.values(perpetualMarketRefresher.getPerpetualMarketsMap()),
-      PerpetualMarketColumns.ticker,
-    );
 
-    const tickersToFetch: string[] = _.filter(allTickers, (ticker: string) => {
+    const tickersToFetch: string[] = _.filter(perpetualMarketTickers, (ticker: string) => {
       return _.some(
         Object.values(CandleResolution),
         (resolution: CandleResolution) => {
-          const startedAtISOString: string = this.resolutionStartTimes.get(resolution)!.toISO();
+          const startedAtISOString: string = this.resolutionStartTimesISO.get(resolution)!;
           const existingCandle: CandleFromDatabase | undefined = getCandle(ticker, resolution);
           return existingCandle === undefined || existingCandle.startedAt !== startedAtISOString;
         },
@@ -370,7 +372,7 @@ export class CandlesGenerator {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   private async createCandleInPostgres(
-    startedAt: DateTime,
+    startedAtISO: string,
     blockCandleUpdate: BlockCandleUpdate,
     ticker: string,
     resolution: CandleResolution,
@@ -378,7 +380,7 @@ export class CandlesGenerator {
     orderbookMidPrice: OrderbookMidPrice,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAtISO,
       ticker,
       resolution,
       low: blockCandleUpdate.low,
@@ -402,7 +404,7 @@ export class CandlesGenerator {
    */
   // eslint-disable-next-line @typescript-eslint/require-await
   private async createEmptyCandleInPostgres(
-    startedAt: DateTime,
+    startedAtISO: string,
     ticker: string,
     resolution: CandleResolution,
     openInterestMap: OpenInterestMap,
@@ -410,7 +412,7 @@ export class CandlesGenerator {
     orderbookMidPrice: OrderbookMidPrice,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAtISO,
       ticker,
       resolution,
       low: existingCandle.close,

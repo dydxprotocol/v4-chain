@@ -125,6 +125,9 @@ export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
   ? {
     readReplica: true,
   } : {};
+export const USE_MASTER_POSTGRES_OPTIONS : Options = {
+  readReplica: false,
+};
 
 // The maximum number of parent subaccounts per address.
 export const MAX_PARENT_SUBACCOUNTS: number = 128;

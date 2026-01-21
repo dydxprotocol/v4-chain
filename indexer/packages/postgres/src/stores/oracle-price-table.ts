@@ -226,13 +226,16 @@ export async function findLatestPricesBeforeOrAtHeight(
   transaction?: Knex.Transaction,
 ): Promise<PriceMap> {
   const query: string = `
-    SELECT "marketId", "price"
-    FROM "oracle_prices"
-    WHERE ("marketId", "effectiveAtHeight") IN (
-      SELECT "marketId", MAX("effectiveAtHeight")
-      FROM "oracle_prices"
-      WHERE "effectiveAtHeight" <= ?
-      GROUP BY "marketId");
+    SELECT m."id" AS "marketId", op."price"
+    FROM "markets" m
+    JOIN LATERAL (
+      SELECT "price"
+      FROM "oracle_prices" p
+      WHERE p."marketId" = m."id"
+      AND p."effectiveAtHeight" <= ?::bigint
+      ORDER BY p."effectiveAtHeight" DESC
+      LIMIT 1
+    ) op ON true;
   `;
   let result: { rows: OraclePriceFromDatabase[] };
   if (transaction === undefined) {

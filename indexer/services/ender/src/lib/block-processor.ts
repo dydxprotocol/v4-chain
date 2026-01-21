@@ -271,7 +271,7 @@ export class BlockProcessor {
   }
 
   private async processEvents(): Promise<KafkaPublisher> {
-    const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
+    const start: number = Date.now();
 
     await Promise.all(this.sqlEventPromises).then((values) => {
       for (let i: number = 0; i < this.block.events.length; i++) {
@@ -287,7 +287,6 @@ export class BlockProcessor {
       }
     });
 
-    const start: number = Date.now();
     let success = false;
     let resultRow: pg.QueryResultRow;
     try {
@@ -318,10 +317,13 @@ export class BlockProcessor {
     }
 
     // Create a block message from the current block
+    const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
     kafkaPublisher.addEvent(this.createBlockHeightMsg());
 
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.
+    const startHandlingEvents: number = Date.now();
+
     if (this.block.height === 0) {
       await this.syncHandlers.process(kafkaPublisher, resultRow);
       await this.batchedHandlers.process(kafkaPublisher, resultRow);
@@ -329,6 +331,13 @@ export class BlockProcessor {
       await this.batchedHandlers.process(kafkaPublisher, resultRow);
       await this.syncHandlers.process(kafkaPublisher, resultRow);
     }
+
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_events.timing`,
+      Date.now() - startHandlingEvents,
+      STATS_NO_SAMPLING,
+    );
+
     return kafkaPublisher;
   }
 }

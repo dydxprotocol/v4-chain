@@ -979,7 +979,7 @@ describe('pnl-controller#V4', () => {
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No PnL data found for address nonexistentaddress and parentSubaccountNumber 0',
+            msg: 'No subaccount found with address nonexistentaddress and parentSubaccountNumber 0',
           },
         ],
       });
@@ -1222,5 +1222,92 @@ describe('pnl-controller#V4', () => {
       expect(Number(lastDailyRecord.totalPnl)).toEqual(expectedTotalPnl);
       expect(Number(lastDailyRecord.netTransfers)).toEqual(expectedNetTransfers);
     }, 120000);
+
+    it('Get /pnl/parentSubaccountNumber returns empty array when date filter excludes all data', async () => {
+      await testMocks.seedData();
+
+      // Create PNL records with dates AFTER the filter date
+      const records = [];
+      const subaccountIds = [
+        testConstants.defaultSubaccountId,
+        testConstants.isolatedSubaccountId,
+      ];
+
+      // Create records in 2024 (after our filter date of 2023-12-10)
+      for (const subaccountId of subaccountIds) {
+        records.push({
+          ...testConstants.defaultPnl,
+          subaccountId,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          createdAtHeight: '1000',
+          equity: '1000',
+          totalPnl: '100',
+          netTransfers: '500',
+        });
+      }
+
+      await Promise.all(records.map((record) => PnlTable.create(record)));
+
+      // Test with daily=true and createdBeforeOrAt that excludes all data
+      const dailyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'true',
+          createdBeforeOrAt: '2023-12-10T23:59:59.000Z',
+        })}`,
+      });
+
+      // Should return 200 with empty array, not an error
+      expect(dailyResponse.status).toBe(200);
+      expect(dailyResponse.body.pnl).toEqual([]);
+
+      // Test with daily=false (hourly) and same filter
+      const hourlyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'false',
+          createdBeforeOrAt: '2023-12-10T23:59:59.000Z',
+        })}`,
+      });
+
+      expect(hourlyResponse.status).toBe(200);
+      expect(hourlyResponse.body.pnl).toEqual([]);
+    });
+
+    it('Get /pnl/parentSubaccountNumber returns empty array when no PNL records exist', async () => {
+      await testMocks.seedData();
+
+      // Don't create any PNL records - subaccounts exist but have no PNL data
+
+      // Test with daily=true
+      const dailyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'true',
+        })}`,
+      });
+
+      expect(dailyResponse.status).toBe(200);
+      expect(dailyResponse.body.pnl).toEqual([]);
+
+      // Test with daily=false (hourly)
+      const hourlyResponse: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/pnl/parentSubaccountNumber?${getQueryString({
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: 0,
+          daily: 'false',
+        })}`,
+      });
+
+      expect(hourlyResponse.status).toBe(200);
+      expect(hourlyResponse.body.pnl).toEqual([]);
+    });
   });
 });
