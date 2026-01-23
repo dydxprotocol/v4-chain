@@ -18,7 +18,7 @@ type UpdateMarketPricesTx struct {
 	msg          *types.MsgUpdateMarketPrices
 }
 
-// DecodeAddPremiumVotesTx returns a new `UpdateMarketPricesTx` after validating the following:
+// DecodeUpdateMarketPricesTx returns a new `UpdateMarketPricesTx` after validating the following:
 //   - decodes the given tx bytes
 //   - checks the num of msgs in the tx matches expectations
 //   - checks the msg is of expected type
