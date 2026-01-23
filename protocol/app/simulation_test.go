@@ -190,7 +190,7 @@ func (app *SimApp) WithRandomlyGeneratedOperationsSimulationManager() {
 	app.sm.RegisterStoreDecoders()
 }
 
-// BenchmarkSimulation run the chain simulation.
+// BenchmarkFullAppSimulation run the chain simulation.
 // Copied from:
 // https://github.com/cosmos/cosmos-sdk/blob/1e8e923d3174cdfdb42454a96c27251ad72b6504/simapp/sim_bench_test.go#L21
 func BenchmarkFullAppSimulation(b *testing.B) {
