@@ -143,7 +143,7 @@ func (k Keeper) AddRewardSharesForFill(
 ) {
 	// Process reward weight for taker.
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
-	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
+	maxMakerRebatePpm := min(int32(0), lowestMakerFee)
 
 	// Calculate total net fee rev share ppm on the protocol
 	totalNetFeeRevSharePpm := uint32(0)

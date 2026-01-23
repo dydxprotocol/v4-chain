@@ -319,7 +319,7 @@ func (k Keeper) processStoredPremiums(
 		// if block times are longer than expected and hence there were not enough blocks to
 		// collect votes.
 		// Note `NumPremiums >= len(marketPremiums.Premiums)`, so `lenPadding >= 0`.
-		lenPadding := int64(lib.Max(premiumStore.NumPremiums, minNumPremiumsRequired)) -
+		lenPadding := int64(max(premiumStore.NumPremiums, minNumPremiumsRequired)) -
 			int64(len(marketPremiums.Premiums))
 
 		padding := make([]int32, lenPadding)

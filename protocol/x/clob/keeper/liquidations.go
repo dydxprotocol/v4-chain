@@ -65,7 +65,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// in the slice. Note `numSubaccounts` is guaranteed to be non-zero at this point, so `Intn` shouldn't panic.
 	pseudoRand := k.GetPseudoRand(ctx)
 	liquidationOrders := make([]types.LiquidationOrder, 0)
-	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
+	numLiqOrders := min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
 	indexOffset := pseudoRand.Intn(numSubaccounts)
 
 	startGetLiquidationOrders := time.Now()
