@@ -956,10 +956,17 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA2EjTY=
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
+<<<<<<< HEAD
 github.com/dydxprotocol/cometbft v0.38.6-0.20251014202517-0235a938b029 h1:jgRwHeeMpPahMyWUvBT0TIdAo7M9y6CXLzF7ZZzYstg=
 github.com/dydxprotocol/cometbft v0.38.6-0.20251014202517-0235a938b029/go.mod h1:XSQX1hQbr54qaJb4/5YNNZGXkAQHHa6bi/KMcN1SQ7w=
 github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20251014211237-3a1ba0aabac3 h1:VzjChSIDsDua0WjFoHb+bqodgeAMBPsflNS7ot14TQU=
 github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20251014211237-3a1ba0aabac3/go.mod h1:PqtaF8C4fKHmDIvrdc7GBpZKsRkjihCJxq0gOlt2k98=
+=======
+github.com/dydxprotocol/cometbft v0.38.6-0.20260126154011-467083c7ba0b h1:zimy9cByNdNEXMtcq0MLgS1/1SNudK2t9gGIW/Rv9co=
+github.com/dydxprotocol/cometbft v0.38.6-0.20260126154011-467083c7ba0b/go.mod h1:XSQX1hQbr54qaJb4/5YNNZGXkAQHHa6bi/KMcN1SQ7w=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20260126162345-69ba38d4ae69 h1:yppKvzPXeXJeTnJQGm4q3W2QykVs9ogKAzPdoBwntLk=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20260126162345-69ba38d4ae69/go.mod h1:LPTAFgqFNHEbp7hQG16uSIEw5GpwXT5QMbX+oI0CMfA=
+>>>>>>> 07b2c964 (upgrade cometbft and cosmos-sdk for tachyon security fix (#3320))
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d h1:HgLu1FD2oDFzlKW6/+SFXlH5Os8cwNTbplQIrQOWx8w=
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d/go.mod h1:zMcD3hfNwd0WMTpdRUhS3QxoCoEtBXWeoKsu3iaLBbQ=
 github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85 h1:5B/yGZyTBX/OZASQQMnk6Ms/TZja56MYd8OBaVc0Mho=
