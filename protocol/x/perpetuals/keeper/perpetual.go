@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"slices"
 	"sort"
 	"time"
 
@@ -615,7 +616,7 @@ func (k Keeper) GetRemoveSampleTailsFunc(
 
 		end := int64(len(premiums)) - topRemoval
 
-		sort.Slice(premiums, func(i, j int) bool { return premiums[i] < premiums[j] })
+		slices.Sort(premiums)
 
 		return premiums[bottomRemoval:end]
 	}
