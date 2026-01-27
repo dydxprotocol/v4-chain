@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -37,9 +37,7 @@ func (k Keeper) Leverage(
 	for perpetualId := range leverageMap {
 		keys = append(keys, perpetualId)
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] < keys[j]
-	})
+	slices.Sort(keys)
 
 	clobPairLeverage := make([]*types.ClobPairLeverageInfo, 0, len(leverageMap))
 	for _, perpetualId := range keys {
