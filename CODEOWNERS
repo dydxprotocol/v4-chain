@@ -1,1 +1,11 @@
+# repo default
 * @dydxprotocol/backend
+
+# module owners
+/indexer/ @dydxprotocol/indexer-code-owners
+/protocol/ @dydxprotocol/protocol-code-owners
+/proto/ @dydxprotocol/proto-code-owners
+
+# global security policy
+/.github/   @dydxprotocol/security
+/CODEOWNERS @dydxprotocol/security
