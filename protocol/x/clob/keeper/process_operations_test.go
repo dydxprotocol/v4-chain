@@ -640,6 +640,10 @@ func TestProcessProposerOperations(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bk.On(
+					"BlockedAddr",
+					mock.Anything,
+				).Return(false)
+				bk.On(
 					"SendCoins",
 					mock.Anything,
 					mock.Anything,
@@ -2539,6 +2543,10 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 		).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(tc.insuranceFundBalance)))
+		mockBankKeeper.On(
+			"BlockedAddr",
+			mock.Anything,
+		).Return(false)
 	}
 
 	mockIndexerEventManager = &mocks.IndexerEventManager{}

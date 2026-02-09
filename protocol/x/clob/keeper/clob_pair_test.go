@@ -1206,3 +1206,50 @@ func TestAcquireNextClobPairID(t *testing.T) {
 	nextClobPairID = ks.ClobKeeper.AcquireNextClobPairID(ks.Ctx)
 	require.Equal(t, nextClobPairIDFromStore+1, nextClobPairID)
 }
+
+func TestSyncOrderbookState_SucceedsAndUpdatesValues(t *testing.T) {
+	// Use keeper to verify memclob is synced by behavior after update.
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, nil, indexer_manager.NewIndexerEventManagerNoop())
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+	// Create initial clob pair (defaults to 5/5 for BTC).
+	clobPair := constants.ClobPair_Btc
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ks.Ctx,
+		clobPair.Id,
+		clobPair.MustGetPerpetualId(),
+		clobPair.GetClobPairMinOrderBaseQuantums(),
+		clobPair.QuantumConversionExponent,
+		uint32(clobPair.GetClobPairSubticksPerTick()),
+		clobPair.Status,
+	)
+	require.NoError(t, err)
+
+	// Update to valid divisors and smaller values.
+	clobPair.StepBaseQuantums = 1
+	clobPair.SubticksPerTick = 1
+	err = ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
+	require.NoError(t, err)
+
+	// Place a short-term order that would fail under old memclob params but passes after sync.
+	nextBlock := uint32(ks.Ctx.BlockHeight() + int64(types.ShortBlockWindow))
+	order := types.Order{
+		OrderId: types.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     7,
+			ClobPairId:   clobPair.Id,
+		},
+		Side:         types.Order_SIDE_BUY,
+		Quantums:     1, // valid after MinOrderBaseQuantums=1
+		Subticks:     1, // valid after SubticksPerTick=1
+		GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: nextBlock},
+	}
+	ctx := ks.Ctx.WithIsCheckTx(true)
+	_, status, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, types.NewMsgPlaceOrder(order))
+	require.NoError(t, err)
+	require.Equal(t, types.Success, status)
+}

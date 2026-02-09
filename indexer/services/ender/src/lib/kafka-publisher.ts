@@ -185,6 +185,7 @@ export class KafkaPublisher {
   }
 
   public async publish() {
+    const start = Date.now();
     const allTopicKafkaMessages:
     TopicKafkaMessages[] = this.generateAllTopicKafkaMessages();
 
@@ -203,6 +204,11 @@ export class KafkaPublisher {
           return batchProducer.flush();
         },
       ),
+    );
+    stats.timing(
+      `${config.SERVICE_NAME}.kafka_publish.timing`,
+      Date.now() - start,
+      STATS_NO_SAMPLING,
     );
   }
 

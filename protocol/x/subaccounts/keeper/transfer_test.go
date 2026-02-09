@@ -2095,3 +2095,70 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 		})
 	}
 }
+
+func TestTransferBuilderFees_BlockedAddress(t *testing.T) {
+	tests := map[string]struct {
+		builderAddress string
+		expectedErr    error
+	}{
+		"success - regular address receives builder fees": {
+			builderAddress: sample_testutil.AccAddress(),
+			expectedErr:    nil,
+		},
+		"failure - blocked module account (distribution) cannot receive builder fees": {
+			builderAddress: authtypes.NewModuleAddress(distrtypes.ModuleName).String(),
+			expectedErr:    sdkerrors.ErrUnauthorized,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _, _ :=
+				keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+
+			// Create liquidity tiers and perpetuals.
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+			// Set up Subaccounts module account with funds.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
+			err := bank_testutil.FundAccount(
+				ctx,
+				types.ModuleAddress,
+				sdk.Coins{
+					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewInt(10_000_000)), // 10 USDC
+				},
+				*bankKeeper,
+			)
+			require.NoError(t, err)
+
+			// Create USDC asset.
+			err = keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+			require.NoError(t, err)
+
+			// Attempt to transfer builder fees using perpetual ID 0 (BTC-USD from test perpetuals).
+			builderFeeQuantums := big.NewInt(1_000_000) // 1 USDC
+			err = keeper.TransferBuilderFees(
+				ctx,
+				0, // perpetual ID 0 from CreateTestPerpetuals
+				builderFeeQuantums,
+				tc.builderAddress,
+			)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+
+				// Verify builder received the funds.
+				builderAddr := sdk.MustAccAddressFromBech32(tc.builderAddress)
+				builderBalance := bankKeeper.GetBalance(ctx, builderAddr, constants.Usdc.Denom)
+				require.Equal(t,
+					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(builderFeeQuantums)),
+					builderBalance,
+				)
+			}
+		})
+	}
+}

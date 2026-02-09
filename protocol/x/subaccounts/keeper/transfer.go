@@ -468,6 +468,10 @@ func (k Keeper) TransferBuilderFees(
 		return err
 	}
 
+	if k.bankKeeper.BlockedAddr(recipient) {
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipient)
+	}
+
 	return k.bankKeeper.SendCoins(
 		ctx,
 		collateralPoolAddr,
