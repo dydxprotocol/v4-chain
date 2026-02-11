@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -36,17 +38,12 @@ func CmdCancelOrder() *cobra.Command {
 				return err
 			}
 
-			argGoodTilBlock, err := cast.ToUint32E(args[4])
-			if err != nil {
-				return err
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCancelOrderShortTerm(
+			msg := types.NewMsgCancelOrderStateful(
 				types.OrderId{
 					ClobPairId: argClobPairId,
 					ClientId:   argClientId,
@@ -54,8 +51,9 @@ func CmdCancelOrder() *cobra.Command {
 						Owner:  argOwner,
 						Number: argSubaccountNumber,
 					},
+					OrderFlags: types.OrderIdFlags_LongTerm,
 				},
-				argGoodTilBlock,
+				uint32(time.Now().Unix()+86400*5),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

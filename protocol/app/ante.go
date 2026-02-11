@@ -237,6 +237,9 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	// During `checkTx` we acquire a per account lock to prevent stale reads of state that can be mutated during
 	// `checkTx`. Note that these messages are common so we use a row level like lock for each account and branch
 	// the state store to support writes in the ante decorators that follow.
+	// Only use CacheMultiStoreWithLocking when the multistore supports it (ExecModeCheck/ReCheck). During
+	// PrepareProposal the state uses a normal CacheMultiStore whose substores are *cachekv.Store, which do not
+	// implement LockingCacheWrapper and would panic on CacheMultiStoreWithLocking.
 	var cacheMs storetypes.CacheMultiStore
 	if !simulate && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
 		sigTx, ok := tx.(authsigning.SigVerifiableTx)
@@ -249,10 +252,14 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 			return ctx, err
 		}
 
-		cacheMs = ctx.MultiStore().(cachemulti.Store).CacheMultiStoreWithLocking(map[storetypes.StoreKey][][]byte{
-			h.authStoreKey: signers,
-		})
-		defer cacheMs.(storetypes.LockingStore).Unlock()
+		if ctx.ExecMode() == sdk.ExecModeCheck || ctx.ExecMode() == sdk.ExecModeReCheck {
+			cacheMs = ctx.MultiStore().(cachemulti.Store).CacheMultiStoreWithLocking(map[storetypes.StoreKey][][]byte{
+				h.authStoreKey: signers,
+			})
+			defer cacheMs.(storetypes.LockingStore).Unlock()
+		} else {
+			cacheMs = ctx.MultiStore().CacheMultiStore()
+		}
 		ctx = ctx.WithMultiStore(cacheMs)
 	}
 
@@ -395,6 +402,9 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// that we linearize reads and writes for accounts with the clobAnteHandle and the global lock ensures that
 	// we linearize reads and writes to other stores since the deduct fees decorator mutates state outside of the
 	// account keeper and those stores are currently not safe for concurrent use.
+	// Only use CacheMultiStoreWithLocking when the multistore supports it (ExecModeCheck/ReCheck). During
+	// PrepareProposal the state uses a normal CacheMultiStore whose substores are *cachekv.Store, which do not
+	// implement LockingCacheWrapper and would panic on CacheMultiStoreWithLocking.
 	var cacheMs storetypes.CacheMultiStore
 	if !simulate && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
 		sigTx, ok := tx.(authsigning.SigVerifiableTx)
@@ -407,10 +417,14 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 			return ctx, err
 		}
 
-		cacheMs = ctx.MultiStore().(cachemulti.Store).CacheMultiStoreWithLocking(map[storetypes.StoreKey][][]byte{
-			h.authStoreKey: signers,
-		})
-		defer cacheMs.(storetypes.LockingStore).Unlock()
+		if ctx.ExecMode() == sdk.ExecModeCheck || ctx.ExecMode() == sdk.ExecModeReCheck {
+			cacheMs = ctx.MultiStore().(cachemulti.Store).CacheMultiStoreWithLocking(map[storetypes.StoreKey][][]byte{
+				h.authStoreKey: signers,
+			})
+			defer cacheMs.(storetypes.LockingStore).Unlock()
+		} else {
+			cacheMs = ctx.MultiStore().CacheMultiStore()
+		}
 		ctx = ctx.WithMultiStore(cacheMs)
 
 		h.globalLock.Lock()

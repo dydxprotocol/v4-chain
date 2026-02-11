@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -56,6 +58,26 @@ func CmdPlaceOrder() *cobra.Command {
 				return err
 			}
 
+			argIsIOC, err := cmd.Flags().GetBool("ioc")
+			if err != nil {
+				return err
+			}
+
+			var timeInForce types.Order_TimeInForce = types.Order_TIME_IN_FORCE_UNSPECIFIED
+			if argIsIOC {
+				timeInForce = types.Order_TIME_IN_FORCE_IOC
+			}
+
+			argShortTerm, err := cmd.Flags().GetBool("short")
+			if err != nil {
+				return err
+			}
+
+			orderTypeFlag := types.OrderIdFlags_LongTerm
+			if argShortTerm {
+				orderTypeFlag = types.OrderIdFlags_ShortTerm
+			}
+
 			// Optional Params from flags
 			builderCodeAddr, err := cmd.Flags().GetString("builder-address")
 			if err != nil {
@@ -84,26 +106,51 @@ func CmdPlaceOrder() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			msg := types.NewMsgPlaceOrder(
-				types.Order{
-					OrderId: types.OrderId{
-						ClientId: argClientId,
-						SubaccountId: satypes.SubaccountId{
-							Owner:  argOwner,
-							Number: argSubaccountNumber,
+			var msg *types.MsgPlaceOrder = nil
+			if argShortTerm {
+				msg = types.NewMsgPlaceOrder(
+					types.Order{
+						OrderId: types.OrderId{
+							ClientId: argClientId,
+							SubaccountId: satypes.SubaccountId{
+								Owner:  argOwner,
+								Number: argSubaccountNumber,
+							},
+							ClobPairId: argClobPairId,
+							OrderFlags: orderTypeFlag,
 						},
-						ClobPairId: argClobPairId,
-						OrderFlags: types.OrderIdFlags_ShortTerm,
+						Side:                  types.Order_Side(argSide),
+						Quantums:              argQuantums,
+						Subticks:              argSubticks,
+						GoodTilOneof:          &types.Order_GoodTilBlock{GoodTilBlock: argGoodTilBlock},
+						TimeInForce:           timeInForce,
+						BuilderCodeParameters: builderParams,
+						OrderRouterAddress:    orderRouterRevShareAddr,
 					},
-					Side:                  types.Order_Side(argSide),
-					Quantums:              argQuantums,
-					Subticks:              argSubticks,
-					GoodTilOneof:          &types.Order_GoodTilBlock{GoodTilBlock: argGoodTilBlock},
-					BuilderCodeParameters: builderParams,
-					OrderRouterAddress:    orderRouterRevShareAddr,
-				},
-			)
+				)
+			} else {
+				msg = types.NewMsgPlaceOrder(
+					types.Order{
+						OrderId: types.OrderId{
+							ClientId: argClientId,
+							SubaccountId: satypes.SubaccountId{
+								Owner:  argOwner,
+								Number: argSubaccountNumber,
+							},
+							ClobPairId: argClobPairId,
+							OrderFlags: orderTypeFlag,
+						},
+						Side:                  types.Order_Side(argSide),
+						Quantums:              argQuantums,
+						Subticks:              argSubticks,
+						GoodTilOneof:          &types.Order_GoodTilBlockTime{GoodTilBlockTime: uint32(time.Now().Unix() + 86400*5)},
+						TimeInForce:           timeInForce,
+						BuilderCodeParameters: builderParams,
+						OrderRouterAddress:    orderRouterRevShareAddr,
+					},
+				)
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -136,6 +183,8 @@ func CmdPlaceOrder() *cobra.Command {
 	cmd.Flags().String("builder-address", "", "Builder address for revenue sharing")
 	cmd.Flags().Uint32("builder-ppm", 0, "Builder fee in parts per million")
 	cmd.Flags().String("order-router-address", "", "Order router address for revenue sharing")
+	cmd.Flags().Bool("ioc", false, "Set Time In Force to Immediate-Or-Cancel (IOC)")
+	cmd.Flags().Bool("short", false, "Set order type to Short-Term")
 
 	return cmd
 }

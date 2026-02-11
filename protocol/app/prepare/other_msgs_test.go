@@ -169,3 +169,59 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 		})
 	}
 }
+
+func TestReorderClobCancelsFirst(t *testing.T) {
+	encodingCfg := encoding.GetTestEncodingCfg()
+
+	tests := map[string]struct {
+		txs         [][]byte
+		expectedTxs [][]byte
+	}{
+		"Empty": {
+			txs:         [][]byte{},
+			expectedTxs: [][]byte{},
+		},
+		"Single cancel only": {
+			txs: [][]byte{
+				constants.Msg_CancelOrder_TxBtyes,
+			},
+			expectedTxs: [][]byte{
+				constants.Msg_CancelOrder_TxBtyes,
+			},
+		},
+		"Cancel before place": {
+			txs: [][]byte{
+				constants.Msg_PlaceOrder_TxBtyes,
+				constants.Msg_CancelOrder_TxBtyes,
+			},
+			expectedTxs: [][]byte{
+				constants.Msg_CancelOrder_TxBtyes,
+				constants.Msg_PlaceOrder_TxBtyes,
+			},
+		},
+		"Mixed cancels and others preserve intra-bucket order": {
+			txs: [][]byte{
+				constants.Msg_Send_TxBytes,
+				constants.Msg_CancelOrder_TxBtyes,
+				constants.Msg_PlaceOrder_TxBtyes,
+				constants.Msg_BatchCancel_TxBtyes,
+			},
+			expectedTxs: [][]byte{
+				constants.Msg_CancelOrder_TxBtyes,
+				constants.Msg_BatchCancel_TxBtyes,
+				constants.Msg_Send_TxBytes,
+				constants.Msg_PlaceOrder_TxBtyes,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testApp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+
+			reordered, _ := prepare.ReorderClobCancelsFirst(ctx, encodingCfg.TxConfig.TxDecoder(), tc.txs)
+			require.Equal(t, tc.expectedTxs, reordered)
+		})
+	}
+}

@@ -21,6 +21,7 @@ import _ from 'lodash';
 
 import config from '../config';
 import { convertToSubaccountMessage } from './helper';
+import { splitOversizedMessages } from './kafka-message-splitter';
 import {
   AnnotatedSubaccountMessage,
   ConsolidatedKafkaEvent,
@@ -188,17 +189,23 @@ export class KafkaPublisher {
     const start = Date.now();
     const allTopicKafkaMessages:
     TopicKafkaMessages[] = this.generateAllTopicKafkaMessages();
+    const maxMessageSizeBytes = config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES;
 
     await Promise.all(
       _.map(
         allTopicKafkaMessages,
         (topicKafkaMessages: TopicKafkaMessages) => {
+          const messages = splitOversizedMessages(
+            topicKafkaMessages.topic,
+            topicKafkaMessages.messages,
+            maxMessageSizeBytes,
+          );
           const batchProducer: BatchKafkaProducer = new BatchKafkaProducer(
             topicKafkaMessages.topic,
             producer,
-            config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES,
+            maxMessageSizeBytes,
           );
-          for (const message of topicKafkaMessages.messages) {
+          for (const message of messages) {
             batchProducer.addMessageAndMaybeFlush(message);
           }
           return batchProducer.flush();

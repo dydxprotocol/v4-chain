@@ -2,6 +2,7 @@ package prepare
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -142,7 +144,21 @@ func PrepareProposalHandler(
 		} else {
 			txsWithoutDisallowMsgs = RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
 		}
+		txsWithoutDisallowMsgs, numCancelOnlyTxs := ReorderClobCancelsFirst(ctx, txConfig.TxDecoder(), txsWithoutDisallowMsgs)
+		ctx.Logger().Info("PrepareProposal: reordered txs for CLOB cancel-first",
+			"height", req.Height,
+			"total_txs", len(txsWithoutDisallowMsgs),
+			"cancel_only_txs_first", numCancelOnlyTxs,
+			"other_txs_after", len(txsWithoutDisallowMsgs)-numCancelOnlyTxs,
+		)
+
 		otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
+		ctx.Logger().Info("PrepareProposal: Other group allocation",
+			"height", req.Height,
+			"other_bytes_allocated", otherBytesAllocated,
+			"other_txs_included", len(otherTxsToInclude),
+			"other_txs_remainder", len(otherTxsRemainder),
+		)
 		if len(otherTxsToInclude) > 0 {
 			err := txs.AddOtherTxs(otherTxsToInclude)
 			if err != nil {
@@ -154,9 +170,28 @@ func PrepareProposalHandler(
 
 		// Gather "OperationsRelated" group messages.
 		// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
-		operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
+		memClobCtx, _ := ctx.CacheContext()
+		memClobCtx = memClobCtx.WithIsCheckTx(true)
+
+		var operationsTxResp OperationsTxResponse
+		err = ApplyClobMsgsToMemClob(memClobCtx, txConfig.TxDecoder(), clobKeeper, txsWithoutDisallowMsgs)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", err))
+			ctx.Logger().Error(fmt.Sprintf("ApplyClobMsgsToMemClob error (using empty ops): %v", err))
+			recordErrorMetricsWithLabel(metrics.OperationsTx)
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
+		}
+
+		msgOperations := clobKeeper.GetOperations(memClobCtx)
+		if msgOperations == nil {
+			ctx.Logger().Error("GetOperations returned nil msg")
+			recordErrorMetricsWithLabel(metrics.OperationsTx)
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
+		}
+		// Log all proposed operations in detail.
+		logProposedOperations(ctx, req.Height, msgOperations)
+		operationsTxResp, err = EncodeProposedOperationsTx(txConfig, msgOperations)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("EncodeProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
 			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
@@ -187,6 +222,11 @@ func PrepareProposalHandler(
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
 			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
+		ctx.Logger().Info("PrepareProposal: final txs to return",
+			"height", req.Height,
+			"num_txs", len(txsToReturn),
+			"num_original_req_txs", len(req.Txs),
+		)
 
 		// Record a success metric.
 		recordSuccessMetrics(
@@ -202,6 +242,82 @@ func PrepareProposalHandler(
 		)
 
 		return &abci.ResponsePrepareProposal{Txs: txsToReturn}, nil
+	}
+}
+
+// logProposedOperations logs each operation in the proposed operations queue for the given height.
+func logProposedOperations(ctx sdk.Context, height int64, msg *clobtypes.MsgProposedOperations) {
+	if msg == nil {
+		return
+	}
+	queue := msg.GetOperationsQueue()
+	ctx.Logger().Info("PrepareProposal: proposed operations",
+		"height", height,
+		"num_operations", len(queue),
+	)
+	for i, op := range queue {
+		ctx.Logger().Info("PrepareProposal: proposed operation",
+			"height", height,
+			"index", i,
+			"operation", formatOperationForLog(op),
+		)
+	}
+}
+
+// formatOperationForLog returns a short, human-readable description of an OperationRaw for logging.
+func formatOperationForLog(op clobtypes.OperationRaw) string {
+	switch o := op.Operation.(type) {
+	case *clobtypes.OperationRaw_Match:
+		return formatMatchForLog(o.Match)
+	case *clobtypes.OperationRaw_ShortTermOrderPlacement:
+		return fmt.Sprintf("ShortTermOrderPlacement(len=%d)", len(o.ShortTermOrderPlacement))
+	case *clobtypes.OperationRaw_OrderRemoval:
+		if o.OrderRemoval != nil {
+			return fmt.Sprintf("OrderRemoval orderId=%v reason=%s",
+				o.OrderRemoval.GetOrderId(),
+				o.OrderRemoval.GetRemovalReason().String())
+		}
+		return "OrderRemoval(nil)"
+	default:
+		return "UnknownOperation"
+	}
+}
+
+// formatMatchForLog returns a short description of a ClobMatch for logging.
+func formatMatchForLog(match *clobtypes.ClobMatch) string {
+	if match == nil {
+		return "Match(nil)"
+	}
+	switch m := match.Match.(type) {
+	case *clobtypes.ClobMatch_MatchOrders:
+		if mo := m.MatchOrders; mo != nil {
+			taker := mo.GetTakerOrderId()
+			fills := mo.GetFills()
+			makerDesc := fmt.Sprintf("%d maker(s)", len(fills))
+			if len(fills) > 0 {
+				makerIds := make([]string, 0, len(fills))
+				for _, f := range fills {
+					makerIds = append(makerIds, fmt.Sprintf("%v", f.GetMakerOrderId()))
+				}
+				makerDesc = fmt.Sprintf("makers=[%s]", strings.Join(makerIds, ","))
+			}
+			return fmt.Sprintf("MatchOrders taker=%v %s", taker, makerDesc)
+		}
+		return "MatchOrders(nil)"
+	case *clobtypes.ClobMatch_MatchPerpetualLiquidation:
+		if liq := m.MatchPerpetualLiquidation; liq != nil {
+			return fmt.Sprintf("MatchPerpetualLiquidation liquidated=%v clobPairId=%d perpetualId=%d totalSize=%d",
+				liq.GetLiquidated(), liq.GetClobPairId(), liq.GetPerpetualId(), liq.GetTotalSize())
+		}
+		return "MatchPerpetualLiquidation(nil)"
+	case *clobtypes.ClobMatch_MatchPerpetualDeleveraging:
+		if d := m.MatchPerpetualDeleveraging; d != nil {
+			return fmt.Sprintf("MatchPerpetualDeleveraging liquidated=%v perpetualId=%d num_fills=%d",
+				d.GetLiquidated(), d.GetPerpetualId(), len(d.GetFills()))
+		}
+		return "MatchPerpetualDeleveraging(nil)"
+	default:
+		return "Match(unknown type)"
 	}
 }
 
@@ -251,31 +367,6 @@ func GetAddPremiumVotesTx(
 }
 
 // GetProposedOperationsTx returns a tx containing `MsgProposedOperations`.
-func GetProposedOperationsTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
-	clobKeeper PrepareClobKeeper,
-) (OperationsTxResponse, error) {
-	// Get the order and fill messages from the CLOB keeper.
-	msgOperations := clobKeeper.GetOperations(ctx)
-	if msgOperations == nil {
-		return OperationsTxResponse{}, fmt.Errorf("MsgProposedOperations cannot be nil")
-	}
-
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgOperations)
-	if err != nil {
-		return OperationsTxResponse{}, err
-	}
-	if len(tx) == 0 {
-		return OperationsTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
-	}
-
-	return OperationsTxResponse{
-		Tx:            tx,
-		NumOperations: len(msgOperations.GetOperationsQueue()),
-	}, nil
-}
-
 // GetAcknowledgeBridgeTx returns a tx containing a list of `MsgAcknowledgeBridge`.
 func GetAcknowledgeBridgesTx(
 	ctx sdk.Context,
@@ -312,4 +403,168 @@ func EncodeMsgsIntoTxBytes(txConfig client.TxConfig, msgs ...sdk.Msg) ([]byte, e
 	}
 
 	return txBytes, nil
+}
+
+// EncodeProposedOperationsTx encodes a MsgProposedOperations into a tx.
+func EncodeProposedOperationsTx(
+	txConfig client.TxConfig,
+	msgOperations *clobtypes.MsgProposedOperations,
+) (OperationsTxResponse, error) {
+	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgOperations)
+	if err != nil {
+		return OperationsTxResponse{}, err
+	}
+	if len(tx) == 0 {
+		return OperationsTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
+	}
+
+	return OperationsTxResponse{
+		Tx:            tx,
+		NumOperations: len(msgOperations.GetOperationsQueue()),
+	}, nil
+}
+
+// GetProposedOperationsTx returns a tx containing `MsgProposedOperations`.
+func GetProposedOperationsTx(
+	ctx sdk.Context,
+	txConfig client.TxConfig,
+	clobKeeper PrepareClobKeeper,
+) (OperationsTxResponse, error) {
+	msgOperations := clobKeeper.GetOperations(ctx)
+	if msgOperations == nil {
+		return OperationsTxResponse{}, fmt.Errorf("MsgProposedOperations cannot be nil")
+	}
+
+	return EncodeProposedOperationsTx(txConfig, msgOperations)
+}
+
+// ApplyClobMsgsToMemClob replays CLOB cancel/place messages on a check-tx cache context so the memclob
+// reflects those changes before computing proposed operations.
+func ApplyClobMsgsToMemClob(
+	ctx sdk.Context,
+	decoder sdk.TxDecoder,
+	clobKeeper PrepareClobKeeper,
+	txs [][]byte,
+) error {
+	for i, txBytes := range txs {
+		tx, err := decoder(txBytes)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("ApplyCancelsToMemClob: failed to decode tx (index %v of %v): %v", i, len(txs), err))
+			continue
+		}
+
+		txCtx := ctx.WithTxBytes(txBytes)
+
+		for _, msg := range tx.GetMsgs() {
+			var applyErr error
+			switch m := msg.(type) {
+			case *clobtypes.MsgCancelOrder:
+				if m.OrderId.IsStatefulOrder() {
+					applyErr = clobKeeper.CancelStatefulOrder(txCtx, m)
+				} else {
+					applyErr = clobKeeper.CancelShortTermOrder(txCtx, m)
+				}
+			case *clobtypes.MsgBatchCancel:
+				_, _, applyErr = clobKeeper.BatchCancelShortTermOrder(txCtx, m)
+			case *clobtypes.MsgPlaceOrder:
+				if m.Order.OrderId.IsStatefulOrder() {
+					applyErr = clobKeeper.PlaceStatefulOrder(txCtx, m, false)
+				} else {
+					_, _, applyErr = clobKeeper.PlaceShortTermOrder(txCtx, m)
+				}
+			default:
+				continue
+			}
+
+			if applyErr != nil {
+				return applyErr
+			}
+		}
+	}
+
+	return nil
+}
+
+// ExtractCancelledOrderIds builds a set of order IDs cancelled by the provided txs.
+func ExtractCancelledOrderIds(
+	ctx sdk.Context,
+	decoder sdk.TxDecoder,
+	txs [][]byte,
+) map[clobtypes.OrderId]struct{} {
+	cancelled := make(map[clobtypes.OrderId]struct{})
+	for i, txBytes := range txs {
+		tx, err := decoder(txBytes)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("ExtractCancelledOrderIds: failed to decode tx (index %v of %v): %v", i, len(txs), err))
+			continue
+		}
+		for _, msg := range tx.GetMsgs() {
+			switch m := msg.(type) {
+			case *clobtypes.MsgCancelOrder:
+				cancelled[m.GetOrderId()] = struct{}{}
+			case *clobtypes.MsgBatchCancel:
+				subaccount := m.GetSubaccountId()
+				for _, batch := range m.GetShortTermCancels() {
+					clobPairId := batch.GetClobPairId()
+					for _, clientId := range batch.GetClientIds() {
+						orderId := clobtypes.OrderId{
+							SubaccountId: subaccount,
+							ClientId:     clientId,
+							ClobPairId:   clobPairId,
+							OrderFlags:   clobtypes.OrderIdFlags_ShortTerm,
+						}
+						cancelled[orderId] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+	return cancelled
+}
+
+// FilterMatchesByCancelledOrders drops match operations that reference any cancelled order ID.
+func FilterMatchesByCancelledOrders(
+	msgOperations *clobtypes.MsgProposedOperations,
+	cancelled map[clobtypes.OrderId]struct{},
+) *clobtypes.MsgProposedOperations {
+	if len(cancelled) == 0 || msgOperations == nil {
+		return msgOperations
+	}
+
+	filtered := &clobtypes.MsgProposedOperations{
+		OperationsQueue: make([]clobtypes.OperationRaw, 0, len(msgOperations.GetOperationsQueue())),
+	}
+
+	for _, op := range msgOperations.GetOperationsQueue() {
+		match := op.GetMatch()
+		if match != nil && matchContainsCancelledOrder(match, cancelled) {
+			continue
+		}
+		filtered.OperationsQueue = append(filtered.OperationsQueue, op)
+	}
+
+	return filtered
+}
+
+func matchContainsCancelledOrder(match *clobtypes.ClobMatch, cancelled map[clobtypes.OrderId]struct{}) bool {
+	switch m := match.Match.(type) {
+	case *clobtypes.ClobMatch_MatchOrders:
+		mo := m.MatchOrders
+		if mo == nil {
+			return false
+		}
+		taker := mo.GetTakerOrderId()
+		if _, ok := cancelled[taker]; ok {
+			return true
+		}
+		for _, fill := range mo.GetFills() {
+			maker := fill.GetMakerOrderId()
+			if _, ok := cancelled[maker]; ok {
+				return true
+			}
+		}
+	default:
+		// Other match types are not filtered.
+	}
+	return false
 }

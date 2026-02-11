@@ -11,6 +11,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // GetGroupMsgOther returns two separate slices of byte txs given a single slice of byte txs and max bytes.
@@ -83,4 +84,75 @@ func RemoveDisallowMsgs(
 	}
 
 	return filteredTxs
+}
+
+// ReorderClobCancelsFirst returns a new slice with CLOB cancel-only txs placed
+// before all other txs, preserving relative order within each bucket.
+// It also returns the number of cancel-only txs (the first N in the returned slice).
+func ReorderClobCancelsFirst(
+	ctx sdk.Context,
+	decoder sdk.TxDecoder,
+	txs [][]byte,
+) (reordered [][]byte, numCancelOnly int) {
+	if len(txs) == 0 {
+		return txs, 0
+	}
+
+	cancelTxs := make([][]byte, 0, len(txs))
+	otherTxs := make([][]byte, 0, len(txs))
+
+	for i, txBytes := range txs {
+		tx, err := decoder(txBytes)
+		if err != nil {
+			// Preserve tx ordering by treating decode failures as non-cancel txs.
+			ctx.Logger().Error(
+				fmt.Sprintf("ReorderClobCancelsFirst: failed to decode tx (index %v of %v txs): %v", i, len(txs), err))
+			otherTxs = append(otherTxs, txBytes)
+			continue
+		}
+
+		msgs := tx.GetMsgs()
+		if len(msgs) == 0 {
+			otherTxs = append(otherTxs, txBytes)
+			continue
+		}
+
+		allCancels := true
+		for _, msg := range msgs {
+			switch msg.(type) {
+			case *clobtypes.MsgCancelOrder, *clobtypes.MsgBatchCancel:
+				// continue til we get non-cancel msg.
+				continue
+			default:
+				allCancels = false
+			}
+		}
+
+		if allCancels {
+			cancelTxs = append(cancelTxs, txBytes)
+			continue
+		}
+
+		otherTxs = append(otherTxs, txBytes)
+	}
+
+	return append(cancelTxs, otherTxs...), len(cancelTxs)
+}
+
+// IsTxCancelOnly returns true if the tx contains only CLOB cancel messages (MsgCancelOrder or MsgBatchCancel).
+// It is used by tests to assert that PrepareProposal places cancel-only txs before other tx types.
+func IsTxCancelOnly(tx sdk.Tx) bool {
+	msgs := tx.GetMsgs()
+	if len(msgs) == 0 {
+		return false
+	}
+	for _, msg := range msgs {
+		switch msg.(type) {
+		case *clobtypes.MsgCancelOrder, *clobtypes.MsgBatchCancel:
+			continue
+		default:
+			return false
+		}
+	}
+	return true
 }

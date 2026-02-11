@@ -124,8 +124,29 @@ It's occasionally helpful to send a transaction to the local chain to observe Co
 It's occasionally helpful to send a transaction to the local chain to test order placement and matching. Run the following two commands in succession in order to match an order between two accounts.
 
 ```sh
-./build/dydxprotocold tx clob place-order dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4 0 0 0 1 10 10000 20 --from alice --chain-id localdydxprotocol
-./build/dydxprotocold tx clob place-order dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs 0 0 0 2 10 10000 20 --from bob --chain-id localdydxprotocol
+# place order on asset 0.
+./build/dydxprotocold tx clob place-order dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4 0 0 0 1 1000000 100000 2200 --from alice --yes
+./build/dydxprotocold tx sending deposit-to-subaccount dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs 0 100000000000
+dydxprotocold tx clob cancel-order dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs 0 0 0 5300 --from bob --yes
+dydxprotocold tx clob place-order <owner> <subaccount_number> <clientId> <clobPairId> <side> <quantums> <subticks> <goodTilBlock> --ioc=1 --from <key_name> --chain-id <chain_id> --fees 5000adv4
+
+curl 'https://faucet.v4staging.dydx.exchange/faucet/tokens' \
+-X 'POST' \
+-H 'Accept: application/json' \
+-d '{"address":"dydx1fe24lrnscvj5mzpp48cf7l0x0t2ay6lj3j5dh8","subaccountNumber":0,"amount":100}'
+
+./build/dydxprotocold tx gov submit-proposal ../test.json --from dydx-1 --yes --broadcast-mode sync --gas auto --fees 9652525000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 379 yes --from dydx-1 --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 379 yes --from dydx-2 --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from carl --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from dave --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from emily --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from fiona --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from greg --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from henry --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from ian --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+./build/dydxprotocold tx gov vote 6 yes --from jeff --yes --gas auto --fees 5000000000000000adv4tnt --keyring-backend test
+
 ```
 
 Run the following command to cancel an order.

@@ -31,6 +31,22 @@ import { refreshDataCaches } from './cache-manager';
 import { CandlesGenerator } from './candles-generator';
 import { KafkaPublisher } from './kafka-publisher';
 
+const KAFKA_MESSAGE_SIZE_ERROR_PATTERNS = [
+  'MessageSizeTooLarge',
+  'Message size too large',
+  'message size too large',
+  'Record too large',
+  'message.max.bytes',
+  'MessageSize',
+];
+
+function isKafkaMessageSizeTooLargeError(error: unknown): boolean {
+  const message: string = error instanceof Error ? error.message : String(error);
+  return KAFKA_MESSAGE_SIZE_ERROR_PATTERNS.some(
+    (pattern) => message.includes(pattern),
+  );
+}
+
 /**
  * @function onMessage
  * @param message the kafka message being processed which should parse
@@ -115,7 +131,19 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
 
     if (config.SEND_WEBSOCKET_MESSAGES) {
       wrapBackgroundTask(
-        kafkaPublisher.publish(),
+        kafkaPublisher.publish().catch((error: unknown) => {
+          if (isKafkaMessageSizeTooLargeError(error)) {
+            logger.warning({
+              at: 'onMessage#onMessage',
+              message: 'Kafka message/batch size too large, skipping publish (non-fatal)',
+              offset,
+              blockHeight,
+              error: error instanceof Error ? error : new Error(String(error)),
+            });
+            return;
+          }
+          throw error;
+        }),
         false,
         'kafkaPublisher.publish',
       );

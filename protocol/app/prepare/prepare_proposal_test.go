@@ -28,6 +28,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -358,8 +359,12 @@ func TestPrepareProposalHandler(t *testing.T) {
 				Return(tc.bridgeResp)
 
 			mockClobKeeper := mocks.PrepareClobKeeper{}
-			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
-				Return(tc.clobResp)
+			mockClobKeeper.On("GetOperations", mock.Anything).Return(tc.clobResp)
+			mockClobKeeper.On("CancelShortTermOrder", mock.Anything, mock.Anything).Return(nil)
+			mockClobKeeper.On("CancelStatefulOrder", mock.Anything, mock.Anything).Return(nil)
+			mockClobKeeper.On("BatchCancelShortTermOrder", mock.Anything, mock.Anything).Return([]uint32{}, []uint32{}, nil)
+			mockClobKeeper.On("PlaceShortTermOrder", mock.Anything, mock.Anything).Return(satypes.BaseQuantums(0), clobtypes.OrderStatus(0), nil)
+			mockClobKeeper.On("PlaceStatefulOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			ctx, _, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
@@ -420,6 +425,20 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				constants.ValidMsgUpdateMarketPricesTxBytes,            // prices.
 			},
 		},
+		"Valid: cancels are placed before other clob txs": {
+			txs: [][]byte{
+				constants.Msg_PlaceOrder_TxBtyes,
+				constants.Msg_CancelOrder_TxBtyes,
+			},
+			expectedTxs: [][]byte{
+				constants.ValidEmptyMsgProposedOperationsTxBytes,       // order (proposed operations).
+				constants.Msg_CancelOrder_TxBtyes,                      // cancel first.
+				constants.Msg_PlaceOrder_TxBtyes,                       // other clob tx.
+				constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes, // bridge.
+				constants.ValidMsgAddPremiumVotesTxBytes,               // funding.
+				constants.ValidMsgUpdateMarketPricesTxBytes,            // prices.
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -433,8 +452,13 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				Return(constants.ValidMsgAddPremiumVotes)
 
 			mockClobKeeper := mocks.PrepareClobKeeper{}
-			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+			mockClobKeeper.On("GetOperations", mock.Anything).
 				Return(constants.ValidEmptyMsgProposedOperations)
+			mockClobKeeper.On("CancelShortTermOrder", mock.Anything, mock.Anything).Return(nil)
+			mockClobKeeper.On("CancelStatefulOrder", mock.Anything, mock.Anything).Return(nil)
+			mockClobKeeper.On("BatchCancelShortTermOrder", mock.Anything, mock.Anything).Return([]uint32{}, []uint32{}, nil)
+			mockClobKeeper.On("PlaceShortTermOrder", mock.Anything, mock.Anything).Return(satypes.BaseQuantums(0), clobtypes.OrderStatus(0), nil)
+			mockClobKeeper.On("PlaceStatefulOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			mockBridgeKeeper := mocks.PrepareBridgeKeeper{}
 			mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
@@ -471,8 +495,12 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 			Return(constants.ValidMsgAddPremiumVotes)
 
 		mockClobKeeper := mocks.PrepareClobKeeper{}
-		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
-			Return(constants.ValidEmptyMsgProposedOperations)
+		mockClobKeeper.On("GetOperations", mock.Anything).Return(constants.ValidEmptyMsgProposedOperations)
+		mockClobKeeper.On("CancelShortTermOrder", mock.Anything, mock.Anything).Return(nil)
+		mockClobKeeper.On("CancelStatefulOrder", mock.Anything, mock.Anything).Return(nil)
+		mockClobKeeper.On("BatchCancelShortTermOrder", mock.Anything, mock.Anything).Return([]uint32{}, []uint32{}, nil)
+		mockClobKeeper.On("PlaceShortTermOrder", mock.Anything, mock.Anything).Return(satypes.BaseQuantums(0), clobtypes.OrderStatus(0), nil)
+		mockClobKeeper.On("PlaceStatefulOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		mockBridgeKeeper := mocks.PrepareBridgeKeeper{}
 		mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
@@ -516,8 +544,12 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 			Return(constants.ValidMsgAddPremiumVotes)
 
 		mockClobKeeper := mocks.PrepareClobKeeper{}
-		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
-			Return(constants.ValidEmptyMsgProposedOperations)
+		mockClobKeeper.On("GetOperations", mock.Anything).Return(constants.ValidEmptyMsgProposedOperations)
+		mockClobKeeper.On("CancelShortTermOrder", mock.Anything, mock.Anything).Return(nil)
+		mockClobKeeper.On("CancelStatefulOrder", mock.Anything, mock.Anything).Return(nil)
+		mockClobKeeper.On("BatchCancelShortTermOrder", mock.Anything, mock.Anything).Return([]uint32{}, []uint32{}, nil)
+		mockClobKeeper.On("PlaceShortTermOrder", mock.Anything, mock.Anything).Return(satypes.BaseQuantums(0), clobtypes.OrderStatus(0), nil)
+		mockClobKeeper.On("PlaceStatefulOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		mockBridgeKeeper := mocks.PrepareBridgeKeeper{}
 		mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
@@ -888,7 +920,12 @@ func TestGetProposedOperationsTx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			mockTxConfig := createMockTxConfig(nil, []sdk.TxEncoder{tc.txEncoder})
 			mockClobKeeper := mocks.PrepareClobKeeper{}
-			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
+			mockClobKeeper.On("GetOperations", mock.Anything).Return(tc.keeperResp)
+			mockClobKeeper.On("CancelShortTermOrder", mock.Anything, mock.Anything).Return(nil)
+			mockClobKeeper.On("CancelStatefulOrder", mock.Anything, mock.Anything).Return(nil)
+			mockClobKeeper.On("BatchCancelShortTermOrder", mock.Anything, mock.Anything).Return([]uint32{}, []uint32{}, nil)
+			mockClobKeeper.On("PlaceShortTermOrder", mock.Anything, mock.Anything).Return(satypes.BaseQuantums(0), clobtypes.OrderStatus(0), nil)
+			mockClobKeeper.On("PlaceStatefulOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			resp, err := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
 			if tc.expectedErr != nil {
