@@ -18,8 +18,4 @@ const (
 	AffiliateTiersKey = "AT"
 
 	AffiliateWhitelistKey = "AW"
-
-	AffiliateParametersKey = "AP"
-
-	AffiliateOverridesKey = "AO"
 )
