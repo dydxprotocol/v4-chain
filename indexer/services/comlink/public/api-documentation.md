@@ -3594,6 +3594,224 @@ fetch(`${baseURL}/time`,
 This operation does not require authentication
 </aside>
 
+## GetTradeHistory
+
+<a id="opIdGetTradeHistory"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/tradeHistory', params={
+  'address': 'string',  'subaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /tradeHistory`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|subaccountNumber|query|number(double)|true|none|
+|market|query|string|false|none|
+|marketType|query|[MarketType](#schemamarkettype)|false|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|marketType|PERPETUAL|
+|marketType|SPOT|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "tradeHistory": [
+    {
+      "action": "OPEN",
+      "executionPrice": "string",
+      "side": "BUY",
+      "prevSize": "string",
+      "additionalSize": "string",
+      "value": "string",
+      "orderType": "LIMIT",
+      "netFee": "string",
+      "netRealizedPnl": "string",
+      "time": "string",
+      "orderId": "string",
+      "market": "string",
+      "marginMode": "CROSS"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TradeHistoryResponse](#schematradehistoryresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetTradeHistoryForParentSubaccount
+
+<a id="opIdGetTradeHistoryForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/tradeHistory/parentSubaccount', params={
+  'address': 'string',  'parentSubaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/tradeHistory/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /tradeHistory/parentSubaccount`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|market|query|string|false|none|
+|marketType|query|[MarketType](#schemamarkettype)|false|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|marketType|PERPETUAL|
+|marketType|SPOT|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "tradeHistory": [
+    {
+      "action": "OPEN",
+      "executionPrice": "string",
+      "side": "BUY",
+      "prevSize": "string",
+      "additionalSize": "string",
+      "value": "string",
+      "orderType": "LIMIT",
+      "netFee": "string",
+      "netRealizedPnl": "string",
+      "time": "string",
+      "orderId": "string",
+      "market": "string",
+      "marginMode": "CROSS"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TradeHistoryResponse](#schematradehistoryresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetTrades
 
 <a id="opIdGetTrades"></a>
@@ -6751,6 +6969,121 @@ or
 |---|---|---|---|---|
 |iso|[IsoString](#schemaisostring)|true|none|none|
 |epoch|number(double)|true|none|none|
+
+## TradeHistoryType
+
+<a id="schematradehistorytype"></a>
+<a id="schema_TradeHistoryType"></a>
+<a id="tocStradehistorytype"></a>
+<a id="tocstradehistorytype"></a>
+
+```json
+"OPEN"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|OPEN|
+|*anonymous*|EXTEND|
+|*anonymous*|PARTIAL_CLOSE|
+|*anonymous*|CLOSE|
+|*anonymous*|LIQUIDATION_PARTIAL_CLOSE|
+|*anonymous*|LIQUIDATION_CLOSE|
+
+## TradeHistoryResponseObject
+
+<a id="schematradehistoryresponseobject"></a>
+<a id="schema_TradeHistoryResponseObject"></a>
+<a id="tocStradehistoryresponseobject"></a>
+<a id="tocstradehistoryresponseobject"></a>
+
+```json
+{
+  "action": "OPEN",
+  "executionPrice": "string",
+  "side": "BUY",
+  "prevSize": "string",
+  "additionalSize": "string",
+  "value": "string",
+  "orderType": "LIMIT",
+  "netFee": "string",
+  "netRealizedPnl": "string",
+  "time": "string",
+  "orderId": "string",
+  "market": "string",
+  "marginMode": "CROSS"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|action|[TradeHistoryType](#schematradehistorytype)|true|none|none|
+|executionPrice|string|true|none|none|
+|side|[OrderSide](#schemaorderside)|true|none|none|
+|prevSize|string|true|none|none|
+|additionalSize|string|true|none|none|
+|value|string|true|none|none|
+|orderType|[OrderType](#schemaordertype)¦null|true|none|none|
+|netFee|string|true|none|none|
+|netRealizedPnl|string|true|none|none|
+|time|[IsoString](#schemaisostring)|true|none|none|
+|orderId|string¦null|true|none|none|
+|market|string|true|none|none|
+|marginMode|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
+
+## TradeHistoryResponse
+
+<a id="schematradehistoryresponse"></a>
+<a id="schema_TradeHistoryResponse"></a>
+<a id="tocStradehistoryresponse"></a>
+<a id="tocstradehistoryresponse"></a>
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "tradeHistory": [
+    {
+      "action": "OPEN",
+      "executionPrice": "string",
+      "side": "BUY",
+      "prevSize": "string",
+      "additionalSize": "string",
+      "value": "string",
+      "orderType": "LIMIT",
+      "netFee": "string",
+      "netRealizedPnl": "string",
+      "time": "string",
+      "orderId": "string",
+      "market": "string",
+      "marginMode": "CROSS"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|pageSize|integer(int32)|false|none|none|
+|totalResults|integer(int32)|false|none|none|
+|offset|integer(int32)|false|none|none|
+|tradeHistory|[[TradeHistoryResponseObject](#schematradehistoryresponseobject)]|true|none|none|
 
 ## TradeType
 
