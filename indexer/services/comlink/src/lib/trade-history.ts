@@ -155,6 +155,8 @@ function processMarketFills(
  * Groups fills by orderId. Liquidation fills (orderId is null/undefined)
  * each become their own group. Regular fills with the same orderId are combined.
  * Order of groups follows the chronological order of their first fill.
+ *
+ * Assumes `fills` is sorted by createdAt ASC (guaranteed by the caller).
  */
 function groupFillsByOrder(fills: FillFromDatabase[]): FillGroup[] {
   const groups: FillGroup[] = [];
@@ -300,8 +302,11 @@ function handleCrossZero(
   // --- Reset for new lifecycle ---
   state.cumulativePnl = new Big(0);
   state.cumulativeFee = new Big(0);
+  state.entryPrice = new Big(0); // overwritten below, but reset for completeness
 
   // --- Row 2: OPEN ---
+  // Fee split: openFee = totalFee - closeFee. This avoids rounding discrepancy
+  // since the two parts always sum exactly to totalFee.
   const openFee = group.totalFee.minus(closeFee);
   state.cumulativeFee = state.cumulativeFee.plus(openFee);
   state.positionSize = positionAfter;
@@ -382,7 +387,7 @@ function computeSingleRow(
     // Opening fresh position
     state.entryPrice = avgPrice;
   } else if (!isReducing && !becomesFlat) {
-    // Extending: weighted average
+    // Extending: weighted average (positionAfter.abs() > 0 since becomesFlat is false)
     const existingValue = state.entryPrice.times(positionBefore.abs());
     const newValue = avgPrice.times(group.totalSize);
     state.entryPrice = existingValue.plus(newValue).div(positionAfter.abs());
