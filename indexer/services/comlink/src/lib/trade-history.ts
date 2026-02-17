@@ -57,23 +57,33 @@ export function computeTradeHistory(
   orderTypeMap: Record<string, OrderType>,
   clobPairIdToMarket: MarketAndTypeByClobPairId,
 ): TradeHistoryResponseObject[] {
-  // Group fills by market
-  const fillsByMarket: Record<string, FillFromDatabase[]> = _.groupBy(fills, 'clobPairId');
+  // Group fills by (subaccountId, clobPairId) so that different child subaccounts
+  // maintain independent position lifecycles even when queried via parent subaccount.
+  const groupKey = (f: FillFromDatabase) => `${f.subaccountId}:${f.clobPairId}`;
+  const fillsBySubaccountAndMarket: Record<string, FillFromDatabase[]> = _.groupBy(
+    fills, groupKey,
+  );
 
   const allRows: TradeHistoryResponseObject[] = [];
 
-  for (const [clobPairId, marketFills] of Object.entries(fillsByMarket)) {
+  for (const groupedFills of Object.values(fillsBySubaccountAndMarket)) {
+    const { clobPairId } = groupedFills[0];
     const marketInfo = clobPairIdToMarket[clobPairId];
-    if (!marketInfo?.market) continue;
+    if (!marketInfo?.market || !marketInfo.perpetualMarketType) continue;
 
     const rows = processMarketFills(
-      marketFills, marketInfo.market, marketInfo.perpetualMarketType!, orderTypeMap,
+      groupedFills, marketInfo.market, marketInfo.perpetualMarketType, orderTypeMap,
     );
     allRows.push(...rows);
   }
 
-  // Sort by time DESC (most recent first)
-  allRows.sort((a, b) => (a.time > b.time ? -1 : a.time < b.time ? 1 : 0));
+  // Sort by time DESC (most recent first), with id as tiebreaker for cross-zero
+  // rows that share the same timestamp (`:open` > `:close` alphabetically,
+  // so the new-lifecycle OPEN row sorts before the old-lifecycle CLOSE row).
+  allRows.sort((a, b) => {
+    if (a.time !== b.time) return a.time > b.time ? -1 : 1;
+    return a.id > b.id ? -1 : a.id < b.id ? 1 : 0;
+  });
 
   return allRows;
 }
@@ -287,6 +297,9 @@ function handleCrossZero(
   state.positionSize = positionAfter;
   state.entryPrice = avgPrice;
 
+  // Signed delta for the opening portion (same convention as computeSingleRow)
+  const openSignedDelta = positionAfter.toFixed();
+
   const openRow: TradeHistoryResponseObject = {
     id: makeRowId(group, 'open'),
     action: TradeHistoryType.OPEN,
@@ -294,7 +307,7 @@ function handleCrossZero(
     side: group.side,
     positionSide: positionAfter.gt(0) ? PositionSide.LONG : PositionSide.SHORT,
     prevSize: '0',
-    additionalSize: openingSize.toFixed(), // positive (opening)
+    additionalSize: openSignedDelta,
     value: openingSize.times(avgPrice).toFixed(),
     orderType,
     netFee: state.cumulativeFee.toFixed(),

@@ -148,7 +148,7 @@ class TradeHistoryController extends Controller {
     };
   }
 
-  @Get('/parentSubaccount')
+  @Get('/parentSubaccountNumber')
   async getTradeHistoryForParentSubaccount(
     @Query() address: string,
       @Query() parentSubaccountNumber: number,

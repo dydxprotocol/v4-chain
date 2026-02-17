@@ -177,14 +177,13 @@ describe('computeTradeHistory', () => {
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
     expect(result).toHaveLength(3); // OPEN + CLOSE + OPEN
-    // Sorted DESC by time, but CLOSE and OPEN from cross-zero share same time
-    // The first (most recent) entries are the cross-zero rows
-    const crossRows = result.filter((r) => r.orderId === 'order-2');
-    expect(crossRows).toHaveLength(2);
+    // Cross-zero rows share same time; sorted DESC with id tiebreaker:
+    // order-2:open (new lifecycle) sorts before order-2:close (old lifecycle)
+    expect(result[0].id).toBe('order-2:open');
+    expect(result[1].id).toBe('order-2:close');
 
-    const closeRow = crossRows.find((r) => r.action === TradeHistoryType.CLOSE)!;
-    expect(closeRow).toBeDefined();
-    expect(closeRow.id).toBe('order-2:close');
+    const closeRow = result[1];
+    expect(closeRow.action).toBe(TradeHistoryType.CLOSE);
     expect(closeRow.prevSize).toBe('5');
     expect(closeRow.additionalSize).toBe('-5');
     expect(closeRow.positionSide).toBeNull(); // fully closed
@@ -193,11 +192,10 @@ describe('computeTradeHistory', () => {
     // Close fee = 1 * (5/10) = 0.5, cumulative = 0.5 (open) + 0.5 = 1
     expect(closeRow.netFee).toBe('1');
 
-    const openRow = crossRows.find((r) => r.action === TradeHistoryType.OPEN)!;
-    expect(openRow).toBeDefined();
-    expect(openRow.id).toBe('order-2:open');
+    const openRow = result[0];
+    expect(openRow.action).toBe(TradeHistoryType.OPEN);
     expect(openRow.prevSize).toBe('0');
-    expect(openRow.additionalSize).toBe('5'); // opening 5 short, but delta is positive abs
+    expect(openRow.additionalSize).toBe('-5'); // opening short, signed delta is negative
     expect(openRow.positionSide).toBe(PositionSide.SHORT); // new short position
     // After lifecycle reset, netRealizedPnl = 0
     expect(openRow.netRealizedPnl).toBe('0');
@@ -375,6 +373,32 @@ describe('computeTradeHistory', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].orderType).toBeNull();
+  });
+
+  it('different subaccountIds are processed independently (parent subaccount)', () => {
+    const fills = [
+      // Subaccount A: long 5 BTC
+      makeFill({
+        subaccountId: 'sub-0', side: OrderSide.BUY, size: '5', price: '100',
+        fee: '0.5', orderId: 'order-1', clobPairId: '0',
+      }),
+      // Subaccount B (child 128): short 3 BTC
+      makeFill({
+        subaccountId: 'sub-128', side: OrderSide.SELL, size: '3', price: '100',
+        fee: '0.3', orderId: 'order-2', clobPairId: '0',
+      }),
+    ];
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+
+    // Both should be OPEN (independent positions), not an OPEN + PARTIAL_CLOSE
+    expect(result).toHaveLength(2);
+    expect(result.every((r) => r.action === TradeHistoryType.OPEN)).toBe(true);
+    const longRow = result.find((r) => r.side === OrderSide.BUY)!;
+    const shortRow = result.find((r) => r.side === OrderSide.SELL)!;
+    expect(longRow.additionalSize).toBe('5');
+    expect(longRow.positionSide).toBe(PositionSide.LONG);
+    expect(shortRow.additionalSize).toBe('-3');
+    expect(shortRow.positionSide).toBe(PositionSide.SHORT);
   });
 
   it('skips fills for unknown markets', () => {

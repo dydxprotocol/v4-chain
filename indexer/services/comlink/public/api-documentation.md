@@ -3675,9 +3675,11 @@ fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
   "offset": 0,
   "tradeHistory": [
     {
+      "id": "string",
       "action": "OPEN",
       "executionPrice": "string",
       "side": "BUY",
+      "positionSide": "LONG",
       "prevSize": "string",
       "additionalSize": "string",
       "value": "string",
@@ -3686,7 +3688,7 @@ fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
       "netRealizedPnl": "string",
       "time": "string",
       "orderId": "string",
-      "market": "string",
+      "marketId": "string",
       "marginMode": "CROSS"
     }
   ]
@@ -3719,7 +3721,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
-r = requests.get(f'{baseURL}/tradeHistory/parentSubaccount', params={
+r = requests.get(f'{baseURL}/tradeHistory/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
 }, headers = headers)
 
@@ -3737,7 +3739,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/tradeHistory/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+fetch(`${baseURL}/tradeHistory/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
   method: 'GET',
 
@@ -3751,7 +3753,7 @@ fetch(`${baseURL}/tradeHistory/parentSubaccount?address=string&parentSubaccountN
 
 ```
 
-`GET /tradeHistory/parentSubaccount`
+`GET /tradeHistory/parentSubaccountNumber`
 
 ### Parameters
 
@@ -3784,9 +3786,11 @@ fetch(`${baseURL}/tradeHistory/parentSubaccount?address=string&parentSubaccountN
   "offset": 0,
   "tradeHistory": [
     {
+      "id": "string",
       "action": "OPEN",
       "executionPrice": "string",
       "side": "BUY",
+      "positionSide": "LONG",
       "prevSize": "string",
       "additionalSize": "string",
       "value": "string",
@@ -3795,7 +3799,7 @@ fetch(`${baseURL}/tradeHistory/parentSubaccount?address=string&parentSubaccountN
       "netRealizedPnl": "string",
       "time": "string",
       "orderId": "string",
-      "market": "string",
+      "marketId": "string",
       "marginMode": "CROSS"
     }
   ]
@@ -7008,9 +7012,11 @@ or
 
 ```json
 {
+  "id": "string",
   "action": "OPEN",
   "executionPrice": "string",
   "side": "BUY",
+  "positionSide": "LONG",
   "prevSize": "string",
   "additionalSize": "string",
   "value": "string",
@@ -7019,7 +7025,7 @@ or
   "netRealizedPnl": "string",
   "time": "string",
   "orderId": "string",
-  "market": "string",
+  "marketId": "string",
   "marginMode": "CROSS"
 }
 
@@ -7029,9 +7035,11 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|id|string|true|none|none|
 |action|[TradeHistoryType](#schematradehistorytype)|true|none|none|
 |executionPrice|string|true|none|none|
 |side|[OrderSide](#schemaorderside)|true|none|none|
+|positionSide|[PositionSide](#schemapositionside)¦null|true|none|none|
 |prevSize|string|true|none|none|
 |additionalSize|string|true|none|none|
 |value|string|true|none|none|
@@ -7040,7 +7048,7 @@ or
 |netRealizedPnl|string|true|none|none|
 |time|[IsoString](#schemaisostring)|true|none|none|
 |orderId|string¦null|true|none|none|
-|market|string|true|none|none|
+|marketId|string|true|none|none|
 |marginMode|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
 
 ## TradeHistoryResponse
@@ -7057,9 +7065,11 @@ or
   "offset": 0,
   "tradeHistory": [
     {
+      "id": "string",
       "action": "OPEN",
       "executionPrice": "string",
       "side": "BUY",
+      "positionSide": "LONG",
       "prevSize": "string",
       "additionalSize": "string",
       "value": "string",
@@ -7068,7 +7078,7 @@ or
       "netRealizedPnl": "string",
       "time": "string",
       "orderId": "string",
-      "market": "string",
+      "marketId": "string",
       "marginMode": "CROSS"
     }
   ]

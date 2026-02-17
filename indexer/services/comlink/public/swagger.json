@@ -1460,6 +1460,9 @@
       },
       "TradeHistoryResponseObject": {
         "properties": {
+          "id": {
+            "type": "string"
+          },
           "action": {
             "$ref": "#/components/schemas/TradeHistoryType"
           },
@@ -1468,6 +1471,14 @@
           },
           "side": {
             "$ref": "#/components/schemas/OrderSide"
+          },
+          "positionSide": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PositionSide"
+              }
+            ],
+            "nullable": true
           },
           "prevSize": {
             "type": "string"
@@ -1499,7 +1510,7 @@
             "type": "string",
             "nullable": true
           },
-          "market": {
+          "marketId": {
             "type": "string"
           },
           "marginMode": {
@@ -1507,9 +1518,11 @@
           }
         },
         "required": [
+          "id",
           "action",
           "executionPrice",
           "side",
+          "positionSide",
           "prevSize",
           "additionalSize",
           "value",
@@ -1518,7 +1531,7 @@
           "netRealizedPnl",
           "time",
           "orderId",
-          "market",
+          "marketId",
           "marginMode"
         ],
         "type": "object",
@@ -4157,7 +4170,7 @@
         ]
       }
     },
-    "/tradeHistory/parentSubaccount": {
+    "/tradeHistory/parentSubaccountNumber": {
       "get": {
         "operationId": "GetTradeHistoryForParentSubaccount",
         "responses": {
