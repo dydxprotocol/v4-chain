@@ -274,6 +274,11 @@ function handleCrossZero(
     ? TradeHistoryType.LIQUIDATION_CLOSE
     : TradeHistoryType.CLOSE;
 
+  // Use same BUY/SELL sign convention as computeSingleRow: BUY → positive, SELL → negative
+  const closeSignedDelta = group.side === OrderSide.BUY
+    ? closingSize
+    : closingSize.times(-1);
+
   const closeRow: TradeHistoryResponseObject = {
     id: makeRowId(group, 'close'),
     action: closeType,
@@ -281,7 +286,7 @@ function handleCrossZero(
     side: group.side,
     positionSide: null, // position fully closed
     prevSize: positionBefore.abs().toFixed(),
-    additionalSize: closingSize.times(-1).toFixed(), // negative (reducing)
+    additionalSize: closeSignedDelta.toFixed(),
     value: closingSize.times(avgPrice).toFixed(),
     orderType,
     netFee: state.cumulativeFee.toFixed(),

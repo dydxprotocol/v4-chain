@@ -227,6 +227,41 @@ describe('computeTradeHistory', () => {
     expect(openRow.netFee).toBe('0.5');
   });
 
+  it('cross-zero: single order that closes short and opens long (BUY direction)', () => {
+    const fills = [
+      // Open Short 5
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '200', fee: '0.5', orderId: 'order-1',
+      }),
+      // Buy 10 → close 5 short, open 5 long
+      makeFill({
+        side: OrderSide.BUY, size: '10', price: '180', fee: '1', orderId: 'order-2',
+      }),
+    ];
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+
+    expect(result).toHaveLength(3); // OPEN + CLOSE + OPEN
+
+    const closeRow = result.find((r) => r.id === 'order-2:close')!;
+    expect(closeRow.action).toBe(TradeHistoryType.CLOSE);
+    expect(closeRow.side).toBe(OrderSide.BUY);
+    expect(closeRow.prevSize).toBe('5');
+    // BUY closing a short → additionalSize should be positive (BUY convention)
+    expect(closeRow.additionalSize).toBe('5');
+    expect(closeRow.positionSide).toBeNull();
+    // Short PnL = (200 - 180) * 5 = 100
+    expect(closeRow.netRealizedPnl).toBe('100');
+
+    const openRow = result.find((r) => r.id === 'order-2:open')!;
+    expect(openRow.action).toBe(TradeHistoryType.OPEN);
+    expect(openRow.side).toBe(OrderSide.BUY);
+    expect(openRow.prevSize).toBe('0');
+    // BUY opening long → additionalSize should be positive
+    expect(openRow.additionalSize).toBe('5');
+    expect(openRow.positionSide).toBe(PositionSide.LONG);
+    expect(openRow.netRealizedPnl).toBe('0');
+  });
+
   it('liquidation fills produce LIQUIDATION_CLOSE with null orderId', () => {
     const fills = [
       makeFill({
