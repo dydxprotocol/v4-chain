@@ -5,7 +5,6 @@ import {
   OrderTable,
   FillTable,
   OrderFromDatabase,
-  FillFromDatabase,
   perpetualMarketRefresher,
   OrderSide,
   OrderType,
@@ -85,7 +84,7 @@ describe('trade-history-controller#V4', () => {
         clientId: '2',
         side: OrderSide.SELL,
       });
-      const sellFill: FillFromDatabase = await FillTable.create({
+      await FillTable.create({
         ...testConstants.defaultFill,
         orderId: sellOrder.id,
         side: OrderSide.SELL,

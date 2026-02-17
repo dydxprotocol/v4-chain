@@ -20,24 +20,24 @@ import {
 
 /** A group of fills belonging to the same order (or a single liquidation fill). */
 interface FillGroup {
-  orderId: string | null;
-  fills: FillFromDatabase[];
-  side: OrderSide;
-  totalSize: Big;
-  weightedPriceSum: Big; // sum(price * size) for weighted avg
-  totalFee: Big;
-  isLiquidation: boolean;
-  clobPairId: string;
-  lastCreatedAt: string;
-  lastCreatedAtHeight: string;
+  orderId: string | null,
+  fills: FillFromDatabase[],
+  side: OrderSide,
+  totalSize: Big,
+  weightedPriceSum: Big, // sum(price * size) for weighted avg
+  totalFee: Big,
+  isLiquidation: boolean,
+  clobPairId: string,
+  lastCreatedAt: string,
+  lastCreatedAtHeight: string,
 }
 
 /** Running state for a single market's position lifecycle. */
 interface MarketState {
-  positionSize: Big; // signed: positive = LONG, negative = SHORT
-  entryPrice: Big;
-  cumulativePnl: Big;
-  cumulativeFee: Big;
+  positionSize: Big, // signed: positive = LONG, negative = SHORT
+  entryPrice: Big,
+  cumulativePnl: Big,
+  cumulativeFee: Big,
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,9 @@ export function computeTradeHistory(
   // so the new-lifecycle OPEN row sorts before the old-lifecycle CLOSE row).
   allRows.sort((a, b) => {
     if (a.time !== b.time) return a.time > b.time ? -1 : 1;
-    return a.id > b.id ? -1 : a.id < b.id ? 1 : 0;
+    if (a.id > b.id) return -1;
+    if (a.id < b.id) return 1;
+    return 0;
   });
 
   return allRows;
@@ -96,10 +98,10 @@ export function paginateTradeHistory(
   limit: number,
   page?: number,
 ): {
-  tradeHistory: TradeHistoryResponseObject[];
-  pageSize: number;
-  totalResults: number;
-  offset: number;
+  tradeHistory: TradeHistoryResponseObject[],
+  pageSize: number,
+  totalResults: number,
+  offset: number,
 } {
   const total = rows.length;
   if (page !== undefined) {
@@ -193,6 +195,7 @@ function createFillGroup(fill: FillFromDatabase, isLiquidation: boolean): FillGr
   };
 }
 
+/* eslint-disable no-param-reassign */
 function addFillToGroup(group: FillGroup, fill: FillFromDatabase): void {
   group.fills.push(fill);
   group.totalSize = group.totalSize.plus(fill.size);
@@ -205,6 +208,7 @@ function addFillToGroup(group: FillGroup, fill: FillFromDatabase): void {
     group.lastCreatedAtHeight = fill.createdAtHeight;
   }
 }
+/* eslint-enable no-param-reassign */
 
 /**
  * Processes a single order group against the running market state.
@@ -229,10 +233,10 @@ function processOrderGroup(
   const positionAfter = positionBefore.plus(signedDelta);
 
   // Detect cross-zero: sign changed AND neither before nor after is zero
-  const crossesZero = !positionBefore.eq(0)
-    && !positionAfter.eq(0)
-    && ((positionBefore.gt(0) && positionAfter.lt(0))
-      || (positionBefore.lt(0) && positionAfter.gt(0)));
+  const crossesZero = !positionBefore.eq(0) &&
+    !positionAfter.eq(0) &&
+    ((positionBefore.gt(0) && positionAfter.lt(0)) ||
+      (positionBefore.lt(0) && positionAfter.gt(0)));
 
   if (crossesZero) {
     return handleCrossZero(group, state, marketId, marginMode, avgPrice, positionBefore,
@@ -243,6 +247,7 @@ function processOrderGroup(
     positionAfter, orderTypeMap)];
 }
 
+/* eslint-disable no-param-reassign */
 function handleCrossZero(
   group: FillGroup,
   state: MarketState,
@@ -320,7 +325,9 @@ function handleCrossZero(
 
   return [closeRow, openRow];
 }
+/* eslint-enable no-param-reassign */
 
+/* eslint-disable no-param-reassign */
 function computeSingleRow(
   group: FillGroup,
   state: MarketState,
@@ -421,6 +428,7 @@ function computeSingleRow(
 
   return row;
 }
+/* eslint-enable no-param-reassign */
 
 /**
  * Generates a unique ID for a trade history row.

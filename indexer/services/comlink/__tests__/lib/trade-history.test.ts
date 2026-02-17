@@ -9,7 +9,9 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 
 import { computeTradeHistory, paginateTradeHistory } from '../../src/lib/trade-history';
-import { MarketAndTypeByClobPairId, MarketType, TradeHistoryResponseObject, TradeHistoryType } from '../../src/types';
+import {
+  MarketAndTypeByClobPairId, MarketType, TradeHistoryResponseObject, TradeHistoryType,
+} from '../../src/types';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -41,8 +43,8 @@ function makeFill(overrides: Partial<FillFromDatabase> = {}): FillFromDatabase {
 }
 
 const MARKET_MAP: MarketAndTypeByClobPairId = {
-  '0': { market: 'BTC-USD', marketType: MarketType.PERPETUAL, perpetualMarketType: PerpetualMarketType.CROSS },
-  '1': { market: 'ETH-USD', marketType: MarketType.PERPETUAL, perpetualMarketType: PerpetualMarketType.CROSS },
+  0: { market: 'BTC-USD', marketType: MarketType.PERPETUAL, perpetualMarketType: PerpetualMarketType.CROSS },
+  1: { market: 'ETH-USD', marketType: MarketType.PERPETUAL, perpetualMarketType: PerpetualMarketType.CROSS },
 };
 
 const ORDER_TYPE_MAP: Record<string, OrderType> = {
@@ -72,7 +74,9 @@ describe('computeTradeHistory', () => {
 
   it('OPEN: buying from flat produces an OPEN row', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -94,8 +98,12 @@ describe('computeTradeHistory', () => {
 
   it('EXTEND: buying more when already long produces EXTEND', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1' }),
-      makeFill({ side: OrderSide.BUY, size: '5', price: '110', fee: '0.5', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
+      }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '110', fee: '0.5', orderId: 'order-2',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -113,8 +121,12 @@ describe('computeTradeHistory', () => {
 
   it('PARTIAL_CLOSE: selling part of a long position', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '10', price: '100', fee: '1', orderId: 'order-1' }),
-      makeFill({ side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.BUY, size: '10', price: '100', fee: '1', orderId: 'order-1',
+      }),
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -131,8 +143,12 @@ describe('computeTradeHistory', () => {
 
   it('CLOSE: fully closing a long position with realized PnL', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1' }),
-      makeFill({ side: OrderSide.SELL, size: '5', price: '150', fee: '0.5', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
+      }),
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '150', fee: '0.5', orderId: 'order-2',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -148,8 +164,12 @@ describe('computeTradeHistory', () => {
 
   it('SHORT: open short and close with PnL', () => {
     const fills = [
-      makeFill({ side: OrderSide.SELL, size: '3', price: '200', fee: '0.3', orderId: 'order-1' }),
-      makeFill({ side: OrderSide.BUY, size: '3', price: '180', fee: '0.3', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.SELL, size: '3', price: '200', fee: '0.3', orderId: 'order-1',
+      }),
+      makeFill({
+        side: OrderSide.BUY, size: '3', price: '180', fee: '0.3', orderId: 'order-2',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -170,9 +190,13 @@ describe('computeTradeHistory', () => {
   it('cross-zero: single order that closes long and opens short', () => {
     const fills = [
       // Open Long 5
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
+      }),
       // Sell 10 → close 5 long, open 5 short
-      makeFill({ side: OrderSide.SELL, size: '10', price: '120', fee: '1', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.SELL, size: '10', price: '120', fee: '1', orderId: 'order-2',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -205,7 +229,9 @@ describe('computeTradeHistory', () => {
 
   it('liquidation fills produce LIQUIDATION_CLOSE with null orderId', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
+      }),
       // Liquidation fill — no orderId
       makeFill({
         side: OrderSide.SELL,
@@ -231,7 +257,9 @@ describe('computeTradeHistory', () => {
 
   it('liquidation partial close', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '10', price: '100', fee: '1', orderId: 'order-1' }),
+      makeFill({
+        side: OrderSide.BUY, size: '10', price: '100', fee: '1', orderId: 'order-1',
+      }),
       makeFill({
         side: OrderSide.SELL,
         size: '3',
@@ -255,10 +283,16 @@ describe('computeTradeHistory', () => {
   it('cumulative PnL resets after full close and reopen', () => {
     const fills = [
       // Lifecycle 1: open and close
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1' }),
-      makeFill({ side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
+      }),
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2',
+      }),
       // Lifecycle 2: open again
-      makeFill({ side: OrderSide.BUY, size: '3', price: '130', fee: '0.3', orderId: 'order-3' }),
+      makeFill({
+        side: OrderSide.BUY, size: '3', price: '130', fee: '0.3', orderId: 'order-3',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -281,11 +315,19 @@ describe('computeTradeHistory', () => {
   it('multiple fills per orderId are grouped correctly', () => {
     const fills = [
       makeFill({
-        side: OrderSide.BUY, size: '2', price: '100', fee: '0.2', orderId: 'order-1',
+        side: OrderSide.BUY,
+        size: '2',
+        price: '100',
+        fee: '0.2',
+        orderId: 'order-1',
         createdAt: '2024-01-01T00:01:00.000Z',
       }),
       makeFill({
-        side: OrderSide.BUY, size: '3', price: '110', fee: '0.3', orderId: 'order-1',
+        side: OrderSide.BUY,
+        size: '3',
+        price: '110',
+        fee: '0.3',
+        orderId: 'order-1',
         createdAt: '2024-01-01T00:02:00.000Z',
       }),
     ];
@@ -306,12 +348,20 @@ describe('computeTradeHistory', () => {
   it('multiple markets are processed independently', () => {
     const fills = [
       makeFill({
-        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5',
-        orderId: 'order-1', clobPairId: '0',
+        side: OrderSide.BUY,
+        size: '5',
+        price: '100',
+        fee: '0.5',
+        orderId: 'order-1',
+        clobPairId: '0',
       }),
       makeFill({
-        side: OrderSide.SELL, size: '2', price: '3000', fee: '0.3',
-        orderId: 'order-2', clobPairId: '1',
+        side: OrderSide.SELL,
+        size: '2',
+        price: '3000',
+        fee: '0.3',
+        orderId: 'order-2',
+        clobPairId: '1',
       }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
@@ -330,11 +380,17 @@ describe('computeTradeHistory', () => {
 
   it('entry price updates correctly on extend (weighted average)', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '4', price: '100', fee: '0.4', orderId: 'order-1' }),
-      makeFill({ side: OrderSide.BUY, size: '6', price: '150', fee: '0.6', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.BUY, size: '4', price: '100', fee: '0.4', orderId: 'order-1',
+      }),
+      makeFill({
+        side: OrderSide.BUY, size: '6', price: '150', fee: '0.6', orderId: 'order-2',
+      }),
       // Now close at 200 to verify entry was weighted avg
       // Entry = (100*4 + 150*6) / 10 = 1300/10 = 130
-      makeFill({ side: OrderSide.SELL, size: '10', price: '200', fee: '1', orderId: 'order-3' }),
+      makeFill({
+        side: OrderSide.SELL, size: '10', price: '200', fee: '1', orderId: 'order-3',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -347,11 +403,17 @@ describe('computeTradeHistory', () => {
 
   it('entry price stays the same on partial close', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '10', price: '100', fee: '1', orderId: 'order-1' }),
+      makeFill({
+        side: OrderSide.BUY, size: '10', price: '100', fee: '1', orderId: 'order-1',
+      }),
       // Partial close 5
-      makeFill({ side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2' }),
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2',
+      }),
       // Close remaining 5 — entry should still be 100
-      makeFill({ side: OrderSide.SELL, size: '5', price: '140', fee: '0.5', orderId: 'order-3' }),
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '140', fee: '0.5', orderId: 'order-3',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -367,7 +429,9 @@ describe('computeTradeHistory', () => {
 
   it('orderType is null when orderId is not in the map', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'unknown-id' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'unknown-id',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
@@ -379,13 +443,23 @@ describe('computeTradeHistory', () => {
     const fills = [
       // Subaccount A: long 5 BTC
       makeFill({
-        subaccountId: 'sub-0', side: OrderSide.BUY, size: '5', price: '100',
-        fee: '0.5', orderId: 'order-1', clobPairId: '0',
+        subaccountId: 'sub-0',
+        side: OrderSide.BUY,
+        size: '5',
+        price: '100',
+        fee: '0.5',
+        orderId: 'order-1',
+        clobPairId: '0',
       }),
       // Subaccount B (child 128): short 3 BTC
       makeFill({
-        subaccountId: 'sub-128', side: OrderSide.SELL, size: '3', price: '100',
-        fee: '0.3', orderId: 'order-2', clobPairId: '0',
+        subaccountId: 'sub-128',
+        side: OrderSide.SELL,
+        size: '3',
+        price: '100',
+        fee: '0.3',
+        orderId: 'order-2',
+        clobPairId: '0',
       }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
@@ -403,7 +477,9 @@ describe('computeTradeHistory', () => {
 
   it('skips fills for unknown markets', () => {
     const fills = [
-      makeFill({ side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', clobPairId: '999' }),
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', clobPairId: '999',
+      }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
 
