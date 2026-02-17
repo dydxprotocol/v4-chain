@@ -100,6 +100,50 @@ const marketTypeCheckSchema = checkSchema({
   },
 });
 
+// Shared: resolve clobPairId from market/marketType params
+async function resolveClobPairId(
+  market?: string,
+  marketType?: MarketType,
+): Promise<string | undefined> {
+  if (isDefined(market) && isDefined(marketType)) {
+    const clobPairId = await getClobPairId(market!, marketType!);
+    if (clobPairId === undefined) {
+      throw new NotFoundError(`${market} not found in markets of type ${marketType}`);
+    }
+    return clobPairId;
+  }
+  return undefined;
+}
+
+// Shared: compute trade history from fills and return paginated response
+async function buildTradeHistoryResponse(
+  fills: FillFromDatabase[],
+  subaccountIdToNumber: Record<string, number>,
+  limit?: number,
+  page?: number,
+): Promise<TradeHistoryResponse> {
+  if (fills.length > TRADE_HISTORY_MAX_FILLS) {
+    throw new Error(
+      `Too many fills (${fills.length}) to compute trade history.`,
+    );
+  }
+
+  const orderTypeMap = await buildOrderTypeMap(fills);
+  const clobPairIdToMarket = buildClobPairIdToMarket();
+  const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket,
+    subaccountIdToNumber);
+
+  const effectiveLimit = limit ?? config.API_LIMIT_V4;
+  const paginated = paginateTradeHistory(allRows, effectiveLimit, page);
+
+  return {
+    tradeHistory: paginated.tradeHistory,
+    pageSize: paginated.pageSize,
+    totalResults: paginated.totalResults,
+    offset: paginated.offset,
+  };
+}
+
 @Route('tradeHistory')
 class TradeHistoryController extends Controller {
   @Get('/')
@@ -111,46 +155,18 @@ class TradeHistoryController extends Controller {
       @Query() limit?: number,
       @Query() page?: number,
   ): Promise<TradeHistoryResponse> {
-    let clobPairId: string | undefined;
-    if (isDefined(market) && isDefined(marketType)) {
-      clobPairId = await getClobPairId(market!, marketType!);
-      if (clobPairId === undefined) {
-        throw new NotFoundError(`${market} not found in markets of type ${marketType}`);
-      }
-    }
-
+    const clobPairId = await resolveClobPairId(market, marketType);
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
     const { results: fills } = await FillTable.findAll(
-      {
-        subaccountId: [subaccountId],
-        clobPairId,
-      },
+      { subaccountId: [subaccountId], clobPairId },
       [],
       { orderBy: fillOrderBy },
     );
 
-    if (fills.length > TRADE_HISTORY_MAX_FILLS) {
-      throw new Error(
-        `Too many fills (${fills.length}) to compute trade history. Please filter by market.`,
-      );
-    }
-
-    const subaccountIdToNumber: Record<string, number> = { [subaccountId]: subaccountNumber };
-    const orderTypeMap = await buildOrderTypeMap(fills);
-    const clobPairIdToMarket = buildClobPairIdToMarket();
-    const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket,
-      subaccountIdToNumber);
-
-    const effectiveLimit = limit ?? config.API_LIMIT_V4;
-    const paginated = paginateTradeHistory(allRows, effectiveLimit, page);
-
-    return {
-      tradeHistory: paginated.tradeHistory,
-      pageSize: paginated.pageSize,
-      totalResults: paginated.totalResults,
-      offset: paginated.offset,
-    };
+    return buildTradeHistoryResponse(
+      fills, { [subaccountId]: subaccountNumber }, limit, page,
+    );
   }
 
   @Get('/parentSubaccountNumber')
@@ -162,33 +178,18 @@ class TradeHistoryController extends Controller {
       @Query() limit?: number,
       @Query() page?: number,
   ): Promise<TradeHistoryResponse> {
-    let clobPairId: string | undefined;
-    if (isDefined(market) && isDefined(marketType)) {
-      clobPairId = await getClobPairId(market!, marketType!);
-      if (clobPairId === undefined) {
-        throw new NotFoundError(`${market} not found in markets of type ${marketType}`);
-      }
-    }
+    const clobPairId = await resolveClobPairId(market, marketType);
 
     const { results: fills } = await FillTable.findAll(
       {
-        parentSubaccount: {
-          address,
-          subaccountNumber: parentSubaccountNumber,
-        },
+        parentSubaccount: { address, subaccountNumber: parentSubaccountNumber },
         clobPairId,
       },
       [],
       { orderBy: fillOrderBy },
     );
 
-    if (fills.length > TRADE_HISTORY_MAX_FILLS) {
-      throw new Error(
-        `Too many fills (${fills.length}) to compute trade history. Please filter by market.`,
-      );
-    }
-
-    // Build subaccountId → subaccountNumber map from the fills
+    // Build subaccountId -> subaccountNumber map from the fills
     const uniqueSubaccountIds = _.uniq(fills.map((f) => f.subaccountId));
     const subaccounts: SubaccountFromDatabase[] = uniqueSubaccountIds.length > 0
       ? await SubaccountTable.findAll({ id: uniqueSubaccountIds }, [])
@@ -198,20 +199,7 @@ class TradeHistoryController extends Controller {
       subaccountIdToNumber[sa.id] = sa.subaccountNumber;
     }
 
-    const orderTypeMap = await buildOrderTypeMap(fills);
-    const clobPairIdToMarket = buildClobPairIdToMarket();
-    const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket,
-      subaccountIdToNumber);
-
-    const effectiveLimit = limit ?? config.API_LIMIT_V4;
-    const paginated = paginateTradeHistory(allRows, effectiveLimit, page);
-
-    return {
-      tradeHistory: paginated.tradeHistory,
-      pageSize: paginated.pageSize,
-      totalResults: paginated.totalResults,
-      offset: paginated.offset,
-    };
+    return buildTradeHistoryResponse(fills, subaccountIdToNumber, limit, page);
   }
 }
 

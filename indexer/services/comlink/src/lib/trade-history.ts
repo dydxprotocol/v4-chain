@@ -72,7 +72,8 @@ export function computeTradeHistory(
     const marketInfo = clobPairIdToMarket[clobPairId];
     if (!marketInfo?.market || !marketInfo.perpetualMarketType) continue;
 
-    const subaccountNumber = subaccountIdToNumber[subaccountId] ?? 0;
+    const subaccountNumber = subaccountIdToNumber[subaccountId];
+    if (subaccountNumber === undefined) continue;
     const rows = processMarketFills(
       groupedFills, marketInfo.market, marketInfo.perpetualMarketType, orderTypeMap,
       subaccountNumber,
