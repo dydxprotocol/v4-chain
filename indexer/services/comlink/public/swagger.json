@@ -1463,6 +1463,10 @@
           "id": {
             "type": "string"
           },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
+          },
           "action": {
             "$ref": "#/components/schemas/TradeHistoryType"
           },
@@ -1519,6 +1523,7 @@
         },
         "required": [
           "id",
+          "subaccountNumber",
           "action",
           "executionPrice",
           "side",
@@ -4143,23 +4148,6 @@
           },
           {
             "in": "query",
-            "name": "createdBeforeOrAtHeight",
-            "required": false,
-            "schema": {
-              "format": "double",
-              "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "createdBeforeOrAt",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/IsoString"
-            }
-          },
-          {
-            "in": "query",
             "name": "page",
             "required": false,
             "schema": {
@@ -4227,23 +4215,6 @@
             "schema": {
               "format": "double",
               "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "createdBeforeOrAtHeight",
-            "required": false,
-            "schema": {
-              "format": "double",
-              "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "createdBeforeOrAt",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/IsoString"
             }
           },
           {

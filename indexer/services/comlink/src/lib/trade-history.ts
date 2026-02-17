@@ -56,6 +56,7 @@ export function computeTradeHistory(
   fills: FillFromDatabase[],
   orderTypeMap: Record<string, OrderType>,
   clobPairIdToMarket: MarketAndTypeByClobPairId,
+  subaccountIdToNumber: Record<string, number>,
 ): TradeHistoryResponseObject[] {
   // Group fills by (subaccountId, clobPairId) so that different child subaccounts
   // maintain independent position lifecycles even when queried via parent subaccount.
@@ -67,12 +68,14 @@ export function computeTradeHistory(
   const allRows: TradeHistoryResponseObject[] = [];
 
   for (const groupedFills of Object.values(fillsBySubaccountAndMarket)) {
-    const { clobPairId } = groupedFills[0];
+    const { clobPairId, subaccountId } = groupedFills[0];
     const marketInfo = clobPairIdToMarket[clobPairId];
     if (!marketInfo?.market || !marketInfo.perpetualMarketType) continue;
 
+    const subaccountNumber = subaccountIdToNumber[subaccountId] ?? 0;
     const rows = processMarketFills(
       groupedFills, marketInfo.market, marketInfo.perpetualMarketType, orderTypeMap,
+      subaccountNumber,
     );
     allRows.push(...rows);
   }
@@ -131,6 +134,7 @@ function processMarketFills(
   marketId: string,
   marginMode: PerpetualMarketType,
   orderTypeMap: Record<string, OrderType>,
+  subaccountNumber: number,
 ): TradeHistoryResponseObject[] {
   const fillGroups: FillGroup[] = groupFillsByOrder(fills);
 
@@ -144,7 +148,8 @@ function processMarketFills(
   const rows: TradeHistoryResponseObject[] = [];
 
   for (const group of fillGroups) {
-    const newRows = processOrderGroup(group, state, marketId, marginMode, orderTypeMap);
+    const newRows = processOrderGroup(group, state, marketId, marginMode, orderTypeMap,
+      subaccountNumber);
     rows.push(...newRows);
   }
 
@@ -223,6 +228,7 @@ function processOrderGroup(
   marketId: string,
   marginMode: PerpetualMarketType,
   orderTypeMap: Record<string, OrderType>,
+  subaccountNumber: number,
 ): TradeHistoryResponseObject[] {
   const avgPrice = group.weightedPriceSum.div(group.totalSize);
 
@@ -242,11 +248,11 @@ function processOrderGroup(
 
   if (crossesZero) {
     return handleCrossZero(group, state, marketId, marginMode, avgPrice, positionBefore,
-      positionAfter, orderTypeMap);
+      positionAfter, orderTypeMap, subaccountNumber);
   }
 
   return [computeSingleRow(group, state, marketId, marginMode, avgPrice, positionBefore,
-    positionAfter, orderTypeMap)];
+    positionAfter, orderTypeMap, subaccountNumber)];
 }
 
 /* eslint-disable no-param-reassign */
@@ -259,6 +265,7 @@ function handleCrossZero(
   positionBefore: Big,
   positionAfter: Big,
   orderTypeMap: Record<string, OrderType>,
+  subaccountNumber: number,
 ): TradeHistoryResponseObject[] {
   const closingSize = positionBefore.abs();
   const openingSize = positionAfter.abs();
@@ -283,6 +290,7 @@ function handleCrossZero(
 
   const closeRow: TradeHistoryResponseObject = {
     id: makeRowId(group, 'close'),
+    subaccountNumber,
     action: closeType,
     executionPrice: avgPrice.toFixed(),
     side: group.side,
@@ -317,6 +325,7 @@ function handleCrossZero(
 
   const openRow: TradeHistoryResponseObject = {
     id: makeRowId(group, 'open'),
+    subaccountNumber,
     action: TradeHistoryType.OPEN,
     executionPrice: avgPrice.toFixed(),
     side: group.side,
@@ -347,6 +356,7 @@ function computeSingleRow(
   positionBefore: Big,
   positionAfter: Big,
   orderTypeMap: Record<string, OrderType>,
+  subaccountNumber: number,
 ): TradeHistoryResponseObject {
   const isFlat = positionBefore.eq(0);
   const becomesFlat = positionAfter.eq(0);
@@ -410,6 +420,7 @@ function computeSingleRow(
   // Build the row
   const row: TradeHistoryResponseObject = {
     id: makeRowId(group),
+    subaccountNumber,
     action,
     executionPrice: avgPrice.toFixed(),
     side: group.side,

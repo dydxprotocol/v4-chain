@@ -3,11 +3,11 @@ import {
   FillColumns,
   FillFromDatabase,
   FillTable,
-  IsoString,
   OrderTable,
   OrderType,
   Ordering,
   SubaccountTable,
+  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -30,7 +30,7 @@ import {
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { computeTradeHistory, paginateTradeHistory } from '../../../lib/trade-history';
 import {
-  CheckLimitAndCreatedBeforeOrAtSchema,
+  CheckLimitSchema,
   CheckPaginationSchema,
   CheckParentSubaccountSchema,
   CheckSubaccountSchema,
@@ -46,6 +46,7 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'trade-history-controller';
+const TRADE_HISTORY_MAX_FILLS: number = 500_000;
 const tradeHistoryCacheControlMiddleware = cacheControlMiddleware(
   config.CACHE_CONTROL_DIRECTIVE_FILLS,
 );
@@ -108,8 +109,6 @@ class TradeHistoryController extends Controller {
       @Query() market?: string,
       @Query() marketType?: MarketType,
       @Query() limit?: number,
-      @Query() createdBeforeOrAtHeight?: number,
-      @Query() createdBeforeOrAt?: IsoString,
       @Query() page?: number,
   ): Promise<TradeHistoryResponse> {
     let clobPairId: string | undefined;
@@ -126,16 +125,22 @@ class TradeHistoryController extends Controller {
       {
         subaccountId: [subaccountId],
         clobPairId,
-        createdBeforeOrAtHeight: createdBeforeOrAtHeight?.toString(),
-        createdBeforeOrAt,
       },
       [],
       { orderBy: fillOrderBy },
     );
 
+    if (fills.length > TRADE_HISTORY_MAX_FILLS) {
+      throw new Error(
+        `Too many fills (${fills.length}) to compute trade history. Please filter by market.`,
+      );
+    }
+
+    const subaccountIdToNumber: Record<string, number> = { [subaccountId]: subaccountNumber };
     const orderTypeMap = await buildOrderTypeMap(fills);
     const clobPairIdToMarket = buildClobPairIdToMarket();
-    const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket);
+    const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket,
+      subaccountIdToNumber);
 
     const effectiveLimit = limit ?? config.API_LIMIT_V4;
     const paginated = paginateTradeHistory(allRows, effectiveLimit, page);
@@ -155,8 +160,6 @@ class TradeHistoryController extends Controller {
       @Query() market?: string,
       @Query() marketType?: MarketType,
       @Query() limit?: number,
-      @Query() createdBeforeOrAtHeight?: number,
-      @Query() createdBeforeOrAt?: IsoString,
       @Query() page?: number,
   ): Promise<TradeHistoryResponse> {
     let clobPairId: string | undefined;
@@ -174,16 +177,31 @@ class TradeHistoryController extends Controller {
           subaccountNumber: parentSubaccountNumber,
         },
         clobPairId,
-        createdBeforeOrAtHeight: createdBeforeOrAtHeight?.toString(),
-        createdBeforeOrAt,
       },
       [],
       { orderBy: fillOrderBy },
     );
 
+    if (fills.length > TRADE_HISTORY_MAX_FILLS) {
+      throw new Error(
+        `Too many fills (${fills.length}) to compute trade history. Please filter by market.`,
+      );
+    }
+
+    // Build subaccountId → subaccountNumber map from the fills
+    const uniqueSubaccountIds = _.uniq(fills.map((f) => f.subaccountId));
+    const subaccounts: SubaccountFromDatabase[] = uniqueSubaccountIds.length > 0
+      ? await SubaccountTable.findAll({ id: uniqueSubaccountIds }, [])
+      : [];
+    const subaccountIdToNumber: Record<string, number> = {};
+    for (const sa of subaccounts) {
+      subaccountIdToNumber[sa.id] = sa.subaccountNumber;
+    }
+
     const orderTypeMap = await buildOrderTypeMap(fills);
     const clobPairIdToMarket = buildClobPairIdToMarket();
-    const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket);
+    const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket,
+      subaccountIdToNumber);
 
     const effectiveLimit = limit ?? config.API_LIMIT_V4;
     const paginated = paginateTradeHistory(allRows, effectiveLimit, page);
@@ -204,7 +222,7 @@ router.get(
   rateLimiterMiddleware(fillsRateLimiter),
   tradeHistoryCacheControlMiddleware,
   ...CheckSubaccountSchema,
-  ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckLimitSchema,
   ...CheckPaginationSchema,
   query('market').if(query('marketType').exists()).notEmpty()
     .withMessage('market must be provided if marketType is provided'),
@@ -222,8 +240,6 @@ router.get(
       market,
       marketType,
       limit,
-      createdBeforeOrAtHeight,
-      createdBeforeOrAt,
       page,
     }: TradeHistoryRequest = matchedData(req) as TradeHistoryRequest;
 
@@ -237,8 +253,6 @@ router.get(
         market,
         marketType,
         limit,
-        createdBeforeOrAtHeight,
-        createdBeforeOrAt,
         page,
       );
 
@@ -267,7 +281,7 @@ router.get(
   rateLimiterMiddleware(fillsRateLimiter),
   tradeHistoryCacheControlMiddleware,
   ...CheckParentSubaccountSchema,
-  ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckLimitSchema,
   ...CheckPaginationSchema,
   query('market').if(query('marketType').exists()).notEmpty()
     .withMessage('market must be provided if marketType is provided'),
@@ -285,8 +299,6 @@ router.get(
       market,
       marketType,
       limit,
-      createdBeforeOrAtHeight,
-      createdBeforeOrAt,
       page,
     }: ParentSubaccountTradeHistoryRequest = matchedData(
       req,
@@ -303,8 +315,6 @@ router.get(
           market,
           marketType,
           limit,
-          createdBeforeOrAtHeight,
-          createdBeforeOrAt,
           page,
         );
 

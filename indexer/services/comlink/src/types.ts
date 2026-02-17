@@ -912,19 +912,20 @@ export enum TradeHistoryType {
 }
 
 export interface TradeHistoryRequest
-  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
+  extends SubaccountRequest, LimitRequest, PaginationRequest {
   market?: string,
   marketType?: MarketType,
 }
 
 export interface ParentSubaccountTradeHistoryRequest
-  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
+  extends ParentSubaccountRequest, LimitRequest, PaginationRequest {
   market?: string,
   marketType?: MarketType,
 }
 
 export interface TradeHistoryResponseObject {
   id: string,
+  subaccountNumber: number,
   action: TradeHistoryType,
   executionPrice: string,
   side: OrderSide,

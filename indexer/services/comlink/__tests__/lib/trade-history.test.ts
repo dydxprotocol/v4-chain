@@ -58,6 +58,12 @@ const ORDER_TYPE_MAP: Record<string, OrderType> = {
   'order-8': OrderType.LIMIT,
 };
 
+const SUBACCOUNT_MAP: Record<string, number> = {
+  'sub-1': 0,
+  'sub-0': 0,
+  'sub-128': 128,
+};
+
 beforeEach(() => {
   fillCounter = 0;
 });
@@ -68,7 +74,7 @@ beforeEach(() => {
 
 describe('computeTradeHistory', () => {
   it('returns empty array for empty fills', () => {
-    const result = computeTradeHistory([], ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory([], ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
     expect(result).toEqual([]);
   });
 
@@ -78,7 +84,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'order-1',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(1);
     expect(result[0].action).toBe(TradeHistoryType.OPEN);
@@ -94,6 +100,7 @@ describe('computeTradeHistory', () => {
     expect(result[0].positionSide).toBe(PositionSide.LONG);
     expect(result[0].orderId).toBe('order-1');
     expect(result[0].id).toBe('order-1');
+    expect(result[0].subaccountNumber).toBe(0);
   });
 
   it('EXTEND: buying more when already long produces EXTEND', () => {
@@ -105,7 +112,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '5', price: '110', fee: '0.5', orderId: 'order-2',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     // Most recent first (sorted DESC)
@@ -128,7 +135,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.SELL, size: '5', price: '120', fee: '0.5', orderId: 'order-2',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     const partialClose = result[0]; // most recent
@@ -150,7 +157,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.SELL, size: '5', price: '150', fee: '0.5', orderId: 'order-2',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     const close = result[0];
@@ -171,7 +178,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '3', price: '180', fee: '0.3', orderId: 'order-2',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     const open = result[1];
@@ -198,7 +205,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.SELL, size: '10', price: '120', fee: '1', orderId: 'order-2',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(3); // OPEN + CLOSE + OPEN
     // Cross-zero rows share same time; sorted DESC with id tiebreaker:
@@ -238,7 +245,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '10', price: '180', fee: '1', orderId: 'order-2',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(3); // OPEN + CLOSE + OPEN
 
@@ -277,7 +284,7 @@ describe('computeTradeHistory', () => {
         type: FillType.LIQUIDATED,
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     const liqRow = result[0];
@@ -304,7 +311,7 @@ describe('computeTradeHistory', () => {
         type: FillType.LIQUIDATED,
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     const liqRow = result[0];
@@ -329,7 +336,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '3', price: '130', fee: '0.3', orderId: 'order-3',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(3);
     // result[0] = most recent = lifecycle 2 OPEN
@@ -366,7 +373,7 @@ describe('computeTradeHistory', () => {
         createdAt: '2024-01-01T00:02:00.000Z',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(1);
     expect(result[0].action).toBe(TradeHistoryType.OPEN);
@@ -399,7 +406,7 @@ describe('computeTradeHistory', () => {
         clobPairId: '1',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(2);
     const btcRow = result.find((r) => r.marketId === 'BTC-USD')!;
@@ -427,7 +434,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.SELL, size: '10', price: '200', fee: '1', orderId: 'order-3',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(3);
     const close = result[0];
@@ -450,7 +457,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.SELL, size: '5', price: '140', fee: '0.5', orderId: 'order-3',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(3);
     const partialClose = result[1]; // middle
@@ -468,7 +475,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', orderId: 'unknown-id',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(1);
     expect(result[0].orderType).toBeNull();
@@ -497,7 +504,7 @@ describe('computeTradeHistory', () => {
         clobPairId: '0',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     // Both should be OPEN (independent positions), not an OPEN + PARTIAL_CLOSE
     expect(result).toHaveLength(2);
@@ -506,8 +513,10 @@ describe('computeTradeHistory', () => {
     const shortRow = result.find((r) => r.side === OrderSide.SELL)!;
     expect(longRow.additionalSize).toBe('5');
     expect(longRow.positionSide).toBe(PositionSide.LONG);
+    expect(longRow.subaccountNumber).toBe(0);
     expect(shortRow.additionalSize).toBe('-3');
     expect(shortRow.positionSide).toBe(PositionSide.SHORT);
+    expect(shortRow.subaccountNumber).toBe(128);
   });
 
   it('skips fills for unknown markets', () => {
@@ -516,7 +525,7 @@ describe('computeTradeHistory', () => {
         side: OrderSide.BUY, size: '5', price: '100', fee: '0.5', clobPairId: '999',
       }),
     ];
-    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP);
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
 
     expect(result).toHaveLength(0);
   });
@@ -529,6 +538,7 @@ describe('computeTradeHistory', () => {
 describe('paginateTradeHistory', () => {
   const rows = Array.from({ length: 10 }, (_, i) => ({
     id: `order-${i}`,
+    subaccountNumber: 0,
     action: TradeHistoryType.OPEN,
     executionPrice: '100',
     side: OrderSide.BUY,

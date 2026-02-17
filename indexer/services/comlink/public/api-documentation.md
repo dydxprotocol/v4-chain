@@ -3653,8 +3653,6 @@ fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
 |market|query|string|false|none|
 |marketType|query|[MarketType](#schemamarkettype)|false|none|
 |limit|query|number(double)|false|none|
-|createdBeforeOrAtHeight|query|number(double)|false|none|
-|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |page|query|number(double)|false|none|
 
 #### Enumerated Values
@@ -3676,6 +3674,7 @@ fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
   "tradeHistory": [
     {
       "id": "string",
+      "subaccountNumber": 0.1,
       "action": "OPEN",
       "executionPrice": "string",
       "side": "BUY",
@@ -3764,8 +3763,6 @@ fetch(`${baseURL}/tradeHistory/parentSubaccountNumber?address=string&parentSubac
 |market|query|string|false|none|
 |marketType|query|[MarketType](#schemamarkettype)|false|none|
 |limit|query|number(double)|false|none|
-|createdBeforeOrAtHeight|query|number(double)|false|none|
-|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |page|query|number(double)|false|none|
 
 #### Enumerated Values
@@ -3787,6 +3784,7 @@ fetch(`${baseURL}/tradeHistory/parentSubaccountNumber?address=string&parentSubac
   "tradeHistory": [
     {
       "id": "string",
+      "subaccountNumber": 0.1,
       "action": "OPEN",
       "executionPrice": "string",
       "side": "BUY",
@@ -7013,6 +7011,7 @@ or
 ```json
 {
   "id": "string",
+  "subaccountNumber": 0.1,
   "action": "OPEN",
   "executionPrice": "string",
   "side": "BUY",
@@ -7036,6 +7035,7 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |id|string|true|none|none|
+|subaccountNumber|number(double)|true|none|none|
 |action|[TradeHistoryType](#schematradehistorytype)|true|none|none|
 |executionPrice|string|true|none|none|
 |side|[OrderSide](#schemaorderside)|true|none|none|
@@ -7066,6 +7066,7 @@ or
   "tradeHistory": [
     {
       "id": "string",
+      "subaccountNumber": 0.1,
       "action": "OPEN",
       "executionPrice": "string",
       "side": "BUY",
