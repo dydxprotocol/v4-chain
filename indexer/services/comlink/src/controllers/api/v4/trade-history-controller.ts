@@ -46,7 +46,7 @@ import {
 
 const router: express.Router = express.Router();
 const controllerName: string = 'trade-history-controller';
-const TRADE_HISTORY_MAX_FILLS: number = 500_000;
+const TRADE_HISTORY_MAX_FILLS: number = 100_000;
 const tradeHistoryCacheControlMiddleware = cacheControlMiddleware(
   config.CACHE_CONTROL_DIRECTIVE_FILLS,
 );
@@ -115,6 +115,22 @@ async function resolveClobPairId(
   return undefined;
 }
 
+// Shared: fast fill count check using pagination (COUNT(*) only, loads 1 row)
+async function checkFillCount(
+  queryParams: object,
+): Promise<void> {
+  const { total } = await FillTable.findAll(
+    { ...queryParams, limit: 1, page: 1 },
+    [],
+    { orderBy: fillOrderBy },
+  );
+  if (total !== undefined && total > TRADE_HISTORY_MAX_FILLS) {
+    throw new Error(
+      `Too many fills (${total}) to compute trade history.`,
+    );
+  }
+}
+
 // Shared: compute trade history from fills and return paginated response
 async function buildTradeHistoryResponse(
   fills: FillFromDatabase[],
@@ -122,12 +138,6 @@ async function buildTradeHistoryResponse(
   limit?: number,
   page?: number,
 ): Promise<TradeHistoryResponse> {
-  if (fills.length > TRADE_HISTORY_MAX_FILLS) {
-    throw new Error(
-      `Too many fills (${fills.length}) to compute trade history.`,
-    );
-  }
-
   const orderTypeMap = await buildOrderTypeMap(fills);
   const clobPairIdToMarket = buildClobPairIdToMarket();
   const allRows = computeTradeHistory(fills, orderTypeMap, clobPairIdToMarket,
@@ -158,6 +168,8 @@ class TradeHistoryController extends Controller {
     const clobPairId = await resolveClobPairId(market, marketType);
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
+    await checkFillCount({ subaccountId: [subaccountId], clobPairId });
+
     const { results: fills } = await FillTable.findAll(
       { subaccountId: [subaccountId], clobPairId },
       [],
@@ -179,6 +191,11 @@ class TradeHistoryController extends Controller {
       @Query() page?: number,
   ): Promise<TradeHistoryResponse> {
     const clobPairId = await resolveClobPairId(market, marketType);
+
+    await checkFillCount({
+      parentSubaccount: { address, subaccountNumber: parentSubaccountNumber },
+      clobPairId,
+    });
 
     const { results: fills } = await FillTable.findAll(
       {
