@@ -963,6 +963,12 @@ func TestRecordMevMetrics(t *testing.T) {
 				}
 			}
 
+			// With deferred matching, orders are placed without matching during CheckTx.
+			// Call MatchAllCrossedOrders to perform matching, which happens during
+			// PrepareProposal before RecordMevMetrics is called in ProcessProposal.
+			err = ks.ClobKeeper.MatchAllCrossedOrders(ctx)
+			require.NoError(t, err)
+
 			// Run the test.
 			ctx = ctx.WithValue(process.ConsensusRound, int64(0))
 			ctx = ctx.WithProposer(constants.AliceConsAddress)

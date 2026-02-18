@@ -358,6 +358,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				Return(tc.bridgeResp)
 
 			mockClobKeeper := mocks.PrepareClobKeeper{}
+			mockClobKeeper.On("MatchAllCrossedOrders", mock.Anything).Return(nil).Maybe()
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(tc.clobResp)
 
@@ -433,6 +434,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				Return(constants.ValidMsgAddPremiumVotes)
 
 			mockClobKeeper := mocks.PrepareClobKeeper{}
+			mockClobKeeper.On("MatchAllCrossedOrders", mock.Anything).Return(nil).Maybe()
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(constants.ValidEmptyMsgProposedOperations)
 
@@ -471,6 +473,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 			Return(constants.ValidMsgAddPremiumVotes)
 
 		mockClobKeeper := mocks.PrepareClobKeeper{}
+		mockClobKeeper.On("MatchAllCrossedOrders", mock.Anything).Return(nil).Maybe()
 		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 			Return(constants.ValidEmptyMsgProposedOperations)
 
@@ -516,6 +519,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 			Return(constants.ValidMsgAddPremiumVotes)
 
 		mockClobKeeper := mocks.PrepareClobKeeper{}
+		mockClobKeeper.On("MatchAllCrossedOrders", mock.Anything).Return(nil).Maybe()
 		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 			Return(constants.ValidEmptyMsgProposedOperations)
 
