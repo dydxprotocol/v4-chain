@@ -115,22 +115,6 @@ async function resolveClobPairId(
   return undefined;
 }
 
-// Shared: fast fill count check using pagination (COUNT(*) only, loads 1 row)
-async function checkFillCount(
-  queryParams: object,
-): Promise<void> {
-  const { total } = await FillTable.findAll(
-    { ...queryParams, limit: 1, page: 1 },
-    [],
-    { orderBy: fillOrderBy },
-  );
-  if (total !== undefined && total > TRADE_HISTORY_MAX_FILLS) {
-    throw new Error(
-      `Too many fills (${total}) to compute trade history.`,
-    );
-  }
-}
-
 // Shared: compute trade history from fills and return paginated response
 async function buildTradeHistoryResponse(
   fills: FillFromDatabase[],
@@ -168,13 +152,15 @@ class TradeHistoryController extends Controller {
     const clobPairId = await resolveClobPairId(market, marketType);
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
-    await checkFillCount({ subaccountId: [subaccountId], clobPairId });
-
     const { results: fills } = await FillTable.findAll(
-      { subaccountId: [subaccountId], clobPairId },
+      { subaccountId: [subaccountId], clobPairId, limit: TRADE_HISTORY_MAX_FILLS + 1 },
       [],
       { orderBy: fillOrderBy },
     );
+
+    if (fills.length > TRADE_HISTORY_MAX_FILLS) {
+      throw new Error('Too many fills to compute trade history.');
+    }
 
     return buildTradeHistoryResponse(
       fills, { [subaccountId]: subaccountNumber }, limit, page,
@@ -192,19 +178,19 @@ class TradeHistoryController extends Controller {
   ): Promise<TradeHistoryResponse> {
     const clobPairId = await resolveClobPairId(market, marketType);
 
-    await checkFillCount({
-      parentSubaccount: { address, subaccountNumber: parentSubaccountNumber },
-      clobPairId,
-    });
-
     const { results: fills } = await FillTable.findAll(
       {
         parentSubaccount: { address, subaccountNumber: parentSubaccountNumber },
         clobPairId,
+        limit: TRADE_HISTORY_MAX_FILLS + 1,
       },
       [],
       { orderBy: fillOrderBy },
     );
+
+    if (fills.length > TRADE_HISTORY_MAX_FILLS) {
+      throw new Error('Too many fills to compute trade history.');
+    }
 
     // Build subaccountId -> subaccountNumber map from the fills
     const uniqueSubaccountIds = _.uniq(fills.map((f) => f.subaccountId));
