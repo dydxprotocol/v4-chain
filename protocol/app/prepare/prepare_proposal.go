@@ -105,7 +105,6 @@ func PrepareProposalHandler(
 			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 
-		// Run deferred matching early: uncross the F
 		if err := clobKeeper.MatchAllCrossedOrders(ctx); err != nil {
 			ctx.Logger().Error(fmt.Sprintf("MatchAllCrossedOrders error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
