@@ -3677,6 +3677,7 @@ fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
       "subaccountNumber": 0.1,
       "action": "OPEN",
       "executionPrice": "string",
+      "entryPrice": "string",
       "side": "BUY",
       "positionSide": "LONG",
       "prevSize": "string",
@@ -3685,6 +3686,7 @@ fetch(`${baseURL}/tradeHistory?address=string&subaccountNumber=0.1`,
       "orderType": "LIMIT",
       "netFee": "string",
       "netRealizedPnl": "string",
+      "netRealizedPnlPercent": "string",
       "time": "string",
       "orderId": "string",
       "marketId": "string",
@@ -3787,6 +3789,7 @@ fetch(`${baseURL}/tradeHistory/parentSubaccountNumber?address=string&parentSubac
       "subaccountNumber": 0.1,
       "action": "OPEN",
       "executionPrice": "string",
+      "entryPrice": "string",
       "side": "BUY",
       "positionSide": "LONG",
       "prevSize": "string",
@@ -3795,6 +3798,7 @@ fetch(`${baseURL}/tradeHistory/parentSubaccountNumber?address=string&parentSubac
       "orderType": "LIMIT",
       "netFee": "string",
       "netRealizedPnl": "string",
+      "netRealizedPnlPercent": "string",
       "time": "string",
       "orderId": "string",
       "marketId": "string",
@@ -7014,6 +7018,7 @@ or
   "subaccountNumber": 0.1,
   "action": "OPEN",
   "executionPrice": "string",
+  "entryPrice": "string",
   "side": "BUY",
   "positionSide": "LONG",
   "prevSize": "string",
@@ -7022,6 +7027,7 @@ or
   "orderType": "LIMIT",
   "netFee": "string",
   "netRealizedPnl": "string",
+  "netRealizedPnlPercent": "string",
   "time": "string",
   "orderId": "string",
   "marketId": "string",
@@ -7038,6 +7044,7 @@ or
 |subaccountNumber|number(double)|true|none|none|
 |action|[TradeHistoryType](#schematradehistorytype)|true|none|none|
 |executionPrice|string|true|none|none|
+|entryPrice|string|true|none|none|
 |side|[OrderSide](#schemaorderside)|true|none|none|
 |positionSide|[PositionSide](#schemapositionside)¦null|true|none|none|
 |prevSize|string|true|none|none|
@@ -7046,6 +7053,7 @@ or
 |orderType|[OrderType](#schemaordertype)¦null|true|none|none|
 |netFee|string|true|none|none|
 |netRealizedPnl|string|true|none|none|
+|netRealizedPnlPercent|string¦null|true|none|none|
 |time|[IsoString](#schemaisostring)|true|none|none|
 |orderId|string¦null|true|none|none|
 |marketId|string|true|none|none|
@@ -7069,6 +7077,7 @@ or
       "subaccountNumber": 0.1,
       "action": "OPEN",
       "executionPrice": "string",
+      "entryPrice": "string",
       "side": "BUY",
       "positionSide": "LONG",
       "prevSize": "string",
@@ -7077,6 +7086,7 @@ or
       "orderType": "LIMIT",
       "netFee": "string",
       "netRealizedPnl": "string",
+      "netRealizedPnlPercent": "string",
       "time": "string",
       "orderId": "string",
       "marketId": "string",
