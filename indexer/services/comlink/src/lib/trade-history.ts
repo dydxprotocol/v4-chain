@@ -38,6 +38,7 @@ interface MarketState {
   entryPrice: Big,
   cumulativePnl: Big,
   cumulativeFee: Big,
+  cumulativeCostBasis: Big, // sum of (entryPrice * closingAmount) across closes
 }
 
 // ---------------------------------------------------------------------------
@@ -144,6 +145,7 @@ function processMarketFills(
     entryPrice: new Big(0),
     cumulativePnl: new Big(0),
     cumulativeFee: new Big(0),
+    cumulativeCostBasis: new Big(0),
   };
 
   const rows: TradeHistoryResponseObject[] = [];
@@ -277,8 +279,10 @@ function handleCrossZero(
     state.entryPrice);
   const closeFee = group.totalFee.times(closingSize).div(group.totalSize);
 
+  const closeCostBasis = state.entryPrice.times(closingSize);
   state.cumulativePnl = state.cumulativePnl.plus(closePnl);
   state.cumulativeFee = state.cumulativeFee.plus(closeFee);
+  state.cumulativeCostBasis = state.cumulativeCostBasis.plus(closeCostBasis);
 
   const closeType = group.isLiquidation
     ? TradeHistoryType.LIQUIDATION_CLOSE
@@ -294,6 +298,7 @@ function handleCrossZero(
     subaccountNumber,
     action: closeType,
     executionPrice: avgPrice.toFixed(),
+    entryPrice: state.entryPrice.toFixed(),
     side: group.side,
     positionSide: null, // position fully closed
     prevSize: positionBefore.abs().toFixed(),
@@ -302,6 +307,9 @@ function handleCrossZero(
     orderType,
     netFee: state.cumulativeFee.toFixed(),
     netRealizedPnl: state.cumulativePnl.toFixed(),
+    netRealizedPnlPercent: state.cumulativeCostBasis.gt(0)
+      ? state.cumulativePnl.div(state.cumulativeCostBasis).toFixed()
+      : null,
     time: group.lastCreatedAt,
     orderId: group.orderId,
     marketId,
@@ -311,6 +319,7 @@ function handleCrossZero(
   // --- Reset for new lifecycle ---
   state.cumulativePnl = new Big(0);
   state.cumulativeFee = new Big(0);
+  state.cumulativeCostBasis = new Big(0);
   state.entryPrice = new Big(0); // overwritten below, but reset for completeness
 
   // --- Row 2: OPEN ---
@@ -329,6 +338,7 @@ function handleCrossZero(
     subaccountNumber,
     action: TradeHistoryType.OPEN,
     executionPrice: avgPrice.toFixed(),
+    entryPrice: state.entryPrice.toFixed(),
     side: group.side,
     positionSide: positionAfter.gt(0) ? PositionSide.LONG : PositionSide.SHORT,
     prevSize: '0',
@@ -337,6 +347,7 @@ function handleCrossZero(
     orderType,
     netFee: state.cumulativeFee.toFixed(),
     netRealizedPnl: state.cumulativePnl.toFixed(),
+    netRealizedPnlPercent: null,
     time: group.lastCreatedAt,
     orderId: group.orderId,
     marketId,
@@ -387,6 +398,9 @@ function computeSingleRow(
       : positionBefore.abs().minus(positionAfter.abs());
     tradePnl = computeClosingPnl(positionBefore.gt(0), closingAmount, avgPrice,
       state.entryPrice);
+    state.cumulativeCostBasis = state.cumulativeCostBasis.plus(
+      state.entryPrice.times(closingAmount),
+    );
   }
 
   // Update cumulative state
@@ -424,6 +438,7 @@ function computeSingleRow(
     subaccountNumber,
     action,
     executionPrice: avgPrice.toFixed(),
+    entryPrice: state.entryPrice.toFixed(),
     side: group.side,
     positionSide,
     prevSize: positionBefore.abs().toFixed(),
@@ -432,6 +447,9 @@ function computeSingleRow(
     orderType: group.orderId ? (orderTypeMap[group.orderId] ?? null) : null,
     netFee: state.cumulativeFee.toFixed(),
     netRealizedPnl: state.cumulativePnl.toFixed(),
+    netRealizedPnlPercent: state.cumulativeCostBasis.gt(0)
+      ? state.cumulativePnl.div(state.cumulativeCostBasis).toFixed()
+      : null,
     time: group.lastCreatedAt,
     orderId: group.orderId,
     marketId,
@@ -445,6 +463,7 @@ function computeSingleRow(
   if (becomesFlat) {
     state.cumulativePnl = new Big(0);
     state.cumulativeFee = new Big(0);
+    state.cumulativeCostBasis = new Big(0);
     state.entryPrice = new Big(0);
   }
 

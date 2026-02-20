@@ -92,9 +92,11 @@ describe('computeTradeHistory', () => {
     expect(result[0].prevSize).toBe('0');
     expect(result[0].additionalSize).toBe('5');
     expect(result[0].executionPrice).toBe('100');
+    expect(result[0].entryPrice).toBe('100');
     expect(result[0].value).toBe('500');
     expect(result[0].orderType).toBe(OrderType.LIMIT);
     expect(result[0].netRealizedPnl).toBe('0');
+    expect(result[0].netRealizedPnlPercent).toBeNull();
     expect(result[0].netFee).toBe('0.5');
     expect(result[0].marketId).toBe('BTC-USD');
     expect(result[0].positionSide).toBe(PositionSide.LONG);
@@ -120,10 +122,13 @@ describe('computeTradeHistory', () => {
     expect(result[0].prevSize).toBe('5');
     expect(result[0].additionalSize).toBe('5');
     expect(result[0].executionPrice).toBe('110');
+    // Weighted avg entry: (100*5 + 110*5) / 10 = 105
+    expect(result[0].entryPrice).toBe('105');
     expect(result[0].netRealizedPnl).toBe('0');
     expect(result[0].netFee).toBe('1'); // 0.5 + 0.5
 
     expect(result[1].action).toBe(TradeHistoryType.OPEN);
+    expect(result[1].entryPrice).toBe('100');
   });
 
   it('PARTIAL_CLOSE: selling part of a long position', () => {
@@ -145,6 +150,8 @@ describe('computeTradeHistory', () => {
     expect(partialClose.executionPrice).toBe('120');
     // PnL = (120 - 100) * 5 = 100
     expect(partialClose.netRealizedPnl).toBe('100');
+    // costBasis = 100 * 5 = 500, percent = 100/500 = 0.2
+    expect(partialClose.netRealizedPnlPercent).toBe('0.2');
     expect(partialClose.netFee).toBe('1.5'); // 1 + 0.5
   });
 
@@ -164,8 +171,11 @@ describe('computeTradeHistory', () => {
     expect(close.action).toBe(TradeHistoryType.CLOSE);
     expect(close.prevSize).toBe('5');
     expect(close.additionalSize).toBe('-5');
+    expect(close.entryPrice).toBe('100');
     // PnL = (150 - 100) * 5 = 250
     expect(close.netRealizedPnl).toBe('250');
+    // costBasis = 100 * 5 = 500, percent = 250/500 = 0.5
+    expect(close.netRealizedPnlPercent).toBe('0.5');
     expect(close.netFee).toBe('1'); // 0.5 + 0.5
   });
 
@@ -192,6 +202,8 @@ describe('computeTradeHistory', () => {
     expect(close.positionSide).toBeNull(); // fully closed
     // Short PnL = (200 - 180) * 3 = 60
     expect(close.netRealizedPnl).toBe('60');
+    // costBasis = 200 * 3 = 600, percent = 60/600 = 0.1
+    expect(close.netRealizedPnlPercent).toBe('0.1');
   });
 
   it('cross-zero: single order that closes long and opens short', () => {
@@ -220,6 +232,8 @@ describe('computeTradeHistory', () => {
     expect(closeRow.positionSide).toBeNull(); // fully closed
     // Close PnL = (120 - 100) * 5 = 100
     expect(closeRow.netRealizedPnl).toBe('100');
+    // costBasis = 100 * 5 = 500, percent = 100/500 = 0.2
+    expect(closeRow.netRealizedPnlPercent).toBe('0.2');
     // Close fee = 1 * (5/10) = 0.5, cumulative = 0.5 (open) + 0.5 = 1
     expect(closeRow.netFee).toBe('1');
 
@@ -230,6 +244,7 @@ describe('computeTradeHistory', () => {
     expect(openRow.positionSide).toBe(PositionSide.SHORT); // new short position
     // After lifecycle reset, netRealizedPnl = 0
     expect(openRow.netRealizedPnl).toBe('0');
+    expect(openRow.netRealizedPnlPercent).toBeNull();
     // Open fee = 1 * (5/10) = 0.5, new lifecycle cumulative = 0.5
     expect(openRow.netFee).toBe('0.5');
   });
@@ -258,6 +273,8 @@ describe('computeTradeHistory', () => {
     expect(closeRow.positionSide).toBeNull();
     // Short PnL = (200 - 180) * 5 = 100
     expect(closeRow.netRealizedPnl).toBe('100');
+    // costBasis = 200 * 5 = 1000, percent = 100/1000 = 0.1
+    expect(closeRow.netRealizedPnlPercent).toBe('0.1');
 
     const openRow = result.find((r) => r.id === 'order-2:open')!;
     expect(openRow.action).toBe(TradeHistoryType.OPEN);
@@ -267,6 +284,7 @@ describe('computeTradeHistory', () => {
     expect(openRow.additionalSize).toBe('5');
     expect(openRow.positionSide).toBe(PositionSide.LONG);
     expect(openRow.netRealizedPnl).toBe('0');
+    expect(openRow.netRealizedPnlPercent).toBeNull();
   });
 
   it('liquidation fills produce LIQUIDATION_CLOSE with null orderId', () => {
@@ -295,6 +313,8 @@ describe('computeTradeHistory', () => {
     expect(liqRow.id).toBe(fills[1].id);
     // PnL = (80 - 100) * 5 = -100
     expect(liqRow.netRealizedPnl).toBe('-100');
+    // costBasis = 100 * 5 = 500, percent = -100/500 = -0.2
+    expect(liqRow.netRealizedPnlPercent).toBe('-0.2');
   });
 
   it('liquidation partial close', () => {
@@ -320,6 +340,8 @@ describe('computeTradeHistory', () => {
     expect(liqRow.additionalSize).toBe('-3');
     // PnL = (90 - 100) * 3 = -30
     expect(liqRow.netRealizedPnl).toBe('-30');
+    // costBasis = 100 * 3 = 300, percent = -30/300 = -0.1
+    expect(liqRow.netRealizedPnlPercent).toBe('-0.1');
   });
 
   it('cumulative PnL resets after full close and reopen', () => {
@@ -344,6 +366,7 @@ describe('computeTradeHistory', () => {
     expect(newOpen.action).toBe(TradeHistoryType.OPEN);
     // After lifecycle reset, cumulative should be fresh
     expect(newOpen.netRealizedPnl).toBe('0');
+    expect(newOpen.netRealizedPnlPercent).toBeNull();
     expect(newOpen.netFee).toBe('0.3');
 
     // result[1] = lifecycle 1 CLOSE
@@ -351,6 +374,8 @@ describe('computeTradeHistory', () => {
     expect(close.action).toBe(TradeHistoryType.CLOSE);
     // PnL = (120 - 100) * 5 = 100
     expect(close.netRealizedPnl).toBe('100');
+    // costBasis = 100 * 5 = 500, percent = 100/500 = 0.2
+    expect(close.netRealizedPnlPercent).toBe('0.2');
     expect(close.netFee).toBe('1'); // 0.5 + 0.5
   });
 
@@ -439,8 +464,12 @@ describe('computeTradeHistory', () => {
     expect(result).toHaveLength(3);
     const close = result[0];
     expect(close.action).toBe(TradeHistoryType.CLOSE);
+    // Entry = (100*4 + 150*6) / 10 = 130
+    expect(close.entryPrice).toBe('130');
     // PnL = (200 - 130) * 10 = 700
     expect(close.netRealizedPnl).toBe('700');
+    // costBasis = 130 * 10 = 1300, percent = 700/1300
+    expect(close.netRealizedPnlPercent).toBe('0.53846153846153846154');
   });
 
   it('entry price stays the same on partial close', () => {
@@ -463,10 +492,14 @@ describe('computeTradeHistory', () => {
     const partialClose = result[1]; // middle
     // Partial PnL = (120 - 100) * 5 = 100
     expect(partialClose.netRealizedPnl).toBe('100');
+    // costBasis = 100 * 5 = 500, percent = 100/500 = 0.2
+    expect(partialClose.netRealizedPnlPercent).toBe('0.2');
 
     const fullClose = result[0]; // most recent
     // Full close PnL = (140 - 100) * 5 = 200, cumulative = 100 + 200 = 300
     expect(fullClose.netRealizedPnl).toBe('300');
+    // cumCostBasis = 500 + 500 = 1000, percent = 300/1000 = 0.3
+    expect(fullClose.netRealizedPnlPercent).toBe('0.3');
   });
 
   it('orderType is null when orderId is not in the map', () => {
@@ -541,6 +574,7 @@ describe('paginateTradeHistory', () => {
     subaccountNumber: 0,
     action: TradeHistoryType.OPEN,
     executionPrice: '100',
+    entryPrice: '100',
     side: OrderSide.BUY,
     positionSide: PositionSide.LONG,
     prevSize: '0',
@@ -549,6 +583,7 @@ describe('paginateTradeHistory', () => {
     orderType: OrderType.LIMIT,
     netFee: '0',
     netRealizedPnl: '0',
+    netRealizedPnlPercent: null,
     time: `2024-01-01T00:${String(i).padStart(2, '0')}:00.000Z`,
     orderId: `order-${i}`,
     marketId: 'BTC-USD',
