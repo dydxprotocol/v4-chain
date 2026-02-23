@@ -420,27 +420,43 @@ describe('computeTradeHistory', () => {
     const fills = [
       // Day 1: SELL 5 at 100 (orderId reused, block 100)
       makeFill({
-        side: OrderSide.SELL, size: '5', price: '100', fee: '0.5',
-        orderId: 'order-1', createdAtHeight: '100',
+        side: OrderSide.SELL,
+        size: '5',
+        price: '100',
+        fee: '0.5',
+        orderId: 'order-1',
+        createdAtHeight: '100',
         createdAt: '2024-01-01T00:00:00.000Z',
       }),
       // Day 1: BUY 5 at 90 (different orderId, block 101) — closes the short
       makeFill({
-        side: OrderSide.BUY, size: '5', price: '90', fee: '0.5',
-        orderId: 'order-2', createdAtHeight: '101',
+        side: OrderSide.BUY,
+        size: '5',
+        price: '90',
+        fee: '0.5',
+        orderId: 'order-2',
+        createdAtHeight: '101',
         createdAt: '2024-01-01T00:01:00.000Z',
       }),
       // Day 2: SELL 3 at 110 — SAME orderId as fill 1 but different block
       // This is a new logical order, not the same one from day 1
       makeFill({
-        side: OrderSide.SELL, size: '3', price: '110', fee: '0.3',
-        orderId: 'order-1', createdAtHeight: '200',
+        side: OrderSide.SELL,
+        size: '3',
+        price: '110',
+        fee: '0.3',
+        orderId: 'order-1',
+        createdAtHeight: '200',
         createdAt: '2024-01-02T00:00:00.000Z',
       }),
       // Day 2: BUY 3 at 100 — closes the new short
       makeFill({
-        side: OrderSide.BUY, size: '3', price: '100', fee: '0.3',
-        orderId: 'order-2', createdAtHeight: '201',
+        side: OrderSide.BUY,
+        size: '3',
+        price: '100',
+        fee: '0.3',
+        orderId: 'order-2',
+        createdAtHeight: '201',
         createdAt: '2024-01-02T00:01:00.000Z',
       }),
     ];
