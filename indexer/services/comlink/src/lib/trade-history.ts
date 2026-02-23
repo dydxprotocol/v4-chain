@@ -160,15 +160,21 @@ function processMarketFills(
 }
 
 /**
- * Groups fills by orderId. Liquidation fills (orderId is null/undefined)
- * each become their own group. Regular fills with the same orderId are combined.
- * Order of groups follows the chronological order of their first fill.
+ * Groups fills by (orderId, createdAtHeight). Liquidation fills (orderId is
+ * null/undefined) each become their own group.
  *
+ * In dYdX v4, orderIds are deterministic: (subaccountId, clientId, orderFlags,
+ * clobPairId). Users may reuse the same clientId across different logical
+ * orders, causing the same orderId to appear across fills spanning months.
+ * Grouping by (orderId, createdAtHeight) ensures that only partial fills from
+ * the same order execution within the same block are combined.
+ *
+ * Order of groups follows the chronological order of their first fill.
  * Assumes `fills` is sorted by createdAt ASC (guaranteed by the caller).
  */
 function groupFillsByOrder(fills: FillFromDatabase[]): FillGroup[] {
   const groups: FillGroup[] = [];
-  const orderMap = new Map<string, FillGroup>();
+  const groupMap = new Map<string, FillGroup>();
 
   for (const fill of fills) {
     const isLiquidation = fill.orderId === null || fill.orderId === undefined;
@@ -176,10 +182,11 @@ function groupFillsByOrder(fills: FillFromDatabase[]): FillGroup[] {
     if (isLiquidation) {
       groups.push(createFillGroup(fill, true));
     } else {
-      let group = orderMap.get(fill.orderId!);
+      const key = `${fill.orderId}:${fill.createdAtHeight}`;
+      let group = groupMap.get(key);
       if (!group) {
         group = createFillGroup(fill, false);
-        orderMap.set(fill.orderId!, group);
+        groupMap.set(key, group);
         groups.push(group);
       } else {
         addFillToGroup(group, fill);

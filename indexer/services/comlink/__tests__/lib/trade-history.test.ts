@@ -379,7 +379,7 @@ describe('computeTradeHistory', () => {
     expect(close.netFee).toBe('1'); // 0.5 + 0.5
   });
 
-  it('multiple fills per orderId are grouped correctly', () => {
+  it('multiple fills per orderId in same block are grouped correctly', () => {
     const fills = [
       makeFill({
         side: OrderSide.BUY,
@@ -387,6 +387,7 @@ describe('computeTradeHistory', () => {
         price: '100',
         fee: '0.2',
         orderId: 'order-1',
+        createdAtHeight: '100',
         createdAt: '2024-01-01T00:01:00.000Z',
       }),
       makeFill({
@@ -395,7 +396,8 @@ describe('computeTradeHistory', () => {
         price: '110',
         fee: '0.3',
         orderId: 'order-1',
-        createdAt: '2024-01-01T00:02:00.000Z',
+        createdAtHeight: '100',
+        createdAt: '2024-01-01T00:01:00.000Z',
       }),
     ];
     const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
@@ -410,6 +412,62 @@ describe('computeTradeHistory', () => {
     expect(result[0].netFee).toBe('0.5');
     // value = 5 * 106 = 530
     expect(result[0].value).toBe('530');
+  });
+
+  it('reused orderId across different blocks produces separate trades', () => {
+    // Simulates a market-making bot that reuses the same clientId (and thus orderId)
+    // for different logical orders over time.
+    const fills = [
+      // Day 1: SELL 5 at 100 (orderId reused, block 100)
+      makeFill({
+        side: OrderSide.SELL, size: '5', price: '100', fee: '0.5',
+        orderId: 'order-1', createdAtHeight: '100',
+        createdAt: '2024-01-01T00:00:00.000Z',
+      }),
+      // Day 1: BUY 5 at 90 (different orderId, block 101) — closes the short
+      makeFill({
+        side: OrderSide.BUY, size: '5', price: '90', fee: '0.5',
+        orderId: 'order-2', createdAtHeight: '101',
+        createdAt: '2024-01-01T00:01:00.000Z',
+      }),
+      // Day 2: SELL 3 at 110 — SAME orderId as fill 1 but different block
+      // This is a new logical order, not the same one from day 1
+      makeFill({
+        side: OrderSide.SELL, size: '3', price: '110', fee: '0.3',
+        orderId: 'order-1', createdAtHeight: '200',
+        createdAt: '2024-01-02T00:00:00.000Z',
+      }),
+      // Day 2: BUY 3 at 100 — closes the new short
+      makeFill({
+        side: OrderSide.BUY, size: '3', price: '100', fee: '0.3',
+        orderId: 'order-2', createdAtHeight: '201',
+        createdAt: '2024-01-02T00:01:00.000Z',
+      }),
+    ];
+    const result = computeTradeHistory(fills, ORDER_TYPE_MAP, MARKET_MAP, SUBACCOUNT_MAP);
+
+    // Should produce 4 trades (2 lifecycles: OPEN+CLOSE, OPEN+CLOSE)
+    // NOT 2 mega-trades from grouping all order-1 fills and all order-2 fills
+    expect(result).toHaveLength(4);
+
+    // Chronological order (result is sorted DESC):
+    // result[3] = Day 1 OPEN SHORT 5 at 100
+    // result[2] = Day 1 CLOSE SHORT at 90, PnL = (100-90)*5 = 50
+    // result[1] = Day 2 OPEN SHORT 3 at 110
+    // result[0] = Day 2 CLOSE SHORT at 100, PnL = (110-100)*3 = 30
+    expect(result[3].action).toBe(TradeHistoryType.OPEN);
+    expect(result[3].side).toBe(OrderSide.SELL);
+    expect(result[3].additionalSize).toBe('-5');
+
+    expect(result[2].action).toBe(TradeHistoryType.CLOSE);
+    expect(result[2].netRealizedPnl).toBe('50');
+
+    expect(result[1].action).toBe(TradeHistoryType.OPEN);
+    expect(result[1].side).toBe(OrderSide.SELL);
+    expect(result[1].additionalSize).toBe('-3');
+
+    expect(result[0].action).toBe(TradeHistoryType.CLOSE);
+    expect(result[0].netRealizedPnl).toBe('30');
   });
 
   it('multiple markets are processed independently', () => {
