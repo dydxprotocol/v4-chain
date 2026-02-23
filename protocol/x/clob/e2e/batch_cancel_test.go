@@ -89,8 +89,10 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
 				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
 			},
+			// With deferred matching, batch cancel in the same block prevents the match entirely.
+			// The order is cancelled before MatchAllCrossedOrders runs, so fill amount is 0.
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
-				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 40,
+				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 0,
 			},
 		},
 		"Cancel partially filled short term order in next block": {

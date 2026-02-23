@@ -504,6 +504,61 @@ func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subacco
 	return r0, r1, r2, r3
 }
 
+// PlaceOrderNoMatch provides a mock function with given fields: ctx, order
+func (_m *MemClob) PlaceOrderNoMatch(ctx types.Context, order clobtypes.Order) (clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+	ret := _m.Called(ctx, order)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PlaceOrderNoMatch")
+	}
+
+	var r0 clobtypes.OrderStatus
+	var r1 *clobtypes.OffchainUpdates
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) (clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
+		return rf(ctx, order)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) clobtypes.OrderStatus); ok {
+		r0 = rf(ctx, order)
+	} else {
+		r0 = ret.Get(0).(clobtypes.OrderStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order) *clobtypes.OffchainUpdates); ok {
+		r1 = rf(ctx, order)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*clobtypes.OffchainUpdates)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.Order) error); ok {
+		r2 = rf(ctx, order)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// MatchAllCrossedOrders provides a mock function with given fields: ctx
+func (_m *MemClob) MatchAllCrossedOrders(ctx types.Context) error {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MatchAllCrossedOrders")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // PlacePerpetualLiquidation provides a mock function with given fields: ctx, liquidationOrder
 func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder clobtypes.LiquidationOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
 	ret := _m.Called(ctx, liquidationOrder)

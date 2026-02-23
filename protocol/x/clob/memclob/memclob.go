@@ -47,6 +47,12 @@ type MemClobPriceTimePriority struct {
 
 	// ---- Fields for determining if orderbook updates should be generated ----
 	generateOrderbookUpdates bool
+
+	// pendingMatchOrders tracks orders placed via PlaceOrderNoMatch in arrival order.
+	// Stores the full Order so that MatchAllCrossedOrders can process IOC orders that
+	// are not on the book. Used by MatchAllCrossedOrders to determine taker priority
+	// (most recently arrived = taker). Cleared in RemoveAndClearOperationsQueue.
+	pendingMatchOrders []types.Order
 }
 
 type OrderWithRemovalReason struct {
@@ -62,6 +68,7 @@ func NewMemClobPriceTimePriority(
 		operationsToPropose:      *types.NewOperationsToPropose(),
 		generateOffchainUpdates:  generateOffchainUpdates,
 		generateOrderbookUpdates: false,
+		pendingMatchOrders:       make([]types.Order, 0),
 	}
 }
 
@@ -415,19 +422,26 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	if !takerOrder.IsLiquidation() {
 		taker := takerOrder.MustGetOrder()
 
-		// Add the taker order placement to the operations queue.
-		if taker.IsStatefulOrder() {
-			m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(
-				taker,
-			)
-		} else {
-			m.operationsToPropose.MustAddShortTermOrderTxBytes(
-				taker,
-				ctx.TxBytes(),
-			)
-			m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(
-				taker,
-			)
+		// Skip if the taker order placement is already in the operations queue
+		// (can happen when MatchAllCrossedOrders processes orders that were pre-registered).
+		if !m.operationsToPropose.IsOrderPlacementInOperationsQueue(taker) {
+			// Add the taker order placement to the operations queue.
+			if taker.IsStatefulOrder() {
+				m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(
+					taker,
+				)
+			} else {
+				// TX bytes may already be stored (from PlaceOrderNoMatch during deferred matching).
+				if !m.operationsToPropose.HasShortTermOrderTxBytes(taker) {
+					m.operationsToPropose.MustAddShortTermOrderTxBytes(
+						taker,
+						ctx.TxBytes(),
+					)
+				}
+				m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(
+					taker,
+				)
+			}
 		}
 	}
 
@@ -719,6 +733,312 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	)
 
 	return orderSizeOptimisticallyFilledFromMatchingQuantums, types.Success, offchainUpdates, nil
+}
+
+// PlaceOrderNoMatch places an order on the orderbook without attempting to match it.
+// This is used during CheckTx in the deferred-matching model: orders are placed on the book
+// during CheckTx, and matching is deferred to PrepareProposal via MatchAllCrossedOrders.
+//
+// The order will be validated, and if it passes validation it will be added to the orderbook.
+// Post-only orders that would cross the book are rejected immediately.
+// IOC/FOK orders are placed on the book and will be handled at matching time.
+//
+// The function tracks the order in pendingMatchOrderIds so that MatchAllCrossedOrders
+// can process orders in arrival order (most recently arrived = taker).
+func (m *MemClobPriceTimePriority) PlaceOrderNoMatch(
+	ctx sdk.Context,
+	order types.Order,
+) (
+	orderStatus types.OrderStatus,
+	offchainUpdates *types.OffchainUpdates,
+	err error,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	offchainUpdates = types.NewOffchainUpdates()
+
+	// Validate the order.
+	if err := m.validateNewOrder(ctx, order); err != nil {
+		return 0, offchainUpdates, err
+	}
+
+	orderbook := m.mustGetOrderbook(order.GetClobPairId())
+
+	// Post-only orders: reject if the order would cross the book.
+	if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
+		bestOrderOnOtherSide, exists := orderbook.getBestOrderOnSide(!order.IsBuy())
+		if exists {
+			wouldCross := (order.IsBuy() && order.GetOrderSubticks() >= bestOrderOnOtherSide.Value.Order.GetOrderSubticks()) ||
+				(!order.IsBuy() && order.GetOrderSubticks() <= bestOrderOnOtherSide.Value.Order.GetOrderSubticks())
+			if wouldCross {
+				if m.generateOffchainUpdates {
+					if message, success := off_chain_updates.CreateOrderRemoveMessage(
+						ctx,
+						order.OrderId,
+						types.PostOnlyWouldCrossMakerOrder,
+						types.ErrPostOnlyWouldCrossMakerOrder,
+						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+					); success {
+						offchainUpdates.AddRemoveMessage(order.OrderId, message)
+					}
+				}
+				// For stateful post-only orders, add removal to operations queue.
+				if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+					m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+						order.OrderId,
+						types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+					)
+				}
+				return types.PostOnlyWouldCrossMakerOrder, offchainUpdates, types.ErrPostOnlyWouldCrossMakerOrder
+			}
+		}
+	}
+
+	if m.generateOffchainUpdates {
+		// Handle replacement order messaging.
+		orderId := order.OrderId
+		if _, found := orderbook.getOrder(orderId); found {
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+				ctx,
+				orderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(orderId, message)
+			}
+		}
+		if message, success := off_chain_updates.CreateOrderPlaceMessage(
+			ctx,
+			order,
+		); success {
+			offchainUpdates.AddPlaceMessage(order.OrderId, message)
+		}
+	}
+
+	// If this is a Short-Term order, store the TX bytes for later proposal construction.
+	// TX bytes are stored now so that MatchAllCrossedOrders → mustUpdateMemclobStateWithMatches
+	// can find them when adding matched maker orders to the operations queue.
+	if order.IsShortTermOrder() &&
+		!m.operationsToPropose.HasShortTermOrderTxBytes(order) {
+		m.operationsToPropose.MustAddShortTermOrderTxBytes(
+			order,
+			ctx.TxBytes(),
+		)
+	}
+
+	// Handle replacement: if the same order ID already exists on the book, remove it first.
+	if _, found := orderbook.getOrder(order.OrderId); found {
+		m.mustRemoveOrder(ctx, order.OrderId)
+		// Restore TX bytes that may have been cleared by mustRemoveOrder.
+		if order.IsShortTermOrder() &&
+			!m.operationsToPropose.HasShortTermOrderTxBytes(order) {
+			m.operationsToPropose.MustAddShortTermOrderTxBytes(
+				order,
+				ctx.TxBytes(),
+			)
+		}
+	}
+
+	// IOC orders: do NOT add to the book. They can only be takers.
+	// They will be processed as takers during MatchAllCrossedOrders.
+	if order.GetTimeInForce() != types.Order_TIME_IN_FORCE_IOC {
+		// Add the order to the orderbook (without matching).
+		m.mustAddOrderToOrderbook(ctx, order, false)
+	}
+
+	// Track this order for deferred matching in arrival order.
+	m.pendingMatchOrders = append(m.pendingMatchOrders, order)
+
+	if m.generateOffchainUpdates {
+		if message, success := off_chain_updates.CreateOrderUpdateMessage(
+			ctx,
+			order.OrderId,
+			0, // No fill yet — matching is deferred.
+		); success {
+			offchainUpdates.AddUpdateMessage(order.OrderId, message)
+		}
+	}
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.PlaceOrder, metrics.AddedToOrderBook},
+		1,
+		order.GetOrderLabels(),
+	)
+
+	return types.Success, offchainUpdates, nil
+}
+
+// MatchAllCrossedOrders performs deferred matching for all orders placed via PlaceOrderNoMatch.
+// It replicates the eager-matching model by removing all pending orders from the book, then
+// re-processing each in arrival order. Each order is run through matchOrder (as a taker) and
+// any remaining unfilled portion is re-added to the book before moving to the next order.
+// This ensures the later-arriving order in a cross is always the taker, matching the behavior
+// of the eager-matching model.
+//
+// Algorithm:
+//  1. Remove all pending orders from the book (preserving TX bytes).
+//  2. For each pending order in arrival order:
+//     a. Run matchOrder against whatever is currently on the book.
+//     b. If the order has remaining size, re-add to the book (unless IOC).
+//
+// pendingMatchOrders is NOT cleared here; it is cleared in RemoveAndClearOperationsQueue.
+func (m *MemClobPriceTimePriority) MatchAllCrossedOrders(
+	ctx sdk.Context,
+) error {
+	// Phase 1: Remove ALL pending orders from the book and save their TX bytes.
+	// This empties the book of all orders placed during CheckTx so we can rebuild
+	// the matching sequence correctly.
+	type savedOrderInfo struct {
+		order        types.Order
+		savedTxBytes []byte
+		wasOnBook    bool // Whether the order was on the book (false = canceled or IOC)
+	}
+	orderInfos := make([]savedOrderInfo, 0, len(m.pendingMatchOrders))
+
+	for _, pendingOrder := range m.pendingMatchOrders {
+		orderId := pendingOrder.OrderId
+		orderbook := m.mustGetOrderbook(types.ClobPairId(orderId.GetClobPairId()))
+
+		// Use the version from the book if available (may have been updated by a replacement).
+		order := pendingOrder
+		onBook := false
+		if bookOrder, found := orderbook.getOrder(orderId); found {
+			order = bookOrder
+			onBook = true
+		}
+
+		var savedTxBytes []byte
+		if order.IsShortTermOrder() {
+			orderHash := order.GetOrderHash()
+			if bytes, exists := m.operationsToPropose.ShortTermOrderHashToTxBytes[orderHash]; exists {
+				savedTxBytes = make([]byte, len(bytes))
+				copy(savedTxBytes, bytes)
+			}
+		}
+
+		if onBook {
+			m.mustRemoveOrder(ctx, orderId)
+		}
+
+		// Restore TX bytes immediately (mustRemoveOrder may have cleared them).
+		if savedTxBytes != nil {
+			orderHash := order.GetOrderHash()
+			m.operationsToPropose.ShortTermOrderHashToTxBytes[orderHash] = savedTxBytes
+		}
+
+		orderInfos = append(orderInfos, savedOrderInfo{
+			order:        order,
+			savedTxBytes: savedTxBytes,
+			wasOnBook:    onBook,
+		})
+	}
+
+	// Phase 2: Re-process each order in arrival order. Earlier orders become makers on the
+	// book; later orders that cross them act as takers — exactly as in the eager model.
+	// Orders that were not on the book (canceled between CheckTx and PrepareProposal, or
+	// superseded by a replacement) are skipped entirely.
+	for _, info := range orderInfos {
+		order := info.order
+		orderId := order.OrderId
+
+		// Skip orders that were not on the book when we entered MatchAllCrossedOrders.
+		// These were canceled (or replaced) between CheckTx and PrepareProposal.
+		// IOC orders that were never placed on the book ARE still valid for matching as takers.
+		if !info.wasOnBook && order.GetTimeInForce() != types.Order_TIME_IN_FORCE_IOC {
+			continue
+		}
+
+		// Run matchOrder in a closure with panic recovery. This ensures that a panic
+		// from an individual order's matching (e.g., insufficient module account funds)
+		// does not prevent the rest of the orders from being processed or the proposal
+		// from being generated.
+		panicked := false
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					panicked = true
+					log.ErrorLog(ctx, "MatchAllCrossedOrders: panic during matchOrder",
+						log.OrderId, orderId,
+						log.Error, r,
+						log.StackTrace, string(debug.Stack()),
+					)
+				}
+			}()
+
+			// Run matchOrder. This treats the order as a taker against the current state of the book.
+			takerOrderStatus, matchOffchainUpdates, _, err := m.matchOrder(ctx, &order)
+			_ = matchOffchainUpdates
+
+			if err != nil {
+				log.InfoLog(ctx, "MatchAllCrossedOrders: matchOrder returned error",
+					log.OrderId, orderId,
+					log.Error, err,
+				)
+
+				// For stateful orders that error during matching, add order removal.
+				if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+					var removalReason types.OrderRemoval_RemovalReason
+					if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
+						removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+					} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+						removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
+					}
+					if removalReason != types.OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+						m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(order.OrderId, removalReason)
+					}
+				}
+				return
+			}
+
+			remainingSize := takerOrderStatus.RemainingQuantums
+
+			// If the order status is not successful (e.g., undercollateralized), don't add to book.
+			if !takerOrderStatus.OrderStatus.IsSuccess() {
+				if takerOrderStatus.OrderStatus == types.Undercollateralized && order.IsStatefulOrder() {
+					if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+						m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+							order.OrderId,
+							types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+						)
+					}
+				}
+				if takerOrderStatus.OrderStatus == types.ReduceOnlyResized && order.IsStatefulOrder() {
+					if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+						m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+							order.OrderId,
+							types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+						)
+					}
+				}
+				return
+			}
+
+			// Fully filled — done.
+			if remainingSize == 0 {
+				return
+			}
+
+			// IOC orders: cancel remaining size (IOC can't rest on book).
+			if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
+				if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+					m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+						order.OrderId,
+						types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
+					)
+				}
+				return
+			}
+
+			// Re-add the order to the book with its remaining size.
+			m.mustAddOrderToOrderbook(ctx, order, false)
+		}()
+
+		if panicked {
+			continue
+		}
+	}
+
+	return nil
 }
 
 // PlacePerpetualLiquidation matches an IOC liquidation order against the orderbook. Specifically,
@@ -1191,6 +1511,20 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 			log.Order, order,
 		)
 
+		// If the order is fully filled, generate an OrderUpdate with the full fill amount
+		// so the indexer receives the correct fill information during replay.
+		// This is especially important with deferred matching, where fill updates are not
+		// sent during CheckTx and must be sent during PrepareCheckState replay.
+		if m.generateOffchainUpdates && errors.Is(err, types.ErrOrderFullyFilled) {
+			if message, success := off_chain_updates.CreateOrderUpdateMessage(
+				ctx,
+				orderId,
+				order.GetBaseQuantums(),
+			); success {
+				existingOffchainUpdates.AddUpdateMessage(orderId, message)
+			}
+		}
+
 		// If the order is dropped while adding it to the book, return an off-chain order remove
 		// message for the order.
 		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
@@ -1230,7 +1564,11 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 		metrics.Latency,
 	)
 
-	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
+	// Clear pending match order tracking.
+	m.pendingMatchOrders = make([]types.Order, 0)
+
+	// Clear the OTP. Note: ClearOperationsQueue preserves ShortTermOrderHashToTxBytes,
+	// so TX bytes for orders still on the book survive across blocks.
 	m.operationsToPropose.ClearOperationsQueue()
 
 	// For each order placement operation in the copy, remove the order from the book
@@ -1620,7 +1958,11 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			newTakerOrder.MustGetOrder(),
 		)
 		if !takerHasRemainingSize {
-			panic(fmt.Sprintf("mustPerformTakerOrderMatching: order has no remaining amount %v", newTakerOrder))
+			// Order is already fully filled in committed state (e.g. during PrepareCheckState replay).
+			// Return early with 0 remaining quantums and Success status so that callers (like PlaceOrder)
+			// can generate the correct OrderUpdate with the full fill amount.
+			takerOrderStatus.RemainingQuantums = 0
+			return
 		}
 	}
 	takerRemainingSizeBeforeMatching := takerRemainingSize

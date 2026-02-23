@@ -737,6 +737,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				},
 				{
 					blockHeight: 3,
+					// Bob's short-term order gets an update message during PrepareCheckState replay
+					expectedOffchainMessagesAfterBlock: []msgsender.Message{
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
+					},
 					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 						&indexer_manager.IndexerTendermintBlock{
 							Height: 3,
@@ -1070,6 +1078,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						),
+						// Bob's short-term order also gets an update during PrepareCheckState replay
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
 					},
 					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 						&indexer_manager.IndexerTendermintBlock{
@@ -1195,8 +1209,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					orderMsgs: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20,
 					},
-					// Short term order placement results in Create and Update with fully-filled amount for both
-					// taker and maker
+					// With deferred matching, CheckTx only generates OrderPlace + OrderUpdate(fill=0).
+					// No matching happens during CheckTx.
 					expectedOffchainMessagesCheckTx: []msgsender.Message{
 						off_chain_updates.MustCreateOrderPlaceMessage(
 							ctx,
@@ -1207,22 +1221,23 @@ func TestPlaceLongTermOrder(t *testing.T) {
 						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
-							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
-							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetBaseQuantums(),
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
-						}),
-						off_chain_updates.MustCreateOrderUpdateMessage(
-							ctx,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
-							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+							0,
 						).AddHeader(msgsender.MessageHeader{
 							Key:   msgsender.TransactionHashHeaderKey,
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
 						}),
 					},
-					expectedOffchainMessagesAfterBlock: []msgsender.Message{},
+					// Fill updates come from PrepareCheckState replay after matching in PrepareProposal.
+					// Alice's long-term order is fully filled and removed from state, so no update message.
+					expectedOffchainMessagesAfterBlock: []msgsender.Message{
+						// taker (Bob Id1) fully filled
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
+					},
 					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 						&indexer_manager.IndexerTendermintBlock{
 							Height: 4,

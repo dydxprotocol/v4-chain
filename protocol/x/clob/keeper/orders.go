@@ -23,6 +23,13 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// MatchAllCrossedOrders runs the deferred matching engine. It processes all orders that were
+// placed on the book via PlaceOrderNoMatch during CheckTx, matching them in arrival order.
+// This should be called during PrepareProposal before GetOperations.
+func (k Keeper) MatchAllCrossedOrders(ctx sdk.Context) error {
+	return k.MemClob.MatchAllCrossedOrders(ctx)
+}
+
 func (k Keeper) GetOperations(ctx sdk.Context) *types.MsgProposedOperations {
 	operationsQueueRaw := k.MemClob.GetOperationsRaw(ctx)
 
@@ -209,8 +216,9 @@ func (k Keeper) PlaceShortTermOrder(
 		return 0, 0, err
 	}
 
-	// Place the order on the memclob and return the result.
-	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := k.MemClob.PlaceOrder(
+	// Place the order on the memclob WITHOUT matching (deferred matching model).
+	// Matching will occur during PrepareProposal via MatchAllCrossedOrders.
+	orderStatus, offchainUpdates, err := k.MemClob.PlaceOrderNoMatch(
 		ctx,
 		msg.Order,
 	)
@@ -225,15 +233,9 @@ func (k Keeper) PlaceShortTermOrder(
 		metrics.SendPlaceOrderOffchainUpdates,
 	)
 
-	if orderSizeOptimisticallyFilledFromMatchingQuantums > 0 {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.PlaceOrder, metrics.Matched},
-			1,
-			orderLabels,
-		)
-	}
-
-	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
+	// With deferred matching, no optimistic fills happen during CheckTx.
+	// orderSizeOptimisticallyFilledFromMatchingQuantums is always 0.
+	return 0, orderStatus, err
 }
 
 // CancelStatefulOrder performs stateful order cancellation validation and removes the stateful order
