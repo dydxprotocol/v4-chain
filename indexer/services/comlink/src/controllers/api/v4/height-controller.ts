@@ -17,7 +17,7 @@ const controllerName: string = 'height-controller';
 @Route('height')
 class HeightController extends Controller {
   @Get('/')
-  async getHeight(): Promise<HeightResponse> {
+  static async getHeight(): Promise<HeightResponse> {
     try {
       const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
       return {
@@ -37,8 +37,7 @@ router.get(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     try {
-      const controller: HeightController = new HeightController();
-      const response: HeightResponse = await controller.getHeight();
+      const response: HeightResponse = await HeightController.getHeight();
 
       return res.send(response);
     } catch (error) {
