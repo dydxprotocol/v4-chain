@@ -484,7 +484,11 @@ function computeSingleRow(
  *   Cross-zero:    orderId:close / orderId:open
  */
 function makeRowId(group: FillGroup, suffix?: 'close' | 'open'): string {
-  const base = group.orderId ?? group.fills[0].id;
+  // Include createdAtHeight to ensure uniqueness when the same orderId is reused
+  // across different blocks (dYdX v4 orderIds are deterministic and can be reused).
+  const base = group.orderId
+    ? `${group.orderId}:${group.fills[0].createdAtHeight}`
+    : group.fills[0].id;
   return suffix ? `${base}:${suffix}` : base;
 }
 

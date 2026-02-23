@@ -101,7 +101,7 @@ describe('computeTradeHistory', () => {
     expect(result[0].marketId).toBe('BTC-USD');
     expect(result[0].positionSide).toBe(PositionSide.LONG);
     expect(result[0].orderId).toBe('order-1');
-    expect(result[0].id).toBe('order-1');
+    expect(result[0].id).toBe('order-1:1');
     expect(result[0].subaccountNumber).toBe(0);
   });
 
@@ -222,8 +222,8 @@ describe('computeTradeHistory', () => {
     expect(result).toHaveLength(3); // OPEN + CLOSE + OPEN
     // Cross-zero rows share same time; sorted DESC with id tiebreaker:
     // order-2:open (new lifecycle) sorts before order-2:close (old lifecycle)
-    expect(result[0].id).toBe('order-2:open');
-    expect(result[1].id).toBe('order-2:close');
+    expect(result[0].id).toBe('order-2:2:open');
+    expect(result[1].id).toBe('order-2:2:close');
 
     const closeRow = result[1];
     expect(closeRow.action).toBe(TradeHistoryType.CLOSE);
@@ -264,7 +264,7 @@ describe('computeTradeHistory', () => {
 
     expect(result).toHaveLength(3); // OPEN + CLOSE + OPEN
 
-    const closeRow = result.find((r) => r.id === 'order-2:close')!;
+    const closeRow = result.find((r) => r.id === 'order-2:2:close')!;
     expect(closeRow.action).toBe(TradeHistoryType.CLOSE);
     expect(closeRow.side).toBe(OrderSide.BUY);
     expect(closeRow.prevSize).toBe('5');
@@ -276,7 +276,7 @@ describe('computeTradeHistory', () => {
     // costBasis = 200 * 5 = 1000, percent = 100/1000 = 0.1
     expect(closeRow.netRealizedPnlPercent).toBe('0.1');
 
-    const openRow = result.find((r) => r.id === 'order-2:open')!;
+    const openRow = result.find((r) => r.id === 'order-2:2:open')!;
     expect(openRow.action).toBe(TradeHistoryType.OPEN);
     expect(openRow.side).toBe(OrderSide.BUY);
     expect(openRow.prevSize).toBe('0');
