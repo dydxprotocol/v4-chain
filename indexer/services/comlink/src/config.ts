@@ -132,6 +132,7 @@ export const configSchema = {
   ALCHEMY_AUTH_TOKEN: parseString({ default: '' }),
   ALCHEMY_API_KEY: parseString({ default: '' }),
   ALCHEMY_WEBHOOK_UPDATE_URL: parseString({ default: 'https://dashboard.alchemy.com/api/update-webhook-addresses' }),
+  ALCHEMY_WEBHOOK_UPDATE_TIMEOUT_MS: parseInteger({ default: 5000 }),
   // ZeroDev RPC for skip bridge.
   ZERODEV_API_KEY: parseString({ default: '' }),
   ZERODEV_API_BASE_URL: parseString({ default: 'https://rpc.zerodev.app/api/v3' }),
