@@ -177,8 +177,11 @@ export function fillResponseObjectFromFillCreateObject(
   return fillResponse;
 }
 
-function randomInt(range: number = 1000): number {
-  return Math.floor(Math.random() * range);
+let nextInt: number = 100000;
+function randomInt(_range: number = 1000): number {
+  const val = nextInt;
+  nextInt += 1;
+  return val;
 }
 
 export function pnlTickCreateObjectToResponseObject(
