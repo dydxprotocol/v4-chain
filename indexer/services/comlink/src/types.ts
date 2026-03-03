@@ -308,6 +308,7 @@ export type AssetById = {[assetId: string]: AssetFromDatabase};
 export interface MarketAndType {
   marketType: MarketType,
   market: string,
+  perpetualMarketType?: PerpetualMarketType,
 }
 
 export type MarketAndTypeByClobPairId = {[clobPairId: string]: MarketAndType};
@@ -889,4 +890,52 @@ export interface PnlResponseObject {
 export interface AggregatedPnl{
   pnl: PnlFromDatabase,
   numPnls: number,
+}
+
+/* ------- TRADE HISTORY TYPES ------- */
+
+export enum TradeHistoryType {
+  OPEN = 'OPEN',
+  EXTEND = 'EXTEND',
+  PARTIAL_CLOSE = 'PARTIAL_CLOSE',
+  CLOSE = 'CLOSE',
+  LIQUIDATION_PARTIAL_CLOSE = 'LIQUIDATION_PARTIAL_CLOSE',
+  LIQUIDATION_CLOSE = 'LIQUIDATION_CLOSE',
+}
+
+export interface TradeHistoryRequest
+  extends SubaccountRequest, LimitRequest, PaginationRequest {
+  market?: string,
+  marketType?: MarketType,
+}
+
+export interface ParentSubaccountTradeHistoryRequest
+  extends ParentSubaccountRequest, LimitRequest, PaginationRequest {
+  market?: string,
+  marketType?: MarketType,
+}
+
+export interface TradeHistoryResponseObject {
+  id: string,
+  subaccountNumber: number,
+  action: TradeHistoryType,
+  executionPrice: string,
+  entryPrice: string,
+  side: OrderSide,
+  positionSide: PositionSide | null,
+  prevSize: string,
+  additionalSize: string,
+  value: string,
+  orderType: OrderType | null,
+  netFee: string,
+  netRealizedPnl: string,
+  netRealizedPnlPercent: string | null,
+  time: IsoString,
+  orderId: string | null,
+  marketId: string,
+  marginMode: PerpetualMarketType,
+}
+
+export interface TradeHistoryResponse extends PaginationResponse {
+  tradeHistory: TradeHistoryResponseObject[],
 }

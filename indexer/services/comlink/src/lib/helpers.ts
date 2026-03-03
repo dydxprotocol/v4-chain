@@ -42,6 +42,7 @@ import {
   AssetById,
   AssetPositionResponseObject,
   AssetPositionsMap,
+  MarketAndTypeByClobPairId,
   MarketType,
   PerpetualPositionResponseObject,
   PerpetualPositionsMap,
@@ -186,6 +187,20 @@ export async function getClobPairId(
   // spot markets are not supported in V4 yet
 
   return undefined;
+}
+
+export function buildClobPairIdToMarket(): MarketAndTypeByClobPairId {
+  const clobPairIdToPerpetualMarket: Record<
+    string,
+    PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
+  return _.mapValues(
+    clobPairIdToPerpetualMarket,
+    (perpetualMarket: PerpetualMarketFromDatabase) => ({
+      marketType: MarketType.PERPETUAL,
+      market: perpetualMarket.ticker,
+      perpetualMarketType: perpetualMarket.marketType,
+    }),
+  );
 }
 
 /* ------- ACCOUNT HELPERS ------- */

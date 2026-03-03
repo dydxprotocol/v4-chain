@@ -1447,6 +1447,137 @@
         "type": "object",
         "additionalProperties": false
       },
+      "TradeHistoryType": {
+        "enum": [
+          "OPEN",
+          "EXTEND",
+          "PARTIAL_CLOSE",
+          "CLOSE",
+          "LIQUIDATION_PARTIAL_CLOSE",
+          "LIQUIDATION_CLOSE"
+        ],
+        "type": "string"
+      },
+      "TradeHistoryResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
+          },
+          "action": {
+            "$ref": "#/components/schemas/TradeHistoryType"
+          },
+          "executionPrice": {
+            "type": "string"
+          },
+          "entryPrice": {
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/OrderSide"
+          },
+          "positionSide": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PositionSide"
+              }
+            ],
+            "nullable": true
+          },
+          "prevSize": {
+            "type": "string"
+          },
+          "additionalSize": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "orderType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderType"
+              }
+            ],
+            "nullable": true
+          },
+          "netFee": {
+            "type": "string"
+          },
+          "netRealizedPnl": {
+            "type": "string"
+          },
+          "netRealizedPnlPercent": {
+            "type": "string",
+            "nullable": true
+          },
+          "time": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "orderId": {
+            "type": "string",
+            "nullable": true
+          },
+          "marketId": {
+            "type": "string"
+          },
+          "marginMode": {
+            "$ref": "#/components/schemas/PerpetualMarketType"
+          }
+        },
+        "required": [
+          "id",
+          "subaccountNumber",
+          "action",
+          "executionPrice",
+          "entryPrice",
+          "side",
+          "positionSide",
+          "prevSize",
+          "additionalSize",
+          "value",
+          "orderType",
+          "netFee",
+          "netRealizedPnl",
+          "netRealizedPnlPercent",
+          "time",
+          "orderId",
+          "marketId",
+          "marginMode"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TradeHistoryResponse": {
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalResults": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tradeHistory": {
+            "items": {
+              "$ref": "#/components/schemas/TradeHistoryResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "tradeHistory"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TradeType": {
         "enum": [
           "LIMIT",
@@ -3875,6 +4006,148 @@
         },
         "security": [],
         "parameters": []
+      }
+    },
+    "/tradeHistory": {
+      "get": {
+        "operationId": "GetTradeHistory",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeHistoryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "marketType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MarketType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/tradeHistory/parentSubaccountNumber": {
+      "get": {
+        "operationId": "GetTradeHistoryForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeHistoryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "marketType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MarketType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
       }
     },
     "/trades/perpetualMarket/{ticker}": {

@@ -1,14 +1,12 @@
 import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
-  SubaccountTable,
-  IsoString,
-  perpetualMarketRefresher,
-  PerpetualMarketFromDatabase,
-  FillTable,
-  FillFromDatabase,
-  QueryableField,
   FillColumns,
+  FillFromDatabase,
+  FillTable,
+  IsoString,
   Ordering,
+  QueryableField,
+  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -16,7 +14,6 @@ import {
   matchedData,
   query,
 } from 'express-validator';
-import _ from 'lodash';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -26,6 +23,7 @@ import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
+  buildClobPairIdToMarket,
   getChildSubaccountNums,
   getClobPairId, handleControllerError, isDefined,
 } from '../../../lib/helpers';
@@ -43,7 +41,6 @@ import {
   FillRequest,
   FillResponse,
   FillResponseObject,
-  MarketAndTypeByClobPairId,
   MarketType,
   ParentSubaccountFillRequest,
 } from '../../../types';
@@ -97,18 +94,7 @@ class FillsController extends Controller {
       page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
-    const clobPairIdToPerpetualMarket: Record<
-      string,
-      PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
-    const clobPairIdToMarket: MarketAndTypeByClobPairId = _.mapValues(
-      clobPairIdToPerpetualMarket,
-      (perpetualMarket: PerpetualMarketFromDatabase) => {
-        return {
-          marketType: MarketType.PERPETUAL,
-          market: perpetualMarket.ticker,
-        };
-      },
-    );
+    const clobPairIdToMarket = buildClobPairIdToMarket();
 
     return {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
@@ -156,18 +142,7 @@ class FillsController extends Controller {
       page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
-    const clobPairIdToPerpetualMarket: Record<
-        string,
-        PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
-    const clobPairIdToMarket: MarketAndTypeByClobPairId = _.mapValues(
-      clobPairIdToPerpetualMarket,
-      (perpetualMarket: PerpetualMarketFromDatabase) => {
-        return {
-          marketType: MarketType.PERPETUAL,
-          market: perpetualMarket.ticker,
-        };
-      },
-    );
+    const clobPairIdToMarket = buildClobPairIdToMarket();
 
     return {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
