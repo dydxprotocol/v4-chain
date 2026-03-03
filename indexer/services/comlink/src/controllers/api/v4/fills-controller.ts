@@ -1,24 +1,12 @@
 import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
-<<<<<<< HEAD
-=======
   FillColumns,
   FillFromDatabase,
   FillTable,
-  FillType,
   IsoString,
   Ordering,
   QueryableField,
->>>>>>> 59cd776b ([ENG-1734] feat(comlink): add GET /v4/tradeHistory endpoint with cumulative PnL tracking (#3323))
   SubaccountTable,
-  IsoString,
-  perpetualMarketRefresher,
-  PerpetualMarketFromDatabase,
-  FillTable,
-  FillFromDatabase,
-  QueryableField,
-  FillColumns,
-  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -154,22 +142,7 @@ class FillsController extends Controller {
       page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
-<<<<<<< HEAD
-    const clobPairIdToPerpetualMarket: Record<
-        string,
-        PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
-    const clobPairIdToMarket: MarketAndTypeByClobPairId = _.mapValues(
-      clobPairIdToPerpetualMarket,
-      (perpetualMarket: PerpetualMarketFromDatabase) => {
-        return {
-          marketType: MarketType.PERPETUAL,
-          market: perpetualMarket.ticker,
-        };
-      },
-    );
-=======
     const clobPairIdToMarket = buildClobPairIdToMarket();
->>>>>>> 59cd776b ([ENG-1734] feat(comlink): add GET /v4/tradeHistory endpoint with cumulative PnL tracking (#3323))
 
     return {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
