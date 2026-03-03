@@ -1,5 +1,15 @@
 import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
+<<<<<<< HEAD
+=======
+  FillColumns,
+  FillFromDatabase,
+  FillTable,
+  FillType,
+  IsoString,
+  Ordering,
+  QueryableField,
+>>>>>>> 59cd776b ([ENG-1734] feat(comlink): add GET /v4/tradeHistory endpoint with cumulative PnL tracking (#3323))
   SubaccountTable,
   IsoString,
   perpetualMarketRefresher,
@@ -16,7 +26,6 @@ import {
   matchedData,
   query,
 } from 'express-validator';
-import _ from 'lodash';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -26,6 +35,7 @@ import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
+  buildClobPairIdToMarket,
   getChildSubaccountNums,
   getClobPairId, handleControllerError, isDefined,
 } from '../../../lib/helpers';
@@ -43,7 +53,6 @@ import {
   FillRequest,
   FillResponse,
   FillResponseObject,
-  MarketAndTypeByClobPairId,
   MarketType,
   ParentSubaccountFillRequest,
 } from '../../../types';
@@ -97,18 +106,7 @@ class FillsController extends Controller {
       page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
-    const clobPairIdToPerpetualMarket: Record<
-      string,
-      PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
-    const clobPairIdToMarket: MarketAndTypeByClobPairId = _.mapValues(
-      clobPairIdToPerpetualMarket,
-      (perpetualMarket: PerpetualMarketFromDatabase) => {
-        return {
-          marketType: MarketType.PERPETUAL,
-          market: perpetualMarket.ticker,
-        };
-      },
-    );
+    const clobPairIdToMarket = buildClobPairIdToMarket();
 
     return {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
@@ -156,6 +154,7 @@ class FillsController extends Controller {
       page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
+<<<<<<< HEAD
     const clobPairIdToPerpetualMarket: Record<
         string,
         PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
@@ -168,6 +167,9 @@ class FillsController extends Controller {
         };
       },
     );
+=======
+    const clobPairIdToMarket = buildClobPairIdToMarket();
+>>>>>>> 59cd776b ([ENG-1734] feat(comlink): add GET /v4/tradeHistory endpoint with cumulative PnL tracking (#3323))
 
     return {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
