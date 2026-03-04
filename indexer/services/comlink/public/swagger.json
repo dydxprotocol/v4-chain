@@ -1108,6 +1108,9 @@
           "createdAtHeight": {
             "type": "string"
           },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
           "clientMetadata": {
             "type": "string"
           },

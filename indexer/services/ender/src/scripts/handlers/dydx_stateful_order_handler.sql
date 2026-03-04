@@ -60,6 +60,7 @@ BEGIN
         order_record."goodTilBlockTime" = to_timestamp((order_->'goodTilBlockTime')::double precision);
         order_record."clientMetadata" = (order_->'clientMetadata')::bigint;
         order_record."createdAtHeight" = block_height;
+        order_record."createdAt" = block_time;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
         order_record."orderRouterAddress" = order_->>'orderRouterAddress';
@@ -99,7 +100,7 @@ BEGIN
         INSERT INTO orders (
             "id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", 
             "price", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlockTime", 
-            "clientMetadata", "createdAtHeight", "updatedAt", "updatedAtHeight", 
+            "clientMetadata", "createdAtHeight", "createdAt", "updatedAt", "updatedAtHeight", 
             "orderRouterAddress", "type", "status", "triggerPrice", "builderAddress", 
             "feePpm", "duration", "interval", "priceTolerance"
         ) VALUES (
@@ -107,11 +108,11 @@ BEGIN
             order_record."clobPairId", order_record."side", order_record."size", 
             order_record."totalFilled", order_record."price", order_record."timeInForce", 
             order_record."reduceOnly", order_record."orderFlags", order_record."goodTilBlockTime", 
-            order_record."clientMetadata", order_record."createdAtHeight", order_record."updatedAt", 
-            order_record."updatedAtHeight", order_record."orderRouterAddress", order_record."type", 
-            order_record."status", order_record."triggerPrice", order_record."builderAddress", 
-            order_record."feePpm", order_record."duration", order_record."interval", 
-            order_record."priceTolerance"
+            order_record."clientMetadata", order_record."createdAtHeight", order_record."createdAt",
+            order_record."updatedAt", order_record."updatedAtHeight", order_record."orderRouterAddress",
+            order_record."type", order_record."status", order_record."triggerPrice",
+            order_record."builderAddress", order_record."feePpm", order_record."duration",
+            order_record."interval", order_record."priceTolerance"
         ) ON CONFLICT ("id") DO
             UPDATE SET
                        "subaccountId" = order_record."subaccountId",

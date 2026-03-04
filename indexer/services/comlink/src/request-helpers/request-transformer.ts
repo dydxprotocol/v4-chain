@@ -494,6 +494,7 @@ export function postgresOrderToResponseObject(
     goodTilBlock: order.goodTilBlock ?? undefined,
     goodTilBlockTime: order.goodTilBlockTime ?? undefined,
     createdAtHeight: order.createdAtHeight ?? undefined,
+    createdAt: order.createdAt ?? undefined,
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
     triggerPrice: order.triggerPrice ?? undefined,
     builderAddress: order.builderAddress ?? undefined,
