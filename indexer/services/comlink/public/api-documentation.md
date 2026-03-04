@@ -2382,6 +2382,7 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
     "goodTilBlock": "string",
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
+    "createdAt": "string",
     "clientMetadata": "string",
     "triggerPrice": "string",
     "builderAddress": "string",
@@ -2428,6 +2429,7 @@ Status Code **200**
 |» goodTilBlock|string|false|none|none|
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
+|» createdAt|[IsoString](#schemaisostring)|false|none|none|
 |» clientMetadata|string|true|none|none|
 |» triggerPrice|string|false|none|none|
 |» builderAddress|string|false|none|none|
@@ -2615,6 +2617,7 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
     "goodTilBlock": "string",
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
+    "createdAt": "string",
     "clientMetadata": "string",
     "triggerPrice": "string",
     "builderAddress": "string",
@@ -2661,6 +2664,7 @@ Status Code **200**
 |» goodTilBlock|string|false|none|none|
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
+|» createdAt|[IsoString](#schemaisostring)|false|none|none|
 |» clientMetadata|string|true|none|none|
 |» triggerPrice|string|false|none|none|
 |» builderAddress|string|false|none|none|
@@ -2798,6 +2802,7 @@ fetch(`${baseURL}/orders/{orderId}`,
   "goodTilBlock": "string",
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
+  "createdAt": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
   "builderAddress": "string",
@@ -6513,6 +6518,7 @@ or
   "goodTilBlock": "string",
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
+  "createdAt": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
   "builderAddress": "string",
@@ -6550,6 +6556,7 @@ or
 |goodTilBlock|string|false|none|none|
 |goodTilBlockTime|string|false|none|none|
 |createdAtHeight|string|false|none|none|
+|createdAt|[IsoString](#schemaisostring)|false|none|none|
 |clientMetadata|string|true|none|none|
 |triggerPrice|string|false|none|none|
 |builderAddress|string|false|none|none|
