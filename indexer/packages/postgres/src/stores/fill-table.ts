@@ -340,11 +340,11 @@ export async function getCostOfFills(
     .getConnection()
     .raw(
       `
-      SELECT SUM(CASE 
-                  WHEN side = 'SELL' THEN price * size 
-                  ELSE -1 * price * size 
+      SELECT SUM(CASE
+                  WHEN side = 'SELL' THEN price * size
+                  ELSE -1 * price * size
                 END) AS "cost"
-      FROM fills 
+      FROM fills
       WHERE "subaccountId" = ?
         AND "createdAtHeight" <= ?;
       `,
@@ -519,7 +519,7 @@ export async function getOpenSizeWithFundingIndex(
     .raw(
       `
       WITH input AS (
-        SELECT 
+        SELECT
           f."clobPairId",
           SUM(CASE
             WHEN side = 'SELL' THEN -1 * size
@@ -534,7 +534,7 @@ export async function getOpenSizeWithFundingIndex(
         GROUP BY
           f."clobPairId"
       )
-      SELECT 
+      SELECT
         input.*,
         fiu."fundingIndex",
         fiu."effectiveAtHeight" as "fundingIndexHeight"

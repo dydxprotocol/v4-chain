@@ -11,6 +11,7 @@ import {
   IsolationLevel,
   CandleFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
+import { rawQuery } from '@dydxprotocol-indexer/postgres/build/src/helpers/stores-helpers';
 import {
   IndexerTendermintBlock,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -85,6 +86,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   let success: boolean = false;
   const txId: number = await Transaction.start();
   await Transaction.setIsolationLevel(txId, IsolationLevel.READ_UNCOMMITTED);
+  await rawQuery('SET LOCAL work_mem=\'128MB\';', { txId });
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
