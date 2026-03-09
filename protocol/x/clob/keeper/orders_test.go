@@ -31,7 +31,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
-	rewardtypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
@@ -142,35 +141,15 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
 
 			expectedOrderStatus: types.Success,
-			expectedFilledSize:  constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.GetBaseQuantums(),
+			// Deferred matching: fill size is 0 during PlaceShortTermOrder.
+			// Matching happens in MatchAllCrossedOrders.
+			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{
-				// Update taker subaccount
-				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num0.ToStateKey()),
-				// Indexer event
-				indexer_manager.IndexerEventsCountKey,
-				// Update maker subaccount
-				satypes.SubaccountKeyPrefix +
-					string(constants.Dave_Num0.ToStateKey()),
-				// Indexer event
-				indexer_manager.IndexerEventsCountKey,
-				// Update rewards
-				rewardtypes.RewardShareKeyPrefix + constants.Carl_Num0.Owner,
-				rewardtypes.RewardShareKeyPrefix + constants.Dave_Num0.Owner,
-				// Update block stats
-				statstypes.BlockStatsKey,
-				// Update prunable block height for taker fill amount
-				types.PrunableOrdersKeyPrefix,
-				// Update taker order fill amount
-				types.OrderAmountFilledKeyPrefix,
-				// Update prunable block height for maker fill amount
-				types.PrunableOrdersKeyPrefix,
-				// Update maker order fill amount
-				types.OrderAmountFilledKeyPrefix,
+				// No multistore writes during placement — matching is deferred.
 			},
 			expectedOpenInterests: map[uint32]*big.Int{
-				// positions fully closed
-				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(0),
+				// Deferred matching: OI unchanged during placement.
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
 		},
 		"Can place an order on the orderbook if the subaccount is right at the initial margin ratio": {
@@ -425,30 +404,16 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			// checking collateralization, the match would fail.
 			order:               constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000,
 			expectedOrderStatus: types.Success,
-			expectedFilledSize:  1_000_000,
+			// Deferred matching: fill size is 0 during PlaceShortTermOrder.
+			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{
-				// Update taker subaccount
-				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num1.ToStateKey()),
-				indexer_manager.IndexerEventsCountKey,
-				// Update maker subaccount
-				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsCountKey,
-				// Update block stats
-				statstypes.BlockStatsKey,
-				// Update prunable block height for taker fill amount
-				types.PrunableOrdersKeyPrefix,
-				// Update taker order fill amount
-				types.OrderAmountFilledKeyPrefix,
-				// Update prunable block height for maker fill amount
-				types.PrunableOrdersKeyPrefix,
-				// Update maker order fill amount
-				types.OrderAmountFilledKeyPrefix,
+				// No multistore writes during placement — matching is deferred.
 			},
 			expectedOpenInterests: map[uint32]*big.Int{
-				// 1 BTC + 0.01 BTC + 0.01 BTC filled
-				constants.BtcUsd_50PercentInitial_40PercentMaintenance.Params.Id: big.NewInt(102_000_000),
+				// Note: OI reflects prior matching from existingOrders placements
+				// (which also don't match during PlaceShortTermOrder with deferred matching).
+				// OI unchanged from initial state.
+				constants.BtcUsd_50PercentInitial_40PercentMaintenance.Params.Id: big.NewInt(100_000_000),
 			},
 		},
 		// This is a regression test for an issue whereby orders that had been previously matched were being checked for
@@ -501,10 +466,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			order:               constants.Order_Carl_Num0_Id4_Clob1_Buy01ETH_Price3000,
 			expectedOrderStatus: types.Success,
 			expectedOpenInterests: map[uint32]*big.Int{
-				// Unchanged, no BTC match happened
-				constants.BtcUsd_NoMarginRequirement.Params.Id: big.NewInt(100_000_000),
-				// 1 ETH + 1 ETH filled
-				constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Id: big.NewInt(2_000_000_000),
+				// Deferred matching: no matches during placement, OI unchanged.
+				constants.BtcUsd_NoMarginRequirement.Params.Id:                   big.NewInt(100_000_000),
+				constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Id: big.NewInt(1_000_000_000),
 			},
 		},
 		// <grouped tests: deprecating pessimistic value collateralization check -- BUY>
@@ -1049,8 +1013,8 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 
 	order := constants.Order_Carl_Num0_Id5_Clob0_Buy2BTC_Price50000
 	msgPlaceOrder := &types.MsgPlaceOrder{Order: order}
-	memClob.On("PlaceOrder", ctx, order).
-		Return(order.GetBaseQuantums(), types.OrderStatus(0), constants.TestOffchainUpdates, nil)
+	memClob.On("PlaceOrderNoMatch", ctx, order).
+		Return(types.OrderStatus(0), constants.TestOffchainUpdates, nil)
 
 	_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msgPlaceOrder)
 	require.NoError(t, err)
