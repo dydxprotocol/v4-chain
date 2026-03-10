@@ -96,6 +96,7 @@ export default class OrderModel extends BaseModel {
         goodTilBlock: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         goodTilBlockTime: { type: ['string', 'null'], default: null, format: 'date-time' },
         createdAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
+        createdAt: { type: ['string', 'null'], default: null, format: 'date-time' },
         clientMetadata: { type: 'string', pattern: IntegerPattern },
         triggerPrice: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
         updatedAt: { type: 'string', format: 'date-time' },
@@ -134,6 +135,7 @@ export default class OrderModel extends BaseModel {
       goodTilBlock: 'string',
       goodTilBlockTime: 'date-time',
       createdAtHeight: 'string',
+      createdAt: 'date-time',
       clientMetadata: 'string',
       triggerPrice: 'string',
       updatedAt: 'date-time',
@@ -180,6 +182,8 @@ export default class OrderModel extends BaseModel {
   goodTilBlockTime!: string;
 
   createdAtHeight?: string;
+
+  createdAt?: IsoString;
 
   clientMetadata!: string;
 
