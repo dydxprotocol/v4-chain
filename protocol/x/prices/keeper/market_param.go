@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"sort"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -41,7 +42,7 @@ func (k Keeper) ModifyMarketParam(
 
 	// Validate update is permitted.
 	for _, market := range k.GetAllMarketParams(ctx) {
-		if market.Pair == updatedMarketParam.Pair && market.Id != updatedMarketParam.Id {
+		if strings.EqualFold(market.Pair, updatedMarketParam.Pair) && market.Id != updatedMarketParam.Id {
 			return types.MarketParam{}, errorsmod.Wrap(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
 		}
 	}
