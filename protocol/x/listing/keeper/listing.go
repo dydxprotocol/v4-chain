@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"strings"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
@@ -43,6 +44,7 @@ func (k Keeper) CreateMarket(
 	ctx sdk.Context,
 	ticker string,
 ) (marketId uint32, err error) {
+	ticker = strings.ToUpper(ticker)
 	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
 
 	// Get market details from marketmap

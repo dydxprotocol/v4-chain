@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
@@ -41,7 +42,7 @@ func (k Keeper) CreateMarket(
 	}
 	// Stateful Validation
 	for _, market := range k.GetAllMarketParams(ctx) {
-		if market.Pair == marketParam.Pair {
+		if strings.EqualFold(market.Pair, marketParam.Pair) {
 			return types.MarketParam{}, errorsmod.Wrap(
 				types.ErrMarketParamPairAlreadyExists,
 				marketParam.Pair,
