@@ -496,7 +496,7 @@ importers:
       '@types/swagger-ui-express': ^4.1.3
       '@zerodev/ecdsa-validator': ^5.4.9
       '@zerodev/permissions': 5.5.15-alpha.0
-      '@zerodev/sdk': ^5.4.41
+      '@zerodev/sdk': ^5.5.10
       '@zerodev/webauthn-key': ^5.4.0
       alchemy-sdk: ^3.6.2
       array.prototype.findlast: ^1.2.5
@@ -557,9 +557,9 @@ importers:
       '@turnkey/sdk-server': 4.3.0_typescript@5.8.3
       '@turnkey/solana': 1.0.38_typescript@5.8.3
       '@turnkey/viem': 0.9.10_typescript@5.8.3+viem@2.31.7
-      '@zerodev/ecdsa-validator': 5.4.9_@zerodev+sdk@5.4.41+viem@2.31.7
-      '@zerodev/permissions': 5.5.15-alpha.0_f73be2f3ba46a55e67321519fc7f75e8
-      '@zerodev/sdk': 5.4.41_viem@2.31.7
+      '@zerodev/ecdsa-validator': 5.4.9_@zerodev+sdk@5.5.10+viem@2.31.7
+      '@zerodev/permissions': 5.5.15-alpha.0_ed9aeaba2a1966b662db98913a7f0873
+      '@zerodev/sdk': 5.5.10_viem@2.31.7
       '@zerodev/webauthn-key': 5.4.4_viem@2.31.7
       alchemy-sdk: 3.6.2_typescript@5.8.3
       array.prototype.findlast: 1.2.5
@@ -8564,17 +8564,17 @@ packages:
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
     dev: false
 
-  /@zerodev/ecdsa-validator/5.4.9_@zerodev+sdk@5.4.41+viem@2.31.7:
+  /@zerodev/ecdsa-validator/5.4.9_@zerodev+sdk@5.5.10+viem@2.31.7:
     resolution: {integrity: sha512-9NVE8/sQIKRo42UOoYKkNdmmHJY8VlT4t+2MHD2ipLg21cpbY9fS17TGZh61+Bl3qlqc8pP23I6f89z9im7kuA==}
     peerDependencies:
       '@zerodev/sdk': ^5.4.13
       viem: ^2.28.0
     dependencies:
-      '@zerodev/sdk': 5.4.41_viem@2.31.7
+      '@zerodev/sdk': 5.5.10_viem@2.31.7
       viem: 2.31.7_typescript@5.8.3
     dev: false
 
-  /@zerodev/permissions/5.5.15-alpha.0_f73be2f3ba46a55e67321519fc7f75e8:
+  /@zerodev/permissions/5.5.15-alpha.0_ed9aeaba2a1966b662db98913a7f0873:
     resolution: {integrity: sha512-RVteWYTYadhHUf1hOnI0NmXqqPSQeqLd49EjplbPi5n+hDX5u/Y/x/pTx6j02q/8wrApnXriAqa0LCwGNCu0Tw==}
     peerDependencies:
       '@zerodev/sdk': ^5.4.0
@@ -8582,14 +8582,14 @@ packages:
       viem: ^2.28.0
     dependencies:
       '@simplewebauthn/browser': 9.0.1
-      '@zerodev/sdk': 5.4.41_viem@2.31.7
+      '@zerodev/sdk': 5.5.10_viem@2.31.7
       '@zerodev/webauthn-key': 5.4.4_viem@2.31.7
       merkletreejs: 0.3.11
       viem: 2.31.7_typescript@5.8.3
     dev: false
 
-  /@zerodev/sdk/5.4.41_viem@2.31.7:
-    resolution: {integrity: sha512-YNXLYq4PXdC8u6NVzKNDnN42MKnXignehs0eAgyTb1Er57C4ueClR3ShR64QQ0oCL20NRtzMt/dJ+Yi+sVXndA==}
+  /@zerodev/sdk/5.5.10_viem@2.31.7:
+    resolution: {integrity: sha512-WVyj2XR9F6zK2GdXrvappx7yo6zoJ46cWe42dOIArp3xDjFBninjA4O1O94MwohB0G+yFqtXNsEU+WxdE67SgQ==}
     peerDependencies:
       viem: ^2.28.0
     dependencies:
