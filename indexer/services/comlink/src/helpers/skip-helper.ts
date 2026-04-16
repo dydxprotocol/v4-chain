@@ -47,7 +47,7 @@ export async function buildUserAddresses(
   );
 }
 const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address/channel';
-const skipMessagesTimeoutSeconds = '60';
+const skipMessagesTimeoutSeconds = '300'; // 5 minutes.
 const dydxNobleChannel = 33;
 // Grabs the raw skip route data to carry out the bridge on our own.
 export async function getSkipCallData(
