@@ -4,6 +4,7 @@ import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '
 import express from 'express';
 import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
+import { URL } from 'url';
 import {
   Controller, Post, Route, Body,
 } from 'tsoa';
@@ -168,7 +169,15 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail and targetPublicKey are required for email signin');
       }
       if (magicLink) {
-        const isValidMagicLink = magicLink.startsWith(config.TURNKEY_MAGIC_LINK_VALIDATION);
+        const isValidMagicLink = (() => {
+          try {
+            const allowed = new URL(config.TURNKEY_MAGIC_LINK_VALIDATION);
+            const supplied = new URL(magicLink);
+            return supplied.origin === allowed.origin;
+          } catch {
+            return false;
+          }
+        })();
         if (!isValidMagicLink) {
           throw new Error('Invalid magic link template');
         }
