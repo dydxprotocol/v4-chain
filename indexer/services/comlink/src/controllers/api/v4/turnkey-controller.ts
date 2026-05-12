@@ -1,10 +1,11 @@
+import { URL } from 'url';
+
 import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
-import { URL } from 'url';
 import {
   Controller, Post, Route, Body,
 } from 'tsoa';
