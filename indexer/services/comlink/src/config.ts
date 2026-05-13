@@ -121,6 +121,11 @@ export const configSchema = {
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
   TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
   TURNKEY_MAGIC_LINK_VALIDATION: parseString({ default: 'https://dydx.trade' }),
+  // Comma-separated list of allowed values for the `Origin` request header on
+  // Turnkey POST endpoints (e.g. `https://dydx.trade,https://staging.dydx.trade`).
+  // When empty, no origin restriction is applied. Requests without an `Origin`
+  // header (mobile apps, server-to-server, curl) are always allowed.
+  TURNKEY_ALLOWED_ORIGINS: parseString({ default: '' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
   SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
