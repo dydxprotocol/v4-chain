@@ -55,8 +55,13 @@ func (m SubaccountFilter) Track(ctx sdk.Context, request types.AuthenticationReq
 }
 
 // Authenticate checks if the message's subaccount numbers are in the whitelist.
+//
+// SubaccountFilter is a fail-closed whitelist: it only authorizes the CLOB
+// messages whose subaccount number is in the configured set. Any other
+// message type is rejected. This prevents a delegated key scoped via
+// AllOf([..., SubaccountFilter(...)]) from being used to authorize unrelated
+// messages.
 func (m SubaccountFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
-	// Collect the clob pair ids from the request.
 	requestSubaccountNums := make([]uint32, 0)
 	switch msg := request.Msg.(type) {
 	case *clobtypes.MsgPlaceOrder:
@@ -66,11 +71,13 @@ func (m SubaccountFilter) Authenticate(ctx sdk.Context, request types.Authentica
 	case *clobtypes.MsgBatchCancel:
 		requestSubaccountNums = append(requestSubaccountNums, msg.SubaccountId.Number)
 	default:
-		// Skip other messages.
-		return nil
+		return errorsmod.Wrapf(
+			types.ErrSubaccountVerification,
+			"SubaccountFilter does not authorize message type %s",
+			sdk.MsgTypeURL(request.Msg),
+		)
 	}
 
-	// Make sure all the subaccount numbers are in the whitelist.
 	for _, subaccountNum := range requestSubaccountNums {
 		if _, ok := m.whitelist[subaccountNum]; !ok {
 			return errorsmod.Wrapf(
