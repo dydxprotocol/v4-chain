@@ -251,10 +251,10 @@ test-container-build:
 ###############################################################################
 
 lint:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --build-tags='$(build_tags) all' --timeout=10m
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --build-tags='$(build_tags) all' --timeout=20m
 
 lint-fix:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --build-tags='$(build_tags) all' --fix --out-format=tab --issues-exit-code=0
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --build-tags='$(build_tags) all' --fix --out-format=tab --issues-exit-code=0 --timeout=20m
 .PHONY: lint lint-fix
 
 format:

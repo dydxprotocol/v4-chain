@@ -4,13 +4,17 @@ import (
 	"os"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -71,6 +75,38 @@ func (s *SubaccountFilterTest) TestFilter() {
 			whitelist: "1",
 			msg:       constants.Msg_BatchCancel,
 			match:     false,
+		},
+		// non-CLOB messages must be rejected, not silently allowed.
+		"withdraw from subaccount - rejected": {
+			whitelist: "0",
+			msg: &sendingtypes.MsgWithdrawFromSubaccount{
+				Sender:    satypes.SubaccountId{Owner: constants.AliceAccAddress.String(), Number: 0},
+				Recipient: constants.BobAccAddress.String(),
+				AssetId:   0,
+				Quantums:  1_000_000_000,
+			},
+			match: false,
+		},
+		"create transfer - rejected": {
+			whitelist: "0",
+			msg: &sendingtypes.MsgCreateTransfer{
+				Transfer: &sendingtypes.Transfer{
+					Sender:    satypes.SubaccountId{Owner: constants.AliceAccAddress.String(), Number: 0},
+					Recipient: satypes.SubaccountId{Owner: constants.BobAccAddress.String(), Number: 0},
+					AssetId:   0,
+					Amount:    1_000_000,
+				},
+			},
+			match: false,
+		},
+		"bank send - rejected": {
+			whitelist: "0",
+			msg: &banktypes.MsgSend{
+				FromAddress: constants.AliceAccAddress.String(),
+				ToAddress:   constants.BobAccAddress.String(),
+				Amount:      sdk.NewCoins(sdk.NewCoin("uusdc", sdkmath.NewInt(1_000_000))),
+			},
+			match: false,
 		},
 	}
 

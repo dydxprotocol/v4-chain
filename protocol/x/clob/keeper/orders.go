@@ -1015,6 +1015,35 @@ func (k Keeper) PerformStatefulOrderValidation(
 		}
 	}
 
+	if err := k.ValidateBuilderAddress(*order); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateBuilderAddress checks that an order's BuilderCodeParameters.BuilderAddress,
+// if set, is a valid bech32 address that is not a blocked module account. Blocked
+// module accounts cannot receive funds, and placing such an order would cause an
+// unrecoverable panic during fee transfer in the memclob match loop.
+func (k Keeper) ValidateBuilderAddress(order types.Order) error {
+	if order.BuilderCodeParameters != nil {
+		builderAddr, err := sdk.AccAddressFromBech32(order.BuilderCodeParameters.BuilderAddress)
+		if err != nil {
+			return errorsmod.Wrapf(
+				types.ErrInvalidBuilderCode,
+				"builder address %s must be a valid bech32 address",
+				order.BuilderCodeParameters.BuilderAddress,
+			)
+		}
+		if k.bankKeeper.BlockedAddr(builderAddr) {
+			return errorsmod.Wrapf(
+				types.ErrInvalidBuilderCode,
+				"builder address %s is a blocked module account and cannot receive funds",
+				order.BuilderCodeParameters.BuilderAddress,
+			)
+		}
+	}
 	return nil
 }
 
@@ -1244,6 +1273,18 @@ func (k Keeper) InitStatefulOrders(
 	// Place each order in the memclob, ignoring errors if they occur.
 	statefulOrders := k.GetAllPlacedStatefulOrders(ctx)
 	for _, statefulOrder := range statefulOrders {
+		// Validate builder address before placing. Orders with blocked builder addresses
+		// would cause an unrecoverable panic in the memclob match loop (SEC-76).
+		if err := k.ValidateBuilderAddress(statefulOrder); err != nil {
+			log.ErrorLogWithError(
+				ctx,
+				"InitStatefulOrders: skipping order with invalid builder address",
+				err,
+				"order", statefulOrder,
+			)
+			continue
+		}
+
 		// First fork the multistore. If `PlaceOrder` fails, we don't want to write to state.
 		placeOrderCtx, writeCache := ctx.CacheContext()
 
