@@ -19,7 +19,7 @@ export default (
     // Don't log GET requests unless configured to
     const shouldLogMethod: boolean = request.method !== 'GET' || config.LOG_GETS;
     if (shouldLogMethod || response.statusCode !== 200) {
-      logger.info({
+      logger.debug({
         at: 'requestLogger#logRequest',
         message: {
           request: {

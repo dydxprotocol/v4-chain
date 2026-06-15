@@ -141,7 +141,7 @@ export class MessageForwarder {
       // also prevent disconnecting from the broker due to inactivity.
       const now: number = Date.now();
       if (now - lastCommitTime > config.KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS) {
-        logger.info({
+        logger.debug({
           at: 'on-batch#onBatch',
           message: 'Committing offsets and sending heart beat',
           ...batchInfo,
@@ -404,7 +404,7 @@ export class MessageForwarder {
   ): void {
     const connection: Connection = this.index.connections[connectionId];
     if (!connection) {
-      logger.info({
+      logger.debug({
         at: 'message-forwarder#forwardToClientBatch',
         message: 'Attempted to forward batched messages, but connection did not exist',
         connectionId,
@@ -466,7 +466,7 @@ export class MessageForwarder {
   public forwardToClient(message: MessageToForward, connectionId: string): number {
     const connection: Connection = this.index.connections[connectionId];
     if (!connection) {
-      logger.info({
+      logger.debug({
         at: 'message-forwarder#forwardToClient',
         message: 'Attempted to forward message, but connection did not exist',
         connectionId,

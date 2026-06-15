@@ -46,7 +46,7 @@ export async function updateOrderbookMidPrices(): Promise<void> {
 
     // Log out each median price for each market
     Object.entries(orderbookMidPriceCache).forEach(([ticker, price]) => {
-      logger.info({
+      logger.debug({
         at: 'orderbook-mid-price-cache#updateOrderbookMidPrices',
         message: `Median price for market ${ticker}`,
         ticker,

@@ -73,7 +73,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     },
   );
 
-  logger.info({
+  logger.debug({
     at: 'onMessage#onMessage',
     message: 'Processing message',
     offset,
@@ -121,7 +121,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       );
     }
 
-    logger.info({
+    logger.debug({
       at: 'onMessage#onMessage',
       message: 'Successfully processed block',
       height: blockHeight,
@@ -186,7 +186,7 @@ function getIndexerTendermintBlock(
   }
   try {
     const messageValueBinary: Uint8Array = new Uint8Array(message.value);
-    logger.info({
+    logger.debug({
       at: 'onMessage#getIndexerTendermintBlock',
       message: 'Received message',
       offset: message.offset,
@@ -195,7 +195,7 @@ function getIndexerTendermintBlock(
     const block: IndexerTendermintBlock = IndexerTendermintBlock.decode(
       messageValueBinary,
     );
-    logger.info({
+    logger.debug({
       at: 'onMessage#getIndexerTendermintBlock',
       message: 'Parsed message',
       offset: message.offset,

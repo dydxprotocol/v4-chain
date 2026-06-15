@@ -59,7 +59,7 @@ export async function shouldSkipBlock(
     });
     return true;
   } else if (isNextBlock(blockHeight)) {
-    logger.info({
+    logger.debug({
       at: 'block-cache#shouldSkipBlock',
       message: 'Block will be processed',
       blockHeight,

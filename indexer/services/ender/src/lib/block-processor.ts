@@ -227,7 +227,7 @@ export class BlockProcessor {
         ...this.block.events[eventProto.blockEventIndex],
         subtype: SKIPPED_EVENT_SUBTYPE,
       };
-      logger.info({
+      logger.debug({
         at: 'onMessage#shouldSkipSql',
         message: 'Excluded event from sql processing',
         eventProto,
@@ -236,7 +236,7 @@ export class BlockProcessor {
     if (validator.shouldSkipHandlers()) {
       // If handlers should be skipped, set handlers to empty.
       handlers = [];
-      logger.info({
+      logger.debug({
         at: 'onMessage#shouldSkipHandlers',
         message: 'Excluded event from handler processing',
         eventProto,
