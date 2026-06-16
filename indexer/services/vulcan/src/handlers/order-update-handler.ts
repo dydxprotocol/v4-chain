@@ -52,7 +52,7 @@ import { Handler } from './handler';
  */
 export class OrderUpdateHandler extends Handler {
   protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
-    logger.info({
+    logger.debug({
       at: 'OrderUpdateHandler#handle',
       message: 'Received OffChainUpdate with OrderUpdate.',
       update,
@@ -71,7 +71,7 @@ export class OrderUpdateHandler extends Handler {
       this.generateTimingStatsOptions('update_order_cache_update'),
     );
 
-    logger.info({
+    logger.debug({
       at: 'OrderUpdateHandler#handle',
       message: 'OrderUpdate processed',
       orderUpdate,

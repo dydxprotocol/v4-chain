@@ -48,7 +48,7 @@ import { Handler } from './handler';
  */
 export class OrderPlaceHandler extends Handler {
   protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
-    logger.info({
+    logger.debug({
       at: 'OrderPlaceHandler#handle',
       message: 'Received OffChainUpdate with OrderPlace.',
       update,
@@ -84,7 +84,7 @@ export class OrderPlaceHandler extends Handler {
     await this.removeOrderFromCanceledOrdersCache(
       OrderTable.orderIdToUuid(redisOrder.order?.orderId!),
     );
-    logger.info({
+    logger.debug({
       at: 'OrderPlaceHandler#handle',
       message: 'OrderPlace processed',
       order,

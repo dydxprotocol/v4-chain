@@ -1087,7 +1087,7 @@ export class Subscriptions {
     });
 
     if (Object.keys(maxSubscriptionsByChannel).length > 0) {
-      logger.info({
+      logger.debug({
         at: 'Subscriptions#emitSubscriptionMetrics',
         message: 'Max subscriptions by channel',
         maxSubscriptionsByChannel,
@@ -1095,7 +1095,7 @@ export class Subscriptions {
     }
 
     if (Object.keys(maxIdByChannel).length > 0) {
-      logger.info({
+      logger.debug({
         at: 'Subscriptions#emitSubscriptionMetrics',
         message: 'Max id by channel',
         maxIdByChannel,

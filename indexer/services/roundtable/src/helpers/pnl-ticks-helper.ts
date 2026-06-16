@@ -80,7 +80,7 @@ export async function getPnlTicksCreateObjects(
     mostRecentPnlTicks,
     (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
   );
-  logger.info({
+  logger.debug({
     at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
     message: 'Account to last updated block time',
     accountToLastUpdatedBlockTime,
@@ -94,7 +94,7 @@ export async function getPnlTicksCreateObjects(
     ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
   ].slice(0, config.PNL_TICK_MAX_ACCOUNTS_PER_RUN);
-  logger.info({
+  logger.debug({
     at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
     message: 'Accounts to update',
     accountsToUpdate,
@@ -203,7 +203,7 @@ export async function getPnlTicksCreateObjects(
       });
     }
   });
-  logger.info({
+  logger.debug({
     at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
     message: 'New ticks to create',
     subaccountIds: _.map(newTicksToCreate, 'subaccountId'),
@@ -315,7 +315,7 @@ export function getNewPnlTick(
   lastUpdatedFundingIndexMap: FundingIndexMap,
   currentFundingIndexMap: FundingIndexMap,
 ): PnlTicksCreateObject {
-  logger.info({
+  logger.debug({
     at: 'createPnlTicks#getNewPnlTick',
     message: 'Creating new PNL tick',
     subaccountId,
@@ -334,7 +334,7 @@ export function getNewPnlTick(
     currentEquity,
     subaccountTotalTransfersMap[subaccountId][USDC_ASSET_ID],
   );
-  logger.info({
+  logger.debug({
     at: 'createPnlTicks#getNewPnlTick',
     message: 'Calculated equity and total pnl',
     subaccountId,
@@ -376,7 +376,7 @@ export function getNewPnlTick(
     blockHeight: latestBlockHeight,
     blockTime: latestBlockTime,
   };
-  logger.info({
+  logger.debug({
     at: 'createPnlTicks#getNewPnlTick',
     message: 'New PNL tick',
     subaccountId,
