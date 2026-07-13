@@ -32,7 +32,12 @@ export function rateLimiterMiddleware(
       return next();
     }
 
-    const pointCost: number = getPointCost(ipAddr, req);
+    // Clamp to the limiter's own capacity: a cost beyond that exhausts the bucket either way,
+    // and an unclamped cost derived from a crafted page/limit can be large enough that its
+    // decimal string trips Redis's integer parser (e.g. exponential notation), which throws a
+    // plain Error and - via the catch branch below - lets the request through with no rate
+    // limiting applied at all.
+    const pointCost: number = Math.min(getPointCost(ipAddr, req), rateLimiter.points);
 
     // generate redis key
     const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;

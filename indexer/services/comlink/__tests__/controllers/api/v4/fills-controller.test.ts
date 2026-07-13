@@ -468,6 +468,32 @@ describe('fills-controller#V4', () => {
       );
     });
 
+    it('Get /fills/parentSubaccountNumber routes paginated reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+      await OrderTable.create(testConstants.defaultOrder);
+      await FillTable.create(testConstants.defaultFill);
+
+      const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+      (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+      const findAllSpy: jest.SpyInstance = jest.spyOn(FillTable, 'findAll');
+
+      try {
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/fills/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            '&parentSubaccountNumber=0&page=1&limit=1',
+        });
+
+        expect(findAllSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          expect.objectContaining({ [testMarker]: true }),
+        );
+      } finally {
+        delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+        findAllSpy.mockRestore();
+      }
+    });
+
     it('Get /fills/parentSubaccountNumber gets fills ordered by createdAtHeight descending and paginated', async () => {
       // Order and fill for BTC-USD
       await OrderTable.create(testConstants.defaultOrder);

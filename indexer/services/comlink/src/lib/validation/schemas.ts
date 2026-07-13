@@ -90,7 +90,14 @@ const paginationSchemaRecord: Record<string, ParamSchema> = {
     },
     errorMessage: 'page must be a non-negative integer',
     custom: {
-      options: (value: string | number, { req }) => {
+      options: (value: unknown, { req }) => {
+        // `isInt` only validates the first element of an array value - a known express-validator
+        // quirk - so HTTP parameter pollution (e.g. `?page=1&page=999999999`) makes `page` arrive
+        // here as a real array while still passing `isInt`. Reject non-scalar values explicitly
+        // instead of assuming `isInt` already caught them.
+        if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+          throw new Error('page must be a single integer value, not a list or object');
+        }
         // `value` arrives as the raw query string (e.g. "27"), not a number - unlike `limit`
         // below, this field has no `customSanitizer` to coerce it first, so do it explicitly.
         const page: number = Number(value);
@@ -102,10 +109,14 @@ const paginationSchemaRecord: Record<string, ParamSchema> = {
         }
         const offset: number = (Math.max(1, page) - 1) * limit;
         if (offset > config.MAX_PAGINATION_OFFSET) {
+          // Deliberately omit the computed offset and the MAX_PAGINATION_OFFSET value itself
+          // from the response - naming the check (MAX_PAGINATION_OFFSET) is enough of a clue to
+          // grep the codebase/logs by, without handing an external caller the exact threshold to
+          // binary-search for.
           throw new Error(
-            `page/limit combination requests an offset of ${offset}, which exceeds the ` +
-            `maximum allowed offset of ${config.MAX_PAGINATION_OFFSET}. Narrow your query using ` +
-            'the createdBeforeOrAt/createdOnOrAfter time-range filters instead of paging deeper.',
+            'page/limit combination requests an offset that exceeds MAX_PAGINATION_OFFSET. ' +
+            'Narrow your query using the createdBeforeOrAt/createdOnOrAfter time-range filters ' +
+            'instead of paging deeper.',
           );
         }
         return true;

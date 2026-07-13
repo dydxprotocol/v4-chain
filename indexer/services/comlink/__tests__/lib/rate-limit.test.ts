@@ -492,6 +492,26 @@ describe('rateLimit', () => {
       });
       expect(next).toHaveBeenCalledTimes(1);
     });
+
+    it('clamps an astronomically large offset-derived cost to the limiter capacity', async () => {
+      // An unclamped cost this large (offset ~1e29, so 1 + floor(offset/API_LIMIT_V4) is on the
+      // order of 1e26) serializes to exponential notation, which Redis's INCRBY rejects as "not
+      // an integer" - rateLimiterMiddleware's catch block treats that rejection as a plain Error
+      // and falls through to next(), silently disabling rate limiting entirely for the request.
+      // Clamping to the limiter's own point capacity avoids ever sending such a value to Redis.
+      req.headers = defaultHeaders;
+      req.query = { page: '2', limit: '99999999999999999999999999999' };
+
+      await rateLimiterMiddleware(fillsRateLimiter)(req, res, next);
+
+      expect(res.set).toHaveBeenCalledWith({
+        'RateLimit-Remaining': 0,
+        'RateLimit-Reset': expect.any(Number),
+        'RateLimit-Limit': config.RATE_LIMIT_FILLS_POINTS,
+      });
+      expect(res.status).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('rate limiter duration configuration', () => {
