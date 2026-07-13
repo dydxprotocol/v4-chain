@@ -32,7 +32,7 @@ export function rateLimiterMiddleware(
       return next();
     }
 
-    const pointCost: number = getPointCost(ipAddr);
+    const pointCost: number = getPointCost(ipAddr, req);
 
     // generate redis key
     const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
@@ -70,10 +70,27 @@ export function rateLimiterMiddleware(
 
 export function getPointCost(
   ipAddress: string,
+  req: express.Request,
 ): number {
   if (isIndexerIp(ipAddress)) {
     return INTERNAL_REQUEST_POINTS;
   }
 
-  return EXTERNAL_REQUEST_POINTS;
+  // Weight cost by OFFSET depth: deep pagination (large page * limit) is far more expensive to the
+  // DB than a shallow page, so it should drain the rate-limit budget faster. Read directly from
+  // req.query since this middleware runs before checkSchema/handleValidationErrors.
+  const rawPage: unknown = req.query?.page;
+  const rawLimit: unknown = req.query?.limit;
+  const page: number | undefined = rawPage !== undefined ? Number(rawPage) : undefined;
+  const limit: number = rawLimit !== undefined ? Number(rawLimit) : config.API_LIMIT_V4;
+
+  if (
+    page === undefined || !Number.isFinite(page) || page <= 1 ||
+    !Number.isFinite(limit) || limit <= 0
+  ) {
+    return EXTERNAL_REQUEST_POINTS;
+  }
+
+  const offset: number = (Math.max(1, Math.floor(page)) - 1) * Math.floor(limit);
+  return EXTERNAL_REQUEST_POINTS + Math.floor(offset / config.API_LIMIT_V4);
 }

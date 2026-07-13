@@ -1,7 +1,7 @@
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
 import config from '../../src/config';
-import { rateLimiterMiddleware } from '../../src/lib/rate-limit';
+import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
 import {
   ratelimitRedis,
   defaultRateLimiter,
@@ -434,6 +434,63 @@ describe('rateLimit', () => {
       });
 
       config.RATE_LIMIT_FUNDING_POINTS = originalPoints;
+    });
+  });
+
+  describe('getPointCost offset weighting', () => {
+    const ip: string = '0.0.0.0';
+
+    it('costs 1 point when the request has no page/limit in the query', () => {
+      expect(getPointCost(ip, { query: undefined } as any)).toEqual(1);
+      expect(getPointCost(ip, { query: {} } as any)).toEqual(1);
+    });
+
+    it('costs 1 point for page 1 (matches every pre-existing assertion in this file)', () => {
+      expect(getPointCost(ip, { query: { page: '1', limit: '1000' } } as any)).toEqual(1);
+    });
+
+    it('costs 1 point for a shallow page regardless of limit', () => {
+      expect(getPointCost(ip, { query: { page: '2', limit: '100' } } as any)).toEqual(1);
+    });
+
+    it('weights cost by offset depth: 1 + floor(offset / API_LIMIT_V4)', () => {
+      // offset = (50 - 1) * 1000 = 49,000 -> 1 + floor(49000 / 1000) = 50
+      expect(getPointCost(ip, { query: { page: '50', limit: '1000' } } as any)).toEqual(50);
+      // offset = (2 - 1) * 1000 = 1,000 -> 1 + floor(1000 / 1000) = 2
+      expect(getPointCost(ip, { query: { page: '2', limit: '1000' } } as any)).toEqual(2);
+    });
+
+    it('defaults limit to API_LIMIT_V4 when limit is omitted', () => {
+      // offset = (10 - 1) * API_LIMIT_V4 -> 1 + floor(offset / API_LIMIT_V4) = 1 + 9 = 10
+      expect(getPointCost(ip, { query: { page: '10' } } as any)).toEqual(10);
+    });
+
+    it('never throws and falls back to 1 point on adversarial/garbage page values', () => {
+      expect(getPointCost(ip, { query: { page: 'not-a-number', limit: '1000' } } as any))
+        .toEqual(1);
+      expect(getPointCost(ip, { query: { page: '-5', limit: '1000' } } as any)).toEqual(1);
+      expect(getPointCost(ip, { query: { page: 'Infinity', limit: '1000' } } as any)).toEqual(1);
+      expect(getPointCost(ip, { query: { page: '10', limit: '0' } } as any)).toEqual(1);
+      expect(getPointCost(ip, { query: { page: '10', limit: '-100' } } as any)).toEqual(1);
+    });
+
+    it('costs 0 for internal IPs regardless of page depth', () => {
+      isIndexerIpSpy.mockReturnValueOnce(true);
+      expect(getPointCost(ip, { query: { page: '10000', limit: '1000' } } as any)).toEqual(0);
+    });
+
+    it('drains the rate-limit budget faster for deep pagination end-to-end', async () => {
+      req.headers = defaultHeaders;
+      req.query = { page: '50', limit: '1000' };
+
+      await rateLimiterMiddleware(fillsRateLimiter)(req, res, next);
+
+      expect(res.set).toHaveBeenCalledWith({
+        'RateLimit-Remaining': config.RATE_LIMIT_FILLS_POINTS - 50,
+        'RateLimit-Reset': expect.any(Number),
+        'RateLimit-Limit': config.RATE_LIMIT_FILLS_POINTS,
+      });
+      expect(next).toHaveBeenCalledTimes(1);
     });
   });
 
