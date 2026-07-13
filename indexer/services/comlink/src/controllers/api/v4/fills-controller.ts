@@ -1,5 +1,6 @@
 import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   FillColumns,
   FillFromDatabase,
   FillTable,
@@ -98,7 +99,9 @@ class FillsController extends Controller {
         page,
       },
       [QueryableField.LIMIT],
-      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
+      page !== undefined
+        ? { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [[FillColumns.eventId, Ordering.ASC]] }
+        : undefined,
     );
 
     const clobPairIdToMarket = buildClobPairIdToMarket();
@@ -150,7 +153,9 @@ class FillsController extends Controller {
         page,
       },
       [QueryableField.LIMIT],
-      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
+      page !== undefined
+        ? { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [[FillColumns.eventId, Ordering.ASC]] }
+        : undefined,
     );
 
     const clobPairIdToMarket = buildClobPairIdToMarket();
