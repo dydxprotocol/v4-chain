@@ -89,6 +89,28 @@ const paginationSchemaRecord: Record<string, ParamSchema> = {
       options: { gt: 0 },
     },
     errorMessage: 'page must be a non-negative integer',
+    custom: {
+      options: (value: string | number, { req }) => {
+        // `value` arrives as the raw query string (e.g. "27"), not a number - unlike `limit`
+        // below, this field has no `customSanitizer` to coerce it first, so do it explicitly.
+        const page: number = Number(value);
+        const rawLimit = req.query?.limit;
+        const limit: number = rawLimit !== undefined ? Number(rawLimit) : config.API_LIMIT_V4;
+        if (!Number.isInteger(page) || page <= 0 || !Number.isFinite(limit) || limit <= 0) {
+          // Let the isInt/limit validators surface their own errors; don't double-report.
+          return true;
+        }
+        const offset: number = (Math.max(1, page) - 1) * limit;
+        if (offset > config.MAX_PAGINATION_OFFSET) {
+          throw new Error(
+            `page/limit combination requests an offset of ${offset}, which exceeds the ` +
+            `maximum allowed offset of ${config.MAX_PAGINATION_OFFSET}. Narrow your query using ` +
+            'the createdBeforeOrAt/createdOnOrAfter time-range filters instead of paging deeper.',
+          );
+        }
+        return true;
+      },
+    },
   },
 };
 

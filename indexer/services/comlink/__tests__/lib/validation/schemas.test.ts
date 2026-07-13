@@ -154,4 +154,71 @@ describe('schemas', () => {
       }));
     });
   });
+
+  describe('CheckPaginationSchema offset ceiling', () => {
+    it('allows a page/limit combination exactly at MAX_PAGINATION_OFFSET', async () => {
+      const limit: number = 1000;
+      const page: number = config.MAX_PAGINATION_OFFSET / limit + 1;
+
+      await sendRequestToApp({
+        type: RequestMethod.GET,
+        path: `/v4/check-pagination-schema?${getQueryString({ page, limit })}`,
+        expressApp: schemaTestApp,
+        expectedStatus: 200,
+      });
+    });
+
+    it('rejects a page/limit combination past MAX_PAGINATION_OFFSET', async () => {
+      const limit: number = 1000;
+      const page: number = config.MAX_PAGINATION_OFFSET / limit + 2;
+      const expectedOffset: number = (page - 1) * limit;
+
+      const response: request.Response = await sendRequestToApp({
+        type: RequestMethod.GET,
+        path: `/v4/check-pagination-schema?${getQueryString({ page, limit })}`,
+        expressApp: schemaTestApp,
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual(expect.objectContaining({
+        errors: expect.arrayContaining([
+          expect.objectContaining({
+            param: 'page',
+            msg: expect.stringContaining(
+              `page/limit combination requests an offset of ${expectedOffset}, which exceeds ` +
+              `the maximum allowed offset of ${config.MAX_PAGINATION_OFFSET}`,
+            ),
+          }),
+        ]),
+      }));
+    });
+
+    it('rejects a deep page using the default limit when no limit is provided', async () => {
+      const page: number = Math.floor(config.MAX_PAGINATION_OFFSET / config.API_LIMIT_V4) + 2;
+
+      const response: request.Response = await sendRequestToApp({
+        type: RequestMethod.GET,
+        path: `/v4/check-pagination-schema?${getQueryString({ page })}`,
+        expressApp: schemaTestApp,
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual(expect.objectContaining({
+        errors: expect.arrayContaining([
+          expect.objectContaining({
+            param: 'page',
+          }),
+        ]),
+      }));
+    });
+
+    it('does not report an offset error for shallow pagination', async () => {
+      await sendRequestToApp({
+        type: RequestMethod.GET,
+        path: `/v4/check-pagination-schema?${getQueryString({ page: 2, limit: 100 })}`,
+        expressApp: schemaTestApp,
+        expectedStatus: 200,
+      });
+    });
+  });
 });
