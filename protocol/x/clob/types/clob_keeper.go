@@ -160,4 +160,24 @@ type ClobKeeper interface {
 	UpdateLeverage(ctx sdk.Context, subaccountId *satypes.SubaccountId, perpetualLeverage map[uint32]uint32) error
 	RateLimitUpdateLeverage(ctx sdk.Context, msg *MsgUpdateLeverage) error
 	GetSubaccountsKeeper() SubaccountsKeeper
+
+	// BackfillConditionalOrderTriggerPriceIndex populates the trigger-price secondary index
+	// for any untriggered conditional orders that do not yet have an index entry.
+	// Called once at the governance flag-enable transition to backfill orders resting from
+	// before the config was enabled.
+	BackfillConditionalOrderTriggerPriceIndex(ctx sdk.Context)
+
+	// SetConditionalOrderTriggerConfigParams sets the conditional-order EndBlocker work conditional-order trigger
+	// mitigation config from scalar params (used by the governance
+	// MsgUpdateConditionalOrderTriggerConfig handler). Scalars rather than the config struct are
+	// used because the struct lives in the keeper package and cannot be referenced by this
+	// interface without an import cycle. Enabling performs the deterministic index backfill.
+	SetConditionalOrderTriggerConfigParams(
+		ctx sdk.Context,
+		enabled bool,
+		maxTriggersPerBlock uint32,
+		maxRemovalsPerBlock uint32,
+		maxUntriggeredConditionalOrdersGlobal uint32,
+		maxUntriggeredConditionalOrdersPerSubaccount uint32,
+	)
 }

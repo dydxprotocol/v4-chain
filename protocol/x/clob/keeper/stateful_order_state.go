@@ -62,6 +62,28 @@ func (k Keeper) SetLongTermOrderPlacement(
 	// Write the `LongTermOrderPlacement` to state.
 	store.Set(orderKey, longTermOrderPlacementBytes)
 
+	// Maintain the trigger-price secondary index and untriggered conditional counters.
+	// Only insert on the first placement (!found) — re-placement of the same order
+	// does not change trigger direction or subticks, so the index entry is idempotent,
+	// but we avoid a redundant write.
+	if order.OrderId.IsConditionalOrder() && !k.IsConditionalOrderTriggered(ctx, order.OrderId) {
+		if !found {
+			// The trigger-price index is CONSENSUS state (storeKey). Only maintain it when the
+			// mitigation is enabled, so a flag-off node writes NO new consensus KV state and is
+			// byte-identical (app hash) to the pre-fix binary — this is what makes the fix
+			// rolling-deployable. The index is (re)built at the enable transition by
+			// SetConditionalOrderTriggerConfig.
+			if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
+				k.addConditionalOrderToTriggerPriceIndex(ctx, order)
+			}
+			// The untriggered conditional counters are MEMSTORE (memKey) — not consensus state,
+			// not in the app hash — so they are always maintained (and rehydrated by
+			// InitMemStore) and need no gating. Enforcement of the caps that read them is gated
+			// in PlaceStatefulOrder.
+			k.IncrementUntriggeredConditionalOrderCount(ctx, order.OrderId.SubaccountId)
+		}
+	}
+
 	if !found {
 		// Increment the stateful order count.
 		k.CheckAndIncrementStatefulOrderCount(ctx, order.OrderId)
@@ -142,6 +164,22 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
+	// Before deleting, load the full order so we can remove it from the trigger-price index
+	// and decrement the untriggered conditional counters.
+	// Only untriggered conditional orders are present in the index; triggered conditionals and
+	// long-term orders are not indexed.
+	if orderId.IsConditionalOrder() && !k.IsConditionalOrderTriggered(ctx, orderId) {
+		if placement, exists := k.GetUntriggeredConditionalOrderPlacement(ctx, orderId); exists {
+			// Index is consensus state — only maintain it when the mitigation is enabled (see
+			// the rolling-safety note in SetLongTermOrderPlacement). Counters are memstore.
+			if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
+				k.removeConditionalOrderFromTriggerPriceIndex(ctx, placement.Order)
+			}
+			// Decrement the untriggered conditional counters (cancel / expiry path).
+			k.DecrementUntriggeredConditionalOrderCount(ctx, orderId.SubaccountId)
+		}
+	}
+
 	store := k.fetchStateStoresForOrder(ctx, orderId)
 	orderKey := orderId.ToStateKey()
 	orderExists := store.Has(orderKey)
@@ -208,9 +246,20 @@ func (k Keeper) AddStatefulOrderIdExpiration(
 
 // RemoveExpiredStatefulOrders removes the stateful order id expirations up to `blockTime` and
 // returns the removed order ids as a slice.
+//
+// When the ConditionalOrderTriggerConfig is Enabled, at most cfg.MaxRemovalsPerBlock entries are
+// processed this block. Remaining expired-but-unprocessed entries are left in the expiration index
+// so the next block re-scans and drains them. This keeps the EndBlocker expiry loop a bounded
+// per-block workload rather than an unbounded scan.
+//
+// When the config is Disabled (the default / legacy path), the old unbounded loop runs unchanged
+// so that a flag-off node is byte-identical to a pre-fix node.
 func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time) (
 	expiredOrderIds []types.OrderId,
 ) {
+	// Read config once. The byte-identical legacy path runs when disabled.
+	cfg := k.GetConditionalOrderTriggerConfig(ctx)
+
 	expiredOrderIds = make([]types.OrderId, 0)
 	store := ctx.KVStore(k.storeKey)
 	it := store.Iterator(
@@ -220,11 +269,28 @@ func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time
 		),
 	)
 	defer it.Close()
-	for ; it.Valid(); it.Next() {
+
+	if !cfg.Enabled {
+		// LEGACY (disabled): unbounded loop — byte-identical to pre-fix behavior.
+		for ; it.Valid(); it.Next() {
+			var orderId types.OrderId
+			k.cdc.MustUnmarshal(it.Value(), &orderId)
+			expiredOrderIds = append(expiredOrderIds, orderId)
+			store.Delete(it.Key())
+		}
+		return expiredOrderIds
+	}
+
+	// ENABLED: bounded loop — process at most MaxRemovalsPerBlock entries this block.
+	// Remaining entries are left in the index for the next block to drain. Deterministic
+	// because store iteration order is stable (lexicographic key order).
+	budget := cfg.MaxRemovalsPerBlock
+	for processed := uint32(0); it.Valid() && processed < budget; it.Next() {
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(it.Value(), &orderId)
 		expiredOrderIds = append(expiredOrderIds, orderId)
 		store.Delete(it.Key())
+		processed++
 	}
 	return expiredOrderIds
 }
@@ -293,6 +359,17 @@ func (k Keeper) MustTriggerConditionalOrder(
 	triggeredConditionalOrderStore := k.GetTriggeredConditionalOrderPlacementStore(ctx)
 	orderKey := orderId.ToStateKey()
 	triggeredConditionalOrderStore.Set(orderKey, longTermOrderPlacementBytes)
+
+	// Remove the order from the trigger-price secondary index — it is now triggered and no
+	// longer belongs in the untriggered index. Index is consensus state, so only maintain it
+	// when the mitigation is enabled (rolling-safety; see SetLongTermOrderPlacement). Counters
+	// are memstore.
+	if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
+		k.removeConditionalOrderFromTriggerPriceIndex(ctx, longTermOrderPlacement.Order)
+	}
+
+	// Decrement the untriggered conditional counters (trigger path).
+	k.DecrementUntriggeredConditionalOrderCount(ctx, orderId.SubaccountId)
 
 	// Delete the `StatefulOrderPlacement` from Untriggered state store.
 	untriggeredConditionalOrderStore.Delete(orderKey)
@@ -499,5 +576,132 @@ func (k Keeper) CheckAndDecrementStatefulOrderCount(
 		)
 	} else {
 		k.SetStatefulOrderCount(ctx, subaccountId, count-1)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Untriggered conditional order counters
+// ---------------------------------------------------------------------------
+// These counters bound the resting untriggered conditional set (defense-in-depth,
+// Packet 3).  They are maintained in the memstore (same as StatefulOrderCount) and
+// are re-hydrated from InitMemStore on node restart.
+//
+// The cap constants below are intentionally conservative — well above any observed
+// legitimate market-maker usage.  Governance-settable param wiring is a follow-up
+// (see conditional-order EndBlocker work plan §9 Packet 3).
+const (
+	// MaxUntriggeredConditionalOrdersGlobal is the maximum total number of resting
+	// untriggered conditional orders across all subaccounts and clob pairs.
+	// Chosen to be well above expected aggregate market-maker usage (~tens of thousands)
+	// while providing a hard ceiling far below the attack threshold of ~250k–1.2M.
+	MaxUntriggeredConditionalOrdersGlobal uint32 = 200_000
+
+	// MaxUntriggeredConditionalOrdersPerSubaccount is the maximum number of resting
+	// untriggered conditional orders for a single subaccount.
+	// The equity-tier limit already constrains most accounts far below this; this cap
+	// provides a hard bound even for the highest equity-tier accounts.
+	MaxUntriggeredConditionalOrdersPerSubaccount uint32 = 200
+)
+
+// GetUntriggeredConditionalOrderCountGlobal returns the current global count of resting
+// untriggered conditional orders stored in the memstore.
+func (k Keeper) GetUntriggeredConditionalOrderCountGlobal(ctx sdk.Context) uint32 {
+	store := ctx.KVStore(k.memKey)
+	b := store.Get([]byte(types.UntriggeredConditionalOrderCountGlobalKey))
+	result := gogotypes.UInt32Value{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &result)
+	}
+	return result.Value
+}
+
+// SetUntriggeredConditionalOrderCountGlobal sets the global count of resting untriggered
+// conditional orders in the memstore.
+func (k Keeper) SetUntriggeredConditionalOrderCountGlobal(ctx sdk.Context, count uint32) {
+	store := ctx.KVStore(k.memKey)
+	if count == 0 {
+		store.Delete([]byte(types.UntriggeredConditionalOrderCountGlobalKey))
+	} else {
+		result := gogotypes.UInt32Value{Value: count}
+		store.Set(
+			[]byte(types.UntriggeredConditionalOrderCountGlobalKey),
+			k.cdc.MustMarshal(&result),
+		)
+	}
+}
+
+// GetUntriggeredConditionalOrderCountForSubaccount returns the number of resting untriggered
+// conditional orders for a specific subaccount from the memstore.
+func (k Keeper) GetUntriggeredConditionalOrderCountForSubaccount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) uint32 {
+	store := k.GetUntriggeredConditionalOrderCountMemStore(ctx)
+	b := store.Get(subaccountId.ToStateKey())
+	result := gogotypes.UInt32Value{Value: 0}
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &result)
+	}
+	return result.Value
+}
+
+// SetUntriggeredConditionalOrderCountForSubaccount sets the per-subaccount count of resting
+// untriggered conditional orders in the memstore.
+func (k Keeper) SetUntriggeredConditionalOrderCountForSubaccount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	count uint32,
+) {
+	store := k.GetUntriggeredConditionalOrderCountMemStore(ctx)
+	if count == 0 {
+		store.Delete(subaccountId.ToStateKey())
+	} else {
+		result := gogotypes.UInt32Value{Value: count}
+		store.Set(subaccountId.ToStateKey(), k.cdc.MustMarshal(&result))
+	}
+}
+
+// IncrementUntriggeredConditionalOrderCount increments both the global and per-subaccount
+// counters for resting untriggered conditional orders.
+// Must be called when an untriggered conditional order is first inserted into state
+// (i.e. SetLongTermOrderPlacement with a new conditional order).
+// This function never panics or enforces caps — enforcement is in PlaceStatefulOrder.
+func (k Keeper) IncrementUntriggeredConditionalOrderCount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) {
+	// Global counter.
+	globalCount := k.GetUntriggeredConditionalOrderCountGlobal(ctx)
+	k.SetUntriggeredConditionalOrderCountGlobal(ctx, globalCount+1)
+
+	// Per-subaccount counter.
+	saCount := k.GetUntriggeredConditionalOrderCountForSubaccount(ctx, subaccountId)
+	k.SetUntriggeredConditionalOrderCountForSubaccount(ctx, subaccountId, saCount+1)
+}
+
+// DecrementUntriggeredConditionalOrderCount decrements both the global and per-subaccount
+// counters for resting untriggered conditional orders.
+// Must be called when an untriggered conditional order is removed from state via
+// cancel, trigger, or expiry.  Underflow is logged and clamped to zero.
+func (k Keeper) DecrementUntriggeredConditionalOrderCount(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) {
+	// Global counter.
+	globalCount := k.GetUntriggeredConditionalOrderCountGlobal(ctx)
+	if globalCount == 0 {
+		log.ErrorLog(ctx, "UntriggeredConditionalOrderCount global is zero but decrement called. Underflow")
+	} else {
+		k.SetUntriggeredConditionalOrderCountGlobal(ctx, globalCount-1)
+	}
+
+	// Per-subaccount counter.
+	saCount := k.GetUntriggeredConditionalOrderCountForSubaccount(ctx, subaccountId)
+	if saCount == 0 {
+		log.ErrorLog(ctx, "UntriggeredConditionalOrderCount per-subaccount is zero but decrement called. Underflow",
+			"subaccountId", cometbftlog.NewLazySprintf("%+v", subaccountId),
+		)
+	} else {
+		k.SetUntriggeredConditionalOrderCountForSubaccount(ctx, subaccountId, saCount-1)
 	}
 }

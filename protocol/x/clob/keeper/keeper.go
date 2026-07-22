@@ -309,6 +309,16 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	for _, order := range statefulOrders {
 		k.CheckAndIncrementStatefulOrderCount(ctx, order.GetOrderId())
 	}
+
+	// Ensure that the untriggered conditional order counters are accurately represented in the
+	// memstore on restart.  We iterate only the untriggered conditional store to avoid
+	// double-counting triggered conditionals or long-term orders.
+	// Note: IncrementUntriggeredConditionalOrderCount does not enforce caps — it is safe to call
+	// here even if a previously accumulated set is at or above a cap.
+	untriggeredOrders := k.GetAllUntriggeredConditionalOrders(ctx)
+	for _, order := range untriggeredOrders {
+		k.IncrementUntriggeredConditionalOrderCount(ctx, order.GetOrderId().SubaccountId)
+	}
 }
 
 func (k Keeper) GetMemstoreInitialized(ctx sdk.Context) bool {

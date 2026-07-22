@@ -69,6 +69,16 @@ func (k Keeper) GetStatefulOrderCountMemStore(ctx sdk.Context) prefix.Store {
 	)
 }
 
+// GetUntriggeredConditionalOrderCountMemStore fetches the memstore prefix store used for
+// per-subaccount untriggered conditional order counts.
+// Full key within this prefix store = subaccountId.ToStateKey().
+func (k Keeper) GetUntriggeredConditionalOrderCountMemStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.memKey),
+		[]byte(types.UntriggeredConditionalOrderCountPerSubaccountPrefix),
+	)
+}
+
 // GetTriggeredConditionalOrderPlacementStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order placement from state.
 func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) prefix.Store {

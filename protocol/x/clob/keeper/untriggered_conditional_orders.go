@@ -195,13 +195,40 @@ func OrganizeUntriggeredConditionalOrdersFromState(
 	return ret
 }
 
+// MaxConditionalTriggersPerBlock is the maximum number of conditional orders that may be
+// triggered in a single block by MaybeTriggerConditionalOrders. This acts as a per-block
+// budget that bounds EndBlocker work to O(budget) rather than O(global N). A conservative
+// high default is chosen so that normal operation and equivalence tests are unaffected; the
+// value will be made governance-tunable in Packet 3.
+//
+// Rationale for 1000: the observed legitimate peak is on the order of tens of triggers per
+// block; 1000 provides a 10–100× safety margin while keeping worst-case EndBlocker work
+// firmly bounded. When the crossed set exceeds the budget, only the nearest-crossing orders
+// (lowest triggerSubticks for LTE, lowest triggerSubticks for GTE) are triggered this block;
+// the remainder are deferred to subsequent blocks where the budget refills, making deferral
+// deterministic and consistent across all nodes.
+const MaxConditionalTriggersPerBlock = 1000
+
 // MaybeTriggerConditionalOrders queries the prices module for price updates and triggers
-// any conditional orders in `UntriggeredConditionalOrders` that can be triggered. For each triggered
-// order, it takes the stateful order placement stored in Untriggered state and moves it to Triggered state.
-// A conditional order trigger event is emitted for each triggered order.
-// Function returns a sorted list of conditional order ids that were triggered, intended to be written
-// to `ProcessProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock`.
-// This function is called in EndBlocker.
+// any conditional orders that can be triggered. It is called in EndBlocker and returns the list
+// of triggered conditional order ids, written to
+// `ProcessProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock`.
+//
+// FLAG-GATED BEHAVIOR (consensus-safe rolling deploy):
+//
+//   - When the ConditionalOrderTriggerConfig is DISABLED (the default when unset), this function
+//     runs maybeTriggerConditionalOrdersLegacy, which is byte-for-byte identical to the pre-fix
+//     implementation: it reads the full untriggered set, organizes and time-sorts it, and triggers
+//     against oracle + clamped trade prices with the original ordering and state writes. Because
+//     the legacy path is bit-identical, the new binary can be rolled out on all nodes without a
+//     version split — every node produces the same app hash until the flag is flipped.
+//
+//   - When the config is ENABLED, this function runs the bounded, crossing-priority path
+//     (maybeTriggerConditionalOrdersBounded), which uses the trigger-price secondary index to do
+//     O(crossed + budget) work per block instead of O(global N). The flag MUST be flipped at a
+//     coordinated (governed) height, since enabling it changes the triggered set (under budget
+//     pressure) and ordering (price-priority instead of time-priority) — both observable in block
+//     state.
 func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrderIds []types.OrderId) {
 	defer metrics.ModuleMeasureSince(
 		types.ModuleName,
@@ -209,6 +236,22 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 		time.Now(),
 	)
 
+	cfg := k.GetConditionalOrderTriggerConfig(ctx)
+	if !cfg.Enabled {
+		// Legacy path — identical to the pre-fix behavior. Rolling-deploy safe.
+		return k.maybeTriggerConditionalOrdersLegacy(ctx)
+	}
+	return k.maybeTriggerConditionalOrdersBounded(ctx, cfg)
+}
+
+// maybeTriggerConditionalOrdersLegacy is the ORIGINAL, pre-fix implementation preserved verbatim.
+// It is executed when the ConditionalOrderTriggerConfig is disabled so that a chain running the
+// new binary behaves bit-identically to the old binary (same triggered set, same ordering, same
+// state writes, same metrics) — enabling a rolling deploy with delayed, coordinated activation.
+//
+// DO NOT change the behavior of this function; any change here would break the rolling-deploy
+// equivalence guarantee. It intentionally performs the full-set read + organize + sort.
+func (k Keeper) maybeTriggerConditionalOrdersLegacy(ctx sdk.Context) (allTriggeredOrderIds []types.OrderId) {
 	clobPairToUntriggeredConditionals := OrganizeUntriggeredConditionalOrdersFromState(
 		k.GetAllUntriggeredConditionalOrders(ctx),
 	)
@@ -270,6 +313,193 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 	}
 
 	return allTriggeredOrderIds
+}
+
+// maybeTriggerConditionalOrdersBounded is the fixed, bounded trigger path. It runs only when the
+// ConditionalOrderTriggerConfig is enabled.
+//
+// Work is O(crossed + budget), independent of the global untriggered count N, because it uses the
+// trigger-price secondary index to visit ONLY the orders whose trigger boundary the current price
+// crosses (nearest-crossing first). Far-from-market orders that cannot cross are never visited, so
+// they do not contribute to per-block scan cost; genuinely crossing orders (real liquidity /
+// taking) are processed nearest-first.
+//
+// Prioritization under budget pressure (prioritize real crossing liquidity):
+//   - The per-block budget is cfg.MaxTriggersPerBlock, drained nearest-crossing-first across clob
+//     pairs in ascending id.
+//   - Any orders beyond the budget are deterministically deferred to subsequent blocks (the index
+//     is ordered, so the same nearest-crossing prefix is chosen on every node every block).
+//
+// Ordering: (clobPairId ascending, oracle→min-trade→max-trade, LTE→GTE, ascending
+// triggerSubticks/orderId). Deterministic across nodes. Differs from legacy time-priority ordering,
+// which is why enabling the flag must happen at a coordinated height.
+func (k Keeper) maybeTriggerConditionalOrdersBounded(
+	ctx sdk.Context,
+	cfg ConditionalOrderTriggerConfig,
+) (allTriggeredOrderIds []types.OrderId) {
+	allTriggeredOrderIds = make([]types.OrderId, 0)
+	remaining := int(cfg.MaxTriggersPerBlock)
+
+	// GetAllClobPairs already returns clob pairs sorted in ascending ClobPair.Id order,
+	// preserving the deterministic per-pair iteration order of the prior implementation.
+	clobPairs := k.GetAllClobPairs(ctx)
+
+	for _, clobPair := range clobPairs {
+		if remaining <= 0 {
+			break
+		}
+
+		clobPairId := types.ClobPairId(clobPair.Id)
+		perpetualId := clobPair.MustGetPerpetualId()
+		oraclePrice := k.GetOraclePriceSubticksRat(ctx, clobPair)
+
+		// Trigger conditional orders using the oracle price.
+		triggered := k.triggerCrossedOrdersFromIndex(
+			ctx, clobPairId, oraclePrice, perpetualId, metrics.OraclePrice, remaining,
+		)
+		allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
+		remaining -= len(triggered)
+
+		if remaining <= 0 {
+			continue
+		}
+
+		// Trigger conditional orders using the clamped trade prices.
+		clampedMinTradePrice,
+			clampedMaxTradePrice,
+			found := k.getClampedTradePricesForTriggering(
+			ctx,
+			perpetualId,
+			oraclePrice,
+		)
+
+		if found {
+			triggered = k.triggerCrossedOrdersFromIndex(
+				ctx, clobPairId, clampedMinTradePrice, perpetualId, metrics.MinTradePrice, remaining,
+			)
+			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
+			remaining -= len(triggered)
+
+			if remaining > 0 {
+				triggered = k.triggerCrossedOrdersFromIndex(
+					ctx, clobPairId, clampedMaxTradePrice, perpetualId, metrics.MaxTradePrice, remaining,
+				)
+				allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
+				remaining -= len(triggered)
+			}
+		}
+	}
+
+	// Emit the global count of resting untriggered conditional orders. Sourced O(1) from the
+	// admission-cap counter rather than the prior O(N) full-set read, so the monitoring signal is
+	// preserved without reintroducing the vulnerable per-block scan. Global (not per-perpetual).
+	metrics.SetGaugeWithLabels(
+		metrics.ClobNumUntriggeredOrders,
+		float32(k.GetUntriggeredConditionalOrderCountGlobal(ctx)),
+	)
+
+	return allTriggeredOrderIds
+}
+
+// triggerCrossedOrdersFromIndex performs a crossed-order range scan on the trigger-price index
+// for a single clob pair and price, triggering up to `budget` orders. It returns the list of
+// triggered order ids in the order they were visited (ascending triggerSubticks, then orderId
+// bytes). This is O(crossed) — it reads only the orders whose trigger boundary the given price
+// crosses, not the full untriggered set.
+//
+// Pessimistic rounding (matching PollTriggeredConditionalOrders):
+//   - LTE direction: ceil(price) — only trigger if we are sure the price is truly ≤ triggerSubticks.
+//   - GTE direction: floor(price) — only trigger if we are sure the price is truly ≥ triggerSubticks.
+//
+// The function scans LTE-crossed orders first, then GTE-crossed orders, matching the append order
+// of the prior PollTriggeredConditionalOrders implementation.
+func (k Keeper) triggerCrossedOrdersFromIndex(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+	price *big.Rat,
+	perpetualId uint32,
+	priceType string,
+	budget int,
+) (triggeredOrderIds []types.OrderId) {
+	triggeredOrderIds = make([]types.OrderId, 0)
+
+	// Emit the price gauge (mirrors TriggerOrdersWithPrice metric).
+	priceFloat, _ := price.Float32()
+	labels := []gometrics.Label{
+		metrics.GetLabelForStringValue(metrics.Type, priceType),
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+	}
+	metrics.SetGaugeWithLabels(metrics.ClobConditionalOrderTriggerPrice, priceFloat, labels...)
+
+	// LTE-direction: orders trigger when oracle_price ≤ triggerSubticks.
+	// Pessimistic rounding: ceil(price) for the subticks threshold.
+	if budget > 0 {
+		ltePriceSubticks := lib.BigRatRound(price, true).Uint64() // ceil
+		k.IterateCrossedConditionalOrders(
+			ctx,
+			uint32(clobPairId),
+			TriggerDirectionLTE,
+			ltePriceSubticks,
+			func(orderId types.OrderId) bool {
+				if budget <= 0 {
+					return false
+				}
+				k.MustTriggerConditionalOrder(ctx, orderId)
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewConditionalOrderTriggeredEvent(orderId),
+					),
+				)
+				metrics.IncrCountMetricWithLabels(
+					types.ModuleName,
+					metrics.ClobConditionalOrderTriggered,
+					append(orderId.GetOrderIdLabels(), labels...)...,
+				)
+				triggeredOrderIds = append(triggeredOrderIds, orderId)
+				budget--
+				return true
+			},
+		)
+	}
+
+	// GTE-direction: orders trigger when oracle_price ≥ triggerSubticks.
+	// Pessimistic rounding: floor(price) for the subticks threshold.
+	if budget > 0 {
+		gtePriceSubticks := lib.BigRatRound(price, false).Uint64() // floor
+		k.IterateCrossedConditionalOrders(
+			ctx,
+			uint32(clobPairId),
+			TriggerDirectionGTE,
+			gtePriceSubticks,
+			func(orderId types.OrderId) bool {
+				if budget <= 0 {
+					return false
+				}
+				k.MustTriggerConditionalOrder(ctx, orderId)
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewConditionalOrderTriggeredEvent(orderId),
+					),
+				)
+				metrics.IncrCountMetricWithLabels(
+					types.ModuleName,
+					metrics.ClobConditionalOrderTriggered,
+					append(orderId.GetOrderIdLabels(), labels...)...,
+				)
+				triggeredOrderIds = append(triggeredOrderIds, orderId)
+				budget--
+				return true
+			},
+		)
+	}
+
+	return triggeredOrderIds
 }
 
 // TriggerOrdersWithPrice triggers all untriggered conditional orders using the given price. It returns

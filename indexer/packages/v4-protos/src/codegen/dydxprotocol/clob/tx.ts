@@ -430,6 +430,82 @@ export interface MsgUpdateLeverageResponse {}
 /** MsgUpdateLeverageResponse is a response type used for updating leverage. */
 
 export interface MsgUpdateLeverageResponseSDKType {}
+/**
+ * MsgUpdateConditionalOrderTriggerConfig is the
+ * Msg/UpdateConditionalOrderTriggerConfig request type.
+ */
+
+export interface MsgUpdateConditionalOrderTriggerConfig {
+  authority: string;
+  /**
+   * When true, the bounded trigger and removal paths are active. When false,
+   * the legacy unbounded paths run (byte-identical to pre-fix nodes).
+   */
+
+  enabled: boolean;
+  /** Maximum number of conditional orders that may trigger per block. */
+
+  maxTriggersPerBlock: number;
+  /** Maximum number of expired stateful orders removed per block. */
+
+  maxRemovalsPerBlock: number;
+  /**
+   * Maximum total number of resting untriggered conditional orders across all
+   * subaccounts and clob pairs.
+   */
+
+  maxUntriggeredConditionalOrdersGlobal: number;
+  /**
+   * Maximum number of resting untriggered conditional orders for a single
+   * subaccount.
+   */
+
+  maxUntriggeredConditionalOrdersPerSubaccount: number;
+}
+/**
+ * MsgUpdateConditionalOrderTriggerConfig is the
+ * Msg/UpdateConditionalOrderTriggerConfig request type.
+ */
+
+export interface MsgUpdateConditionalOrderTriggerConfigSDKType {
+  authority: string;
+  /**
+   * When true, the bounded trigger and removal paths are active. When false,
+   * the legacy unbounded paths run (byte-identical to pre-fix nodes).
+   */
+
+  enabled: boolean;
+  /** Maximum number of conditional orders that may trigger per block. */
+
+  max_triggers_per_block: number;
+  /** Maximum number of expired stateful orders removed per block. */
+
+  max_removals_per_block: number;
+  /**
+   * Maximum total number of resting untriggered conditional orders across all
+   * subaccounts and clob pairs.
+   */
+
+  max_untriggered_conditional_orders_global: number;
+  /**
+   * Maximum number of resting untriggered conditional orders for a single
+   * subaccount.
+   */
+
+  max_untriggered_conditional_orders_per_subaccount: number;
+}
+/**
+ * MsgUpdateConditionalOrderTriggerConfigResponse is the
+ * Msg/UpdateConditionalOrderTriggerConfig response type.
+ */
+
+export interface MsgUpdateConditionalOrderTriggerConfigResponse {}
+/**
+ * MsgUpdateConditionalOrderTriggerConfigResponse is the
+ * Msg/UpdateConditionalOrderTriggerConfig response type.
+ */
+
+export interface MsgUpdateConditionalOrderTriggerConfigResponseSDKType {}
 
 function createBaseMsgCreateClobPair(): MsgCreateClobPair {
   return {
@@ -1524,6 +1600,135 @@ export const MsgUpdateLeverageResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateLeverageResponse>): MsgUpdateLeverageResponse {
     const message = createBaseMsgUpdateLeverageResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateConditionalOrderTriggerConfig(): MsgUpdateConditionalOrderTriggerConfig {
+  return {
+    authority: "",
+    enabled: false,
+    maxTriggersPerBlock: 0,
+    maxRemovalsPerBlock: 0,
+    maxUntriggeredConditionalOrdersGlobal: 0,
+    maxUntriggeredConditionalOrdersPerSubaccount: 0
+  };
+}
+
+export const MsgUpdateConditionalOrderTriggerConfig = {
+  encode(message: MsgUpdateConditionalOrderTriggerConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.enabled === true) {
+      writer.uint32(16).bool(message.enabled);
+    }
+
+    if (message.maxTriggersPerBlock !== 0) {
+      writer.uint32(24).uint32(message.maxTriggersPerBlock);
+    }
+
+    if (message.maxRemovalsPerBlock !== 0) {
+      writer.uint32(32).uint32(message.maxRemovalsPerBlock);
+    }
+
+    if (message.maxUntriggeredConditionalOrdersGlobal !== 0) {
+      writer.uint32(40).uint32(message.maxUntriggeredConditionalOrdersGlobal);
+    }
+
+    if (message.maxUntriggeredConditionalOrdersPerSubaccount !== 0) {
+      writer.uint32(48).uint32(message.maxUntriggeredConditionalOrdersPerSubaccount);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateConditionalOrderTriggerConfig {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateConditionalOrderTriggerConfig();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.enabled = reader.bool();
+          break;
+
+        case 3:
+          message.maxTriggersPerBlock = reader.uint32();
+          break;
+
+        case 4:
+          message.maxRemovalsPerBlock = reader.uint32();
+          break;
+
+        case 5:
+          message.maxUntriggeredConditionalOrdersGlobal = reader.uint32();
+          break;
+
+        case 6:
+          message.maxUntriggeredConditionalOrdersPerSubaccount = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateConditionalOrderTriggerConfig>): MsgUpdateConditionalOrderTriggerConfig {
+    const message = createBaseMsgUpdateConditionalOrderTriggerConfig();
+    message.authority = object.authority ?? "";
+    message.enabled = object.enabled ?? false;
+    message.maxTriggersPerBlock = object.maxTriggersPerBlock ?? 0;
+    message.maxRemovalsPerBlock = object.maxRemovalsPerBlock ?? 0;
+    message.maxUntriggeredConditionalOrdersGlobal = object.maxUntriggeredConditionalOrdersGlobal ?? 0;
+    message.maxUntriggeredConditionalOrdersPerSubaccount = object.maxUntriggeredConditionalOrdersPerSubaccount ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateConditionalOrderTriggerConfigResponse(): MsgUpdateConditionalOrderTriggerConfigResponse {
+  return {};
+}
+
+export const MsgUpdateConditionalOrderTriggerConfigResponse = {
+  encode(_: MsgUpdateConditionalOrderTriggerConfigResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateConditionalOrderTriggerConfigResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateConditionalOrderTriggerConfigResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateConditionalOrderTriggerConfigResponse>): MsgUpdateConditionalOrderTriggerConfigResponse {
+    const message = createBaseMsgUpdateConditionalOrderTriggerConfigResponse();
     return message;
   }
 

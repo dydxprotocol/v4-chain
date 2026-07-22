@@ -79,6 +79,17 @@ const (
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U:"
 
+	// ConditionalOrderTriggerPriceIndexKeyPrefix is the prefix for the secondary trigger-price index.
+	// IMPORTANT: this prefix must NOT start with StatefulOrderKeyPrefix ("SO/") to avoid being
+	// picked up by getAllOrdersIterator / GetAllStatefulOrders, which would try to unmarshal
+	// the empty-value index entries as LongTermOrderPlacement.
+	// Keys are structured as:
+	//   <prefix> <clobPairId:4 big-endian> <directionByte:1> <triggerSubticks:8 big-endian> <orderId state key>
+	// directionByte = 0x00 for LTE-direction (trigger when oracle ≤ triggerPrice)
+	//               = 0x01 for GTE-direction (trigger when oracle ≥ triggerPrice)
+	// triggerSubticks is big-endian so byte ordering is monotonically increasing in price.
+	ConditionalOrderTriggerPriceIndexKeyPrefix = "TPIdx:"
+
 	// NextClobPairIDKey is the key to retrieve the next ClobPair ID to be used.
 	NextClobPairIDKey = "NextClobPairID"
 
@@ -115,6 +126,25 @@ const (
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of stateful orders stored in state.
 	StatefulOrderCountPrefix = "NumSO:"
+
+	// UntriggeredConditionalOrderCountGlobalKey is the single memstore key that holds the global count
+	// of resting untriggered conditional orders across all subaccounts and clob pairs.
+	// Maintained at the same four lifecycle hooks as the trigger-price index (Packet 1).
+	UntriggeredConditionalOrderCountGlobalKey = "NumUcond"
+
+	// UntriggeredConditionalOrderCountPerSubaccountPrefix is the memstore key prefix for the
+	// per-subaccount count of resting untriggered conditional orders.
+	// Full key = prefix + subaccountId.ToStateKey().
+	UntriggeredConditionalOrderCountPerSubaccountPrefix = "NumUcondSa:"
+
+	// ConditionalOrderTriggerConfigKey is the single persistent-store key holding the
+	// consensus-level configuration that gates the bounded conditional-order trigger path.
+	// When absent (the default), MaybeTriggerConditionalOrders runs the legacy full-scan
+	// behavior that is byte-for-byte identical to the pre-fix implementation, so the fix can be
+	// shipped on a rolling basis and activated later at a governed height without a version split.
+	// When present and enabled, the bounded crossing-priority path runs. This value is consensus
+	// state (persistent KVStore), so every node agrees deterministically on which path executes.
+	ConditionalOrderTriggerConfigKey = "CondTrigCfg"
 )
 
 // Transient Store
