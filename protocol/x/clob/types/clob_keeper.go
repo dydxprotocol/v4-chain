@@ -180,4 +180,14 @@ type ClobKeeper interface {
 		maxUntriggeredConditionalOrdersGlobal uint32,
 		maxUntriggeredConditionalOrdersPerSubaccount uint32,
 	)
+
+	// IsConditionalOrderTriggerConfigEnabled reports whether the bounded conditional-order trigger
+	// path is currently enabled in consensus state. Scalar accessor (bool) so the config struct,
+	// which lives in the keeper package, need not cross this interface.
+	IsConditionalOrderTriggerConfigEnabled(ctx sdk.Context) bool
+
+	// GetUntriggeredConditionalOrderCountGlobal returns the current global count of resting
+	// untriggered conditional orders (the O(1) admission-cap counter). Used by the enable handler
+	// to bound the one-shot index backfill.
+	GetUntriggeredConditionalOrderCountGlobal(ctx sdk.Context) uint32
 }

@@ -145,12 +145,12 @@ func collectIndexOrderIds(
 
 	for ; it.Valid(); it.Next() {
 		rawKey := it.Key()
-		// Must have at least 4+1+8 = 13 bytes fixed prefix.
-		require.Greater(t, len(rawKey), 13, "malformed index key: %x", rawKey)
+		// Fixed prefix: <clobPairId:4><dir:1><subticks:8><sequenceKey:8> = 21 bytes.
+		require.Greater(t, len(rawKey), 21, "malformed index key: %x", rawKey)
 
 		clobPairIdBytes := rawKey[0:4]
 		dirByte := rawKey[4]
-		orderKeyBytes := rawKey[13:]
+		orderKeyBytes := rawKey[21:]
 
 		clobPairId := uint32(clobPairIdBytes[0])<<24 |
 			uint32(clobPairIdBytes[1])<<16 |

@@ -47,6 +47,19 @@ const conditionalOrderTriggerConfigLen = 1 + 1 + 4 + 4 + 4 + 4
 // Chosen to match MaxConditionalTriggersPerBlock so both budgets share the same default scale.
 const MaxConditionalRemovalsPerBlock = 1000
 
+// MaxBackfillCardinality bounds the size of the resting untriggered conditional set that the
+// disabled->enabled transition is allowed to rebuild in a single consensus block
+// (BackfillConditionalOrderTriggerPriceIndex is an unbudgeted O(N) full clear + re-insert). The
+// governance enable handler refuses to enable the mitigation when the live global untriggered
+// count exceeds this ceiling, so the one-shot backfill can never exceed a validated size
+// Operators drain the resting set below this before enabling.
+//
+// Set to the default steady-state global admission cap: a set that already fits under the cap that
+// will apply once enabled is, by construction, safe to rebuild. This value SHOULD be confirmed
+// against a validator-hardware benchmark of the backfill (see the remediation plan's benchmark
+// packet) before enabling on a production network.
+const MaxBackfillCardinality = MaxUntriggeredConditionalOrdersGlobal
+
 // DefaultConditionalOrderTriggerConfig returns the config that applies when no config has been
 // set in state: disabled (legacy behavior). All numeric fields default to the package constants
 // so that if governance enables the config without specifying individual limits, sane bounds apply.
@@ -106,6 +119,13 @@ func (k Keeper) GetConditionalOrderTriggerConfig(ctx sdk.Context) ConditionalOrd
 		return DefaultConditionalOrderTriggerConfig()
 	}
 	return decodeConditionalOrderTriggerConfig(b)
+}
+
+// IsConditionalOrderTriggerConfigEnabled reports whether the bounded conditional-order trigger
+// path is currently enabled. Scalar accessor exposed on the ClobKeeper interface for callers (the
+// governance enable handler) that cannot reference the keeper-package config struct.
+func (k Keeper) IsConditionalOrderTriggerConfigEnabled(ctx sdk.Context) bool {
+	return k.GetConditionalOrderTriggerConfig(ctx).Enabled
 }
 
 // SetConditionalOrderTriggerConfig writes the trigger config to consensus state.

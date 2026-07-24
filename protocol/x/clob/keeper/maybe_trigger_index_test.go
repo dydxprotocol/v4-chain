@@ -35,6 +35,7 @@ import (
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -369,9 +370,9 @@ func TestMaybeTrigger_BudgetAndDeferral(t *testing.T) {
 	require.Len(t, triggered1, budget,
 		"first block: exactly MaxConditionalTriggersPerBlock orders should trigger")
 
-	// The triggered orders must be the first `budget` by ascending triggerSubticks.
-	// Since we assigned triggerSubticks = 1001+i (ascending), index iterates them in
-	// placement order which matches ascending subticks here.
+	// Exactly `budget` orders fire this block and the remaining `extra` defer to the next block;
+	// this test asserts the COUNTS and cross-block completeness (which specific orders fire first —
+	// nearest-crossing-first — is covered by TestIterateCrossedConditionalOrders_NearestFirstOrdering).
 	triggeredSet1 := orderIdSet(triggered1)
 	for _, id := range triggered1 {
 		_, found := k.GetTriggeredConditionalOrderPlacement(ctx, id)
@@ -485,6 +486,245 @@ func TestMaybeTrigger_NoPriceCrossingIsConstantWork(t *testing.T) {
 	// (bounded by index scan of zero crossed entries, not O(N) full scan).
 	// The bounded behavior is guaranteed by design: IterateCrossedConditionalOrders scans
 	// only the crossed range of the index; with no crossed orders, the iterator visits 0 keys.
+}
+
+// ----------------------------------------------------------------
+// Test 4e: Per-block budget is fair-shared across markets
+// ----------------------------------------------------------------
+// TestMaybeTrigger_FairShareAcrossMarkets verifies that a low-id market cannot consume the whole
+// chain-wide trigger budget and starve higher-id markets. Before the fix, a single shared budget was
+// drained in ascending pair-id order, so pair 0 (with many crossed orders) could take the entire
+// budget every block while pair 1 stayed deferred.
+func TestMaybeTrigger_FairShareAcrossMarkets(t *testing.T) {
+	ks := trigIndexTestKeeper(t) // BTC = pair 0, ETH = pair 1
+	k := ks.ClobKeeper
+	ctx := ks.Ctx
+
+	// Many crossed GTE orders on BOTH pairs (triggerSubticks well below each oracle price).
+	const perPair = 10
+	for i := 0; i < perPair; i++ {
+		placeOrder(t, k, ctx, makeTrigTestOrder(
+			constants.Alice_Num0, uint32(i), 0, clobkeeper.TriggerDirectionGTE, uint64(1+i),
+		))
+		placeOrder(t, k, ctx, makeTrigTestOrder(
+			constants.Alice_Num1, uint32(i), 1, clobkeeper.TriggerDirectionGTE, uint64(1+i),
+		))
+	}
+
+	// Budget of 4 across 2 active pairs → each pair gets a fair share of 2 this block.
+	enableTriggerConfig(t, k, ctx, 4)
+	triggered := k.MaybeTriggerConditionalOrders(ctx)
+
+	perPairCount := map[uint32]int{}
+	for _, id := range triggered {
+		perPairCount[id.ClobPairId]++
+	}
+	require.Len(t, triggered, 4, "exactly the budget (4) should trigger this block")
+	require.Equal(t, 2, perPairCount[0], "BTC (pair 0) must not consume the whole budget")
+	require.Equal(t, 2, perPairCount[1], "ETH (pair 1) must get its fair share, not be starved")
+}
+
+// ----------------------------------------------------------------
+// Test 4a: GTE crossed orders are visited nearest-first under budget
+// ----------------------------------------------------------------
+// TestIterateCrossedConditionalOrders_NearestFirstOrdering verifies that both trigger directions
+// visit crossed orders NEAREST-CROSSING first, so a per-block budget triggers the orders closest to
+// the current price before farther ones. The pre-fix GTE scan iterated ascending over [0, price],
+// which is FARTHEST-first (deep out-of-the-money stops fired before near-price ones); the fix
+// iterates GTE descending. LTE was and remains ascending (nearest-first).
+func TestIterateCrossedConditionalOrders_NearestFirstOrdering(t *testing.T) {
+	ks := newCondTestKeepers(t)
+	ctx := ks.Ctx
+	k := ks.ClobKeeper
+	// Enable so the placement hooks maintain the consensus-gated index.
+	enableTriggerConfig(t, k, ctx, clobkeeper.MaxConditionalTriggersPerBlock)
+
+	// GTE (stop-loss buy) orders at ascending trigger subticks; clientId i -> subticks.
+	gteSubticks := []uint64{50, 100, 200, 300}
+	gteByClient := make(map[uint32]uint64, len(gteSubticks))
+	for i, sub := range gteSubticks {
+		o := makeTrigTestOrder(constants.Alice_Num0, uint32(i), 0, clobkeeper.TriggerDirectionGTE, sub)
+		k.SetLongTermOrderPlacement(ctx, o, 1)
+		gteByClient[uint32(i)] = sub
+	}
+
+	// Scan GTE at price 300: all crossed. Visitation order must be DESCENDING (nearest-first).
+	var gteVisited []uint64
+	k.IterateCrossedConditionalOrders(ctx, 0, clobkeeper.TriggerDirectionGTE, 300,
+		func(id clobtypes.OrderId) bool {
+			gteVisited = append(gteVisited, gteByClient[id.ClientId])
+			return true
+		})
+	require.Equal(t, []uint64{300, 200, 100, 50}, gteVisited,
+		"GTE crossed orders must be visited nearest-first (highest subticks ≤ price first)")
+
+	// LTE (take-profit buy) orders at ascending trigger subticks on a different subaccount.
+	lteSubticks := []uint64{10, 20, 25, 30}
+	lteByClient := make(map[uint32]uint64, len(lteSubticks))
+	for i, sub := range lteSubticks {
+		o := makeTrigTestOrder(constants.Alice_Num1, uint32(i), 0, clobkeeper.TriggerDirectionLTE, sub)
+		k.SetLongTermOrderPlacement(ctx, o, 1)
+		lteByClient[uint32(i)] = sub
+	}
+
+	// Scan LTE at price 5: all crossed. Visitation order must be ASCENDING (nearest-first).
+	var lteVisited []uint64
+	k.IterateCrossedConditionalOrders(ctx, 0, clobkeeper.TriggerDirectionLTE, 5,
+		func(id clobtypes.OrderId) bool {
+			lteVisited = append(lteVisited, lteByClient[id.ClientId])
+			return true
+		})
+	require.Equal(t, []uint64{10, 20, 25, 30}, lteVisited,
+		"LTE crossed orders must be visited nearest-first (lowest subticks ≥ price first)")
+}
+
+// ----------------------------------------------------------------
+// Test 4d: Equal-price ties resolve by placement time, not client id
+// ----------------------------------------------------------------
+// TestMaybeTrigger_EqualPriceTieBreaksByPlacementTime verifies that when two orders share the same
+// trigger subticks, the OLDER order (earlier placement) triggers first under a per-block budget,
+// regardless of client id. Before the fix, the index tie-break was the raw orderId (which embeds
+// the client-chosen ClientId), so a newer order with a lower client id could jump an older one.
+func TestMaybeTrigger_EqualPriceTieBreaksByPlacementTime(t *testing.T) {
+	const sameSubticksLTE = uint64(60_000_000_000) // above oracle (50B) -> LTE crosses
+	const sameSubticksGTE = uint64(40_000_000_000) // below oracle (50B) -> GTE crosses
+
+	// Each case places an OLDER order with a HIGHER client id first, then a NEWER order with a
+	// LOWER client id. Time priority must trigger the older (high-client-id) order first; a
+	// client-id tie-break would (incorrectly) pick the newer low-client-id order.
+	cases := []struct {
+		name string
+		dir  byte
+		sub  uint64
+	}{
+		{"lte", clobkeeper.TriggerDirectionLTE, sameSubticksLTE},
+		{"gte", clobkeeper.TriggerDirectionGTE, sameSubticksGTE},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ks := trigIndexTestKeeper(t)
+			k := ks.ClobKeeper
+			ctx := ks.Ctx
+
+			older := makeTrigTestOrder(constants.Alice_Num0, 99 /* high client id */, 0, tc.dir, tc.sub)
+			newer := makeTrigTestOrder(constants.Alice_Num0, 1 /* low client id */, 0, tc.dir, tc.sub)
+			placeOrder(t, k, ctx, older) // placed first -> lower placement sequence
+			placeOrder(t, k, ctx, newer) // placed second -> higher placement sequence
+
+			// Budget of 1 so only the highest-priority (oldest) order triggers this block.
+			enableTriggerConfig(t, k, ctx, 1)
+
+			triggered := k.MaybeTriggerConditionalOrders(ctx)
+			require.Equal(t, []clobtypes.OrderId{older.OrderId}, triggered,
+				"the older order must trigger first even though it has the higher client id")
+		})
+	}
+}
+
+// ----------------------------------------------------------------
+// Test 4b: Zero oracle price does not panic the EndBlocker
+// ----------------------------------------------------------------
+// TestMaybeTrigger_ZeroOraclePriceDoesNotPanic verifies that the enabled bounded path does not
+// panic when a clob pair's market oracle price is still 0 (e.g. a freshly listed market that has
+// not yet received a valid non-zero price update). The pre-fix bounded path fetched the oracle
+// price for every clob pair unconditionally and panicked (ErrZeroPriceForOracle); the legacy path
+// only ever visited pairs that had resting orders, so this all-pairs visit was a new exposure.
+func TestMaybeTrigger_ZeroOraclePriceDoesNotPanic(t *testing.T) {
+	const btcMarketId = uint32(0)
+
+	setBtcPrice := func(t *testing.T, ks keepertest.ClobKeepersTestContext, price uint64) {
+		t.Helper()
+		require.NoError(t, ks.PricesKeeper.UpdateMarketPrices(ks.Ctx,
+			[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+				{MarketId: btcMarketId, Price: price},
+			},
+		))
+	}
+
+	t.Run("empty_price_zero_pair_is_skipped", func(t *testing.T) {
+		ks := trigIndexTestKeeper(t)
+		k := ks.ClobKeeper
+		ctx := ks.Ctx
+
+		// BTC market drops to price 0; no conditional orders rest on any pair.
+		setBtcPrice(t, ks, 0)
+		enableTriggerConfig(t, k, ctx, uint32(clobkeeper.MaxConditionalTriggersPerBlock))
+
+		require.NotPanics(t, func() {
+			require.Empty(t, k.MaybeTriggerConditionalOrders(ctx))
+		}, "a price-0 pair with no resting conditionals must be skipped, not panic")
+	})
+
+	t.Run("price_zero_pair_with_resting_conditional_defers_then_triggers", func(t *testing.T) {
+		ks := trigIndexTestKeeper(t)
+		k := ks.ClobKeeper
+		ctx := ks.Ctx
+
+		// A GTE (stop-loss buy) order that will cross once BTC is at its normal 50B oracle price.
+		order := makeTrigTestOrder(constants.Alice_Num0, 0, 0, clobkeeper.TriggerDirectionGTE, 40_000_000_000)
+		placeOrder(t, k, ctx, order)
+
+		// Enable while BTC is at price 0. The pair now HAS an index entry, so it is not skipped by
+		// the presence check — the non-panicking oracle guard must handle the zero price.
+		setBtcPrice(t, ks, 0)
+		enableTriggerConfig(t, k, ctx, uint32(clobkeeper.MaxConditionalTriggersPerBlock))
+
+		require.NotPanics(t, func() {
+			require.Empty(t, k.MaybeTriggerConditionalOrders(ctx),
+				"at price 0 the crossing cannot be evaluated, so nothing triggers")
+		}, "a price-0 pair WITH a resting conditional must not panic")
+
+		// The order must remain untriggered (skipped, not lost).
+		require.Len(t, k.GetAllUntriggeredConditionalOrders(ctx), 1)
+
+		// Once a valid non-zero price arrives, the deferred order triggers normally — proving the
+		// zero-price skip is temporary, not a black hole.
+		setBtcPrice(t, ks, 50_000_000_000)
+		triggered := k.MaybeTriggerConditionalOrders(ctx)
+		require.Len(t, triggered, 1, "order must trigger once a non-zero price is available")
+		require.Equal(t, order.OrderId, triggered[0])
+	})
+}
+
+// ----------------------------------------------------------------
+// Test 4c: Expired-but-un-drained orders are not triggered
+// ----------------------------------------------------------------
+// TestMaybeTrigger_ExpiredOrderNotTriggered verifies that a conditional order past its
+// GoodTilBlockTime is not triggered even though it is still resting in state and the trigger-price
+// index (the expiry prune is budgeted, so expired orders can linger). Before the fix, the trigger
+// path did not recheck GTBT, so an expired conditional could still trigger after its expiry.
+func TestMaybeTrigger_ExpiredOrderNotTriggered(t *testing.T) {
+	// GTE (stop-loss buy) crossing at the BTC oracle price (50B); triggerSubticks 40B < oracle.
+	newSetup := func(t *testing.T) (*clobkeeper.Keeper, sdk.Context, clobtypes.Order) {
+		ks := trigIndexTestKeeper(t)
+		k := ks.ClobKeeper
+		ctx := ks.Ctx
+		order := makeTrigTestOrder(constants.Alice_Num0, 0, 0, clobkeeper.TriggerDirectionGTE, 40_000_000_000)
+		placeOrder(t, k, ctx, order)
+		enableTriggerConfig(t, k, ctx, uint32(clobkeeper.MaxConditionalTriggersPerBlock))
+		return k, ctx, order
+	}
+
+	t.Run("expired_order_is_not_triggered", func(t *testing.T) {
+		k, ctx, order := newSetup(t)
+		// Advance block time PAST the order's GoodTilBlockTime without running the (budgeted) expiry
+		// prune — the order is still resting in state and in the index.
+		expiredCtx := ctx.WithBlockTime(time.Unix(int64(condTestGTBT)+1, 0))
+		require.Empty(t, k.MaybeTriggerConditionalOrders(expiredCtx),
+			"an order past its GoodTilBlockTime must not trigger even though it is still resting")
+		// It remains untriggered (left for the expiry prune), not moved to triggered state.
+		require.Len(t, k.GetAllUntriggeredConditionalOrders(expiredCtx), 1)
+		_, foundTriggered := k.GetTriggeredConditionalOrderPlacement(expiredCtx, order.OrderId)
+		require.False(t, foundTriggered, "expired order must not be moved to triggered state")
+	})
+
+	t.Run("unexpired_order_triggers", func(t *testing.T) {
+		k, ctx, order := newSetup(t)
+		// Block time before the GoodTilBlockTime → the same crossed order triggers normally,
+		// proving the GTBT guard blocks only expired orders.
+		validCtx := ctx.WithBlockTime(time.Unix(int64(condTestGTBT)-1, 0))
+		require.Equal(t, []clobtypes.OrderId{order.OrderId}, k.MaybeTriggerConditionalOrders(validCtx))
+	})
 }
 
 // ----------------------------------------------------------------

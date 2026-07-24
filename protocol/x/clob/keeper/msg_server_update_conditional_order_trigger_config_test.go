@@ -6,6 +6,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
@@ -50,4 +51,103 @@ func TestUpdateConditionalOrderTriggerConfig(t *testing.T) {
 	require.Equal(t, uint32(250), got.MaxRemovalsPerBlock)
 	require.Equal(t, uint32(123_456), got.MaxUntriggeredConditionalOrdersGlobal)
 	require.Equal(t, uint32(77), got.MaxUntriggeredConditionalOrdersPerSubaccount)
+}
+
+// TestUpdateConditionalOrderTriggerConfig_ValidateBasicBounds covers:
+// ValidateBasic rejects out-of-range budgets / caps (previously the setter only normalized zeros
+// and applied no upper bound, so a proposal could set a MaxUint32 budget and erase the work bound).
+func TestUpdateConditionalOrderTriggerConfig_ValidateBasicBounds(t *testing.T) {
+	base := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
+		Authority:                             lib.GovModuleAddress.String(),
+		Enabled:                               true,
+		MaxTriggersPerBlock:                   500,
+		MaxRemovalsPerBlock:                   250,
+		MaxUntriggeredConditionalOrdersGlobal: 100_000,
+		MaxUntriggeredConditionalOrdersPerSubaccount: 200,
+	}
+
+	// Valid message passes.
+	require.NoError(t, base.ValidateBasic())
+
+	// Zeros are allowed (setter normalizes to defaults).
+	zeros := base
+	zeros.MaxTriggersPerBlock = 0
+	zeros.MaxRemovalsPerBlock = 0
+	zeros.MaxUntriggeredConditionalOrdersGlobal = 0
+	zeros.MaxUntriggeredConditionalOrdersPerSubaccount = 0
+	require.NoError(t, zeros.ValidateBasic())
+
+	// MaxUint32 trigger budget is rejected.
+	tooManyTriggers := base
+	tooManyTriggers.MaxTriggersPerBlock = ^uint32(0)
+	require.ErrorIs(t, tooManyTriggers.ValidateBasic(), clobtypes.ErrInvalidConditionalOrderTriggerConfig)
+
+	// MaxUint32 removal budget is rejected.
+	tooManyRemovals := base
+	tooManyRemovals.MaxRemovalsPerBlock = ^uint32(0)
+	require.ErrorIs(t, tooManyRemovals.ValidateBasic(), clobtypes.ErrInvalidConditionalOrderTriggerConfig)
+
+	// Per-subaccount cap exceeding the global cap is rejected.
+	inverted := base
+	inverted.MaxUntriggeredConditionalOrdersGlobal = 100
+	inverted.MaxUntriggeredConditionalOrdersPerSubaccount = 1_000
+	require.ErrorIs(t, inverted.ValidateBasic(), clobtypes.ErrInvalidConditionalOrderTriggerConfig)
+
+	// Invalid authority is rejected.
+	badAuth := base
+	badAuth.Authority = "not-a-bech32-address"
+	require.Error(t, badAuth.ValidateBasic())
+}
+
+// TestUpdateConditionalOrderTriggerConfig_EnableRefusedWhenSetTooLarge covers:
+// enabling is refused when the live untriggered set exceeds the size the one-shot index backfill
+// can safely rebuild in a single consensus block, so the operator must drain first.
+func TestUpdateConditionalOrderTriggerConfig_EnableRefusedWhenSetTooLarge(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
+		return testapp.DefaultGenesis()
+	}).Build()
+	ctx := tApp.InitChain()
+	handler := tApp.App.MsgServiceRouter().Handler(&clobtypes.MsgUpdateConditionalOrderTriggerConfig{})
+
+	// Seed a live global count above the backfill ceiling (the counter alone drives the gate; the
+	// untriggered store stays empty, so the backfill that would run on a successful enable is cheap).
+	tApp.App.ClobKeeper.SetUntriggeredConditionalOrderCountGlobal(ctx, clobkeeper.MaxBackfillCardinality+1)
+
+	// Default caps (global cap left 0 -> normalized to the default). Enable is refused.
+	msg := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
+		Authority: lib.GovModuleAddress.String(),
+		Enabled:   true,
+	}
+	_, err := handler(ctx, &msg)
+	require.ErrorIs(t, err, clobtypes.ErrUntriggeredSetTooLargeToEnable)
+	require.False(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).Enabled)
+
+	// Draining below the ceiling allows enabling.
+	tApp.App.ClobKeeper.SetUntriggeredConditionalOrderCountGlobal(ctx, clobkeeper.MaxBackfillCardinality-1)
+	_, err = handler(ctx, &msg)
+	require.NoError(t, err)
+	require.True(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).Enabled)
+}
+
+// TestUpdateConditionalOrderTriggerConfig_EnableRefusedWhenCapBelowLiveCount covers:
+// enabling with a global admission cap below the current live count would immediately
+// freeze all new conditional placements, so it is refused.
+func TestUpdateConditionalOrderTriggerConfig_EnableRefusedWhenCapBelowLiveCount(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
+		return testapp.DefaultGenesis()
+	}).Build()
+	ctx := tApp.InitChain()
+	handler := tApp.App.MsgServiceRouter().Handler(&clobtypes.MsgUpdateConditionalOrderTriggerConfig{})
+
+	// Live count is small (well under the backfill ceiling) but above the requested global cap.
+	tApp.App.ClobKeeper.SetUntriggeredConditionalOrderCountGlobal(ctx, 100)
+
+	msg := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
+		Authority:                             lib.GovModuleAddress.String(),
+		Enabled:                               true,
+		MaxUntriggeredConditionalOrdersGlobal: 50, // below the live count of 100
+	}
+	_, err := handler(ctx, &msg)
+	require.ErrorIs(t, err, clobtypes.ErrUntriggeredSetTooLargeToEnable)
+	require.False(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).Enabled)
 }

@@ -40,7 +40,7 @@ func (k Keeper) SetLongTermOrderPlacement(
 	// If this is a Short-Term order, panic.
 	order.MustBeStatefulOrder()
 
-	_, found := k.GetLongTermOrderPlacement(ctx, order.GetOrderId())
+	oldPlacement, found := k.GetLongTermOrderPlacement(ctx, order.GetOrderId())
 
 	// Get the next stateful order block transaction index, defaulting to zero if not set.
 	// Note that the transaction index will always be overwritten at the end of this method.
@@ -67,15 +67,27 @@ func (k Keeper) SetLongTermOrderPlacement(
 	// does not change trigger direction or subticks, so the index entry is idempotent,
 	// but we avoid a redundant write.
 	if order.OrderId.IsConditionalOrder() && !k.IsConditionalOrderTriggered(ctx, order.OrderId) {
-		if !found {
-			// The trigger-price index is CONSENSUS state (storeKey). Only maintain it when the
-			// mitigation is enabled, so a flag-off node writes NO new consensus KV state and is
-			// byte-identical (app hash) to the pre-fix binary — this is what makes the fix
-			// rolling-deployable. The index is (re)built at the enable transition by
-			// SetConditionalOrderTriggerConfig.
-			if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
-				k.addConditionalOrderToTriggerPriceIndex(ctx, order)
+		// The trigger-price index is CONSENSUS state (storeKey). Only maintain it when the
+		// mitigation is enabled, so a flag-off node writes NO new consensus KV state and is
+		// byte-identical (app hash) to the pre-fix binary — this is what makes the fix
+		// rolling-deployable. The index is (re)built at the enable transition by
+		// SetConditionalOrderTriggerConfig.
+		if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
+			// The index key embeds the placement-sequence tie-breaker, which
+			// changes across re-placements. So on re-placement (found), remove the entry keyed on
+			// the OLD placement index before adding the entry keyed on the new one — otherwise the
+			// old key would orphan and the new key would be missing. On first placement the remove
+			// is skipped.
+			if found {
+				k.removeConditionalOrderFromTriggerPriceIndex(
+					ctx,
+					oldPlacement.Order,
+					oldPlacement.PlacementIndex,
+				)
 			}
+			k.addConditionalOrderToTriggerPriceIndex(ctx, order, longTermOrderPlacement.PlacementIndex)
+		}
+		if !found {
 			// The untriggered conditional counters are MEMSTORE (memKey) — not consensus state,
 			// not in the app hash — so they are always maintained (and rehydrated by
 			// InitMemStore) and need no gating. Enforcement of the caps that read them is gated
@@ -173,7 +185,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 			// Index is consensus state — only maintain it when the mitigation is enabled (see
 			// the rolling-safety note in SetLongTermOrderPlacement). Counters are memstore.
 			if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
-				k.removeConditionalOrderFromTriggerPriceIndex(ctx, placement.Order)
+				k.removeConditionalOrderFromTriggerPriceIndex(ctx, placement.Order, placement.PlacementIndex)
 			}
 			// Decrement the untriggered conditional counters (cancel / expiry path).
 			k.DecrementUntriggeredConditionalOrderCount(ctx, orderId.SubaccountId)
@@ -346,6 +358,12 @@ func (k Keeper) MustTriggerConditionalOrder(
 	var longTermOrderPlacement types.LongTermOrderPlacement
 	k.cdc.MustUnmarshal(bytes, &longTermOrderPlacement)
 
+	// Capture the ORIGINAL (untriggered) placement index before it is overwritten below. The
+	// trigger-price index entry was written with this original ordering, so the
+	// removal must key on it — using the new triggered-state ordering would fail to find the entry
+	// and orphan it.
+	untriggeredPlacementIndex := longTermOrderPlacement.PlacementIndex
+
 	nextStatefulOrderTransactionIndex := k.GetNextStatefulOrderTransactionIndex(ctx)
 
 	// Set the triggered block height and transaction index.
@@ -365,7 +383,11 @@ func (k Keeper) MustTriggerConditionalOrder(
 	// when the mitigation is enabled (rolling-safety; see SetLongTermOrderPlacement). Counters
 	// are memstore.
 	if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
-		k.removeConditionalOrderFromTriggerPriceIndex(ctx, longTermOrderPlacement.Order)
+		k.removeConditionalOrderFromTriggerPriceIndex(
+			ctx,
+			longTermOrderPlacement.Order,
+			untriggeredPlacementIndex,
+		)
 	}
 
 	// Decrement the untriggered conditional counters (trigger path).

@@ -37,26 +37,58 @@ func conditionalOrderTriggerDirectionForOrder(order types.Order) byte {
 	return conditionalOrderTriggerDirection(order)
 }
 
+// triggerIndexKeySequenceLen is the width of the placement-sequence tie-breaker embedded in the
+// trigger-price index key (packed block height + transaction index; see triggerIndexSequenceKey).
+const triggerIndexKeySequenceLen = 8
+
+// triggerIndexSequenceKey encodes an order's placement ordering (block height, transaction index)
+// into an 8-byte tie-breaker that follows triggerSubticks in the index key, so that among orders
+// with EQUAL trigger subticks the OLDER order (earlier placement) is triggered first under a
+// per-block budget. This replaces the previous tie-break on the raw orderId, which embeds the
+// client-chosen ClientId and thus let a later order jump an older equal-price order. Placement
+// ordering is protocol-assigned (GetNextStatefulOrderTransactionIndex) and cannot be influenced
+// by the client.
+//
+// The value is direction-aware so that oldest-first holds under BOTH iteration directions used by
+// IterateCrossedConditionalOrders:
+//   - LTE is scanned forward, so the raw (ascending) sequence already yields oldest-first.
+//   - GTE is scanned in reverse (nearest-crossing = highest subticks first), so the bitwise
+//     complement is stored; reversing a descending complement yields an ascending real sequence —
+//     still oldest-first.
+func triggerIndexSequenceKey(direction byte, placement types.TransactionOrdering) uint64 {
+	rawSeq := (uint64(placement.BlockHeight) << 32) | uint64(placement.TransactionIndex)
+	if direction == TriggerDirectionGTE {
+		return ^rawSeq
+	}
+	return rawSeq
+}
+
 // encodeTriggerPriceIndexKey builds the composite key for the trigger-price secondary index.
 // The key layout (all within the ConditionalOrderTriggerPriceIndexKeyPrefix prefix store) is:
 //
-//	<clobPairId:4 big-endian> <directionByte:1> <triggerSubticks:8 big-endian> <orderId state key>
+//	<clobPairId:4 big-endian> <directionByte:1> <triggerSubticks:8 big-endian>
+//	  <sequenceKey:8 big-endian> <orderId state key>
 //
-// The big-endian encoding of both clobPairId and triggerSubticks ensures that a forward byte scan
-// over the prefix store is equivalent to ascending numeric order, enabling efficient range queries.
+// The big-endian encoding of clobPairId, triggerSubticks, and sequenceKey ensures that a forward
+// byte scan over the prefix store is equivalent to ascending numeric order, enabling efficient
+// range queries. The sequenceKey (see triggerIndexSequenceKey) sits between triggerSubticks and the
+// orderId so that orders with equal subticks are ordered by placement time, not by client-chosen
+// orderId bytes.
 func encodeTriggerPriceIndexKey(
 	clobPairId uint32,
 	direction byte,
 	triggerSubticks uint64,
+	sequenceKey uint64,
 	orderId types.OrderId,
 ) []byte {
 	orderKey := orderId.ToStateKey()
-	// 4 bytes clobPairId + 1 byte direction + 8 bytes triggerSubticks + len(orderKey)
-	key := make([]byte, 4+1+8+len(orderKey))
+	// 4 clobPairId + 1 direction + 8 triggerSubticks + 8 sequenceKey + len(orderKey)
+	key := make([]byte, 4+1+8+triggerIndexKeySequenceLen+len(orderKey))
 	binary.BigEndian.PutUint32(key[0:4], clobPairId)
 	key[4] = direction
 	binary.BigEndian.PutUint64(key[5:13], triggerSubticks)
-	copy(key[13:], orderKey)
+	binary.BigEndian.PutUint64(key[13:21], sequenceKey)
+	copy(key[21:], orderKey)
 	return key
 }
 
@@ -68,17 +100,36 @@ func (k Keeper) GetConditionalOrderTriggerPriceIndexStore(ctx sdk.Context) prefi
 	)
 }
 
+// clobPairHasTriggerIndexEntries reports, in O(1), whether the trigger-price index holds any
+// untriggered conditional order for the given clobPairId. The bounded EndBlocker trigger path uses
+// it to skip pairs with nothing to trigger — restoring the legacy path's "only visit pairs that
+// have resting orders" property and avoiding an oracle-price fetch (and its zero-price panic) for
+// empty pairs.
+func (k Keeper) clobPairHasTriggerIndexEntries(ctx sdk.Context, clobPairId uint32) bool {
+	store := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
+	prefixKey := make([]byte, 4)
+	binary.BigEndian.PutUint32(prefixKey, clobPairId)
+	it := store.Iterator(prefixKey, storetypes.PrefixEndBytes(prefixKey))
+	defer it.Close()
+	return it.Valid()
+}
+
 // addConditionalOrderToTriggerPriceIndex inserts an entry into the trigger-price secondary index
 // for the given untriggered conditional order.  The value stored is empty (the key itself
 // encodes all necessary lookup information).
 //
 // This must be called whenever a conditional order is placed into the untriggered store.
-func (k Keeper) addConditionalOrderToTriggerPriceIndex(ctx sdk.Context, order types.Order) {
+func (k Keeper) addConditionalOrderToTriggerPriceIndex(
+	ctx sdk.Context,
+	order types.Order,
+	placementIndex types.TransactionOrdering,
+) {
 	direction := conditionalOrderTriggerDirection(order)
 	key := encodeTriggerPriceIndexKey(
 		uint32(order.GetClobPairId()),
 		direction,
 		order.ConditionalOrderTriggerSubticks,
+		triggerIndexSequenceKey(direction, placementIndex),
 		order.OrderId,
 	)
 	store := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
@@ -88,12 +139,17 @@ func (k Keeper) addConditionalOrderToTriggerPriceIndex(ctx sdk.Context, order ty
 // removeConditionalOrderFromTriggerPriceIndex removes the entry for the given order from the
 // trigger-price secondary index.  This is a no-op if the key does not exist (safe for all
 // delete/cancel/trigger/expire call sites).
-func (k Keeper) removeConditionalOrderFromTriggerPriceIndex(ctx sdk.Context, order types.Order) {
+func (k Keeper) removeConditionalOrderFromTriggerPriceIndex(
+	ctx sdk.Context,
+	order types.Order,
+	placementIndex types.TransactionOrdering,
+) {
 	direction := conditionalOrderTriggerDirectionForOrder(order)
 	key := encodeTriggerPriceIndexKey(
 		uint32(order.GetClobPairId()),
 		direction,
 		order.ConditionalOrderTriggerSubticks,
+		triggerIndexSequenceKey(direction, placementIndex),
 		order.OrderId,
 	)
 	store := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
@@ -132,7 +188,14 @@ func (k Keeper) BackfillConditionalOrderTriggerPriceIndex(ctx sdk.Context) {
 
 	orders := k.GetAllUntriggeredConditionalOrders(ctx)
 	for _, order := range orders {
-		k.addConditionalOrderToTriggerPriceIndex(ctx, order)
+		// Read the stored placement so the index key carries the same placement-sequence
+		// tie-breaker (block height + transaction index) the per-placement hook would have written
+		// The placement is authoritative in the untriggered store.
+		placement, found := k.GetUntriggeredConditionalOrderPlacement(ctx, order.OrderId)
+		if !found {
+			continue
+		}
+		k.addConditionalOrderToTriggerPriceIndex(ctx, order, placement.PlacementIndex)
 	}
 	ctx.Logger().Info(
 		"BackfillConditionalOrderTriggerPriceIndex: reconciled trigger-price index",
@@ -201,18 +264,30 @@ func (k Keeper) IterateCrossedConditionalOrders(
 		}
 	}
 
-	it := store.Iterator(startKey, endKey)
+	// Visit nearest-crossing orders first so that, under a per-block trigger budget, the orders
+	// closest to the current price are triggered before farther ones:
+	//   - LTE crosses at triggerSubticks ≥ price; nearest = lowest such subticks = ASCENDING from
+	//     priceSubticks, i.e. a forward iterator.
+	//   - GTE crosses at triggerSubticks ≤ price; nearest = highest such subticks = DESCENDING from
+	//     priceSubticks, i.e. a reverse iterator over the same [0, price] range.
+	// Both directions produce a deterministic, node-identical order.
+	var it storetypes.Iterator
+	if direction == TriggerDirectionGTE {
+		it = store.ReverseIterator(startKey, endKey)
+	} else {
+		it = store.Iterator(startKey, endKey)
+	}
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
 		// Key is relative to the ConditionalOrderTriggerPriceIndexKeyPrefix prefix store.
-		// Layout: <clobPairId:4><dir:1><subticks:8><orderId:N>
+		// Layout: <clobPairId:4><dir:1><subticks:8><sequenceKey:8><orderId:N>
 		rawKey := it.Key()
-		if len(rawKey) <= 4+1+8 {
+		if len(rawKey) <= 4+1+8+triggerIndexKeySequenceLen {
 			// Malformed key — skip.
 			continue
 		}
-		orderKeyBytes := rawKey[4+1+8:]
+		orderKeyBytes := rawKey[4+1+8+triggerIndexKeySequenceLen:]
 
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(orderKeyBytes, &orderId)

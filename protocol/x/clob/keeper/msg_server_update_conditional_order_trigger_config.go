@@ -29,6 +29,48 @@ func (k msgServer) UpdateConditionalOrderTriggerConfig(
 		)
 	}
 
+	// Stateless bounds: reject out-of-range budgets / caps. Enforced here
+	// (the guaranteed execution point for a governance message) in addition to being registered as
+	// the message's ValidateBasic.
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// Stateful enable gate. The disabled->enabled transition backfills
+	// the trigger-price index over the ENTIRE resting untriggered set in one consensus block
+	// (unbudgeted O(N) — see BackfillConditionalOrderTriggerPriceIndex). Because admission caps are
+	// off while disabled, that set can be arbitrarily large. Refuse to enable when the live count
+	// exceeds the size the backfill can safely rebuild in one block, or exceeds the global admission
+	// cap that will apply once enabled (which would otherwise freeze all new placements immediately).
+	// Operators must drain (cancel / let expire) the resting set below the ceiling before enabling.
+	if msg.Enabled && !k.Keeper.IsConditionalOrderTriggerConfigEnabled(ctx) {
+		liveCount := k.Keeper.GetUntriggeredConditionalOrderCountGlobal(ctx)
+
+		effectiveGlobalCap := msg.MaxUntriggeredConditionalOrdersGlobal
+		if effectiveGlobalCap == 0 {
+			// Mirror the setter's zero-normalization so the gate reasons about the cap that will
+			// actually apply once enabled.
+			effectiveGlobalCap = MaxUntriggeredConditionalOrdersGlobal
+		}
+
+		limit := uint32(MaxBackfillCardinality)
+		if effectiveGlobalCap < limit {
+			limit = effectiveGlobalCap
+		}
+
+		if liveCount > limit {
+			return nil, errorsmod.Wrapf(
+				types.ErrUntriggeredSetTooLargeToEnable,
+				"live untriggered conditional order count %d exceeds the enable ceiling %d "+
+					"(backfill bound %d, effective global cap %d); drain the resting set before enabling",
+				liveCount,
+				limit,
+				MaxBackfillCardinality,
+				effectiveGlobalCap,
+			)
+		}
+	}
+
 	// Normalizes zero-valued numeric fields to their defaults and performs the
 	// disabled->enabled index backfill (inside SetConditionalOrderTriggerConfig).
 	k.Keeper.SetConditionalOrderTriggerConfigParams(
