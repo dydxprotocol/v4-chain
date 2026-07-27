@@ -405,13 +405,9 @@ func TestAdmissionCap_LoweredBelowLiveCountBlocksThenResumesAfterDrain(t *testin
 	// Governance may deliberately lower the cap below the live set to stop new admission while
 	// existing orders cancel, trigger, or expire.
 	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{
-		Enabled:                               true,
-		MaxUntriggeredConditionalOrdersGlobal: 2,
+		MaxUntriggeredConditionalOrdersGlobal:        2,
 		MaxUntriggeredConditionalOrdersPerSubaccount: 2,
 	})
-	for !k.IsConditionalOrderTriggerIndexReady(ctx) {
-		k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	}
 
 	fresh := capConditionalOrder(capTestSA(1), 703, condTestTriggerFarBelow)
 	err := k.PlaceStatefulOrder(ctx, &clobtypes.MsgPlaceOrder{Order: fresh}, true)

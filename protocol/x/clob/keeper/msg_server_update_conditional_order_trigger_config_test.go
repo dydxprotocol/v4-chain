@@ -10,42 +10,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestUpdateConditionalOrderTriggerConfig verifies the governance activation lever for the
-// conditional-order EndBlocker work mitigation: MsgUpdateConditionalOrderTriggerConfig is authority-gated, and a valid
-// authority flips the flag + sets the budgets/caps in consensus state.
+// TestUpdateConditionalOrderTriggerConfig verifies the governance tuning lever for the
+// conditional-order trigger mitigation: MsgUpdateConditionalOrderTriggerConfig is authority-gated,
+// and a valid authority sets the budgets/caps in consensus state.
 func TestUpdateConditionalOrderTriggerConfig(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
 		return testapp.DefaultGenesis()
 	}).Build()
 	ctx := tApp.InitChain()
 
-	// Default: disabled (legacy path).
 	original := tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx)
-	require.False(t, original.Enabled)
 
 	handler := tApp.App.MsgServiceRouter().Handler(&clobtypes.MsgUpdateConditionalOrderTriggerConfig{})
 
 	msg := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
-		Authority:                             lib.GovModuleAddress.String(),
-		Enabled:                               true,
-		MaxTriggersPerBlock:                   500,
-		MaxRemovalsPerBlock:                   250,
-		MaxUntriggeredConditionalOrdersGlobal: 123_456,
+		Authority:                                    lib.GovModuleAddress.String(),
+		MaxTriggersPerBlock:                          500,
+		MaxRemovalsPerBlock:                          250,
+		MaxUntriggeredConditionalOrdersGlobal:        123_456,
 		MaxUntriggeredConditionalOrdersPerSubaccount: 77,
 	}
 
-	// Invalid authority is rejected and leaves the config unchanged (still disabled).
+	// Invalid authority is rejected and leaves the config unchanged.
 	bad := msg
 	bad.Authority = "fake authority"
 	_, err := handler(ctx, &bad)
 	require.Error(t, err, "invalid authority")
-	require.False(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).Enabled)
+	require.Equal(t, original, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx))
 
-	// Valid (gov) authority activates the mitigation and persists the budgets/caps.
+	// Valid (gov) authority persists the budgets/caps.
 	_, err = handler(ctx, &msg)
 	require.NoError(t, err)
 	got := tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx)
-	require.True(t, got.Enabled)
 	require.Equal(t, uint32(500), got.MaxTriggersPerBlock)
 	require.Equal(t, uint32(250), got.MaxRemovalsPerBlock)
 	require.Equal(t, uint32(123_456), got.MaxUntriggeredConditionalOrdersGlobal)
@@ -53,15 +49,14 @@ func TestUpdateConditionalOrderTriggerConfig(t *testing.T) {
 }
 
 // TestUpdateConditionalOrderTriggerConfig_ValidateBasicBounds covers:
-// ValidateBasic rejects out-of-range budgets / caps (previously the setter only normalized zeros
-// and applied no upper bound, so a proposal could set a MaxUint32 budget and erase the work bound).
+// ValidateBasic rejects out-of-range budgets / caps (without an upper bound a proposal could set a
+// MaxUint32 budget and erase the per-block work bound this feature exists to provide).
 func TestUpdateConditionalOrderTriggerConfig_ValidateBasicBounds(t *testing.T) {
 	base := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
-		Authority:                             lib.GovModuleAddress.String(),
-		Enabled:                               true,
-		MaxTriggersPerBlock:                   500,
-		MaxRemovalsPerBlock:                   250,
-		MaxUntriggeredConditionalOrdersGlobal: 100_000,
+		Authority:                                    lib.GovModuleAddress.String(),
+		MaxTriggersPerBlock:                          500,
+		MaxRemovalsPerBlock:                          250,
+		MaxUntriggeredConditionalOrdersGlobal:        100_000,
 		MaxUntriggeredConditionalOrdersPerSubaccount: 200,
 	}
 
@@ -114,9 +109,10 @@ func TestUpdateConditionalOrderTriggerConfig_ValidateBasicBounds(t *testing.T) {
 	require.Error(t, badAuth.ValidateBasic())
 }
 
-// TestUpdateConditionalOrderTriggerConfig_EnableAllowsLargeLiveCount covers incremental activation:
-// enable no longer depends on a one-shot cardinality ceiling because reconciliation is per-block bounded.
-func TestUpdateConditionalOrderTriggerConfig_EnableAllowsLargeLiveCount(t *testing.T) {
+// TestUpdateConditionalOrderTriggerConfig_AllowsLargeLiveCount verifies a config update succeeds
+// regardless of the current resting-set size (there is no one-shot cardinality ceiling; the index
+// is already built by the upgrade and admission is per-placement bounded).
+func TestUpdateConditionalOrderTriggerConfig_AllowsLargeLiveCount(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
 		return testapp.DefaultGenesis()
 	}).Build()
@@ -126,17 +122,17 @@ func TestUpdateConditionalOrderTriggerConfig_EnableAllowsLargeLiveCount(t *testi
 	tApp.App.ClobKeeper.SetUntriggeredConditionalOrderCountGlobal(ctx, 1_000_000)
 
 	msg := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
-		Authority: lib.GovModuleAddress.String(),
-		Enabled:   true,
+		Authority:           lib.GovModuleAddress.String(),
+		MaxTriggersPerBlock: 500,
 	}
 	_, err := handler(ctx, &msg)
 	require.NoError(t, err)
-	require.True(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).Enabled)
+	require.Equal(t, uint32(500), tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).MaxTriggersPerBlock)
 }
 
-// TestUpdateConditionalOrderTriggerConfig_EnableAllowsCapBelowLiveCount preserves governance's
-// ability to lower the cap immediately and drain an oversized resting set without admitting more.
-func TestUpdateConditionalOrderTriggerConfig_EnableAllowsCapBelowLiveCount(t *testing.T) {
+// TestUpdateConditionalOrderTriggerConfig_AllowsCapBelowLiveCount preserves governance's ability to
+// lower the admission cap below the current resting set (to stop admitting more while it drains).
+func TestUpdateConditionalOrderTriggerConfig_AllowsCapBelowLiveCount(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
 		return testapp.DefaultGenesis()
 	}).Build()
@@ -148,10 +144,10 @@ func TestUpdateConditionalOrderTriggerConfig_EnableAllowsCapBelowLiveCount(t *te
 
 	msg := clobtypes.MsgUpdateConditionalOrderTriggerConfig{
 		Authority:                             lib.GovModuleAddress.String(),
-		Enabled:                               true,
 		MaxUntriggeredConditionalOrdersGlobal: 50, // below the live count of 100
 	}
 	_, err := handler(ctx, &msg)
 	require.NoError(t, err)
-	require.True(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx).Enabled)
+	cfg := tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(ctx)
+	require.Equal(t, uint32(50), cfg.MaxUntriggeredConditionalOrdersGlobal)
 }

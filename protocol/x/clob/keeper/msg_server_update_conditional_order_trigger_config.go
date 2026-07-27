@@ -9,12 +9,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// UpdateConditionalOrderTriggerConfig sets the conditional-order EndBlocker work conditional-order trigger mitigation
-// configuration. It is authority-gated (governance), which is the on-chain activation lever for
-// the mitigation: the binary ships with the config disabled (legacy behavior, rolling-deploy
-// safe), and a governance proposal invoking this message flips Enabled and sets the per-block
-// trigger/removal budgets and admission caps at a coordinated height. Enabling starts a persisted,
-// bounded index reconciliation; the legacy trigger path remains authoritative until it completes.
+// UpdateConditionalOrderTriggerConfig sets the governance-tunable budgets and caps for the
+// conditional-order trigger mitigation. It is authority-gated (governance). The mitigation itself
+// is always active (activated by the state-breaking upgrade that builds the trigger-price index);
+// this message only retunes the per-block trigger/removal budgets and the admission caps.
 func (k msgServer) UpdateConditionalOrderTriggerConfig(
 	goCtx context.Context,
 	msg *types.MsgUpdateConditionalOrderTriggerConfig,
@@ -36,10 +34,9 @@ func (k msgServer) UpdateConditionalOrderTriggerConfig(
 		return nil, err
 	}
 
-	// Normalizes zero-valued numeric fields and starts/cancels incremental activation as needed.
+	// Normalizes zero-valued numeric fields to sane package defaults.
 	k.Keeper.SetConditionalOrderTriggerConfigParams(
 		ctx,
-		msg.Enabled,
 		msg.MaxTriggersPerBlock,
 		msg.MaxRemovalsPerBlock,
 		msg.MaxUntriggeredConditionalOrdersGlobal,

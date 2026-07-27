@@ -32,11 +32,6 @@ func TestStoreAndMemstoreKeys(t *testing.T) {
 	require.Equal(t, "SO/P/L:", types.LongTermOrderPlacementKeyPrefix)
 	require.Equal(t, "SO/U:", types.UntriggeredConditionalOrderKeyPrefix)
 	require.Equal(t, "CondTrigNextPair", types.ConditionalOrderTriggerNextClobPairKey)
-	require.Equal(t, "CondTrigIdxPhase", types.ConditionalOrderTriggerIndexActivationPhaseKey)
-	require.Equal(t, "CondTrigIdxCursor", types.ConditionalOrderTriggerIndexActivationCursorKey)
-	require.Equal(t, "CondTrigIdxCleared", types.ConditionalOrderTriggerIndexActivationClearedKey)
-	require.Equal(t, "CondTrigIdxIndexed", types.ConditionalOrderTriggerIndexActivationIndexedKey)
-	require.Equal(t, "CondTrigIdxReady", types.ConditionalOrderTriggerIndexReadyKey)
 
 	require.Equal(t, "NumSO:", types.StatefulOrderCountPrefix)
 	require.Equal(t, "ProposerEvents", types.ProcessProposerMatchesEventsKey)

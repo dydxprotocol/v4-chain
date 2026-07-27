@@ -161,14 +161,13 @@ type ClobKeeper interface {
 	RateLimitUpdateLeverage(ctx sdk.Context, msg *MsgUpdateLeverage) error
 	GetSubaccountsKeeper() SubaccountsKeeper
 
-	// SetConditionalOrderTriggerConfigParams sets the conditional-order EndBlocker work conditional-order trigger
-	// mitigation config from scalar params (used by the governance
+	// SetConditionalOrderTriggerConfigParams sets the conditional-order trigger mitigation's
+	// governance-tunable budgets and caps from scalar params (used by the
 	// MsgUpdateConditionalOrderTriggerConfig handler). Scalars rather than the config struct are
 	// used because the struct lives in the keeper package and cannot be referenced by this
-	// interface without an import cycle. Enabling starts deterministic incremental activation.
+	// interface without an import cycle.
 	SetConditionalOrderTriggerConfigParams(
 		ctx sdk.Context,
-		enabled bool,
 		maxTriggersPerBlock uint32,
 		maxRemovalsPerBlock uint32,
 		maxUntriggeredConditionalOrdersGlobal uint32,

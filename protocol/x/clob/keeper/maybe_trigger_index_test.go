@@ -127,34 +127,35 @@ func orderIdSet(ids []clobtypes.OrderId) map[string]struct{} {
 func referenceTriggerFullScanSet(t *testing.T, k *clobkeeper.Keeper, ctx sdk.Context) map[string]struct{} {
 	t.Helper()
 
-	allOrders := k.GetAllUntriggeredConditionalOrders(ctx)
-	clobPairToUntriggered := clobkeeper.OrganizeUntriggeredConditionalOrdersFromState(allOrders)
-
-	// Sort keys (same deterministic order as the old implementation).
-	sortedKeys := lib.GetSortedKeys[clobtypes.SortedClobPairId](clobPairToUntriggered)
-
+	// Independent full-scan reference oracle: for every resting untriggered conditional order,
+	// evaluate whether it triggers against the oracle price using the same pessimistic rounding as
+	// the (now removed) legacy PollTriggeredConditionalOrders — ceil for LTE-direction orders (take
+	// profit buy / stop loss sell), floor for GTE-direction (take profit sell / stop loss buy). The
+	// bounded index path must trigger exactly this set (within budget).
+	//
+	// clamped trade prices are intentionally not evaluated here — the test cases in this file do not
+	// seed trade prices (GetTradePricesForPerpetual returns found=false), so the oracle price is the
+	// only crossing source, matching the bounded implementation under test.
 	triggered := make(map[string]struct{})
 
-	for _, clobPairId := range sortedKeys {
-		untriggered := clobPairToUntriggered[clobPairId]
-		clobPair, found := k.GetClobPair(ctx, clobPairId)
+	for _, order := range k.GetAllUntriggeredConditionalOrders(ctx) {
+		clobPair, found := k.GetClobPair(ctx, clobtypes.ClobPairId(order.GetClobPairId()))
 		if !found {
 			continue
 		}
-
 		oraclePrice := k.GetOraclePriceSubticksRat(ctx, clobPair)
 
-		// oracle price — this is always evaluated.
-		for _, id := range untriggered.PollTriggeredConditionalOrders(oraclePrice) {
-			triggered[string(id.ToStateKey())] = struct{}{}
+		// LTE-direction (trigger when oracle price ≤ trigger price) uses ceil; GTE uses floor.
+		isLTE := order.IsTakeProfitOrder() && order.IsBuy() ||
+			order.IsStopLossOrder() && !order.IsBuy()
+		subticks := clobtypes.Subticks(lib.BigRatRound(oraclePrice, false).Uint64())
+		if isLTE {
+			subticks = clobtypes.Subticks(lib.BigRatRound(oraclePrice, true).Uint64())
 		}
 
-		// clamped trade prices — skipped when no trade prices have been recorded this block
-		// (GetTradePricesForPerpetual returns found=false). All test cases here fall in this
-		// category because they use simple keeper setups that don't execute matches.
-		//
-		// If a future test seeds trade prices, add a call to GetTradePricesForPerpetual here
-		// and construct the clamped prices using the same logic as getClampedTradePricesForTriggering.
+		if order.CanTrigger(subticks) {
+			triggered[string(order.OrderId.ToStateKey())] = struct{}{}
+		}
 	}
 
 	return triggered

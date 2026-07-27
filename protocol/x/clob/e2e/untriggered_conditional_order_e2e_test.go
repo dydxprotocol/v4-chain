@@ -50,18 +50,6 @@ func condE2EBenchN(t *testing.T) int {
 	return v
 }
 
-func completeConditionalTriggerIndexActivation(
-	t *testing.T,
-	k *clobkeeper.Keeper,
-	ctx sdk.Context,
-) {
-	t.Helper()
-	for i := 0; !k.IsConditionalOrderTriggerIndexReady(ctx); i++ {
-		require.Less(t, i, 1_000_000, "conditional trigger index activation did not complete")
-		k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	}
-}
-
 func condE2EGenesis() types.GenesisDoc {
 	genesis := testapp.DefaultGenesis()
 	testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(g *satypes.GenesisState) {
@@ -213,12 +201,10 @@ func TestConditionalTrigger_AdmissionE2E(t *testing.T) {
 // conditional-order EndBlocker work Phase B validation tests (committed-state; governance flag ON)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// TestConditionalTrigger_AppAdvanceBoundedMeasure is the Phase B (mitigated) counterpart
-// to TestConditionalTrigger_AppAdvanceMeasure (Phase A / baseline).
+// TestConditionalTrigger_AppAdvanceBoundedMeasure measures the steady-state bounded trigger path.
 //
-// SAME binary, SAME seed, governance flag ConditionalOrderTriggerConfig.Enabled = TRUE.
-// The bounded index path is active, so per-block EndBlocker cost is O(0 crossed entries),
-// independent of N.  The timing must be flat regardless of how large N is.
+// The bounded index path is always active, so per-block EndBlocker cost is O(0 crossed entries),
+// independent of N. The timing must be flat regardless of how large N is.
 //
 // Committed-state note: seeding happens via NewUncachedContext (same pattern as Phase A) so the
 // orders are written directly to the commit store (IAVL-backed), making the iterator cost
@@ -239,12 +225,11 @@ func TestConditionalTrigger_AppAdvanceBoundedMeasure(t *testing.T) {
 		tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(seedCtx, time.Unix(1_900_000_000, 0), order.OrderId)
 	}
 
-	// Enable the bounded trigger path and complete the incremental build before timing.
+	// The bounded trigger path is always active; the trigger-price index was maintained
+	// incrementally as the orders were seeded via SetLongTermOrderPlacement. Set an explicit budget.
 	tApp.App.ClobKeeper.SetConditionalOrderTriggerConfig(seedCtx, clobkeeper.ConditionalOrderTriggerConfig{
-		Enabled:             true,
 		MaxTriggersPerBlock: clobkeeper.MaxConditionalTriggersPerBlock,
 	})
-	completeConditionalTriggerIndexActivation(t, tApp.App.ClobKeeper, seedCtx)
 
 	_ = tApp.InitChain()
 	start := time.Now()
@@ -311,12 +296,11 @@ func TestConditionalTrigger_BoundedLegitTrigger(t *testing.T) {
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(seedCtx, legitOrder, 1)
 	tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(seedCtx, time.Unix(1_900_000_000, 0), legitOrder.OrderId)
 
-	// Enable the bounded path and complete incremental activation.
+	// The bounded trigger path is always active; the trigger-price index was maintained
+	// incrementally as the orders were seeded via SetLongTermOrderPlacement. Set an explicit budget.
 	tApp.App.ClobKeeper.SetConditionalOrderTriggerConfig(seedCtx, clobkeeper.ConditionalOrderTriggerConfig{
-		Enabled:             true,
 		MaxTriggersPerBlock: clobkeeper.MaxConditionalTriggersPerBlock,
 	})
-	completeConditionalTriggerIndexActivation(t, tApp.App.ClobKeeper, seedCtx)
 
 	_ = tApp.InitChain()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
@@ -338,73 +322,6 @@ func TestConditionalTrigger_BoundedLegitTrigger(t *testing.T) {
 		nNonCrossing,
 		len(untriggered),
 	)
-}
-
-// TestConditionalTrigger_BoundedIndexBackfillTransition verifies that when the governance flag
-// transitions from OFF to ON (via SetConditionalOrderTriggerConfig) on a set of pre-existing
-// untriggered orders (simulating an upgrade on a live chain), all pre-activation orders are
-// reachable by the bounded trigger path.
-//
-// Setup: seed N orders with trigger=1 (non-crossing, never crosses) PLUS 1 legitimate order with
-// trigger=51B (crosses). Call SetConditionalOrderTriggerConfig with Enabled=true, incrementally
-// build the index from the existing set, then verify the legitimate order triggers at block 2.
-//
-// This confirms the rolling-deploy safety contract: pre-activation orders don't fall through
-// the cracks when the flag is flipped.
-func TestConditionalTrigger_BoundedIndexBackfillTransition(t *testing.T) {
-	const nNonCrossing = 100
-	tApp := testapp.NewTestAppBuilder(t).
-		WithGenesisDocFn(condE2EGenesis).
-		WithNonDeterminismChecksEnabled(false).
-		Build()
-
-	// Phase 1: initialize the app with the flag off, then seed live pre-activation state.
-	ctx := tApp.InitChain()
-	postInitCtx := tApp.App.NewUncachedContext(false, tmproto.Header{
-		Height: ctx.BlockHeight(),
-		Time:   ctx.BlockTime(),
-	})
-	for i := 0; i < nNonCrossing; i++ {
-		order := e2eSeedConditionalOrder(uint32(i))
-		tApp.App.ClobKeeper.SetLongTermOrderPlacement(postInitCtx, order, 1)
-		tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(postInitCtx, time.Unix(1_900_000_000, 0), order.OrderId)
-	}
-	legitClientID := uint32(nNonCrossing)
-	legitOrder := clobtypes.Order{
-		OrderId: clobtypes.OrderId{
-			SubaccountId: constants.Alice_Num0,
-			ClientId:     legitClientID,
-			OrderFlags:   clobtypes.OrderIdFlags_Conditional,
-			ClobPairId:   constants.ClobPair_Btc.Id,
-		},
-		Side:                            clobtypes.Order_SIDE_BUY,
-		Quantums:                        1_000_000,
-		Subticks:                        55_000_000_000,
-		GoodTilOneof:                    &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 1_900_000_000},
-		ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
-		ConditionalOrderTriggerSubticks: 51_000_000_000,
-	}
-	tApp.App.ClobKeeper.SetLongTermOrderPlacement(postInitCtx, legitOrder, 1)
-	tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(postInitCtx, time.Unix(1_900_000_000, 0), legitOrder.OrderId)
-
-	require.False(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(postInitCtx).Enabled)
-	require.Len(t, tApp.App.ClobKeeper.GetAllUntriggeredConditionalOrders(postInitCtx), nNonCrossing+1)
-
-	// Phase 2: Simulate governance activation after a block with the flag off, then run the
-	// persisted activation state machine to completion.
-	tApp.App.ClobKeeper.SetConditionalOrderTriggerConfig(postInitCtx, clobkeeper.ConditionalOrderTriggerConfig{
-		Enabled:             true,
-		MaxTriggersPerBlock: clobkeeper.MaxConditionalTriggersPerBlock,
-	})
-	completeConditionalTriggerIndexActivation(t, tApp.App.ClobKeeper, postInitCtx)
-	require.True(t, tApp.App.ClobKeeper.GetConditionalOrderTriggerConfig(postInitCtx).Enabled,
-		"flag must be ON after SetConditionalOrderTriggerConfig")
-
-	// The completed index must make every pre-activation order reachable by the bounded path.
-	triggered := tApp.App.ClobKeeper.MaybeTriggerConditionalOrders(postInitCtx)
-	require.Equal(t, []clobtypes.OrderId{legitOrder.OrderId}, triggered)
-	require.True(t, tApp.App.ClobKeeper.IsConditionalOrderTriggered(postInitCtx, legitOrder.OrderId))
-	require.Len(t, tApp.App.ClobKeeper.GetAllUntriggeredConditionalOrders(postInitCtx), nNonCrossing)
 }
 
 func TestConditionalTrigger_SignedSingleOwnerAccumulation(t *testing.T) {

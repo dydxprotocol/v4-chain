@@ -130,7 +130,7 @@ const (
 
 	// UntriggeredConditionalOrderCountGlobalKey is the single memstore key that holds the global count
 	// of resting untriggered conditional orders across all subaccounts and clob pairs.
-	// Maintained at the same four lifecycle hooks as the trigger-price index (Packet 1).
+	// Maintained at the same placement / cancel / trigger / expiry hooks as the trigger-price index.
 	UntriggeredConditionalOrderCountGlobalKey = "NumUcond"
 
 	// UntriggeredConditionalOrderCountPerSubaccountPrefix is the memstore key prefix for the
@@ -139,13 +139,10 @@ const (
 	UntriggeredConditionalOrderCountPerSubaccountPrefix = "NumUcondSa:"
 
 	// ConditionalOrderTriggerConfigKey is the single persistent-store key holding the
-	// consensus-level configuration that gates the bounded conditional-order trigger path.
-	// When absent (the default), MaybeTriggerConditionalOrders runs the legacy full-scan
-	// behavior that is byte-for-byte identical to the pre-fix implementation, so the fix can be
-	// shipped on a rolling basis and activated later at a governed height without a version split.
-	// When present and enabled, incremental activation starts; the bounded crossing-priority path
-	// runs only after ConditionalOrderTriggerIndexReadyKey is set. These values are consensus state,
-	// so every node agrees deterministically on which path executes.
+	// consensus-level, governance-tunable budgets and caps for the bounded conditional-order
+	// trigger path. When absent, GetConditionalOrderTriggerConfig returns the package defaults.
+	// The mitigation itself is always active (the trigger-price index is built by the v9.6
+	// state-breaking upgrade); this config only tunes the per-block budgets and admission caps.
 	ConditionalOrderTriggerConfigKey = "CondTrigCfg"
 
 	// ConditionalOrderTriggerNextClobPairKey stores the clob-pair id at which the next bounded
@@ -153,14 +150,6 @@ const (
 	// pair order from starving later markets when the trigger budget is smaller than the number of
 	// active markets.
 	ConditionalOrderTriggerNextClobPairKey = "CondTrigNextPair"
-
-	// ConditionalOrderTriggerIndexActivation* keys persist the incremental trigger-price-index
-	// activation state. The legacy trigger path remains authoritative until ReadyKey is set.
-	ConditionalOrderTriggerIndexActivationPhaseKey   = "CondTrigIdxPhase"
-	ConditionalOrderTriggerIndexActivationCursorKey  = "CondTrigIdxCursor"
-	ConditionalOrderTriggerIndexActivationClearedKey = "CondTrigIdxCleared"
-	ConditionalOrderTriggerIndexActivationIndexedKey = "CondTrigIdxIndexed"
-	ConditionalOrderTriggerIndexReadyKey             = "CondTrigIdxReady"
 )
 
 // Transient Store

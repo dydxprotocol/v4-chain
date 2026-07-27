@@ -356,37 +356,31 @@ func (k Keeper) PlaceStatefulOrder(
 	// SAFETY: The cap is enforced ONLY here (the admission path), never inside
 	// SetLongTermOrderPlacement, so that InitMemStore / hydration / replay / DeliverTx
 	// re-application are always safe even when the resting set is at or above the cap.
-	// Gate cap ENFORCEMENT behind the mitigation flag: when disabled, a new-binary node must
-	// accept exactly the txs an old-binary node accepts (no rejections), so the rolling deploy
-	// cannot diverge on tx results. The memstore counters are still maintained regardless, so
-	// enforcement is immediately accurate once the flag is enabled.
+	// Caps are read from the governance-settable config, so governance can tune them without a
+	// binary upgrade.
 	if order.IsConditionalOrder() {
 		triggerCfg := k.GetConditionalOrderTriggerConfig(ctx)
-		if triggerCfg.Enabled {
-			// Read caps from governance-settable config rather than package constants directly.
-			// This allows governance to tune the caps without a binary upgrade.
-			globalCap := triggerCfg.MaxUntriggeredConditionalOrdersGlobal
-			saAccountCap := triggerCfg.MaxUntriggeredConditionalOrdersPerSubaccount
+		globalCap := triggerCfg.MaxUntriggeredConditionalOrdersGlobal
+		saAccountCap := triggerCfg.MaxUntriggeredConditionalOrdersPerSubaccount
 
-			globalCount := k.GetUntriggeredConditionalOrderCountGlobal(ctx)
-			if globalCount >= globalCap {
-				return errorsmod.Wrapf(
-					types.ErrTooManyUntriggeredConditionalOrders,
-					"global untriggered conditional order count %d is at or above cap %d",
-					globalCount,
-					globalCap,
-				)
-			}
-			saCount := k.GetUntriggeredConditionalOrderCountForSubaccount(ctx, order.OrderId.SubaccountId)
-			if saCount >= saAccountCap {
-				return errorsmod.Wrapf(
-					types.ErrTooManyUntriggeredConditionalOrders,
-					"per-subaccount untriggered conditional order count %d is at or above cap %d for subaccount %+v",
-					saCount,
-					saAccountCap,
-					order.OrderId.SubaccountId,
-				)
-			}
+		globalCount := k.GetUntriggeredConditionalOrderCountGlobal(ctx)
+		if globalCount >= globalCap {
+			return errorsmod.Wrapf(
+				types.ErrTooManyUntriggeredConditionalOrders,
+				"global untriggered conditional order count %d is at or above cap %d",
+				globalCount,
+				globalCap,
+			)
+		}
+		saCount := k.GetUntriggeredConditionalOrderCountForSubaccount(ctx, order.OrderId.SubaccountId)
+		if saCount >= saAccountCap {
+			return errorsmod.Wrapf(
+				types.ErrTooManyUntriggeredConditionalOrders,
+				"per-subaccount untriggered conditional order count %d is at or above cap %d for subaccount %+v",
+				saCount,
+				saAccountCap,
+				order.OrderId.SubaccountId,
+			)
 		}
 	}
 

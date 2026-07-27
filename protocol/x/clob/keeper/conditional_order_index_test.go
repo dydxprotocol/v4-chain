@@ -13,7 +13,6 @@ package keeper_test
 //     for representative prices, boundary-inclusive.
 
 import (
-	"bytes"
 	"sort"
 	"testing"
 	"time"
@@ -526,28 +525,12 @@ func TestConditionalOrderIndex_CrossedRangeScan(t *testing.T) {
 	})
 }
 
-// TestIncrementalConditionalOrderTriggerPriceIndexActivation verifies flag-enable reconciliation.
-//
-// This test simulates a pre-upgrade node state where untriggered conditional orders exist in
-// the SO/U: store but have NO entries in the trigger-price index (TPIdx:).  It then calls
-// advances the incremental activation state machine and asserts:
-//
-//  1. Every pre-upgrade order now has an index entry (post-backfill triggers work).
-//  2. Advancing after readiness is idempotent.
-//  3. The backfill is deterministic: the index contents are identical to what would have been
-//     produced by the Packet 1 placement hooks if the orders had been placed post-upgrade.
-//
-// To inject the "pre-upgrade" state (order in SO/U: but no index entry) we:
-//
-//	a. Write the order via SetLongTermOrderPlacement (which Packet 1 wires to call
-//	   addConditionalOrderToTriggerPriceIndex), then
-//	b. Manually delete the index entry by calling removeConditionalOrderFromTriggerPriceIndex
-//	   (unexported helper — tested via the exported store accessor).
-//
-// Since removeConditionalOrderFromTriggerPriceIndex is unexported, we simulate the absence of
-// the index entry by directly deleting the key from the prefix store, which is the same
-// underlying operation.
-func TestIncrementalConditionalOrderTriggerPriceIndexActivation(t *testing.T) {
+// TestBuildConditionalOrderTriggerPriceIndex verifies the one-shot state-breaking migration that
+// the v9.6 upgrade handler runs: given resting untriggered conditional orders that have NO
+// trigger-price index entries (the pre-upgrade state), BuildConditionalOrderTriggerPriceIndex
+// reconstructs the index so that every order is present, the build is idempotent, and orders are
+// subsequently triggerable via the index.
+func TestBuildConditionalOrderTriggerPriceIndex(t *testing.T) {
 	ks := indexTestKeeperWithEth(t)
 	ctx := ks.Ctx
 	k := ks.ClobKeeper
@@ -562,20 +545,18 @@ func TestIncrementalConditionalOrderTriggerPriceIndexActivation(t *testing.T) {
 
 	orders := []clobtypes.Order{tpBuyBtc, slBuyBtc, tpSellEth, slSellEth}
 
-	// Step 1: place all orders normally (Packet 1 hooks write index entries).
+	// Step 1: place all orders normally (the placement hooks write index entries).
 	for _, o := range orders {
 		order := o
 		k.SetLongTermOrderPlacement(ctx, order, 1)
 		k.AddStatefulOrderIdExpiration(ctx, expiry, order.OrderId)
 	}
 
-	// Step 2: manually remove all index entries to simulate "pre-upgrade" state.
-	// The index store key layout: <clobPairId:4><dir:1><subticks:8><orderId:N>.
-	// We reconstruct and delete each key directly from the prefix store.
+	// Step 2: manually remove all index entries to simulate the "pre-upgrade" state (orders in the
+	// SO/U: store but no TPIdx: entries).
 	{
 		indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
 		it := indexStore.Iterator(nil, nil)
-		// Collect all keys first (cannot delete while iterating).
 		var keysToDelete [][]byte
 		for ; it.Valid(); it.Next() {
 			keyCopy := make([]byte, len(it.Key()))
@@ -588,38 +569,23 @@ func TestIncrementalConditionalOrderTriggerPriceIndexActivation(t *testing.T) {
 		}
 	}
 
-	// Verify the index is now empty (pre-upgrade state simulated).
-	preBackfillIndex := collectIndexOrderIds(t, k, ctx)
-	require.Empty(t, preBackfillIndex, "index must be empty after manual removal (pre-upgrade simulation)")
-
-	// Verify the orders are still in the SO/U: untriggered store.
+	require.Empty(t, collectIndexOrderIds(t, k, ctx),
+		"index must be empty after manual removal (pre-upgrade simulation)")
 	require.Len(t, k.GetAllUntriggeredConditionalOrders(ctx), len(orders),
 		"orders must still be in the untriggered store after index removal")
 
-	// Step 3: enable and advance the persisted activation state machine. This small fixture fits
-	// in one bounded pass, but the setter itself must leave the non-empty source in clearing state.
-	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{Enabled: true})
-	status := k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationClearing, status.Phase)
-	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
-	k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	require.True(t, k.IsConditionalOrderTriggerIndexReady(ctx))
+	// Step 3: run the one-shot migration build.
+	k.BuildConditionalOrderTriggerPriceIndex(ctx)
 
-	// Step 4: assert post-backfill index equals what GetAllUntriggeredConditionalOrders returns.
-	postBackfillIndex := collectIndexOrderIds(t, k, ctx)
-
-	// Build the expected index from the full-scan (authoritative source of truth).
+	// Step 4: assert the rebuilt index exactly equals what GetAllUntriggeredConditionalOrders implies.
 	expectedIndex := func() map[uint32]map[byte]map[string]struct{} {
-		all := k.GetAllUntriggeredConditionalOrders(ctx)
 		result := make(map[uint32]map[byte]map[string]struct{})
-		for _, order := range all {
+		for _, order := range k.GetAllUntriggeredConditionalOrders(ctx) {
 			cp := uint32(order.GetClobPairId())
-			var dir byte
+			dir := clobkeeper.TriggerDirectionGTE
 			if order.IsTakeProfitOrder() && order.IsBuy() ||
 				order.IsStopLossOrder() && !order.IsBuy() {
 				dir = clobkeeper.TriggerDirectionLTE
-			} else {
-				dir = clobkeeper.TriggerDirectionGTE
 			}
 			if _, ok := result[cp]; !ok {
 				result[cp] = make(map[byte]map[string]struct{})
@@ -631,18 +597,16 @@ func TestIncrementalConditionalOrderTriggerPriceIndexActivation(t *testing.T) {
 		}
 		return result
 	}()
+	postBuildIndex := collectIndexOrderIds(t, k, ctx)
+	require.Equal(t, expectedIndex, postBuildIndex,
+		"post-build index must exactly equal GetAllUntriggeredConditionalOrders")
 
-	require.Equal(t, expectedIndex, postBackfillIndex,
-		"post-backfill index must exactly equal GetAllUntriggeredConditionalOrders")
+	// Step 5: idempotency — building again must not change the index.
+	k.BuildConditionalOrderTriggerPriceIndex(ctx)
+	require.Equal(t, postBuildIndex, collectIndexOrderIds(t, k, ctx),
+		"build must be idempotent: a second call must not change the index")
 
-	// Step 5: idempotency — advancing after readiness must not change the index.
-	k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	afterSecondBackfill := collectIndexOrderIds(t, k, ctx)
-	require.Equal(t, postBackfillIndex, afterSecondBackfill,
-		"backfill must be idempotent: second call must not change the index")
-
-	// Step 6: determinism — after backfill, orders must be triggerable via IterateCrossedConditionalOrders.
-	// tpBuyBtc is LTE direction with triggerSubticks=100.  A price of 100 should find it.
+	// Step 6: after build, orders are triggerable via IterateCrossedConditionalOrders.
 	var triggeredByLTE []clobtypes.OrderId
 	k.IterateCrossedConditionalOrders(ctx, 0, clobkeeper.TriggerDirectionLTE, 100, func(id clobtypes.OrderId) bool {
 		triggeredByLTE = append(triggeredByLTE, id)
@@ -651,7 +615,6 @@ func TestIncrementalConditionalOrderTriggerPriceIndexActivation(t *testing.T) {
 	require.Len(t, triggeredByLTE, 1, "LTE scan at price=100 must find tpBuyBtc (triggerSubticks=100)")
 	require.Equal(t, tpBuyBtc.OrderId, triggeredByLTE[0])
 
-	// slBuyBtc is GTE direction with triggerSubticks=200.  A price of 200 should find it.
 	var triggeredByGTE []clobtypes.OrderId
 	k.IterateCrossedConditionalOrders(ctx, 0, clobkeeper.TriggerDirectionGTE, 200, func(id clobtypes.OrderId) bool {
 		triggeredByGTE = append(triggeredByGTE, id)
@@ -659,139 +622,4 @@ func TestIncrementalConditionalOrderTriggerPriceIndexActivation(t *testing.T) {
 	})
 	require.Len(t, triggeredByGTE, 1, "GTE scan at price=200 must find slBuyBtc (triggerSubticks=200)")
 	require.Equal(t, slBuyBtc.OrderId, triggeredByGTE[0])
-}
-
-func TestIncrementalConditionalOrderTriggerPriceIndexActivation_MultiBlockAndMutations(t *testing.T) {
-	ks := indexTestKeeperWithEth(t)
-	ctx := ks.Ctx
-	k := ks.ClobKeeper
-
-	const extra = 2
-	n := clobkeeper.MaxConditionalOrderIndexActivationEntriesPerBlock + extra
-	orders := make([]clobtypes.Order, 0, n)
-	for i := 0; i < n; i++ {
-		order := makeConditionalOrder(
-			constants.Alice_Num0,
-			uint32(i),
-			0,
-			condSideBuy,
-			condTypeSL,
-			uint64(100+i),
-		)
-		orders = append(orders, order)
-		k.SetLongTermOrderPlacement(ctx, order, 1)
-	}
-
-	// Seed one more stale entry than a full activation pass can clear. The keys need not be valid
-	// composite keys because the clearing phase treats the entire secondary index as stale bytes.
-	indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
-	for i := 0; i < clobkeeper.MaxConditionalOrderIndexActivationEntriesPerBlock+1; i++ {
-		indexStore.Set([]byte{0xff, byte(i >> 16), byte(i >> 8), byte(i)}, []byte{})
-	}
-
-	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{Enabled: true})
-	k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	status := k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationClearing, status.Phase)
-	require.Equal(t, uint64(clobkeeper.MaxConditionalOrderIndexActivationEntriesPerBlock), status.Cleared)
-	require.Zero(t, status.Indexed)
-
-	// The next pass clears the final stale entry and spends only its remaining budget on building.
-	k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	status = k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationBuilding, status.Phase)
-	require.Equal(t, uint64(clobkeeper.MaxConditionalOrderIndexActivationEntriesPerBlock+1), status.Cleared)
-	require.Equal(t, uint64(clobkeeper.MaxConditionalOrderIndexActivationEntriesPerBlock-1), status.Indexed)
-	require.NotEmpty(t, status.Cursor)
-	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
-
-	// Re-place an already-scanned low key and cancel an unscanned high key. The final source scan
-	// will revisit neither; lifecycle hooks must nevertheless leave the completed index exact.
-	sort.Slice(orders, func(i, j int) bool {
-		return bytes.Compare(orders[i].OrderId.ToStateKey(), orders[j].OrderId.ToStateKey()) < 0
-	})
-	k.DeleteLongTermOrderPlacement(ctx, orders[0].OrderId)
-	k.SetLongTermOrderPlacement(ctx, orders[0], 2)
-	k.DeleteLongTermOrderPlacement(ctx, orders[len(orders)-1].OrderId)
-
-	k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	status = k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationReady, status.Phase)
-	require.True(t, k.IsConditionalOrderTriggerIndexReady(ctx))
-
-	actual := collectIndexOrderIds(t, k, ctx)
-	expected := make(map[uint32]map[byte]map[string]struct{})
-	for _, order := range k.GetAllUntriggeredConditionalOrders(ctx) {
-		pairId := uint32(order.GetClobPairId())
-		direction := clobkeeper.TriggerDirectionGTE
-		if order.IsTakeProfitOrder() && order.IsBuy() || order.IsStopLossOrder() && !order.IsBuy() {
-			direction = clobkeeper.TriggerDirectionLTE
-		}
-		if expected[pairId] == nil {
-			expected[pairId] = make(map[byte]map[string]struct{})
-		}
-		if expected[pairId][direction] == nil {
-			expected[pairId][direction] = make(map[string]struct{})
-		}
-		expected[pairId][direction][string(order.OrderId.ToStateKey())] = struct{}{}
-	}
-	require.Equal(t, expected, actual)
-}
-
-func TestIncrementalConditionalOrderTriggerPriceIndexActivation_DisableMidBuildAndReenable(t *testing.T) {
-	ks := indexTestKeeperWithEth(t)
-	ctx := ks.Ctx
-	k := ks.ClobKeeper
-
-	orders := make([]clobtypes.Order, 0, 4)
-	for i := 0; i < 4; i++ {
-		order := makeConditionalOrder(
-			constants.Alice_Num0,
-			uint32(i),
-			0,
-			condSideBuy,
-			condTypeSL,
-			uint64(100+i),
-		)
-		orders = append(orders, order)
-		k.SetLongTermOrderPlacement(ctx, order, 1)
-	}
-
-	// Leave room for exactly two source entries after clearing, ensuring the first pass persists a
-	// real build cursor without requiring another large authoritative source fixture.
-	indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
-	for i := 0; i < clobkeeper.MaxConditionalOrderIndexActivationEntriesPerBlock-2; i++ {
-		indexStore.Set([]byte{0xfe, byte(i >> 16), byte(i >> 8), byte(i)}, []byte{})
-	}
-	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{Enabled: true})
-	k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	status := k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationBuilding, status.Phase)
-	require.Equal(t, uint64(2), status.Indexed)
-	require.NotEmpty(t, status.Cursor)
-
-	// Disabling must invalidate both readiness and the cursor. Mutations during the disabled window
-	// intentionally do not maintain the partial index and must be reconciled from scratch later.
-	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{Enabled: false})
-	status = k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationInactive, status.Phase)
-	require.Empty(t, status.Cursor)
-	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
-	k.DeleteLongTermOrderPlacement(ctx, orders[len(orders)-1].OrderId)
-	newOrder := makeConditionalOrder(constants.Alice_Num1, 99, 1, condSideSell, condTypeTP, 250)
-	k.SetLongTermOrderPlacement(ctx, newOrder, 2)
-
-	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{Enabled: true})
-	for !k.IsConditionalOrderTriggerIndexReady(ctx) {
-		k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
-	}
-	status = k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, clobkeeper.ConditionalOrderTriggerIndexActivationReady, status.Phase)
-	require.Equal(t, uint64(2), status.Cleared, "re-enable must clear the partial pre-disable index")
-	require.Equal(t, uint64(4), status.Indexed)
-
-	actual := collectIndexOrderIds(t, k, ctx)
-	require.Len(t, actual[0][clobkeeper.TriggerDirectionGTE], 3)
-	require.Contains(t, actual[1][clobkeeper.TriggerDirectionGTE], string(newOrder.OrderId.ToStateKey()))
-	require.Len(t, k.GetAllUntriggeredConditionalOrders(ctx), 4)
 }

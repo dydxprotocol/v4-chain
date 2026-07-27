@@ -67,31 +67,21 @@ func (k Keeper) SetLongTermOrderPlacement(
 	// does not change trigger direction or subticks, so the index entry is idempotent,
 	// but we avoid a redundant write.
 	if order.OrderId.IsConditionalOrder() && !k.IsConditionalOrderTriggered(ctx, order.OrderId) {
-		// The trigger-price index is CONSENSUS state (storeKey). Only maintain it when the
-		// mitigation is enabled, so a flag-off node writes NO new consensus KV state and is
-		// byte-identical (app hash) to the pre-fix binary — this is what makes the fix
-		// rolling-deployable. The index is (re)built at the enable transition by
-		// SetConditionalOrderTriggerConfig.
-		if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
-			// The index key embeds the placement-sequence tie-breaker, which
-			// changes across re-placements. So on re-placement (found), remove the entry keyed on
-			// the OLD placement index before adding the entry keyed on the new one — otherwise the
-			// old key would orphan and the new key would be missing. On first placement the remove
-			// is skipped.
-			if found {
-				k.removeConditionalOrderFromTriggerPriceIndex(
-					ctx,
-					oldPlacement.Order,
-					oldPlacement.PlacementIndex,
-				)
-			}
-			k.addConditionalOrderToTriggerPriceIndex(ctx, order, longTermOrderPlacement.PlacementIndex)
+		// The index key embeds the placement-sequence tie-breaker, which changes across
+		// re-placements. So on re-placement (found), remove the entry keyed on the OLD placement
+		// index before adding the entry keyed on the new one — otherwise the old key would orphan
+		// and the new key would be missing. On first placement the remove is skipped.
+		if found {
+			k.removeConditionalOrderFromTriggerPriceIndex(
+				ctx,
+				oldPlacement.Order,
+				oldPlacement.PlacementIndex,
+			)
 		}
+		k.addConditionalOrderToTriggerPriceIndex(ctx, order, longTermOrderPlacement.PlacementIndex)
 		if !found {
-			// The untriggered conditional counters are MEMSTORE (memKey) — not consensus state,
-			// not in the app hash — so they are always maintained (and rehydrated by
-			// InitMemStore) and need no gating. Enforcement of the caps that read them is gated
-			// in PlaceStatefulOrder.
+			// The untriggered conditional counters are MEMSTORE (memKey) — rehydrated by
+			// InitMemStore. Enforcement of the caps that read them is in PlaceStatefulOrder.
 			k.IncrementUntriggeredConditionalOrderCount(ctx, order.OrderId.SubaccountId)
 		}
 	}
@@ -182,11 +172,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	// long-term orders are not indexed.
 	if orderId.IsConditionalOrder() && !k.IsConditionalOrderTriggered(ctx, orderId) {
 		if placement, exists := k.GetUntriggeredConditionalOrderPlacement(ctx, orderId); exists {
-			// Index is consensus state — only maintain it when the mitigation is enabled (see
-			// the rolling-safety note in SetLongTermOrderPlacement). Counters are memstore.
-			if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
-				k.removeConditionalOrderFromTriggerPriceIndex(ctx, placement.Order, placement.PlacementIndex)
-			}
+			k.removeConditionalOrderFromTriggerPriceIndex(ctx, placement.Order, placement.PlacementIndex)
 			// Decrement the untriggered conditional counters (cancel / expiry path).
 			k.DecrementUntriggeredConditionalOrderCount(ctx, orderId.SubaccountId)
 		}
@@ -259,17 +245,12 @@ func (k Keeper) AddStatefulOrderIdExpiration(
 // RemoveExpiredStatefulOrders removes the stateful order id expirations up to `blockTime` and
 // returns the removed order ids as a slice.
 //
-// When the ConditionalOrderTriggerConfig is Enabled, at most cfg.MaxRemovalsPerBlock entries are
-// processed this block. Remaining expired-but-unprocessed entries are left in the expiration index
-// so the next block re-scans and drains them. This keeps the EndBlocker expiry loop a bounded
-// per-block workload rather than an unbounded scan.
-//
-// When the config is Disabled (the default / legacy path), the old unbounded loop runs unchanged
-// so that a flag-off node is byte-identical to a pre-fix node.
+// At most cfg.MaxRemovalsPerBlock entries are processed this block. Remaining expired-but-unprocessed
+// entries are left in the expiration index so the next block re-scans and drains them. This keeps the
+// EndBlocker expiry loop a bounded per-block workload rather than an unbounded scan.
 func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time) (
 	expiredOrderIds []types.OrderId,
 ) {
-	// Read config once. The byte-identical legacy path runs when disabled.
 	cfg := k.GetConditionalOrderTriggerConfig(ctx)
 
 	expiredOrderIds = make([]types.OrderId, 0)
@@ -282,20 +263,9 @@ func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time
 	)
 	defer it.Close()
 
-	if !cfg.Enabled {
-		// LEGACY (disabled): unbounded loop — byte-identical to pre-fix behavior.
-		for ; it.Valid(); it.Next() {
-			var orderId types.OrderId
-			k.cdc.MustUnmarshal(it.Value(), &orderId)
-			expiredOrderIds = append(expiredOrderIds, orderId)
-			store.Delete(it.Key())
-		}
-		return expiredOrderIds
-	}
-
-	// ENABLED: bounded loop — process at most MaxRemovalsPerBlock entries this block.
-	// Remaining entries are left in the index for the next block to drain. Deterministic
-	// because store iteration order is stable (lexicographic key order).
+	// Bounded loop — process at most MaxRemovalsPerBlock entries this block. Remaining entries are
+	// left in the index for the next block to drain. Deterministic because store iteration order is
+	// stable (lexicographic key order).
 	budget := cfg.MaxRemovalsPerBlock
 	for processed := uint32(0); it.Valid() && processed < budget; it.Next() {
 		var orderId types.OrderId
@@ -379,16 +349,12 @@ func (k Keeper) MustTriggerConditionalOrder(
 	triggeredConditionalOrderStore.Set(orderKey, longTermOrderPlacementBytes)
 
 	// Remove the order from the trigger-price secondary index — it is now triggered and no
-	// longer belongs in the untriggered index. Index is consensus state, so only maintain it
-	// when the mitigation is enabled (rolling-safety; see SetLongTermOrderPlacement). Counters
-	// are memstore.
-	if k.GetConditionalOrderTriggerConfig(ctx).Enabled {
-		k.removeConditionalOrderFromTriggerPriceIndex(
-			ctx,
-			longTermOrderPlacement.Order,
-			untriggeredPlacementIndex,
-		)
-	}
+	// longer belongs in the untriggered index.
+	k.removeConditionalOrderFromTriggerPriceIndex(
+		ctx,
+		longTermOrderPlacement.Order,
+		untriggeredPlacementIndex,
+	)
 
 	// Decrement the untriggered conditional counters (trigger path).
 	k.DecrementUntriggeredConditionalOrderCount(ctx, orderId.SubaccountId)
@@ -604,13 +570,13 @@ func (k Keeper) CheckAndDecrementStatefulOrderCount(
 // ---------------------------------------------------------------------------
 // Untriggered conditional order counters
 // ---------------------------------------------------------------------------
-// These counters bound the resting untriggered conditional set (defense-in-depth,
-// Packet 3).  They are maintained in the memstore (same as StatefulOrderCount) and
-// are re-hydrated from InitMemStore on node restart.
+// These counters bound the resting untriggered conditional set (defense-in-depth).
+// They are maintained in the memstore (same as StatefulOrderCount) and are re-hydrated
+// from InitMemStore on node restart.
 //
-// The cap constants below are intentionally conservative — well above any observed
-// legitimate market-maker usage.  Governance-settable param wiring is a follow-up
-// (see conditional-order EndBlocker work plan §9 Packet 3).
+// The cap constants below are the defaults — intentionally conservative, well above any
+// observed legitimate market-maker usage. They are governance-tunable at runtime via
+// MsgUpdateConditionalOrderTriggerConfig.
 const (
 	// MaxUntriggeredConditionalOrdersGlobal is the maximum total number of resting
 	// untriggered conditional orders across all subaccounts and clob pairs.

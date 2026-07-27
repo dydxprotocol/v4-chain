@@ -437,12 +437,6 @@ export interface MsgUpdateLeverageResponseSDKType {}
 
 export interface MsgUpdateConditionalOrderTriggerConfig {
   authority: string;
-  /**
-   * When true, the bounded trigger and removal paths are active. When false,
-   * the legacy unbounded paths run (byte-identical to pre-fix nodes).
-   */
-
-  enabled: boolean;
   /** Maximum number of conditional orders that may trigger per block. */
 
   maxTriggersPerBlock: number;
@@ -469,12 +463,6 @@ export interface MsgUpdateConditionalOrderTriggerConfig {
 
 export interface MsgUpdateConditionalOrderTriggerConfigSDKType {
   authority: string;
-  /**
-   * When true, the bounded trigger and removal paths are active. When false,
-   * the legacy unbounded paths run (byte-identical to pre-fix nodes).
-   */
-
-  enabled: boolean;
   /** Maximum number of conditional orders that may trigger per block. */
 
   max_triggers_per_block: number;
@@ -1608,7 +1596,6 @@ export const MsgUpdateLeverageResponse = {
 function createBaseMsgUpdateConditionalOrderTriggerConfig(): MsgUpdateConditionalOrderTriggerConfig {
   return {
     authority: "",
-    enabled: false,
     maxTriggersPerBlock: 0,
     maxRemovalsPerBlock: 0,
     maxUntriggeredConditionalOrdersGlobal: 0,
@@ -1620,10 +1607,6 @@ export const MsgUpdateConditionalOrderTriggerConfig = {
   encode(message: MsgUpdateConditionalOrderTriggerConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.authority !== "") {
       writer.uint32(10).string(message.authority);
-    }
-
-    if (message.enabled === true) {
-      writer.uint32(16).bool(message.enabled);
     }
 
     if (message.maxTriggersPerBlock !== 0) {
@@ -1658,10 +1641,6 @@ export const MsgUpdateConditionalOrderTriggerConfig = {
           message.authority = reader.string();
           break;
 
-        case 2:
-          message.enabled = reader.bool();
-          break;
-
         case 3:
           message.maxTriggersPerBlock = reader.uint32();
           break;
@@ -1690,7 +1669,6 @@ export const MsgUpdateConditionalOrderTriggerConfig = {
   fromPartial(object: DeepPartial<MsgUpdateConditionalOrderTriggerConfig>): MsgUpdateConditionalOrderTriggerConfig {
     const message = createBaseMsgUpdateConditionalOrderTriggerConfig();
     message.authority = object.authority ?? "";
-    message.enabled = object.enabled ?? false;
     message.maxTriggersPerBlock = object.maxTriggersPerBlock ?? 0;
     message.maxRemovalsPerBlock = object.maxRemovalsPerBlock ?? 0;
     message.maxUntriggeredConditionalOrdersGlobal = object.maxUntriggeredConditionalOrdersGlobal ?? 0;

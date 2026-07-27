@@ -81,7 +81,7 @@ func TestEndBlocker_Success(t *testing.T) {
 		expectedStatefulPlacementInState     map[types.OrderId]bool
 		expectedStatefulOrderTimeSlice       map[time.Time][]types.OrderId
 		expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
-		expectedUntriggeredConditionalOrders map[types.ClobPairId]*keeper.UntriggeredConditionalOrders
+		expectedUntriggeredConditionalOrders map[types.ClobPairId]*expectedUntriggeredByClobPair
 		expectedTriggeredConditionalOrderIds []types.OrderId
 	}{
 		"Prunes existing Short-Term orders and seen place orders correctly": {
@@ -170,7 +170,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					},
 				)
 			},
-			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*expectedUntriggeredByClobPair{},
 			expectedStatefulPlacementInState: map[types.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId:   false,
 				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25.OrderId:  false,
@@ -263,7 +263,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20.OrderId,
 				},
 			},
-			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*expectedUntriggeredByClobPair{
 				constants.ClobPair_Btc.GetClobPairId(): {
 					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
 						constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
@@ -658,9 +658,9 @@ func TestEndBlocker_Success(t *testing.T) {
 			}
 
 			if tc.expectedUntriggeredConditionalOrders != nil {
-				// Get untriggered orders from state and convert into
-				// `map[types.ClobPairId]*keeper.UntriggeredConditionalOrders`.
-				gotUntriggered := keeper.OrganizeUntriggeredConditionalOrdersFromState(
+				// Group the untriggered orders remaining in state by clob pair and trigger direction
+				// and compare against the expected grouping.
+				gotUntriggered := organizeUntriggeredForTest(
 					ks.ClobKeeper.GetAllUntriggeredConditionalOrders(ctx),
 				)
 
@@ -675,46 +675,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.AssertExpectations(t)
 		})
 	}
-}
-
-func TestEndBlocker_AdvancesConditionalOrderTriggerIndexActivation(t *testing.T) {
-	bankKeeper := &mocks.BankKeeper{}
-	bankKeeper.On("GetBalance", mock.Anything, mock.Anything, constants.Usdc.Denom).
-		Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.ZeroInt()))
-	ks := keepertest.NewClobKeepersTestContext(
-		t,
-		memclob.NewMemClobPriceTimePriority(false),
-		bankKeeper,
-		indexer_manager.NewIndexerEventManagerNoop(),
-	)
-	ctx := ks.Ctx.WithBlockHeight(1).WithBlockTime(unixTimeFive)
-	k := ks.ClobKeeper
-	require.NoError(t, keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper))
-	k.InitializeProcessProposerMatchesEvents(ctx)
-
-	// One more stale key than a full pass proves EndBlock invokes exactly one bounded activation
-	// step, rather than completing the reconciliation synchronously or not advancing it at all.
-	indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
-	for i := 0; i < keeper.MaxConditionalOrderIndexActivationEntriesPerBlock+1; i++ {
-		indexStore.Set([]byte{0xff, byte(i >> 16), byte(i >> 8), byte(i)}, []byte{})
-	}
-	k.SetConditionalOrderTriggerConfig(ctx, keeper.ConditionalOrderTriggerConfig{Enabled: true})
-
-	clob.EndBlocker(ctx, *k)
-	status := k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, keeper.ConditionalOrderTriggerIndexActivationClearing, status.Phase)
-	require.Equal(t, uint64(keeper.MaxConditionalOrderIndexActivationEntriesPerBlock), status.Cleared)
-	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
-
-	// The next EndBlock clears the final stale entry, observes the empty authoritative source, and
-	// commits readiness. Bounded triggering therefore becomes authoritative in the following block.
-	ctx2 := ctx.WithBlockHeight(2)
-	k.MustSetProcessProposerMatchesEvents(ctx2, types.ProcessProposerMatchesEvents{BlockHeight: 2})
-	clob.EndBlocker(ctx2, *k)
-	status = k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
-	require.Equal(t, keeper.ConditionalOrderTriggerIndexActivationReady, status.Phase)
-	require.Equal(t, uint64(keeper.MaxConditionalOrderIndexActivationEntriesPerBlock+1), status.Cleared)
-	require.True(t, k.IsConditionalOrderTriggerIndexReady(ctx))
 }
 
 func TestLiquidateSubaccounts(t *testing.T) {
@@ -1349,4 +1309,39 @@ func TestPrepareCheckState(t *testing.T) {
 			)
 		})
 	}
+}
+
+// expectedUntriggeredByClobPair mirrors the grouping the (removed) in-memory
+// UntriggeredConditionalOrders struct provided, for asserting which conditional orders remain
+// untriggered after EndBlocker.
+type expectedUntriggeredByClobPair struct {
+	OrdersToTriggerWhenOraclePriceLTETriggerPrice []types.Order
+	OrdersToTriggerWhenOraclePriceGTETriggerPrice []types.Order
+}
+
+// organizeUntriggeredForTest groups untriggered conditional orders by clob pair and trigger
+// direction, replicating the classification the old OrganizeUntriggeredConditionalOrdersFromState /
+// AddUntriggeredConditionalOrder performed (take-profit buy / stop-loss sell → LTE; take-profit
+// sell / stop-loss buy → GTE), with both slices initialized empty (non-nil) per group.
+func organizeUntriggeredForTest(orders []types.Order) map[types.ClobPairId]*expectedUntriggeredByClobPair {
+	ret := make(map[types.ClobPairId]*expectedUntriggeredByClobPair)
+	for _, order := range orders {
+		clobPairId := types.ClobPairId(order.GetClobPairId())
+		group, ok := ret[clobPairId]
+		if !ok {
+			group = &expectedUntriggeredByClobPair{
+				OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{},
+				OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+			}
+			ret[clobPairId] = group
+		}
+		if order.IsTakeProfitOrder() && order.IsBuy() || order.IsStopLossOrder() && !order.IsBuy() {
+			group.OrdersToTriggerWhenOraclePriceLTETriggerPrice = append(
+				group.OrdersToTriggerWhenOraclePriceLTETriggerPrice, order)
+		} else {
+			group.OrdersToTriggerWhenOraclePriceGTETriggerPrice = append(
+				group.OrdersToTriggerWhenOraclePriceGTETriggerPrice, order)
+		}
+	}
+	return ret
 }
