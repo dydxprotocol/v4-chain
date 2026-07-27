@@ -25,6 +25,70 @@ import (
 
 func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
+		`Stateful order validation: referenced maker order is expired`: {
+			blockTime: time.Unix(10, 0),
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000,
+						},
+					},
+				),
+			},
+			expectedError: types.ErrTimeExceedsGoodTilBlockTime,
+		},
+		`Stateful order validation: referenced taker order is expired`: {
+			blockTime: time.Unix(10, 0),
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   100_000_000,
+						},
+					},
+				),
+			},
+			expectedError: types.ErrTimeExceedsGoodTilBlockTime,
+		},
 		`Stateful order validation: referenced maker order does not exist in state`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,

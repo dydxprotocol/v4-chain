@@ -385,3 +385,43 @@ func TestAdmissionCap_CrossWindowAccumulationBounded(t *testing.T) {
 	require.ErrorIs(t, err, clobtypes.ErrTooManyUntriggeredConditionalOrders,
 		"cross-window accumulation at global cap must be rejected")
 }
+
+func TestAdmissionCap_LoweredBelowLiveCountBlocksThenResumesAfterDrain(t *testing.T) {
+	ks := capTestKeeper(t)
+	ctx := capValidCtx(ks)
+	k := ks.ClobKeeper
+	sa0 := capTestSA(0)
+
+	orders := []clobtypes.Order{
+		capConditionalOrder(sa0, 700, condTestTriggerFarBelow),
+		capConditionalOrder(sa0, 701, condTestTriggerFarBelow),
+		capConditionalOrder(sa0, 702, condTestTriggerFarBelow),
+	}
+	for _, order := range orders {
+		k.SetLongTermOrderPlacement(ctx, order, 1)
+	}
+	require.Equal(t, uint32(3), k.GetUntriggeredConditionalOrderCountGlobal(ctx))
+
+	// Governance may deliberately lower the cap below the live set to stop new admission while
+	// existing orders cancel, trigger, or expire.
+	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{
+		Enabled:                               true,
+		MaxUntriggeredConditionalOrdersGlobal: 2,
+		MaxUntriggeredConditionalOrdersPerSubaccount: 2,
+	})
+	for !k.IsConditionalOrderTriggerIndexReady(ctx) {
+		k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
+	}
+
+	fresh := capConditionalOrder(capTestSA(1), 703, condTestTriggerFarBelow)
+	err := k.PlaceStatefulOrder(ctx, &clobtypes.MsgPlaceOrder{Order: fresh}, true)
+	require.ErrorIs(t, err, clobtypes.ErrTooManyUntriggeredConditionalOrders)
+
+	// Drain below the new cap. Admission may still fail for unrelated validation/collateral
+	// reasons in this minimal keeper fixture, but the cap must no longer reject it.
+	k.DeleteLongTermOrderPlacement(ctx, orders[0].OrderId)
+	k.DeleteLongTermOrderPlacement(ctx, orders[1].OrderId)
+	require.Equal(t, uint32(1), k.GetUntriggeredConditionalOrderCountGlobal(ctx))
+	err = k.PlaceStatefulOrder(ctx, &clobtypes.MsgPlaceOrder{Order: fresh}, true)
+	require.NotErrorIs(t, err, clobtypes.ErrTooManyUntriggeredConditionalOrders)
+}

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/binary"
 
 	"cosmossdk.io/store/prefix"
@@ -16,6 +17,30 @@ const TriggerDirectionLTE byte = 0x00
 // TriggerDirectionGTE is the direction byte for orders that trigger when the oracle price is
 // greater than or equal to the order's trigger price (take-profit sells + stop-loss buys).
 const TriggerDirectionGTE byte = 0x01
+
+// MaxConditionalOrderIndexActivationEntriesPerBlock bounds the total number of stale index
+// entries deleted plus authoritative placements indexed by one EndBlock activation pass.
+const MaxConditionalOrderIndexActivationEntriesPerBlock = 10_000
+
+// ConditionalOrderTriggerIndexActivationPhase is the persisted incremental-build phase.
+type ConditionalOrderTriggerIndexActivationPhase byte
+
+const (
+	ConditionalOrderTriggerIndexActivationInactive ConditionalOrderTriggerIndexActivationPhase = iota
+	ConditionalOrderTriggerIndexActivationClearing
+	ConditionalOrderTriggerIndexActivationBuilding
+	ConditionalOrderTriggerIndexActivationReady
+)
+
+// ConditionalOrderTriggerIndexActivationStatus is the operator-visible progress snapshot. Cleared
+// and Indexed are cumulative across the current activation attempt; Cursor is the last
+// authoritative untriggered-store key processed during the build phase.
+type ConditionalOrderTriggerIndexActivationStatus struct {
+	Phase   ConditionalOrderTriggerIndexActivationPhase
+	Cleared uint64
+	Indexed uint64
+	Cursor  []byte
+}
 
 // conditionalOrderTriggerDirection returns the direction byte for the given order by replicating
 // the exact classification used by AddUntriggeredConditionalOrder / CanTrigger:
@@ -156,52 +181,203 @@ func (k Keeper) removeConditionalOrderFromTriggerPriceIndex(
 	store.Delete(key)
 }
 
-// BackfillConditionalOrderTriggerPriceIndex populates the trigger-price secondary index for every
-// untriggered conditional order that does not yet have an entry.  It is called exactly once at the
-// governance flag-enable transition (OFF->ON) to backfill orders that were resting before the
-// config was enabled and were therefore never written into the index by the placement hooks.
-//
-// DETERMINISM: GetAllUntriggeredConditionalOrders returns orders sorted by ascending time
-// priority (SortedLongTermOrderPlacements), so the iteration order is identical on every node.
-// addConditionalOrderToTriggerPriceIndex is a pure KV store.Set — it is idempotent and safe to
-// call even when an entry already exists.
-//
-// This must NOT be called again after the upgrade block because the per-placement hooks
-// (SetLongTermOrderPlacement) maintain the index from that point forward.  InitMemStore
-// rehydrates NumUcond / NumUcondSa: counters independently from the untriggered store, so no
-// double-counting occurs.
-func (k Keeper) BackfillConditionalOrderTriggerPriceIndex(ctx sdk.Context) {
-	// Reconcile: clear any existing index entries, then repopulate from the authoritative
-	// untriggered conditional order store. Deterministic (fixed iteration order) and safe to run
-	// at the mitigation's enable transition regardless of prior index state (e.g. after a
-	// disabled window during which the per-placement hooks did not maintain the index).
-	indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
-	staleKeys := make([][]byte, 0)
-	it := indexStore.Iterator(nil, nil)
-	for ; it.Valid(); it.Next() {
-		staleKeys = append(staleKeys, it.Key())
+func getUint64State(store storetypes.KVStore, key string) uint64 {
+	b := store.Get([]byte(key))
+	if len(b) != 8 {
+		return 0
 	}
-	it.Close()
-	for _, key := range staleKeys {
-		indexStore.Delete(key)
+	return binary.BigEndian.Uint64(b)
+}
+
+func setUint64State(store storetypes.KVStore, key string, value uint64) {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, value)
+	store.Set([]byte(key), b)
+}
+
+// GetConditionalOrderTriggerIndexActivationStatus returns persisted activation progress for logs,
+// tests, and operator tooling without scanning either the source or index store.
+func (k Keeper) GetConditionalOrderTriggerIndexActivationStatus(
+	ctx sdk.Context,
+) ConditionalOrderTriggerIndexActivationStatus {
+	store := ctx.KVStore(k.storeKey)
+	status := ConditionalOrderTriggerIndexActivationStatus{
+		Cleared: getUint64State(store, types.ConditionalOrderTriggerIndexActivationClearedKey),
+		Indexed: getUint64State(store, types.ConditionalOrderTriggerIndexActivationIndexedKey),
+	}
+	if store.Has([]byte(types.ConditionalOrderTriggerIndexReadyKey)) {
+		status.Phase = ConditionalOrderTriggerIndexActivationReady
+		return status
+	}
+	phase := store.Get([]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey))
+	if len(phase) == 1 {
+		status.Phase = ConditionalOrderTriggerIndexActivationPhase(phase[0])
+	}
+	status.Cursor = append(
+		[]byte(nil),
+		store.Get([]byte(types.ConditionalOrderTriggerIndexActivationCursorKey))...,
+	)
+	return status
+}
+
+// IsConditionalOrderTriggerIndexReady reports whether the secondary index has completed a full
+// reconciliation since the most recent disabled->enabled transition.
+func (k Keeper) IsConditionalOrderTriggerIndexReady(ctx sdk.Context) bool {
+	return ctx.KVStore(k.storeKey).Has([]byte(types.ConditionalOrderTriggerIndexReadyKey))
+}
+
+func prefixStoreIsEmpty(store prefix.Store) bool {
+	it := store.Iterator(nil, nil)
+	defer it.Close()
+	return !it.Valid()
+}
+
+// startConditionalOrderTriggerIndexActivation resets progress. Per-placement lifecycle hooks begin
+// maintaining the index as soon as config.Enabled is stored; clearing precedes the authoritative
+// scan so any pre-enable stale state is deterministically removed.
+func (k Keeper) startConditionalOrderTriggerIndexActivation(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexReadyKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationCursorKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationClearedKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationIndexedKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerNextClobPairKey))
+
+	// Empty chains can activate immediately using two constant-work emptiness checks. Any non-empty
+	// source or stale index is handled only by the bounded EndBlock state machine.
+	if prefixStoreIsEmpty(k.GetConditionalOrderTriggerPriceIndexStore(ctx)) &&
+		prefixStoreIsEmpty(k.GetUntriggeredConditionalOrderPlacementStore(ctx)) {
+		store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey))
+		store.Set([]byte(types.ConditionalOrderTriggerIndexReadyKey), []byte{1})
+		return
+	}
+	store.Set(
+		[]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey),
+		[]byte{byte(ConditionalOrderTriggerIndexActivationClearing)},
+	)
+}
+
+func (k Keeper) cancelConditionalOrderTriggerIndexActivation(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexReadyKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationCursorKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationClearedKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationIndexedKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerNextClobPairKey))
+}
+
+func (k Keeper) markConditionalOrderTriggerIndexReady(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey))
+	store.Delete([]byte(types.ConditionalOrderTriggerIndexActivationCursorKey))
+	store.Set([]byte(types.ConditionalOrderTriggerIndexReadyKey), []byte{1})
+}
+
+// AdvanceConditionalOrderTriggerIndexActivation performs at most
+// MaxConditionalOrderIndexActivationEntriesPerBlock index deletes/inserts. It first clears the
+// possibly stale index, then resumes an authoritative SO/U: scan after a persisted raw-key cursor.
+// New placements, cancellations, expirations, and legacy-path triggers maintain the index while
+// this runs, so mutations on either side of the cursor cannot be missed.
+func (k Keeper) AdvanceConditionalOrderTriggerIndexActivation(ctx sdk.Context) {
+	if !k.GetConditionalOrderTriggerConfig(ctx).Enabled || k.IsConditionalOrderTriggerIndexReady(ctx) {
+		return
 	}
 
-	orders := k.GetAllUntriggeredConditionalOrders(ctx)
-	for _, order := range orders {
-		// Read the stored placement so the index key carries the same placement-sequence
-		// tie-breaker (block height + transaction index) the per-placement hook would have written
-		// The placement is authoritative in the untriggered store.
-		placement, found := k.GetUntriggeredConditionalOrderPlacement(ctx, order.OrderId)
-		if !found {
-			continue
+	store := ctx.KVStore(k.storeKey)
+	phaseBytes := store.Get([]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey))
+	if len(phaseBytes) != 1 {
+		k.startConditionalOrderTriggerIndexActivation(ctx)
+		if k.IsConditionalOrderTriggerIndexReady(ctx) {
+			return
 		}
-		k.addConditionalOrderToTriggerPriceIndex(ctx, order, placement.PlacementIndex)
+		phaseBytes = store.Get([]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey))
 	}
-	ctx.Logger().Info(
-		"BackfillConditionalOrderTriggerPriceIndex: reconciled trigger-price index",
-		"cleared", len(staleKeys),
-		"count", len(orders),
-	)
+
+	remaining := MaxConditionalOrderIndexActivationEntriesPerBlock
+	phase := ConditionalOrderTriggerIndexActivationPhase(phaseBytes[0])
+	if phase != ConditionalOrderTriggerIndexActivationClearing &&
+		phase != ConditionalOrderTriggerIndexActivationBuilding {
+		k.startConditionalOrderTriggerIndexActivation(ctx)
+		if k.IsConditionalOrderTriggerIndexReady(ctx) {
+			return
+		}
+		phase = ConditionalOrderTriggerIndexActivationClearing
+	}
+	if phase == ConditionalOrderTriggerIndexActivationClearing {
+		indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
+		keys := make([][]byte, 0, remaining)
+		it := indexStore.Iterator(nil, nil)
+		for ; it.Valid() && len(keys) < remaining; it.Next() {
+			keys = append(keys, append([]byte(nil), it.Key()...))
+		}
+		clearingComplete := !it.Valid()
+		it.Close()
+		for _, key := range keys {
+			indexStore.Delete(key)
+		}
+		remaining -= len(keys)
+		cleared := getUint64State(store, types.ConditionalOrderTriggerIndexActivationClearedKey) + uint64(len(keys))
+		setUint64State(store, types.ConditionalOrderTriggerIndexActivationClearedKey, cleared)
+
+		if !clearingComplete {
+			ctx.Logger().Info("conditional-order trigger index activation progress",
+				"phase", "clearing", "cleared", cleared, "indexed", uint64(0))
+			return
+		}
+		phase = ConditionalOrderTriggerIndexActivationBuilding
+		store.Set(
+			[]byte(types.ConditionalOrderTriggerIndexActivationPhaseKey),
+			[]byte{byte(phase)},
+		)
+	}
+
+	if phase != ConditionalOrderTriggerIndexActivationBuilding {
+		return
+	}
+	if remaining == 0 {
+		ctx.Logger().Info("conditional-order trigger index activation progress",
+			"phase", "building",
+			"cleared", getUint64State(store, types.ConditionalOrderTriggerIndexActivationClearedKey),
+			"indexed", getUint64State(store, types.ConditionalOrderTriggerIndexActivationIndexedKey))
+		return
+	}
+
+	source := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
+	cursor := store.Get([]byte(types.ConditionalOrderTriggerIndexActivationCursorKey))
+	it := source.Iterator(cursor, nil)
+	if len(cursor) > 0 && it.Valid() && bytes.Equal(it.Key(), cursor) {
+		it.Next()
+	}
+
+	processed := 0
+	var lastKey []byte
+	for ; it.Valid() && processed < remaining; it.Next() {
+		var placement types.LongTermOrderPlacement
+		k.cdc.MustUnmarshal(it.Value(), &placement)
+		k.addConditionalOrderToTriggerPriceIndex(ctx, placement.Order, placement.PlacementIndex)
+		lastKey = append(lastKey[:0], it.Key()...)
+		processed++
+	}
+	buildingComplete := !it.Valid()
+	it.Close()
+
+	indexed := getUint64State(store, types.ConditionalOrderTriggerIndexActivationIndexedKey) + uint64(processed)
+	setUint64State(store, types.ConditionalOrderTriggerIndexActivationIndexedKey, indexed)
+	if len(lastKey) > 0 {
+		store.Set([]byte(types.ConditionalOrderTriggerIndexActivationCursorKey), lastKey)
+	}
+	if buildingComplete {
+		k.markConditionalOrderTriggerIndexReady(ctx)
+		ctx.Logger().Info("conditional-order trigger index activation complete",
+			"cleared", getUint64State(store, types.ConditionalOrderTriggerIndexActivationClearedKey),
+			"indexed", indexed)
+		return
+	}
+	ctx.Logger().Info("conditional-order trigger index activation progress",
+		"phase", "building",
+		"cleared", getUint64State(store, types.ConditionalOrderTriggerIndexActivationClearedKey),
+		"indexed", indexed)
 }
 
 // IterateCrossedConditionalOrders iterates over orders in the trigger-price index that are
@@ -221,6 +397,27 @@ func (k Keeper) IterateCrossedConditionalOrders(
 	direction byte,
 	priceSubticks uint64,
 	fn func(orderId types.OrderId) bool,
+) {
+	k.iterateCrossedConditionalOrders(
+		ctx,
+		clobPairId,
+		direction,
+		priceSubticks,
+		func(orderId types.OrderId, _ []byte) bool {
+			return fn(orderId)
+		},
+	)
+}
+
+// iterateCrossedConditionalOrders is the internal form of
+// IterateCrossedConditionalOrders. It also exposes the raw secondary-index key so callers can
+// remove stale entries without reconstructing placement metadata that may no longer exist.
+func (k Keeper) iterateCrossedConditionalOrders(
+	ctx sdk.Context,
+	clobPairId uint32,
+	direction byte,
+	priceSubticks uint64,
+	fn func(orderId types.OrderId, indexKey []byte) bool,
 ) {
 	store := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
 
@@ -292,8 +489,15 @@ func (k Keeper) IterateCrossedConditionalOrders(
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(orderKeyBytes, &orderId)
 
-		if !fn(orderId) {
+		if !fn(orderId, rawKey) {
 			break
 		}
 	}
+}
+
+// removeConditionalOrderTriggerPriceIndexEntry removes a raw key yielded by
+// iterateCrossedConditionalOrders. This is used to clean up expired or orphaned index entries
+// while keeping consensus-state expiry deletion in the bounded expiry queue.
+func (k Keeper) removeConditionalOrderTriggerPriceIndexEntry(ctx sdk.Context, indexKey []byte) {
+	k.GetConditionalOrderTriggerPriceIndexStore(ctx).Delete(indexKey)
 }

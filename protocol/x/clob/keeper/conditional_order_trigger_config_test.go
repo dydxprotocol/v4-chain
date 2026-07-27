@@ -41,6 +41,10 @@ func enableTriggerConfig(t *testing.T, k *clobkeeper.Keeper, ctx sdk.Context, bu
 		Enabled:             true,
 		MaxTriggersPerBlock: budget,
 	})
+	for i := 0; !k.IsConditionalOrderTriggerIndexReady(ctx); i++ {
+		require.Less(t, i, 100_000, "incremental trigger index activation did not complete")
+		k.AdvanceConditionalOrderTriggerIndexActivation(ctx)
+	}
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -65,6 +69,17 @@ func TestTriggerConfig_DefaultDisabledAndRoundTrip(t *testing.T) {
 	got = k.GetConditionalOrderTriggerConfig(ctx)
 	require.True(t, got.Enabled)
 	require.Equal(t, uint32(250), got.MaxTriggersPerBlock)
+	require.True(t, k.IsConditionalOrderTriggerIndexReady(ctx), "empty stores activate immediately")
+
+	// Disabling invalidates readiness so index writes made during the disabled window can never be
+	// treated as authoritative on a later re-enable.
+	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{Enabled: false})
+	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
+	require.Equal(
+		t,
+		clobkeeper.ConditionalOrderTriggerIndexActivationInactive,
+		k.GetConditionalOrderTriggerIndexActivationStatus(ctx).Phase,
+	)
 
 	// Normalization: zero max falls back to the constant.
 	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{
@@ -225,14 +240,38 @@ func TestTriggerConfig_FlagOn_CustomBudgetHonored(t *testing.T) {
 			uint32(i), 0, clobkeeper.TriggerDirectionGTE, uint64(1+i)))
 	}
 
-	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{
-		Enabled:             true,
-		MaxTriggersPerBlock: 3,
-	})
+	enableTriggerConfig(t, k, ctx, 3)
 
 	triggered := k.MaybeTriggerConditionalOrders(ctx)
 	require.Len(t, triggered, 3, "custom budget of 3 must be honored")
 	require.Len(t, k.GetAllUntriggeredConditionalOrders(ctx), 7)
+}
+
+func TestTriggerConfig_ActivationKeepsLegacyPathAuthoritative(t *testing.T) {
+	ks := newCondTestKeepers(t)
+	ctx := ks.Ctx
+	k := ks.ClobKeeper
+
+	for i := 0; i < 3; i++ {
+		placeOrder(t, k, ctx, makeTrigTestOrder(
+			constants.Alice_Num0,
+			uint32(i),
+			0,
+			clobkeeper.TriggerDirectionGTE,
+			uint64(1+i),
+		))
+	}
+	k.SetConditionalOrderTriggerConfig(ctx, clobkeeper.ConditionalOrderTriggerConfig{
+		Enabled:             true,
+		MaxTriggersPerBlock: 1,
+	})
+	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
+
+	// The configured budget would trigger one order on the bounded path. All three trigger while
+	// activation is incomplete, proving the pre-existing full-scan path remains authoritative.
+	triggered := k.MaybeTriggerConditionalOrders(ctx)
+	require.Len(t, triggered, 3)
+	require.Empty(t, k.GetAllUntriggeredConditionalOrders(ctx))
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -309,8 +348,8 @@ func TestTriggerConfig_FlagOff_WritesNoIndexState(t *testing.T) {
 	require.Equal(t, 0, indexEntryCount(),
 		"disabled trigger path (legacy) must not populate the trigger-price index")
 
-	// Enabling now must backfill the index from the resting untriggered set (the two orders that
-	// were not cancelled), proving activation lazily builds the consensus index.
+	// Enabling now incrementally builds the index from the resting untriggered set (the two orders
+	// that were not cancelled), proving activation lazily builds the consensus index.
 	enableTriggerConfig(t, k, ctx, clobkeeper.MaxConditionalTriggersPerBlock)
 	require.Equal(t, 2, indexEntryCount(),
 		"enabling the flag must backfill the index for the resting untriggered orders")

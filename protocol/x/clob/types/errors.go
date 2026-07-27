@@ -521,15 +521,6 @@ var (
 		6004,
 		"Conditional order trigger config is invalid",
 	)
-	// ErrUntriggeredSetTooLargeToEnable is returned when a proposal attempts to enable the bounded
-	// conditional-order trigger path while the resting untriggered set is larger than the size the
-	// one-shot enable-time index backfill can safely rebuild in a single consensus block (or larger
-	// than the configured global admission cap). Operators must drain the set before enabling.
-	ErrUntriggeredSetTooLargeToEnable = errorsmod.Register(
-		ModuleName,
-		6005,
-		"Cannot enable bounded conditional-order triggering while the resting untriggered set exceeds the enable ceiling",
-	)
 	ErrInvalidConditionalOrderTriggerSubticks = errorsmod.Register(
 		ModuleName,
 		6001,

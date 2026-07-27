@@ -22,8 +22,8 @@ const (
 	// MaxConfigurableRemovalsPerBlock bounds MaxRemovalsPerBlock (expiry drain per block).
 	MaxConfigurableRemovalsPerBlock uint32 = 100_000
 	// MaxConfigurableUntriggeredGlobal bounds the global admission cap. Steady-state admission is
-	// incremental (per-placement), so this can be generous; the one-shot enable-time backfill is
-	// bounded separately by the enable ceiling in the msg handler.
+	// incremental (per-placement), and enable-time index reconciliation is independently bounded
+	// per block, so this can be generous without creating one-block activation work.
 	MaxConfigurableUntriggeredGlobal uint32 = 10_000_000
 	// MaxConfigurableUntriggeredPerSubaccount bounds the per-subaccount admission cap.
 	MaxConfigurableUntriggeredPerSubaccount uint32 = 1_000_000
@@ -33,9 +33,6 @@ const (
 // It rejects an invalid authority and any budget / admission cap outside its configurable bound.
 // A zero value for any numeric field is permitted: the keeper setter normalizes zeros to sane
 // package defaults, so zero means "use the default", not "unbounded".
-//
-// Stateful checks (e.g. refusing to enable while the resting untriggered set is too large to
-// backfill safely) live in the message handler, which has access to consensus state.
 func (msg *MsgUpdateConditionalOrderTriggerConfig) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return errorsmod.Wrapf(

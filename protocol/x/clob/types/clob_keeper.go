@@ -161,17 +161,11 @@ type ClobKeeper interface {
 	RateLimitUpdateLeverage(ctx sdk.Context, msg *MsgUpdateLeverage) error
 	GetSubaccountsKeeper() SubaccountsKeeper
 
-	// BackfillConditionalOrderTriggerPriceIndex populates the trigger-price secondary index
-	// for any untriggered conditional orders that do not yet have an index entry.
-	// Called once at the governance flag-enable transition to backfill orders resting from
-	// before the config was enabled.
-	BackfillConditionalOrderTriggerPriceIndex(ctx sdk.Context)
-
 	// SetConditionalOrderTriggerConfigParams sets the conditional-order EndBlocker work conditional-order trigger
 	// mitigation config from scalar params (used by the governance
 	// MsgUpdateConditionalOrderTriggerConfig handler). Scalars rather than the config struct are
 	// used because the struct lives in the keeper package and cannot be referenced by this
-	// interface without an import cycle. Enabling performs the deterministic index backfill.
+	// interface without an import cycle. Enabling starts deterministic incremental activation.
 	SetConditionalOrderTriggerConfigParams(
 		ctx sdk.Context,
 		enabled bool,
@@ -180,14 +174,4 @@ type ClobKeeper interface {
 		maxUntriggeredConditionalOrdersGlobal uint32,
 		maxUntriggeredConditionalOrdersPerSubaccount uint32,
 	)
-
-	// IsConditionalOrderTriggerConfigEnabled reports whether the bounded conditional-order trigger
-	// path is currently enabled in consensus state. Scalar accessor (bool) so the config struct,
-	// which lives in the keeper package, need not cross this interface.
-	IsConditionalOrderTriggerConfigEnabled(ctx sdk.Context) bool
-
-	// GetUntriggeredConditionalOrderCountGlobal returns the current global count of resting
-	// untriggered conditional orders (the O(1) admission-cap counter). Used by the enable handler
-	// to bound the one-shot index backfill.
-	GetUntriggeredConditionalOrderCountGlobal(ctx sdk.Context) uint32
 }

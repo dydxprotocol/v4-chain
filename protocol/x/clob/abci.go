@@ -120,6 +120,10 @@ func EndBlocker(
 	// These triggered conditional orders will be placed in the `PrepareCheckState``.
 	processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock = triggeredConditionalOrderIds
 
+	// Incrementally reconcile the trigger-price index after this block's legacy trigger work.
+	// If this pass completes activation, the bounded path becomes authoritative next block.
+	keeper.AdvanceConditionalOrderTriggerIndexActivation(ctx)
+
 	// Write the ProcessProposerMatchcesEvents with all the EndBlocker updates to state.
 	keeper.MustSetProcessProposerMatchesEvents(
 		ctx,

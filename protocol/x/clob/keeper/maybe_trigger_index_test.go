@@ -472,20 +472,22 @@ func TestMaybeTrigger_NoPriceCrossingIsConstantWork(t *testing.T) {
 	// Enable the bounded (indexed) path so this exercises the fixed O(crossed) scan.
 	enableTriggerConfig(t, k, ctx, uint32(clobkeeper.MaxConditionalTriggersPerBlock))
 
+	// A malformed sentinel in the authoritative SO/U store makes any broad/full-store scan panic
+	// during unmarshal. The indexed no-crossing path must never read it.
+	sourceStore := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
+	poisonKey := []byte("no-crossing-global-scan-sentinel")
+	sourceStore.Set(poisonKey, []byte{0xff})
+
 	for block := 1; block <= 3; block++ {
-		triggered := k.MaybeTriggerConditionalOrders(ctx)
+		var triggered []clobtypes.OrderId
+		require.NotPanics(t, func() {
+			triggered = k.MaybeTriggerConditionalOrders(ctx)
+		}, "bounded no-crossing evaluation must not scan the authoritative order store")
 		require.Empty(t, triggered,
 			"block=%d: no orders should be triggered when price doesn't cross any trigger", block)
-
-		still := k.GetAllUntriggeredConditionalOrders(ctx)
-		require.Len(t, still, n,
-			"block=%d: all %d untriggered orders should remain", block, n)
 	}
-
-	// Assertion: if we got here, MaybeTriggerConditionalOrders returned empty in O(1)
-	// (bounded by index scan of zero crossed entries, not O(N) full scan).
-	// The bounded behavior is guaranteed by design: IterateCrossedConditionalOrders scans
-	// only the crossed range of the index; with no crossed orders, the iterator visits 0 keys.
+	sourceStore.Delete(poisonKey)
+	require.Len(t, k.GetAllUntriggeredConditionalOrders(ctx), n)
 }
 
 // ----------------------------------------------------------------
@@ -522,6 +524,34 @@ func TestMaybeTrigger_FairShareAcrossMarkets(t *testing.T) {
 	require.Len(t, triggered, 4, "exactly the budget (4) should trigger this block")
 	require.Equal(t, 2, perPairCount[0], "BTC (pair 0) must not consume the whole budget")
 	require.Equal(t, 2, perPairCount[1], "ETH (pair 1) must get its fair share, not be starved")
+}
+
+// TestMaybeTrigger_FairShareRotatesWhenBudgetIsSmallerThanMarkets verifies cross-block fairness.
+// With a budget of one and two continuously backlogged markets, a fixed ascending-id scheduler
+// would serve pair 0 forever. The persisted cursor must alternate which pair starts each block.
+func TestMaybeTrigger_FairShareRotatesWhenBudgetIsSmallerThanMarkets(t *testing.T) {
+	ks := trigIndexTestKeeper(t)
+	k := ks.ClobKeeper
+	ctx := ks.Ctx
+
+	const perPair = 3
+	for i := 0; i < perPair; i++ {
+		placeOrder(t, k, ctx, makeTrigTestOrder(
+			constants.Alice_Num0, uint32(i), 0, clobkeeper.TriggerDirectionGTE, uint64(1+i),
+		))
+		placeOrder(t, k, ctx, makeTrigTestOrder(
+			constants.Alice_Num1, uint32(i), 1, clobkeeper.TriggerDirectionGTE, uint64(1+i),
+		))
+	}
+
+	enableTriggerConfig(t, k, ctx, 1)
+	expectedPairOrder := []uint32{0, 1, 0, 1}
+	for block, expectedPair := range expectedPairOrder {
+		triggered := k.MaybeTriggerConditionalOrders(ctx)
+		require.Len(t, triggered, 1, "block %d must consume exactly one trigger slot", block+1)
+		require.Equal(t, expectedPair, triggered[0].ClobPairId,
+			"the scheduling cursor must rotate across backlogged markets")
+	}
 }
 
 // ----------------------------------------------------------------
@@ -690,9 +720,9 @@ func TestMaybeTrigger_ZeroOraclePriceDoesNotPanic(t *testing.T) {
 // Test 4c: Expired-but-un-drained orders are not triggered
 // ----------------------------------------------------------------
 // TestMaybeTrigger_ExpiredOrderNotTriggered verifies that a conditional order past its
-// GoodTilBlockTime is not triggered even though it is still resting in state and the trigger-price
-// index (the expiry prune is budgeted, so expired orders can linger). Before the fix, the trigger
-// path did not recheck GTBT, so an expired conditional could still trigger after its expiry.
+// GoodTilBlockTime is not triggered even though it is still resting in state. During traversal its
+// stale trigger-price index entry is removed, while the budgeted expiry prune retains ownership of
+// deleting the authoritative placement.
 func TestMaybeTrigger_ExpiredOrderNotTriggered(t *testing.T) {
 	// GTE (stop-loss buy) crossing at the BTC oracle price (50B); triggerSubticks 40B < oracle.
 	newSetup := func(t *testing.T) (*clobkeeper.Keeper, sdk.Context, clobtypes.Order) {
@@ -716,6 +746,18 @@ func TestMaybeTrigger_ExpiredOrderNotTriggered(t *testing.T) {
 		require.Len(t, k.GetAllUntriggeredConditionalOrders(expiredCtx), 1)
 		_, foundTriggered := k.GetTriggeredConditionalOrderPlacement(expiredCtx, order.OrderId)
 		require.False(t, foundTriggered, "expired order must not be moved to triggered state")
+		remainingIndexEntries := 0
+		k.IterateCrossedConditionalOrders(
+			expiredCtx,
+			0,
+			clobkeeper.TriggerDirectionGTE,
+			50_000_000_000,
+			func(clobtypes.OrderId) bool {
+				remainingIndexEntries++
+				return true
+			},
+		)
+		require.Zero(t, remainingIndexEntries, "expired index entry must be removed during traversal")
 	})
 
 	t.Run("unexpired_order_triggers", func(t *testing.T) {
@@ -725,6 +767,57 @@ func TestMaybeTrigger_ExpiredOrderNotTriggered(t *testing.T) {
 		validCtx := ctx.WithBlockTime(time.Unix(int64(condTestGTBT)-1, 0))
 		require.Equal(t, []clobtypes.OrderId{order.OrderId}, k.MaybeTriggerConditionalOrders(validCtx))
 	})
+}
+
+// TestMaybeTrigger_ExpiredCleanupConsumesBudget verifies an expired backlog cannot turn the
+// bounded trigger path back into an unbounded scan. Each stale entry removed consumes one unit of
+// the same per-block work budget as a trigger.
+func TestMaybeTrigger_ExpiredCleanupConsumesBudget(t *testing.T) {
+	const (
+		budget = 3
+		total  = 7
+	)
+
+	ks := trigIndexTestKeeper(t)
+	k := ks.ClobKeeper
+	ctx := ks.Ctx
+	for i := 0; i < total; i++ {
+		placeOrder(t, k, ctx, makeTrigTestOrder(
+			constants.Alice_Num0,
+			uint32(i),
+			0,
+			clobkeeper.TriggerDirectionGTE,
+			40_000_000_000+uint64(i),
+		))
+	}
+	enableTriggerConfig(t, k, ctx, budget)
+	expiredCtx := ctx.WithBlockTime(time.Unix(int64(condTestGTBT)+1, 0))
+
+	countIndexEntries := func() int {
+		count := 0
+		k.IterateCrossedConditionalOrders(
+			expiredCtx,
+			0,
+			clobkeeper.TriggerDirectionGTE,
+			50_000_000_000,
+			func(clobtypes.OrderId) bool {
+				count++
+				return true
+			},
+		)
+		return count
+	}
+
+	require.Empty(t, k.MaybeTriggerConditionalOrders(expiredCtx))
+	require.Equal(t, total-budget, countIndexEntries())
+	require.Len(t, k.GetAllUntriggeredConditionalOrders(expiredCtx), total,
+		"trigger traversal must not delete authoritative expiry state")
+
+	require.Empty(t, k.MaybeTriggerConditionalOrders(expiredCtx))
+	require.Equal(t, total-(2*budget), countIndexEntries())
+
+	require.Empty(t, k.MaybeTriggerConditionalOrders(expiredCtx))
+	require.Zero(t, countIndexEntries())
 }
 
 // ----------------------------------------------------------------
@@ -766,14 +859,21 @@ func TestMaybeTrigger_OneCrossedOrderNoBroadScan(t *testing.T) {
 
 	// Enable the bounded (indexed) path so this exercises the fixed O(crossed) scan.
 	enableTriggerConfig(t, k, ctx, uint32(clobkeeper.MaxConditionalTriggersPerBlock))
+	sourceStore := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
+	poisonKey := []byte("single-crossing-global-scan-sentinel")
+	sourceStore.Set(poisonKey, []byte{0xff})
 
-	triggered := k.MaybeTriggerConditionalOrders(ctx)
+	var triggered []clobtypes.OrderId
+	require.NotPanics(t, func() {
+		triggered = k.MaybeTriggerConditionalOrders(ctx)
+	}, "one indexed crossing must not scan the authoritative order store")
 	require.Len(t, triggered, 1, "exactly one order should trigger")
 	require.Equal(t, crossedOrder.OrderId, triggered[0], "the GTE order at triggerSubticks=1 should be triggered")
 
 	_, found := k.GetTriggeredConditionalOrderPlacement(ctx, crossedOrder.OrderId)
 	require.True(t, found, "triggered order must be in triggered state store")
 
+	sourceStore.Delete(poisonKey)
 	still := k.GetAllUntriggeredConditionalOrders(ctx)
 	require.Len(t, still, n-1, "n-1 untriggered orders should remain")
 }

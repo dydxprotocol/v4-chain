@@ -52,6 +52,10 @@ type MemClobPriceTimePriority struct {
 type OrderWithRemovalReason struct {
 	Order         types.Order
 	RemovalReason types.OrderRemoval_RemovalReason
+	// IsExpired marks a stateful order that is removed from the local memclob because its
+	// GoodTilBlockTime has passed. Consensus-state deletion remains owned by the bounded
+	// EndBlocker expiry queue, so no OrderRemoval operation should be proposed for it.
+	IsExpired bool
 }
 
 func NewMemClobPriceTimePriority(
@@ -848,21 +852,28 @@ func (m *MemClobPriceTimePriority) matchOrder(
 			// If the taker order and the removed maker order are from the same subaccount, set
 			// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
 			// TODO(DEC-1409): Update this to support order replacements on indexer.
-			reason := indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-				makerOrderWithRemovalReason.RemovalReason,
-			)
+			reason := indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED
+			removalStatus := ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED
+			if !makerOrderWithRemovalReason.IsExpired {
+				reason = indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+					makerOrderWithRemovalReason.RemovalReason,
+				)
+				removalStatus = ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
+			}
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 				branchedContext,
 				makerOrderId,
 				reason,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				removalStatus,
 			); success {
 				offchainUpdates.AddRemoveMessage(makerOrderId, message)
 			}
 		}
 
 		m.mustRemoveOrder(branchedContext, makerOrderId)
-		if makerOrderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
+		if makerOrderId.IsStatefulOrder() &&
+			!makerOrderWithRemovalReason.IsExpired &&
+			!m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				makerOrderId,
 				makerOrderWithRemovalReason.RemovalReason,
@@ -1453,6 +1464,18 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	orderId := order.OrderId
 	orderbook := m.mustGetOrderbook(order.GetClobPairId())
 
+	// Stateful orders can remain in consensus state after GoodTilBlockTime while the bounded
+	// expiry queue drains. Do not replay or match such an order as a new taker in the memclob.
+	if order.IsStatefulOrderExpired(ctx.BlockTime()) {
+		return errorsmod.Wrapf(
+			types.ErrTimeExceedsGoodTilBlockTime,
+			"stateful order %v expired at %v (block time %v)",
+			orderId,
+			order.MustGetUnixGoodTilBlockTime(),
+			ctx.BlockTime(),
+		)
+	}
+
 	if orderId.IsShortTermOrder() {
 		// If the cancelation has an equal-to-or-greater `GoodTilBlock` than the new order, return an error.
 		// If the cancelation has a lesser `GoodTilBlock` than the new order, we do not remove the cancelation.
@@ -1656,6 +1679,20 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		}
 
 		makerOrder := makerLevelOrder.Value
+
+		// Physical deletion from consensus state is budgeted, so an expired stateful order can
+		// still be present in the local book. Remove it locally and continue to the next maker;
+		// the EndBlocker expiry queue will delete its state and emit the consensus event later.
+		if makerOrder.Order.IsStatefulOrderExpired(ctx.BlockTime()) {
+			makerOrdersToRemove = append(
+				makerOrdersToRemove,
+				OrderWithRemovalReason{
+					Order:     makerOrder.Order,
+					IsExpired: true,
+				},
+			)
+			continue
+		}
 
 		// Check if the orderbook is crossed.
 		var takerOrderCrossesMakerOrder bool

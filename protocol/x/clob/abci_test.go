@@ -677,6 +677,46 @@ func TestEndBlocker_Success(t *testing.T) {
 	}
 }
 
+func TestEndBlocker_AdvancesConditionalOrderTriggerIndexActivation(t *testing.T) {
+	bankKeeper := &mocks.BankKeeper{}
+	bankKeeper.On("GetBalance", mock.Anything, mock.Anything, constants.Usdc.Denom).
+		Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.ZeroInt()))
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memclob.NewMemClobPriceTimePriority(false),
+		bankKeeper,
+		indexer_manager.NewIndexerEventManagerNoop(),
+	)
+	ctx := ks.Ctx.WithBlockHeight(1).WithBlockTime(unixTimeFive)
+	k := ks.ClobKeeper
+	require.NoError(t, keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper))
+	k.InitializeProcessProposerMatchesEvents(ctx)
+
+	// One more stale key than a full pass proves EndBlock invokes exactly one bounded activation
+	// step, rather than completing the reconciliation synchronously or not advancing it at all.
+	indexStore := k.GetConditionalOrderTriggerPriceIndexStore(ctx)
+	for i := 0; i < keeper.MaxConditionalOrderIndexActivationEntriesPerBlock+1; i++ {
+		indexStore.Set([]byte{0xff, byte(i >> 16), byte(i >> 8), byte(i)}, []byte{})
+	}
+	k.SetConditionalOrderTriggerConfig(ctx, keeper.ConditionalOrderTriggerConfig{Enabled: true})
+
+	clob.EndBlocker(ctx, *k)
+	status := k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
+	require.Equal(t, keeper.ConditionalOrderTriggerIndexActivationClearing, status.Phase)
+	require.Equal(t, uint64(keeper.MaxConditionalOrderIndexActivationEntriesPerBlock), status.Cleared)
+	require.False(t, k.IsConditionalOrderTriggerIndexReady(ctx))
+
+	// The next EndBlock clears the final stale entry, observes the empty authoritative source, and
+	// commits readiness. Bounded triggering therefore becomes authoritative in the following block.
+	ctx2 := ctx.WithBlockHeight(2)
+	k.MustSetProcessProposerMatchesEvents(ctx2, types.ProcessProposerMatchesEvents{BlockHeight: 2})
+	clob.EndBlocker(ctx2, *k)
+	status = k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
+	require.Equal(t, keeper.ConditionalOrderTriggerIndexActivationReady, status.Phase)
+	require.Equal(t, uint64(keeper.MaxConditionalOrderIndexActivationEntriesPerBlock+1), status.Cleared)
+	require.True(t, k.IsConditionalOrderTriggerIndexReady(ctx))
+}
+
 func TestLiquidateSubaccounts(t *testing.T) {
 	tests := map[string]struct {
 		// Perpetuals state.

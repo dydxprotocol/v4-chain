@@ -17,7 +17,7 @@ import (
 // legacy path — and produces identical app hashes — until governance flips Enabled at a
 // coordinated height.
 //
-// When Enabled is true:
+// Once Enabled is true and the incremental trigger index is ready:
 //   - MaxTriggersPerBlock bounds the total conditional-order triggers per block (per-block budget).
 //     The index is keyed by crossing proximity (triggerSubticks), so the budget is drained
 //     nearest-crossing-first; far-from-market orders that cannot cross are never visited, so they
@@ -46,19 +46,6 @@ const conditionalOrderTriggerConfigLen = 1 + 1 + 4 + 4 + 4 + 4
 // RemoveExpiredStatefulOrders will process per block when the mitigation is enabled.
 // Chosen to match MaxConditionalTriggersPerBlock so both budgets share the same default scale.
 const MaxConditionalRemovalsPerBlock = 1000
-
-// MaxBackfillCardinality bounds the size of the resting untriggered conditional set that the
-// disabled->enabled transition is allowed to rebuild in a single consensus block
-// (BackfillConditionalOrderTriggerPriceIndex is an unbudgeted O(N) full clear + re-insert). The
-// governance enable handler refuses to enable the mitigation when the live global untriggered
-// count exceeds this ceiling, so the one-shot backfill can never exceed a validated size
-// Operators drain the resting set below this before enabling.
-//
-// Set to the default steady-state global admission cap: a set that already fits under the cap that
-// will apply once enabled is, by construction, safe to rebuild. This value SHOULD be confirmed
-// against a validator-hardware benchmark of the backfill (see the remediation plan's benchmark
-// packet) before enabling on a production network.
-const MaxBackfillCardinality = MaxUntriggeredConditionalOrdersGlobal
 
 // DefaultConditionalOrderTriggerConfig returns the config that applies when no config has been
 // set in state: disabled (legacy behavior). All numeric fields default to the package constants
@@ -121,11 +108,20 @@ func (k Keeper) GetConditionalOrderTriggerConfig(ctx sdk.Context) ConditionalOrd
 	return decodeConditionalOrderTriggerConfig(b)
 }
 
-// IsConditionalOrderTriggerConfigEnabled reports whether the bounded conditional-order trigger
-// path is currently enabled. Scalar accessor exposed on the ClobKeeper interface for callers (the
-// governance enable handler) that cannot reference the keeper-package config struct.
-func (k Keeper) IsConditionalOrderTriggerConfigEnabled(ctx sdk.Context) bool {
-	return k.GetConditionalOrderTriggerConfig(ctx).Enabled
+// getConditionalOrderTriggerNextClobPairId returns the clob-pair id at which the next bounded
+// scheduling pass should begin. An absent cursor starts at the first active pair.
+func (k Keeper) getConditionalOrderTriggerNextClobPairId(ctx sdk.Context) (uint32, bool) {
+	b := ctx.KVStore(k.storeKey).Get([]byte(types.ConditionalOrderTriggerNextClobPairKey))
+	if len(b) != 4 {
+		return 0, false
+	}
+	return binary.BigEndian.Uint32(b), true
+}
+
+func (k Keeper) setConditionalOrderTriggerNextClobPairId(ctx sdk.Context, clobPairId uint32) {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, clobPairId)
+	ctx.KVStore(k.storeKey).Set([]byte(types.ConditionalOrderTriggerNextClobPairKey), b)
 }
 
 // SetConditionalOrderTriggerConfig writes the trigger config to consensus state.
@@ -145,19 +141,24 @@ func (k Keeper) SetConditionalOrderTriggerConfig(ctx sdk.Context, cfg Conditiona
 		cfg.MaxUntriggeredConditionalOrdersPerSubaccount = MaxUntriggeredConditionalOrdersPerSubaccount
 	}
 
-	// Detect the disabled->enabled activation transition. While disabled, the trigger-price index
-	// (consensus state) is NOT maintained by the per-placement hooks, so any conditional orders
-	// resting at activation have no index entries. We must (re)build the index at the transition,
-	// otherwise the enabled bounded trigger path would never evaluate those pre-activation orders.
-	// This runs deterministically on every node at the same activation block (the flag is flipped
-	// via a governance action / upgrade handler), so all nodes reconcile identically.
+	// Detect activation transitions. Enabled starts lifecycle index maintenance immediately, but
+	// MaybeTriggerConditionalOrders remains on the legacy path until the persisted incremental
+	// reconciliation marks the index ready. Disabling cancels progress and invalidates readiness;
+	// the next enable clears and rebuilds any index state that went stale while disabled.
 	wasEnabled := k.GetConditionalOrderTriggerConfig(ctx).Enabled
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set([]byte(types.ConditionalOrderTriggerConfigKey), encodeConditionalOrderTriggerConfig(cfg))
 
-	if cfg.Enabled && !wasEnabled {
-		k.BackfillConditionalOrderTriggerPriceIndex(ctx)
+	if !cfg.Enabled {
+		k.cancelConditionalOrderTriggerIndexActivation(ctx)
+	} else if !wasEnabled {
+		k.startConditionalOrderTriggerIndexActivation(ctx)
+	} else if cfg.Enabled && !k.IsConditionalOrderTriggerIndexReady(ctx) {
+		status := k.GetConditionalOrderTriggerIndexActivationStatus(ctx)
+		if status.Phase == ConditionalOrderTriggerIndexActivationInactive {
+			k.startConditionalOrderTriggerIndexActivation(ctx)
+		}
 	}
 }
 

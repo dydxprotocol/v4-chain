@@ -237,8 +237,8 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 	)
 
 	cfg := k.GetConditionalOrderTriggerConfig(ctx)
-	if !cfg.Enabled {
-		// Legacy path — identical to the pre-fix behavior. Rolling-deploy safe.
+	if !cfg.Enabled || !k.IsConditionalOrderTriggerIndexReady(ctx) {
+		// Legacy remains authoritative while disabled and throughout incremental activation.
 		return k.maybeTriggerConditionalOrdersLegacy(ctx)
 	}
 	return k.maybeTriggerConditionalOrdersBounded(ctx, cfg)
@@ -325,13 +325,14 @@ func (k Keeper) maybeTriggerConditionalOrdersLegacy(ctx sdk.Context) (allTrigger
 // taking) are processed nearest-first.
 //
 // Prioritization under budget pressure (prioritize real crossing liquidity):
-//   - The per-block budget is cfg.MaxTriggersPerBlock, drained nearest-crossing-first across clob
-//     pairs in ascending id.
+//   - The per-block budget is cfg.MaxTriggersPerBlock, drained nearest-crossing-first within each
+//     clob pair. The first pair rotates across blocks so a budget smaller than the active-pair count
+//     cannot permanently starve later pair ids.
 //   - Any orders beyond the budget are deterministically deferred to subsequent blocks (the index
 //     is ordered, so the same nearest-crossing prefix is chosen on every node every block).
 //
-// Ordering: (clobPairId ascending, oracle→min-trade→max-trade, LTE→GTE, ascending
-// triggerSubticks/orderId). Deterministic across nodes. Differs from legacy time-priority ordering,
+// Ordering: (rotating clobPairId start, oracle→min-trade→max-trade, LTE→GTE, nearest trigger
+// subticks, placement time). Deterministic across nodes. Differs from legacy time-priority ordering,
 // which is why enabling the flag must happen at a coordinated height.
 func (k Keeper) maybeTriggerConditionalOrdersBounded(
 	ctx sdk.Context,
@@ -351,18 +352,49 @@ func (k Keeper) maybeTriggerConditionalOrdersBounded(
 		}
 	}
 
+	// Rotate the deterministic pair order at a persisted cursor. Advancing by one active pair per
+	// block guarantees eventual service even when totalBudget < len(activePairs), while also rotating
+	// which market receives Phase-2 leftover capacity. If the cursor's pair is no longer active,
+	// resume at the next greater active pair id, wrapping to the first pair.
+	scheduledPairs := activePairs
+	if len(activePairs) > 0 {
+		start := 0
+		if nextClobPairId, found := k.getConditionalOrderTriggerNextClobPairId(ctx); found {
+			start = len(activePairs) // sentinel: wrap if every active id is below the cursor
+			for i, clobPair := range activePairs {
+				if uint32(clobPair.Id) >= nextClobPairId {
+					start = i
+					break
+				}
+			}
+			if start == len(activePairs) {
+				start = 0
+			}
+		}
+		scheduledPairs = make([]types.ClobPair, 0, len(activePairs))
+		scheduledPairs = append(scheduledPairs, activePairs[start:]...)
+		scheduledPairs = append(scheduledPairs, activePairs[:start]...)
+
+		nextStart := 0
+		if len(scheduledPairs) > 1 {
+			nextStart = 1
+		}
+		k.setConditionalOrderTriggerNextClobPairId(ctx, uint32(scheduledPairs[nextStart].Id))
+	}
+
 	// Fair-share the chain-wide per-block trigger budget across active pairs so a low-id pair
 	// cannot consume the whole budget and starve higher-id pairs.
-	if totalBudget > 0 && len(activePairs) > 0 {
-		// Phase 1: each active pair gets an equal share (at least 1) of the budget, in id order.
-		// This guarantees every active pair a fair slice before any pair takes leftover capacity.
+	if totalBudget > 0 && len(scheduledPairs) > 0 {
+		// Phase 1: each active pair gets an equal share (at least 1) of the budget, in rotating
+		// scheduling order. When there are more pairs than budget, advancing the starting pair every
+		// block ensures every active pair eventually enters the serviced prefix.
 		perPairBudget := totalBudget / len(activePairs)
 		if perPairBudget < 1 {
 			perPairBudget = 1
 		}
 
 		spent := 0
-		for _, clobPair := range activePairs {
+		for _, clobPair := range scheduledPairs {
 			if spent >= totalBudget {
 				break
 			}
@@ -370,21 +402,21 @@ func (k Keeper) maybeTriggerConditionalOrdersBounded(
 			if rem := totalBudget - spent; pairBudget > rem {
 				pairBudget = rem
 			}
-			triggered := k.triggerPairWithinBudget(ctx, clobPair, pairBudget)
+			triggered, processed := k.triggerPairWithinBudget(ctx, clobPair, pairBudget)
 			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
-			spent += len(triggered)
+			spent += processed
 		}
 
 		// Phase 2: redistribute any leftover budget (from pairs that had fewer crossings than their
 		// share) to the remaining crossed orders, in id order. Orders triggered in Phase 1 were
 		// removed from the index, so re-scanning a pair here continues past them.
-		for _, clobPair := range activePairs {
+		for _, clobPair := range scheduledPairs {
 			if spent >= totalBudget {
 				break
 			}
-			triggered := k.triggerPairWithinBudget(ctx, clobPair, totalBudget-spent)
+			triggered, processed := k.triggerPairWithinBudget(ctx, clobPair, totalBudget-spent)
 			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
-			spent += len(triggered)
+			spent += processed
 		}
 	}
 
@@ -399,42 +431,42 @@ func (k Keeper) maybeTriggerConditionalOrdersBounded(
 	return allTriggeredOrderIds
 }
 
-// triggerPairWithinBudget triggers up to `budget` crossed conditional orders for a single clob pair
-// — first against the oracle price, then the clamped min/max trade prices — and returns the
-// triggered order ids. It skips a pair with no index entries or an unusable (zero / missing) oracle
-// price without panicking. The caller passes a per-pair budget so no single
-// pair can consume the whole chain-wide budget.
+// triggerPairWithinBudget processes up to `budget` crossed conditional-order index entries for a
+// single clob pair — first against the oracle price, then the clamped min/max trade prices. Each
+// triggered order and each expired/orphaned entry removed during traversal consumes one unit of
+// work. It returns both the triggered order ids and the number of index entries processed.
 func (k Keeper) triggerPairWithinBudget(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 	budget int,
-) (triggeredOrderIds []types.OrderId) {
+) (triggeredOrderIds []types.OrderId, processed int) {
 	triggeredOrderIds = make([]types.OrderId, 0)
 	if budget <= 0 {
-		return triggeredOrderIds
+		return triggeredOrderIds, 0
 	}
 
 	clobPairId := types.ClobPairId(clobPair.Id)
 
 	// Skip pairs with nothing to trigger, and read the oracle price without panicking on price 0.
 	if !k.clobPairHasTriggerIndexEntries(ctx, uint32(clobPairId)) {
-		return triggeredOrderIds
+		return triggeredOrderIds, 0
 	}
 	perpetualId, oraclePrice, ok := k.getBoundedTriggerOraclePrice(ctx, clobPair)
 	if !ok {
-		return triggeredOrderIds
+		return triggeredOrderIds, 0
 	}
 
 	remaining := budget
 
 	// Trigger conditional orders using the oracle price.
-	triggered := k.triggerCrossedOrdersFromIndex(
+	triggered, priceProcessed := k.triggerCrossedOrdersFromIndex(
 		ctx, clobPairId, oraclePrice, perpetualId, metrics.OraclePrice, remaining,
 	)
 	triggeredOrderIds = append(triggeredOrderIds, triggered...)
-	remaining -= len(triggered)
+	processed += priceProcessed
+	remaining -= priceProcessed
 	if remaining <= 0 {
-		return triggeredOrderIds
+		return triggeredOrderIds, processed
 	}
 
 	// Trigger conditional orders using the clamped trade prices.
@@ -444,28 +476,29 @@ func (k Keeper) triggerPairWithinBudget(
 		oraclePrice,
 	)
 	if found {
-		triggered = k.triggerCrossedOrdersFromIndex(
+		triggered, priceProcessed = k.triggerCrossedOrdersFromIndex(
 			ctx, clobPairId, clampedMinTradePrice, perpetualId, metrics.MinTradePrice, remaining,
 		)
 		triggeredOrderIds = append(triggeredOrderIds, triggered...)
-		remaining -= len(triggered)
+		processed += priceProcessed
+		remaining -= priceProcessed
 
 		if remaining > 0 {
-			triggered = k.triggerCrossedOrdersFromIndex(
+			triggered, priceProcessed = k.triggerCrossedOrdersFromIndex(
 				ctx, clobPairId, clampedMaxTradePrice, perpetualId, metrics.MaxTradePrice, remaining,
 			)
 			triggeredOrderIds = append(triggeredOrderIds, triggered...)
+			processed += priceProcessed
 		}
 	}
 
-	return triggeredOrderIds
+	return triggeredOrderIds, processed
 }
 
 // triggerCrossedOrdersFromIndex performs a crossed-order range scan on the trigger-price index
-// for a single clob pair and price, triggering up to `budget` orders. It returns the list of
-// triggered order ids in the order they were visited (ascending triggerSubticks, then orderId
-// bytes). This is O(crossed) — it reads only the orders whose trigger boundary the given price
-// crosses, not the full untriggered set.
+// for a single clob pair and price, processing up to `budget` entries. Each triggered order and
+// each expired/orphaned index entry removed during traversal consumes one unit of work. It returns
+// the triggered order ids plus the number of entries processed.
 //
 // Pessimistic rounding (matching PollTriggeredConditionalOrders):
 //   - LTE direction: ceil(price) — only trigger if we are sure the price is truly ≤ triggerSubticks.
@@ -480,11 +513,11 @@ func (k Keeper) triggerCrossedOrdersFromIndex(
 	perpetualId uint32,
 	priceType string,
 	budget int,
-) (triggeredOrderIds []types.OrderId) {
+) (triggeredOrderIds []types.OrderId, processed int) {
 	triggeredOrderIds = make([]types.OrderId, 0)
 
-	// Block time is used to skip orders that have passed their GoodTilBlockTime but have not yet
-	// been physically pruned (the expiry drain is budgeted). See conditionalOrderIsExpired.
+	// Block time is the logical validity boundary even if the bounded expiry drain has not yet
+	// physically removed the order from consensus state.
 	blockTime := ctx.BlockTime()
 
 	// Emit the price gauge (mirrors TriggerOrdersWithPrice metric).
@@ -495,26 +528,29 @@ func (k Keeper) triggerCrossedOrdersFromIndex(
 	}
 	metrics.SetGaugeWithLabels(metrics.ClobConditionalOrderTriggerPrice, priceFloat, labels...)
 
-	// LTE-direction: orders trigger when oracle_price ≤ triggerSubticks.
-	// Pessimistic rounding: ceil(price) for the subticks threshold.
-	if budget > 0 {
-		ltePriceSubticks := lib.BigRatRound(price, true).Uint64() // ceil
-		k.IterateCrossedConditionalOrders(
+	scanDirection := func(direction byte, priceSubticks uint64) {
+		if processed >= budget {
+			return
+		}
+		k.iterateCrossedConditionalOrders(
 			ctx,
 			uint32(clobPairId),
-			TriggerDirectionLTE,
-			ltePriceSubticks,
-			func(orderId types.OrderId) bool {
-				if budget <= 0 {
+			direction,
+			priceSubticks,
+			func(orderId types.OrderId, indexKey []byte) bool {
+				if processed >= budget {
 					return false
 				}
-				if k.conditionalOrderIsExpired(ctx, orderId, blockTime) {
-					// this order has passed its GoodTilBlockTime but the budgeted
-					// expiry prune (RemoveExpiredStatefulOrders) has not yet removed it. It is
-					// logically invalid, so it must NOT be triggered. Skip it without consuming the
-					// trigger budget; the expiry drain will physically remove it in a later block.
-					return true
+				processed++
+
+				placement, found := k.GetUntriggeredConditionalOrderPlacement(ctx, orderId)
+				if !found || placement.Order.IsStatefulOrderExpired(blockTime) {
+					// Remove the stale secondary-index entry immediately. The bounded expiry queue
+					// remains responsible for deleting an expired placement from consensus state.
+					k.removeConditionalOrderTriggerPriceIndexEntry(ctx, indexKey)
+					return processed < budget
 				}
+
 				k.MustTriggerConditionalOrder(ctx, orderId)
 				k.GetIndexerEventManager().AddTxnEvent(
 					ctx,
@@ -530,54 +566,17 @@ func (k Keeper) triggerCrossedOrdersFromIndex(
 					append(orderId.GetOrderIdLabels(), labels...)...,
 				)
 				triggeredOrderIds = append(triggeredOrderIds, orderId)
-				budget--
-				return true
+				return processed < budget
 			},
 		)
 	}
 
-	// GTE-direction: orders trigger when oracle_price ≥ triggerSubticks.
-	// Pessimistic rounding: floor(price) for the subticks threshold.
-	if budget > 0 {
-		gtePriceSubticks := lib.BigRatRound(price, false).Uint64() // floor
-		k.IterateCrossedConditionalOrders(
-			ctx,
-			uint32(clobPairId),
-			TriggerDirectionGTE,
-			gtePriceSubticks,
-			func(orderId types.OrderId) bool {
-				if budget <= 0 {
-					return false
-				}
-				if k.conditionalOrderIsExpired(ctx, orderId, blockTime) {
-					// this order has passed its GoodTilBlockTime but the budgeted
-					// expiry prune (RemoveExpiredStatefulOrders) has not yet removed it. It is
-					// logically invalid, so it must NOT be triggered. Skip it without consuming the
-					// trigger budget; the expiry drain will physically remove it in a later block.
-					return true
-				}
-				k.MustTriggerConditionalOrder(ctx, orderId)
-				k.GetIndexerEventManager().AddTxnEvent(
-					ctx,
-					indexerevents.SubtypeStatefulOrder,
-					indexerevents.StatefulOrderEventVersion,
-					indexer_manager.GetBytes(
-						indexerevents.NewConditionalOrderTriggeredEvent(orderId),
-					),
-				)
-				metrics.IncrCountMetricWithLabels(
-					types.ModuleName,
-					metrics.ClobConditionalOrderTriggered,
-					append(orderId.GetOrderIdLabels(), labels...)...,
-				)
-				triggeredOrderIds = append(triggeredOrderIds, orderId)
-				budget--
-				return true
-			},
-		)
-	}
+	// LTE-direction: oracle_price <= triggerSubticks. Pessimistic rounding uses ceil(price).
+	scanDirection(TriggerDirectionLTE, lib.BigRatRound(price, true).Uint64())
+	// GTE-direction: oracle_price >= triggerSubticks. Pessimistic rounding uses floor(price).
+	scanDirection(TriggerDirectionGTE, lib.BigRatRound(price, false).Uint64())
 
-	return triggeredOrderIds
+	return triggeredOrderIds, processed
 }
 
 // TriggerOrdersWithPrice triggers all untriggered conditional orders using the given price. It returns
@@ -625,27 +624,6 @@ func (k Keeper) TriggerOrdersWithPrice(
 		)
 	}
 	return triggeredOrderIds
-}
-
-// conditionalOrderIsExpired reports whether the untriggered conditional order identified by
-// orderId has passed its GoodTilBlockTime as of blockTime (equivalently: whether it would be
-// removed by RemoveExpiredStatefulOrders this block). The expiry prune is budgeted, so an expired
-// order can still be resting in the untriggered store and the trigger-price index; such an order is
-// logically invalid and must not be triggered. An order that is not present in
-// the untriggered store is treated as expired/untriggerable (defensive: the index should never lead
-// the store, but a missing placement must never be triggered).
-func (k Keeper) conditionalOrderIsExpired(
-	ctx sdk.Context,
-	orderId types.OrderId,
-	blockTime time.Time,
-) bool {
-	placement, found := k.GetUntriggeredConditionalOrderPlacement(ctx, orderId)
-	if !found {
-		return true
-	}
-	// Expired iff GoodTilBlockTime <= blockTime. RemoveExpiredStatefulOrders treats an expiration
-	// exactly at blockTime as expired, so this uses the same (inclusive) boundary.
-	return !placement.Order.MustGetUnixGoodTilBlockTime().After(blockTime)
 }
 
 // getBoundedTriggerOraclePrice returns the perpetual id and oracle price (in subticks) for the

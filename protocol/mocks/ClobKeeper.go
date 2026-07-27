@@ -1254,50 +1254,9 @@ func (_m *ClobKeeper) UpdateSubaccountLiquidationInfo(ctx types.Context, subacco
 	_m.Called(ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums)
 }
 
-// BackfillConditionalOrderTriggerPriceIndex provides a mock function with given fields: ctx
-func (_m *ClobKeeper) BackfillConditionalOrderTriggerPriceIndex(ctx types.Context) {
-	_m.Called(ctx)
-}
-
 // SetConditionalOrderTriggerConfigParams provides a mock function
 func (_m *ClobKeeper) SetConditionalOrderTriggerConfigParams(ctx types.Context, enabled bool, maxTriggersPerBlock uint32, maxRemovalsPerBlock uint32, maxUntriggeredConditionalOrdersGlobal uint32, maxUntriggeredConditionalOrdersPerSubaccount uint32) {
 	_m.Called(ctx, enabled, maxTriggersPerBlock, maxRemovalsPerBlock, maxUntriggeredConditionalOrdersGlobal, maxUntriggeredConditionalOrdersPerSubaccount)
-}
-
-// IsConditionalOrderTriggerConfigEnabled provides a mock function with given fields: ctx
-func (_m *ClobKeeper) IsConditionalOrderTriggerConfigEnabled(ctx types.Context) bool {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsConditionalOrderTriggerConfigEnabled")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context) bool); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// GetUntriggeredConditionalOrderCountGlobal provides a mock function with given fields: ctx
-func (_m *ClobKeeper) GetUntriggeredConditionalOrderCountGlobal(ctx types.Context) uint32 {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetUntriggeredConditionalOrderCountGlobal")
-	}
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context) uint32); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	return r0
 }
 
 // NewClobKeeper creates a new instance of ClobKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

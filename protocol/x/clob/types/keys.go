@@ -84,7 +84,8 @@ const (
 	// picked up by getAllOrdersIterator / GetAllStatefulOrders, which would try to unmarshal
 	// the empty-value index entries as LongTermOrderPlacement.
 	// Keys are structured as:
-	//   <prefix> <clobPairId:4 big-endian> <directionByte:1> <triggerSubticks:8 big-endian> <orderId state key>
+	//   <prefix> <clobPairId:4 big-endian> <directionByte:1> <triggerSubticks:8 big-endian>
+	//     <placementSequence:8 big-endian> <orderId state key>
 	// directionByte = 0x00 for LTE-direction (trigger when oracle ≤ triggerPrice)
 	//               = 0x01 for GTE-direction (trigger when oracle ≥ triggerPrice)
 	// triggerSubticks is big-endian so byte ordering is monotonically increasing in price.
@@ -142,9 +143,24 @@ const (
 	// When absent (the default), MaybeTriggerConditionalOrders runs the legacy full-scan
 	// behavior that is byte-for-byte identical to the pre-fix implementation, so the fix can be
 	// shipped on a rolling basis and activated later at a governed height without a version split.
-	// When present and enabled, the bounded crossing-priority path runs. This value is consensus
-	// state (persistent KVStore), so every node agrees deterministically on which path executes.
+	// When present and enabled, incremental activation starts; the bounded crossing-priority path
+	// runs only after ConditionalOrderTriggerIndexReadyKey is set. These values are consensus state,
+	// so every node agrees deterministically on which path executes.
 	ConditionalOrderTriggerConfigKey = "CondTrigCfg"
+
+	// ConditionalOrderTriggerNextClobPairKey stores the clob-pair id at which the next bounded
+	// conditional-order scheduling pass should begin. Rotating this cursor prevents fixed ascending
+	// pair order from starving later markets when the trigger budget is smaller than the number of
+	// active markets.
+	ConditionalOrderTriggerNextClobPairKey = "CondTrigNextPair"
+
+	// ConditionalOrderTriggerIndexActivation* keys persist the incremental trigger-price-index
+	// activation state. The legacy trigger path remains authoritative until ReadyKey is set.
+	ConditionalOrderTriggerIndexActivationPhaseKey   = "CondTrigIdxPhase"
+	ConditionalOrderTriggerIndexActivationCursorKey  = "CondTrigIdxCursor"
+	ConditionalOrderTriggerIndexActivationClearedKey = "CondTrigIdxCleared"
+	ConditionalOrderTriggerIndexActivationIndexedKey = "CondTrigIdxIndexed"
+	ConditionalOrderTriggerIndexReadyKey             = "CondTrigIdxReady"
 )
 
 // Transient Store
