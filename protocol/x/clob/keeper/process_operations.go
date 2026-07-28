@@ -467,6 +467,44 @@ func (k Keeper) PersistOrderRemovalToState(
 	return nil
 }
 
+// matchHasExpiredStatefulOrder reports whether either non-liquidation side of a proposed match
+// references a stateful order whose GoodTilBlockTime has passed as of blockTime.
+//
+// Stateful-order expiry cleanup is budgeted in the EndBlocker, so an order can remain addressable
+// in state after its GoodTilBlockTime — in particular a maker that was valid when the proposer
+// assembled the block can expire before FinalizeBlock. The DeliverTx operations replay skips such a
+// match (see the call sites) rather than aborting the whole proposed-operations transaction, which
+// would roll back every healthy match and liquidation already processed in it.
+func matchHasExpiredStatefulOrder(match *types.MatchWithOrders, blockTime time.Time) bool {
+	for _, matchableOrder := range []types.MatchableOrder{match.TakerOrder, match.MakerOrder} {
+		if matchableOrder == nil || matchableOrder.IsLiquidation() {
+			continue
+		}
+		order := matchableOrder.MustGetOrder()
+		if order.IsStatefulOrderExpired(blockTime) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchOrderIdIsExpiredStateful reports whether orderId refers to a stateful order resting in state
+// whose GoodTilBlockTime has passed as of the current block time. Short-term ids, and ids not
+// resolvable from state, return false. It resolves the order via FetchOrderFromOrderId (the same
+// lookup the match replay uses), so it stays in exact sync with matchHasExpiredStatefulOrder — this
+// is what keeps GenerateProcessProposerMatchesEvents' filled-order set consistent with the matches
+// actually processed (skipped expired matches are excluded from both).
+func (k Keeper) matchOrderIdIsExpiredStateful(ctx sdk.Context, orderId types.OrderId) bool {
+	if !orderId.IsStatefulOrder() {
+		return false
+	}
+	order, err := k.FetchOrderFromOrderId(ctx, orderId, nil)
+	if err != nil {
+		return false
+	}
+	return order.IsStatefulOrderExpired(ctx.BlockTime())
+}
+
 // PersistMatchOrdersToState writes a MatchOrders object to state and emits an onchain
 // indexer event for the match.
 func (k Keeper) PersistMatchOrdersToState(
@@ -517,6 +555,15 @@ func (k Keeper) PersistMatchOrdersToState(
 			MakerOrder: &makerOrder,
 			FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
 		}
+
+		// Skip a match whose taker or maker expired between proposal assembly and FinalizeBlock,
+		// rather than failing the whole proposed-operations tx (which would roll back every healthy
+		// match already processed). The expired order is pruned by the bounded EndBlocker expiry queue.
+		if matchHasExpiredStatefulOrder(&matchWithOrders, ctx.BlockTime()) {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.ProcessOperations, metrics.Expired, metrics.Count)
+			continue
+		}
+
 		makerOrders = append(makerOrders, makerOrder)
 
 		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(
@@ -631,13 +678,21 @@ func (k Keeper) PersistMatchLiquidationToState(
 		if err != nil {
 			return err
 		}
-		makerOrders = append(makerOrders, makerOrder)
 
 		matchWithOrders := types.MatchWithOrders{
 			MakerOrder: &makerOrder,
 			TakerOrder: takerOrder,
 			FillAmount: satypes.BaseQuantums(fill.FillAmount),
 		}
+
+		// Skip a fill whose maker expired between proposal assembly and FinalizeBlock, rather than
+		// failing the whole proposed-operations tx. The expired maker is pruned by the bounded
+		// EndBlocker expiry queue. (The taker is a liquidation order and never expires this way.)
+		if matchHasExpiredStatefulOrder(&matchWithOrders, ctx.BlockTime()) {
+			telemetry.IncrCounter(1, types.ModuleName, metrics.ProcessOperations, metrics.Expired, metrics.Count)
+			continue
+		}
+		makerOrders = append(makerOrders, makerOrder)
 
 		// Write the position updates and state fill amounts for this match.
 		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
@@ -904,19 +959,33 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 	for _, operation := range operations {
 		if operationMatch := operation.GetMatch(); operationMatch != nil {
 			if matchOrders := operationMatch.GetMatchOrders(); matchOrders != nil {
-				// For match order, add taker order id to `seenOrderIdsFilledInLastBlock`
+				// A match that references an expired stateful order (taker or maker) is skipped in
+				// PersistMatchOrdersToState rather than aborting the tx; exclude such fills here so
+				// the filled-order events match the matches actually processed.
 				takerOrderId := matchOrders.GetTakerOrderId()
-				seenOrderIdsFilledInLastBlock[takerOrderId] = struct{}{}
+				takerExpired := k.matchOrderIdIsExpiredStateful(ctx, takerOrderId)
+				takerFilled := false
 				// For each fill of a match order, add maker order id to `seenOrderIdsFilledInLastBlock`
 				for _, fill := range matchOrders.GetFills() {
 					makerOrderId := fill.GetMakerOrderId()
+					if takerExpired || k.matchOrderIdIsExpiredStateful(ctx, makerOrderId) {
+						continue
+					}
 					seenOrderIdsFilledInLastBlock[makerOrderId] = struct{}{}
+					takerFilled = true
+				}
+				// Add the taker only if at least one of its fills was not skipped.
+				if takerFilled {
+					seenOrderIdsFilledInLastBlock[takerOrderId] = struct{}{}
 				}
 			}
 			// For each fill of a perpetual liquidation match, add maker order id to `seenOrderIdsFilledInLastBlock`
 			if perpLiquidationMatch := operationMatch.GetMatchPerpetualLiquidation(); perpLiquidationMatch != nil {
 				for _, fill := range perpLiquidationMatch.GetFills() {
 					makerOrderId := fill.GetMakerOrderId()
+					if k.matchOrderIdIsExpiredStateful(ctx, makerOrderId) {
+						continue
+					}
 					seenOrderIdsFilledInLastBlock[makerOrderId] = struct{}{}
 				}
 			}

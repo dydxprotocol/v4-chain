@@ -1,12 +1,12 @@
 //go:build all || container_test
 
-package v_9_6_test
+package v_9_7_test
 
 import (
 	"testing"
 	"time"
 
-	v_9_6 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.6"
+	v_9_7 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.7"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -26,7 +26,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_9_6.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_9_7.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
@@ -103,7 +103,7 @@ func requireUntriggeredConditionalExists(node *containertest.Node, t *testing.T,
 
 func preUpgradeSetups(node *containertest.Node, t *testing.T) {
 	// Rest an untriggered conditional order on the pre-upgrade (old) binary. The old binary has no
-	// trigger-price index, so this order is the migration's input: the v9.6 upgrade handler must
+	// trigger-price index, so this order is the migration's input: the v9.7 upgrade handler must
 	// build the index from it and preserve it across the state-breaking upgrade.
 	placeAndCommitOrder(node, t, buildRestingConditionalOrder(preExistingConditionalClientId))
 }
@@ -116,7 +116,8 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// 1. Migration integrity: the pre-existing untriggered conditional order survived the
 	//    state-breaking upgrade (its untriggered-store entry — which the migration also indexed —
-	//    was neither lost nor corrupted, and it was not spuriously triggered).
+	//    was neither lost nor corrupted, and it was not spuriously triggered). Without the v9.7
+	//    migration this order would be absent from the new index and could never trigger.
 	requireUntriggeredConditionalExists(node, t, preExistingConditionalClientId)
 
 	// 2. Always-on path on the upgraded binary: a NEW conditional order is admitted (the admission
