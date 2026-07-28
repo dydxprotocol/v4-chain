@@ -141,7 +141,7 @@ const (
 	// ConditionalOrderTriggerConfigKey is the single persistent-store key holding the
 	// consensus-level, governance-tunable budgets and caps for the bounded conditional-order
 	// trigger path. When absent, GetConditionalOrderTriggerConfig returns the package defaults.
-	// The mitigation itself is always active (the trigger-price index is built by the v9.6
+	// The mitigation itself is always active (the trigger-price index is built by the v9.7
 	// state-breaking upgrade); this config only tunes the per-block budgets and admission caps.
 	ConditionalOrderTriggerConfigKey = "CondTrigCfg"
 

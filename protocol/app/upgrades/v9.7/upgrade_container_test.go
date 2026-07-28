@@ -39,11 +39,12 @@ const preExistingConditionalClientId = 0
 const postUpgradeConditionalClientId = 1
 
 // buildRestingConditionalOrder returns a conditional order that provably rests UNTRIGGERED
-// regardless of the exact genesis oracle scale: it is a TAKE_PROFIT BUY (LTE trigger direction —
-// triggers only when the oracle price falls to or below the trigger) with a trigger of 1 subtick,
-// so any positive oracle price stays above it and the order never crosses. GoodTilBlockTime is set
-// an hour into the future so the order survives the (minutes-long) upgrade without expiring.
-// Quantums/Subticks mirror the known-good container place-order test so collateral checks pass.
+// regardless of the exact genesis oracle scale: it is a STOP_LOSS BUY (GTE trigger direction —
+// triggers only when the oracle price rises to or above the trigger) with a trigger far above any
+// realistic price, so the oracle never crosses it. The trigger is a multiple of the ClobPair's
+// SubticksPerTick (validated at placement). GoodTilBlockTime is set an hour into the future so the
+// order survives the (minutes-long) upgrade without expiring. Quantums/Subticks mirror the
+// known-good container place-order test so collateral checks pass.
 func buildRestingConditionalOrder(clientId uint32) clobtypes.Order {
 	return clobtypes.Order{
 		OrderId: clobtypes.OrderId{
@@ -61,8 +62,8 @@ func buildRestingConditionalOrder(clientId uint32) clobtypes.Order {
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
 			GoodTilBlockTime: uint32(time.Now().Unix() + 3600),
 		},
-		ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
-		ConditionalOrderTriggerSubticks: 1,
+		ConditionType:                   clobtypes.Order_CONDITION_TYPE_STOP_LOSS,
+		ConditionalOrderTriggerSubticks: 1_000_000_000_000_000,
 	}
 }
 

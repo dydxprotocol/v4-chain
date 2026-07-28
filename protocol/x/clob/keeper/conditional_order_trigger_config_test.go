@@ -3,7 +3,7 @@ package keeper_test
 // Tests for the governance-tunable conditional-order trigger config and the always-on bounded
 // trigger / expiry paths.
 //
-// The mitigation is activated by the state-breaking v9.6 upgrade and is always on; the config only
+// The mitigation is activated by the state-breaking v9.7 upgrade and is always on; the config only
 // tunes the per-block trigger budget, the per-block expiry-removal budget, and the admission caps.
 //
 // Test groups:

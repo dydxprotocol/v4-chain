@@ -526,7 +526,7 @@ func TestConditionalOrderIndex_CrossedRangeScan(t *testing.T) {
 }
 
 // TestBuildConditionalOrderTriggerPriceIndex verifies the one-shot state-breaking migration that
-// the v9.6 upgrade handler runs: given resting untriggered conditional orders that have NO
+// the v9.7 upgrade handler runs: given resting untriggered conditional orders that have NO
 // trigger-price index entries (the pre-upgrade state), BuildConditionalOrderTriggerPriceIndex
 // reconstructs the index so that every order is present, the build is idempotent, and orders are
 // subsequently triggerable via the index.
