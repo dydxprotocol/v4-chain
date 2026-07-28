@@ -249,9 +249,9 @@ message MsgUpdateConditionalOrderTriggerConfig {
   option (cosmos.msg.v1.signer) = "authority";
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // Field number 2 is reserved: it previously held a `bool enabled` flag used to
-  // gate a rolling deploy. The mitigation is now activated by a state-breaking
-  // upgrade and is always active, so the flag was removed.
+  // Field 2 is reserved: it previously held a `bool enabled` flag. The bounded
+  // trigger path is always active after the v9.7 upgrade, so the flag was
+  // removed.
   reserved 2;
   reserved "enabled";
 
