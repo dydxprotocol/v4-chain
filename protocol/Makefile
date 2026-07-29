@@ -114,9 +114,6 @@ aws-push-dev2:
 aws-push-dev3:
 	./scripts/build-push-ecr.sh dev3
 
-aws-push-dev4:
-	./scripts/build-push-ecr.sh dev4
-
 aws-push-dev5:
 	./scripts/build-push-ecr.sh dev5
 

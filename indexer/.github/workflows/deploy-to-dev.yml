@@ -28,13 +28,6 @@ jobs:
       ENVIRONMENT: dev3
     secrets: inherit
 
-  deploy-to-dev4:
-    name: (Dev4) Deploy indexer
-    uses: ./.github/workflows/reusable-deploy-to-env.yml
-    with:
-      ENVIRONMENT: dev4
-    secrets: inherit
-
   deploy-to-dev5:
     name: (Dev5) Deploy indexer
     uses: ./.github/workflows/reusable-deploy-to-env.yml
