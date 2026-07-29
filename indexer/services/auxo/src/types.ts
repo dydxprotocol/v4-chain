@@ -2,7 +2,7 @@
  * Example of an auxo event json:
 {
   "upgrade_tag": "4aea7a61",
-  "prefix": "dev4",
+  "prefix": "dev5",
   "region": "ap-northeast-1",
   "regionAbbrev": "apne1"
 }

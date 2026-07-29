@@ -19,9 +19,6 @@ elif [ "$1" == "dev2" ]; then
 elif [ "$1" == "dev3" ]; then
 	aws_account="295746761472"
 	ecr_repo="dev3-validator"
-elif [ "$1" == "dev4" ]; then
-	aws_account="525975847385"
-	ecr_repo="dev4-validator"
 elif [ "$1" == "dev5" ]; then
 	aws_account="917958511744"
 	ecr_repo="dev5-validator"
@@ -32,7 +29,7 @@ elif [ "$1" == "testnet" ]; then
 	aws_account="419937869548"
 	ecr_repo="testnet-validator"
 else
-	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev4|dev5|staging)"
+	echo "Usage: build-push-ecr.sh (dev|dev2|dev3|dev5|staging)"
 	exit 1
 fi
 
