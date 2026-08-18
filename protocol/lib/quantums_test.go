@@ -281,3 +281,102 @@ func BenchmarkQuoteToBaseQuantums(b *testing.B) {
 	expected2, _ := new(big.Int).SetString("1494", 10)
 	require.Equal(b, expected2, result2)
 }
+
+func TestBigRatRoundToMultiple(t *testing.T) {
+	tests := map[string]struct {
+		value          *big.Rat
+		multiple       *big.Int
+		roundUp        bool
+		expectedResult *big.Int
+	}{
+		// The fractional part must survive to the rounding decision. In these cases the
+		// floor of the value already sits on a multiple, so discarding it before rounding
+		// leaves the result a full multiple below the value it was asked to round up past.
+		"Rounds up when the value's floor is already a multiple": {
+			value:          big.NewRat(2001, 2), // 1000.5
+			multiple:       big.NewInt(10),
+			roundUp:        true,
+			expectedResult: big.NewInt(1010),
+		},
+		"Rounds up to the next integer when the multiple is one": {
+			value:          big.NewRat(21, 2), // 10.5
+			multiple:       big.NewInt(1),
+			roundUp:        true,
+			expectedResult: big.NewInt(11),
+		},
+		"Rounds a value below the multiple up to the multiple": {
+			value:          big.NewRat(1, 2), // 0.5
+			multiple:       big.NewInt(10),
+			roundUp:        true,
+			expectedResult: big.NewInt(10),
+		},
+		"Rounds up when the value's floor is not a multiple": {
+			value:          big.NewRat(2011, 2), // 1005.5
+			multiple:       big.NewInt(10),
+			roundUp:        true,
+			expectedResult: big.NewInt(1010),
+		},
+		"Rounds down": {
+			value:          big.NewRat(2011, 2), // 1005.5
+			multiple:       big.NewInt(10),
+			roundUp:        false,
+			expectedResult: big.NewInt(1000),
+		},
+		"Leaves an exact multiple unchanged when rounding up": {
+			value:          big.NewRat(1000, 1),
+			multiple:       big.NewInt(10),
+			roundUp:        true,
+			expectedResult: big.NewInt(1000),
+		},
+		"Leaves an exact multiple unchanged when rounding down": {
+			value:          big.NewRat(1000, 1),
+			multiple:       big.NewInt(10),
+			roundUp:        false,
+			expectedResult: big.NewInt(1000),
+		},
+		"Rounds an integer value up to the next multiple": {
+			value:          big.NewRat(7, 1),
+			multiple:       big.NewInt(3),
+			roundUp:        true,
+			expectedResult: big.NewInt(9),
+		},
+		"Rounds an integer value down to the previous multiple": {
+			value:          big.NewRat(7, 1),
+			multiple:       big.NewInt(3),
+			roundUp:        false,
+			expectedResult: big.NewInt(6),
+		},
+		// Rounding up means towards positive infinity, so a negative value rounds
+		// towards zero.
+		"Rounds a negative value up towards zero": {
+			value:          big.NewRat(-2001, 2), // -1000.5
+			multiple:       big.NewInt(10),
+			roundUp:        true,
+			expectedResult: big.NewInt(-1000),
+		},
+		"Rounds a negative value down away from zero": {
+			value:          big.NewRat(-2001, 2), // -1000.5
+			multiple:       big.NewInt(10),
+			roundUp:        false,
+			expectedResult: big.NewInt(-1010),
+		},
+		"Rounds a negative value down when the multiple is one": {
+			value:          big.NewRat(-21, 2), // -10.5
+			multiple:       big.NewInt(1),
+			roundUp:        false,
+			expectedResult: big.NewInt(-11),
+		},
+		"Zero is unchanged": {
+			value:          big.NewRat(0, 1),
+			multiple:       big.NewInt(10),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := lib.BigRatRoundToMultiple(tc.value, tc.multiple, tc.roundUp)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
