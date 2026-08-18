@@ -55,8 +55,13 @@ func (m ClobPairIdFilter) Track(ctx sdk.Context, request types.AuthenticationReq
 }
 
 // Authenticate checks if the message's clob pair ids are in the whitelist.
+//
+// ClobPairIdFilter is a fail-closed whitelist: it only authorizes CLOB
+// messages (MsgPlaceOrder, MsgCancelOrder, MsgBatchCancel) whose clob pair
+// id is in the configured set. Any other message type is rejected. This
+// prevents a delegated key scoped via AllOf([..., ClobPairIdFilter(...)])
+// from being used to authorize unrelated messages.
 func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
-	// Collect the clob pair ids from the request.
 	requestOrderIds := make([]uint32, 0)
 	switch msg := request.Msg.(type) {
 	case *clobtypes.MsgPlaceOrder:
@@ -68,11 +73,13 @@ func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request types.Authentica
 			requestOrderIds = append(requestOrderIds, batch.ClobPairId)
 		}
 	default:
-		// Skip other messages.
-		return nil
+		return errorsmod.Wrapf(
+			types.ErrClobPairIdVerification,
+			"ClobPairIdFilter does not authorize message type %s",
+			sdk.MsgTypeURL(request.Msg),
+		)
 	}
 
-	// Make sure all the clob pair ids are in the whitelist.
 	for _, clobPairId := range requestOrderIds {
 		if _, ok := m.whitelist[clobPairId]; !ok {
 			return errorsmod.Wrapf(
