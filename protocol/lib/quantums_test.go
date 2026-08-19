@@ -288,6 +288,7 @@ func TestBigRatRoundToMultiple(t *testing.T) {
 		multiple       *big.Int
 		roundUp        bool
 		expectedResult *big.Int
+		shouldPanic    bool
 	}{
 		// The fractional part must survive to the rounding decision. In these cases the
 		// floor of the value already sits on a multiple, so discarding it before rounding
@@ -372,9 +373,29 @@ func TestBigRatRoundToMultiple(t *testing.T) {
 			roundUp:        true,
 			expectedResult: big.NewInt(0),
 		},
+		// A zero multiple divides by zero and a negative one reverses the rounding
+		// direction, so both are rejected rather than silently answered.
+		"Panics on a zero multiple": {
+			value:       big.NewRat(21, 2),
+			multiple:    big.NewInt(0),
+			roundUp:     true,
+			shouldPanic: true,
+		},
+		"Panics on a negative multiple": {
+			value:       big.NewRat(21, 2),
+			multiple:    big.NewInt(-10),
+			roundUp:     true,
+			shouldPanic: true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			if tc.shouldPanic {
+				require.Panics(t, func() {
+					lib.BigRatRoundToMultiple(tc.value, tc.multiple, tc.roundUp)
+				})
+				return
+			}
 			result := lib.BigRatRoundToMultiple(tc.value, tc.multiple, tc.roundUp)
 			require.Equal(t, tc.expectedResult, result)
 		})

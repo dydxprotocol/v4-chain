@@ -91,12 +91,18 @@ func QuoteToBaseQuantums(
 
 // BigRatRoundToMultiple rounds a big.Rat to the nearest multiple of the given number.
 // If roundUp is true, it rounds up to the nearest multiple, otherwise it rounds down.
-// This function expects `multiple` to be positive.
+// This function always expects the `multiple` parameter to be positive, otherwise it will panic.
 func BigRatRoundToMultiple(
 	value *big.Rat,
 	multiple *big.Int,
 	roundUp bool,
 ) *big.Int {
+	// A zero multiple divides by zero and a negative one silently reverses the
+	// rounding direction, so reject both up front like BigIntRoundToMultiple does.
+	if multiple.Sign() <= 0 {
+		panic("BigRatRoundToMultiple: multiple must be positive")
+	}
+
 	// Round `value / multiple` to an integer and scale it back up, so that the
 	// fractional part of `value` takes part in the rounding decision. Rounding
 	// `value` to an integer first would discard it, and a value such as `10.5`
