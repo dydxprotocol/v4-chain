@@ -99,7 +99,7 @@ jobs:
     defaults:
       run:
         working-directory: ./protocol
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

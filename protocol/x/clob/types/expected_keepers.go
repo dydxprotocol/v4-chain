@@ -203,6 +203,7 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 type RewardsKeeper interface {
