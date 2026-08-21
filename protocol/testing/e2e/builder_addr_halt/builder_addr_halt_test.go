@@ -199,9 +199,11 @@ func TestBuilderAddrBlocked_MakerSideVariant(t *testing.T) {
 		Subticks:     100_000_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: gtbt},
 	}
-	tApp.CheckTx(testapp.MustMakeCheckTxsWithClobMsg(
+	takerResp := tApp.CheckTx(testapp.MustMakeCheckTxsWithClobMsg(
 		ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(takerBuy),
 	)[0])
+	require.Conditionf(t, takerResp.IsOK,
+		"Honest taker order should succeed. Response: %+v", takerResp)
 
 	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
