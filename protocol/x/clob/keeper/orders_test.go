@@ -10,6 +10,11 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 
 	cmt "github.com/cometbft/cometbft/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 
@@ -1716,6 +1721,161 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			order:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			expectedErr: "trading is disabled for clob pair",
 		},
+		// --- Blocked builder address tests (SEC-76) ---
+		// All 6 blocked module accounts must be rejected.
+		"Fails with blocked builder address: fee_collector": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "blocked module account",
+		},
+		"Fails with blocked builder address: distribution": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress(distrtypes.ModuleName).String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "blocked module account",
+		},
+		"Fails with blocked builder address: bonded_tokens_pool": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "blocked module account",
+		},
+		"Fails with blocked builder address: not_bonded_tokens_pool": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "blocked module account",
+		},
+		"Fails with blocked builder address: ibc transfer": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress(ibctransfertypes.ModuleName).String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "blocked module account",
+		},
+		"Fails with blocked builder address: interchain accounts": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress(icatypes.ModuleName).String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "blocked module account",
+		},
+		// --- Positive cases: valid builder addresses ---
+		"Succeeds with valid non-blocked builder address": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: constants.Carl_Num0.Owner,
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "",
+		},
+		"Succeeds with non-blocked module account (gov) as builder address": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					OrderFlags:   types.OrderIdFlags_LongTerm,
+					ClobPairId:   uint32(0),
+				},
+				Side:         types.Order_SIDE_BUY,
+				Quantums:     12,
+				Subticks:     39,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+				BuilderCodeParameters: &types.BuilderCodeParameters{
+					BuilderAddress: authtypes.NewModuleAddress("gov").String(),
+					FeePpm:         10_000,
+				},
+			},
+			expectedErr: "",
+		},
 	}
 
 	for name, tc := range tests {
@@ -2142,6 +2302,132 @@ func TestInitStatefulOrders(t *testing.T) {
 				len(constants.TestOffchainMessages)*len(expectedPlacedOrders),
 			)
 			memClob.AssertExpectations(t)
+		})
+	}
+}
+
+func TestInitStatefulOrders_SkipsBlockedBuilderAddress(t *testing.T) {
+	feeCollectorAddr := authtypes.NewModuleAddress(authtypes.FeeCollectorName).String()
+
+	// Order with a blocked builder address — should be skipped during init.
+	blockedBuilderOrder := types.Order{
+		OrderId: types.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     99,
+			OrderFlags:   types.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:         types.Order_SIDE_BUY,
+		Quantums:     5,
+		Subticks:     10,
+		GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
+		BuilderCodeParameters: &types.BuilderCodeParameters{
+			BuilderAddress: feeCollectorAddr,
+			FeePpm:         10_000,
+		},
+	}
+	// Valid order — should be placed normally.
+	validOrder := constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25
+
+	tests := map[string]struct {
+		statefulOrdersInState []types.Order
+		// Orders expected to actually be placed on the memclob (blocked ones excluded).
+		expectedPlacedOrders []types.Order
+	}{
+		"Skips order with blocked builder address, places valid order": {
+			statefulOrdersInState: []types.Order{blockedBuilderOrder, validOrder},
+			expectedPlacedOrders:  []types.Order{validOrder},
+		},
+		"Skips order with blocked builder address when it is the only order": {
+			statefulOrdersInState: []types.Order{blockedBuilderOrder},
+			expectedPlacedOrders:  []types.Order{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := &mocks.MemClob{}
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+
+			bankKeeper := &mocks.BankKeeper{}
+			bankKeeper.On("BlockedAddr", mock.MatchedBy(func(addr sdk.AccAddress) bool {
+				return addr.String() == feeCollectorAddr
+			})).Return(true)
+			bankKeeper.On("BlockedAddr", mock.Anything).Return(false)
+
+			indexerEventManager := &mocks.IndexerEventManager{}
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankKeeper, indexerEventManager)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			// Create CLOB pair.
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
+			indexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypePerpetualMarket,
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewPerpetualMarketCreateEvent(
+						0,
+						0,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+						constants.ClobPair_Btc.Status,
+						constants.ClobPair_Btc.QuantumConversionExponent,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+						constants.ClobPair_Btc.SubticksPerTick,
+						constants.ClobPair_Btc.StepBaseQuantums,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
+					),
+				),
+			).Once().Return()
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				ks.Ctx,
+				constants.ClobPair_Btc.Id,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+			)
+			require.NoError(t, err)
+
+			// Write all orders to state.
+			for i, order := range tc.statefulOrdersInState {
+				ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, uint32(i))
+				ks.ClobKeeper.SetStatefulOrderCount(ks.Ctx, order.OrderId.SubaccountId, 0)
+			}
+
+			// Only expect PlaceOrder calls for non-blocked orders.
+			for _, order := range tc.expectedPlacedOrders {
+				memClob.On("PlaceOrder", mock.Anything, order).Return(
+					satypes.BaseQuantums(0),
+					types.Success,
+					constants.TestOffchainUpdates,
+					nil,
+				).Once()
+
+				for _, message := range constants.TestOffchainMessages {
+					indexerEventManager.On("SendOffchainData", message).Return().Once()
+				}
+			}
+
+			// Run InitStatefulOrders — must not panic.
+			ks.ClobKeeper.InitStatefulOrders(ks.Ctx)
+
+			// Verify the blocked order was never placed on the memclob.
+			memClob.AssertExpectations(t)
+			indexerEventManager.AssertExpectations(t)
+			indexerEventManager.AssertNumberOfCalls(
+				t,
+				"SendOffchainData",
+				len(constants.TestOffchainMessages)*len(tc.expectedPlacedOrders),
+			)
 		})
 	}
 }
