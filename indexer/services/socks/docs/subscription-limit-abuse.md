@@ -249,7 +249,7 @@ reaching origin at all, and to make the timeout long enough that a client has to
 - **Counting expression — must repeat host and path:**
 
   ```txt
-  raw.http.host eq "indexer.dydx.trade"
+  http.host eq "indexer.dydx.trade"
   and http.request.uri.path eq "/v4/ws"
   and http.response.code eq 429
   and any(http.response.headers["x-dydx-ratelimit-reason"][*] eq "subscription-limit-abuse")
@@ -259,15 +259,8 @@ reaching origin at all, and to make the timeout long enough that a client has to
   evaluates it independently, so host and path have to be restated or the counter will increment
   on unrelated traffic.
 
-  `raw.http.host` rather than `http.host`, because rate limiting runs in the `http_ratelimit`
-  phase, after Origin Rules run in `http_request_origin`. If an Origin Rule rewrites the `Host`
-  header for this hostname, `http.host` holds the rewritten value by the time the counting
-  expression is evaluated and would silently stop matching, so the counter would never increment
-  and the rule would appear to work while doing nothing. The `raw.` fields are immutable and
-  unaffected by earlier transformations. Confirm whether any Host rewrite exists for this
-  hostname when applying the rule; if `raw.http.host` is unavailable in this phase, drop the host
-  condition and rely on the exact path plus the reason header, both of which are already
-  sufficient to isolate socks.
+  Substitute the hostname for the environment the rule is being applied to. The host condition is
+  belt-and-braces: the exact path and the reason header already isolate socks on their own.
 
   Exact path equality, not a prefix. The ALB routes exactly `/v4/ws` to socks and everything else
   under `/v4/*` to comlink, which runs its own rate limiter and returns its own 429s. A prefix
