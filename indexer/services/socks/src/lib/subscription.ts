@@ -29,9 +29,17 @@ import {
   SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
-import { V4_BLOCK_HEIGHT_ID, V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
+import {
+  RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+  SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+  V4_BLOCK_HEIGHT_ID,
+  V4_MARKETS_ID,
+  WS_CLOSE_CODE_POLICY_VIOLATION,
+  WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
+} from './constants';
 import { BlockedError, InvalidChannelError } from './errors';
 import { RateLimiter } from './rate-limit';
+import { reconnectPenalty } from './reconnect-penalty';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
@@ -43,6 +51,10 @@ const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
 
 const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
+// Single key for the subscription-limit-abuse limiter, so the allowance is spent across every
+// channel and id a connection touches rather than being refreshed per market.
+const SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY: string = 'subscriptionLimitReached';
+
 const CHANNEL_CONNECTION_LIMITS: { [channel: string]: number } = {
   [Channel.V4_ACCOUNTS]: config.V4_ACCOUNTS_CHANNEL_LIMIT,
   [Channel.V4_BLOCK_HEIGHT]: 1,
@@ -53,10 +65,63 @@ const CHANNEL_CONNECTION_LIMITS: { [channel: string]: number } = {
   [Channel.V4_TRADES]: config.V4_TRADES_CHANNEL_LIMIT,
 };
 
+/**
+ * Destroys a websocket without waiting for the close handshake, and records why.
+ *
+ * `terminate` is safe to call on an already-closed socket, so callers do not need to track
+ * whether the peer cooperated.
+ */
+function forceTerminate(ws: WebSocket, connectionId: string, reason: string): void {
+  try {
+    if (ws.readyState === WebSocket.CLOSED) {
+      return;
+    }
+
+    ws.terminate();
+
+    stats.increment(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_force_terminate`,
+      1,
+      undefined,
+      { reason, instance: getInstanceId() },
+    );
+
+    logger.info({
+      at: 'subscription#forceTerminate',
+      message: 'Connection destroyed without a completed close handshake',
+      reason,
+      connectionId,
+    });
+  } catch (error) {
+    logger.info({
+      at: 'subscription#forceTerminate',
+      message: `Failed to terminate connection: ${error.message}`,
+      reason,
+      connectionId,
+    });
+  }
+}
+
 export class Subscriptions {
   private forwardMessage?: (message: MessageToForward, connectionId: string) => number;
   private subscriptionMetricsInterval?: NodeJS.Timeout;
   private subscribeRateLimiter: RateLimiter;
+  private subscriptionLimitReachedRateLimiter: RateLimiter;
+  // Connection id -> epoch. `subscribe` awaits an initial-response fetch, and the connection can
+  // be torn down during that await. The epoch is captured before the await and re-checked after,
+  // so a late-resolving request can tell that the connection it belongs to is gone.
+  private connectionEpochs: Map<string, number>;
+  private nextConnectionEpoch: number;
+  // Connections that exceeded the abuse allowance since the last metrics emit. Counted whether
+  // or not the drop is enabled: the size of this set is how many connections the drop would
+  // disconnect per interval, which is the number that decides whether it is safe to enable.
+  //
+  // Bounded, because entries are retained until the next emit and a client churning connections
+  // would otherwise grow it unchecked -- most easily while the drop is disabled, since then no
+  // reconnect cooldown slows the churn down. Anything past the cap is counted separately rather
+  // than dropped silently, so the gauge is never quietly understated.
+  private subscriptionLimitAbuseCandidates: Set<string>;
+  private subscriptionLimitAbuseOverflow: number;
   public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
   public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
   public subscriptionLists: { [connectionId: string]: Subscription[] };
@@ -70,7 +135,18 @@ export class Subscriptions {
       points: config.RATE_LIMIT_SUBSCRIBE_POINTS,
       durationMs: config.RATE_LIMIT_SUBSCRIBE_DURATION_MS,
     });
+    // Deliberately keyed per-connection rather than per channel+id: a client cycling through
+    // hundreds of distinct markets must trip this, and it is exactly that pattern which
+    // otherwise slips past `subscribeRateLimiter`.
+    this.subscriptionLimitReachedRateLimiter = new RateLimiter({
+      points: config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS,
+      durationMs: config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS,
+    });
     this.subsByChannelByConnectionId = {};
+    this.connectionEpochs = new Map();
+    this.nextConnectionEpoch = 1;
+    this.subscriptionLimitAbuseCandidates = new Set();
+    this.subscriptionLimitAbuseOverflow = 0;
     this.forwardMessage = undefined;
   }
 
@@ -100,11 +176,162 @@ export class Subscriptions {
     return this.subsByChannelByConnectionId[channel][connectionId];
   }
 
+  /**
+   * Records a connection that exceeded the abuse allowance, up to a bounded cardinality.
+   *
+   * Past the cap the connection is counted as overflow instead. Truncating silently would
+   * understate the very gauge used to decide whether the drop is safe to enable, which could turn
+   * a widespread problem into one that looks confined to a handful of clients.
+   */
+  private recordSubscriptionLimitAbuseCandidate(connectionId: string): void {
+    const maxTracked: number = config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS;
+    if (this.subscriptionLimitAbuseCandidates.size < maxTracked) {
+      this.subscriptionLimitAbuseCandidates.add(connectionId);
+      return;
+    }
+
+    if (!this.subscriptionLimitAbuseCandidates.has(connectionId)) {
+      this.subscriptionLimitAbuseOverflow += 1;
+    }
+  }
+
+  /**
+   * Returns the connection's current epoch, assigning one if this is its first subscription.
+   */
+  private currentConnectionEpoch(connectionId: string): number {
+    let epoch: number | undefined = this.connectionEpochs.get(connectionId);
+    if (epoch === undefined) {
+      epoch = this.nextConnectionEpoch;
+      this.nextConnectionEpoch += 1;
+      this.connectionEpochs.set(connectionId, epoch);
+    }
+    return epoch;
+  }
+
+  /**
+   * Whether the connection a request began on has since been torn down.
+   *
+   * `remove` drops the epoch, so any request that captured one before the teardown will see a
+   * mismatch. Without this, an initial-response fetch that resolves after teardown would
+   * recreate the very structures `remove` deleted, and nothing would ever clean them up again.
+   */
+  private isStaleConnection(connectionId: string, epoch: number): boolean {
+    return this.connectionEpochs.get(connectionId) !== epoch;
+  }
+
   public removeSubscriptions(connectionId: string): void {
     Object.keys(this.subsByChannelByConnectionId).forEach((channel) => {
       if (this.subsByChannelByConnectionId[channel][connectionId] !== undefined) {
         delete this.subsByChannelByConnectionId[channel][connectionId];
       }
+    });
+  }
+
+  /**
+   * Drops a connection that keeps re-subscribing after being told it is at the per-connection
+   * subscription limit.
+   *
+   * The client is told, in the close frame and in a final error message, exactly which contract
+   * it violated and how long to wait, so a well-behaved client can correct itself. The client is
+   * also placed in the reconnect penalty box, which makes subsequent handshakes fail with an
+   * HTTP 429 -- the signal Cloudflare can see and escalate on, since it cannot inspect websocket
+   * close frames.
+   *
+   * @param ws websocket connection to drop
+   * @param channel channel whose limit was breached
+   * @param connectionId id of the websocket connection
+   * @param messageId message id for the final error message
+   * @param channelSubscriptionsLimit the limit that was breached
+   * @param retryAfterMs how long the client should wait before retrying
+   */
+  private dropConnectionForSubscriptionLimitAbuse(
+    ws: WebSocket,
+    channel: Channel,
+    connectionId: string,
+    messageId: number,
+    channelSubscriptionsLimit: number,
+    retryAfterMs: number,
+  ): void {
+    const retryAfterSeconds: number = Math.ceil(
+      Math.max(retryAfterMs, config.RECONNECT_PENALTY_MS) / 1000,
+    );
+
+    stats.increment(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_disconnect`,
+      1,
+      undefined,
+      { channel, instance: getInstanceId() },
+    );
+
+    try {
+      sendMessage(
+        ws,
+        connectionId,
+        createErrorMessage(
+          `Repeatedly exceeded the per-connection subscription limit for ${channel} ` +
+          `(limit=${channelSubscriptionsLimit}). Unsubscribe before subscribing again, or open ` +
+          'an additional connection. Closing this connection; reconnecting sooner than ' +
+          `${retryAfterSeconds}s will be refused.`,
+          connectionId,
+          messageId,
+        ),
+      );
+    } catch (error) {
+      logger.info({
+        at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
+        message: `Failed to send subscription limit abuse message: ${error.message}`,
+        connectionId,
+      });
+    }
+
+    reconnectPenalty.penalizeConnection(
+      connectionId,
+      RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+    );
+
+    // Unsubscribe now rather than waiting for the close event. `ws` keeps the socket alive until
+    // the peer acknowledges the close frame, and the message forwarder would otherwise go on
+    // serializing market data for this connection for the whole of that window -- which is the
+    // cost that caused the incident in the first place.
+    this.remove(connectionId);
+
+    try {
+      ws.close(
+        WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
+        JSON.stringify({
+          message: SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+          reason: RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+          retryAfterSeconds,
+        }),
+      );
+    } catch (error) {
+      logger.info({
+        at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
+        message: `Failed to close connection: ${error.message}`,
+        connectionId,
+      });
+      // A close that never happened leaves the abusive connection fully live, so destroy it now
+      // instead of waiting for a handshake that will not complete.
+      forceTerminate(ws, connectionId, 'close_failed');
+      return;
+    }
+
+    // A peer that never returns a close frame keeps its socket -- and its inbound messages --
+    // alive for the `ws` close timeout of 30s. Destroy it well before then. `terminate` is a
+    // no-op once the socket is already closed, so the cooperative case is unaffected.
+    const forceTerminateTimer: NodeJS.Timeout = setTimeout(
+      () => forceTerminate(ws, connectionId, 'close_timeout'),
+      config.SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS,
+    );
+    forceTerminateTimer.unref();
+
+    logger.info({
+      at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
+      message: 'Connection closed for repeatedly exceeding the subscription limit',
+      channel,
+      channelSubscriptionsLimit,
+      retryAfterSeconds,
+      connectionId,
     });
   }
 
@@ -131,6 +358,9 @@ export class Subscriptions {
     batched?: boolean,
     geoOriginHeaders?: GeoOriginHeaders,
   ): Promise<void> {
+    // Captured before the initial-response await so that a late resolution can detect that the
+    // connection was torn down while it was in flight.
+    const connectionEpoch: number = this.currentConnectionEpoch(connectionId);
     const activeSubscriptions = this.incrementSubscriptions(channel, connectionId);
 
     if (this.forwardMessage === undefined) {
@@ -161,6 +391,34 @@ export class Subscriptions {
         undefined,
         { channel, instance: getInstanceId() },
       );
+
+      // Being at the limit is a normal condition and is answered with an error. Repeatedly
+      // hitting it is not: it means the client is retrying instead of respecting the limit, and
+      // answering it again just funds the retry loop. Past the allowance, drop the connection.
+      // Evaluated even when the drop is disabled, so that the number of connections this would
+      // affect can be measured in production before anyone turns it on.
+      const limitAbuseDurationMs: number = this.subscriptionLimitReachedRateLimiter.rateLimit({
+        connectionId,
+        key: SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY,
+      });
+
+      if (limitAbuseDurationMs > 0) {
+        this.recordSubscriptionLimitAbuseCandidate(connectionId);
+      }
+
+      if (limitAbuseDurationMs > 0 && config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED) {
+        this.dropConnectionForSubscriptionLimitAbuse(
+          ws,
+          channel,
+          connectionId,
+          messageId,
+          channelSubscriptionsLimit,
+          limitAbuseDurationMs,
+        );
+        // No decrement here: the drop tears the connection down entirely, and decrementing
+        // afterwards would recreate the zero-valued counter that teardown just deleted.
+        return;
+      }
 
       sendMessage(
         ws,
@@ -212,6 +470,11 @@ export class Subscriptions {
     try {
       initialResponse = await this.getInitialResponsesForChannels(channel, id, geoOriginHeaders);
     } catch (error) {
+      if (this.isStaleConnection(connectionId, connectionEpoch)) {
+        // The connection is already gone; do not touch its counters or write to its socket.
+        return;
+      }
+
       logger.info({
         at: 'Subscription#subscribe',
         message: `Making initial request threw error: ${error.message}`,
@@ -258,6 +521,26 @@ export class Subscriptions {
         undefined,
         { channel, instance: getInstanceId() },
       );
+    }
+
+    // The connection may have been dropped or disconnected while the initial response was in
+    // flight. Everything below recreates subscription state, so bail before it resurrects a
+    // connection that has already been cleaned up and will never be cleaned up again.
+    if (this.isStaleConnection(connectionId, connectionEpoch)) {
+      stats.increment(
+        `${config.SERVICE_NAME}.subscription_abandoned_stale_connection`,
+        1,
+        undefined,
+        { channel, instance: getInstanceId() },
+      );
+
+      logger.info({
+        at: 'Subscription#subscribe',
+        message: 'Abandoned subscription for a connection that was removed while in flight',
+        channel,
+        connectionId,
+      });
+      return;
     }
 
     const subscription: Subscription = {
@@ -415,6 +698,12 @@ export class Subscriptions {
     }
     this.removeSubscriptions(connectionId);
     this.subscribeRateLimiter.removeConnection(connectionId);
+    this.subscriptionLimitReachedRateLimiter.removeConnection(connectionId);
+    // Invalidate any subscribe request still awaiting its initial response.
+    this.connectionEpochs.delete(connectionId);
+    // Deliberately not pruning subscriptionLimitAbuseCandidates here. The drop itself calls this
+    // method, so removing the entry would undercount exactly the connections being measured. The
+    // set is cleared wholesale on every metrics emit, so it stays bounded either way.
   }
 
   /**
@@ -753,6 +1042,27 @@ export class Subscriptions {
       });
 
     const instanceId = getInstanceId();
+
+    // Distinct connections over the abuse allowance this interval. Compare against
+    // num_concurrent_connections: a handful means the behaviour is confined to a few bad
+    // clients and the drop is safe to enable; a large fraction means it is not.
+    stats.gauge(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_connections`,
+      this.subscriptionLimitAbuseCandidates.size,
+      {
+        enforcing: String(config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED),
+        instance: instanceId,
+      },
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_connections_overflow`,
+      this.subscriptionLimitAbuseOverflow,
+      {
+        instance: instanceId,
+      },
+    );
+    this.subscriptionLimitAbuseCandidates.clear();
+    this.subscriptionLimitAbuseOverflow = 0;
 
     Object.entries(maxSubscriptionsByChannel).forEach(([channel, count]) => {
       stats.gauge(

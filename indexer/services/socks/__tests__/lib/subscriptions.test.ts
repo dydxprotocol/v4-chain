@@ -21,6 +21,12 @@ import {
   AxiosSafeServerError, makeAxiosSafeServerError, stats, setInstanceId,
 } from '@dydxprotocol-indexer/base';
 import { BlockedError } from '../../src/lib/errors';
+import {
+  RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+  SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+  WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
+} from '../../src/lib/constants';
+import { reconnectPenalty } from '../../src/lib/reconnect-penalty';
 import config from '../../src/config';
 
 import 'jest-extended';
@@ -45,6 +51,11 @@ describe('Subscriptions', () => {
   let axiosRequestMock: jest.Mock;
 
   const connectionId: string = 'connectionId';
+  const clientIp: string = '203.0.113.7';
+  const validTickers: string[] = [btcTicker, ethTicker];
+  const defaultDropEnabled: boolean = config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED;
+  const defaultAbusePoints: number = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+  const defaultMaxTrackedConns: number = config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS;
   const initialMsgId: number = 1;
   const defaultId: string = 'id';
   const defaultId1: string = 'id1';
@@ -124,6 +135,9 @@ describe('Subscriptions', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = true;
+    // Keep the allowance small so the tests stay fast and independent of the production default.
+    config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS = 5;
     (WebSocket as unknown as jest.Mock).mockClear();
     subscriptions = new Subscriptions();
     subscriptions.start(jest.fn());
@@ -141,6 +155,10 @@ describe('Subscriptions', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = defaultDropEnabled;
+    config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS = defaultAbusePoints;
+    config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = defaultMaxTrackedConns;
+    reconnectPenalty.clear();
     decrementSubscriptionsSpy.mockRestore();
     incrementSubscriptionsSpy.mockRestore();
     removeSubscriptionsSpy.mockRestore();
@@ -318,6 +336,587 @@ describe('Subscriptions', () => {
 
       expect(decrementSubscriptionsSpy).toHaveBeenCalledTimes(2);
       expect(decrementSubscriptionsSpy).toHaveBeenCalledWith(Channel.V4_ACCOUNTS, connectionId);
+    });
+
+    it('drops the connection once the subscription limit is hit repeatedly', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      // Every hit up to the allowance is answered with an ordinary error, connection intact.
+      for (let i = 0; i < allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+      expect(mockWs.close).not.toHaveBeenCalled();
+      expect(reconnectPenalty.getRemainingPenaltyMs(clientIp)).toEqual(0);
+
+      // The hit past the allowance drops the connection instead.
+      await subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ORDERBOOK,
+        connectionId,
+        initialMsgId + allowedHits,
+        validTickers[allowedHits % validTickers.length],
+        false,
+      );
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+      const [closeCode, closeReason] = (mockWs.close as jest.Mock).mock.calls[0];
+      expect(closeCode).toEqual(WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE);
+      expect(JSON.parse(closeReason)).toEqual(expect.objectContaining({
+        message: SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+        reason: RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+      }));
+      expect(JSON.parse(closeReason).retryAfterSeconds).toBeGreaterThan(0);
+    });
+
+    it('tells the client why it was dropped and when it may reconnect', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(sendMessageMock).toHaveBeenLastCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Repeatedly exceeded the per-connection subscription limit for ${Channel.V4_ORDERBOOK}`,
+          ),
+        }),
+      );
+      expect(sendMessageMock).toHaveBeenLastCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining('will be refused'),
+        }),
+      );
+    });
+
+    it('penalises the dropped client so its reconnect handshake is refused', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(reconnectPenalty.getRemainingPenaltyMs(clientIp)).toBeGreaterThan(0);
+    });
+
+    it('spends the allowance across channels, not per channel', async () => {
+      // The incident pattern: a client cycling through many distinct channels and markets. The
+      // per-channel+id subscribe limiter never trips on this, so the abuse limiter must.
+      incrementSubscriptionsSpy.mockImplementation(() => 1000);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      const channels = [Channel.V4_ORDERBOOK, Channel.V4_TRADES];
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          channels[i % channels.length],
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+      expect((mockWs.close as jest.Mock).mock.calls[0][0])
+        .toEqual(WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE);
+    });
+
+    it('is inert when the drop flag is disabled', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      // Well past the allowance; without the flag this must stay at the old behaviour.
+      for (let i = 0; i < config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS * 4; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).not.toHaveBeenCalled();
+      expect(mockWs.terminate).not.toHaveBeenCalled();
+      expect(reconnectPenalty.getRemainingPenaltyMs(clientIp)).toEqual(0);
+      expect(sendMessageMock).toHaveBeenLastCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining('Per-connection subscription limit reached'),
+        }),
+      );
+    });
+
+    it('unsubscribes the connection immediately rather than waiting for the close event', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const removeSpy = jest.spyOn(Subscriptions.prototype, 'remove');
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      // Otherwise the forwarder keeps serializing market data for this connection for the whole
+      // of the ws close-handshake window.
+      expect(removeSpy).toHaveBeenCalledWith(connectionId);
+      removeSpy.mockRestore();
+    });
+
+    it('destroys the socket if the close handshake cannot be initiated', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      (mockWs.close as jest.Mock).mockImplementation(() => {
+        throw new Error('socket already destroyed');
+      });
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      // A close that never happened would otherwise leave the abusive connection fully live.
+      expect(mockWs.terminate).toHaveBeenCalledTimes(1);
+    });
+
+    it('destroys the socket when the peer never completes the close handshake', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.terminate).not.toHaveBeenCalled();
+
+      // ws would otherwise wait 30s before destroying an uncooperative peer.
+      jest.advanceTimersByTime(config.SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS);
+
+      expect(mockWs.terminate).toHaveBeenCalledTimes(1);
+    });
+
+    it('counts connections that would be dropped even while the drop is disabled', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      // Nothing was disconnected, but the connection is counted so the blast radius of enabling
+      // the drop can be measured in production first.
+      expect(mockWs.close).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        1,
+        expect.objectContaining({ enforcing: 'false' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('counts distinct connections, not individual rejections', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      // Two connections, each well past the allowance.
+      for (const id of ['connA', 'connB']) {
+        for (let i = 0; i <= allowedHits * 2; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        2,
+        expect.objectContaining({ enforcing: 'false' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('still counts a connection that the drop disconnected', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+      // The drop tears the connection down, which must not erase it from the measurement.
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        1,
+        expect.objectContaining({ enforcing: 'true' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('bounds how many connections it tracks and counts the rest as overflow', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = 2;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      // Four distinct connections all exceed the allowance; only two fit.
+      for (const id of ['connA', 'connB', 'connC', 'connD']) {
+        for (let i = 0; i <= allowedHits; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        2,
+        expect.objectContaining({ enforcing: 'false' }),
+      );
+      // The excess is reported rather than silently dropped, so the gauge is never read as
+      // "only two connections affected" when in fact there were four.
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections_overflow',
+        2,
+        expect.objectContaining({ instance: expect.any(String) }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('does not count a repeat offender past the cap as new overflow', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = 1;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      // connA fills the single slot, then keeps offending; it must not inflate overflow.
+      for (const id of ['connA', 'connA', 'connA']) {
+        for (let i = 0; i <= allowedHits; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections_overflow',
+        0,
+        expect.objectContaining({ instance: expect.any(String) }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('resets the overflow count each interval', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = 1;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (const id of ['connA', 'connB']) {
+        for (let i = 0; i <= allowedHits; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections_overflow',
+        0,
+        expect.objectContaining({ instance: expect.any(String) }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('leaves no counter entry behind immediately after the drop', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+
+      // Asserted before any close-event cleanup: the drop must leave the connection fully torn
+      // down on its own, not rely on a later pass to tidy up after it.
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_ORDERBOOK]?.[connectionId])
+        .toBeUndefined();
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+    });
+
+    it('does not resurrect subscription state when a drop lands mid initial-response', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+
+      // Hold the initial response open so the subscribe is still in flight when the drop lands.
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ORDERBOOK,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      // A later request trips the abuse limiter and tears the connection down.
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + 1 + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+
+      // Socket-close cleanup runs, as it would on the close event.
+      subscriptions.remove(connectionId);
+
+      // Only now does the in-flight request resolve.
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      // Nothing may have been recreated: after cleanup there is no later cleanup to undo it, so
+      // any resurrected entry would forward and serialize for a dead connection forever.
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+      const orderbookSubs = subscriptions.subscriptions[Channel.V4_ORDERBOOK] ?? {};
+      Object.values(orderbookSubs).forEach((subs) => {
+        expect(subs.map((sub) => sub.connectionId)).not.toContain(connectionId);
+      });
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_ORDERBOOK]?.[connectionId])
+        .toBeUndefined();
+    });
+
+    it('does not resurrect subscription state when the client disconnects mid initial-response', async () => {
+      // The same race on the ordinary disconnect path, which predates the abuse drop.
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      subscriptions.remove(connectionId);
+
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+      const tradeSubs = subscriptions.subscriptions[Channel.V4_TRADES] ?? {};
+      Object.values(tradeSubs).forEach((subs) => {
+        expect(subs.map((sub) => sub.connectionId)).not.toContain(connectionId);
+      });
+    });
+
+    it('still completes a subscription that is not interrupted', async () => {
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      expect(subscriptions.subscriptionLists[connectionId]).toHaveLength(1);
+    });
+
+    it('keeps the close reason within the websocket 123 byte limit', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      // ws throws if the close reason exceeds 123 bytes, which would downgrade this to a reasonless
+      // 1006 and lose the explanation the client needs.
+      const closeReason: string = (mockWs.close as jest.Mock).mock.calls[0][1];
+      expect(Buffer.byteLength(closeReason)).toBeLessThanOrEqual(123);
     });
 
     it('sends error message if rate limit exceeded', async () => {

@@ -22,6 +22,14 @@ jest.mock('../../src/helpers/wss');
 jest.mock('../../src/lib/subscription');
 jest.mock('../../src/lib/invalid-message');
 
+function setReadyState(ws: WebSocket, readyState: number): void {
+  Object.defineProperty(ws, 'readyState', {
+    value: readyState,
+    configurable: true,
+    writable: true,
+  });
+}
+
 describe('Index', () => {
   let index: Index;
   let mockWss: Wss;
@@ -58,6 +66,9 @@ describe('Index', () => {
     (sendMessage as unknown as jest.Mock).mockClear();
     mockWss = new Wss();
     websocket = new WebSocket(null as any as string, [], { autoPong: true } as any);
+    // A connection handed to `Index` by the ws server is always OPEN. The bare constructor used
+    // here leaves it CONNECTING, which would trip the guard that drops work for doomed sockets.
+    setReadyState(websocket, WebSocket.OPEN);
     wsCloseSpy = jest.spyOn(websocket, 'close');
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
@@ -244,6 +255,54 @@ describe('Index', () => {
             type: OutgoingMessageType.UNSUBSCRIBED,
           },
         );
+      });
+    });
+
+    describe('doomed connections', () => {
+      it('does no work for a peer that ignores the close frame and keeps sending', () => {
+        (mockSub.subscribe as jest.Mock).mockClear();
+        invalidMsgHandlerSpy.mockClear();
+
+        // The server has sent a close frame; `ws` keeps delivering the peer's messages until the
+        // close handshake completes or times out.
+        setReadyState(websocket, WebSocket.CLOSING);
+
+        const subMessage = {
+          type: IncomingMessageType.SUBSCRIBE,
+          channel: Channel.V4_TRADES,
+          id: 'BTC-USD',
+        };
+        for (let i = 0; i < 25; i += 1) {
+          websocket.emit(WebsocketEvent.MESSAGE, JSON.stringify(subMessage));
+        }
+
+        expect(mockSub.subscribe).not.toHaveBeenCalled();
+        expect(mockSub.unsubscribe).not.toHaveBeenCalled();
+        expect(invalidMsgHandlerSpy).not.toHaveBeenCalled();
+      });
+
+      it('does not parse payloads from a socket that is no longer open', () => {
+        invalidMsgHandlerSpy.mockClear();
+
+        setReadyState(websocket, WebSocket.CLOSING);
+
+        // Malformed payloads would normally reach the invalid-message handler and spend its
+        // allowance; a doomed connection must not get that far.
+        websocket.emit(WebsocketEvent.MESSAGE, 'not json at all');
+
+        expect(invalidMsgHandlerSpy).not.toHaveBeenCalled();
+      });
+
+      it('still serves a healthy connection', () => {
+        (mockSub.subscribe as jest.Mock).mockClear();
+
+        websocket.emit(WebsocketEvent.MESSAGE, JSON.stringify({
+          type: IncomingMessageType.SUBSCRIBE,
+          channel: Channel.V4_TRADES,
+          id: 'BTC-USD',
+        }));
+
+        expect(mockSub.subscribe).toHaveBeenCalledTimes(1);
       });
     });
 
