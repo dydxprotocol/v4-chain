@@ -130,6 +130,46 @@ describe('ReconnectPenalty', () => {
     expect(penalty.getRemainingPenaltyMs('203.0.113.19')).toBeGreaterThan(0);
   });
 
+  it('still evicts a client that was penalised more than once', () => {
+    // Map.set on an existing key updates in place and does NOT move it to the back, so a naive
+    // refresh would leave an entry holding a later expiry at an earlier position and defeat the
+    // front-to-back sweep. Re-penalising must re-anchor the entry.
+    config.RECONNECT_PENALTY_MAX_TRACKED_CLIENTS = 3;
+
+    penalty.penalizeClient('203.0.113.1', reason);
+    advanceTime(1);
+    penalty.penalizeClient('203.0.113.2', reason);
+    advanceTime(1);
+    // Re-penalise the oldest entry; it must now be the newest.
+    penalty.penalizeClient('203.0.113.1', reason);
+    advanceTime(1);
+
+    penalty.penalizeClient('203.0.113.3', reason);
+    advanceTime(1);
+    penalty.penalizeClient('203.0.113.4', reason);
+
+    // 203.0.113.2 is now the oldest and should have been evicted first, not the re-penalised .1
+    expect(penalty.getRemainingPenaltyMs('203.0.113.1')).toBeGreaterThan(0);
+    expect(penalty.getRemainingPenaltyMs('203.0.113.2')).toEqual(0);
+  });
+
+  it('sweeps expired entries rather than letting them accumulate', () => {
+    config.RECONNECT_PENALTY_MAX_TRACKED_CLIENTS = 1000;
+
+    for (let i = 0; i < 5; i += 1) {
+      penalty.penalizeClient(`198.51.100.${i}`, reason);
+    }
+
+    // Everything above has expired; a later penalty should reclaim it without a full scan.
+    advanceTime(config.RECONNECT_PENALTY_MS + 1);
+    penalty.penalizeClient('203.0.113.200', reason);
+
+    for (let i = 0; i < 5; i += 1) {
+      expect(penalty.getRemainingPenaltyMs(`198.51.100.${i}`)).toEqual(0);
+    }
+    expect(penalty.getRemainingPenaltyMs('203.0.113.200')).toBeGreaterThan(0);
+  });
+
   it('clears all state', () => {
     penalty.trackConnection(connectionId, clientIp);
     penalty.penalizeConnection(connectionId, reason);

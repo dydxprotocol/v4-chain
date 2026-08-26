@@ -562,6 +562,133 @@ describe('Subscriptions', () => {
       expect(mockWs.terminate).toHaveBeenCalledTimes(1);
     });
 
+    it('does not resurrect subscription state when a drop lands mid initial-response', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+
+      // Hold the initial response open so the subscribe is still in flight when the drop lands.
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ORDERBOOK,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      // A later request trips the abuse limiter and tears the connection down.
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + 1 + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+
+      // Socket-close cleanup runs, as it would on the close event.
+      subscriptions.remove(connectionId);
+
+      // Only now does the in-flight request resolve.
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      // Nothing may have been recreated: after cleanup there is no later cleanup to undo it, so
+      // any resurrected entry would forward and serialize for a dead connection forever.
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+      const orderbookSubs = subscriptions.subscriptions[Channel.V4_ORDERBOOK] ?? {};
+      Object.values(orderbookSubs).forEach((subs) => {
+        expect(subs.map((sub) => sub.connectionId)).not.toContain(connectionId);
+      });
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_ORDERBOOK]?.[connectionId])
+        .toBeUndefined();
+    });
+
+    it('does not resurrect subscription state when the client disconnects mid initial-response', async () => {
+      // The same race on the ordinary disconnect path, which predates the abuse drop.
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      subscriptions.remove(connectionId);
+
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+      const tradeSubs = subscriptions.subscriptions[Channel.V4_TRADES] ?? {};
+      Object.values(tradeSubs).forEach((subs) => {
+        expect(subs.map((sub) => sub.connectionId)).not.toContain(connectionId);
+      });
+    });
+
+    it('still completes a subscription that is not interrupted', async () => {
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      expect(subscriptions.subscriptionLists[connectionId]).toHaveLength(1);
+    });
+
+    it('keeps the close reason within the websocket 123 byte limit', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      // ws throws if the close reason exceeds 123 bytes, which would downgrade this to a reasonless
+      // 1006 and lose the explanation the client needs.
+      const closeReason: string = (mockWs.close as jest.Mock).mock.calls[0][1];
+      expect(Buffer.byteLength(closeReason)).toBeLessThanOrEqual(123);
+    });
+
     it('sends error message if rate limit exceeded', async () => {
       rateLimiterSpy.mockImplementation(() => 1);
       await subscriptions.subscribe(

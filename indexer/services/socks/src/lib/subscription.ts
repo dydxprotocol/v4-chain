@@ -107,6 +107,11 @@ export class Subscriptions {
   private subscriptionMetricsInterval?: NodeJS.Timeout;
   private subscribeRateLimiter: RateLimiter;
   private subscriptionLimitReachedRateLimiter: RateLimiter;
+  // Connection id -> epoch. `subscribe` awaits an initial-response fetch, and the connection can
+  // be torn down during that await. The epoch is captured before the await and re-checked after,
+  // so a late-resolving request can tell that the connection it belongs to is gone.
+  private connectionEpochs: Map<string, number>;
+  private nextConnectionEpoch: number;
   public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
   public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
   public subscriptionLists: { [connectionId: string]: Subscription[] };
@@ -128,6 +133,8 @@ export class Subscriptions {
       durationMs: config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS,
     });
     this.subsByChannelByConnectionId = {};
+    this.connectionEpochs = new Map();
+    this.nextConnectionEpoch = 1;
     this.forwardMessage = undefined;
   }
 
@@ -155,6 +162,30 @@ export class Subscriptions {
       this.subsByChannelByConnectionId[channel][connectionId] = 0;
     }
     return this.subsByChannelByConnectionId[channel][connectionId];
+  }
+
+  /**
+   * Returns the connection's current epoch, assigning one if this is its first subscription.
+   */
+  private currentConnectionEpoch(connectionId: string): number {
+    let epoch: number | undefined = this.connectionEpochs.get(connectionId);
+    if (epoch === undefined) {
+      epoch = this.nextConnectionEpoch;
+      this.nextConnectionEpoch += 1;
+      this.connectionEpochs.set(connectionId, epoch);
+    }
+    return epoch;
+  }
+
+  /**
+   * Whether the connection a request began on has since been torn down.
+   *
+   * `remove` drops the epoch, so any request that captured one before the teardown will see a
+   * mismatch. Without this, an initial-response fetch that resolves after teardown would
+   * recreate the very structures `remove` deleted, and nothing would ever clean them up again.
+   */
+  private isStaleConnection(connectionId: string, epoch: number): boolean {
+    return this.connectionEpochs.get(connectionId) !== epoch;
   }
 
   public removeSubscriptions(connectionId: string): void {
@@ -296,6 +327,9 @@ export class Subscriptions {
     batched?: boolean,
     geoOriginHeaders?: GeoOriginHeaders,
   ): Promise<void> {
+    // Captured before the initial-response await so that a late resolution can detect that the
+    // connection was torn down while it was in flight.
+    const connectionEpoch: number = this.currentConnectionEpoch(connectionId);
     const activeSubscriptions = this.incrementSubscriptions(channel, connectionId);
 
     if (this.forwardMessage === undefined) {
@@ -400,6 +434,11 @@ export class Subscriptions {
     try {
       initialResponse = await this.getInitialResponsesForChannels(channel, id, geoOriginHeaders);
     } catch (error) {
+      if (this.isStaleConnection(connectionId, connectionEpoch)) {
+        // The connection is already gone; do not touch its counters or write to its socket.
+        return;
+      }
+
       logger.info({
         at: 'Subscription#subscribe',
         message: `Making initial request threw error: ${error.message}`,
@@ -446,6 +485,26 @@ export class Subscriptions {
         undefined,
         { channel, instance: getInstanceId() },
       );
+    }
+
+    // The connection may have been dropped or disconnected while the initial response was in
+    // flight. Everything below recreates subscription state, so bail before it resurrects a
+    // connection that has already been cleaned up and will never be cleaned up again.
+    if (this.isStaleConnection(connectionId, connectionEpoch)) {
+      stats.increment(
+        `${config.SERVICE_NAME}.subscription_abandoned_stale_connection`,
+        1,
+        undefined,
+        { channel, instance: getInstanceId() },
+      );
+
+      logger.info({
+        at: 'Subscription#subscribe',
+        message: 'Abandoned subscription for a connection that was removed while in flight',
+        channel,
+        connectionId,
+      });
+      return;
     }
 
     const subscription: Subscription = {
@@ -604,6 +663,8 @@ export class Subscriptions {
     this.removeSubscriptions(connectionId);
     this.subscribeRateLimiter.removeConnection(connectionId);
     this.subscriptionLimitReachedRateLimiter.removeConnection(connectionId);
+    // Invalidate any subscribe request still awaiting its initial response.
+    this.connectionEpochs.delete(connectionId);
   }
 
   /**

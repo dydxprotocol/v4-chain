@@ -55,6 +55,14 @@ forced-termination fallback. Inbound messages are discarded without being parsed
 is no longer `OPEN`, so a client that ignores the close frame gets no further work done on its
 behalf.
 
+A subscribe request that is already awaiting its initial response from comlink when the drop
+lands is invalidated rather than allowed to complete. Every connection carries an epoch that is
+captured before the await and re-checked after it; teardown drops the epoch. Without that check
+a late-resolving request would recreate the exact structures teardown had just deleted, and
+because teardown has already run, nothing would ever clean them up — leaving a dead connection
+being serialized for indefinitely. The same race exists on the ordinary disconnect path and is
+covered by the same guard.
+
 ### 2. The client is refused at the handshake for a cooldown
 
 A websocket close frame is invisible to Cloudflare — it proxies the tunnelled connection but does
@@ -74,6 +82,13 @@ x-dydx-ratelimit-reason: subscription-limit-abuse
 That gives three things at once: a well-behaved client learns exactly how long to wait without
 needing any Cloudflare involvement; the offending client cannot immediately re-establish and
 resume hammering; and Cloudflare gets a countable, matchable signal.
+
+The fixed cooldown is deliberate. A self-clearing, rate-proportional penalty is generally
+preferable — AWS WAF's rate-based rules and Cloudflare's `mitigation_timeout: 0` both work that
+way — but it is not available at this layer: a rate cannot be measured for a connection that is
+being refused before it is accepted. A hard stop is required, and Kraken makes the same call at
+the same layer, banning a client IP for 10 minutes after too many connection attempts. 30s is
+deliberately at the conservative end of the range implied by comparable systems.
 
 The penalty is per-instance and in-memory by design. Its job is to stop one instance being
 monopolised and to emit the edge signal. Cross-instance enforcement belongs at the edge, below.
@@ -107,6 +122,14 @@ cooldown, since a client only ever enters it by being dropped.
 
 ### Note on shared addresses
 
+Scoping abuse enforcement to a client address is a known-imperfect fallback, and both Cloudflare
+and Google Cloud publish that caveat: a shared NAT or VPN egress pools unrelated users into one
+bucket, and an attacker with an address range can rotate out of it. The accepted mitigation is to
+key on an authenticated principal where one exists and fall back to address only where none does.
+socks has no credential at the handshake, so address is the only key available at that point —
+which is why the cooldown is deliberately short and confined to connection establishment rather
+than applied to ongoing usage.
+
 The penalty is applied per client address. Clients behind a shared NAT or corporate egress can
 therefore be caught by another party's behaviour. The 30s default and the requirement that a
 single *connection* first exceed its allowance keep this narrow, and
@@ -126,6 +149,7 @@ penalty enabled and watch `socks.connection_rejected_penalty`; a rate much highe
 
 | `socks.subscriptions_limit_abuse_force_terminate` | `reason`, `instance` | A dropped socket was destroyed without a completed close handshake |
 | `socks.message_dropped_not_open` | `readyState`, `instance` | An inbound message was discarded because the socket was no longer open |
+| `socks.subscription_abandoned_stale_connection` | `channel`, `instance` | An initial response resolved after its connection was torn down |
 
 Drops also appear on the existing `socks.num_disconnects` counter tagged `code: "4008"`.
 
@@ -146,13 +170,13 @@ reaching origin at all, and to make the timeout long enough that a client has to
 
 **Rate limiting rule — "socks subscription-limit abuse"**
 
-- Match: `(http.host eq "indexer.dydx.trade" and starts_with(http.request.uri.path, "/v4/ws"))`
+- Match: `(http.host eq "indexer.dydx.trade" and http.request.uri.path eq "/v4/ws")`
 - Counting characteristic: client IP
 - **Counting expression — must repeat host and path:**
 
   ```
   http.host eq "indexer.dydx.trade"
-  and starts_with(http.request.uri.path, "/v4/ws")
+  and http.request.uri.path eq "/v4/ws"
   and http.response.code eq 429
   and any(http.response.headers["x-dydx-ratelimit-reason"][*] eq "subscription-limit-abuse")
   ```
@@ -161,12 +185,14 @@ reaching origin at all, and to make the timeout long enough that a client has to
   evaluates it independently, so host and path have to be restated or the counter will increment
   on unrelated traffic.
 
-  The reason header is not optional hardening here, it is what makes the rule correct. The ALB
-  routes exactly `/v4/ws` to socks and everything else under `/v4/*` to comlink, which runs its
-  own rate limiter and returns its own 429s. A counting expression of "status 429" alone — or one
-  scoped only by a `/v4/ws` prefix, which still covers `/v4/ws...` paths the ALB hands to comlink
-  — would count comlink's rate-limit responses and block those clients out of the websocket
-  entirely. socks is the only origin that emits this header.
+  Exact path equality, not a prefix. The ALB routes exactly `/v4/ws` to socks and everything else
+  under `/v4/*` to comlink, which runs its own rate limiter and returns its own 429s. A prefix
+  match would still cover `/v4/ws...` paths the ALB hands to comlink; equality mirrors the ALB
+  rule exactly and keeps the blast radius to the one endpoint at issue.
+
+  The reason header is the second, independent guard: socks is the only origin that emits it, so
+  even a misconfigured path condition cannot make the counter fire on comlink's rate-limit
+  responses. Counting on status alone would block those clients out of the websocket entirely.
 - Threshold: 5 requests per 60 seconds
 - Action: **Block**, duration **300 seconds** (deliberately an order of magnitude longer than the
   origin's 30s penalty — the origin cooldown is a nudge, the edge block is the consequence)
@@ -180,7 +206,8 @@ reaching origin at all, and to make the timeout long enough that a client has to
 }
 ```
 
-Confirm the actual websocket path before applying — the match above assumes `/v4/ws`.
+The path is `/v4/ws`, matching `aws_lb_listener_rule.public_https_socks` in `v4-infrastructure`
+(`indexer/load_balancer.tf`), which forwards exactly that path to the socks target group.
 
 **Prerequisite.** Counting on response fields requires a Business plan or above. Confirm the
 zone's tier before building the rule. If response-based counting is unavailable, the fallback is
