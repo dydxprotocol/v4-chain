@@ -54,6 +54,7 @@ describe('Subscriptions', () => {
   const clientIp: string = '203.0.113.7';
   const validTickers: string[] = [btcTicker, ethTicker];
   const defaultDropEnabled: boolean = config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED;
+  const defaultAbusePoints: number = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
   const initialMsgId: number = 1;
   const defaultId: string = 'id';
   const defaultId1: string = 'id1';
@@ -134,6 +135,8 @@ describe('Subscriptions', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = true;
+    // Keep the allowance small so the tests stay fast and independent of the production default.
+    config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS = 5;
     (WebSocket as unknown as jest.Mock).mockClear();
     subscriptions = new Subscriptions();
     subscriptions.start(jest.fn());
@@ -152,6 +155,7 @@ describe('Subscriptions', () => {
   afterEach(() => {
     jest.useRealTimers();
     config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = defaultDropEnabled;
+    config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS = defaultAbusePoints;
     reconnectPenalty.clear();
     decrementSubscriptionsSpy.mockRestore();
     incrementSubscriptionsSpy.mockRestore();
