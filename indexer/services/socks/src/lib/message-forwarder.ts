@@ -13,6 +13,8 @@ import {
 import _ from 'lodash';
 
 import config from '../config';
+import { MAX_TIMEOUT_INTEGER } from './constants';
+import { Subscriptions } from './subscription';
 import {
   getChannels,
   getMessagesToForward,
@@ -30,8 +32,6 @@ import {
   WebsocketTopic,
 } from '../types';
 import { Index } from '../websocket/index';
-import { MAX_TIMEOUT_INTEGER } from './constants';
-import { Subscriptions } from './subscription';
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';

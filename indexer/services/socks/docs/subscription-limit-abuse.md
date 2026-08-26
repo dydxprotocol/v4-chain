@@ -37,11 +37,15 @@ Being at the limit stays a normal, recoverable condition: the first
 `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS` hits within
 `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS` are answered with the usual error and the
 connection is left alone. Past that, the connection is closed with close code
-**4008** (`WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE`) and a body of:
+**4008** (`WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE`) and a close-reason payload of:
 
 ```json
 { "message": "Subscription limit abuse", "reason": "subscription-limit-abuse", "retryAfterSeconds": 30 }
 ```
+
+`retryAfterSeconds` is derived from the remaining limiter delay and `RECONNECT_PENALTY_MS`,
+whichever is longer; `30` above is what the default configuration produces, not a fixed value.
+The payload must stay within the 123-byte close-reason limit, which a test asserts.
 
 A distinct close code matters: 1008 is already used for the generic rate-limit drops, and we
 want dashboards and clients to be able to tell the two apart.
@@ -73,7 +77,7 @@ So a dropped client is put in a short in-memory penalty box (`src/lib/reconnect-
 keyed by client address. While the penalty is live, `verifyClientNotPenalized` refuses the
 websocket upgrade with:
 
-```
+```http
 HTTP/1.1 429 Too Many Requests
 Retry-After: 30
 x-dydx-ratelimit-reason: subscription-limit-abuse
@@ -94,6 +98,27 @@ The penalty is per-instance and in-memory by design. Its job is to stop one inst
 monopolised and to emit the edge signal. Cross-instance enforcement belongs at the edge, below.
 
 ### 3. Client address derivation
+
+`cf-connecting-ip` and `x-forwarded-for` are supplied by the caller, and the load balancer
+forwards whatever it was handed. What makes them trustworthy here is an operational property
+rather than anything in the request: **origin ingress accepts connections from Cloudflare proxies
+alone**, so the caller is always Cloudflare and `cf-connecting-ip` is Cloudflare's own view of
+the client.
+
+That property is load-bearing, and `TRUST_FORWARDED_HEADERS` exists to withdraw the trust if it
+ever stops holding. Were the origin to become directly reachable, a caller could present a
+victim's address, trip the limit deliberately, and have that address's upgrades refused for the
+cooldown — turning this control into a way to deny service to arbitrary clients. Setting the
+switch to `false` makes a request carrying a forwarded header yield no client address at all, so
+the address cooldown goes inert. It deliberately does not fall back to the socket address,
+because behind a proxy that is the proxy itself, shared by every client — penalising it would
+refuse everyone. A request with no forwarded headers still uses the socket address, which is
+genuinely the peer.
+
+The per-connection drop is unaffected either way: it keys on the connection, which cannot be
+spoofed. Only the address-based cooldown depends on this.
+
+
 
 `getClientIp` (`src/helpers/header-utils.ts`) prefers `cf-connecting-ip`, then the left-most
 `x-forwarded-for` entry, then the socket address. This matches comlink's `getIpAddr`.
@@ -158,6 +183,7 @@ This costs nothing to run and turns the decision into a reading rather than an a
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS` | `5` | Limit hits allowed per connection before it is dropped |
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS` | `10000` | Window over which those hits are counted |
 | `SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS` | `1000` | Grace period after the close frame before the socket is destroyed |
+| `TRUST_FORWARDED_HEADERS` | `true` | Whether `cf-connecting-ip` / `x-forwarded-for` may be believed. True because origin ingress accepts Cloudflare proxies only. Set false if that ever stops holding; the address cooldown then goes inert. |
 | `RECONNECT_PENALTY_ENABLED` | `true` | Kill switch for handshake refusal only. The connection drop stays active. |
 | `RECONNECT_PENALTY_MS` | `30000` | How long a dropped client's upgrades are refused |
 | `RECONNECT_PENALTY_MAX_TRACKED_CLIENTS` | `100000` | Bound on the penalty map |
@@ -222,8 +248,8 @@ reaching origin at all, and to make the timeout long enough that a client has to
 - Counting characteristic: client IP
 - **Counting expression — must repeat host and path:**
 
-  ```
-  http.host eq "indexer.dydx.trade"
+  ```txt
+  raw.http.host eq "indexer.dydx.trade"
   and http.request.uri.path eq "/v4/ws"
   and http.response.code eq 429
   and any(http.response.headers["x-dydx-ratelimit-reason"][*] eq "subscription-limit-abuse")
@@ -232,6 +258,16 @@ reaching origin at all, and to make the timeout long enough that a client has to
   A custom counting expression does **not** inherit the rule's matching expression. Cloudflare
   evaluates it independently, so host and path have to be restated or the counter will increment
   on unrelated traffic.
+
+  `raw.http.host` rather than `http.host`, because rate limiting runs in the `http_ratelimit`
+  phase, after Origin Rules run in `http_request_origin`. If an Origin Rule rewrites the `Host`
+  header for this hostname, `http.host` holds the rewritten value by the time the counting
+  expression is evaluated and would silently stop matching, so the counter would never increment
+  and the rule would appear to work while doing nothing. The `raw.` fields are immutable and
+  unaffected by earlier transformations. Confirm whether any Host rewrite exists for this
+  hostname when applying the rule; if `raw.http.host` is unavailable in this phase, drop the host
+  condition and rely on the exact path plus the reason header, both of which are already
+  sufficient to isolate socks.
 
   Exact path equality, not a prefix. The ALB routes exactly `/v4/ws` to socks and everything else
   under `/v4/*` to comlink, which runs its own rate limiter and returns its own 429s. A prefix

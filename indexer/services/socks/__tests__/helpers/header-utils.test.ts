@@ -1,9 +1,21 @@
 import { IncomingMessage as IncomingMessageHttp } from 'http';
 import { Socket } from 'net';
 
+import config from '../../src/config';
 import { getClientIp } from '../../src/helpers/header-utils';
 
 describe('getClientIp', () => {
+  const defaultTrust: boolean = config.TRUST_FORWARDED_HEADERS;
+
+  beforeEach(() => {
+    // Most cases describe behaviour once ingress is locked to the trusted proxy chain.
+    config.TRUST_FORWARDED_HEADERS = true;
+  });
+
+  afterEach(() => {
+    config.TRUST_FORWARDED_HEADERS = defaultTrust;
+  });
+
   function requestWithHeaders(
     headers: { [key: string]: string | string[] },
     remoteAddress?: string,
@@ -67,5 +79,38 @@ describe('getClientIp', () => {
     const req = requestWithHeaders({ 'x-forwarded-for': '' }, '10.0.1.5');
 
     expect(getClientIp(req)).toEqual('10.0.1.5');
+  });
+
+  describe('when forwarded headers are not trusted', () => {
+    beforeEach(() => {
+      config.TRUST_FORWARDED_HEADERS = false;
+    });
+
+    it('refuses to believe cf-connecting-ip', () => {
+      // Otherwise anyone reaching the load balancer directly could name a victim address and
+      // have that address penalised.
+      const req = requestWithHeaders({ 'cf-connecting-ip': '203.0.113.7' }, '10.0.1.5');
+
+      expect(getClientIp(req)).toBeUndefined();
+    });
+
+    it('refuses to believe x-forwarded-for', () => {
+      const req = requestWithHeaders({ 'x-forwarded-for': '203.0.113.7' }, '10.0.1.5');
+
+      expect(getClientIp(req)).toBeUndefined();
+    });
+
+    it('does not fall back to the socket address, which would be the shared proxy', () => {
+      const req = requestWithHeaders({ 'x-forwarded-for': '203.0.113.7' }, '10.0.1.5');
+
+      // Penalising the proxy address would refuse every client behind it.
+      expect(getClientIp(req)).not.toEqual('10.0.1.5');
+    });
+
+    it('still uses the socket address when no proxy is in the path', () => {
+      const req = requestWithHeaders({}, '10.0.1.5');
+
+      expect(getClientIp(req)).toEqual('10.0.1.5');
+    });
   });
 });

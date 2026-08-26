@@ -12,6 +12,7 @@ import { reconnectPenalty } from '../../src/lib/reconnect-penalty';
 describe('verifyClientNotPenalized', () => {
   const clientIp: string = '203.0.113.7';
   const defaultPenaltyMs: number = config.RECONNECT_PENALTY_MS;
+  const defaultTrust: boolean = config.TRUST_FORWARDED_HEADERS;
 
   function infoForIp(ip?: string): {
     origin: string, secure: boolean, req: IncomingMessageHttp,
@@ -32,6 +33,9 @@ describe('verifyClientNotPenalized', () => {
   beforeEach(() => {
     nowMs = 1_700_000_000_000;
     jest.spyOn(Date, 'now').mockImplementation(() => nowMs);
+    // These cases describe a deployment whose ingress is locked to the trusted proxy chain, so
+    // the forwarded client address can be believed.
+    config.TRUST_FORWARDED_HEADERS = true;
     config.RECONNECT_PENALTY_ENABLED = true;
     config.RECONNECT_PENALTY_MS = defaultPenaltyMs;
     reconnectPenalty.clear();
@@ -41,6 +45,19 @@ describe('verifyClientNotPenalized', () => {
     jest.restoreAllMocks();
     reconnectPenalty.clear();
     config.RECONNECT_PENALTY_MS = defaultPenaltyMs;
+    config.TRUST_FORWARDED_HEADERS = defaultTrust;
+  });
+
+  it('accepts the upgrade when forwarded headers are not trusted', () => {
+    config.TRUST_FORWARDED_HEADERS = false;
+    reconnectPenalty.penalizeClient(clientIp, RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE);
+    const callback: jest.Mock = jest.fn();
+
+    // The address cannot be established safely, so the cooldown must not be applied to a
+    // caller-supplied value.
+    verifyClientNotPenalized(infoForIp(clientIp), callback);
+
+    expect(callback).toHaveBeenCalledWith(true);
   });
 
   it('accepts the upgrade for a client with no penalty', () => {

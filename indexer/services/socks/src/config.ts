@@ -65,6 +65,12 @@ export const configSchema = {
   // After a connection is dropped for subscription-limit abuse, reject new websocket upgrades
   // from the same client for this long with an HTTP 429. The 429 is the only part of this the
   // edge (Cloudflare) can observe, and is what its rate limiting rule counts on.
+  // `cf-connecting-ip` and `x-forwarded-for` are supplied by the caller, so they are only
+  // meaningful because origin ingress accepts connections from Cloudflare proxies alone. That
+  // property is what makes the forwarded address trustworthy, and this switch exists to turn the
+  // address cooldown off if it ever stops holding -- if the origin became directly reachable, a
+  // caller could name a victim address and have that address's upgrades refused.
+  TRUST_FORWARDED_HEADERS: parseBoolean({ default: true }),
   RECONNECT_PENALTY_ENABLED: parseBoolean({ default: true }),
   RECONNECT_PENALTY_MS: parseInteger({ default: 30_000 }),
   RECONNECT_PENALTY_MAX_TRACKED_CLIENTS: parseInteger({ default: 100_000 }),
