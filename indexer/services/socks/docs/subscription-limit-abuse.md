@@ -46,6 +46,15 @@ connection is left alone. Past that, the connection is closed with close code
 A distinct close code matters: 1008 is already used for the generic rate-limit drops, and we
 want dashboards and clients to be able to tell the two apart.
 
+The close frame is only the start of the drop. `ws` keeps an uncooperative peer's socket alive
+for up to 30 seconds waiting for a close frame that may never come, and goes on delivering that
+peer's messages for the whole window. So the drop also, in order: unsubscribes the connection
+immediately rather than waiting for the close event, so the forwarder stops serializing market
+data for it; destroys the socket outright if `close()` itself throws; and arms a short
+forced-termination fallback. Inbound messages are discarded without being parsed once the socket
+is no longer `OPEN`, so a client that ignores the close frame gets no further work done on its
+behalf.
+
 ### 2. The client is refused at the handshake for a cooldown
 
 A websocket close frame is invisible to Cloudflare — it proxies the tunnelled connection but does
@@ -83,14 +92,18 @@ client. This is also why the incident could not be attributed from S3 ALB logs.
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED` | `false` | Kill switch for the connection drop, independent of `RATE_LIMIT_ENABLED`. Ships off; enable once thresholds are sized. |
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS` | `5` | Limit hits allowed per connection before it is dropped |
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS` | `10000` | Window over which those hits are counted |
+| `SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS` | `1000` | Grace period after the close frame before the socket is destroyed |
 | `RECONNECT_PENALTY_ENABLED` | `true` | Kill switch for handshake refusal only. The connection drop stays active. |
 | `RECONNECT_PENALTY_MS` | `30000` | How long a dropped client's upgrades are refused |
 | `RECONNECT_PENALTY_MAX_TRACKED_CLIENTS` | `100000` | Bound on the penalty map |
 
-The existing global `RATE_LIMIT_ENABLED` kill switch is honoured inside `RateLimiter` itself, so
-setting it to `false` disables the drop as well.
+`SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED` gates the drop on its own, so it can be rolled back
+without touching the subscribe, ping and invalid-message limiters. The global `RATE_LIMIT_ENABLED`
+switch still disables everything, including the drop. Disabling the drop also disables the
+cooldown, since a client only ever enters it by being dropped.
 
 ### Note on shared addresses
 
@@ -111,7 +124,14 @@ penalty enabled and watch `socks.connection_rejected_penalty`; a rate much highe
 | `socks.reconnect_penalty_applied` | `reason`, `instance` | A client entered the penalty box |
 | `socks.connection_rejected_penalty` | `instance` | An upgrade was refused with 429 |
 
+| `socks.subscriptions_limit_abuse_force_terminate` | `reason`, `instance` | A dropped socket was destroyed without a completed close handshake |
+| `socks.message_dropped_not_open` | `readyState`, `instance` | An inbound message was discarded because the socket was no longer open |
+
 Drops also appear on the existing `socks.num_disconnects` counter tagged `code: "4008"`.
+
+A steady `socks.subscriptions_limit_abuse_force_terminate` tagged `close_timeout` means clients
+are ignoring close frames rather than disconnecting, which is itself a sign of a badly behaved
+integration.
 
 Worth alerting on: a sustained non-zero `socks.subscriptions_limit_abuse_disconnect` means a
 client is in a retry loop and not backing off, which is the signal that the edge rule below
@@ -128,10 +148,25 @@ reaching origin at all, and to make the timeout long enough that a client has to
 
 - Match: `(http.host eq "indexer.dydx.trade" and starts_with(http.request.uri.path, "/v4/ws"))`
 - Counting characteristic: client IP
-- Count only responses where: `origin response status eq 429` **or**, if response-header matching
-  is available on the plan, response header `x-dydx-ratelimit-reason` eq `subscription-limit-abuse`.
-  The header form is the more precise of the two — it will not count 429s emitted for any other
-  reason.
+- **Counting expression — must repeat host and path:**
+
+  ```
+  http.host eq "indexer.dydx.trade"
+  and starts_with(http.request.uri.path, "/v4/ws")
+  and http.response.code eq 429
+  and any(http.response.headers["x-dydx-ratelimit-reason"][*] eq "subscription-limit-abuse")
+  ```
+
+  A custom counting expression does **not** inherit the rule's matching expression. Cloudflare
+  evaluates it independently, so host and path have to be restated or the counter will increment
+  on unrelated traffic.
+
+  The reason header is not optional hardening here, it is what makes the rule correct. The ALB
+  routes exactly `/v4/ws` to socks and everything else under `/v4/*` to comlink, which runs its
+  own rate limiter and returns its own 429s. A counting expression of "status 429" alone — or one
+  scoped only by a `/v4/ws` prefix, which still covers `/v4/ws...` paths the ALB hands to comlink
+  — would count comlink's rate-limit responses and block those clients out of the websocket
+  entirely. socks is the only origin that emits this header.
 - Threshold: 5 requests per 60 seconds
 - Action: **Block**, duration **300 seconds** (deliberately an order of magnitude longer than the
   origin's 30s penalty — the origin cooldown is a nudge, the edge block is the consequence)
@@ -146,6 +181,12 @@ reaching origin at all, and to make the timeout long enough that a client has to
 ```
 
 Confirm the actual websocket path before applying — the match above assumes `/v4/ws`.
+
+**Prerequisite.** Counting on response fields requires a Business plan or above. Confirm the
+zone's tier before building the rule. If response-based counting is unavailable, the fallback is
+a request-rate rule on the `/v4/ws` path per client IP with no response condition — cruder, since
+it cannot distinguish an abusive reconnect storm from a legitimate one, so it needs a threshold
+set well above normal reconnect behaviour.
 
 **Verifying it**
 

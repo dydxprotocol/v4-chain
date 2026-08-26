@@ -247,6 +247,22 @@ export class Index {
       return;
     }
 
+    // A peer that ignores our close frame keeps delivering messages until `ws` gives up on the
+    // close handshake. Once the socket is no longer OPEN the connection is doomed, so do no
+    // further work for it -- not even parsing the payload.
+    if (connection.ws.readyState !== WebSocket.OPEN) {
+      stats.increment(
+        `${config.SERVICE_NAME}.message_dropped_not_open`,
+        1,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        {
+          instance: instanceId,
+          readyState: String(connection.ws.readyState),
+        },
+      );
+      return;
+    }
+
     let parsed: IncomingMessage;
     try {
       parsed = JSON.parse(message.toString());

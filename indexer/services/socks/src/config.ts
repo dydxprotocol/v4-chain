@@ -44,8 +44,17 @@ export const configSchema = {
   // A client that keeps re-sending subscribe requests after being told it is at the
   // per-connection subscription limit is ignoring the contract. Once it exceeds these points
   // within the window, the connection is dropped rather than answered with another error.
+  //
+  // Gated independently of RATE_LIMIT_ENABLED so this can be rolled back on its own without
+  // also disabling the subscribe, ping and invalid-message limiters. Staged off until the
+  // thresholds below have been sized against production telemetry.
+  SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED: parseBoolean({ default: false }),
   RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS: parseNumber({ default: 5 }),
   RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS: parseInteger({ default: 10_000 }),
+  // How long to wait after sending the close frame before destroying the socket. `ws` waits 30s
+  // for a peer that never replies, and keeps delivering that peer's messages for the whole
+  // window; an abusive client must not get 30s of free work.
+  SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS: parseInteger({ default: 1_000 }),
 
   // After a connection is dropped for subscription-limit abuse, reject new websocket upgrades
   // from the same client for this long with an HTTP 429. The 429 is the only part of this the

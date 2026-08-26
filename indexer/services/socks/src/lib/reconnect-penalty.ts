@@ -2,6 +2,10 @@ import { getInstanceId, logger, stats } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 
+// Upper bound on how many expired entries a single penalty application will sweep. Keeps the
+// sweep constant-time regardless of how large the map has grown.
+const EVICTION_SWEEP_LIMIT: number = 8;
+
 /**
  * Tracks clients that were disconnected for abusing the subscription limit, so that their
  * reconnection attempts can be refused at the websocket handshake.
@@ -17,14 +21,19 @@ import config from '../config';
  */
 export class ReconnectPenalty {
   // Client address -> epoch ms at which the penalty expires.
-  private penaltyExpiryMs: { [clientIp: string]: number };
+  //
+  // A Map rather than an object so that iteration order is insertion order. Every penalty uses
+  // the same duration, so insertion order is also expiry order, which makes both the expiry
+  // sweep and the capacity eviction O(1) amortized from the front. That matters because
+  // eviction runs precisely when the map is full -- i.e. while under attack.
+  private penaltyExpiryMs: Map<string, number>;
   // Connection id -> client address, so a connection can be penalised by the code that drops it
   // without having to thread request headers through the subscription layer.
-  private clientIpByConnectionId: { [connectionId: string]: string };
+  private clientIpByConnectionId: Map<string, string>;
 
   constructor() {
-    this.penaltyExpiryMs = {};
-    this.clientIpByConnectionId = {};
+    this.penaltyExpiryMs = new Map();
+    this.clientIpByConnectionId = new Map();
   }
 
   /**
@@ -34,7 +43,7 @@ export class ReconnectPenalty {
     if (clientIp === undefined) {
       return;
     }
-    this.clientIpByConnectionId[connectionId] = clientIp;
+    this.clientIpByConnectionId.set(connectionId, clientIp);
   }
 
   /**
@@ -42,14 +51,14 @@ export class ReconnectPenalty {
    * in place, since it must outlive the connection that earned it.
    */
   public removeConnection(connectionId: string): void {
-    delete this.clientIpByConnectionId[connectionId];
+    this.clientIpByConnectionId.delete(connectionId);
   }
 
   /**
    * Places the client behind `connectionId` in the penalty box.
    */
   public penalizeConnection(connectionId: string, reason: string): void {
-    const clientIp: string | undefined = this.clientIpByConnectionId[connectionId];
+    const clientIp: string | undefined = this.clientIpByConnectionId.get(connectionId);
     if (clientIp === undefined) {
       return;
     }
@@ -61,9 +70,13 @@ export class ReconnectPenalty {
       return;
     }
 
-    this.evictIfFull();
+    // Re-insert rather than update, so a re-offending client moves to the back and the
+    // insertion-order-equals-expiry-order invariant holds.
+    this.penaltyExpiryMs.delete(clientIp);
+    this.evictExpired();
+    this.evictToCapacity();
 
-    this.penaltyExpiryMs[clientIp] = Date.now() + config.RECONNECT_PENALTY_MS;
+    this.penaltyExpiryMs.set(clientIp, Date.now() + config.RECONNECT_PENALTY_MS);
 
     logger.info({
       at: 'reconnect-penalty#penalizeClient',
@@ -92,14 +105,14 @@ export class ReconnectPenalty {
       return 0;
     }
 
-    const expiryMs: number | undefined = this.penaltyExpiryMs[clientIp];
+    const expiryMs: number | undefined = this.penaltyExpiryMs.get(clientIp);
     if (expiryMs === undefined) {
       return 0;
     }
 
     const remainingMs: number = expiryMs - Date.now();
     if (remainingMs <= 0) {
-      delete this.penaltyExpiryMs[clientIp];
+      this.penaltyExpiryMs.delete(clientIp);
       return 0;
     }
 
@@ -107,27 +120,33 @@ export class ReconnectPenalty {
   }
 
   /**
-   * Drops expired entries, and if the map is still at capacity, the entry expiring soonest. This
-   * bounds memory so a client cycling through addresses cannot grow the map without limit.
+   * Drops entries that have already expired, from the front and bounded per call, so the sweep
+   * never scales with the size of the map.
    */
-  private evictIfFull(): void {
-    if (Object.keys(this.penaltyExpiryMs).length < config.RECONNECT_PENALTY_MAX_TRACKED_CLIENTS) {
-      return;
-    }
-
+  private evictExpired(): void {
     const now: number = Date.now();
-    Object.entries(this.penaltyExpiryMs).forEach(([clientIp, expiryMs]: [string, number]) => {
-      if (expiryMs <= now) {
-        delete this.penaltyExpiryMs[clientIp];
-      }
-    });
+    let swept: number = 0;
 
-    const entries: [string, number][] = Object.entries(this.penaltyExpiryMs);
-    if (entries.length >= config.RECONNECT_PENALTY_MAX_TRACKED_CLIENTS && entries.length > 0) {
-      const soonest: [string, number] = entries.reduce(
-        (a: [string, number], b: [string, number]) => (a[1] <= b[1] ? a : b),
-      );
-      delete this.penaltyExpiryMs[soonest[0]];
+    for (const [clientIp, expiryMs] of this.penaltyExpiryMs) {
+      if (expiryMs > now || swept >= EVICTION_SWEEP_LIMIT) {
+        break;
+      }
+      this.penaltyExpiryMs.delete(clientIp);
+      swept += 1;
+    }
+  }
+
+  /**
+   * Makes room for one more entry by dropping the oldest, which under a uniform penalty duration
+   * is also the soonest to expire.
+   */
+  private evictToCapacity(): void {
+    while (this.penaltyExpiryMs.size >= config.RECONNECT_PENALTY_MAX_TRACKED_CLIENTS) {
+      const oldest: string | undefined = this.penaltyExpiryMs.keys().next().value;
+      if (oldest === undefined) {
+        return;
+      }
+      this.penaltyExpiryMs.delete(oldest);
     }
   }
 
@@ -135,8 +154,8 @@ export class ReconnectPenalty {
    * Clears all tracked state. Used to reset between tests.
    */
   public clear(): void {
-    this.penaltyExpiryMs = {};
-    this.clientIpByConnectionId = {};
+    this.penaltyExpiryMs = new Map();
+    this.clientIpByConnectionId = new Map();
   }
 }
 

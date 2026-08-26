@@ -65,6 +65,43 @@ const CHANNEL_CONNECTION_LIMITS: { [channel: string]: number } = {
   [Channel.V4_TRADES]: config.V4_TRADES_CHANNEL_LIMIT,
 };
 
+/**
+ * Destroys a websocket without waiting for the close handshake, and records why.
+ *
+ * `terminate` is safe to call on an already-closed socket, so callers do not need to track
+ * whether the peer cooperated.
+ */
+function forceTerminate(ws: WebSocket, connectionId: string, reason: string): void {
+  try {
+    if (ws.readyState === WebSocket.CLOSED) {
+      return;
+    }
+
+    ws.terminate();
+
+    stats.increment(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_force_terminate`,
+      1,
+      undefined,
+      { reason, instance: getInstanceId() },
+    );
+
+    logger.info({
+      at: 'subscription#forceTerminate',
+      message: 'Connection destroyed without a completed close handshake',
+      reason,
+      connectionId,
+    });
+  } catch (error) {
+    logger.info({
+      at: 'subscription#forceTerminate',
+      message: `Failed to terminate connection: ${error.message}`,
+      reason,
+      connectionId,
+    });
+  }
+}
+
 export class Subscriptions {
   private forwardMessage?: (message: MessageToForward, connectionId: string) => number;
   private subscriptionMetricsInterval?: NodeJS.Timeout;
@@ -190,6 +227,12 @@ export class Subscriptions {
       RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
     );
 
+    // Unsubscribe now rather than waiting for the close event. `ws` keeps the socket alive until
+    // the peer acknowledges the close frame, and the message forwarder would otherwise go on
+    // serializing market data for this connection for the whole of that window -- which is the
+    // cost that caused the incident in the first place.
+    this.remove(connectionId);
+
     try {
       ws.close(
         WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
@@ -205,7 +248,20 @@ export class Subscriptions {
         message: `Failed to close connection: ${error.message}`,
         connectionId,
       });
+      // A close that never happened leaves the abusive connection fully live, so destroy it now
+      // instead of waiting for a handshake that will not complete.
+      forceTerminate(ws, connectionId, 'close_failed');
+      return;
     }
+
+    // A peer that never returns a close frame keeps its socket -- and its inbound messages --
+    // alive for the `ws` close timeout of 30s. Destroy it well before then. `terminate` is a
+    // no-op once the socket is already closed, so the cooperative case is unaffected.
+    const forceTerminateTimer: NodeJS.Timeout = setTimeout(
+      () => forceTerminate(ws, connectionId, 'close_timeout'),
+      config.SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS,
+    );
+    forceTerminateTimer.unref();
 
     logger.info({
       at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
@@ -274,10 +330,12 @@ export class Subscriptions {
       // Being at the limit is a normal condition and is answered with an error. Repeatedly
       // hitting it is not: it means the client is retrying instead of respecting the limit, and
       // answering it again just funds the retry loop. Past the allowance, drop the connection.
-      const limitAbuseDurationMs: number = this.subscriptionLimitReachedRateLimiter.rateLimit({
-        connectionId,
-        key: SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY,
-      });
+      const limitAbuseDurationMs: number = config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED
+        ? this.subscriptionLimitReachedRateLimiter.rateLimit({
+          connectionId,
+          key: SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY,
+        })
+        : 0;
 
       if (limitAbuseDurationMs > 0) {
         this.dropConnectionForSubscriptionLimitAbuse(
