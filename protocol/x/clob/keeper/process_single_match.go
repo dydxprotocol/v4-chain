@@ -53,6 +53,13 @@ func (k Keeper) ProcessSingleMatch(
 	affiliateRevSharesQuoteQuantums *big.Int,
 	err error,
 ) {
+	// NOTE: Stateful-order expiry is NOT checked here. Expiry cleanup is budgeted in the EndBlocker,
+	// so an order can remain addressable in state after its GoodTilBlockTime — in particular a maker
+	// that was valid when the proposer assembled the block can expire before FinalizeBlock. Matching
+	// an expired order is prevented by the callers (the proposer's memclob filters expired orders at
+	// assembly time, and the DeliverTx operations replay skips a match that references an expired
+	// stateful order — see matchHasExpiredStatefulOrder). Rejecting here instead would abort the
+	// entire proposed-operations transaction and roll back every healthy match/liquidation.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		defer func() {
 			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {

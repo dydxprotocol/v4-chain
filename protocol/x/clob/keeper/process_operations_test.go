@@ -44,6 +44,7 @@ type MatchWithOrdersForTesting struct {
 
 type processProposerOperationsTestCase struct {
 	// State
+	blockTime                     time.Time
 	perpetuals                    []perptypes.Perpetual
 	perpetualFeeParams            *feetierstypes.PerpetualFeeParams
 	clobPairs                     []types.ClobPair
@@ -2715,10 +2716,14 @@ func setupProcessProposerOperationsTestCase(
 	}
 
 	// Set the block time on the context and of the last committed block.
-	ctx = ctx.WithBlockTime(time.Unix(5, 0)).WithBlockHeight(int64(blockHeight))
+	blockTime := tc.blockTime
+	if blockTime.IsZero() {
+		blockTime = time.Unix(5, 0)
+	}
+	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(int64(blockHeight))
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
 		Height:    blockHeight,
-		Timestamp: time.Unix(int64(5), 0),
+		Timestamp: blockTime,
 	})
 
 	return ctx, ks, mockIndexerEventManager

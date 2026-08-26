@@ -503,6 +503,24 @@ var (
 		6000,
 		"Conditional type is invalid",
 	)
+	// ErrTooManyUntriggeredConditionalOrders is returned when placing a new untriggered
+	// conditional order would exceed the global or per-subaccount cap on resting untriggered
+	// conditional orders.  This is an admission-gate error (returned from PlaceStatefulOrder)
+	// and must NOT be returned from SetLongTermOrderPlacement, InitMemStore, or any replay path.
+	ErrTooManyUntriggeredConditionalOrders = errorsmod.Register(
+		ModuleName,
+		6003,
+		"Placing this order would exceed the maximum number of resting untriggered conditional orders",
+	)
+	// ErrInvalidConditionalOrderTriggerConfig is returned by
+	// MsgUpdateConditionalOrderTriggerConfig.ValidateBasic when a governance-supplied budget or
+	// admission cap is outside its allowed bounds (e.g. a per-block budget above the configurable
+	// upper bound, which would erase the O(budget) EndBlocker work bound).
+	ErrInvalidConditionalOrderTriggerConfig = errorsmod.Register(
+		ModuleName,
+		6004,
+		"Conditional order trigger config is invalid",
+	)
 	ErrInvalidConditionalOrderTriggerSubticks = errorsmod.Register(
 		ModuleName,
 		6001,

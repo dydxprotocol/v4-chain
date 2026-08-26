@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/big"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -354,6 +356,204 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
+}
+
+// TestProcessProposerMatches_ExpiredStatefulOrderSkipped verifies that a proposed match that
+// references a stateful order which has expired (its GoodTilBlockTime <= block time) is SKIPPED
+// rather than aborting the whole MsgProposedOperations transaction — so healthy matches processed
+// alongside it are not rolled back. Expiry cleanup is budgeted in the EndBlocker, so an order can
+// be valid when the proposer assembles the block and expired by FinalizeBlock.
+func TestProcessProposerMatches_ExpiredStatefulOrderSkipped(t *testing.T) {
+	tests := map[string]processProposerOperationsTestCase{
+		`Expired maker order in a proposed match is skipped, not fatal`: {
+			blockTime: time.Unix(10, 0),
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				// GoodTilBlockTime 10 == block time 10 => expired.
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+							FillAmount:   100_000_000,
+						},
+					},
+				),
+			},
+			// No error; the match against the expired maker is skipped, so nothing fills.
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 5,
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         0,
+			},
+		},
+		`Expired taker order in a proposed match is skipped, not fatal`: {
+			blockTime: time.Unix(10, 0),
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				// GoodTilBlockTime 10 == block time 10 => the taker is expired.
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+							FillAmount:   100_000_000,
+						},
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 5,
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 0,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId:           0,
+			},
+		},
+		`Healthy matches before and after an expired match all succeed`: {
+			blockTime: time.Unix(10, 0),
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id:             &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{&constants.Usdc_Asset_100_000},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(0, big.NewInt(1_000_000_000), big.NewInt(0), big.NewInt(0)),
+					},
+				},
+				{
+					Id:             &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{&constants.Usdc_Asset_100_000},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(0, big.NewInt(1_000_000_000), big.NewInt(0), big.NewInt(0)),
+					},
+				},
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				// Expired maker (GoodTilBlockTime 10 == block time 10).
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				// Healthy match BEFORE the expired one: Bob (taker) sells to Alice (maker).
+				clobtest.NewShortTermOrderPlacementOperationRaw(healthyBuy(constants.Alice_Num0, 14)),
+				clobtest.NewShortTermOrderPlacementOperationRaw(healthySell(constants.Bob_Num0, 14)),
+				clobtest.NewMatchOperationRaw(
+					ptrOrder(healthySell(constants.Bob_Num0, 14)),
+					[]types.MakerFill{{FillAmount: 100_000_000, MakerOrderId: healthyBuy(constants.Alice_Num0, 14).OrderId}},
+				),
+				// Expired match: Dave (taker) vs the expired Carl maker — skipped, not fatal.
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+				),
+				clobtest.NewMatchOperationRaw(
+					&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
+					[]types.MakerFill{{
+						FillAmount:   100_000_000,
+						MakerOrderId: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+					}},
+				),
+				// Healthy match AFTER the expired one: Bob (taker) sells to Alice (maker) again.
+				clobtest.NewShortTermOrderPlacementOperationRaw(healthyBuy(constants.Alice_Num0, 15)),
+				clobtest.NewShortTermOrderPlacementOperationRaw(healthySell(constants.Bob_Num0, 15)),
+				clobtest.NewMatchOperationRaw(
+					ptrOrder(healthySell(constants.Bob_Num0, 15)),
+					[]types.MakerFill{{FillAmount: 100_000_000, MakerOrderId: healthyBuy(constants.Alice_Num0, 15).OrderId}},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				// Sorted by SortedOrders (Bob's subaccount sorts before Alice's).
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					healthySell(constants.Bob_Num0, 14).OrderId,
+					healthySell(constants.Bob_Num0, 15).OrderId,
+					healthyBuy(constants.Alice_Num0, 14).OrderId,
+					healthyBuy(constants.Alice_Num0, 15).OrderId,
+				},
+				BlockHeight: 5,
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				// Both healthy matches filled despite the expired one being skipped between them.
+				healthyBuy(constants.Alice_Num0, 14).OrderId:                                  100_000_000,
+				healthySell(constants.Bob_Num0, 14).OrderId:                                   100_000_000,
+				healthyBuy(constants.Alice_Num0, 15).OrderId:                                  100_000_000,
+				healthySell(constants.Bob_Num0, 15).OrderId:                                   100_000_000,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId: 0,
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId:         0,
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			runProcessProposerOperationsTestCase(t, tc)
+		})
+	}
+}
+
+// healthyBuy / healthySell build simple crossing short-term BTC orders (never expire by block time)
+// used to assert that healthy matches survive alongside a skipped expired match.
+func healthyBuy(subaccountId satypes.SubaccountId, clientId uint32) types.Order {
+	return types.Order{
+		OrderId:      types.OrderId{SubaccountId: subaccountId, ClientId: clientId, ClobPairId: 0},
+		Side:         types.Order_SIDE_BUY,
+		Quantums:     100_000_000,
+		Subticks:     50_000_000,
+		GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+	}
+}
+
+func healthySell(subaccountId satypes.SubaccountId, clientId uint32) types.Order {
+	return types.Order{
+		OrderId:      types.OrderId{SubaccountId: subaccountId, ClientId: clientId, ClobPairId: 0},
+		Side:         types.Order_SIDE_SELL,
+		Quantums:     100_000_000,
+		Subticks:     50_000_000,
+		GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+	}
+}
+
+func ptrOrder(o types.Order) *types.Order {
+	return &o
 }
 
 func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {

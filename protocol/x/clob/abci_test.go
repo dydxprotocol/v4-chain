@@ -81,7 +81,7 @@ func TestEndBlocker_Success(t *testing.T) {
 		expectedStatefulPlacementInState     map[types.OrderId]bool
 		expectedStatefulOrderTimeSlice       map[time.Time][]types.OrderId
 		expectedProcessProposerMatchesEvents types.ProcessProposerMatchesEvents
-		expectedUntriggeredConditionalOrders map[types.ClobPairId]*keeper.UntriggeredConditionalOrders
+		expectedUntriggeredConditionalOrders map[types.ClobPairId]*expectedUntriggeredByClobPair
 		expectedTriggeredConditionalOrderIds []types.OrderId
 	}{
 		"Prunes existing Short-Term orders and seen place orders correctly": {
@@ -170,7 +170,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					},
 				)
 			},
-			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*expectedUntriggeredByClobPair{},
 			expectedStatefulPlacementInState: map[types.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId:   false,
 				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25.OrderId:  false,
@@ -263,7 +263,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20.OrderId,
 				},
 			},
-			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*expectedUntriggeredByClobPair{
 				constants.ClobPair_Btc.GetClobPairId(): {
 					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
 						constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
@@ -658,9 +658,9 @@ func TestEndBlocker_Success(t *testing.T) {
 			}
 
 			if tc.expectedUntriggeredConditionalOrders != nil {
-				// Get untriggered orders from state and convert into
-				// `map[types.ClobPairId]*keeper.UntriggeredConditionalOrders`.
-				gotUntriggered := keeper.OrganizeUntriggeredConditionalOrdersFromState(
+				// Group the untriggered orders remaining in state by clob pair and trigger direction
+				// and compare against the expected grouping.
+				gotUntriggered := organizeUntriggeredForTest(
 					ks.ClobKeeper.GetAllUntriggeredConditionalOrders(ctx),
 				)
 
@@ -1309,4 +1309,39 @@ func TestPrepareCheckState(t *testing.T) {
 			)
 		})
 	}
+}
+
+// expectedUntriggeredByClobPair mirrors the grouping the (removed) in-memory
+// UntriggeredConditionalOrders struct provided, for asserting which conditional orders remain
+// untriggered after EndBlocker.
+type expectedUntriggeredByClobPair struct {
+	OrdersToTriggerWhenOraclePriceLTETriggerPrice []types.Order
+	OrdersToTriggerWhenOraclePriceGTETriggerPrice []types.Order
+}
+
+// organizeUntriggeredForTest groups untriggered conditional orders by clob pair and trigger
+// direction, replicating the classification the old OrganizeUntriggeredConditionalOrdersFromState /
+// AddUntriggeredConditionalOrder performed (take-profit buy / stop-loss sell → LTE; take-profit
+// sell / stop-loss buy → GTE), with both slices initialized empty (non-nil) per group.
+func organizeUntriggeredForTest(orders []types.Order) map[types.ClobPairId]*expectedUntriggeredByClobPair {
+	ret := make(map[types.ClobPairId]*expectedUntriggeredByClobPair)
+	for _, order := range orders {
+		clobPairId := types.ClobPairId(order.GetClobPairId())
+		group, ok := ret[clobPairId]
+		if !ok {
+			group = &expectedUntriggeredByClobPair{
+				OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{},
+				OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+			}
+			ret[clobPairId] = group
+		}
+		if order.IsTakeProfitOrder() && order.IsBuy() || order.IsStopLossOrder() && !order.IsBuy() {
+			group.OrdersToTriggerWhenOraclePriceLTETriggerPrice = append(
+				group.OrdersToTriggerWhenOraclePriceLTETriggerPrice, order)
+		} else {
+			group.OrdersToTriggerWhenOraclePriceGTETriggerPrice = append(
+				group.OrdersToTriggerWhenOraclePriceGTETriggerPrice, order)
+		}
+	}
+	return ret
 }

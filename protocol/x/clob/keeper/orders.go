@@ -349,7 +349,42 @@ func (k Keeper) PlaceStatefulOrder(
 	order := msg.Order
 	order.OrderId.MustBeStatefulOrder()
 
-	// 2. Perform stateful validation on the order.
+	// 2. For conditional orders, enforce the global and per-subaccount caps on the resting
+	// untriggered conditional set BEFORE performing expensive validation.  Checking counters
+	// first is an efficient early-exit for spam/cap violations.
+	//
+	// SAFETY: The cap is enforced ONLY here (the admission path), never inside
+	// SetLongTermOrderPlacement, so that InitMemStore / hydration / replay / DeliverTx
+	// re-application are always safe even when the resting set is at or above the cap.
+	// Caps are read from the governance-settable config, so governance can tune them without a
+	// binary upgrade.
+	if order.IsConditionalOrder() {
+		triggerCfg := k.GetConditionalOrderTriggerConfig(ctx)
+		globalCap := triggerCfg.MaxUntriggeredConditionalOrdersGlobal
+		saAccountCap := triggerCfg.MaxUntriggeredConditionalOrdersPerSubaccount
+
+		globalCount := k.GetUntriggeredConditionalOrderCountGlobal(ctx)
+		if globalCount >= globalCap {
+			return errorsmod.Wrapf(
+				types.ErrTooManyUntriggeredConditionalOrders,
+				"global untriggered conditional order count %d is at or above cap %d",
+				globalCount,
+				globalCap,
+			)
+		}
+		saCount := k.GetUntriggeredConditionalOrderCountForSubaccount(ctx, order.OrderId.SubaccountId)
+		if saCount >= saAccountCap {
+			return errorsmod.Wrapf(
+				types.ErrTooManyUntriggeredConditionalOrders,
+				"per-subaccount untriggered conditional order count %d is at or above cap %d for subaccount %+v",
+				saCount,
+				saAccountCap,
+				order.OrderId.SubaccountId,
+			)
+		}
+	}
+
+	// 3. Perform stateful validation on the order.
 	if err := k.PerformStatefulOrderValidation(
 		ctx,
 		&order,
@@ -361,7 +396,7 @@ func (k Keeper) PlaceStatefulOrder(
 	}
 
 	if !isInternalOrder {
-		// 3. Check that adding the order would not exceed the equity tier for the account.
+		// 4. Check that adding the order would not exceed the equity tier for the account.
 		if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
 			return err
 		}
@@ -374,7 +409,7 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
-	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
+	// 5. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 	// These checks should happen for all non-internal orders and for generated TWAP suborders.
 	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
 	if order.IsCollateralCheckRequired(isInternalOrder) {
@@ -409,7 +444,7 @@ func (k Keeper) PlaceStatefulOrder(
 		}
 	}
 
-	// 5. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
+	// 6. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
 	// state.
 	if lib.IsDeliverTxMode(ctx) {
 		// Write the stateful order to state and the memstore.

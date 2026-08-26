@@ -1254,6 +1254,11 @@ func (_m *ClobKeeper) UpdateSubaccountLiquidationInfo(ctx types.Context, subacco
 	_m.Called(ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums)
 }
 
+// SetConditionalOrderTriggerConfigParams provides a mock function
+func (_m *ClobKeeper) SetConditionalOrderTriggerConfigParams(ctx types.Context, maxTriggersPerBlock uint32, maxRemovalsPerBlock uint32, maxUntriggeredConditionalOrdersGlobal uint32, maxUntriggeredConditionalOrdersPerSubaccount uint32) {
+	_m.Called(ctx, maxTriggersPerBlock, maxRemovalsPerBlock, maxUntriggeredConditionalOrdersGlobal, maxUntriggeredConditionalOrdersPerSubaccount)
+}
+
 // NewClobKeeper creates a new instance of ClobKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewClobKeeper(t interface {

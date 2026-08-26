@@ -114,7 +114,7 @@ func EndBlocker(
 	// Place any TWAP suborders that are due
 	keeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
 
-	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
+	// Poll out all triggered conditional orders using the bounded trigger-price index and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)
 	// Update the memstore with conditional order ids triggered in the last block.
 	// These triggered conditional orders will be placed in the `PrepareCheckState``.

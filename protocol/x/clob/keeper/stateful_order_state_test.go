@@ -131,6 +131,11 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
+	// Enable the mitigation BEFORE attaching the tracer: the trigger-price index writes are only
+	// performed when enabled (rolling-deploy gating), and enabling here (pre-tracer) keeps the
+	// config-set write out of the traced sequence this test asserts on.
+	enableTriggerConfig(t, ks.ClobKeeper, ks.Ctx, keeper.MaxConditionalTriggersPerBlock)
+
 	// Set the tracer on the multistore to verify the performed writes are correct.
 	traceDecoder := &tracer.TraceDecoder{}
 	ks.Ctx.MultiStore().SetTracer(traceDecoder)
@@ -205,16 +210,27 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 		t,
 		[]string{
 			// Write the order to untriggered state and increment the stateful order
-			// count.
+			// count, trigger-price secondary index, and untriggered conditional counters.
 			types.NextStatefulOrderBlockTransactionIndexKey,
 			types.UntriggeredConditionalOrderKeyPrefix +
 				orderToStringId(conditionalOrder),
+			types.ConditionalOrderTriggerPriceIndexKeyPrefix,
+			// Packet 3: IncrementUntriggeredConditionalOrderCount — global then per-subaccount.
+			types.UntriggeredConditionalOrderCountGlobalKey,
+			types.UntriggeredConditionalOrderCountPerSubaccountPrefix +
+				orderToStringSubaccountId(conditionalOrder),
 			types.StatefulOrderCountPrefix +
 				orderToStringSubaccountId(conditionalOrder),
 			types.NextStatefulOrderBlockTransactionIndexKey,
-			// Write to triggered state
+			// Write to triggered state; remove from trigger-price index;
+			// decrement untriggered conditional counters; delete from untriggered state.
 			types.TriggeredConditionalOrderKeyPrefix +
 				orderToStringId(conditionalOrder),
+			types.ConditionalOrderTriggerPriceIndexKeyPrefix,
+			// Packet 3: DecrementUntriggeredConditionalOrderCount — global then per-subaccount.
+			types.UntriggeredConditionalOrderCountGlobalKey,
+			types.UntriggeredConditionalOrderCountPerSubaccountPrefix +
+				orderToStringSubaccountId(conditionalOrder),
 			// Delete from state
 			types.UntriggeredConditionalOrderKeyPrefix +
 				orderToStringId(conditionalOrder),

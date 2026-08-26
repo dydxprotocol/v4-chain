@@ -102,6 +102,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse",
 		"/dydxprotocol.clob.MsgUpdateClobPair",
 		"/dydxprotocol.clob.MsgUpdateClobPairResponse",
+		"/dydxprotocol.clob.MsgUpdateConditionalOrderTriggerConfig",
+		"/dydxprotocol.clob.MsgUpdateConditionalOrderTriggerConfigResponse",
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration",
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse",
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig",

@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgBatchCancel, MsgBatchCancelResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse, MsgUpdateLeverage, MsgUpdateLeverageResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgBatchCancel, MsgBatchCancelResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse, MsgUpdateLeverage, MsgUpdateLeverageResponse, MsgUpdateConditionalOrderTriggerConfig, MsgUpdateConditionalOrderTriggerConfigResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -50,6 +50,12 @@ export interface Msg {
    */
 
   updateLeverage(request: MsgUpdateLeverage): Promise<MsgUpdateLeverageResponse>;
+  /**
+   * UpdateConditionalOrderTriggerConfig updates the conditional order trigger
+   * configuration in state.
+   */
+
+  updateConditionalOrderTriggerConfig(request: MsgUpdateConditionalOrderTriggerConfig): Promise<MsgUpdateConditionalOrderTriggerConfigResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -66,6 +72,7 @@ export class MsgClientImpl implements Msg {
     this.updateBlockRateLimitConfiguration = this.updateBlockRateLimitConfiguration.bind(this);
     this.updateLiquidationsConfig = this.updateLiquidationsConfig.bind(this);
     this.updateLeverage = this.updateLeverage.bind(this);
+    this.updateConditionalOrderTriggerConfig = this.updateConditionalOrderTriggerConfig.bind(this);
   }
 
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse> {
@@ -126,6 +133,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdateLeverage.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateLeverage", data);
     return promise.then(data => MsgUpdateLeverageResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateConditionalOrderTriggerConfig(request: MsgUpdateConditionalOrderTriggerConfig): Promise<MsgUpdateConditionalOrderTriggerConfigResponse> {
+    const data = MsgUpdateConditionalOrderTriggerConfig.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateConditionalOrderTriggerConfig", data);
+    return promise.then(data => MsgUpdateConditionalOrderTriggerConfigResponse.decode(new _m0.Reader(data)));
   }
 
 }

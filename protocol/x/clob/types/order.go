@@ -237,6 +237,31 @@ func (o *Order) MustGetUnixGoodTilBlockTime() time.Time {
 	return time.Unix(int64(goodTilBlockTime), 0)
 }
 
+// IsStatefulOrderExpired returns true when a stateful order's GoodTilBlockTime is less than
+// or equal to blockTime. Short-term orders expire by block height and always return false here.
+//
+// TWAP orders and their suborders are excluded (always return false): they have a distinct,
+// short-lived lifecycle managed by the TWAP state machine (suborders carry a deliberately small
+// GoodTilBlockTime and are matched within the TWAP execution flow). This helper backs the
+// match-path / bounded-trigger expiry guard, which exists for the resting long-term / conditional
+// set that can linger past expiry under the bounded expiry drain; applying it to TWAP orders would
+// break TWAP matching (which pre-dates and is independent of the conditional-order mitigation).
+func (o *Order) IsStatefulOrderExpired(blockTime time.Time) bool {
+	if !o.IsStatefulOrder() {
+		return false
+	}
+	if o.IsTwapOrder() || o.IsTwapSuborder() {
+		return false
+	}
+	goodTilBlockTime, ok := o.GoodTilOneof.(*Order_GoodTilBlockTime)
+	if !ok || goodTilBlockTime.GoodTilBlockTime == 0 {
+		// Preserve validation behavior for malformed or legacy test orders that carry stateful
+		// flags with a height-based expiry. Their expiry shape is rejected by the normal validators.
+		return false
+	}
+	return !time.Unix(int64(goodTilBlockTime.GoodTilBlockTime), 0).After(blockTime)
+}
+
 // MustBeStatefulOrder panics if the order is not a stateful order, else it does nothing.
 func (o *Order) MustBeStatefulOrder() {
 	o.OrderId.MustBeStatefulOrder()

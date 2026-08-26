@@ -79,6 +79,18 @@ const (
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U:"
 
+	// ConditionalOrderTriggerPriceIndexKeyPrefix is the prefix for the secondary trigger-price index.
+	// IMPORTANT: this prefix must NOT start with StatefulOrderKeyPrefix ("SO/") to avoid being
+	// picked up by getAllOrdersIterator / GetAllStatefulOrders, which would try to unmarshal
+	// the empty-value index entries as LongTermOrderPlacement.
+	// Keys are structured as:
+	//   <prefix> <clobPairId:4 big-endian> <directionByte:1> <triggerSubticks:8 big-endian>
+	//     <placementSequence:8 big-endian> <orderId state key>
+	// directionByte = 0x00 for LTE-direction (trigger when oracle ≤ triggerPrice)
+	//               = 0x01 for GTE-direction (trigger when oracle ≥ triggerPrice)
+	// triggerSubticks is big-endian so byte ordering is monotonically increasing in price.
+	ConditionalOrderTriggerPriceIndexKeyPrefix = "TPIdx:"
+
 	// NextClobPairIDKey is the key to retrieve the next ClobPair ID to be used.
 	NextClobPairIDKey = "NextClobPairID"
 
@@ -115,6 +127,29 @@ const (
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of stateful orders stored in state.
 	StatefulOrderCountPrefix = "NumSO:"
+
+	// UntriggeredConditionalOrderCountGlobalKey is the single memstore key that holds the global count
+	// of resting untriggered conditional orders across all subaccounts and clob pairs.
+	// Maintained at the same placement / cancel / trigger / expiry hooks as the trigger-price index.
+	UntriggeredConditionalOrderCountGlobalKey = "NumUcond"
+
+	// UntriggeredConditionalOrderCountPerSubaccountPrefix is the memstore key prefix for the
+	// per-subaccount count of resting untriggered conditional orders.
+	// Full key = prefix + subaccountId.ToStateKey().
+	UntriggeredConditionalOrderCountPerSubaccountPrefix = "NumUcondSa:"
+
+	// ConditionalOrderTriggerConfigKey is the single persistent-store key holding the
+	// consensus-level, governance-tunable budgets and caps for the bounded conditional-order
+	// trigger path. When absent, GetConditionalOrderTriggerConfig returns the package defaults.
+	// The mitigation itself is always active (the trigger-price index is built by the v9.7
+	// state-breaking upgrade); this config only tunes the per-block budgets and admission caps.
+	ConditionalOrderTriggerConfigKey = "CondTrigCfg"
+
+	// ConditionalOrderTriggerNextClobPairKey stores the clob-pair id at which the next bounded
+	// conditional-order scheduling pass should begin. Rotating this cursor prevents fixed ascending
+	// pair order from starving later markets when the trigger budget is smaller than the number of
+	// active markets.
+	ConditionalOrderTriggerNextClobPairKey = "CondTrigNextPair"
 )
 
 // Transient Store

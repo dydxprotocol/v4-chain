@@ -2,13 +2,18 @@ package memclob
 
 import (
 	"testing"
+	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil_memclob "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPlaceOrder_LongTerm(t *testing.T) {
@@ -560,6 +565,125 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			// TODO(DEC-1296): Verify the correct offchain update messages were returned for Long-Term orders.
 		})
 	}
+}
+
+func TestPlaceOrder_RemovesExpiredStatefulMakerBeforeMatching(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+	maker := constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10
+	taker := constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25
+
+	memclob, _, _, _ := simplePlaceOrderTestSetup(
+		t,
+		ctx,
+		[]types.MatchableOrder{&maker},
+		map[int]testutil_memclob.CollateralizationCheck{},
+		constants.GetStatePosition_ZeroPositionSize,
+		&taker,
+	)
+
+	// Equality is expired: GoodTilBlockTime must be strictly after the current block time.
+	expiredCtx := ctx.WithBlockTime(time.Unix(10, 0))
+	filled, status, _, err := memclob.PlaceOrder(expiredCtx, taker)
+	require.NoError(t, err)
+	require.Zero(t, filled)
+	require.Equal(t, types.Success, status)
+
+	orderbook := memclob.mustGetOrderbook(0)
+	_, makerFound := orderbook.getOrder(maker.OrderId)
+	require.False(t, makerFound, "expired maker must be evicted from the local orderbook")
+	_, takerFound := orderbook.getOrder(taker.OrderId)
+	require.True(t, takerFound, "unexpired taker should rest after the expired maker is skipped")
+
+	operations, _ := memclob.GetOperationsToReplay(expiredCtx)
+	for _, operation := range operations {
+		if removal := operation.GetOrderRemoval(); removal != nil {
+			require.NotEqual(t, maker.OrderId, removal.OrderId,
+				"local GTBT eviction must not propose consensus-state removal")
+		}
+	}
+}
+
+func TestPlaceOrder_ExpiredStatefulMakerDoesNotBlockNextValidMaker(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+	expiredMaker := constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10
+	validMaker := constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10
+	validMaker.GoodTilOneof = &types.Order_GoodTilBlockTime{GoodTilBlockTime: 20}
+	taker := constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25
+
+	memclob, fakeKeeper, _, _ := simplePlaceOrderTestSetup(
+		t,
+		ctx,
+		[]types.MatchableOrder{&expiredMaker, &validMaker},
+		map[int]testutil_memclob.CollateralizationCheck{},
+		constants.GetStatePosition_ZeroPositionSize,
+		&taker,
+	)
+	fakeKeeper.WithCollatCheckFn(func(
+		matched map[satypes.SubaccountId][]types.PendingOpenOrder,
+	) (bool, map[satypes.SubaccountId]satypes.UpdateResult) {
+		results := make(map[satypes.SubaccountId]satypes.UpdateResult, len(matched))
+		for subaccountId := range matched {
+			results[subaccountId] = satypes.Success
+		}
+		return true, results
+	})
+
+	expiredCtx := ctx.WithBlockTime(time.Unix(10, 0))
+	filled, status, updates, err := memclob.PlaceOrder(expiredCtx, taker)
+	require.NoError(t, err)
+	require.Equal(t, satypes.BaseQuantums(45), filled,
+		"matching must continue to the valid maker behind the expired best maker")
+	require.Equal(t, types.Success, status)
+	AssertMemclobHasOrders(
+		t,
+		expiredCtx,
+		memclob,
+		[]OrderWithRemainingSize{},
+		[]OrderWithRemainingSize{{Order: taker, RemainingSize: 20}},
+	)
+
+	expectedMessage, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+		expiredCtx,
+		expiredMaker.OrderId,
+		indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+		ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+	)
+	require.True(t, success)
+	require.Contains(t, updates.Messages, types.OffchainUpdateMessage{
+		Message: expectedMessage,
+		Type:    types.RemoveMessageType,
+		OrderId: expiredMaker.OrderId,
+	})
+
+	operations, _ := memclob.GetOperationsToReplay(expiredCtx)
+	for _, operation := range operations {
+		if removal := operation.GetOrderRemoval(); removal != nil {
+			require.NotEqual(t, expiredMaker.OrderId, removal.OrderId,
+				"local expiry eviction must not propose consensus-state removal")
+		}
+	}
+}
+
+func TestPlaceOrder_RejectsExpiredStatefulTaker(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(10, 0))
+	taker := constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10
+	memclob, _, _, _ := simplePlaceOrderTestSetup(
+		t,
+		ctx,
+		[]types.MatchableOrder{},
+		map[int]testutil_memclob.CollateralizationCheck{},
+		constants.GetStatePosition_ZeroPositionSize,
+		&taker,
+	)
+
+	filled, _, _, err := memclob.PlaceOrder(ctx, taker)
+	require.ErrorIs(t, err, types.ErrTimeExceedsGoodTilBlockTime)
+	require.Zero(t, filled)
+	_, found := memclob.mustGetOrderbook(0).getOrder(taker.OrderId)
+	require.False(t, found, "expired taker must not enter the local orderbook")
 }
 
 func TestPlaceOrder_PreexistingStatefulOrder(t *testing.T) {

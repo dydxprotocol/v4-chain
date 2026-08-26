@@ -89,6 +89,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*clob.MsgCreateClobPair,
 		*clob.MsgUpdateBlockRateLimitConfiguration,
 		*clob.MsgUpdateClobPair,
+		*clob.MsgUpdateConditionalOrderTriggerConfig,
 		*clob.MsgUpdateEquityTierLimitConfiguration,
 		*clob.MsgUpdateLiquidationsConfig,
 
