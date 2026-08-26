@@ -55,6 +55,7 @@ describe('Subscriptions', () => {
   const validTickers: string[] = [btcTicker, ethTicker];
   const defaultDropEnabled: boolean = config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED;
   const defaultAbusePoints: number = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+  const defaultMaxTrackedConns: number = config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS;
   const initialMsgId: number = 1;
   const defaultId: string = 'id';
   const defaultId1: string = 'id1';
@@ -156,6 +157,7 @@ describe('Subscriptions', () => {
     jest.useRealTimers();
     config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = defaultDropEnabled;
     config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS = defaultAbusePoints;
+    config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = defaultMaxTrackedConns;
     reconnectPenalty.clear();
     decrementSubscriptionsSpy.mockRestore();
     incrementSubscriptionsSpy.mockRestore();
@@ -653,6 +655,113 @@ describe('Subscriptions', () => {
         'socks-test.subscriptions_limit_abuse_connections',
         1,
         expect.objectContaining({ enforcing: 'true' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('bounds how many connections it tracks and counts the rest as overflow', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = 2;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      // Four distinct connections all exceed the allowance; only two fit.
+      for (const id of ['connA', 'connB', 'connC', 'connD']) {
+        for (let i = 0; i <= allowedHits; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        2,
+        expect.objectContaining({ enforcing: 'false' }),
+      );
+      // The excess is reported rather than silently dropped, so the gauge is never read as
+      // "only two connections affected" when in fact there were four.
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections_overflow',
+        2,
+        expect.objectContaining({ instance: expect.any(String) }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('does not count a repeat offender past the cap as new overflow', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = 1;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      // connA fills the single slot, then keeps offending; it must not inflate overflow.
+      for (const id of ['connA', 'connA', 'connA']) {
+        for (let i = 0; i <= allowedHits; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections_overflow',
+        0,
+        expect.objectContaining({ instance: expect.any(String) }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('resets the overflow count each interval', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS = 1;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (const id of ['connA', 'connB']) {
+        for (let i = 0; i <= allowedHits; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections_overflow',
+        0,
+        expect.objectContaining({ instance: expect.any(String) }),
       );
       gaugeSpy.mockRestore();
     });

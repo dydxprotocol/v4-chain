@@ -61,6 +61,10 @@ export const configSchema = {
   // for a peer that never replies, and keeps delivering that peer's messages for the whole
   // window; an abusive client must not get 30s of free work.
   SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS: parseInteger({ default: 1_000 }),
+  // Cap on how many distinct connections are recorded per metrics interval. Sits well above the
+  // total concurrent connection count, so reaching it means connection churn far beyond normal
+  // -- which is itself worth knowing, hence the companion overflow gauge.
+  SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS: parseInteger({ default: 10_000 }),
 
   // After a connection is dropped for subscription-limit abuse, reject new websocket upgrades
   // from the same client for this long with an HTTP 429. The 429 is the only part of this the

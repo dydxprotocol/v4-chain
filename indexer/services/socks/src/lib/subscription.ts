@@ -115,7 +115,13 @@ export class Subscriptions {
   // Connections that exceeded the abuse allowance since the last metrics emit. Counted whether
   // or not the drop is enabled: the size of this set is how many connections the drop would
   // disconnect per interval, which is the number that decides whether it is safe to enable.
+  //
+  // Bounded, because entries are retained until the next emit and a client churning connections
+  // would otherwise grow it unchecked -- most easily while the drop is disabled, since then no
+  // reconnect cooldown slows the churn down. Anything past the cap is counted separately rather
+  // than dropped silently, so the gauge is never quietly understated.
   private subscriptionLimitAbuseCandidates: Set<string>;
+  private subscriptionLimitAbuseOverflow: number;
   public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
   public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
   public subscriptionLists: { [connectionId: string]: Subscription[] };
@@ -140,6 +146,7 @@ export class Subscriptions {
     this.connectionEpochs = new Map();
     this.nextConnectionEpoch = 1;
     this.subscriptionLimitAbuseCandidates = new Set();
+    this.subscriptionLimitAbuseOverflow = 0;
     this.forwardMessage = undefined;
   }
 
@@ -167,6 +174,25 @@ export class Subscriptions {
       this.subsByChannelByConnectionId[channel][connectionId] = 0;
     }
     return this.subsByChannelByConnectionId[channel][connectionId];
+  }
+
+  /**
+   * Records a connection that exceeded the abuse allowance, up to a bounded cardinality.
+   *
+   * Past the cap the connection is counted as overflow instead. Truncating silently would
+   * understate the very gauge used to decide whether the drop is safe to enable, which could turn
+   * a widespread problem into one that looks confined to a handful of clients.
+   */
+  private recordSubscriptionLimitAbuseCandidate(connectionId: string): void {
+    const maxTracked: number = config.SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS;
+    if (this.subscriptionLimitAbuseCandidates.size < maxTracked) {
+      this.subscriptionLimitAbuseCandidates.add(connectionId);
+      return;
+    }
+
+    if (!this.subscriptionLimitAbuseCandidates.has(connectionId)) {
+      this.subscriptionLimitAbuseOverflow += 1;
+    }
   }
 
   /**
@@ -377,7 +403,7 @@ export class Subscriptions {
       });
 
       if (limitAbuseDurationMs > 0) {
-        this.subscriptionLimitAbuseCandidates.add(connectionId);
+        this.recordSubscriptionLimitAbuseCandidate(connectionId);
       }
 
       if (limitAbuseDurationMs > 0 && config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED) {
@@ -1028,7 +1054,15 @@ export class Subscriptions {
         instance: instanceId,
       },
     );
+    stats.gauge(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_connections_overflow`,
+      this.subscriptionLimitAbuseOverflow,
+      {
+        instance: instanceId,
+      },
+    );
     this.subscriptionLimitAbuseCandidates.clear();
+    this.subscriptionLimitAbuseOverflow = 0;
 
     Object.entries(maxSubscriptionsByChannel).forEach(([channel, count]) => {
       stats.gauge(
