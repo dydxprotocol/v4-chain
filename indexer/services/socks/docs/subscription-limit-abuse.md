@@ -3,7 +3,7 @@
 ## Background
 
 On 2026-08-26 between roughly 05:15Z and 05:25Z a single client held ~693 `v4_orderbook` and
-~706 `v4_trades` subscriptions against one socks instance (10.0.1.170) while continuously
+~706 `v4_trades` subscriptions against a single socks instance while continuously
 re-sending `subscribe` requests. CPU saturated on socket writes and JSON serialization, Kafka
 consumption fell behind, and every other client that happened to land on that instance saw stale
 market data. Trading was unaffected; comlink was unaffected.
