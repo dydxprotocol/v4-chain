@@ -52,7 +52,7 @@ export const configSchema = {
   // edge (Cloudflare) can observe, and is what its rate limiting rule counts on.
   RECONNECT_PENALTY_ENABLED: parseBoolean({ default: true }),
   RECONNECT_PENALTY_MS: parseInteger({ default: 30_000 }),
-  RECONNECT_PENALTY_MAX_TRACKED_CLIENTS: parseInteger({ default: 10_000 }),
+  RECONNECT_PENALTY_MAX_TRACKED_CLIENTS: parseInteger({ default: 100_000 }),
 
   MESSAGE_FORWARDER_STATSD_SAMPLE_RATE: parseNumber({ default: 1.0 }),
   ENABLE_ORDERBOOK_LOGS: parseBoolean({ default: true }),

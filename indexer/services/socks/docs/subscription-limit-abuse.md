@@ -87,7 +87,7 @@ client. This is also why the incident could not be attributed from S3 ALB logs.
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS` | `10000` | Window over which those hits are counted |
 | `RECONNECT_PENALTY_ENABLED` | `true` | Kill switch for handshake refusal only. The connection drop stays active. |
 | `RECONNECT_PENALTY_MS` | `30000` | How long a dropped client's upgrades are refused |
-| `RECONNECT_PENALTY_MAX_TRACKED_CLIENTS` | `10000` | Bound on the penalty map |
+| `RECONNECT_PENALTY_MAX_TRACKED_CLIENTS` | `100000` | Bound on the penalty map |
 
 The existing global `RATE_LIMIT_ENABLED` kill switch is honoured inside `RateLimiter` itself, so
 setting it to `false` disables the drop as well.
