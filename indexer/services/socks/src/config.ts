@@ -41,6 +41,44 @@ export const configSchema = {
   RATE_LIMIT_INVALID_MESSAGE_POINTS: parseNumber({ default: 2 }),
   RATE_LIMIT_INVALID_MESSAGE_DURATION_MS: parseInteger({ default: 1000 }),
 
+  // A client that keeps re-sending subscribe requests after being told it is at the
+  // per-connection subscription limit is ignoring the contract. Once it exceeds these points
+  // within the window, the connection is dropped rather than answered with another error.
+  //
+  // Gated independently of RATE_LIMIT_ENABLED so this can be rolled back on its own without
+  // also disabling the subscribe, ping and invalid-message limiters. Staged off until the
+  // thresholds below have been sized against production telemetry.
+  SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED: parseBoolean({ default: false }),
+  // These assume subscription-limit rejections are concentrated in a small number of
+  // misbehaving clients, with well-behaved clients producing close to none. That holds only if
+  // the fleet-wide rejection rate measured on mainnet comes from a few offenders rather than
+  // being spread across every connection. Confirm with
+  // socks.subscriptions_limit_abuse_connections, which counts distinct affected connections
+  // while the drop is still disabled, before enabling. See docs/subscription-limit-abuse.md.
+  RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS: parseNumber({ default: 5 }),
+  RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS: parseInteger({ default: 10_000 }),
+  // How long to wait after sending the close frame before destroying the socket. `ws` waits 30s
+  // for a peer that never replies, and keeps delivering that peer's messages for the whole
+  // window; an abusive client must not get 30s of free work.
+  SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS: parseInteger({ default: 1_000 }),
+  // Cap on how many distinct connections are recorded per metrics interval. Sits well above the
+  // total concurrent connection count, so reaching it means connection churn far beyond normal
+  // -- which is itself worth knowing, hence the companion overflow gauge.
+  SUBSCRIPTION_LIMIT_ABUSE_MAX_TRACKED_CONNECTIONS: parseInteger({ default: 10_000 }),
+
+  // After a connection is dropped for subscription-limit abuse, reject new websocket upgrades
+  // from the same client for this long with an HTTP 429. The 429 is the only part of this the
+  // edge (Cloudflare) can observe, and is what its rate limiting rule counts on.
+  // `cf-connecting-ip` and `x-forwarded-for` are supplied by the caller, so they are only
+  // meaningful because origin ingress accepts connections from Cloudflare proxies alone. That
+  // property is what makes the forwarded address trustworthy, and this switch exists to turn the
+  // address cooldown off if it ever stops holding -- if the origin became directly reachable, a
+  // caller could name a victim address and have that address's upgrades refused.
+  TRUST_FORWARDED_HEADERS: parseBoolean({ default: true }),
+  RECONNECT_PENALTY_ENABLED: parseBoolean({ default: true }),
+  RECONNECT_PENALTY_MS: parseInteger({ default: 30_000 }),
+  RECONNECT_PENALTY_MAX_TRACKED_CLIENTS: parseInteger({ default: 100_000 }),
+
   MESSAGE_FORWARDER_STATSD_SAMPLE_RATE: parseNumber({ default: 1.0 }),
   ENABLE_ORDERBOOK_LOGS: parseBoolean({ default: true }),
   PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes

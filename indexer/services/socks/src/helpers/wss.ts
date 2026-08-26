@@ -1,3 +1,5 @@
+import { IncomingMessage as IncomingMessageHttp, OutgoingHttpHeaders } from 'http';
+
 import { stats, getInstanceId, logger } from '@dydxprotocol-indexer/base';
 import WebSocket from 'ws';
 
@@ -5,9 +7,17 @@ import config from '../config';
 import {
   WS_CLOSE_CODE_ABNORMAL_CLOSURE,
   ERR_WRITE_STREAM_DESTROYED,
+  RATE_LIMIT_REASON_HEADER,
+  RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
   WEBSOCKET_NOT_OPEN,
 } from '../lib/constants';
+import { reconnectPenalty } from '../lib/reconnect-penalty';
 import { IncomingMessage, OutgoingMessage, WebsocketEvent } from '../types';
+import { getClientIp } from './header-utils';
+
+// Status returned for a websocket upgrade refused because the client is in the reconnect
+// penalty box. It is an ordinary HTTP response, which is what makes it visible to Cloudflare.
+const HTTP_TOO_MANY_REQUESTS: number = 429;
 
 function incrementSendErrorStats(instanceId: string, error: WssError): void {
   stats.increment(
@@ -43,6 +53,59 @@ function incrementWriteEpipeErrorStats(instanceId: string): void {
   );
 }
 
+/**
+ * Refuses a websocket upgrade from a client that is serving a reconnect penalty.
+ *
+ * Rejecting at the handshake, rather than accepting and immediately closing, is what makes the
+ * penalty legible to the edge: Cloudflare cannot inspect websocket frames, but it can count HTTP
+ * 429 responses and match on the reason header, and escalate to a longer block of its own.
+ * `Retry-After` tells a well-behaved client how long to wait without needing any of that.
+ */
+export function verifyClientNotPenalized(
+  info: { origin: string, secure: boolean, req: IncomingMessageHttp },
+  callback: (
+    result: boolean,
+    code?: number,
+    statusMessage?: string,
+    headers?: OutgoingHttpHeaders,
+  ) => void,
+): void {
+  const clientIp: string | undefined = getClientIp(info.req);
+  const remainingPenaltyMs: number = reconnectPenalty.getRemainingPenaltyMs(clientIp);
+
+  if (remainingPenaltyMs <= 0) {
+    callback(true);
+    return;
+  }
+
+  const retryAfterSeconds: number = Math.ceil(remainingPenaltyMs / 1000);
+
+  stats.increment(
+    `${config.SERVICE_NAME}.connection_rejected_penalty`,
+    1,
+    undefined,
+    {
+      instance: getInstanceId(),
+    },
+  );
+
+  logger.info({
+    at: 'wss#verifyClientNotPenalized',
+    message: 'Rejected websocket upgrade for client serving a reconnect penalty',
+    retryAfterSeconds,
+  });
+
+  callback(
+    false,
+    HTTP_TOO_MANY_REQUESTS,
+    'Too Many Requests',
+    {
+      'Retry-After': String(retryAfterSeconds),
+      [RATE_LIMIT_REASON_HEADER]: RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+    },
+  );
+}
+
 export class Wss {
   private wss: WebSocket.Server;
   private started: boolean;
@@ -56,6 +119,7 @@ export class Wss {
       port: config.WS_PORT,
       allowSynchronousEvents: true,
       autoPong: true,
+      verifyClient: verifyClientNotPenalized,
     };
     this.wss = new WebSocket.Server(serverOptions);
   }
