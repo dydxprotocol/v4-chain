@@ -112,6 +112,10 @@ export class Subscriptions {
   // so a late-resolving request can tell that the connection it belongs to is gone.
   private connectionEpochs: Map<string, number>;
   private nextConnectionEpoch: number;
+  // Connections that exceeded the abuse allowance since the last metrics emit. Counted whether
+  // or not the drop is enabled: the size of this set is how many connections the drop would
+  // disconnect per interval, which is the number that decides whether it is safe to enable.
+  private subscriptionLimitAbuseCandidates: Set<string>;
   public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
   public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
   public subscriptionLists: { [connectionId: string]: Subscription[] };
@@ -135,6 +139,7 @@ export class Subscriptions {
     this.subsByChannelByConnectionId = {};
     this.connectionEpochs = new Map();
     this.nextConnectionEpoch = 1;
+    this.subscriptionLimitAbuseCandidates = new Set();
     this.forwardMessage = undefined;
   }
 
@@ -364,14 +369,18 @@ export class Subscriptions {
       // Being at the limit is a normal condition and is answered with an error. Repeatedly
       // hitting it is not: it means the client is retrying instead of respecting the limit, and
       // answering it again just funds the retry loop. Past the allowance, drop the connection.
-      const limitAbuseDurationMs: number = config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED
-        ? this.subscriptionLimitReachedRateLimiter.rateLimit({
-          connectionId,
-          key: SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY,
-        })
-        : 0;
+      // Evaluated even when the drop is disabled, so that the number of connections this would
+      // affect can be measured in production before anyone turns it on.
+      const limitAbuseDurationMs: number = this.subscriptionLimitReachedRateLimiter.rateLimit({
+        connectionId,
+        key: SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY,
+      });
 
       if (limitAbuseDurationMs > 0) {
+        this.subscriptionLimitAbuseCandidates.add(connectionId);
+      }
+
+      if (limitAbuseDurationMs > 0 && config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED) {
         this.dropConnectionForSubscriptionLimitAbuse(
           ws,
           channel,
@@ -666,6 +675,9 @@ export class Subscriptions {
     this.subscriptionLimitReachedRateLimiter.removeConnection(connectionId);
     // Invalidate any subscribe request still awaiting its initial response.
     this.connectionEpochs.delete(connectionId);
+    // Deliberately not pruning subscriptionLimitAbuseCandidates here. The drop itself calls this
+    // method, so removing the entry would undercount exactly the connections being measured. The
+    // set is cleared wholesale on every metrics emit, so it stays bounded either way.
   }
 
   /**
@@ -1004,6 +1016,19 @@ export class Subscriptions {
       });
 
     const instanceId = getInstanceId();
+
+    // Distinct connections over the abuse allowance this interval. Compare against
+    // num_concurrent_connections: a handful means the behaviour is confined to a few bad
+    // clients and the drop is safe to enable; a large fraction means it is not.
+    stats.gauge(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_connections`,
+      this.subscriptionLimitAbuseCandidates.size,
+      {
+        enforcing: String(config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED),
+        instance: instanceId,
+      },
+    );
+    this.subscriptionLimitAbuseCandidates.clear();
 
     Object.entries(maxSubscriptionsByChannel).forEach(([channel, count]) => {
       stats.gauge(

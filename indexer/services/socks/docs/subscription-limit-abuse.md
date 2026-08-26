@@ -117,28 +117,38 @@ no per-channel or per-instance breakdown is available.
 | `socks.num_concurrent_connections` | ~3,700 | ~4,270 |
 | Implied per-connection rejections | ~54/min (~9 per 10s) | ~171/min (~29 per 10s) |
 
-Two things follow, and both argue against turning the drop on as configured.
+The per-connection row is a fleet average, and how it should be read depends entirely on how the
+rejections are distributed -- which these metrics cannot show, because tag grouping is disabled
+on them.
 
-**The defaults would disconnect much of the customer base.** The allowance is 5 rejections per
-10s per connection. The *average* mainnet connection produces about 9 per 10s while nothing is
-wrong, and about 29 per 10s during a busy period. Enabling the drop today would therefore drop a
-large share of healthy connections on a rolling basis, and place their addresses in a reconnect
-cooldown. This is the reason the feature ships disabled, and it is not fixed by simply raising
-the number.
+**The working assumption is that rejections are heavily concentrated.** A well-behaved client
+subscribes once per market when it connects and then stays subscribed; in steady state it
+produces no rejections at all. Producing them continuously requires continuously re-subscribing,
+which is the pathological pattern by definition. The baseline is also flat rather than tracking
+connection churn, which is what a bulk-subscribe-at-connect explanation would predict. On that
+reading the ~200k/min comes from a small number of offenders, the typical connection sits at or
+near zero, and an allowance of 5 per 10s does not endanger healthy clients.
 
-**The signal itself is questionable on mainnet.** `socks.on_message` tracks
-`socks.message_received_subscribe` almost exactly, so essentially all inbound websocket traffic
-is subscribe requests, and roughly half of them are rejected for hitting the per-connection cap
-at all times. "Repeatedly hits the subscription limit" is the steady state of this system, not a
-marker of abuse. A threshold set safely above normal would have to sit so far above 171/min per
-connection that it would rarely constrain anything.
+The alternative reading -- that the load is spread evenly -- would mean the average connection
+sits at roughly twice the allowance while nothing is wrong, and enabling the drop would
+disconnect a large share of the customer base on a rolling basis. The two readings are the same
+numbers and lead to opposite decisions, so the distribution has to be measured rather than
+assumed.
 
-Before enabling, the open question is why normal clients subscribe 80-350 times per minute and
-are refused about half the time -- most plausibly because they want more markets than the
-per-channel cap of 32 permits and retry in a loop. If that is the cause, raising the cap, or
-making the refusal cacheable so clients stop retrying, addresses more of the load than dropping
-connections does. A per-connection limit on subscribe *attempts*, independent of outcome, is also
-a better-targeted control than punishing limit hits.
+**How to measure it before enabling anything.** The abuse allowance is evaluated even when
+`SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED` is off, and every connection that exceeds it is counted.
+`socks.subscriptions_limit_abuse_connections` reports the number of *distinct* connections that
+would have been dropped in each metrics interval, tagged `enforcing:false` while the drop is
+disabled. Deploy with the drop off and compare that gauge against
+`socks.num_concurrent_connections`:
+
+- A handful of connections against several thousand confirms concentration. Enable the drop.
+- A large fraction means the behaviour is normal for this system, and dropping connections is the
+  wrong control -- raising the per-channel cap, making the refusal cacheable so clients stop
+  retrying, or limiting subscribe *attempts* regardless of outcome would each address more of the
+  load without disconnecting anyone.
+
+This costs nothing to run and turns the decision into a reading rather than an argument.
 
 ## Configuration
 
@@ -187,6 +197,7 @@ penalty enabled and watch `socks.connection_rejected_penalty`; a rate much highe
 | `socks.subscriptions_limit_abuse_force_terminate` | `reason`, `instance` | A dropped socket was destroyed without a completed close handshake |
 | `socks.message_dropped_not_open` | `readyState`, `instance` | An inbound message was discarded because the socket was no longer open |
 | `socks.subscription_abandoned_stale_connection` | `channel`, `instance` | An initial response resolved after its connection was torn down |
+| `socks.subscriptions_limit_abuse_connections` | `enforcing`, `instance` | Distinct connections over the abuse allowance per interval, counted whether or not the drop is enabled |
 
 Drops also appear on the existing `socks.num_disconnects` counter tagged `code: "4008"`.
 

@@ -566,6 +566,97 @@ describe('Subscriptions', () => {
       expect(mockWs.terminate).toHaveBeenCalledTimes(1);
     });
 
+    it('counts connections that would be dropped even while the drop is disabled', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      // Nothing was disconnected, but the connection is counted so the blast radius of enabling
+      // the drop can be measured in production first.
+      expect(mockWs.close).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        1,
+        expect.objectContaining({ enforcing: 'false' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('counts distinct connections, not individual rejections', async () => {
+      config.SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED = false;
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      // Two connections, each well past the allowance.
+      for (const id of ['connA', 'connB']) {
+        for (let i = 0; i <= allowedHits * 2; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await subscriptions.subscribe(
+            mockWs,
+            Channel.V4_ORDERBOOK,
+            id,
+            initialMsgId + i,
+            validTickers[i % validTickers.length],
+            false,
+          );
+        }
+      }
+
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        2,
+        expect.objectContaining({ enforcing: 'false' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
+    it('still counts a connection that the drop disconnected', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      const gaugeSpy = jest.spyOn(stats, 'gauge');
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+      // The drop tears the connection down, which must not erase it from the measurement.
+      jest.advanceTimersByTime(config.SUBSCRIPTION_METRIC_INTERVAL_MS);
+      expect(gaugeSpy).toHaveBeenCalledWith(
+        'socks-test.subscriptions_limit_abuse_connections',
+        1,
+        expect.objectContaining({ enforcing: 'true' }),
+      );
+      gaugeSpy.mockRestore();
+    });
+
     it('leaves no counter entry behind immediately after the drop', async () => {
       const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
       const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
