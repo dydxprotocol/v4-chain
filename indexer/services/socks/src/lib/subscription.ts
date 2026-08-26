@@ -380,7 +380,8 @@ export class Subscriptions {
           channelSubscriptionsLimit,
           limitAbuseDurationMs,
         );
-        this.decrementSubscriptions(channel, connectionId);
+        // No decrement here: the drop tears the connection down entirely, and decrementing
+        // afterwards would recreate the zero-valued counter that teardown just deleted.
         return;
       }
 

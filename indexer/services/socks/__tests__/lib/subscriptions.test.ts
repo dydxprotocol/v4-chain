@@ -562,6 +562,32 @@ describe('Subscriptions', () => {
       expect(mockWs.terminate).toHaveBeenCalledTimes(1);
     });
 
+    it('leaves no counter entry behind immediately after the drop', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+
+      // Asserted before any close-event cleanup: the drop must leave the connection fully torn
+      // down on its own, not rely on a later pass to tidy up after it.
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_ORDERBOOK]?.[connectionId])
+        .toBeUndefined();
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+    });
+
     it('does not resurrect subscription state when a drop lands mid initial-response', async () => {
       const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
       const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
