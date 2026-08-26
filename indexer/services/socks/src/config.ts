@@ -49,8 +49,10 @@ export const configSchema = {
   // also disabling the subscribe, ping and invalid-message limiters. Staged off until the
   // thresholds below have been sized against production telemetry.
   SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED: parseBoolean({ default: false }),
-  // NOT YET SIZED against mainnet telemetry -- see the threshold-sizing note in
-  // docs/subscription-limit-abuse.md. The drop ships disabled for this reason.
+  // These are NOT safe to enable as-is. Measured on mainnet, the average connection produces
+  // ~9 subscription-limit rejections per 10s while nothing is wrong, so this allowance of 5
+  // would disconnect a large share of healthy clients. See the threshold-sizing section in
+  // docs/subscription-limit-abuse.md before changing SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED.
   RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS: parseNumber({ default: 5 }),
   RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS: parseInteger({ default: 10_000 }),
   // How long to wait after sending the close frame before destroying the socket. `ws` waits 30s

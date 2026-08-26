@@ -103,11 +103,48 @@ This ordering is load-bearing rather than cosmetic. `indexer.dydx.trade` is Clou
 ever see Cloudflare edge addresses. `cf-connecting-ip` is the only header that carries the real
 client. This is also why the incident could not be attributed from S3 ALB logs.
 
+## Threshold sizing: measured, and why the drop is still disabled
+
+Measured on mainnet (dYdX Indexer org, ap1) for 2026-08-26 04:30-06:30Z. Note that the socks
+metrics there have tag grouping disabled for cardinality control, so these are fleet-wide totals;
+no per-channel or per-instance breakdown is available.
+
+| Signal | Baseline | Peak in window |
+|---|---|---|
+| `socks.message_received_subscribe` | ~300k/min | 1.31M/min (05:22) |
+| `socks.subscriptions_limit_reached` | ~200k/min | 635k/min (05:11) |
+| Rejected share of all subscribes | ~45-65% | ~57% |
+| `socks.num_concurrent_connections` | ~3,700 | ~4,270 |
+| Implied per-connection rejections | ~54/min (~9 per 10s) | ~171/min (~29 per 10s) |
+
+Two things follow, and both argue against turning the drop on as configured.
+
+**The defaults would disconnect much of the customer base.** The allowance is 5 rejections per
+10s per connection. The *average* mainnet connection produces about 9 per 10s while nothing is
+wrong, and about 29 per 10s during a busy period. Enabling the drop today would therefore drop a
+large share of healthy connections on a rolling basis, and place their addresses in a reconnect
+cooldown. This is the reason the feature ships disabled, and it is not fixed by simply raising
+the number.
+
+**The signal itself is questionable on mainnet.** `socks.on_message` tracks
+`socks.message_received_subscribe` almost exactly, so essentially all inbound websocket traffic
+is subscribe requests, and roughly half of them are rejected for hitting the per-connection cap
+at all times. "Repeatedly hits the subscription limit" is the steady state of this system, not a
+marker of abuse. A threshold set safely above normal would have to sit so far above 171/min per
+connection that it would rarely constrain anything.
+
+Before enabling, the open question is why normal clients subscribe 80-350 times per minute and
+are refused about half the time -- most plausibly because they want more markets than the
+per-channel cap of 32 permits and retry in a loop. If that is the cause, raising the cap, or
+making the refusal cacheable so clients stop retrying, addresses more of the load than dropping
+connections does. A per-connection limit on subscribe *attempts*, independent of outcome, is also
+a better-targeted control than punishing limit hits.
+
 ## Configuration
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED` | `false` | Kill switch for the connection drop, independent of `RATE_LIMIT_ENABLED`. Ships off; enable once thresholds are sized. |
+| `SUBSCRIPTION_LIMIT_ABUSE_DROP_ENABLED` | `false` | Kill switch for the connection drop, independent of `RATE_LIMIT_ENABLED`. Ships off. Do not enable without first reading the threshold-sizing section above. |
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS` | `5` | Limit hits allowed per connection before it is dropped |
 | `RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS` | `10000` | Window over which those hits are counted |
 | `SUBSCRIPTION_LIMIT_ABUSE_FORCE_TERMINATE_MS` | `1000` | Grace period after the close frame before the socket is destroyed |
