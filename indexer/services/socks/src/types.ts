@@ -127,6 +127,9 @@ export interface Connection {
   heartbeat?: NodeJS.Timeout,
   disconnect?: NodeJS.Timeout,
   geoOriginHeaders?: GeoOriginHeaders,
+  // Client address as seen past Cloudflare / the load balancer. Used to apply a reconnect
+  // penalty to a client whose connection was dropped for abuse.
+  clientIp?: string,
   id: string,
 }
 

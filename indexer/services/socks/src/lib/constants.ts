@@ -9,6 +9,18 @@ export const WS_CLOSE_HEARTBEAT_TIMEOUT: number = 1011;
 export const WS_CLOSE_CODE_ABNORMAL_CLOSURE: number = 4000;
 export const WS_CLOSE_CODE_POLICY_VIOLATION: number = 1008;
 export const WS_CLOSE_CODE_SERVICE_RESTART: number = 1012;
+// Private-use close code (4000-4999) signalling that the connection was dropped because the
+// client repeatedly ignored the per-connection subscription limit. A distinct code lets clients
+// (and our own dashboards) tell this apart from a generic policy violation.
+export const WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE: number = 4008;
+
+// Reason sent in the close frame when a connection is dropped for subscription-limit abuse.
+export const SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON: string = 'Subscription limit abuse';
+
+// Header returned on a rejected websocket upgrade so that edge proxies (Cloudflare) and clients
+// can identify why the handshake was refused.
+export const RATE_LIMIT_REASON_HEADER: string = 'x-dydx-ratelimit-reason';
+export const RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE: string = 'subscription-limit-abuse';
 
 // https://github.com/nodejs/node/blob/master/lib/internal/errors.js#L1537
 // Error code for writing to a destroyed stream

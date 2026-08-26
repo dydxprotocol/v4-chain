@@ -29,9 +29,17 @@ import {
   SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
-import { V4_BLOCK_HEIGHT_ID, V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
+import {
+  RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+  SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+  V4_BLOCK_HEIGHT_ID,
+  V4_MARKETS_ID,
+  WS_CLOSE_CODE_POLICY_VIOLATION,
+  WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
+} from './constants';
 import { BlockedError, InvalidChannelError } from './errors';
 import { RateLimiter } from './rate-limit';
+import { reconnectPenalty } from './reconnect-penalty';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
@@ -42,6 +50,10 @@ const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
 ];
 
 const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
+
+// Single key for the subscription-limit-abuse limiter, so the allowance is spent across every
+// channel and id a connection touches rather than being refreshed per market.
+const SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY: string = 'subscriptionLimitReached';
 
 const CHANNEL_CONNECTION_LIMITS: { [channel: string]: number } = {
   [Channel.V4_ACCOUNTS]: config.V4_ACCOUNTS_CHANNEL_LIMIT,
@@ -57,6 +69,7 @@ export class Subscriptions {
   private forwardMessage?: (message: MessageToForward, connectionId: string) => number;
   private subscriptionMetricsInterval?: NodeJS.Timeout;
   private subscribeRateLimiter: RateLimiter;
+  private subscriptionLimitReachedRateLimiter: RateLimiter;
   public batchedSubscriptions: { [channel: string]: { [id: string]: SubscriptionInfo[] } };
   public subsByChannelByConnectionId: { [channel: string]: { [connectionId: string]: number } };
   public subscriptionLists: { [connectionId: string]: Subscription[] };
@@ -69,6 +82,13 @@ export class Subscriptions {
     this.subscribeRateLimiter = new RateLimiter({
       points: config.RATE_LIMIT_SUBSCRIBE_POINTS,
       durationMs: config.RATE_LIMIT_SUBSCRIBE_DURATION_MS,
+    });
+    // Deliberately keyed per-connection rather than per channel+id: a client cycling through
+    // hundreds of distinct markets must trip this, and it is exactly that pattern which
+    // otherwise slips past `subscribeRateLimiter`.
+    this.subscriptionLimitReachedRateLimiter = new RateLimiter({
+      points: config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS,
+      durationMs: config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS,
     });
     this.subsByChannelByConnectionId = {};
     this.forwardMessage = undefined;
@@ -105,6 +125,95 @@ export class Subscriptions {
       if (this.subsByChannelByConnectionId[channel][connectionId] !== undefined) {
         delete this.subsByChannelByConnectionId[channel][connectionId];
       }
+    });
+  }
+
+  /**
+   * Drops a connection that keeps re-subscribing after being told it is at the per-connection
+   * subscription limit.
+   *
+   * The client is told, in the close frame and in a final error message, exactly which contract
+   * it violated and how long to wait, so a well-behaved client can correct itself. The client is
+   * also placed in the reconnect penalty box, which makes subsequent handshakes fail with an
+   * HTTP 429 -- the signal Cloudflare can see and escalate on, since it cannot inspect websocket
+   * close frames.
+   *
+   * @param ws websocket connection to drop
+   * @param channel channel whose limit was breached
+   * @param connectionId id of the websocket connection
+   * @param messageId message id for the final error message
+   * @param channelSubscriptionsLimit the limit that was breached
+   * @param retryAfterMs how long the client should wait before retrying
+   */
+  private dropConnectionForSubscriptionLimitAbuse(
+    ws: WebSocket,
+    channel: Channel,
+    connectionId: string,
+    messageId: number,
+    channelSubscriptionsLimit: number,
+    retryAfterMs: number,
+  ): void {
+    const retryAfterSeconds: number = Math.ceil(
+      Math.max(retryAfterMs, config.RECONNECT_PENALTY_MS) / 1000,
+    );
+
+    stats.increment(
+      `${config.SERVICE_NAME}.subscriptions_limit_abuse_disconnect`,
+      1,
+      undefined,
+      { channel, instance: getInstanceId() },
+    );
+
+    try {
+      sendMessage(
+        ws,
+        connectionId,
+        createErrorMessage(
+          `Repeatedly exceeded the per-connection subscription limit for ${channel} ` +
+          `(limit=${channelSubscriptionsLimit}). Unsubscribe before subscribing again, or open ` +
+          'an additional connection. Closing this connection; reconnecting sooner than ' +
+          `${retryAfterSeconds}s will be refused.`,
+          connectionId,
+          messageId,
+        ),
+      );
+    } catch (error) {
+      logger.info({
+        at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
+        message: `Failed to send subscription limit abuse message: ${error.message}`,
+        connectionId,
+      });
+    }
+
+    reconnectPenalty.penalizeConnection(
+      connectionId,
+      RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+    );
+
+    try {
+      ws.close(
+        WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
+        JSON.stringify({
+          message: SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+          reason: RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+          retryAfterSeconds,
+        }),
+      );
+    } catch (error) {
+      logger.info({
+        at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
+        message: `Failed to close connection: ${error.message}`,
+        connectionId,
+      });
+    }
+
+    logger.info({
+      at: 'subscription#dropConnectionForSubscriptionLimitAbuse',
+      message: 'Connection closed for repeatedly exceeding the subscription limit',
+      channel,
+      channelSubscriptionsLimit,
+      retryAfterSeconds,
+      connectionId,
     });
   }
 
@@ -161,6 +270,27 @@ export class Subscriptions {
         undefined,
         { channel, instance: getInstanceId() },
       );
+
+      // Being at the limit is a normal condition and is answered with an error. Repeatedly
+      // hitting it is not: it means the client is retrying instead of respecting the limit, and
+      // answering it again just funds the retry loop. Past the allowance, drop the connection.
+      const limitAbuseDurationMs: number = this.subscriptionLimitReachedRateLimiter.rateLimit({
+        connectionId,
+        key: SUBSCRIPTION_LIMIT_REACHED_RATE_LIMIT_KEY,
+      });
+
+      if (limitAbuseDurationMs > 0) {
+        this.dropConnectionForSubscriptionLimitAbuse(
+          ws,
+          channel,
+          connectionId,
+          messageId,
+          channelSubscriptionsLimit,
+          limitAbuseDurationMs,
+        );
+        this.decrementSubscriptions(channel, connectionId);
+        return;
+      }
 
       sendMessage(
         ws,
@@ -415,6 +545,7 @@ export class Subscriptions {
     }
     this.removeSubscriptions(connectionId);
     this.subscribeRateLimiter.removeConnection(connectionId);
+    this.subscriptionLimitReachedRateLimiter.removeConnection(connectionId);
   }
 
   /**

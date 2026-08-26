@@ -6,11 +6,12 @@ import {
 import WebSocket from 'ws';
 
 import config from '../config';
-import { getGeoOriginHeaders } from '../helpers/header-utils';
+import { getClientIp, getGeoOriginHeaders } from '../helpers/header-utils';
 import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
 import { sendMessage, Wss } from '../helpers/wss';
 import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART, WS_CLOSE_HEARTBEAT_TIMEOUT } from '../lib/constants';
 import { InvalidMessageHandler } from '../lib/invalid-message';
+import { reconnectPenalty } from '../lib/reconnect-penalty';
 import { Subscriptions } from '../lib/subscription';
 import {
   ALL_CHANNELS,
@@ -89,12 +90,17 @@ export class Index {
     const instanceId: string = getInstanceId();
 
     const connectionId: string = randomUUID();
+    const clientIp: string | undefined = getClientIp(req);
     this.connections[connectionId] = {
       ws,
       messageId: 0,
       id: connectionId,
       geoOriginHeaders: getGeoOriginHeaders(req),
+      clientIp,
     } as Connection;
+    // Record the address so that whichever layer drops this connection can penalise the client
+    // without having to carry the request headers around.
+    reconnectPenalty.trackConnection(connectionId, clientIp);
     const connection: Connection = this.connections[connectionId];
 
     const numConcurrentConnections: number = Object.keys(this.connections).length;
@@ -437,6 +443,7 @@ export class Index {
 
       this.subscriptions.remove(connectionId);
       this.invalidMessageHandler.handleDisconnect(connectionId);
+      reconnectPenalty.removeConnection(connectionId);
       delete this.connections[connectionId];
     } catch (error) {
       logger.error({

@@ -21,6 +21,12 @@ import {
   AxiosSafeServerError, makeAxiosSafeServerError, stats, setInstanceId,
 } from '@dydxprotocol-indexer/base';
 import { BlockedError } from '../../src/lib/errors';
+import {
+  RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+  SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+  WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE,
+} from '../../src/lib/constants';
+import { reconnectPenalty } from '../../src/lib/reconnect-penalty';
 import config from '../../src/config';
 
 import 'jest-extended';
@@ -45,6 +51,8 @@ describe('Subscriptions', () => {
   let axiosRequestMock: jest.Mock;
 
   const connectionId: string = 'connectionId';
+  const clientIp: string = '203.0.113.7';
+  const validTickers: string[] = [btcTicker, ethTicker];
   const initialMsgId: number = 1;
   const defaultId: string = 'id';
   const defaultId1: string = 'id1';
@@ -141,6 +149,7 @@ describe('Subscriptions', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    reconnectPenalty.clear();
     decrementSubscriptionsSpy.mockRestore();
     incrementSubscriptionsSpy.mockRestore();
     removeSubscriptionsSpy.mockRestore();
@@ -318,6 +327,131 @@ describe('Subscriptions', () => {
 
       expect(decrementSubscriptionsSpy).toHaveBeenCalledTimes(2);
       expect(decrementSubscriptionsSpy).toHaveBeenCalledWith(Channel.V4_ACCOUNTS, connectionId);
+    });
+
+    it('drops the connection once the subscription limit is hit repeatedly', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      // Every hit up to the allowance is answered with an ordinary error, connection intact.
+      for (let i = 0; i < allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+      expect(mockWs.close).not.toHaveBeenCalled();
+      expect(reconnectPenalty.getRemainingPenaltyMs(clientIp)).toEqual(0);
+
+      // The hit past the allowance drops the connection instead.
+      await subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ORDERBOOK,
+        connectionId,
+        initialMsgId + allowedHits,
+        validTickers[allowedHits % validTickers.length],
+        false,
+      );
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+      const [closeCode, closeReason] = (mockWs.close as jest.Mock).mock.calls[0];
+      expect(closeCode).toEqual(WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE);
+      expect(JSON.parse(closeReason)).toEqual(expect.objectContaining({
+        message: SUBSCRIPTION_LIMIT_ABUSE_CLOSE_REASON,
+        reason: RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
+      }));
+      expect(JSON.parse(closeReason).retryAfterSeconds).toBeGreaterThan(0);
+    });
+
+    it('tells the client why it was dropped and when it may reconnect', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(sendMessageMock).toHaveBeenLastCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Repeatedly exceeded the per-connection subscription limit for ${Channel.V4_ORDERBOOK}`,
+          ),
+        }),
+      );
+      expect(sendMessageMock).toHaveBeenLastCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          message: expect.stringContaining('will be refused'),
+        }),
+      );
+    });
+
+    it('penalises the dropped client so its reconnect handshake is refused', async () => {
+      const limit = config.V4_ORDERBOOK_CHANNEL_LIMIT;
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      incrementSubscriptionsSpy.mockImplementation(() => limit + 1);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          Channel.V4_ORDERBOOK,
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(reconnectPenalty.getRemainingPenaltyMs(clientIp)).toBeGreaterThan(0);
+    });
+
+    it('spends the allowance across channels, not per channel', async () => {
+      // The incident pattern: a client cycling through many distinct channels and markets. The
+      // per-channel+id subscribe limiter never trips on this, so the abuse limiter must.
+      incrementSubscriptionsSpy.mockImplementation(() => 1000);
+      reconnectPenalty.clear();
+      reconnectPenalty.trackConnection(connectionId, clientIp);
+
+      const channels = [Channel.V4_ORDERBOOK, Channel.V4_TRADES];
+      const allowedHits = config.RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS;
+      for (let i = 0; i <= allowedHits; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await subscriptions.subscribe(
+          mockWs,
+          channels[i % channels.length],
+          connectionId,
+          initialMsgId + i,
+          validTickers[i % validTickers.length],
+          false,
+        );
+      }
+
+      expect(mockWs.close).toHaveBeenCalledTimes(1);
+      expect((mockWs.close as jest.Mock).mock.calls[0][0])
+        .toEqual(WS_CLOSE_CODE_SUBSCRIPTION_LIMIT_ABUSE);
     });
 
     it('sends error message if rate limit exceeded', async () => {

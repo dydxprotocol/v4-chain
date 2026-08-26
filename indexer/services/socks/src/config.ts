@@ -41,6 +41,19 @@ export const configSchema = {
   RATE_LIMIT_INVALID_MESSAGE_POINTS: parseNumber({ default: 2 }),
   RATE_LIMIT_INVALID_MESSAGE_DURATION_MS: parseInteger({ default: 1000 }),
 
+  // A client that keeps re-sending subscribe requests after being told it is at the
+  // per-connection subscription limit is ignoring the contract. Once it exceeds these points
+  // within the window, the connection is dropped rather than answered with another error.
+  RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_POINTS: parseNumber({ default: 5 }),
+  RATE_LIMIT_SUBSCRIPTION_LIMIT_REACHED_DURATION_MS: parseInteger({ default: 10_000 }),
+
+  // After a connection is dropped for subscription-limit abuse, reject new websocket upgrades
+  // from the same client for this long with an HTTP 429. The 429 is the only part of this the
+  // edge (Cloudflare) can observe, and is what its rate limiting rule counts on.
+  RECONNECT_PENALTY_ENABLED: parseBoolean({ default: true }),
+  RECONNECT_PENALTY_MS: parseInteger({ default: 30_000 }),
+  RECONNECT_PENALTY_MAX_TRACKED_CLIENTS: parseInteger({ default: 10_000 }),
+
   MESSAGE_FORWARDER_STATSD_SAMPLE_RATE: parseNumber({ default: 1.0 }),
   ENABLE_ORDERBOOK_LOGS: parseBoolean({ default: true }),
   PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
