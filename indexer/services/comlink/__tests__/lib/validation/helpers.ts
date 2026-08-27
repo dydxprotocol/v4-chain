@@ -1,6 +1,10 @@
 import express from 'express';
 
-import { CheckLimitAndCreatedBeforeOrAtSchema, CheckSubaccountSchema } from '../../../src/lib/validation/schemas';
+import {
+  CheckLimitAndCreatedBeforeOrAtSchema,
+  CheckPaginationSchema,
+  CheckSubaccountSchema,
+} from '../../../src/lib/validation/schemas';
 import { handleValidationErrors } from '../../../src/request-helpers/error-handler';
 import Server from '../../../src/request-helpers/server';
 
@@ -18,6 +22,16 @@ router.get(
 router.get(
   '/check-limit-and-created-before-schema',
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  handleValidationErrors,
+  (req: express.Request, res: express.Response) => {
+    res.sendStatus(200);
+  },
+);
+
+router.get(
+  '/check-pagination-schema',
+  ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   handleValidationErrors,
   (req: express.Request, res: express.Response) => {
     res.sendStatus(200);

@@ -1,5 +1,6 @@
 import {
   BlockTable,
+  DEFAULT_POSTGRES_OPTIONS,
   dbHelpers,
   FundingPaymentsCreateObject,
   FundingPaymentsTable,
@@ -9,6 +10,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { FundingPaymentResponseObject, RequestMethod } from '../../../../src/types';
 import request from 'supertest';
+import config from '../../../../src/config';
 import { sendRequest } from '../../../helpers/helpers';
 
 describe('funding-payments-controller#V4', () => {
@@ -190,6 +192,79 @@ describe('funding-payments-controller#V4', () => {
     // expects page 1 and page 2 to be different
     expect(response.body.fundingPayments[0]).not.toEqual(
       response2.body.fundingPayments[0],
+    );
+  });
+
+  it('Get /fundingPayments routes paginated reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+    // Mutate the live DEFAULT_POSTGRES_OPTIONS object with a marker property. Since the
+    // controller spreads this object at call time (`{ ...DEFAULT_POSTGRES_OPTIONS, orderBy }`),
+    // the marker will only show up in the findAll call if that spread actually happens -
+    // independent of whatever USE_READ_REPLICA currently evaluates to in this test environment.
+    const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+    (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+    const findAllSpy: jest.SpyInstance = jest.spyOn(FundingPaymentsTable, 'findAll');
+
+    try {
+      await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&showZeroPayments=true&limit=1&page=1`,
+      });
+
+      expect(findAllSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ [testMarker]: true }),
+      );
+    } finally {
+      delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+      findAllSpy.mockRestore();
+    }
+  });
+
+  it('Get /fundingPayments/parentSubaccount routes paginated reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+    const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+    (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+    const findAllSpy: jest.SpyInstance = jest.spyOn(FundingPaymentsTable, 'findAll');
+
+    try {
+      await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&showZeroPayments=true&limit=1&page=1`,
+      });
+
+      expect(findAllSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ [testMarker]: true }),
+      );
+    } finally {
+      delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+      findAllSpy.mockRestore();
+    }
+  });
+
+  it('Get /fundingPayments rejects a deep page/limit combination end-to-end through the real app (offset ceiling)', async () => {
+    // Not the exact incident values (page=97-111 & limit=1000, offset ~96k-110k) - just deep
+    // enough to clear MAX_PAGINATION_OFFSET with the same shape of request (a real HTTP call
+    // through the full route: rate-limiter middleware, CheckPaginationSchema, and the controller
+    // handler) rather than exercising the validator or the rate limiter in isolation.
+    const limit: number = 1000;
+    const page: number = Math.floor(config.MAX_PAGINATION_OFFSET / limit) + 2;
+
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&showZeroPayments=true&limit=${limit}&page=${page}`,
+      expectedStatus: 400,
+    });
+
+    expect(response.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          location: 'query',
+          param: 'page',
+          msg: expect.stringContaining('exceeds MAX_PAGINATION_OFFSET'),
+        }),
+      ]),
     );
   });
 
