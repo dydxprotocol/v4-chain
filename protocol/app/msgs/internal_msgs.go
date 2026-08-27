@@ -210,10 +210,8 @@ var (
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse": nil,
 
 		// sending
-		"/dydxprotocol.sending.MsgSendFromModuleToAccount":          &sending.MsgSendFromModuleToAccount{},
-		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse":  nil,
-		"/dydxprotocol.sending.MsgSendFromAccountToAccount":         &sending.MsgSendFromAccountToAccount{},
-		"/dydxprotocol.sending.MsgSendFromAccountToAccountResponse": nil,
+		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         &sending.MsgSendFromModuleToAccount{},
+		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": nil,
 
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},

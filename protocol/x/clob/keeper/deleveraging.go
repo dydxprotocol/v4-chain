@@ -386,6 +386,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		} else {
 			// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
 			// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
+			// Note: any fix must not draw on the insurance fund for isolated markets in final settlement,
+			// whose funds are swept to the cross fund on transition (see transitionToFinalSettlement).
 			liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 			offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
 			log.DebugLog(ctx, "Encountered error when processing deleveraging",

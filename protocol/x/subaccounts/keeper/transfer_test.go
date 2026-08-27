@@ -2162,3 +2162,96 @@ func TestTransferBuilderFees_BlockedAddress(t *testing.T) {
 		})
 	}
 }
+
+func TestTransferIsolatedInsuranceFundToCross(t *testing.T) {
+	isolatedPerpetualId := uint32(3) // Isolated market from CreateTestPerpetuals.
+	tests := map[string]struct {
+		perpetualId         uint32
+		createUsdcAsset     bool
+		isolatedFundBalance *big.Int
+		crossFundBalance    *big.Int
+		expectedErrContains string
+	}{
+		"sweeps isolated insurance fund into cross insurance fund": {
+			perpetualId:         isolatedPerpetualId,
+			createUsdcAsset:     true,
+			isolatedFundBalance: big.NewInt(2_500_000_000),
+			crossFundBalance:    big.NewInt(1_000_000),
+		},
+		"no-op for zero isolated insurance fund balance": {
+			perpetualId:         isolatedPerpetualId,
+			createUsdcAsset:     true,
+			isolatedFundBalance: big.NewInt(0),
+			crossFundBalance:    big.NewInt(1_000_000),
+		},
+		"no-op for cross perpetual": {
+			perpetualId:      0, // BTC-USD, cross market.
+			createUsdcAsset:  true,
+			crossFundBalance: big.NewInt(1_000_000),
+		},
+		"error when USDC asset not in state": {
+			perpetualId:         isolatedPerpetualId,
+			createUsdcAsset:     false,
+			expectedErrContains: "USDC asset not found in state",
+		},
+		"error when perpetual does not exist": {
+			perpetualId:         9999,
+			createUsdcAsset:     true,
+			expectedErrContains: "Perpetual does not exist",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _, _, _ :=
+				keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+			if tc.createUsdcAsset {
+				require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
+			}
+
+			fundAccount := func(addr sdk.AccAddress, balance *big.Int) {
+				if balance == nil || balance.Sign() == 0 {
+					return
+				}
+				require.NoError(t, bank_testutil.FundAccount(
+					ctx,
+					addr,
+					sdk.Coins{sdk.NewCoin(asstypes.AssetUsdc.Denom, sdkmath.NewIntFromBigInt(balance))},
+					*bankKeeper,
+				))
+			}
+			isolatedFundAddr, err := perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, isolatedPerpetualId)
+			require.NoError(t, err)
+			fundAccount(isolatedFundAddr, tc.isolatedFundBalance)
+			fundAccount(perptypes.InsuranceFundModuleAddress, tc.crossFundBalance)
+
+			err = keeper.TransferIsolatedInsuranceFundToCross(ctx, tc.perpetualId)
+
+			if tc.expectedErrContains != "" {
+				require.ErrorContains(t, err, tc.expectedErrContains)
+				return
+			}
+			require.NoError(t, err)
+
+			expectedCross := new(big.Int)
+			if tc.crossFundBalance != nil {
+				expectedCross.Set(tc.crossFundBalance)
+			}
+			if tc.perpetualId == isolatedPerpetualId && tc.isolatedFundBalance != nil {
+				expectedCross.Add(expectedCross, tc.isolatedFundBalance)
+			}
+			require.True(
+				t,
+				bankKeeper.GetBalance(ctx, isolatedFundAddr, asstypes.AssetUsdc.Denom).IsZero(),
+			)
+			require.Equal(
+				t,
+				expectedCross,
+				bankKeeper.GetBalance(ctx, perptypes.InsuranceFundModuleAddress, asstypes.AssetUsdc.Denom).Amount.BigInt(),
+			)
+		})
+	}
+}

@@ -567,34 +567,17 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 	)
 }
 
-// TransferIsolatedInsuranceFundToCross transfers funds from an isolated perpetual's
-// insurance fund to the cross-perpetual insurance fund.
+// TransferIsolatedInsuranceFundToCross transfers the full balance of an isolated perpetual's
+// insurance fund to the cross-perpetual insurance fund. No-op for non-isolated perpetuals,
+// which use the cross insurance fund directly.
 // Note: This uses the `x/bank` keeper and modifies `x/bank` state.
 func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualId uint32) error {
-	// Validate perpetual exists
-	if _, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId); err != nil {
-		return err
-	}
-
-	isolatedInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
-
-	// Skip if balance is zero
-	if isolatedInsuranceFundBalance.Sign() == 0 {
-		return nil
-	}
-
-	_, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
-	if !exists {
-		return fmt.Errorf("USDC asset not found in state")
-	}
-
-	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-		ctx,
-		assettypes.AssetUsdc.Id,
-		isolatedInsuranceFundBalance,
-	)
+	isolated, err := k.perpetualsKeeper.IsIsolatedPerpetual(ctx, perpetualId)
 	if err != nil {
 		return err
+	}
+	if !isolated {
+		return nil
 	}
 
 	isolatedInsuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
@@ -602,13 +585,27 @@ func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualI
 		return err
 	}
 
-	crossInsuranceFundAddr := perptypes.InsuranceFundModuleAddress
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		return fmt.Errorf("USDC asset not found in state")
+	}
+
+	isolatedInsuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		isolatedInsuranceFundAddr,
+		usdcAsset.Denom,
+	)
+
+	// Skip if balance is zero
+	if isolatedInsuranceFundBalance.IsZero() {
+		return nil
+	}
 
 	return k.bankKeeper.SendCoins(
 		ctx,
 		isolatedInsuranceFundAddr,
-		crossInsuranceFundAddr,
-		[]sdk.Coin{coinToTransfer},
+		perptypes.InsuranceFundModuleAddress,
+		[]sdk.Coin{isolatedInsuranceFundBalance},
 	)
 }
 
