@@ -31,6 +31,13 @@ func (msg *MsgProposedOperations) ValidateBasic() error {
 					orderId,
 				)
 			}
+			if orderId.IsTwapOrder() {
+				return errorsmod.Wrapf(
+					ErrInvalidMsgProposedOperations,
+					"order removal is not allowed for TWAP parent orders: %v",
+					orderId,
+				)
+			}
 
 			switch operation.OrderRemoval.RemovalReason {
 			case OrderRemoval_REMOVAL_REASON_UNSPECIFIED:
@@ -104,6 +111,13 @@ func ValidateAndTransformRawOperations(
 			orderRemoval := rawOperation.GetOrderRemoval()
 			if err := orderRemoval.OrderId.Validate(); err != nil {
 				return nil, err
+			}
+			if orderRemoval.OrderId.IsTwapOrder() {
+				return nil, errorsmod.Wrapf(
+					ErrInvalidOrderRemoval,
+					"Order removal is not valid for TWAP parent orders: %+v",
+					orderRemoval.OrderId,
+				)
 			}
 			// Order removal reason fully filled is only used by indexer and should not be
 			// placed in the operations queue.
@@ -246,6 +260,14 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 			return err
 		}
 
+		if makerOrderId.IsTwapOrder() {
+			return errorsmod.Wrapf(
+				ErrInvalidMatchOrder,
+				"TWAP parent order cannot be used as maker in match: %+v",
+				makerOrderId,
+			)
+		}
+
 		// No duplicate maker order IDs in fills.
 		if _, exists := makerOrderIdSet[makerOrderId]; exists {
 			return errorsmod.Wrapf(
@@ -267,6 +289,14 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 
 	if err := takerOrderId.Validate(); err != nil {
 		return err
+	}
+
+	if takerOrderId.IsTwapOrder() {
+		return errorsmod.Wrapf(
+			ErrInvalidMatchOrder,
+			"TWAP parent order cannot be used as taker in match: %+v",
+			takerOrderId,
+		)
 	}
 
 	// Taker order id must be previously placed in an operation.
@@ -324,6 +354,14 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 
 		if err := fillMakerOrderId.Validate(); err != nil {
 			return err
+		}
+
+		if fillMakerOrderId.IsTwapOrder() {
+			return errorsmod.Wrapf(
+				ErrInvalidMatchOrder,
+				"TWAP parent order cannot be used as maker in liquidation match: %+v",
+				fillMakerOrderId,
+			)
 		}
 
 		// Maker order id must be previously placed in an operation.

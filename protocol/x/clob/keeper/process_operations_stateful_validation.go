@@ -45,6 +45,12 @@ func (k Keeper) FetchOrderFromOrderId(
 			)
 		}
 		return statefulOrderPlacement.Order, nil
+	} else if orderId.IsTwapOrder() {
+		return order, errorsmod.Wrapf(
+			types.ErrInvalidMatchOrder,
+			"TWAP parent order id %+v should not be referenced in operations queue",
+			orderId,
+		)
 	} else if orderId.IsConditionalOrder() {
 		conditionalOrderPlacement, found := k.GetTriggeredConditionalOrderPlacement(ctx, orderId)
 		if !found {
