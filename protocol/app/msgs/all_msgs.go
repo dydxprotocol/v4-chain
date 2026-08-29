@@ -210,6 +210,8 @@ var (
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           {},
 		"/dydxprotocol.clob.MsgUpdateLeverage":                             {},
 		"/dydxprotocol.clob.MsgUpdateLeverageResponse":                     {},
+		"/dydxprotocol.clob.MsgUpdateBlockLimitsConfig":                    {},
+		"/dydxprotocol.clob.MsgUpdateBlockLimitsConfigResponse":            {},
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         {},

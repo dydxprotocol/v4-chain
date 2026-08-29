@@ -252,6 +252,43 @@ func (_m *QueryClient) AllPerpetuals(ctx context.Context, in *perpetualstypes.Qu
 	return r0, r1
 }
 
+// BlockLimitsConfiguration provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) BlockLimitsConfiguration(ctx context.Context, in *clobtypes.QueryBlockLimitsConfigurationRequest, opts ...grpc.CallOption) (*clobtypes.QueryBlockLimitsConfigurationResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BlockLimitsConfiguration")
+	}
+
+	var r0 *clobtypes.QueryBlockLimitsConfigurationResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryBlockLimitsConfigurationRequest, ...grpc.CallOption) (*clobtypes.QueryBlockLimitsConfigurationResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryBlockLimitsConfigurationRequest, ...grpc.CallOption) *clobtypes.QueryBlockLimitsConfigurationResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.QueryBlockLimitsConfigurationResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryBlockLimitsConfigurationRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // BlockRateLimitConfiguration provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) BlockRateLimitConfiguration(ctx context.Context, in *clobtypes.QueryBlockRateLimitConfigurationRequest, opts ...grpc.CallOption) (*clobtypes.QueryBlockRateLimitConfigurationResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -511,6 +548,43 @@ func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context,
 	return r0, r1
 }
 
+// Leverage provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) Leverage(ctx context.Context, in *clobtypes.QueryLeverageRequest, opts ...grpc.CallOption) (*clobtypes.QueryLeverageResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Leverage")
+	}
+
+	var r0 *clobtypes.QueryLeverageResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryLeverageRequest, ...grpc.CallOption) (*clobtypes.QueryLeverageResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryLeverageRequest, ...grpc.CallOption) *clobtypes.QueryLeverageResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.QueryLeverageResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryLeverageRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // LiquidateSubaccounts provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *liquidationapi.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*liquidationapi.LiquidateSubaccountsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -577,43 +651,6 @@ func (_m *QueryClient) LiquidationsConfiguration(ctx context.Context, in *clobty
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryLiquidationsConfigurationRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Leverage provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) Leverage(ctx context.Context, in *clobtypes.QueryLeverageRequest, opts ...grpc.CallOption) (*clobtypes.QueryLeverageResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Leverage")
-	}
-
-	var r0 *clobtypes.QueryLeverageResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryLeverageRequest, ...grpc.CallOption) (*clobtypes.QueryLeverageResponse, error)); ok {
-		return rf(ctx, in, opts...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryLeverageRequest, ...grpc.CallOption) *clobtypes.QueryLeverageResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*clobtypes.QueryLeverageResponse)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryLeverageRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

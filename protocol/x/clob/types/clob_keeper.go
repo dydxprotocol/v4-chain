@@ -13,6 +13,7 @@ import (
 type ClobKeeper interface {
 	LiquidationsKeeper
 	LiquidationsConfigKeeper
+	BlockLimitsConfigKeeper
 
 	IsInMemStructuresInitialized() bool
 	Initialize(ctx sdk.Context)

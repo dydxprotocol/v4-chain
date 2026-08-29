@@ -80,6 +80,16 @@ func EndBlocker(
 
 	// Prune expired stateful orders completely from state.
 	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrders(ctx, ctx.BlockTime())
+
+	// Track the total number of expired orders removed for telemetry.
+	telemetry.SetGauge(
+		float32(len(expiredStatefulOrderIds)),
+		types.ModuleName,
+		metrics.EndBlocker,
+		"expired_orders_removed",
+		metrics.Count,
+	)
+
 	for _, orderId := range expiredStatefulOrderIds {
 		// Remove the order fill amount from state.
 		keeper.RemoveOrderFillAmount(ctx, orderId)

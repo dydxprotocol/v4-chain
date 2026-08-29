@@ -42,6 +42,9 @@ const (
 	// BlockRateLimitConfigKey is the key to retrieve the block rate limit configuration.
 	BlockRateLimitConfigKey = "RateLimCfg"
 
+	// BlockLimitsConfigKey is the key to retrieve the block limits configuration.
+	BlockLimitsConfigKey = "BlockLimCfg"
+
 	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
 	ClobPairKeyPrefix = "Clob:"
 

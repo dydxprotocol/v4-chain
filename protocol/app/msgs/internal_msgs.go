@@ -150,6 +150,8 @@ var (
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": nil,
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   &clob.MsgUpdateLiquidationsConfig{},
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
+		"/dydxprotocol.clob.MsgUpdateBlockLimitsConfig":                    &clob.MsgUpdateBlockLimitsConfig{},
+		"/dydxprotocol.clob.MsgUpdateBlockLimitsConfigResponse":            nil,
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         &delaymsg.MsgDelayMessage{},
