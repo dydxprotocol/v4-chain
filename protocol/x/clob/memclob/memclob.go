@@ -1901,10 +1901,12 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		}
 
 		// 3.
-		newMakerFills = append(newMakerFills, types.MakerFill{
-			MakerOrderId: makerOrderId,
-			FillAmount:   matchedAmount.ToUint64(),
-		})
+		// Use the memory pool to get a MakerFill object instead of creating a new one
+		makerFill := GlobalMemPools.MakerFillPool.Get()
+		makerFill.MakerOrderId = makerOrderId
+		makerFill.FillAmount = matchedAmount.ToUint64()
+		newMakerFills = append(newMakerFills, *makerFill)
+		GlobalMemPools.MakerFillPool.Put(makerFill)
 
 		// 4.
 		if newTakerOrder.IsReduceOnly() && takerRemainingSize > 0 {
