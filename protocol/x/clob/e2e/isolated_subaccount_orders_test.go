@@ -10,7 +10,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -365,8 +364,9 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 30_000_000_000, // $30,000 USDC
 			},
-			expectedErrCode: sdkerrors.ErrPanic.ABCICode(),
-			expectedErrMsg:  "insufficient funds",
+			// With deferred matching, no error during CheckTx. The match fails during
+			// PrepareProposal's MatchAllCrossedOrders due to insufficient funds, so
+			// the match is not proposed and state remains unchanged.
 		},
 		`Isolated subaccount will not have matches to close isolated perpetual position if isolated collateral pool does not 
 		have enough balance`: {
@@ -407,8 +407,8 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: sdkerrors.ErrPanic.ABCICode(),
-			expectedErrMsg:  "insufficient funds",
+			// With deferred matching, no error during CheckTx. The match fails during
+			// PrepareProposal's MatchAllCrossedOrders due to insufficient funds.
 		},
 		`Subaccount with isolated perpetual position fails to place stateful order for cross perpetual`: {
 			subaccounts: []satypes.Subaccount{
@@ -522,8 +522,8 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
-			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
+			// With deferred matching, IOC orders are tracked but not matched during CheckTx.
+			// The constraint violation happens during MatchAllCrossedOrders in PrepareProposal.
 		},
 		`Subaccount with cross perpetual position fails to place IOC order for isolated perpetual`: {
 			subaccounts: []satypes.Subaccount{
@@ -563,8 +563,8 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
-			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
+			// With deferred matching, IOC orders are tracked but not matched during CheckTx.
+			// The constraint violation happens during MatchAllCrossedOrders in PrepareProposal.
 		},
 	}
 

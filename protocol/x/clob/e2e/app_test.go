@@ -789,7 +789,9 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	wgFinish.Wait()
 
 	// Advance the block and ensure that the appropriate orders were filled and cancelled.
-	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	// With deferred matching, fills only exist after AdvanceToBlock (matching happens
+	// during PrepareProposal), so we must use the ctx returned here.
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 	for _, expectedFill := range expectedFills {
 		exists, amount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, expectedFill.OrderId)
 		require.True(t, exists)

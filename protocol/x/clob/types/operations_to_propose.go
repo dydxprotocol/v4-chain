@@ -81,6 +81,13 @@ func (o *OperationsToPropose) MustAddShortTermOrderTxBytes(
 	o.ShortTermOrderHashToTxBytes[orderHash] = txBytes
 }
 
+// HasShortTermOrderTxBytes returns true if the order's TX bytes are already stored.
+func (o *OperationsToPropose) HasShortTermOrderTxBytes(order Order) bool {
+	orderHash := order.GetOrderHash()
+	_, exists := o.ShortTermOrderHashToTxBytes[orderHash]
+	return exists
+}
+
 // MustAddShortTermOrderPlacementToOperationsQueue adds a Short-Term order placement operation to the
 // operations queue.
 // This function will panic if the order is not a Short-Term order, the order already exists in

@@ -15,8 +15,11 @@ func IsDeliverTxMode(ctx sdk.Context) bool {
 	return !ctx.IsCheckTx() && !ctx.IsReCheckTx()
 }
 
+// AssertCheckTxMode asserts that the context is in CheckTx, ReCheckTx, or PrepareProposal mode.
+// PrepareProposal is allowed because deferred matching runs the matching engine during
+// PrepareProposal, which shares the same memclob code paths as CheckTx.
 func AssertCheckTxMode(ctx sdk.Context) {
-	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() && ctx.ExecMode() != sdk.ExecModePrepareProposal {
 		panic("assert checkTx mode failed")
 	}
 }

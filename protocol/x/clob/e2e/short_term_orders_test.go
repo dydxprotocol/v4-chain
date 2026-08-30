@@ -124,20 +124,26 @@ func TestPlaceOrder(t *testing.T) {
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
-					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId,
-					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBaseQuantums(),
+					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
+					0,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
+			},
+			// With deferred matching, order update messages are emitted during
+			// PrepareCheckState replay when matching happens for the first time.
+			expectedOffchainMessagesInNextBlock: []msgsender.Message{
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId,
+					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBaseQuantums(),
+				),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
-				}),
+				),
 			},
 			expectedOnchainMessagesInNextBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 				&indexer_manager.IndexerTendermintBlock{
@@ -283,16 +289,8 @@ func TestPlaceOrder(t *testing.T) {
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
-					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
-					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
-				}),
-				off_chain_updates.MustCreateOrderUpdateMessage(
-					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
-					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
+					0,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
@@ -302,6 +300,11 @@ func TestPlaceOrder(t *testing.T) {
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
+					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
+				),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				),
 			},
@@ -449,16 +452,8 @@ func TestPlaceOrder(t *testing.T) {
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
-					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
-					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
-				}),
-				off_chain_updates.MustCreateOrderUpdateMessage(
-					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
-					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
+					0,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
@@ -468,6 +463,11 @@ func TestPlaceOrder(t *testing.T) {
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
+					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
+				),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				),
 			},
@@ -757,7 +757,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB21.Order.OrderId: {
 							shouldExistOnMemclob: true,
 							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB21.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
+							expectedFillAmount:   0,
 						},
 					},
 				},
@@ -783,12 +783,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
 							shouldExistOnMemclob: true,
 							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
-						},
-						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
-							shouldExistOnMemclob: true,
-							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
+							expectedFillAmount:   0,
 						},
 					},
 				},
@@ -826,7 +821,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
 							shouldExistOnMemclob: true,
 							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
+							expectedFillAmount:   0,
 						},
 					},
 				},
@@ -864,7 +859,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
 							shouldExistOnMemclob: true,
 							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
+							expectedFillAmount:   0,
 						},
 					},
 				},
@@ -911,7 +906,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
 							shouldExistOnMemclob: true,
 							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
+							expectedFillAmount:   0,
 						},
 					},
 				},
@@ -1037,8 +1032,10 @@ func TestCancelShortTermOrder(t *testing.T) {
 			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
 				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
 			},
+			// With deferred matching, cancel in the same block prevents the match entirely.
+			// The order is cancelled before MatchAllCrossedOrders runs, so fill amount is 0.
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
-				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 40,
+				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 0,
 			},
 		},
 		"Cancel partially filled short term order in next block": {

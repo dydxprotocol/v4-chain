@@ -11,6 +11,9 @@ import (
 
 // PrepareClobKeeper defines the expected CLOB keeper used for `PrepareProposal`.
 type PrepareClobKeeper interface {
+	// MatchAllCrossedOrders runs deferred matching for orders placed during CheckTx.
+	// Must be called before GetOperations to populate the operations queue.
+	MatchAllCrossedOrders(ctx sdk.Context) error
 	GetOperations(ctx sdk.Context) *clobtypes.MsgProposedOperations
 }
 

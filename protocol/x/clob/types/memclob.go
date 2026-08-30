@@ -62,6 +62,13 @@ type MemClob interface {
 		ctx sdk.Context,
 		order Order,
 	) (satypes.BaseQuantums, OrderStatus, *OffchainUpdates, error)
+	PlaceOrderNoMatch(
+		ctx sdk.Context,
+		order Order,
+	) (OrderStatus, *OffchainUpdates, error)
+	MatchAllCrossedOrders(
+		ctx sdk.Context,
+	) error
 	PlacePerpetualLiquidation(
 		ctx sdk.Context,
 		liquidationOrder LiquidationOrder,

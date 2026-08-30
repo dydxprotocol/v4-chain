@@ -185,7 +185,7 @@ edit_config() {
 
 	# Default `timeout_commit` is 999ms. For local testnet, use a larger value to make 
 	# block time longer for easier troubleshooting.
-	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '5s'
+	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '30s'
 
   # Enable Slinky Prometheus metrics
 	dasel put -t bool -f "$CONFIG_FOLDER"/app.toml '.oracle.metrics_enabled' -v 'true'

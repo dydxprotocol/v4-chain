@@ -1086,37 +1086,22 @@ func TestPrepareCheckState(t *testing.T) {
 			},
 			liquidatableSubaccounts: []satypes.SubaccountId{},
 
-			expectedOperationsQueue: []types.InternalOperation{
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.MustGetOrder(),
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.MustGetOrder(),
-				),
-				types.NewMatchOrdersInternalOperation(
-					constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-					[]types.MakerFill{
-						{
-							FillAmount:   5,
-							MakerOrderId: constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.OrderId,
-						},
-					},
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
-				),
-				types.NewMatchOrdersInternalOperation(
-					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
-					[]types.MakerFill{
-						{
-							FillAmount:   5,
-							MakerOrderId: constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.OrderId,
-						},
-					},
-				),
+			// With deferred matching, PlaceOrderNoMatch does not add operations to the queue.
+			// PrepareCheckState replays an empty operations queue, so no matching occurs during replay.
+			// Orders remain on the book unmatched.
+			expectedOperationsQueue: []types.InternalOperation{},
+			expectedBids: []memclob.OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
+					RemainingSize: 10,
+				},
 			},
-			expectedBids: []memclob.OrderWithRemainingSize{},
-			expectedAsks: []memclob.OrderWithRemainingSize{},
+			expectedAsks: []memclob.OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.MustGetOrder(),
+					RemainingSize: 10,
+				},
+			},
 		},
 	}
 	for name, tc := range tests {

@@ -326,13 +326,9 @@ func TestReduceOnlyOrders(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
-			// Create all orders.
-			deliverTxsOverride := make([][]byte, 0)
-			deliverTxsOverride = append(
-				deliverTxsOverride,
-				constants.ValidEmptyMsgProposedOperationsTxBytes,
-			)
-
+			// Place orders for the first block via CheckTx.
+			// Collect stateful order tx bytes for potential inclusion in DeliverTxsOverride.
+			var statefulOrderTxBytes [][]byte
 			for _, order := range tc.ordersForFirstBlock {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 					ctx,
@@ -341,28 +337,36 @@ func TestReduceOnlyOrders(t *testing.T) {
 				) {
 					resp := tApp.CheckTx(checkTx)
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-
 					if order.IsStatefulOrder() {
-						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
+						statefulOrderTxBytes = append(statefulOrderTxBytes, checkTx.Tx)
 					}
 				}
 			}
 
-			// Add an empty premium vote.
-			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
-
-			// Add the price update.
+			// Advance to block 2. PrepareProposal will run MatchAllCrossedOrders
+			// to perform deferred matching.
+			// If a custom price update is needed, use DeliverTxsOverride to inject it
+			// alongside the naturally-generated operations. We must also include any
+			// stateful order tx bytes so they get committed via DeliverTx.
+			advanceOpts1 := testapp.AdvanceToBlockOptions{}
 			if tc.priceUpdateForFirstBlock != nil {
+				deliverTxsOverride := make([][]byte, 0)
+				deliverTxsOverride = append(
+					deliverTxsOverride,
+					constants.ValidEmptyMsgProposedOperationsTxBytes,
+				)
+				deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
 				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForFirstBlock))
 				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
 				require.NoError(t, err)
 				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+				// Include stateful order tx bytes so conditional/long-term orders
+				// get committed to state via DeliverTx.
+				deliverTxsOverride = append(deliverTxsOverride, statefulOrderTxBytes...)
+				advanceOpts1.DeliverTxsOverride = deliverTxsOverride
 			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: deliverTxsOverride,
-			})
+			ctx = tApp.AdvanceToBlock(2, advanceOpts1)
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[2]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
@@ -370,14 +374,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 				}
 			}
 
-			// Create all orders.
-			deliverTxsOverride = make([][]byte, 0)
-			deliverTxsOverride = append(
-				deliverTxsOverride,
-				constants.ValidEmptyMsgProposedOperationsTxBytes,
-			)
-
-			// Place orders for second block
+			// Place orders for second block.
+			var statefulOrderTxBytes2 [][]byte
 			for _, order := range tc.ordersForSecondBlock {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 					ctx,
@@ -386,28 +384,29 @@ func TestReduceOnlyOrders(t *testing.T) {
 				) {
 					resp := tApp.CheckTx(checkTx)
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-
 					if order.IsStatefulOrder() {
-						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
+						statefulOrderTxBytes2 = append(statefulOrderTxBytes2, checkTx.Tx)
 					}
 				}
 			}
 
-			// Add an empty premium vote.
-			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
-
-			// Add the price update.
+			advanceOpts2 := testapp.AdvanceToBlockOptions{}
 			if tc.priceUpdateForSecondBlock != nil {
+				deliverTxsOverride := make([][]byte, 0)
+				deliverTxsOverride = append(
+					deliverTxsOverride,
+					constants.ValidEmptyMsgProposedOperationsTxBytes,
+				)
+				deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
 				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForSecondBlock))
 				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
 				require.NoError(t, err)
 				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+				deliverTxsOverride = append(deliverTxsOverride, statefulOrderTxBytes2...)
+				advanceOpts2.DeliverTxsOverride = deliverTxsOverride
 			}
-
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: deliverTxsOverride,
-			})
+			ctx = tApp.AdvanceToBlock(3, advanceOpts2)
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
@@ -618,11 +617,12 @@ func TestClosePositionOrder(t *testing.T) {
 				},
 			},
 			expectedOffchainMessages: []msgsender.Message{
-				// 1. Order place of Carl's order
-				// 2. Order update of Carl's order with 0 fill amount
-				// 3. Order place of Alice's order
-				// 4. Order update that Carl's order is fully filled
-				// 5. Order update that Alice's order is fully filled
+				// 1. Order place of Carl's order (CheckTx)
+				// 2. Order update of Carl's order with 0 fill amount (CheckTx)
+				// 3. Order place of Alice's order (CheckTx)
+				// 4. Order update of Alice's order with 0 fill amount (CheckTx, deferred matching)
+				// 5. Order update that Carl's order is fully filled (PrepareCheckState)
+				// 6. Order update that Alice's order is fully filled (PrepareCheckState)
 				off_chain_updates.MustCreateOrderPlaceMessage(
 					ctx,
 					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
@@ -647,20 +647,22 @@ func TestClosePositionOrder(t *testing.T) {
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
-					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
-					100_000_000,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
+					0,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
 					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
 					100_000_000,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
-				}),
+				),
 			},
 		},
 		"Close position order (IOC reduce-only) fully filled, maker order partially filled, match in block": {
@@ -717,12 +719,12 @@ func TestClosePositionOrder(t *testing.T) {
 				},
 			},
 			expectedOffchainMessages: []msgsender.Message{
-				// 1. Order place of Carl's order
-				// 2. Order update of Carl's order with 0 fill amount
-				// 3. Order place of Alice's order
-				// 4. Order update that Carl's order is partially filled
-				// 5. Order update that Alice's order is fully filled
-				// 6. Order update that Carl's order is partially filled (due to operations being replayed)
+				// 1. Order place of Carl's order (CheckTx)
+				// 2. Order update of Carl's order with 0 fill amount (CheckTx)
+				// 3. Order place of Alice's order (CheckTx)
+				// 4. Order update of Alice's order with 0 fill amount (CheckTx, deferred matching)
+				// 5. Order update that Carl's order is partially filled (PrepareCheckState)
+				// 6. Order update that Alice's order is fully filled (PrepareCheckState)
 				off_chain_updates.MustCreateOrderPlaceMessage(
 					ctx,
 					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10,
@@ -747,23 +749,20 @@ func TestClosePositionOrder(t *testing.T) {
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
-					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId,
-					100_000_000,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
+					0,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
 				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
 					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
-					100_000_000,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
-				}),
-				off_chain_updates.MustCreateOrderUpdateMessage(
-					ctx,
-					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId,
 					100_000_000,
 				),
 			},
@@ -821,14 +820,15 @@ func TestClosePositionOrder(t *testing.T) {
 					PerpetualPositions: []*satypes.PerpetualPosition{},
 				},
 			},
+			// With deferred matching, "match not in block" is identical to "match in block"
+			// since matching always goes through PrepareProposal.
 			expectedOffchainMessages: []msgsender.Message{
-				// 1. Order place of Carl's order
-				// 2. Order update of Carl's order with 0 fill amount
-				// 3. Order place of Alice's order
-				// 4. Order update that Carl's order is fully filled
-				// 5. Order update that Alice's order is fully filled
-				// 6. Order update that Carl's order is fully filled (due to operations being replayed as match wasn't in block)
-				// 7. Order update that Alice's order is fully filled (due to operations being replayed as match wasn't in block)
+				// 1. Order place of Carl's order (CheckTx)
+				// 2. Order update of Carl's order with 0 fill amount (CheckTx)
+				// 3. Order place of Alice's order (CheckTx)
+				// 4. Order update of Alice's order with 0 fill amount (CheckTx, deferred matching)
+				// 5. Order update that Carl's order is fully filled (PrepareCheckState)
+				// 6. Order update that Alice's order is fully filled (PrepareCheckState)
 				off_chain_updates.MustCreateOrderPlaceMessage(
 					ctx,
 					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
@@ -853,16 +853,8 @@ func TestClosePositionOrder(t *testing.T) {
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
-					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
-					100_000_000,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
-				}),
-				off_chain_updates.MustCreateOrderUpdateMessage(
-					ctx,
 					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
-					100_000_000,
+					0,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
@@ -924,11 +916,9 @@ func TestClosePositionOrder(t *testing.T) {
 				}
 			}
 
-			options := testapp.AdvanceToBlockOptions{}
-			if !tc.matchIncludedInBlock {
-				options.DeliverTxsOverride = [][]byte{}
-			}
-			ctx = tApp.AdvanceToBlock(2, options)
+			// With deferred matching, matching always goes through PrepareProposal.
+			// The matchIncludedInBlock distinction is no longer needed.
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Verify expectations.
 			for orderId, exists := range tc.expectedOrderOnMemClob {
