@@ -23,7 +23,7 @@ type IBCMiddleware struct {
 	keeper keeper.Keeper
 }
 
-// TODO(CORE-855): Add e2e testing for the x/ratelimit IBC Middlware
+// TODO(CORE-855): Add e2e testing for the x/ratelimit IBC Middleware
 func NewIBCMiddleware(k keeper.Keeper, app porttypes.IBCModule) IBCMiddleware {
 	return IBCMiddleware{
 		app:    app,

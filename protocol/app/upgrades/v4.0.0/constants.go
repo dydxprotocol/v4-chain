@@ -25,7 +25,7 @@ var Upgrade = upgrades.Upgrade{
 			// Add new ICA stores that are needed by ICA host types as of v8.
 			icacontrollertypes.StoreKey,
 
-			// Add authz module to allow granting arbitrary privileges from one account to another acocunt.
+			// Add authz module to allow granting arbitrary privileges from one account to another account.
 			authzkeeper.StoreKey,
 		},
 	},
