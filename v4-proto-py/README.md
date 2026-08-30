@@ -1,6 +1,6 @@
 <p align="center"><img src="https://dydx.exchange/icon.svg?" width="256" /></p>
 
-<h1 align="center">v4-proto-py</h1>
+<h1 align="center">v4-proto</h1>
 
 <div align="center">
   <a href='https://pypi.org/project/v4-proto'>
