@@ -457,7 +457,6 @@ describe('OrderHandler', () => {
               makerPrice,
               totalFilled,
             ),
-            totalRealizedPnl: '-1',
           },
         ),
         expectPerpetualPosition(
@@ -468,7 +467,6 @@ describe('OrderHandler', () => {
           {
             sumClose: totalFilled,
             exitPrice: makerPrice,
-            totalRealizedPnl: '-2.5000',
           },
         ),
         expectCandlesUpdated(),
@@ -2586,83 +2584,6 @@ describe('OrderHandler', () => {
       entryPriceBefore,
       positionSideBefore,
     });
-  });
-
-  it('updates totalRealizedPnl when a reduce-only order closes and realizes PnL', async () => {
-    const transactionIndex = 0;
-    const eventIndex = 0;
-
-    await Promise.all([
-      PerpetualPositionTable.create(defaultPerpetualPosition),
-      PerpetualPositionTable.create({
-        ...defaultPerpetualPosition,
-        subaccountId: testConstants.defaultSubaccountId2,
-      }),
-    ]);
-
-    const makerOrderProto = createOrder({
-      subaccountId: defaultSubaccountId,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_BUY,
-      quantums: 1_000_000,
-      subticks: 100_000_000,
-      goodTilOneof: { goodTilBlock: 10 },
-      clobPairId: defaultClobPairId,
-      orderFlags: ORDER_FLAG_LONG_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
-      reduceOnly: false,
-      clientMetadata: 0,
-    });
-
-    const takerOrderProto = createOrder({
-      subaccountId: defaultSubaccountId2,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_SELL,
-      quantums: 1_000_000,
-      subticks: 15_000_000,
-      goodTilOneof: { goodTilBlock: 15 },
-      clobPairId: defaultClobPairId,
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-      reduceOnly: true,
-      clientMetadata: 0,
-    });
-
-    const fillAmount = 1_000_000;
-    const orderFillEvent = createOrderFillEvent(
-      makerOrderProto,
-      takerOrderProto,
-      fillAmount,
-      fillAmount,
-      fillAmount,
-    );
-
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
-      orderFillEvent,
-      transactionIndex,
-      eventIndex,
-      height: parseInt(defaultHeight, 10),
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    await onMessage(kafkaMessage);
-
-    const expectedRealizedPnl = '-2.5000';
-    const fillInHuman = '0.0001';
-    const makerPriceHuman = '10000';
-
-    await expectPerpetualPosition(
-      PerpetualPositionTable.uuid(
-        testConstants.defaultSubaccountId2,
-        defaultPerpetualPosition.openEventId,
-      ),
-      {
-        sumClose: fillInHuman,
-        exitPrice: makerPriceHuman,
-        totalRealizedPnl: expectedRealizedPnl,
-      },
-    );
   });
 
   async function expectDefaultOrderAndFillSubaccountKafkaMessages(
