@@ -5,7 +5,6 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
@@ -237,126 +236,11 @@ func (m *AffiliateWhitelist_Tier) GetTakerFeeSharePpm() uint32 {
 	return 0
 }
 
-// AffiliateParameters defines the parameters for the affiliate program.
-type AffiliateParameters struct {
-	// Maximum attributable volume for a referred user in a 30d rolling window in
-	// notional
-	Maximum_30DAttributableVolumePerReferredUserQuoteQuantums uint64 `protobuf:"varint,1,opt,name=maximum_30d_attributable_volume_per_referred_user_quote_quantums,json=maximum30dAttributableVolumePerReferredUserQuoteQuantums,proto3" json:"maximum_30d_attributable_volume_per_referred_user_quote_quantums,omitempty"`
-	// Referred user automatically gets set to this fee tier
-	RefereeMinimumFeeTierIdx uint32 `protobuf:"varint,2,opt,name=referee_minimum_fee_tier_idx,json=refereeMinimumFeeTierIdx,proto3" json:"referee_minimum_fee_tier_idx,omitempty"`
-	// Maximum affiliate revenue for a referred user in a 30d rolling window in
-	// quote quantums
-	Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums uint64 `protobuf:"varint,3,opt,name=maximum_30d_affiliate_revenue_per_referred_user_quote_quantums,json=maximum30dAffiliateRevenuePerReferredUserQuoteQuantums,proto3" json:"maximum_30d_affiliate_revenue_per_referred_user_quote_quantums,omitempty"`
-}
-
-func (m *AffiliateParameters) Reset()         { *m = AffiliateParameters{} }
-func (m *AffiliateParameters) String() string { return proto.CompactTextString(m) }
-func (*AffiliateParameters) ProtoMessage()    {}
-func (*AffiliateParameters) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7de5ba9c426e9350, []int{2}
-}
-func (m *AffiliateParameters) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *AffiliateParameters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_AffiliateParameters.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *AffiliateParameters) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AffiliateParameters.Merge(m, src)
-}
-func (m *AffiliateParameters) XXX_Size() int {
-	return m.Size()
-}
-func (m *AffiliateParameters) XXX_DiscardUnknown() {
-	xxx_messageInfo_AffiliateParameters.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AffiliateParameters proto.InternalMessageInfo
-
-func (m *AffiliateParameters) GetMaximum_30DAttributableVolumePerReferredUserQuoteQuantums() uint64 {
-	if m != nil {
-		return m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums
-	}
-	return 0
-}
-
-func (m *AffiliateParameters) GetRefereeMinimumFeeTierIdx() uint32 {
-	if m != nil {
-		return m.RefereeMinimumFeeTierIdx
-	}
-	return 0
-}
-
-func (m *AffiliateParameters) GetMaximum_30DAffiliateRevenuePerReferredUserQuoteQuantums() uint64 {
-	if m != nil {
-		return m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums
-	}
-	return 0
-}
-
-// AffiliateOverrides defines the affiliate whitelist.
-type AffiliateOverrides struct {
-	// List of unique whitelisted addresses.
-	// These are automatically put at the maximum affiliate tier
-	Addresses []string `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
-}
-
-func (m *AffiliateOverrides) Reset()         { *m = AffiliateOverrides{} }
-func (m *AffiliateOverrides) String() string { return proto.CompactTextString(m) }
-func (*AffiliateOverrides) ProtoMessage()    {}
-func (*AffiliateOverrides) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7de5ba9c426e9350, []int{3}
-}
-func (m *AffiliateOverrides) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *AffiliateOverrides) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_AffiliateOverrides.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *AffiliateOverrides) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AffiliateOverrides.Merge(m, src)
-}
-func (m *AffiliateOverrides) XXX_Size() int {
-	return m.Size()
-}
-func (m *AffiliateOverrides) XXX_DiscardUnknown() {
-	xxx_messageInfo_AffiliateOverrides.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AffiliateOverrides proto.InternalMessageInfo
-
-func (m *AffiliateOverrides) GetAddresses() []string {
-	if m != nil {
-		return m.Addresses
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*AffiliateTiers)(nil), "dydxprotocol.affiliates.AffiliateTiers")
 	proto.RegisterType((*AffiliateTiers_Tier)(nil), "dydxprotocol.affiliates.AffiliateTiers.Tier")
 	proto.RegisterType((*AffiliateWhitelist)(nil), "dydxprotocol.affiliates.AffiliateWhitelist")
 	proto.RegisterType((*AffiliateWhitelist_Tier)(nil), "dydxprotocol.affiliates.AffiliateWhitelist.Tier")
-	proto.RegisterType((*AffiliateParameters)(nil), "dydxprotocol.affiliates.AffiliateParameters")
-	proto.RegisterType((*AffiliateOverrides)(nil), "dydxprotocol.affiliates.AffiliateOverrides")
 }
 
 func init() {
@@ -364,43 +248,31 @@ func init() {
 }
 
 var fileDescriptor_7de5ba9c426e9350 = []byte{
-	// 561 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x41, 0x6b, 0x13, 0x41,
-	0x14, 0xce, 0xa6, 0x51, 0xe8, 0x88, 0x22, 0x9b, 0xa2, 0x31, 0x94, 0xb5, 0xe4, 0x94, 0x83, 0xd9,
-	0x04, 0x23, 0xc5, 0x83, 0x14, 0x13, 0xa1, 0xa8, 0x54, 0x4c, 0x37, 0xda, 0x82, 0x97, 0x61, 0x92,
-	0x7d, 0x49, 0x06, 0x77, 0x76, 0x36, 0x33, 0xb3, 0x31, 0xbd, 0x78, 0xf0, 0x17, 0x08, 0xfe, 0x15,
-	0xd1, 0xbf, 0xd0, 0x63, 0xf1, 0x24, 0x1e, 0x44, 0x92, 0x3f, 0x22, 0x33, 0xbb, 0x49, 0x36, 0xd8,
-	0xa8, 0x97, 0x61, 0xf6, 0x7d, 0xef, 0x7d, 0xf3, 0xbe, 0xf7, 0xcd, 0x0e, 0xaa, 0xfa, 0x67, 0xfe,
-	0x34, 0x12, 0x5c, 0xf1, 0x3e, 0x0f, 0xea, 0x64, 0x30, 0xa0, 0x01, 0x25, 0x0a, 0x64, 0x66, 0xeb,
-	0x1a, 0xd8, 0xbe, 0x9d, 0xcd, 0x74, 0x57, 0x70, 0xf9, 0x4e, 0x9f, 0x4b, 0xc6, 0x25, 0x36, 0x58,
-	0x3d, 0xf9, 0x48, 0x6a, 0xca, 0x3b, 0x43, 0x3e, 0xe4, 0x49, 0x5c, 0xef, 0x92, 0x68, 0xe5, 0x53,
-	0x1e, 0xdd, 0x68, 0x2d, 0xea, 0x5f, 0x51, 0x10, 0xd2, 0x7e, 0x8a, 0xae, 0x28, 0xbd, 0x29, 0x59,
-	0x7b, 0x5b, 0xd5, 0x6b, 0xf7, 0xef, 0xb9, 0x1b, 0x0e, 0x73, 0xd7, 0xeb, 0x5c, 0xbd, 0xb6, 0x0b,
-	0xe7, 0x3f, 0xef, 0xe6, 0xbc, 0x84, 0xa0, 0xfc, 0xc5, 0x42, 0x05, 0x1d, 0xb5, 0x9f, 0xa3, 0x8a,
-	0x80, 0x31, 0x16, 0x30, 0x00, 0x21, 0xc0, 0xc7, 0x13, 0x1e, 0xc4, 0x0c, 0xf0, 0x38, 0xe6, 0x4a,
-	0xaf, 0x24, 0x54, 0x31, 0xd3, 0xe7, 0x59, 0xd5, 0x82, 0xe7, 0x08, 0x18, 0x7b, 0x69, 0xe2, 0x89,
-	0xc9, 0x3b, 0xd6, 0x69, 0xc7, 0x69, 0x96, 0xdd, 0x44, 0xb7, 0x34, 0x97, 0x54, 0xe4, 0x2d, 0xf8,
-	0xf8, 0xdd, 0x88, 0x07, 0x80, 0xfb, 0x9c, 0x86, 0xb2, 0x94, 0xdf, 0xb3, 0xaa, 0xd7, 0xbd, 0xa2,
-	0x80, 0x71, 0xd7, 0x80, 0xa7, 0x1a, 0x7b, 0xa2, 0x21, 0xbb, 0x86, 0x8a, 0x3a, 0x24, 0xf0, 0x00,
-	0x00, 0xcb, 0x11, 0x11, 0x80, 0xa3, 0x88, 0x95, 0xb6, 0x4c, 0xc5, 0x4d, 0x03, 0x1d, 0x02, 0x74,
-	0x35, 0xd0, 0x89, 0x58, 0xe5, 0xab, 0x85, 0xec, 0xa5, 0xba, 0xd3, 0x11, 0x55, 0x10, 0x50, 0xa9,
-	0xec, 0xa3, 0xf5, 0xc9, 0x34, 0xfe, 0x3d, 0x99, 0x65, 0xed, 0x25, 0xd3, 0xe9, 0xa6, 0xc3, 0xd9,
-	0x45, 0xdb, 0xc4, 0xf7, 0x05, 0x48, 0x09, 0x09, 0xf3, 0xb6, 0xb7, 0x0a, 0x6c, 0xea, 0x3c, 0xbf,
-	0xa1, 0xf3, 0x1f, 0x79, 0x54, 0x5c, 0x9e, 0xde, 0x21, 0x82, 0x30, 0x50, 0xda, 0xd4, 0x0f, 0x16,
-	0x7a, 0xcc, 0xc8, 0x94, 0xb2, 0x98, 0xe1, 0x66, 0xc3, 0xc7, 0x44, 0x29, 0x41, 0x7b, 0xb1, 0x22,
-	0xbd, 0x00, 0x16, 0x76, 0x44, 0x20, 0x56, 0x16, 0xc5, 0x12, 0xc4, 0xe5, 0x06, 0x3d, 0x4c, 0x79,
-	0x9a, 0x0d, 0xbf, 0x95, 0x61, 0x49, 0xbc, 0xea, 0x80, 0x58, 0x98, 0xf7, 0x5a, 0x82, 0x58, 0xb7,
-	0xee, 0x00, 0xed, 0x1a, 0x7e, 0x00, 0xcc, 0x68, 0x68, 0x7a, 0xd1, 0xaa, 0xf4, 0x38, 0x30, 0xf5,
-	0xa7, 0xa9, 0xa8, 0x52, 0x9a, 0xf3, 0x22, 0x49, 0x39, 0x04, 0x73, 0xbf, 0x9e, 0xf9, 0x53, 0xfb,
-	0x3d, 0x3a, 0x58, 0xd3, 0xb0, 0xd0, 0x89, 0x05, 0x4c, 0x20, 0x8c, 0xff, 0x43, 0xc1, 0x96, 0x51,
-	0xb0, 0x9f, 0x51, 0xb0, 0xe0, 0xf0, 0x12, 0x8a, 0xbf, 0xf5, 0x5f, 0x39, 0xca, 0xdc, 0x8a, 0x97,
-	0x13, 0x10, 0x82, 0xfa, 0x20, 0xed, 0xfd, 0x3f, 0xfc, 0x6b, 0x97, 0xbe, 0x7d, 0xae, 0xed, 0xa4,
-	0x7f, 0x5f, 0x2b, 0xc1, 0xba, 0x4a, 0xd0, 0x70, 0x98, 0x71, 0xb6, 0x7d, 0x72, 0x3e, 0x73, 0xac,
-	0x8b, 0x99, 0x63, 0xfd, 0x9a, 0x39, 0xd6, 0xc7, 0xb9, 0x93, 0xbb, 0x98, 0x3b, 0xb9, 0xef, 0x73,
-	0x27, 0xf7, 0xe6, 0xd1, 0x90, 0xaa, 0x51, 0xdc, 0x73, 0xfb, 0x9c, 0xd5, 0xd7, 0xde, 0x84, 0xc9,
-	0x83, 0x5a, 0x7f, 0x44, 0x68, 0x58, 0x5f, 0x46, 0xa6, 0xd9, 0x77, 0x42, 0x9d, 0x45, 0x20, 0x7b,
-	0x57, 0x0d, 0xd8, 0xfc, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x10, 0x28, 0x41, 0x19, 0x4f, 0x04, 0x00,
-	0x00,
+	// 384 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0x4f, 0x6b, 0xe2, 0x40,
+	0x18, 0xc6, 0x33, 0xea, 0x2e, 0x38, 0xcb, 0x2e, 0x4b, 0x5c, 0x76, 0x45, 0x96, 0xac, 0x78, 0xca,
+	0x61, 0x4d, 0x96, 0x75, 0x8f, 0x7b, 0x59, 0x17, 0x4a, 0x29, 0x3d, 0xd4, 0x58, 0x14, 0x7a, 0x19,
+	0x62, 0xf2, 0xc6, 0x0c, 0x4d, 0x9c, 0x64, 0x66, 0x62, 0xf5, 0x5b, 0x14, 0xfa, 0x5d, 0xda, 0xaf,
+	0xe0, 0xd1, 0x63, 0x4f, 0xa5, 0xe8, 0x17, 0x29, 0x13, 0xad, 0x7f, 0x40, 0xe9, 0x65, 0x78, 0x79,
+	0x7e, 0xcf, 0xfb, 0x64, 0xf2, 0x30, 0xd8, 0xf4, 0xa7, 0xfe, 0x24, 0xe1, 0x4c, 0x32, 0x8f, 0x45,
+	0xb6, 0x1b, 0x04, 0x34, 0xa2, 0xae, 0x04, 0xb1, 0x33, 0x5a, 0x39, 0xd6, 0xbf, 0xed, 0x3a, 0xad,
+	0x2d, 0xae, 0x7d, 0x19, 0xb2, 0x21, 0xcb, 0x81, 0xad, 0xa6, 0x95, 0xbd, 0x71, 0x57, 0xc0, 0x9f,
+	0xfe, 0xbd, 0x9a, 0x2e, 0x29, 0x70, 0xa1, 0x9f, 0xe2, 0x77, 0x52, 0x0d, 0x55, 0x54, 0x2f, 0x9a,
+	0x1f, 0x7e, 0xff, 0xb4, 0x8e, 0x24, 0x5a, 0xfb, 0x7b, 0x96, 0x3a, 0xdb, 0xa5, 0xd9, 0xd3, 0x0f,
+	0xcd, 0x59, 0x05, 0xd4, 0xee, 0x11, 0x2e, 0x29, 0x55, 0x3f, 0xc3, 0x0d, 0x0e, 0x29, 0xe1, 0x10,
+	0x00, 0xe7, 0xe0, 0x93, 0x31, 0x8b, 0xb2, 0x18, 0x48, 0x9a, 0x31, 0xa9, 0x4e, 0x77, 0x24, 0xb3,
+	0x58, 0x7d, 0x0f, 0x99, 0x25, 0xc7, 0xe0, 0x90, 0x3a, 0x6b, 0x63, 0x2f, 0xf7, 0x75, 0x94, 0xad,
+	0xb3, 0x76, 0xe9, 0x2d, 0xfc, 0x55, 0x65, 0x09, 0xe9, 0x5e, 0x83, 0x4f, 0x6e, 0x42, 0x16, 0x01,
+	0xf1, 0x18, 0x1d, 0x89, 0x6a, 0xa1, 0x8e, 0xcc, 0x8f, 0x4e, 0x85, 0x43, 0xda, 0xcd, 0x61, 0x5f,
+	0xb1, 0xff, 0x0a, 0xe9, 0x4d, 0x5c, 0x51, 0x12, 0x27, 0x01, 0x00, 0x11, 0xa1, 0xcb, 0x81, 0x24,
+	0x49, 0x5c, 0x2d, 0xe6, 0x1b, 0x9f, 0x73, 0x74, 0x02, 0xd0, 0x55, 0xe0, 0x22, 0x89, 0x1b, 0x0f,
+	0x08, 0xeb, 0x9b, 0xbf, 0xeb, 0x87, 0x54, 0x42, 0x44, 0x85, 0xd4, 0xcf, 0xf7, 0x9b, 0xf9, 0xf5,
+	0x76, 0x33, 0x9b, 0xdd, 0x03, 0xed, 0x74, 0xd7, 0xe5, 0x7c, 0xc7, 0x65, 0xd7, 0xf7, 0x39, 0x08,
+	0x01, 0xab, 0xe4, 0xb2, 0xb3, 0x15, 0x8e, 0xdd, 0xbc, 0x70, 0xf8, 0xe6, 0xed, 0xde, 0x6c, 0x61,
+	0xa0, 0xf9, 0xc2, 0x40, 0xcf, 0x0b, 0x03, 0xdd, 0x2e, 0x0d, 0x6d, 0xbe, 0x34, 0xb4, 0xc7, 0xa5,
+	0xa1, 0x5d, 0xfd, 0x1d, 0x52, 0x19, 0x66, 0x03, 0xcb, 0x63, 0xb1, 0xbd, 0xf7, 0x9a, 0xc6, 0x7f,
+	0x9a, 0x5e, 0xe8, 0xd2, 0x91, 0xbd, 0x51, 0x26, 0xbb, 0x2f, 0x4c, 0x4e, 0x13, 0x10, 0x83, 0xf7,
+	0x39, 0x6c, 0xbd, 0x04, 0x00, 0x00, 0xff, 0xff, 0xc7, 0x32, 0xb9, 0x71, 0x89, 0x02, 0x00, 0x00,
 }
 
 func (m *AffiliateTiers) Marshal() (dAtA []byte, err error) {
@@ -552,76 +424,6 @@ func (m *AffiliateWhitelist_Tier) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *AffiliateParameters) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AffiliateParameters) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *AffiliateParameters) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums != 0 {
-		i = encodeVarintAffiliates(dAtA, i, uint64(m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.RefereeMinimumFeeTierIdx != 0 {
-		i = encodeVarintAffiliates(dAtA, i, uint64(m.RefereeMinimumFeeTierIdx))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums != 0 {
-		i = encodeVarintAffiliates(dAtA, i, uint64(m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *AffiliateOverrides) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AffiliateOverrides) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *AffiliateOverrides) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Addresses) > 0 {
-		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Addresses[iNdEx])
-			copy(dAtA[i:], m.Addresses[iNdEx])
-			i = encodeVarintAffiliates(dAtA, i, uint64(len(m.Addresses[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintAffiliates(dAtA []byte, offset int, v uint64) int {
 	offset -= sovAffiliates(v)
 	base := offset
@@ -695,39 +497,6 @@ func (m *AffiliateWhitelist_Tier) Size() (n int) {
 	}
 	if m.TakerFeeSharePpm != 0 {
 		n += 1 + sovAffiliates(uint64(m.TakerFeeSharePpm))
-	}
-	return n
-}
-
-func (m *AffiliateParameters) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums != 0 {
-		n += 1 + sovAffiliates(uint64(m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums))
-	}
-	if m.RefereeMinimumFeeTierIdx != 0 {
-		n += 1 + sovAffiliates(uint64(m.RefereeMinimumFeeTierIdx))
-	}
-	if m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums != 0 {
-		n += 1 + sovAffiliates(uint64(m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums))
-	}
-	return n
-}
-
-func (m *AffiliateOverrides) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Addresses) > 0 {
-		for _, s := range m.Addresses {
-			l = len(s)
-			n += 1 + l + sovAffiliates(uint64(l))
-		}
 	}
 	return n
 }
@@ -1093,195 +862,6 @@ func (m *AffiliateWhitelist_Tier) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAffiliates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAffiliates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AffiliateParameters) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAffiliates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AffiliateParameters: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AffiliateParameters: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Maximum_30DAttributableVolumePerReferredUserQuoteQuantums", wireType)
-			}
-			m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAffiliates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Maximum_30DAttributableVolumePerReferredUserQuoteQuantums |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RefereeMinimumFeeTierIdx", wireType)
-			}
-			m.RefereeMinimumFeeTierIdx = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAffiliates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RefereeMinimumFeeTierIdx |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums", wireType)
-			}
-			m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAffiliates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Maximum_30DAffiliateRevenuePerReferredUserQuoteQuantums |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAffiliates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAffiliates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AffiliateOverrides) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAffiliates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AffiliateOverrides: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AffiliateOverrides: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAffiliates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAffiliates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAffiliates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAffiliates(dAtA[iNdEx:])
