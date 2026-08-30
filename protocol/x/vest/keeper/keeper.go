@@ -87,7 +87,7 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 		}
 
 		// last_vest_time = max(start_time, prev_block_time)
-		lastVestTimeMilli := lib.Max(startTimeMilli, prevBlockTimeMilli)
+		lastVestTimeMilli := max(startTimeMilli, prevBlockTimeMilli)
 		// Calculate (block_time - last_vest_time) / (end_time - last_vest_time)
 		// Given `block_time > prev_block_time` and `block_time > start_time` ===> `block_time > last_vest_time`
 		// Given `end_time > prev_block_time` and `end_time > start_time` ===> `end_time > last_vest_time`

@@ -3,18 +3,18 @@ package price_fetcher
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
 	"gopkg.in/typ.v4/lists"
@@ -148,7 +148,7 @@ func (p *PriceFetcher) getNumQueriesPerTaskLoop() int {
 	if p.exchangeDetails.IsMultiMarket {
 		return 1
 	}
-	return lib.Min(
+	return min(
 		int(p.exchangeQueryConfig.MaxQueries),
 		len(p.mutableState.GetMarketIds()),
 	)
