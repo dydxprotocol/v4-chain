@@ -220,7 +220,15 @@ func doFilterTakerOrderBySubaccount(
 	takerOrder *clobtypes.StreamUpdate_TakerOrder,
 	subaccountIds []satypes.SubaccountId,
 ) bool {
-	return slices.Contains(subaccountIds, takerOrder.TakerOrder.GetOrder().OrderId.SubaccountId)
+	if takerOrder == nil || takerOrder.TakerOrder == nil {
+            return false
+        }
+
+        order := takerOrder.TakerOrder.GetOrder()
+        if order == nil {
+            return false
+        }
+        return slices.Contains(subaccountIds, order.OrderId.SubaccountId)
 }
 
 func doFilterOrderFillBySubaccount(
