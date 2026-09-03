@@ -166,8 +166,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
 
 		// sending
-		"/dydxprotocol.sending.MsgSendFromAccountToAccount",
-		"/dydxprotocol.sending.MsgSendFromAccountToAccountResponse",
 		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
 		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
 

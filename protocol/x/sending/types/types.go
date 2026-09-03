@@ -18,9 +18,5 @@ type SendingKeeper interface {
 		ctx sdk.Context,
 		msg *MsgSendFromModuleToAccount,
 	) error
-	SendFromAccountToAccount(
-		ctx sdk.Context,
-		msg *MsgSendFromAccountToAccount,
-	) error
 	HasAuthority(authority string) bool
 }
