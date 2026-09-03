@@ -4,6 +4,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/protectedaccounts"
 )
 
 // DefaultParams returns a default set of parameters
@@ -22,6 +23,14 @@ func DefaultParams() Params {
 func (p Params) Validate() error {
 	if p.TreasuryAccount == "" {
 		return errorsmod.Wrap(ErrInvalidTreasuryAccount, "treasury account cannot have empty name")
+	}
+
+	if protectedaccounts.IsProtectedModuleName(p.TreasuryAccount) {
+		return errorsmod.Wrapf(
+			ErrInvalidTreasuryAccount,
+			"treasury account '%s' is a protected module account",
+			p.TreasuryAccount,
+		)
 	}
 
 	if p.FeeMultiplierPpm > lib.OneMillion {

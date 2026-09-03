@@ -3,6 +3,7 @@ package types
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/protectedaccounts"
 )
 
 func (entry VestEntry) Validate() error {
@@ -12,6 +13,22 @@ func (entry VestEntry) Validate() error {
 
 	if entry.TreasuryAccount == "" {
 		return errorsmod.Wrap(ErrInvalidTreasuryAccount, "treasury account cannot be empty")
+	}
+
+	if protectedaccounts.IsProtectedModuleName(entry.VesterAccount) {
+		return errorsmod.Wrapf(
+			ErrInvalidVesterAccount,
+			"vester account '%s' is a protected module account",
+			entry.VesterAccount,
+		)
+	}
+
+	if protectedaccounts.IsProtectedModuleName(entry.TreasuryAccount) {
+		return errorsmod.Wrapf(
+			ErrInvalidTreasuryAccount,
+			"treasury account '%s' is a protected module account",
+			entry.TreasuryAccount,
+		)
 	}
 
 	if err := sdk.ValidateDenom(entry.Denom); err != nil {

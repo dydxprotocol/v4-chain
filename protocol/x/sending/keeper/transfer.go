@@ -7,9 +7,11 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/protectedaccounts"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -208,6 +210,16 @@ func (k Keeper) SendFromModuleToAccount(
 ) (err error) {
 	if err = msg.ValidateBasic(); err != nil {
 		return err
+	}
+
+	// Also enforced in ValidateBasic; re-checked next to the bank call so the
+	// guard survives refactors of msg validation.
+	if protectedaccounts.IsProtectedModuleName(msg.GetSenderModuleName()) {
+		return errorsmod.Wrapf(
+			types.ErrBlockedSenderModule,
+			"sender module '%s'",
+			msg.GetSenderModuleName(),
+		)
 	}
 
 	return k.bankKeeper.SendCoinsFromModuleToAccount(

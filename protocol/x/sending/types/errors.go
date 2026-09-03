@@ -18,6 +18,11 @@ var (
 	ErrInvalidAccountAddress              = errorsmod.Register(ModuleName, 6, "Account address is invalid")
 	ErrEmptyModuleName                    = errorsmod.Register(ModuleName, 7, "Module name is empty")
 	ErrInvalidAuthority                   = errorsmod.Register(ModuleName, 8, "Authority is invalid")
+	ErrBlockedSenderModule                = errorsmod.Register(
+		ModuleName,
+		9,
+		"Module is not allowed to send funds via MsgSendFromModuleToAccount",
+	)
 	ErrNonUsdcAssetTransferNotImplemented = errorsmod.Register(
 		ModuleName,
 		1101,
