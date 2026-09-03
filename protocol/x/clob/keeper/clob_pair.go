@@ -84,6 +84,16 @@ func (k Keeper) CreatePerpetualClobPair(
 	subticksPerTick uint32,
 	status types.ClobPair_Status,
 ) (types.ClobPair, error) {
+	// Disallow creating a clob pair directly in final settlement: the isolated insurance fund
+	// sweep runs only on the transition to final settlement (see transitionToFinalSettlement).
+	if status == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+		return types.ClobPair{}, errorsmod.Wrapf(
+			types.ErrInvalidClobPairParameter,
+			"ClobPair with id %d cannot be created in final settlement status",
+			clobPairId,
+		)
+	}
+
 	clobPair, err := k.createPerpetualClobPair(
 		ctx,
 		clobPairId,
@@ -647,6 +657,15 @@ func (k Keeper) UpdateClobPair(
 		return err
 	}
 
+	// If newly transitioning to final settlement, enter final settlement before writing the
+	// clob pair and syncing the memclob: the transition can fail (isolated insurance fund
+	// sweep), and an error rolls back state writes but not memclob mutations.
+	if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT && oldStatus != newStatus {
+		if err := k.transitionToFinalSettlement(ctx, clobPair.GetClobPairId(), perpetualId); err != nil {
+			return err
+		}
+	}
+
 	k.SetClobPair(ctx, clobPair)
 
 	if shouldSyncMemClobState {
@@ -668,11 +687,6 @@ func (k Keeper) UpdateClobPair(
 			),
 		),
 	)
-
-	// If newly transitioning to final settlement, enter final settlement.
-	if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT && oldStatus != newStatus {
-		k.mustTransitionToFinalSettlement(ctx, clobPair.GetClobPairId())
-	}
 
 	return nil
 }

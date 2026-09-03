@@ -101,6 +101,15 @@
       },
       "balances": [
         {
+          "address": "dydx1vm9pjsnm03hzfpp8vf2k7dct4r239qzyntt2uc",
+          "coins": [
+            {
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "5000000000"
+            }
+          ]
+        },
+        {
           "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
           "coins": [
             {
@@ -596,7 +605,7 @@
         },
         {
           "id": 301,
-          "status": "STATUS_ACTIVE",
+          "status": "STATUS_FINAL_SETTLEMENT",
           "perpetual_clob_metadata": {
             "perpetual_id": 301
           },

@@ -9,11 +9,20 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// mustTransitionToFinalSettlement holds logic executed when a market transitions to FINAL_SETTLEMENT status.
-// This function will forcefully cancel all stateful open orders for the clob pair.
-func (k Keeper) mustTransitionToFinalSettlement(ctx sdk.Context, clobPairId types.ClobPairId) {
+// transitionToFinalSettlement holds logic executed when a market transitions to FINAL_SETTLEMENT status.
+// This function will forcefully cancel all stateful open orders for the clob pair and sweep any isolated
+// insurance fund for the market into the cross insurance fund. An error fails the enclosing
+// UpdateClobPair atomically; recovery requires a new proposal, since x/delaymsg deletes a
+// delayed MsgUpdateClobPair even when its execution fails.
+func (k Keeper) transitionToFinalSettlement(ctx sdk.Context, clobPairId types.ClobPairId, perpetualId uint32) error {
 	// Forcefully cancel all stateful orders from state for this clob pair.
 	k.mustCancelStatefulOrdersForFinalSettlement(ctx, clobPairId)
+
+	// Sweep any isolated insurance fund into the cross insurance fund (no-op for cross markets).
+	// This is safe even with positions still open: only deleveraging can occur in final settlement,
+	// which never touches the insurance fund. Deposits made to the isolated fund address after this
+	// sweep are not re-swept.
+	return k.subaccountsKeeper.TransferIsolatedInsuranceFundToCross(ctx, perpetualId)
 }
 
 // mustCancelStatefulOrdersForFinalSettlement forcefully cancels all stateful orders

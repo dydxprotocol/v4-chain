@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -717,6 +719,49 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 		},
 		ppme.RemovedStatefulOrderIds,
 	)
+}
+
+func TestUpdateClobPair_FinalSettlement_SweepsIsolatedInsuranceFund(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	bankMock := &mocks.BankKeeper{}
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	mockIndexerEventManager.On("AddTxnEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, mockIndexerEventManager)
+
+	require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+	keepertest.CreateTestPerpetuals(t, ks.Ctx, ks.PerpetualsKeeper)
+	keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{
+		constants.ClobPair_3_Iso,
+	})
+
+	isolatedInsuranceFundAddr, err := ks.PerpetualsKeeper.GetInsuranceFundModuleAddress(
+		ks.Ctx,
+		constants.IsoUsd_IsolatedMarket.Params.Id,
+	)
+	require.NoError(t, err)
+
+	isolatedFundBalance := sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewInt(1_000_000_000))
+	bankMock.On(
+		"GetBalance",
+		mock.Anything,
+		isolatedInsuranceFundAddr,
+		constants.Usdc.Denom,
+	).Return(isolatedFundBalance)
+	bankMock.On(
+		"SendCoins",
+		mock.Anything,
+		isolatedInsuranceFundAddr,
+		perptypes.InsuranceFundModuleAddress,
+		sdk.Coins{isolatedFundBalance},
+	).Return(nil)
+
+	clobPair := constants.ClobPair_3_Iso
+	clobPair.Status = types.ClobPair_STATUS_FINAL_SETTLEMENT
+	require.NoError(t, ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair))
+
+	bankMock.AssertExpectations(t)
 }
 
 func TestUpdateClobPair(t *testing.T) {
