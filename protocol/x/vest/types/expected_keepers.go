@@ -12,6 +12,12 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
+// AccountKeeper defines the expected interface for checking module account registration.
+type AccountKeeper interface {
+	// GetModuleAddress returns nil iff the module account is not registered.
+	GetModuleAddress(name string) sdk.AccAddress
+}
+
 type BlockTimeKeeper interface {
 	GetPreviousBlockInfo(ctx sdk.Context) blocktimetypes.BlockInfo
 }

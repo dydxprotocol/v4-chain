@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,6 +52,33 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 			},
 			err: types.ErrEmptyModuleName,
+		},
+		"Blocked sender module name - bonded_tokens_pool": {
+			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
+				SenderModuleName: stakingtypes.BondedPoolName,
+				Recipient:        constants.BobAccAddress.String(),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			err: types.ErrBlockedSenderModule,
+		},
+		"Blocked sender module name - not_bonded_tokens_pool": {
+			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
+				SenderModuleName: stakingtypes.NotBondedPoolName,
+				Recipient:        constants.BobAccAddress.String(),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			err: types.ErrBlockedSenderModule,
+		},
+		"Blocked sender module name - subaccounts": {
+			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
+				SenderModuleName: satypes.ModuleName,
+				Recipient:        constants.BobAccAddress.String(),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			err: types.ErrBlockedSenderModule,
 		},
 		"Invalid recipient address": {
 			msg: types.MsgSendFromModuleToAccount{

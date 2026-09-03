@@ -16,6 +16,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
@@ -599,6 +600,26 @@ func TestSendFromModuleToAccount_InvalidMsg(t *testing.T) {
 	ks := keepertest.SendingKeepers(t)
 	err := ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgEmptySender)
 	require.ErrorContains(t, err, "Module name is empty")
+}
+
+func TestSendFromModuleToAccount_BlockedSenderModule(t *testing.T) {
+	ks := keepertest.SendingKeepers(t)
+	for _, senderModule := range []string{
+		stakingtypes.BondedPoolName,
+		stakingtypes.NotBondedPoolName,
+		satypes.ModuleName,
+	} {
+		err := ks.SendingKeeper.SendFromModuleToAccount(
+			ks.Ctx,
+			&types.MsgSendFromModuleToAccount{
+				Authority:        lib.GovModuleAddress.String(),
+				SenderModuleName: senderModule,
+				Recipient:        constants.AliceAccAddress.String(),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+		)
+		require.ErrorIs(t, err, types.ErrBlockedSenderModule)
+	}
 }
 
 func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
