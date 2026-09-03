@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
@@ -44,6 +45,7 @@ func VestKeepers(
 			stateStore,
 			db,
 			cdc,
+			accountKeeper,
 			bankKeeper,
 			blocktimeKeeper,
 			authorities,
@@ -57,12 +59,13 @@ func createVestKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *dbm.MemDB,
 	cdc codec.BinaryCodec,
+	accountKeeper *authkeeper.AccountKeeper,
 	bankKeeper *bankkeeper.BaseKeeper,
 	blocktimeKeeper *blocktimekeeper.Keeper,
 	authorities []string,
 ) (*keeper.Keeper, *storetypes.KVStoreKey) {
 	vestStoreKey := storetypes.NewKVStoreKey(types.StoreKey)
-	vestKeeper := keeper.NewKeeper(cdc, vestStoreKey, bankKeeper, blocktimeKeeper, authorities)
+	vestKeeper := keeper.NewKeeper(cdc, vestStoreKey, accountKeeper, bankKeeper, blocktimeKeeper, authorities)
 	stateStore.MountStoreWithDB(vestStoreKey, storetypes.StoreTypeIAVL, db)
 	return vestKeeper, vestStoreKey
 }

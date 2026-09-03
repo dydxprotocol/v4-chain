@@ -45,6 +45,14 @@ func TestParams_Validate(t *testing.T) {
 			expErrMsg: "treasury account cannot have empty name",
 		},
 		{
+			name: "protected treasury account",
+			input: types.Params{
+				TreasuryAccount: "bonded_tokens_pool",
+				Denom:           "foo",
+			},
+			expErrMsg: "is a protected module account",
+		},
+		{
 			name: "invalid denom",
 			input: types.Params{
 				TreasuryAccount: "treasury_account",

@@ -4,6 +4,8 @@ import (
 	"testing"
 	time "time"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
@@ -45,6 +47,28 @@ func TestValidate(t *testing.T) {
 				Denom:           "testdenom",
 				StartTime:       now.Add(-1 * time.Hour).In(time.UTC),
 				EndTime:         now.In(time.UTC),
+			},
+			expectedErr: types.ErrInvalidTreasuryAccount,
+		},
+		{
+			desc: "protected vester account",
+			entry: types.VestEntry{
+				VesterAccount:   stakingtypes.BondedPoolName,
+				TreasuryAccount: "test_treasury",
+				Denom:           "testdenom",
+				StartTime:       now.Add(-1 * time.Hour).In(time.UTC),
+				EndTime:         now,
+			},
+			expectedErr: types.ErrInvalidVesterAccount,
+		},
+		{
+			desc: "protected treasury account",
+			entry: types.VestEntry{
+				VesterAccount:   "test_vester",
+				TreasuryAccount: satypes.ModuleName,
+				Denom:           "testdenom",
+				StartTime:       now.Add(-1 * time.Hour).In(time.UTC),
+				EndTime:         now,
 			},
 			expectedErr: types.ErrInvalidTreasuryAccount,
 		},

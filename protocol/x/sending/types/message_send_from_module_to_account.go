@@ -4,6 +4,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/protectedaccounts"
 )
 
 var _ sdk.Msg = &MsgSendFromModuleToAccount{}
@@ -41,6 +42,11 @@ func (msg *MsgSendFromModuleToAccount) ValidateBasic() error {
 	// Validate sender module name is non-empty.
 	if len(msg.SenderModuleName) == 0 {
 		return ErrEmptyModuleName
+	}
+
+	// Validate sender module is not a protected module account.
+	if protectedaccounts.IsProtectedModuleName(msg.SenderModuleName) {
+		return errorsmod.Wrapf(ErrBlockedSenderModule, "sender module '%s'", msg.SenderModuleName)
 	}
 
 	// Validate account recipient.

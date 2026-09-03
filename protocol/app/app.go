@@ -1073,6 +1073,7 @@ func New(
 	app.VestKeeper = *vestmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vestmoduletypes.StoreKey],
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.BlockTimeKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades

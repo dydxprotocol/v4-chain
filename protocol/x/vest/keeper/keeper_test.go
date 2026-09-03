@@ -250,6 +250,20 @@ func TestProcessVesting(t *testing.T) {
 			expectedTreasuryBalance: sdkmath.NewInt(0),
 			expectedVesterBalance:   sdkmath.NewInt(0),
 		},
+		"unregistered module accounts are skipped without panicking": {
+			vesterBalance: sdkmath.NewInt(1_000_000),
+			vestEntry: types.VestEntry{
+				VesterAccount:   "unregistered_vester",
+				TreasuryAccount: "unregistered_treasury",
+				Denom:           testVestTokenDenom,
+				StartTime:       time.Unix(0, 0).In(time.UTC),
+				EndTime:         time.Unix(2000, 0).In(time.UTC),
+			},
+			prevBlockTime:           time.Unix(1000, 0),
+			blockTime:               time.Unix(1001, 0),
+			expectedVesterBalance:   sdkmath.NewInt(1_000_000),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
@@ -289,7 +303,7 @@ func TestProcessVesting(t *testing.T) {
 			require.Equal(t,
 				tc.expectedVesterBalance,
 				tApp.App.BankKeeper.GetBalance(
-					ctx, authtypes.NewModuleAddress(testVesterAccount),
+					ctx, authtypes.NewModuleAddress(tc.vestEntry.VesterAccount),
 					testVestTokenDenom,
 				).Amount,
 			)
@@ -297,7 +311,7 @@ func TestProcessVesting(t *testing.T) {
 			require.Equal(t,
 				tc.expectedTreasuryBalance,
 				tApp.App.BankKeeper.GetBalance(
-					ctx, authtypes.NewModuleAddress(testTreasuryAccount),
+					ctx, authtypes.NewModuleAddress(tc.vestEntry.TreasuryAccount),
 					testVestTokenDenom,
 				).Amount,
 			)
