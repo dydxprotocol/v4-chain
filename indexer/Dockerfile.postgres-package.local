@@ -40,7 +40,7 @@ RUN chown dydx -R /home/dydx/app
 USER dydx
 
 # Install npm modules using pnpm
-RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
+RUN pnpm i --loglevel warn --frozen-lockfile --unsafe-perm
 
 WORKDIR /home/dydx/app/packages/postgres
 
