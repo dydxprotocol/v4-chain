@@ -185,3 +185,41 @@ func TestMarketPriceExponentIsFromMarketmap(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(-8), marketPrice.Exponent)
 }
+
+func TestCreateOracleMarketNormalizesPairCase(t *testing.T) {
+	ctx, pricesKeeper, _, _, _, _, marketMapKeeper := keepertest.PricesKeepers(t)
+	msgServer := keeper.NewMsgServerImpl(pricesKeeper)
+
+	currencyPair, err := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
+	require.NoError(t, err)
+
+	err = marketMapKeeper.CreateMarket(ctx, marketmaptypes.Market{
+		Ticker: marketmaptypes.Ticker{
+			CurrencyPair:     currencyPair,
+			Decimals:         uint64(8),
+			MinProviderCount: 1,
+		},
+		ProviderConfigs: []marketmaptypes.ProviderConfig{},
+	})
+	require.NoError(t, err)
+
+	// Governance passes a non-canonical case; the permissionless listing path
+	// uppercases tickers, so the gov path must too. Otherwise the pair is
+	// stored verbatim and the pricefeed daemon, which keys its exchange-config
+	// lookup on the exact stored string, never prices the market.
+	testMarket := pricestest.GenerateMarketParamPrice(
+		pricestest.WithId(1),
+		pricestest.WithPair("btc-usd"),
+		pricestest.WithPriceValue(0),
+	)
+
+	_, err = msgServer.CreateOracleMarket(ctx, &pricestypes.MsgCreateOracleMarket{
+		Authority: lib.GovModuleAddress.String(),
+		Params:    testMarket.Param,
+	})
+	require.NoError(t, err)
+
+	marketParam, exists := pricesKeeper.GetMarketParam(ctx, 1)
+	require.True(t, exists)
+	require.Equal(t, constants.BtcUsdPair, marketParam.Pair)
+}
