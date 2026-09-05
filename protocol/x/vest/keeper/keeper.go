@@ -24,6 +24,7 @@ type (
 	Keeper struct {
 		cdc             codec.BinaryCodec
 		storeKey        storetypes.StoreKey
+		accountKeeper   types.AccountKeeper
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
 		authorities     map[string]struct{}
@@ -33,6 +34,7 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
 	authorities []string,
@@ -40,6 +42,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:             cdc,
 		storeKey:        storeKey,
+		accountKeeper:   accountKeeper,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
 		authorities:     lib.UniqueSliceToSet(authorities),
@@ -107,6 +110,21 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 		}
 
 		if !vestAmount.IsZero() {
+			// An unregistered module account makes SendCoinsFromModuleToModule panic,
+			// which would halt the chain since this runs in BeginBlocker. Skip instead.
+			if k.accountKeeper.GetModuleAddress(entry.VesterAccount) == nil ||
+				k.accountKeeper.GetModuleAddress(entry.TreasuryAccount) == nil {
+				log.ErrorLog(
+					ctx,
+					"unexpected internal error: vest entry references unregistered module account",
+					"vester_account",
+					entry.VesterAccount,
+					"treasury_account",
+					entry.TreasuryAccount,
+				)
+				telemetry.IncrCounter(1, metrics.ProcessVesting, metrics.AccountTransfer, metrics.Error)
+				continue
+			}
 			// Transfer vest_amount from vester_account to treasury_account.
 			// Since `vest_amount = min(vest_proportion, 1) * vester_balance`,
 			// we must have `vest_amount <= vester_balance`

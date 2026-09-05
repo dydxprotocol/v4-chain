@@ -149,6 +149,28 @@ func TestCreateClobPair(t *testing.T) {
 			expectedClobPairs: nil,
 			expectedErr:       "invalid authority invalid: expected gov account as only signer for proposal message",
 		},
+		"Failure: clob pair in final settlement status": {
+			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
+				keepertest.CreateTestPricesAndPerpetualMarkets(
+					t,
+					ks.Ctx,
+					ks.PerpetualsKeeper,
+					ks.PricesKeeper,
+					[]perptypes.Perpetual{testPerp1},
+					[]pricestypes.MarketParamPrice{testMarket1},
+				)
+			},
+			msg: &types.MsgCreateClobPair{
+				Authority: lib.GovModuleAddress.String(),
+				ClobPair: *clobtest.GenerateClobPair(
+					clobtest.WithId(1),
+					clobtest.WithPerpetualId(1),
+					clobtest.WithStatus(types.ClobPair_STATUS_FINAL_SETTLEMENT),
+				),
+			},
+			expectedClobPairs: nil,
+			expectedErr:       "cannot be created in final settlement status",
+		},
 	}
 
 	for name, tc := range testCases {

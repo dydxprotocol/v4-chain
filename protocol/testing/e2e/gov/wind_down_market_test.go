@@ -220,12 +220,33 @@ func TestWindDownMarketProposal(t *testing.T) {
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 			)
 
-			// Verify events emitted by indexer in the last block, the block in which the gov proposal was executed
-			events := []*indexer_manager.IndexerTendermintEvent{
-				{
+			// Verify events emitted by indexer in the last block, the block in which the gov proposal was executed.
+			// Stateful order removals are emitted before the clob pair update: the final settlement
+			// transition runs before the clob pair is written so a failed transition aborts atomically.
+			events := []*indexer_manager.IndexerTendermintEvent{}
+			for i, order := range tc.preexistingStatefulOrders {
+				events = append(
+					events,
+					&indexer_manager.IndexerTendermintEvent{
+						Subtype:             indexerevents.SubtypeStatefulOrder,
+						OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+						EventIndex:          uint32(i),
+						Version:             indexerevents.StatefulOrderEventVersion,
+						DataBytes: indexer_manager.GetBytes(
+							indexerevents.NewStatefulOrderRemovalEvent(
+								order.Order.OrderId,
+								indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_FINAL_SETTLEMENT,
+							),
+						),
+					},
+				)
+			}
+			events = append(
+				events,
+				&indexer_manager.IndexerTendermintEvent{
 					Subtype:             indexerevents.SubtypeUpdateClobPair,
 					OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-					EventIndex:          0,
+					EventIndex:          uint32(len(tc.preexistingStatefulOrders)),
 					Version:             indexerevents.UpdateClobPairEventVersion,
 					DataBytes: indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(
@@ -237,24 +258,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 						),
 					),
 				},
-			}
-			for i, order := range tc.preexistingStatefulOrders {
-				events = append(
-					events,
-					&indexer_manager.IndexerTendermintEvent{
-						Subtype:             indexerevents.SubtypeStatefulOrder,
-						OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-						EventIndex:          uint32(i + 1),
-						Version:             indexerevents.StatefulOrderEventVersion,
-						DataBytes: indexer_manager.GetBytes(
-							indexerevents.NewStatefulOrderRemovalEvent(
-								order.Order.OrderId,
-								indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_FINAL_SETTLEMENT,
-							),
-						),
-					},
-				)
-			}
+			)
 			expectedOnChainMessageAfterGovProposal := indexer_manager.CreateIndexerBlockEventMessage(
 				&indexer_manager.IndexerTendermintBlock{
 					Height: uint32(ctx.BlockHeight()),

@@ -2119,6 +2119,14 @@ func TestProcessProposerOperations(t *testing.T) {
 		// Deleveraging is allowed for markets in final settlement to close out all open positions. A deleveraging
 		// event with IsFinalSettlement set to false represents a negative TNC subaccount in the market getting deleveraged.
 		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {
+			// Deleveraging in final settlement must never move funds through x/bank: the isolated
+			// insurance fund is swept on transition (see transitionToFinalSettlement). No Send*
+			// expectations are registered, so any bank transfer fails the test.
+			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
+				bk.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).
+					Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0)))
+				bk.On("BlockedAddr", mock.Anything).Return(false)
+			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -2164,6 +2172,12 @@ func TestProcessProposerOperations(t *testing.T) {
 		// event with IsFinalSettlement set to true represents a non-negative TNC subaccount having its position closed
 		// at the oracle price against other subaccounts with open positions on the opposing side of the book.
 		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {
+			// Same bank tripwire as above: final settlement deleveraging must not move funds.
+			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
+				bk.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).
+					Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0)))
+				bk.On("BlockedAddr", mock.Anything).Return(false)
+			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},

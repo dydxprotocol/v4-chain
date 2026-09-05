@@ -95,6 +95,10 @@ type SubaccountsKeeper interface {
 	) (
 		balance *big.Int,
 	)
+	TransferIsolatedInsuranceFundToCross(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) error
 	GetCollateralPoolFromPerpetualId(
 		ctx sdk.Context,
 		perpetualId uint32,

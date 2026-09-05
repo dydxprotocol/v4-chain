@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -370,7 +371,10 @@ func (k Keeper) ProcessRewardsForBlock(
 	rewardTokenAmount := new(big.Int).Div(rewardTokenAmountPpm, lib.BigIntOneMillion())
 
 	// Calculate value of `T`, the reward tokens balance in the `treasury_account`.
-	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
+	// Read from the same account that distribution debits below, so the cap
+	// always bounds the actual outflow.
+	treasuryModuleAddress := authtypes.NewModuleAddress(params.TreasuryAccount)
+	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, treasuryModuleAddress, params.Denom)
 
 	// Get tokenToDistribute as the min(F, T).
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), rewardTokenAmount)
@@ -446,7 +450,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	)
 
 	// Measure treasury balance after distribution.
-	remainingTreasuryBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
+	remainingTreasuryBalance := k.bankKeeper.GetBalance(ctx, treasuryModuleAddress, params.Denom)
 	telemetry.SetGauge(
 		metrics.GetMetricValueFromBigInt(remainingTreasuryBalance.Amount.BigInt()),
 		types.ModuleName,
