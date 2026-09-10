@@ -213,6 +213,10 @@ const (
 	ProcessSingleMatchUnexpectedError    = "process_single_match_unexpected_error"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
 
+	// TWAP.
+	TwapSweepDuplicateTrigger  = "twap_sweep_duplicate_trigger"
+	TwapSweepSuborderCollision = "twap_sweep_suborder_collision"
+
 	// Daemon
 	DaemonServer    = "daemon_server"
 	ValidResponse   = "valid_response"

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -13,6 +14,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -709,4 +711,391 @@ func TestGenerateSuborder(t *testing.T) {
 			require.Equal(t, tc.expectedOrder.Quantums, generatedOrder.Quantums)
 		})
 	}
+}
+
+func TestDeletePendingTwapTrigger(t *testing.T) {
+	ks := setupTestTWAPOrderState(t)
+
+	suborderId := types.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	otherSuborderId := types.OrderId{
+		SubaccountId: constants.Bob_Num0,
+		ClientId:     0,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+
+	ks.ClobKeeper.AddSuborderToTriggerStore(ks.Ctx, suborderId, 5)
+	ks.ClobKeeper.AddSuborderToTriggerStore(ks.Ctx, otherSuborderId, 0)
+
+	triggerTime, found := ks.ClobKeeper.GetPendingTwapTrigger(ks.Ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, ks.Ctx.BlockTime().Unix()+5, triggerTime)
+
+	require.True(t, ks.ClobKeeper.DeletePendingTwapTrigger(ks.Ctx, suborderId))
+
+	_, _, found = ks.ClobKeeper.GetTwapTriggerPlacement(ks.Ctx, suborderId)
+	require.False(t, found)
+	_, found = ks.ClobKeeper.GetPendingTwapTrigger(ks.Ctx, suborderId)
+	require.False(t, found)
+	require.False(t, ks.ClobKeeper.DeletePendingTwapTrigger(ks.Ctx, suborderId))
+
+	remainingId, _, found := ks.ClobKeeper.GetTwapTriggerPlacement(ks.Ctx, otherSuborderId)
+	require.True(t, found)
+	require.Equal(t, otherSuborderId, remainingId)
+	_, found = ks.ClobKeeper.GetPendingTwapTrigger(ks.Ctx, otherSuborderId)
+	require.True(t, found)
+}
+
+func TestDeleteTWAPOrderPlacement_ClearsTriggerStore(t *testing.T) {
+	ks := setupTestTWAPOrderState(t)
+	ctx := ks.Ctx.WithBlockTime(time.Unix(1000, 0))
+
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 5)
+
+	suborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+
+	// Sanity check: the pending trigger exists before deletion.
+	_, _, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.True(t, found)
+
+	ks.ClobKeeper.DeleteTWAPOrderPlacement(ctx, twapOrder.OrderId)
+
+	_, found = ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.False(t, found)
+
+	_, _, found = ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.False(t, found)
+	_, found = ks.ClobKeeper.GetPendingTwapTrigger(ctx, suborderId)
+	require.False(t, found)
+}
+
+func TestIsOrphanTwapSuborder(t *testing.T) {
+	ks := setupTestTWAPOrderState(t)
+	ctx := ks.Ctx.WithBlockTime(time.Unix(1000, 0))
+
+	// Not a suborder at all.
+	require.False(
+		t,
+		ks.ClobKeeper.IsOrphanTwapSuborder(
+			ctx,
+			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+		),
+	)
+
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 5)
+
+	suborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+
+	// Parent placement exists: not orphaned.
+	require.False(t, ks.ClobKeeper.IsOrphanTwapSuborder(ctx, suborderId))
+
+	ks.ClobKeeper.DeleteTWAPOrderPlacement(ctx, twapOrder.OrderId)
+
+	// Parent placement is gone: orphaned.
+	require.True(t, ks.ClobKeeper.IsOrphanTwapSuborder(ctx, suborderId))
+}
+
+// setRawTwapTrigger writes a trigger-store entry without an index entry, as pre-index state did.
+func setRawTwapTrigger(
+	ks keepertest.ClobKeepersTestContext,
+	ctx sdk.Context,
+	triggerTime int64,
+	suborderId types.OrderId,
+) {
+	ks.ClobKeeper.GetTWAPTriggerOrderPlacementStore(ctx).Set(
+		types.GetTWAPTriggerKey(triggerTime, suborderId),
+		[]byte{},
+	)
+}
+
+func TestIndexTwapTriggers(t *testing.T) {
+	ks := setupTestTWAPOrderState(t)
+	ctx := ks.Ctx.WithBlockTime(time.Unix(1000, 0))
+
+	// A live parent whose first-due trigger (created by SetTWAPOrderPlacement at the block time) is
+	// left unindexed, plus a later duplicate trigger for the same suborder id.
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 5)
+	liveSuborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+	ks.ClobKeeper.GetTWAPTriggerIndexStore(ctx).Delete(liveSuborderId.ToStateKey())
+	setRawTwapTrigger(ks, ctx, 1030, liveSuborderId)
+	require.Equal(t, 2, countTriggersForSuborder(ks, ctx, liveSuborderId))
+
+	// An orphan trigger whose parent placement is missing.
+	orphanSuborderId := types.OrderId{
+		SubaccountId: constants.Carl_Num0,
+		ClientId:     7,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	setRawTwapTrigger(ks, ctx, 1000, orphanSuborderId)
+
+	indexed, deleted := ks.ClobKeeper.IndexTwapTriggers(ctx)
+	require.Equal(t, 1, indexed)
+	require.Equal(t, 2, deleted)
+
+	// The orphan trigger is gone.
+	_, _, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, orphanSuborderId)
+	require.False(t, found)
+	_, found = ks.ClobKeeper.GetPendingTwapTrigger(ctx, orphanSuborderId)
+	require.False(t, found)
+
+	// The live suborder keeps only its first-due trigger, and the index points at it.
+	require.Equal(t, 1, countTriggersForSuborder(ks, ctx, liveSuborderId))
+	_, scannedTime, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, liveSuborderId)
+	require.True(t, found)
+	require.Equal(t, int64(1000), scannedTime)
+	indexedTime, found := ks.ClobKeeper.GetPendingTwapTrigger(ctx, liveSuborderId)
+	require.True(t, found)
+	require.Equal(t, int64(1000), indexedTime)
+}
+
+// setupTwapSweepTest builds a keeper with a funded subaccount, perpetual, and CLOB pair so that
+// GenerateAndPlaceTriggeredTwapSuborders can actually place generated suborders through the normal
+// stateful order placement path (collateralization check included).
+func setupTwapSweepTest(t *testing.T) (ks keepertest.ClobKeepersTestContext, ctx sdk.Context) {
+	memClob := &mocks.MemClob{}
+	memClob.On("SetClobKeeper", mock.Anything).Return()
+	memClob.On("CreateOrderbook", mock.Anything).Return()
+	indexerEventManager := &mocks.IndexerEventManager{}
+	indexerEventManager.On("AddTxnEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
+
+	ks = keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+	require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+	require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ks.Ctx, constants.PerpetualFeeParams))
+
+	perpetual := constants.BtcUsd_100PercentMarginRequirement
+	_, err := ks.PerpetualsKeeper.CreatePerpetual(
+		ks.Ctx,
+		perpetual.Params.Id,
+		perpetual.Params.Ticker,
+		perpetual.Params.MarketId,
+		perpetual.Params.AtomicResolution,
+		perpetual.Params.DefaultFundingPpm,
+		perpetual.Params.LiquidityTier,
+		perpetual.Params.MarketType,
+	)
+	require.NoError(t, err)
+
+	ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, satypes.Subaccount{
+		Id: &constants.Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&constants.Usdc_Asset_100_000,
+		},
+	})
+
+	clobPair := constants.ClobPair_Btc
+	_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ks.Ctx,
+		clobPair.Id,
+		clobtest.MustPerpetualId(clobPair),
+		satypes.BaseQuantums(clobPair.StepBaseQuantums),
+		clobPair.QuantumConversionExponent,
+		clobPair.SubticksPerTick,
+		clobPair.Status,
+	)
+	require.NoError(t, err)
+
+	ctx = ks.Ctx.WithBlockHeight(6).WithBlockTime(time.Unix(6, 0))
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    6,
+		Timestamp: time.Unix(6, 0),
+	})
+	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
+		BlockHeight: 6,
+	})
+
+	return ks, ctx
+}
+
+// countTriggersForSuborder counts the number of trigger-store entries for the given suborder id
+// without mutating the store.
+func countTriggersForSuborder(ks keepertest.ClobKeepersTestContext, ctx sdk.Context, suborderId types.OrderId) int {
+	store := ks.ClobKeeper.GetTWAPTriggerOrderPlacementStore(ctx)
+	iterator := store.Iterator(nil, nil)
+	defer iterator.Close()
+
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		var id types.OrderId
+		ks.Cdc.MustUnmarshal(iterator.Key()[8:], &id)
+		if id == suborderId {
+			count++
+		}
+	}
+	return count
+}
+
+func TestGenerateAndPlaceTriggeredTwapSuborders_DedupsDuplicateTriggers(t *testing.T) {
+	ks, ctx := setupTwapSweepTest(t)
+
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 6)
+
+	suborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+
+	// SetTWAPOrderPlacement already added one due trigger (offset 0, i.e. == block time).
+	// Add a second, earlier-due trigger for the exact same suborder id.
+	ks.ClobKeeper.AddSuborderToTriggerStore(ctx, suborderId, -5)
+
+	// Sanity check: two due triggers exist for the same suborder id before the sweep.
+	require.Equal(t, 2, countTriggersForSuborder(ks, ctx, suborderId))
+
+	ks.ClobKeeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
+
+	// Exactly one suborder was placed - no collision panic from the duplicate trigger.
+	placement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, suborderId, placement.Order.OrderId)
+
+	// The duplicate trigger key was dropped; only the next-interval trigger remains, and it is indexed.
+	require.Equal(t, 1, countTriggersForSuborder(ks, ctx, suborderId))
+	_, nextTriggerTime, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, ctx.BlockTime().Unix()+int64(twapOrder.TwapParameters.Interval), nextTriggerTime)
+	indexedTime, found := ks.ClobKeeper.GetPendingTwapTrigger(ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, nextTriggerTime, indexedTime)
+
+	// The parent placement survives with legs decremented by exactly one.
+	twapPlacement, found := ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.True(t, found)
+	require.Equal(t, twapOrder.GetTotalLegsTWAPOrder()-1, twapPlacement.RemainingLegs)
+}
+
+func TestGenerateAndPlaceTriggeredTwapSuborders_AlreadyExistsKeepsParent(t *testing.T) {
+	ks, ctx := setupTwapSweepTest(t)
+
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 6)
+
+	suborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+
+	// Force the sweep's suborder placement to collide with ErrStatefulOrderAlreadyExists by
+	// pre-placing a long-term order under the exact suborder id the sweep will generate.
+	collidingOrder := twapOrder
+	collidingOrder.OrderId = suborderId
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx, collidingOrder, 6)
+	ks.ClobKeeper.AddStatefulOrderIdExpiration(ctx, collidingOrder.MustGetUnixGoodTilBlockTime(), suborderId)
+
+	ks.ClobKeeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
+
+	// The parent placement survives the collision; the skipped non-final leg still counts and its
+	// quantity is caught up on the next interval.
+	twapPlacement, found := ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.True(t, found)
+	require.Equal(t, twapOrder.GetTotalLegsTWAPOrder()-1, twapPlacement.RemainingLegs)
+
+	// The next trigger is queued rather than the parent being torn down.
+	require.Equal(t, 1, countTriggersForSuborder(ks, ctx, suborderId))
+	_, nextTriggerTime, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, ctx.BlockTime().Unix()+int64(twapOrder.TwapParameters.Interval), nextTriggerTime)
+
+	// The pre-existing colliding placement (which caused the collision) is untouched.
+	existing, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, collidingOrder, existing.Order)
+}
+
+// TestGenerateAndPlaceTriggeredTwapSuborders_FinalLegCollisionRetries covers a collision on the
+// final leg: the previous suborder was removed in the same block, so the placement fails with
+// ErrStatefulOrderPreviouslyRemoved. The parent keeps its last leg, retries it on the next interval,
+// and only then completes.
+func TestGenerateAndPlaceTriggeredTwapSuborders_FinalLegCollisionRetries(t *testing.T) {
+	ks, ctx := setupTwapSweepTest(t)
+
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 6)
+	suborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+	interval := int64(twapOrder.TwapParameters.Interval)
+
+	// Advance the parent to its final leg.
+	placement, found := ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.True(t, found)
+	for placement.RemainingLegs > 1 {
+		ks.ClobKeeper.DecrementTwapOrderRemainingLegs(ctx, placement)
+		placement, found = ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+		require.True(t, found)
+	}
+
+	// The previous suborder was removed in this block, so placing the same suborder id collides.
+	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
+		BlockHeight:             6,
+		RemovedStatefulOrderIds: []types.OrderId{suborderId},
+	})
+	ks.ClobKeeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
+
+	placement, found = ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.True(t, found)
+	require.Equal(t, uint32(1), placement.RemainingLegs)
+	_, found = ks.ClobKeeper.GetLongTermOrderPlacement(ctx, suborderId)
+	require.False(t, found)
+	nextTriggerTime, found := ks.ClobKeeper.GetPendingTwapTrigger(ctx, suborderId)
+	require.True(t, found)
+	require.Equal(t, ctx.BlockTime().Unix()+interval, nextTriggerTime)
+
+	// Next interval, with the removal no longer pending: the final leg is placed and the parent
+	// completes.
+	ctx = ctx.WithBlockTime(time.Unix(nextTriggerTime, 0))
+	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(ctx, types.ProcessProposerMatchesEvents{
+		BlockHeight: 6,
+	})
+	ks.ClobKeeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
+
+	_, found = ks.ClobKeeper.GetLongTermOrderPlacement(ctx, suborderId)
+	require.True(t, found)
+	placement, found = ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.True(t, found)
+	require.Equal(t, uint32(0), placement.RemainingLegs)
+
+	// The following interval, the completed parent is deleted together with its pending trigger.
+	ctx = ctx.WithBlockTime(time.Unix(nextTriggerTime+interval, 0))
+	ks.ClobKeeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
+
+	_, found = ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.False(t, found)
+	require.Equal(t, 0, countTriggersForSuborder(ks, ctx, suborderId))
+	_, found = ks.ClobKeeper.GetPendingTwapTrigger(ctx, suborderId)
+	require.False(t, found)
 }

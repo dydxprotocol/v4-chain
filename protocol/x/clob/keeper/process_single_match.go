@@ -808,12 +808,7 @@ func (k Keeper) checkAndUpdateTWAPOrderRemainingQuantity(
 	fillAmount satypes.BaseQuantums,
 ) error {
 	if orderId.IsTwapSuborder() {
-		parentOrderId := types.OrderId{
-			SubaccountId: orderId.SubaccountId,
-			ClientId:     orderId.ClientId,
-			OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
-			ClobPairId:   orderId.ClobPairId,
-		}
+		parentOrderId := k.suborderToTwapId(orderId)
 		if err := k.UpdateTWAPOrderRemainingQuantityOnFill(ctx, parentOrderId, fillAmount.ToUint64()); err != nil {
 			return err
 		}

@@ -92,6 +92,13 @@ func (k Keeper) GetTWAPTriggerOrderPlacementStore(ctx sdk.Context) prefix.Store 
 	)
 }
 
+func (k Keeper) GetTWAPTriggerIndexStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.TWAPTriggerIndexKeyPrefix),
+	)
+}
+
 // getTransientStore fetches a transient store used for reading and
 // updating the transient store.
 func (k Keeper) getTransientStore(ctx sdk.Context) storetypes.KVStore {
