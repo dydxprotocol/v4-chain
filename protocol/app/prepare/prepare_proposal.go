@@ -85,6 +85,17 @@ func PrepareProposalHandler(
 			extCommitBzTx = req.Txs[constants.OracleInfoIndex]
 		}
 
+		// The slinky vote-extension wrapper (RetainOracleDataInWrappedProposalHandler) re-injects the
+		// extended-commit tx accounting only its raw length against MaxTxBytes, while CometBFT validates
+		// the block against the proto-framed size. Reserve that per-tx framing overhead here so the
+		// combined proposal does not exceed MaxTxBytes and panic the proposer.
+		if ve.VoteExtensionsEnabled(ctx) && len(extCommitBzTx) > 0 {
+			framingOverhead := txProtoSize(extCommitBzTx) - uint64(len(extCommitBzTx))
+			if framingOverhead < txs.MaxBytes {
+				txs.MaxBytes -= framingOverhead
+			}
+		}
+
 		// get the update market prices tx
 		msg, err := priceUpdateGenerator.GetValidMarketPriceUpdates(ctx, extCommitBzTx)
 		if err != nil {
@@ -285,7 +296,7 @@ func GetProposedOperationsTx(
 	if len(tx) == 0 {
 		return OperationsTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
 	}
-	if uint64(len(tx)) <= maxBytes {
+	if txProtoSize(tx) <= maxBytes {
 		return OperationsTxResponse{Tx: tx, NumOperations: len(ops)}, nil
 	}
 
@@ -296,14 +307,15 @@ func GetProposedOperationsTx(
 	//
 	// Each operation contributes its own length-delimited encoding to the tx, and every enclosing
 	// length prefix only shrinks with fewer operations, so the full tx's bytes beyond the operations
-	// themselves bound the framing of any prefix. Pick the longest prefix under that bound without
-	// encoding, then extend it with exact encodes in the rare case the bound left slack.
+	// themselves (including the CometBFT per-tx framing) bound the framing of any prefix. Pick the
+	// longest prefix under that bound without encoding, then extend it with exact encodes in the
+	// rare case the bound left slack.
 	opsBytes := make([]uint64, len(ops)+1)
 	for i := range ops {
 		size := uint64(ops[i].Size())
 		opsBytes[i+1] = opsBytes[i] + 1 + uvarintLen(size) + size
 	}
-	framing := uint64(len(tx)) - opsBytes[len(ops)]
+	framing := txProtoSize(tx) - opsBytes[len(ops)]
 	n := sort.Search(len(ops)+1, func(i int) bool { return opsBytes[i]+framing > maxBytes })
 	if n > 0 {
 		n--
@@ -311,16 +323,16 @@ func GetProposedOperationsTx(
 	if tx, err = encode(n); err != nil {
 		return OperationsTxResponse{}, err
 	}
-	if uint64(len(tx)) > maxBytes {
+	if txProtoSize(tx) > maxBytes {
 		return OperationsTxResponse{}, fmt.Errorf(
 			"empty operations tx (%d bytes) exceeds budget %d",
-			len(tx),
+			txProtoSize(tx),
 			maxBytes,
 		)
 	}
 	for n < len(ops) {
 		next, encodeErr := encode(n + 1)
-		if encodeErr != nil || uint64(len(next)) > maxBytes {
+		if encodeErr != nil || txProtoSize(next) > maxBytes {
 			break
 		}
 		n, tx = n+1, next

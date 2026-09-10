@@ -55,8 +55,12 @@ var (
 )
 
 func TestPrepareProposalHandler(t *testing.T) {
-	msgSendTxBytesLen := int64(len(constants.Msg_Send_TxBytes))
-	msgSendAndTransferTxBytesLen := int64(len(constants.Msg_SendAndTransfer_TxBytes))
+	// The mocked prices/funding/bridge/operations encoders below always return the fixed 4-byte
+	// {1,2,3,4}, which costs 1 (tag) + 1 (varint(4)) + 4 (payload) = 6 proto bytes, not 4 raw bytes.
+	fixedGroupTxProtoSize := int64(protoTxSize([]byte{1, 2, 3, 4}))
+	oneByteTxProtoSize := int64(protoTxSize([]byte{1}))
+	msgSendTxProtoSize := int64(protoTxSize(constants.Msg_Send_TxBytes))
+	msgSendAndTransferTxProtoSize := int64(protoTxSize(constants.Msg_SendAndTransfer_TxBytes))
 
 	tests := map[string]struct {
 		txs      [][]byte
@@ -205,7 +209,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{}, // error returns empty result.
 		},
 		"Error: GetOperationsTx returns empty": {
-			maxBytes: 4,
+			maxBytes: 4 * oneByteTxProtoSize,
 
 			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
 			pricesEncoder: passingTxEncoderOne,
@@ -224,7 +228,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{{1}, {1}, {1}},
 		},
 		"Error: SetOperationsTx returns err": {
-			maxBytes: 3, // only upto 3 bytes, not enough space for the order tx.
+			maxBytes: 3 * oneByteTxProtoSize, // fixed txs fit; the operations tx does not.
 
 			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
 			pricesEncoder: passingTxEncoderOne, // takes up 1 byte.
@@ -243,7 +247,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 		// "Others" related.
 		"Error: AddOtherTxs return error": {
-			maxBytes: 17,
+			maxBytes: 6 * fixedGroupTxProtoSize,
 			txs:      [][]byte{{}},
 
 			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
@@ -262,7 +266,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		},
 		"Error: AddOtherTxs (additional) return error": {
-			maxBytes: 19,
+			maxBytes: 6 * fixedGroupTxProtoSize,
 			txs:      [][]byte{{9, 8}, {9}, {}, {}},
 
 			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
@@ -281,7 +285,10 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		},
 		"Valid: Not all Others than can fit": {
-			maxBytes: int64(16) + msgSendTxBytesLen + 1,
+			// 4 fixed-size groups (prices, funding, bridge, operations) at 6 proto bytes each (24),
+			// plus exactly one Msg_Send_TxBytes proto-framed (+1 byte of slack), so that tx fits but
+			// two more copies of it do not.
+			maxBytes: 4*fixedGroupTxProtoSize + msgSendTxProtoSize + 1,
 			txs: [][]byte{
 				constants.Msg_Send_TxBytes,
 				constants.Msg_Send_TxBytes, // not included due to maxBytes.
@@ -309,7 +316,10 @@ func TestPrepareProposalHandler(t *testing.T) {
 			},
 		},
 		"Valid: Additional Others fit": {
-			maxBytes: int64(16) + msgSendTxBytesLen + msgSendAndTransferTxBytesLen,
+			// 4 fixed-size groups at 6 proto bytes each (24), plus exactly the proto-framed sizes of
+			// one Msg_Send_TxBytes and one Msg_SendAndTransfer_TxBytes, so both fit but a second
+			// Msg_Send_TxBytes does not.
+			maxBytes: 4*fixedGroupTxProtoSize + msgSendTxProtoSize + msgSendAndTransferTxProtoSize,
 			txs: [][]byte{
 				constants.Msg_Send_TxBytes,
 				constants.Msg_SendAndTransfer_TxBytes,
@@ -513,6 +523,164 @@ func fixedGroupSize(
 	return uint64(len(pricesTxResp.Tx)) + uint64(len(fundingTxResp.Tx)) + uint64(len(bridgeTxResp.Tx))
 }
 
+// fixedGroupProtoSize is fixedGroupSize measured in CometBFT proto-framed bytes, matching how
+// PrepareProposalTxs budgets the fixed group internally.
+func fixedGroupProtoSize(
+	t *testing.T,
+	txConfig client.TxConfig,
+	mockPerpKeeper *mocks.PreparePerpetualsKeeper,
+	mockBridgeKeeper *mocks.PrepareBridgeKeeper,
+) uint64 {
+	pricesTxResp, err := prepare.EncodeMarketPriceUpdates(txConfig, constants.ValidMsgUpdateMarketPrices)
+	require.NoError(t, err)
+
+	fundingTxResp, err := prepare.GetAddPremiumVotesTx(sdk.Context{}, txConfig, mockPerpKeeper)
+	require.NoError(t, err)
+
+	bridgeTxResp, err := prepare.GetAcknowledgeBridgesTx(sdk.Context{}, txConfig, mockBridgeKeeper)
+	require.NoError(t, err)
+
+	return sumProtoTxSizes([][]byte{pricesTxResp.Tx, fundingTxResp.Tx, bridgeTxResp.Tx})
+}
+
+// sumProtoTxSizes returns the CometBFT proto-framed size of appending all of txs into a block,
+// i.e. the sum of `protoTxSize` over each tx.
+func sumProtoTxSizes(txs [][]byte) uint64 {
+	var total uint64
+	for _, tx := range txs {
+		total += protoTxSize(tx)
+	}
+	return total
+}
+
+// TestPrepareProposalHandler_ProposalFitsProtoSize is an end-to-end regression test for the proto-
+// size accounting fix: it picks a MaxTxBytes budget that a raw-`len(tx)`-based accounting scheme
+// (the pre-fix behavior) would have considered fully satisfied by including every candidate tx, even
+// though the true (proto-framed) size of that same set of txs exceeds the budget. It then asserts
+// that the actual handler produces a proposal that CometBFT itself would accept, i.e.
+// `cmttypes.ToTxs(resp.Txs).Validate(MaxTxBytes)` returns nil.
+func TestPrepareProposalHandler_ProposalFitsProtoSize(t *testing.T) {
+	txConfig := encoding.GetTestEncodingCfg().TxConfig
+
+	t.Run("vote extensions disabled", func(t *testing.T) {
+		mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper := setUpFixedGroupMocks()
+		mockClobKeeper := &mocks.PrepareClobKeeper{}
+		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+			Return(&clobtypes.MsgProposedOperations{})
+
+		ctx, _, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+		// 5 copies of a real, allowed tx competing for the "Other" group's budget.
+		const numOtherTxs = 5
+		otherTxs := make([][]byte, numOtherTxs)
+		for i := range otherTxs {
+			otherTxs[i] = constants.Msg_Send_TxBytes
+		}
+
+		pricesTxResp, err := prepare.EncodeMarketPriceUpdates(txConfig, constants.ValidMsgUpdateMarketPrices)
+		require.NoError(t, err)
+		fundingTxResp, err := prepare.GetAddPremiumVotesTx(ctx, txConfig, mockPerpKeeper)
+		require.NoError(t, err)
+		bridgeTxResp, err := prepare.GetAcknowledgeBridgesTx(ctx, txConfig, mockBridgeKeeper)
+		require.NoError(t, err)
+		emptyOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
+		require.NoError(t, err)
+
+		// The raw sum of every candidate tx (fixed group + empty ops + all "other" txs) is what a
+		// raw-`len(tx)`-based budget would have measured as exactly fitting. Its true proto-framed
+		// sum is strictly larger (each tx costs 1 extra tag byte plus a varint length prefix), so a
+		// naive accounting scheme would build a proposal CometBFT itself would reject.
+		rawTotal := len(pricesTxResp.Tx) + len(fundingTxResp.Tx) + len(bridgeTxResp.Tx) + len(emptyOpsTx)
+		for _, tx := range otherTxs {
+			rawTotal += len(tx)
+		}
+		protoTotal := protoTxSize(pricesTxResp.Tx) + protoTxSize(fundingTxResp.Tx) +
+			protoTxSize(bridgeTxResp.Tx) + protoTxSize(emptyOpsTx) + sumProtoTxSizes(otherTxs)
+		require.Greater(
+			t, protoTotal, uint64(rawTotal),
+			"test is only meaningful if the proto total exceeds what raw-length accounting would allow",
+		)
+
+		req := abci.RequestPrepareProposal{
+			Txs:        otherTxs,
+			MaxTxBytes: int64(rawTotal), //nolint:gosec
+		}
+
+		handler := prepare.PrepareProposalHandler(
+			txConfig,
+			mockBridgeKeeper,
+			mockClobKeeper,
+			mockPerpKeeper,
+			prices.NewDefaultPriceUpdateGenerator(mockPricesKeeper),
+		)
+
+		resp, err := handler(ctx, &req)
+		require.NoError(t, err)
+		require.NotEmpty(t, resp.Txs)
+
+		// Not every "other" tx can have made it in, since their combined proto size alone would
+		// already exceed the budget once the mandatory (prices/funding/bridge/operations) txs are
+		// accounted for.
+		require.Less(t, len(resp.Txs), 4+numOtherTxs)
+
+		require.NoError(t, cmttypes.ToTxs(resp.Txs).Validate(req.MaxTxBytes))
+	})
+
+	t.Run("vote extensions enabled", func(t *testing.T) {
+		mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper := setUpFixedGroupMocks()
+		mockClobKeeper := &mocks.PrepareClobKeeper{}
+		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+			Return(&clobtypes.MsgProposedOperations{})
+
+		ctx := slinkytestutils.CreateBaseSDKContext(t)
+		ctx = slinkytestutils.UpdateContextWithVEHeight(ctx, 3)
+		ctx = ctx.WithBlockHeight(4) // enable vote-extensions.
+
+		// The extended-commit tx injected by the slinky wrapper at req.Txs[OracleInfoIndex]. Its
+		// content doesn't matter here: `DefaultPriceUpdateGenerator` ignores it.
+		extCommitBzTx := make([]byte, 128)
+
+		pricesTxResp, err := prepare.EncodeMarketPriceUpdates(txConfig, constants.ValidMsgUpdateMarketPrices)
+		require.NoError(t, err)
+		fundingTxResp, err := prepare.GetAddPremiumVotesTx(ctx, txConfig, mockPerpKeeper)
+		require.NoError(t, err)
+		bridgeTxResp, err := prepare.GetAcknowledgeBridgesTx(ctx, txConfig, mockBridgeKeeper)
+		require.NoError(t, err)
+		emptyOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
+		require.NoError(t, err)
+		fixedGroupProtoTotal := protoTxSize(pricesTxResp.Tx) + protoTxSize(fundingTxResp.Tx) +
+			protoTxSize(bridgeTxResp.Tx) + protoTxSize(emptyOpsTx)
+
+		// In production, `RetainOracleDataInWrappedProposalHandler` (in the slinky module, outside
+		// this repo) reserves only extCommitBzTx's raw length from the block's true MaxTxBytes budget
+		// before invoking this handler, and separately re-injects extCommitBzTx ahead of whatever this
+		// handler returns. Mirror that same pre-reservation here so `blockMaxTxBytes` below models
+		// the true, un-reduced per-block budget that CometBFT ultimately validates against.
+		blockMaxTxBytes := int64(fixedGroupProtoTotal) + int64(protoTxSize(extCommitBzTx)) //nolint:gosec
+		reqMaxTxBytes := blockMaxTxBytes - int64(len(extCommitBzTx))
+
+		req := abci.RequestPrepareProposal{
+			Txs:        [][]byte{extCommitBzTx},
+			MaxTxBytes: reqMaxTxBytes,
+		}
+
+		handler := prepare.PrepareProposalHandler(
+			txConfig,
+			mockBridgeKeeper,
+			mockClobKeeper,
+			mockPerpKeeper,
+			prices.NewDefaultPriceUpdateGenerator(mockPricesKeeper),
+		)
+
+		resp, err := handler(ctx, &req)
+		require.NoError(t, err)
+		require.NotEmpty(t, resp.Txs)
+
+		total := protoTxSize(extCommitBzTx) + sumProtoTxSizes(resp.Txs)
+		require.LessOrEqual(t, total, uint64(blockMaxTxBytes)) //nolint:gosec
+	})
+}
+
 func TestPrepareProposalHandler_OperationsTxTruncatedToPrefix(t *testing.T) {
 	encodingCfg := encoding.GetTestEncodingCfg()
 	txConfig := encodingCfg.TxConfig
@@ -521,7 +689,7 @@ func TestPrepareProposalHandler_OperationsTxTruncatedToPrefix(t *testing.T) {
 	ops := buildOperationsQueue(numOps)
 
 	mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper := setUpFixedGroupMocks()
-	fixedSize := fixedGroupSize(t, txConfig, mockPerpKeeper, mockBridgeKeeper)
+	fixedProtoSize := fixedGroupProtoSize(t, txConfig, mockPerpKeeper, mockBridgeKeeper)
 
 	emptyOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
 	require.NoError(t, err)
@@ -529,9 +697,7 @@ func TestPrepareProposalHandler_OperationsTxTruncatedToPrefix(t *testing.T) {
 	require.NoError(t, err)
 	require.Less(t, uint64(len(emptyOpsTx)), uint64(len(fullOpsTx)))
 
-	// Target a specific, non-trivial prefix length so the truncation boundary is predictable, with
-	// enough slack above it to absorb the cometbft per-tx proto-encoding overhead that isn't
-	// accounted for by the raw byte-length budget `PrepareProposalTxs` tracks internally.
+	// Target a specific, non-trivial prefix length so the truncation boundary is predictable.
 	const targetNumOps = numOps / 2
 	targetOpsTx, err := prepare.EncodeMsgsIntoTxBytes(
 		txConfig,
@@ -544,16 +710,17 @@ func TestPrepareProposalHandler_OperationsTxTruncatedToPrefix(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	const slack = uint64(60)
+	// GetProposedOperationsTx truncates by CometBFT proto-framed size, so grant exactly the target
+	// prefix's proto size. The next prefix is strictly larger and does not fit, so the boundary lands
+	// on targetNumOps.
 	require.Greater(
 		t,
-		uint64(len(nextOpsTx))-uint64(len(targetOpsTx)),
-		slack,
-		"slack must be smaller than the per-operation size increment for the truncation boundary "+
-			"to land exactly on targetNumOps",
+		protoTxSize(nextOpsTx),
+		protoTxSize(targetOpsTx),
+		"the per-operation size increment must be positive for the boundary to land on targetNumOps",
 	)
-	opsBudget := uint64(len(targetOpsTx)) + slack
-	maxTxBytes := int64(fixedSize + opsBudget) //nolint:gosec
+	opsBudget := protoTxSize(targetOpsTx)
+	maxTxBytes := int64(fixedProtoSize + opsBudget) //nolint:gosec
 
 	mockClobKeeper := &mocks.PrepareClobKeeper{}
 	mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
