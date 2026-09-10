@@ -64,6 +64,21 @@ func (cd ClobDecorator) AnteHandle(
 		return ctx, err
 	}
 
+	// Reject oversized short-term CLOB txs on initial CheckTx. These are fee- and gas-free, and their
+	// raw bytes are stored verbatim and re-emitted in the operations tx, so padding here inflates the
+	// proposed block. Node-local bound; ReCheckTx and DeliverTx are unaffected.
+	if ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		if isShortTerm, _ := IsShortTermClobMsgTx(ctx, tx); isShortTerm &&
+			len(ctx.TxBytes()) > types.MaxShortTermClobTxBytes {
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrTxTooLarge,
+				"short-term clob tx is %d bytes, max %d",
+				len(ctx.TxBytes()),
+				types.MaxShortTermClobTxBytes,
+			)
+		}
+	}
+
 	// Disable order placement and cancelation processing if the clob keeper is not initialized.
 	if !cd.clobKeeper.IsInMemStructuresInitialized() {
 		return ctx, errorsmod.Wrap(

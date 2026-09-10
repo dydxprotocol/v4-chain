@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/slinky/abci/strategies/aggregator"
@@ -21,6 +22,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	clobtestutil "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -217,7 +219,9 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: emptyTxEncoder, // encoder returns empty.
 
-			expectedTxs: [][]byte{}, // error returns empty result.
+			// GetProposedOperationsTx errors; the handler falls back to an empty operations tx, so the
+			// proposal keeps the fixed bridge/funding/prices txs instead of collapsing to empty.
+			expectedTxs: [][]byte{{1}, {1}, {1}},
 		},
 		"Error: SetOperationsTx returns err": {
 			maxBytes: 3, // only upto 3 bytes, not enough space for the order tx.
@@ -254,7 +258,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
 
-			expectedTxs: [][]byte{}, // error returns empty result.
+			// AddOtherTxs failure no longer empties the proposal; the fixed txs are kept.
+			expectedTxs: [][]byte{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		},
 		"Error: AddOtherTxs (additional) return error": {
 			maxBytes: 19,
@@ -272,7 +277,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
 
-			expectedTxs: [][]byte{}, // error returns empty result.
+			// The additional AddOtherTxs failure no longer empties the proposal; the fixed txs are kept.
+			expectedTxs: [][]byte{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		},
 		"Valid: Not all Others than can fit": {
 			maxBytes: int64(16) + msgSendTxBytesLen + 1,
@@ -341,6 +347,12 @@ func TestPrepareProposalHandler(t *testing.T) {
 					tc.pricesEncoder,
 					tc.fundingEncoder,
 					tc.bridgeEncoder,
+					tc.clobEncoder,
+					// GetProposedOperationsTx re-encodes an empty ops tx when the full ops tx
+					// doesn't fit within the (mocked, fixed-size) available bytes.
+					tc.clobEncoder,
+					// On a GetProposedOperationsTx error, the handler falls back to encoding an empty
+					// operations tx rather than returning an empty proposal.
 					tc.clobEncoder,
 				},
 			)
@@ -460,6 +472,191 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			require.Equal(t, tc.expectedTxs, response.Txs)
 		})
 	}
+}
+
+// setUpFixedGroupMocks wires up mocks for the "fixed" tx groups (prices, funding, bridge) so that
+// their encoded sizes are deterministic and can be measured ahead of time via
+// `EncodeMarketPriceUpdates`/`GetAddPremiumVotesTx`/`GetAcknowledgeBridgesTx`.
+func setUpFixedGroupMocks() (*mocks.PreparePricesKeeper, *mocks.PreparePerpetualsKeeper, *mocks.PrepareBridgeKeeper) {
+	mockPricesKeeper := &mocks.PreparePricesKeeper{}
+	mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
+		Return(constants.ValidMsgUpdateMarketPrices)
+
+	mockPerpKeeper := &mocks.PreparePerpetualsKeeper{}
+	mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
+		Return(constants.ValidMsgAddPremiumVotes)
+
+	mockBridgeKeeper := &mocks.PrepareBridgeKeeper{}
+	mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
+		Return(constants.MsgAcknowledgeBridges_Ids0_1_Height0)
+
+	return mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper
+}
+
+// fixedGroupSize returns the combined encoded size, using the real tx encoder, of the prices,
+// funding, and bridge txs that `PrepareProposalHandler` always includes ahead of the operations tx.
+func fixedGroupSize(
+	t *testing.T,
+	txConfig client.TxConfig,
+	mockPerpKeeper *mocks.PreparePerpetualsKeeper,
+	mockBridgeKeeper *mocks.PrepareBridgeKeeper,
+) uint64 {
+	pricesTxResp, err := prepare.EncodeMarketPriceUpdates(txConfig, constants.ValidMsgUpdateMarketPrices)
+	require.NoError(t, err)
+
+	fundingTxResp, err := prepare.GetAddPremiumVotesTx(sdk.Context{}, txConfig, mockPerpKeeper)
+	require.NoError(t, err)
+
+	bridgeTxResp, err := prepare.GetAcknowledgeBridgesTx(sdk.Context{}, txConfig, mockBridgeKeeper)
+	require.NoError(t, err)
+
+	return uint64(len(pricesTxResp.Tx)) + uint64(len(fundingTxResp.Tx)) + uint64(len(bridgeTxResp.Tx))
+}
+
+func TestPrepareProposalHandler_OperationsTxTruncatedToPrefix(t *testing.T) {
+	encodingCfg := encoding.GetTestEncodingCfg()
+	txConfig := encodingCfg.TxConfig
+
+	const numOps = 50
+	ops := buildOperationsQueue(numOps)
+
+	mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper := setUpFixedGroupMocks()
+	fixedSize := fixedGroupSize(t, txConfig, mockPerpKeeper, mockBridgeKeeper)
+
+	emptyOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
+	require.NoError(t, err)
+	fullOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{OperationsQueue: ops})
+	require.NoError(t, err)
+	require.Less(t, uint64(len(emptyOpsTx)), uint64(len(fullOpsTx)))
+
+	// Target a specific, non-trivial prefix length so the truncation boundary is predictable, with
+	// enough slack above it to absorb the cometbft per-tx proto-encoding overhead that isn't
+	// accounted for by the raw byte-length budget `PrepareProposalTxs` tracks internally.
+	const targetNumOps = numOps / 2
+	targetOpsTx, err := prepare.EncodeMsgsIntoTxBytes(
+		txConfig,
+		&clobtypes.MsgProposedOperations{OperationsQueue: ops[:targetNumOps]},
+	)
+	require.NoError(t, err)
+	nextOpsTx, err := prepare.EncodeMsgsIntoTxBytes(
+		txConfig,
+		&clobtypes.MsgProposedOperations{OperationsQueue: ops[:targetNumOps+1]},
+	)
+	require.NoError(t, err)
+
+	const slack = uint64(60)
+	require.Greater(
+		t,
+		uint64(len(nextOpsTx))-uint64(len(targetOpsTx)),
+		slack,
+		"slack must be smaller than the per-operation size increment for the truncation boundary "+
+			"to land exactly on targetNumOps",
+	)
+	opsBudget := uint64(len(targetOpsTx)) + slack
+	maxTxBytes := int64(fixedSize + opsBudget) //nolint:gosec
+
+	mockClobKeeper := &mocks.PrepareClobKeeper{}
+	mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+		Return(&clobtypes.MsgProposedOperations{OperationsQueue: ops})
+
+	ctx, _, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+	handler := prepare.PrepareProposalHandler(
+		txConfig,
+		mockBridgeKeeper,
+		mockClobKeeper,
+		mockPerpKeeper,
+		prices.NewDefaultPriceUpdateGenerator(mockPricesKeeper),
+	)
+
+	req := abci.RequestPrepareProposal{
+		Txs:        [][]byte{},
+		MaxTxBytes: maxTxBytes,
+	}
+
+	resp, err := handler(ctx, &req)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(resp.Txs), 4)
+
+	require.NoError(t, cmttypes.ToTxs(resp.Txs).Validate(maxTxBytes))
+
+	opsTx, err := txConfig.TxDecoder()(resp.Txs[0])
+	require.NoError(t, err)
+	msgs := opsTx.GetMsgs()
+	require.Len(t, msgs, 1)
+	proposedOps, ok := msgs[0].(*clobtypes.MsgProposedOperations)
+	require.True(t, ok)
+
+	require.NotEmpty(t, proposedOps.OperationsQueue)
+	require.Less(t, len(proposedOps.OperationsQueue), numOps)
+	require.Equal(t, ops[:len(proposedOps.OperationsQueue)], proposedOps.OperationsQueue)
+	require.Equal(t, targetNumOps, len(proposedOps.OperationsQueue))
+}
+
+func TestPrepareProposalHandler_OperationsTxFallsBackToEmpty(t *testing.T) {
+	encodingCfg := encoding.GetTestEncodingCfg()
+	txConfig := encodingCfg.TxConfig
+
+	const numOps = 50
+	ops := buildOperationsQueue(numOps)
+
+	mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper := setUpFixedGroupMocks()
+	fixedSize := fixedGroupSize(t, txConfig, mockPerpKeeper, mockBridgeKeeper)
+
+	emptyOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
+	require.NoError(t, err)
+	oneOpTx, err := prepare.EncodeMsgsIntoTxBytes(
+		txConfig,
+		&clobtypes.MsgProposedOperations{OperationsQueue: ops[:1]},
+	)
+	require.NoError(t, err)
+
+	emptySize := uint64(len(emptyOpsTx))
+	oneOpSize := uint64(len(oneOpTx))
+	require.Greater(t, oneOpSize, emptySize)
+
+	// Budget for operations sits strictly between the empty-tx size and the smallest non-empty
+	// (1-op) tx size, so only the empty ops tx fits.
+	opsBudget := emptySize + (oneOpSize-emptySize)/2
+	require.Greater(t, opsBudget, emptySize)
+	require.Less(t, opsBudget, oneOpSize)
+
+	maxTxBytes := int64(fixedSize + opsBudget) //nolint:gosec
+
+	mockClobKeeper := &mocks.PrepareClobKeeper{}
+	mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+		Return(&clobtypes.MsgProposedOperations{OperationsQueue: ops})
+
+	ctx, _, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+	handler := prepare.PrepareProposalHandler(
+		txConfig,
+		mockBridgeKeeper,
+		mockClobKeeper,
+		mockPerpKeeper,
+		prices.NewDefaultPriceUpdateGenerator(mockPricesKeeper),
+	)
+
+	req := abci.RequestPrepareProposal{
+		Txs:        [][]byte{},
+		MaxTxBytes: maxTxBytes,
+	}
+
+	resp, err := handler(ctx, &req)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(resp.Txs), 4)
+
+	require.NoError(t, cmttypes.ToTxs(resp.Txs).Validate(maxTxBytes))
+
+	opsTx, err := txConfig.TxDecoder()(resp.Txs[0])
+	require.NoError(t, err)
+	msgs := opsTx.GetMsgs()
+	require.Len(t, msgs, 1)
+	proposedOps, ok := msgs[0].(*clobtypes.MsgProposedOperations)
+	require.True(t, ok)
+
+	require.Empty(t, proposedOps.OperationsQueue)
+	require.Equal(t, emptyOpsTx, resp.Txs[0])
 }
 
 func TestSlinkyPrepareProposalHandler(t *testing.T) {
@@ -890,7 +1087,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
 
-			resp, err := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
+			resp, err := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper, 1000)
 			if tc.expectedErr != nil {
 				require.Equal(t, err, tc.expectedErr)
 			} else {
@@ -899,6 +1096,104 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			require.Equal(t, tc.expectedTx, resp.Tx)
 		})
 	}
+}
+
+// buildOperationsQueue returns a queue of `n` distinct, realistically-sized short-term order
+// placement `OperationRaw`s, encoded with the real tx encoder so that byte size grows meaningfully
+// (and deterministically) with the length of the queue.
+func buildOperationsQueue(n int) []clobtypes.OperationRaw {
+	ops := make([]clobtypes.OperationRaw, n)
+	for i := 0; i < n; i++ {
+		ops[i] = clobtestutil.NewShortTermOrderPlacementOperationRaw(clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: uint32(i), ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     100_000_000,
+			Subticks:     50_000_000,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 25},
+		})
+	}
+	return ops
+}
+
+// TestGetProposedOperationsTx_MaxBytes covers the prefix-truncation behavior of
+// `GetProposedOperationsTx` using the real tx encoder (mocked encoders always return fixed-size
+// output regardless of the number of operations, so they cannot exercise truncation).
+func TestGetProposedOperationsTx_MaxBytes(t *testing.T) {
+	txConfig := encoding.GetTestEncodingCfg().TxConfig
+
+	const numOps = 50
+	ops := buildOperationsQueue(numOps)
+
+	mockClobKeeper := mocks.PrepareClobKeeper{}
+	mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+		Return(&clobtypes.MsgProposedOperations{OperationsQueue: ops})
+
+	encodeN := func(t *testing.T, n int) []byte {
+		tx, err := prepare.EncodeMsgsIntoTxBytes(
+			txConfig,
+			&clobtypes.MsgProposedOperations{OperationsQueue: ops[:n]},
+		)
+		require.NoError(t, err)
+		return tx
+	}
+	decodeOps := func(t *testing.T, tx []byte) []clobtypes.OperationRaw {
+		decodedTx, err := txConfig.TxDecoder()(tx)
+		require.NoError(t, err)
+		msgs := decodedTx.GetMsgs()
+		require.Len(t, msgs, 1)
+		msgOps, ok := msgs[0].(*clobtypes.MsgProposedOperations)
+		require.True(t, ok)
+		return msgOps.OperationsQueue
+	}
+
+	emptyTx := encodeN(t, 0)
+	fullTx := encodeN(t, numOps)
+	oneOpTx := encodeN(t, 1)
+	emptySize := uint64(len(emptyTx))
+	fullSize := uint64(len(fullTx))
+	oneOpSize := uint64(len(oneOpTx))
+	// Sanity check that operation size grows meaningfully with queue length, otherwise the
+	// prefix/empty-fits cases below wouldn't be meaningful.
+	require.Less(t, emptySize, oneOpSize)
+	require.Less(t, oneOpSize, fullSize)
+
+	t.Run("fits", func(t *testing.T) {
+		maxBytes := fullSize + 1_000 // comfortably larger than the full ops tx.
+		resp, err := prepare.GetProposedOperationsTx(ctx, txConfig, &mockClobKeeper, maxBytes)
+		require.NoError(t, err)
+		require.Equal(t, numOps, resp.NumOperations)
+		require.Equal(t, fullTx, resp.Tx)
+		require.Equal(t, ops, decodeOps(t, resp.Tx))
+	})
+
+	t.Run("prefix", func(t *testing.T) {
+		maxBytes := emptySize + (fullSize-emptySize)/2
+		resp, err := prepare.GetProposedOperationsTx(ctx, txConfig, &mockClobKeeper, maxBytes)
+		require.NoError(t, err)
+		require.Greater(t, resp.NumOperations, 0)
+		require.Less(t, resp.NumOperations, numOps)
+		require.LessOrEqual(t, uint64(len(resp.Tx)), maxBytes)
+		require.Equal(t, encodeN(t, resp.NumOperations), resp.Tx)
+		require.Equal(t, ops[:resp.NumOperations], decodeOps(t, resp.Tx))
+	})
+
+	t.Run("empty-fits", func(t *testing.T) {
+		// Strictly between the empty-tx size and the smallest non-empty (1-op) tx size, so that
+		// only the empty ops tx fits.
+		maxBytes := emptySize + (oneOpSize-emptySize)/2
+		require.Greater(t, maxBytes, emptySize)
+		require.Less(t, maxBytes, oneOpSize)
+
+		resp, err := prepare.GetProposedOperationsTx(ctx, txConfig, &mockClobKeeper, maxBytes)
+		require.NoError(t, err)
+		require.Equal(t, 0, resp.NumOperations)
+		require.Equal(t, emptyTx, resp.Tx)
+	})
+
+	t.Run("nothing-fits", func(t *testing.T) {
+		_, err := prepare.GetProposedOperationsTx(ctx, txConfig, &mockClobKeeper, emptySize-1)
+		require.Error(t, err)
+	})
 }
 
 func TestEncodeMsgsIntoTxBytes(t *testing.T) {
