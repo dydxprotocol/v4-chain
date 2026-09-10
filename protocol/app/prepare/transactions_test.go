@@ -2,12 +2,34 @@ package prepare_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/stretchr/testify/require"
 )
+
+// protoTxSize mirrors the unexported `prepare.txProtoSize`: the number of bytes a tx contributes to
+// a block's data size, matching how CometBFT accounts for it in `Txs.Validate` (1 tag byte + a
+// varint-encoded length prefix + the tx payload). Tests use this (instead of raw `len(tx)`) to derive
+// expected budgets so the numbers document the framing rather than being magic constants.
+func protoTxSize(tx []byte) uint64 {
+	return uint64(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{tx}))
+}
+
+// uvarintProtoLen returns the number of bytes a protobuf varint encoding of n occupies, independent
+// of cmttypes, so `Test_UsedBytes_ProtoFraming` can cross-check `protoTxSize` against an
+// independently-derived formula rather than one that trivially matches by construction.
+func uvarintProtoLen(n uint64) uint64 {
+	size := uint64(1)
+	for n >= 0x80 {
+		n >>= 7
+		size++
+	}
+	return size
+}
 
 type TestFunction int
 
@@ -62,6 +84,12 @@ func Test_SetProposedOperationsTx(t *testing.T) {
 }
 
 func setterTestCases(t *testing.T, tFunc TestFunction) {
+	// MaxBytes is set to exactly the proto-framed size of the 4-byte "valid" tx below (1 tag byte +
+	// 1 varint-len byte + 4 payload bytes = 6), so that tx exactly fits and a tx one byte longer (5
+	// payload bytes, whose varint-len byte pushes it to 7 proto bytes) overflows by exactly 1 byte.
+	maxBytes := protoTxSize([]byte{1, 2, 3, 4})
+	overflowTxProtoSize := protoTxSize([]byte{1, 2, 3, 4, 5})
+
 	tests := map[string]struct {
 		tx []byte
 
@@ -72,7 +100,7 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 		"input is nil": {
 			tx:                nil,
 			expectedTx:        nil,
-			expectedUsedBytes: 0,
+			expectedUsedBytes: 0, // an unset slot contributes nothing to the block.
 		},
 		"input is empty": {
 			tx:                []byte{},
@@ -82,13 +110,15 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 		"input is valid": {
 			tx:                []byte{1, 2, 3, 4},
 			expectedTx:        []byte{1, 2, 3, 4},
-			expectedUsedBytes: 4,
+			expectedUsedBytes: maxBytes, // exactly fits: proto size of a 4-byte tx equals MaxBytes.
 		},
 		"input overflows": {
 			tx:                []byte{1, 2, 3, 4, 5},
 			expectedTx:        nil,
 			expectedUsedBytes: 0,
-			expectedErr:       errors.New("Exceeds max: max=4, used=0, adding=5"),
+			expectedErr: fmt.Errorf(
+				"Exceeds max: max=%d, used=0, adding=%d", maxBytes, overflowTxProtoSize,
+			),
 		},
 	}
 
@@ -96,11 +126,11 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
 				&abci.RequestPrepareProposal{
-					MaxTxBytes: 4,
+					MaxTxBytes: int64(maxBytes), //nolint:gosec
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, uint64(4), ppt.MaxBytes)
+			require.Equal(t, maxBytes, ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			err = setterTestHelper(tFunc, &ppt, tc.tx)
@@ -148,6 +178,11 @@ func getterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs) []
 }
 
 func Test_AddOtherTxs(t *testing.T) {
+	// Each 1-byte tx costs 1 (tag) + 1 (varint(1)) + 1 (payload) = 3 proto bytes, not 1 raw byte.
+	// MaxBytes is set to exactly 4 such txs (12), so 4 one-byte txs exactly fit and a 5th overflows.
+	oneByteTxProtoSize := protoTxSize([]byte{1})
+	maxBytes := 4 * oneByteTxProtoSize
+
 	tests := map[string]struct {
 		txs           [][]byte
 		additionalTxs [][]byte
@@ -179,23 +214,27 @@ func Test_AddOtherTxs(t *testing.T) {
 			txs:               [][]byte{{1}, {2}, {3}},
 			additionalTxs:     [][]byte{{4}},
 			expectedTxs:       [][]byte{{1}, {2}, {3}, {4}},
-			expectedUsedBytes: 4,
+			expectedUsedBytes: 4 * oneByteTxProtoSize, // 4 one-byte txs, exactly fits MaxBytes.
 		},
 		"input exceeds max on first attempt": {
-			txs:                   [][]byte{{1}, {2}, {3}, {4}, {5}},
-			additionalTxs:         [][]byte{{1}},
-			expectedTxs:           [][]byte{{1}},
-			expectedUsedBytes:     1,
-			expectedErr:           errors.New("Exceeds max: max=4, used=0, adding=5"),
+			txs:               [][]byte{{1}, {2}, {3}, {4}, {5}},
+			additionalTxs:     [][]byte{{1}},
+			expectedTxs:       [][]byte{{1}},
+			expectedUsedBytes: oneByteTxProtoSize, // only the additional tx made it in.
+			expectedErr: fmt.Errorf(
+				"Exceeds max: max=%d, used=0, adding=%d", maxBytes, 5*oneByteTxProtoSize,
+			),
 			expectedAdditionalErr: nil,
 		},
 		"input exceeds max on second attempt": {
-			txs:                   [][]byte{{1}, {2}, {3}, {4}},
-			additionalTxs:         [][]byte{{5}},
-			expectedTxs:           [][]byte{{1}, {2}, {3}, {4}},
-			expectedUsedBytes:     4,
-			expectedErr:           nil,
-			expectedAdditionalErr: errors.New("Exceeds max: max=4, used=4, adding=1"),
+			txs:               [][]byte{{1}, {2}, {3}, {4}},
+			additionalTxs:     [][]byte{{5}},
+			expectedTxs:       [][]byte{{1}, {2}, {3}, {4}},
+			expectedUsedBytes: maxBytes, // first 4 txs exactly fill the budget.
+			expectedErr:       nil,
+			expectedAdditionalErr: fmt.Errorf(
+				"Exceeds max: max=%d, used=%d, adding=%d", maxBytes, maxBytes, oneByteTxProtoSize,
+			),
 		},
 	}
 
@@ -203,11 +242,11 @@ func Test_AddOtherTxs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
 				&abci.RequestPrepareProposal{
-					MaxTxBytes: 4,
+					MaxTxBytes: int64(maxBytes), //nolint:gosec
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, uint64(4), ppt.MaxBytes)
+			require.Equal(t, maxBytes, ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			// initial txs.
@@ -293,6 +332,12 @@ func Test_UpdateUsedBytes(t *testing.T) {
 }
 
 func Test_GetAvailableBytes(t *testing.T) {
+	// MaxBytes is set to exactly the proto-framed sum of the "all are set" case below (3+4+3+3+3+3
+	// = 19), so that case exactly exhausts the budget (0 bytes available) while the smaller cases
+	// leave room to spare. An unset (nil/empty) slot contributes nothing to the block and costs 0.
+	maxBytes := protoTxSize([]byte{1}) + protoTxSize([]byte{2, 3}) + protoTxSize([]byte{4}) +
+		protoTxSize([]byte{5}) + protoTxSize([]byte{6}) + protoTxSize([]byte{7})
+
 	tests := map[string]struct {
 		pricesTx           []byte
 		fundingTx          []byte
@@ -304,7 +349,8 @@ func Test_GetAvailableBytes(t *testing.T) {
 		expectedAvailBytes uint64
 	}{
 		"inputs are nil": {
-			expectedAvailBytes: 10,
+			expectedUsedBytes:  0,
+			expectedAvailBytes: maxBytes,
 		},
 		"inputs are empty": {
 			pricesTx:           []byte{},
@@ -314,7 +360,7 @@ func Test_GetAvailableBytes(t *testing.T) {
 			otherAdditionalTxs: [][]byte{},
 
 			expectedUsedBytes:  0,
-			expectedAvailBytes: 10,
+			expectedAvailBytes: maxBytes,
 		},
 		"some are set": {
 			pricesTx:           []byte{1},
@@ -323,8 +369,11 @@ func Test_GetAvailableBytes(t *testing.T) {
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{{4}, {5, 6}},
 
-			expectedUsedBytes:  6,
-			expectedAvailBytes: 4,
+			// prices(3) + funding(0, empty) + operations(4) + otherAdditional(3+4=7) = 14.
+			expectedUsedBytes: protoTxSize([]byte{1}) +
+				protoTxSize([]byte{2, 3}) + protoTxSize([]byte{4}) + protoTxSize([]byte{5, 6}),
+			expectedAvailBytes: maxBytes - (protoTxSize([]byte{1}) +
+				protoTxSize([]byte{2, 3}) + protoTxSize([]byte{4}) + protoTxSize([]byte{5, 6})),
 		},
 		"all are set": {
 			pricesTx:           []byte{1},
@@ -333,8 +382,8 @@ func Test_GetAvailableBytes(t *testing.T) {
 			otherTxs:           [][]byte{{5}},
 			otherAdditionalTxs: [][]byte{{6}, {7}},
 
-			expectedUsedBytes:  7,
-			expectedAvailBytes: 3,
+			expectedUsedBytes:  maxBytes, // exactly exhausts the budget.
+			expectedAvailBytes: 0,
 		},
 	}
 
@@ -342,11 +391,11 @@ func Test_GetAvailableBytes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
 				&abci.RequestPrepareProposal{
-					MaxTxBytes: 10,
+					MaxTxBytes: int64(maxBytes), //nolint:gosec
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, uint64(10), ppt.MaxBytes)
+			require.Equal(t, maxBytes, ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
@@ -381,6 +430,14 @@ func Test_GetAvailableBytes(t *testing.T) {
 }
 
 func Test_GetTxsInOrder(t *testing.T) {
+	// MaxBytes is set to exactly the proto-framed sum of the "all set" case below, so every other
+	// (smaller) case fits comfortably and "all set" exactly exhausts the budget:
+	//   prices{1}(3) + funding{2,3}(4) + bridge{11}(3) + operations{4,5}(4)
+	//   + others{6}(3) + others{7,8}(4) + additional{9}(3) + additional{10}(3) = 27.
+	maxBytes := protoTxSize([]byte{1}) + protoTxSize([]byte{2, 3}) + protoTxSize([]byte{11}) +
+		protoTxSize([]byte{4, 5}) + protoTxSize([]byte{6}) + protoTxSize([]byte{7, 8}) +
+		protoTxSize([]byte{9}) + protoTxSize([]byte{10})
+
 	tests := map[string]struct {
 		operationsTx       []byte
 		otherTxs           [][]byte
@@ -486,11 +543,11 @@ func Test_GetTxsInOrder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
 				&abci.RequestPrepareProposal{
-					MaxTxBytes: 11,
+					MaxTxBytes: int64(maxBytes), //nolint:gosec
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, uint64(11), ppt.MaxBytes)
+			require.Equal(t, maxBytes, ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
@@ -530,4 +587,85 @@ func Test_GetTxsInOrder(t *testing.T) {
 			require.Equal(t, tc.expectedTxs, txs)
 		})
 	}
+}
+
+// Test_UsedBytes_ProtoFraming asserts that budgeting is done against the CometBFT proto-framed size
+// of a tx (1 tag byte + a varint-encoded length prefix + the tx payload), not its raw `len(tx)`, and
+// that a tx (or batch of txs) is rejected once that framed total exceeds MaxBytes even when the raw
+// byte length(s) alone would have fit.
+func Test_UsedBytes_ProtoFraming(t *testing.T) {
+	t.Run("proto size follows 1 + varint(len) + len, independent of cmttypes", func(t *testing.T) {
+		for _, txLen := range []int{0, 1, 2, 100, 127, 128, 129, 16383, 16384} {
+			tx := make([]byte, txLen)
+			for i := range tx {
+				tx[i] = byte(i)
+			}
+
+			want := 1 + uvarintProtoLen(uint64(txLen)) + uint64(txLen)
+			require.Equalf(t, want, protoTxSize(tx), "txLen=%d", txLen)
+		}
+	})
+
+	t.Run("a 1-byte tx consumes 3 bytes of budget", func(t *testing.T) {
+		ppt, err := prepare.NewPrepareProposalTxs(&abci.RequestPrepareProposal{MaxTxBytes: 3})
+		require.NoError(t, err)
+
+		require.NoError(t, ppt.SetAcknowledgeBridgesTx([]byte{1}))
+		require.Equal(t, uint64(3), ppt.UsedBytes) // 1 (tag) + 1 (varint(1)) + 1 (payload).
+	})
+
+	t.Run("a 128-byte tx consumes 1+2+128=131 bytes of budget", func(t *testing.T) {
+		tx := make([]byte, 128)
+
+		ppt, err := prepare.NewPrepareProposalTxs(&abci.RequestPrepareProposal{MaxTxBytes: 131})
+		require.NoError(t, err)
+
+		require.NoError(t, ppt.SetAcknowledgeBridgesTx(tx))
+		// 1 (tag) + 2 (varint(128), which needs a 2nd byte since 128 >= 0x80) + 128 (payload).
+		require.Equal(t, uint64(131), ppt.UsedBytes)
+	})
+
+	t.Run("SetAcknowledgeBridgesTx rejects a tx whose proto size exceeds MaxBytes though its raw "+
+		"len fits", func(t *testing.T) {
+		tx := make([]byte, 128) // raw len 128, proto size 1+2+128=131 (crosses the 1-byte varint boundary).
+		protoSize := protoTxSize(tx)
+		maxBytes := uint64(len(tx)) + 1 // strictly between the raw len (128) and the proto size (131).
+		require.Greater(t, maxBytes, uint64(len(tx)))
+		require.Less(t, maxBytes, protoSize)
+
+		ppt, err := prepare.NewPrepareProposalTxs(
+			&abci.RequestPrepareProposal{MaxTxBytes: int64(maxBytes)}, //nolint:gosec
+		)
+		require.NoError(t, err)
+
+		err = ppt.SetAcknowledgeBridgesTx(tx)
+		require.ErrorContains(
+			t, err, fmt.Sprintf("Exceeds max: max=%d, used=0, adding=%d", maxBytes, protoSize),
+		)
+		require.Nil(t, ppt.AcknowledgeBridgesTx)
+		require.Equal(t, uint64(0), ppt.UsedBytes)
+	})
+
+	t.Run("AddOtherTxs rejects a batch whose proto sum exceeds MaxBytes though the raw len sum fits",
+		func(t *testing.T) {
+			// Two 128-byte txs: raw sum 256, proto sum 2*(1+2+128)=262.
+			txs := [][]byte{make([]byte, 128), make([]byte, 128)}
+			rawSum := uint64(len(txs[0]) + len(txs[1]))
+			protoSum := protoTxSize(txs[0]) + protoTxSize(txs[1])
+			maxBytes := rawSum + 1 // strictly between the raw sum (256) and the proto sum (262).
+			require.Greater(t, maxBytes, rawSum)
+			require.Less(t, maxBytes, protoSum)
+
+			ppt, err := prepare.NewPrepareProposalTxs(
+				&abci.RequestPrepareProposal{MaxTxBytes: int64(maxBytes)}, //nolint:gosec
+			)
+			require.NoError(t, err)
+
+			err = ppt.AddOtherTxs(txs)
+			require.ErrorContains(
+				t, err, fmt.Sprintf("Exceeds max: max=%d, used=0, adding=%d", maxBytes, protoSum),
+			)
+			require.Nil(t, ppt.OtherTxs)
+			require.Equal(t, uint64(0), ppt.UsedBytes)
+		})
 }

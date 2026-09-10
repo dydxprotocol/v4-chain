@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -84,5 +85,80 @@ func TestPrepareProposal_OverBudgetOperationsQueueYieldsNonEmptyProposal(t *test
 	// A valid block must contain at least the 4 mandatory txs (operations, bridges, funding, prices),
 	// and must pass CometBFT's block-size validation.
 	require.GreaterOrEqual(t, len(resp.Txs), 4)
+	require.NoError(t, cmttypes.ToTxs(resp.Txs).Validate(maxTxBytes))
+}
+
+// TestPrepareProposal_StaysWithinProtoSize verifies that PrepareProposalHandler budgets the txs it
+// packs by their CometBFT proto-framed size (a tag byte + varint length prefix + payload per tx),
+// not by raw byte length. Raw-length budgeting undercounts by the per-tx framing, so a proposal at
+// the raw MaxTxBytes limit could still exceed the proto-framed limit; this asserts the assembled
+// block passes CometBFT's own size validation.
+func TestPrepareProposal_StaysWithinProtoSize(t *testing.T) {
+	txConfig := encoding.GetTestEncodingCfg().TxConfig
+
+	mockPricesKeeper, mockPerpKeeper, mockBridgeKeeper := setUpFixedGroupMocks()
+	mockClobKeeper := &mocks.PrepareClobKeeper{}
+	mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+		Return(&clobtypes.MsgProposedOperations{})
+
+	ctx, _, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+	// Many copies of a small allowed tx competing for the "Other" group's budget. Each costs a few
+	// bytes of per-tx proto framing beyond its raw length, so the accumulated framing overhead
+	// exceeds any single-tx slack.
+	const numOtherTxs = 200
+	otherTxs := make([][]byte, numOtherTxs)
+	for i := range otherTxs {
+		otherTxs[i] = constants.Msg_Send_TxBytes
+	}
+
+	pricesTxResp, err := prepare.EncodeMarketPriceUpdates(txConfig, &pricestypes.MsgUpdateMarketPrices{})
+	require.NoError(t, err)
+	fundingTxResp, err := prepare.GetAddPremiumVotesTx(ctx, txConfig, mockPerpKeeper)
+	require.NoError(t, err)
+	bridgeTxResp, err := prepare.GetAcknowledgeBridgesTx(ctx, txConfig, mockBridgeKeeper)
+	require.NoError(t, err)
+	emptyOpsTx, err := prepare.EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
+	require.NoError(t, err)
+
+	// rawTotal is what a raw-len(tx) budgeting scheme would measure as the cost of including every
+	// candidate tx (fixed group + empty ops + all "other" txs).
+	rawTotal := len(pricesTxResp.Tx) + len(fundingTxResp.Tx) + len(bridgeTxResp.Tx) + len(emptyOpsTx)
+	for _, tx := range otherTxs {
+		rawTotal += len(tx)
+	}
+
+	// protoTotal is the true CometBFT proto-framed cost of that same set of txs.
+	protoTotal := protoTxSize(pricesTxResp.Tx) + protoTxSize(fundingTxResp.Tx) +
+		protoTxSize(bridgeTxResp.Tx) + protoTxSize(emptyOpsTx)
+	for _, tx := range otherTxs {
+		protoTotal += protoTxSize(tx)
+	}
+
+	require.Greater(
+		t, protoTotal, uint64(rawTotal),
+		"test is only meaningful if the proto total exceeds what raw-length accounting would allow",
+	)
+
+	// Set MaxTxBytes to exactly the raw total: raw-length budgeting would consider every candidate
+	// tx as fitting, even though their proto-framed size does not.
+	maxTxBytes := int64(rawTotal) //nolint:gosec
+
+	handler := prepare.PrepareProposalHandler(
+		txConfig,
+		mockBridgeKeeper,
+		mockClobKeeper,
+		mockPerpKeeper,
+		prices.NewDefaultPriceUpdateGenerator(mockPricesKeeper),
+	)
+
+	req := abci.RequestPrepareProposal{
+		Txs:        otherTxs,
+		MaxTxBytes: maxTxBytes,
+	}
+
+	resp, err := handler(ctx, &req)
+	require.NoError(t, err)
+	require.NotEmpty(t, resp.Txs)
 	require.NoError(t, cmttypes.ToTxs(resp.Txs).Validate(maxTxBytes))
 }
