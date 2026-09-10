@@ -30,8 +30,10 @@ type TestCase struct {
 	useWithIsRecheckTxContext bool
 	isSimulate                bool
 	timeoutHeight             uint64
-	expectedErr               error
-	additionalAssertions      func(ctx sdk.Context, mck *mocks.ClobKeeper)
+	// txBytesLen overrides the default (1-byte) tx bytes length when > 0.
+	txBytesLen           int
+	expectedErr          error
+	additionalAssertions func(ctx sdk.Context, mck *mocks.ClobKeeper)
 }
 
 func runTestCase(t *testing.T, tc TestCase) {
@@ -48,6 +50,10 @@ func runTestCase(t *testing.T, tc TestCase) {
 
 	if tc.useWithIsRecheckTxContext && tc.useWithIsCheckTxContext {
 		t.Error("Expected only one of useWithIsCheckTxContext or useWithIsCheckTxContext to be true")
+	}
+
+	if tc.txBytesLen > 0 {
+		ctx = ctx.WithTxBytes(make([]byte, tc.txBytesLen))
 	}
 
 	// Setup AnteHandler.
@@ -498,6 +504,76 @@ func TestIsValidClobTransaction(t *testing.T) {
 				require.ErrorIs(t, tc.expectedErr, err)
 			},
 		)
+	}
+}
+
+func TestClobDecorator_RejectsOversizedShortTermTx(t *testing.T) {
+	placeShortTermOrderMocks := func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+		mck.On("PlaceShortTermOrder",
+			ctx,
+			constants.Msg_PlaceOrder,
+		).Return(
+			satypes.BaseQuantums(0),
+			clobtypes.Success,
+			nil,
+		)
+	}
+	placeStatefulOrderMocks := func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+		mck.On("PlaceStatefulOrder",
+			ctx,
+			constants.Msg_PlaceOrder_LongTerm,
+			false,
+		).Return(
+			nil,
+		)
+	}
+
+	tests := map[string]TestCase{
+		"Rejects a short term tx over the byte limit on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr:             sdkerrors.ErrTxTooLarge,
+		},
+		"Accepts a short term tx at the byte limit on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
+			setupMocks:              placeShortTermOrderMocks,
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes,
+			expectedErr:             nil,
+		},
+		"Accepts a short term tx just below the byte limit on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
+			setupMocks:              placeShortTermOrderMocks,
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes - 1,
+			expectedErr:             nil,
+		},
+		"Accepts an over-the-limit short term tx on ReCheckTx": {
+			msgs:                      []sdk.Msg{constants.Msg_PlaceOrder},
+			useWithIsRecheckTxContext: true,
+			txBytesLen:                clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr:               nil,
+		},
+		"Accepts an over-the-limit short term tx on DeliverTx": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder},
+			txBytesLen:  clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr: nil,
+		},
+		"Accepts an over-the-limit stateful tx on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			setupMocks:              placeStatefulOrderMocks,
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr:             nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			runTestCase(t, tc)
+		})
 	}
 }
 

@@ -61,6 +61,7 @@ const (
 	PrepareProposalTxs   = "prepare_proposal_txs"
 	PrepareCheckState    = "prepare_check_state"
 	PricesTx             = "prices_tx"
+	Truncated            = "truncated"
 	TotalNumBytes        = "total_num_bytes"
 	TotalNumTxs          = "total_num_txs"
 	Validate             = "validate"
