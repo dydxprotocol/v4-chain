@@ -210,6 +210,7 @@ const (
 	AddedToOrderBook                     = "added_to_orderbook"
 	AddToOrderbookCollateralizationCheck = "add_to_orderbook_collateralization_check"
 	Memclob                              = "memclob"
+	ProcessSingleMatchUnexpectedError    = "process_single_match_unexpected_error"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
 
 	// Daemon

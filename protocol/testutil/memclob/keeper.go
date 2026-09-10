@@ -31,6 +31,7 @@ type FakeMemClobKeeper struct {
 	statePositionFn                      types.GetStatePositionFn
 	useCollatCheckFnForSingleMatch       bool
 	indexerEventManager                  indexer_manager.IndexerEventManager
+	processSingleMatchErrFn              func(ctx sdk.Context, matchWithOrders *types.MatchWithOrders) error
 }
 
 func NewFakeMemClobKeeper() *FakeMemClobKeeper {
@@ -53,6 +54,17 @@ func NewFakeMemClobKeeper() *FakeMemClobKeeper {
 
 func (f *FakeMemClobKeeper) WithCollatCheckFnForProcessSingleMatch() *FakeMemClobKeeper {
 	f.useCollatCheckFnForSingleMatch = true
+	return f
+}
+
+// WithProcessSingleMatchErrFn injects a function that runs at the top of ProcessSingleMatch. If it
+// returns a non-nil error, ProcessSingleMatch returns that error with UpdateCausedError on both
+// sides, simulating a failure that occurs after (or instead of) subaccount updates. The function
+// receives the per-match context, so it may also write to state to exercise partial-write isolation.
+func (f *FakeMemClobKeeper) WithProcessSingleMatchErrFn(
+	fn func(ctx sdk.Context, matchWithOrders *types.MatchWithOrders) error,
+) *FakeMemClobKeeper {
+	f.processSingleMatchErrFn = fn
 	return f
 }
 
@@ -344,6 +356,12 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	takerOrder := matchWithOrders.TakerOrder
 
 	fillAmount := matchWithOrders.FillAmount
+
+	if f.processSingleMatchErrFn != nil {
+		if err := f.processSingleMatchErrFn(ctx, matchWithOrders); err != nil {
+			return false, satypes.UpdateCausedError, satypes.UpdateCausedError, big.NewInt(0), err
+		}
+	}
 
 	if !f.useCollatCheckFnForSingleMatch {
 		f.addFakeFillAmount(ctx, makerOrderId, fillAmount)
