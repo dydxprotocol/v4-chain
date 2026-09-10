@@ -13,7 +13,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
@@ -2536,7 +2535,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			expectedErr:      types.ErrFailedToUpdateSubaccounts,
 			msgSenderEnabled: true,
 		},
 		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual,
@@ -2581,7 +2580,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			expectedErr:      types.ErrFailedToUpdateSubaccounts,
 			msgSenderEnabled: true,
 		},
 		"Match updates increase OI: 0 -> 0.9, 0 -> -0.9": {

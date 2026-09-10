@@ -422,16 +422,29 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
-	// state due to an update.
+	// state. Run inflows (Opened, into a pool) before outflows (Closed, out of a pool) so a pool is
+	// funded by an opener's deposit before a closer's payout is drawn from it. Bank transfers commute,
+	// so final balances are unchanged wherever the previous ordering succeeded.
+	stateTransitions := make([]*types.IsolatedPerpetualPositionStateTransition, 0, len(settledUpdates))
 	for _, settledUpdateWithUpdatedSubaccount := range settledUpdates {
-		if err := k.computeAndExecuteCollateralTransfer(
-			ctx,
-			// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
-			// and asset updates applied to it.
+		stateTransition, err := GetIsolatedPerpetualStateTransition(
 			settledUpdateWithUpdatedSubaccount,
 			perpInfos,
-		); err != nil {
+		)
+		if err != nil {
 			return false, nil, err
+		}
+		if stateTransition != nil {
+			stateTransitions = append(stateTransitions, stateTransition)
+		}
+	}
+	for _, phase := range []types.PositionStateTransition{types.Opened, types.Closed} {
+		for _, stateTransition := range stateTransitions {
+			if stateTransition.Transition == phase {
+				if err := k.transferCollateralForIsolatedPerpetual(ctx, stateTransition); err != nil {
+					return false, nil, err
+				}
+			}
 		}
 	}
 

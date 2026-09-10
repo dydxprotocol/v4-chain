@@ -51,6 +51,25 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
 		})
+	// A price high enough above the ISO-USD oracle price ($50) that the resulting match gives the
+	// closing subaccount below a large profit (~$19,995) while still leaving the opening subaccount
+	// collateralized (its ISO position's oracle value covers the initial margin requirement).
+	PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_HighPrice_GTB5 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 3},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     uint64(orderQuantums),
+			Subticks:     1_000_000_000,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
+		})
+	PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_HighPrice_GTB5 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 3},
+			Side:         clobtypes.Order_SIDE_SELL,
+			Quantums:     uint64(orderQuantums),
+			Subticks:     1_000_000_000,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
+		})
 	LongTermOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price5_GTBT5 := clobtypes.Order{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: constants.Alice_Num0,
@@ -144,6 +163,49 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 1.
 				// Bob is selling, add match quantums from asset position.
 				big.NewInt(10_000_000_000+99),
+			),
+		},
+	}
+
+	// Alice opens an isolated position at a price far above the ISO-USD oracle price, paying nearly
+	// her entire prior balance for it (the trade is only viable because the maker fee tier here is
+	// a rebate, and her position's oracle value covers the remaining initial margin requirement).
+	Alice_Num0_IsolatedAfterHighPriceMatch := satypes.Subaccount{
+		Id: &constants.Alice_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			// USDC asset position.
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
+				// Match = 1e9 * 1e9 * 1e-8 = 10_000_000_000 quantums. Maker fee = -1_100_000 (a rebate,
+				// since the default maker fee tier here is negative).
+				// Alice is buying, so her balance goes from 10_000_000_000 to
+				// 10_000_000_000 - 10_000_000_000 - (-1_100_000).
+				big.NewInt(1_100_000),
+			),
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			// Isolated perpetual position.
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
+				big.NewInt(int64(orderQuantums)),
+				big.NewInt(0),
+				big.NewInt(0),
+			),
+		},
+	}
+
+	// Bob closes his isolated position at a profit: he receives more from the match than his
+	// isolated collateral pool is seeded with, so the payout must be covered by Alice's deposit.
+	Bob_Num0_ClosedAtProfitAfterMatch := satypes.Subaccount{
+		Id: &constants.Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			// USDC asset position.
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
+				// Match = 10_000_000_000 quantums. Taker fee = 5_000_000.
+				// Bob is selling, so his balance goes from 10_000_000_000 to
+				// 10_000_000_000 + 10_000_000_000 - 5_000_000.
+				big.NewInt(19_995_000_000),
 			),
 		},
 	}
@@ -324,6 +386,56 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 					// $30,000 USDC - $10,000 USDC - (match) 100 quote quantums
 				).String(): 19_999_999_900,
+			},
+		},
+		"Isolated subaccount closing a position at a profit fills when the pool is funded by the opener's deposit": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+				constants.Bob_Num0_1ISO_LONG_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			// Alice opens a new isolated position, moving her entire $10,000 balance from the cross
+			// collateral pool into the isolated pool. In the same match, Bob fully closes his isolated
+			// position at a profit, withdrawing ~$19,995 from the isolated pool back to the cross pool.
+			// The isolated pool starts with only $15,000: less than Bob's payout on its own, but enough
+			// once Alice's deposit is applied first.
+			orders: []clobtypes.MsgPlaceOrder{
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_HighPrice_GTB5,
+				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_HighPrice_GTB5,
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 20_000_000_000, // $20,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+					// $15,000 USDC: below Bob's $19,995 gross payout on close.
+				).String(): 15_000_000_000,
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_HighPrice_GTB5.Order.OrderId,
+				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_HighPrice_GTB5.Order.OrderId,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				Alice_Num0_IsolatedAfterHighPriceMatch,
+				Bob_Num0_ClosedAtProfitAfterMatch,
+			},
+			expectedCollateralPoolBalances: map[string]int64{
+				// $20,000 - $10,000 (Alice's deposit, opened) + $19,995 (Bob's payout, closed)
+				satypes.ModuleAddress.String(): 29_995_000_000,
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+					// $15,000 + $10,000 (Alice's deposit) - $19,995 (Bob's payout) - $3,900 net fees
+					// (taker fee 5_000_000 minus maker rebate 1_100_000), also paid out of the isolated
+					// pool.
+				).String(): 5_001_100_000,
 			},
 		},
 		`Empty subaccount will not have matches for isolated market orders if cross collateral pool does not 
