@@ -451,6 +451,14 @@ func TestIsValidClobTransaction(t *testing.T) {
 			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
 			expectedErr: nil,
 		},
+		"Failure on mix of long term `PlaceOrder` and `MsgSend` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_Send},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on mix of long term `CancelOrder` and `MsgSend` messages": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_Send},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
 		"Failure on more than one `Transfer` msg": {
 			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
 			expectedErr: sdkerrors.ErrInvalidRequest,
@@ -504,6 +512,92 @@ func TestIsValidClobTransaction(t *testing.T) {
 				require.ErrorIs(t, tc.expectedErr, err)
 			},
 		)
+	}
+}
+
+// TestClobDecorator_ValidatesMsgsInAllModes proves that `ValidateMsgsInClobTx` is enforced by the
+// ante decorator in every mode (DeliverTx, simulation, and ReCheckTx), not only CheckTx, and that
+// rejection happens before any order placement/cancelation keeper call.
+func TestClobDecorator_ValidatesMsgsInAllModes(t *testing.T) {
+	rejectedMixedMsgs := []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_Send}
+	validSingleMsg := []sdk.Msg{constants.Msg_PlaceOrder_LongTerm}
+	validComboMsgs := []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_Transfer}
+
+	assertNoPlacementCalls := func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+		mck.AssertNotCalled(t, "PlaceStatefulOrder", ctx, constants.Msg_PlaceOrder_LongTerm, false)
+		mck.AssertNotCalled(t, "PlaceShortTermOrder", ctx, constants.Msg_PlaceOrder_LongTerm)
+	}
+
+	tests := map[string]TestCase{
+		"DeliverTx: rejects mixed clob tx with a disallowed message": {
+			msgs:                    rejectedMixedMsgs,
+			useWithIsCheckTxContext: false,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"DeliverTx: accepts a single valid stateful PlaceOrder without placing it": {
+			msgs:                    validSingleMsg,
+			useWithIsCheckTxContext: false,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"DeliverTx: accepts a valid stateful PlaceOrder + Transfer combo without placing it": {
+			msgs:                    validComboMsgs,
+			useWithIsCheckTxContext: false,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"Simulate: rejects mixed clob tx with a disallowed message": {
+			msgs:                    rejectedMixedMsgs,
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"Simulate: accepts a single valid stateful PlaceOrder without placing it": {
+			msgs:                    validSingleMsg,
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"Simulate: accepts a valid stateful PlaceOrder + Transfer combo without placing it": {
+			msgs:                    validComboMsgs,
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"ReCheckTx: rejects mixed clob tx with a disallowed message": {
+			msgs:                      rejectedMixedMsgs,
+			useWithIsRecheckTxContext: true,
+			expectedErr:               sdkerrors.ErrInvalidRequest,
+			additionalAssertions:      assertNoPlacementCalls,
+		},
+		"ReCheckTx: places a single valid stateful order": {
+			msgs: validSingleMsg,
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+				mck.On("PlaceStatefulOrder", ctx, constants.Msg_PlaceOrder_LongTerm, false).Return(nil)
+			},
+			useWithIsRecheckTxContext: true,
+			expectedErr:               nil,
+		},
+		"ReCheckTx: places a valid stateful order + transfer combo": {
+			msgs: validComboMsgs,
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+				mck.On("PlaceStatefulOrder", ctx, constants.Msg_PlaceOrder_LongTerm, false).Return(nil)
+				sendingmck.On("ProcessTransfer", ctx, constants.Msg_Transfer.Transfer).Return(nil)
+			},
+			useWithIsRecheckTxContext: true,
+			expectedErr:               nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			runTestCase(t, tc)
+		})
 	}
 }
 
