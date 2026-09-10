@@ -42,6 +42,11 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
+	// Deduplicate the input so no subaccount is liquidated more than once in a block. A repeated id
+	// would drive a second liquidation of an already-liquidated perpetual, which the per-subaccount
+	// liquidation bookkeeping treats as an invariant violation.
+	subaccountIds = lib.DedupeSlice(subaccountIds)
+
 	metrics.AddSample(
 		metrics.LiquidationsLiquidatableSubaccountIdsCount,
 		float32(len(subaccountIds)),
@@ -122,7 +127,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return nil, err
 		}
 
-		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
+		optimisticallyFilledQuantums, orderStatus, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
 		// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
 		// for subaccounts with open positions in final settlement markets.
 		if err != nil && !errors.Is(err, types.ErrLiquidationConflictsWithClobPairStatus) {
@@ -135,7 +140,9 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return nil, err
 		}
 
-		if optimisticallyFilledQuantums == 0 {
+		// InternalError means matching stopped on an unexpected error, not that the book lacked
+		// liquidity, so it must not escalate to deleveraging.
+		if optimisticallyFilledQuantums == 0 && orderStatus != types.InternalError {
 			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
 				SubaccountId: liquidationOrder.GetSubaccountId(),
 				PerpetualId:  liquidationOrder.MustGetLiquidatedPerpetualId(),
