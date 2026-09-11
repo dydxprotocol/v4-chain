@@ -155,6 +155,7 @@ func PrepareCheckState(
 
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
+	keeper.ClearShortTermEquityTierResults()
 
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
