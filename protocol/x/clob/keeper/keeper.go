@@ -67,6 +67,10 @@ type (
 		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
 		updateLeverageRateLimiter   rate_limit.RateLimiter[string]
 
+		// Within a block only optimistic fills can change a subaccount's net collateral, so the result
+		// is held until PrepareCheckState clears it.
+		shortTermEquityTierResults map[satypes.SubaccountId]error
+
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}
 )
@@ -134,6 +138,7 @@ func NewKeeper(
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		updateLeverageRateLimiter:   updateLeverageRateLimiter,
+		shortTermEquityTierResults:  make(map[satypes.SubaccountId]error),
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
 		revshareKeeper:              revshareKeeper,
 		finalizeBlockEventStager: finalizeblock.NewEventStager[*types.ClobStagedFinalizeBlockEvent](

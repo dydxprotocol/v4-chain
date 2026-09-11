@@ -209,6 +209,15 @@ func (k Keeper) PlaceShortTermOrder(
 		return 0, 0, err
 	}
 
+	if err = k.ValidateSubaccountEquityTierLimitForShortTermOrder(ctx, order); err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.PlaceOrder, metrics.Rejected, metrics.EquityTierLimit},
+			1,
+			orderLabels,
+		)
+		return 0, 0, err
+	}
+
 	// Place the order on the memclob and return the result.
 	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := k.MemClob.PlaceOrder(
 		ctx,
