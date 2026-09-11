@@ -22,6 +22,11 @@ export const configSchema = {
   API_LIMIT_V4: parseInteger({
     default: 1000,
   }),
+  // Hard ceiling on (page - 1) * limit for paginated endpoints. Validated against 30d of real
+  // comlink traffic: sits well below the offset range (~91k-149k) that triggered the 2026-07-11
+  // weekend paging incident, while clearing the extreme scraper tiers observed (offsets in the
+  // millions) by 2+ orders of magnitude.
+  MAX_PAGINATION_OFFSET: parseInteger({ default: 25_000 }),
   API_ORDERBOOK_LEVELS_PER_SIDE_LIMIT: parseInteger({ default: 100 }),
 
   // Logging config

@@ -1,5 +1,6 @@
 import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   FundingPaymentsFromDatabase,
   FundingPaymentsQueryConfig,
   FundingPaymentsTable,
@@ -79,7 +80,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
+        ? { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
@@ -140,7 +141,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
+        ? { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
