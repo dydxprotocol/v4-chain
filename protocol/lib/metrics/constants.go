@@ -119,6 +119,7 @@ const (
 	ConditionalOrderUntriggered                             = "conditional_order_untriggered"
 	ConvertToUpdates                                        = "convert_to_updates"
 	CreateClobPair                                          = "create_clob_pair"
+	EquityTierLimit                                         = "equity_tier_limit"
 	Expired                                                 = "expired"
 	FullyFilled                                             = "fully_filled"
 	Hydrate                                                 = "hydrate"

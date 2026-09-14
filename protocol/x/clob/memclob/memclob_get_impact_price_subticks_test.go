@@ -352,12 +352,6 @@ func initializeMemclobForTest(
 	err = ks.ClobKeeper.InitializeEquityTierLimit(
 		ctx,
 		types.EquityTierLimitConfiguration{
-			ShortTermOrderEquityTiers: []types.EquityTierLimit{
-				{
-					UsdTncRequired: dtypes.NewInt(20_000_000),
-					Limit:          5,
-				},
-			},
 			StatefulOrderEquityTiers: []types.EquityTierLimit{
 				{
 					UsdTncRequired: dtypes.NewInt(20_000_000),
