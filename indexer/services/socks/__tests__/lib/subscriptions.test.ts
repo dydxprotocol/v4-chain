@@ -1086,6 +1086,166 @@ describe('Subscriptions', () => {
       expect(subscriptions.subscriptions[Channel.V4_CANDLES]).toBeUndefined();
       expect(subscriptions.subscriptionLists[connectionId]).toHaveLength(1);
     });
+
+    it('cancels an in-flight subscribe so the snapshot cannot resurrect it', async () => {
+      let releaseInitialResponse: (value: string) => void = () => {};
+      const deferred: Promise<string> = new Promise((resolve) => {
+        releaseInitialResponse = resolve;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      subscriptions.unsubscribe(connectionId, Channel.V4_TRADES, btcTicker);
+
+      releaseInitialResponse(JSON.stringify(initialMessage));
+      await inFlight;
+
+      expect(sendMessageStringMock).not.toHaveBeenCalled();
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+      const tradeSubs = subscriptions.subscriptions[Channel.V4_TRADES] ?? {};
+      Object.values(tradeSubs).forEach((subs) => {
+        expect(subs.map((sub) => sub.connectionId)).not.toContain(connectionId);
+      });
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_TRADES]?.[connectionId] ?? 0)
+        .toEqual(0);
+    });
+
+    it('cancels only the unsubscribed id when two subscribes are in flight', async () => {
+      let releaseBtc: (value: string) => void = () => {};
+      let releaseEth: (value: string) => void = () => {};
+      const btcDeferred: Promise<string> = new Promise((resolve) => {
+        releaseBtc = resolve;
+      });
+      const ethDeferred: Promise<string> = new Promise((resolve) => {
+        releaseEth = resolve;
+      });
+      axiosRequestMock
+        .mockImplementationOnce(() => btcDeferred)
+        .mockImplementationOnce(() => ethDeferred);
+
+      const inFlightBtc: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+      const inFlightEth: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId + 1,
+        ethTicker,
+        false,
+      );
+
+      subscriptions.unsubscribe(connectionId, Channel.V4_TRADES, btcTicker);
+
+      releaseBtc(JSON.stringify(initialMessage));
+      releaseEth(JSON.stringify(initialMessage));
+      await Promise.all([inFlightBtc, inFlightEth]);
+
+      expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
+      expect(sendMessageStringMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.stringContaining(ethTicker),
+      );
+      expect(subscriptions.subscriptionLists[connectionId]).toHaveLength(1);
+      expect(subscriptions.subscriptionLists[connectionId]).toContainEqual(
+        expect.objectContaining({ channel: Channel.V4_TRADES, id: ethTicker }),
+      );
+      expect(subscriptions.subscriptions[Channel.V4_TRADES][ethTicker]).toContainEqual(
+        expect.objectContaining({ connectionId }),
+      );
+      expect(subscriptions.subscriptions[Channel.V4_TRADES][btcTicker]).toBeUndefined();
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_TRADES][connectionId])
+        .toEqual(1);
+    });
+
+    it('lets a later subscribe win if the first was unsubscribed while in flight', async () => {
+      let releaseFirst: (value: string) => void = () => {};
+      let releaseSecond: (value: string) => void = () => {};
+      const firstDeferred: Promise<string> = new Promise((resolve) => {
+        releaseFirst = resolve;
+      });
+      const secondDeferred: Promise<string> = new Promise((resolve) => {
+        releaseSecond = resolve;
+      });
+      axiosRequestMock
+        .mockImplementationOnce(() => firstDeferred)
+        .mockImplementationOnce(() => secondDeferred);
+
+      const first: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      subscriptions.unsubscribe(connectionId, Channel.V4_TRADES, btcTicker);
+
+      const second: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId + 1,
+        btcTicker,
+        false,
+      );
+
+      releaseFirst(JSON.stringify(initialMessage));
+      await first;
+      releaseSecond(JSON.stringify(initialMessage));
+      await second;
+
+      expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
+      expect(subscriptions.subscriptionLists[connectionId]).toHaveLength(1);
+      expect(subscriptions.subscriptionLists[connectionId]).toContainEqual(
+        expect.objectContaining({ channel: Channel.V4_TRADES, id: btcTicker }),
+      );
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_TRADES][connectionId])
+        .toEqual(1);
+    });
+
+    it('does not send a fetch error if unsubscribe lands before the snapshot fails', async () => {
+      let rejectInitialResponse: (error: Error) => void = () => {};
+      const deferred: Promise<string> = new Promise((_, reject) => {
+        rejectInitialResponse = reject;
+      });
+      axiosRequestMock.mockImplementationOnce(() => deferred);
+
+      const inFlight: Promise<void> = subscriptions.subscribe(
+        mockWs,
+        Channel.V4_TRADES,
+        connectionId,
+        initialMsgId,
+        btcTicker,
+        false,
+      );
+
+      subscriptions.unsubscribe(connectionId, Channel.V4_TRADES, btcTicker);
+
+      rejectInitialResponse(new Error('snapshot failed'));
+      await inFlight;
+
+      expect(sendMessageMock).not.toHaveBeenCalled();
+      expect(sendMessageStringMock).not.toHaveBeenCalled();
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+      expect(subscriptions.subsByChannelByConnectionId[Channel.V4_TRADES]?.[connectionId] ?? 0)
+        .toEqual(0);
+    });
   });
 
   describe('validateSubscriptionForChannel', () => {
