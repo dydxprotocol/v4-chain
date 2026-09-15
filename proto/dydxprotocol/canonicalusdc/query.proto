@@ -1,0 +1,40 @@
+syntax = "proto3";
+package dydxprotocol.canonicalusdc;
+
+import "dydxprotocol/canonicalusdc/canonical_usdc.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types";
+
+// Query defines the canonical USDC query service.
+service Query {
+  // State returns controls and aggregate backing state.
+  rpc State(QueryStateRequest) returns (QueryStateResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/canonicalusdc/state";
+  }
+  // PendingSettlements returns all in-flight canonical settlements.
+  rpc PendingSettlements(QueryPendingSettlementsRequest)
+      returns (QueryPendingSettlementsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/canonicalusdc/pending_settlements";
+  }
+}
+
+// QueryStateRequest requests canonical controls and ledger state.
+message QueryStateRequest {}
+
+// QueryStateResponse contains canonical controls and ledger state.
+message QueryStateResponse {
+  Controls controls = 1 [ (gogoproto.nullable) = false ];
+  Ledger ledger = 2 [ (gogoproto.nullable) = false ];
+}
+
+// QueryPendingSettlementsRequest requests all in-flight settlements.
+message QueryPendingSettlementsRequest {}
+
+// QueryPendingSettlementsResponse contains all in-flight settlements.
+message QueryPendingSettlementsResponse {
+  repeated PendingSettlement pending_settlements = 1
+      [ (gogoproto.nullable) = false ];
+}
