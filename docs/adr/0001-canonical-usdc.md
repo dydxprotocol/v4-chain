@@ -45,11 +45,14 @@ Do not snapshot in the upgrade handler. Supply still moves while disabled.
 supply(uusdc) == noble_backing + injective_backing + pending_injective
 ```
 
+`pending_noble` is intentionally not in that sum. The two pending fields are different liabilities.
+
 | Field | Meaning |
 | --- | --- |
-| `noble_backing` | Still Noble-classified. Spent on Noble `MsgTransfer`. |
+| `noble_backing` | Still Noble-classified. Spent when a Noble `MsgTransfer` is accepted. |
 | `injective_backing` | Physical Injective USDC on the module. Spent on Injective `MsgTransfer`. |
-| `pending_injective` / `pending_noble` | In-flight IBC. Settled once on ack or timeout. |
+| `pending_injective` | In-flight Injective withdraw. Logical `uusdc` is still on the module (locked), so it remains in `supply` and in the equation. |
+| `pending_noble` | In-flight Noble withdraw. The user's `uusdc` already left via ICS20, so `supply` dropped with `noble_backing`. The field is only a ticket for ack/timeout, not backing. |
 | `legacy_downstream` | Budget for `uusdc` returning from some other channel. No increment after genesis. |
 
 IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
@@ -65,8 +68,8 @@ IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
 Users still send `ibc.applications.transfer.v1.MsgTransfer` of `uusdc`.
 
-- Injective channel: lock user `uusdc` on the module, send physical Injective USDC, pending `ROUTE_INJECTIVE`. Success burns the lock. Timeout refunds `uusdc` and restores `injective_backing`.
-- Noble channel: requires `NobleWithdrawalsEnabled` and cutoff. Spend `noble_backing`, forward the original packet, pending `ROUTE_NOBLE`. Timeout restores `noble_backing`.
+- Injective channel: lock user `uusdc` on the module (`pending_injective +=`, `injective_backing -=`), send physical Injective USDC. Success ack burns the lock and clears pending. Timeout/error: inner transfer refunds physical to the module, unlock `uusdc` to the user, `injective_backing +=`, pending cleared.
+- Noble channel: requires `NobleWithdrawalsEnabled` and cutoff. `noble_backing -=`, `pending_noble +=`, forward the original packet (user `uusdc` leaves, `supply` drops). Success ack clears pending only. Timeout/error: inner transfer refunds `uusdc` to the user (`supply` rises), `noble_backing +=`, pending cleared.
 - Other channel of `uusdc`: `ErrUnsupportedChannel`.
 - Other denoms: passthrough.
 
@@ -92,10 +95,10 @@ The `uusdc` minted in step 2 must be the `uusdc` withdrawn in step 3.
 
 ### Invariants (when not `DISABLED`)
 
-- `supply(uusdc) == noble_backing + injective_backing + pending_injective`
+- `supply(uusdc) == noble_backing + injective_backing + pending_injective` (`pending_noble` excluded; those coins already left `supply`)
 - Module physical Injective balance `>= injective_backing`
-- Module locked `uusdc` `>= pending_injective`
-- Pending count and per-route sums match stored settlements
+- Module locked `uusdc` `>= pending_injective` (Noble pending does not lock module `uusdc`)
+- Pending count and per-route sums match stored settlements (`pending_noble` is still counted here)
 - Cannot switch to `DISABLED` or change channel/denom identity while pending exists
 
 ## Considered options
