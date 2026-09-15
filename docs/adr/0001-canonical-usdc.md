@@ -53,7 +53,7 @@ supply(uusdc) == noble_backing + injective_backing + pending_injective
 | `injective_backing` | Physical Injective USDC on the module. Spent on Injective `MsgTransfer`. |
 | `pending_injective` | In-flight Injective withdraw. Logical `uusdc` is still on the module (locked), so it remains in `supply` and in the equation. |
 | `pending_noble` | In-flight Noble withdraw. The user's `uusdc` already left via ICS20, so `supply` dropped with `noble_backing`. The field is only a ticket for ack/timeout, not backing. |
-| `legacy_downstream` | Budget for `uusdc` returning from some other channel. No increment after genesis. |
+| `legacy_downstream` | Budget for `uusdc` that left before enablement and is now returning on some other channel. No increment after genesis. |
 
 IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
@@ -61,19 +61,19 @@ IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
 - Injective channel, matching packet denom: physical tokens to the module, mint `uusdc` to the original receiver, `injective_backing += amount`. Cap: `max_transfer_amount`, `migration_ceiling`.
 - Noble channel, `uusdc`: reject before the inner app (`ErrNobleDepositsDisabled`).
-- Other channel, `uusdc`: decrement `legacy_downstream` if it covers the amount; else reject.
+- Other channel, `uusdc`: if `legacy_downstream >= amount`, accept the ICS20 recv (`supply` rises), then `legacy_downstream -= amount` and `noble_backing += amount`. Those coins were not in the enablement snapshot; they re-enter as Noble-classified. If the budget is too small, reject.
 - `DISABLED`: passthrough, including Noble deposits.
 
 **Outbound (`MsgTransfer` decorator)**
 
-Users still send `ibc.applications.transfer.v1.MsgTransfer` of `uusdc`.
+Users still send `ibc.applications.transfer.v1.MsgTransfer` of `uusdc`. Both routes reject unless `amount <= max_transfer_amount` and `PendingCount < max_pending_settlements` (`max_pending_settlements` is a count cap, `<= 100_000` completed-ring size).
 
-- Injective channel: lock user `uusdc` on the module (`pending_injective +=`, `injective_backing -=`), send physical Injective USDC. Success ack burns the lock and clears pending. Timeout/error: inner transfer refunds physical to the module, unlock `uusdc` to the user, `injective_backing +=`, pending cleared.
-- Noble channel: requires `NobleWithdrawalsEnabled` and cutoff. `noble_backing -=`, `pending_noble +=`, forward the original packet (user `uusdc` leaves, `supply` drops). Success ack clears pending only. Timeout/error: inner transfer refunds `uusdc` to the user (`supply` rises), `noble_backing +=`, pending cleared.
+- Injective channel: require `amount <= injective_backing`. Lock user `uusdc` on the module (`pending_injective +=`, `injective_backing -=`), send physical Injective USDC. Success ack burns the lock and clears pending. Timeout/error: inner transfer refunds physical to the module, unlock `uusdc` to the user, `injective_backing +=`, pending cleared.
+- Noble channel: require `NobleWithdrawalsEnabled`, cutoff, and `amount <= noble_backing`. `noble_backing -=`, `pending_noble +=`, forward the original packet (user `uusdc` leaves, `supply` drops). Success ack clears pending only. Timeout/error: inner transfer refunds `uusdc` to the user (`supply` rises), `noble_backing +=`, pending cleared.
 - Other channel of `uusdc`: `ErrUnsupportedChannel`.
 - Other denoms: passthrough.
 
-A completed ring (100k slots) makes ack/timeout replay a no-op.
+A completed ring (100k slots) makes ack/timeout replay a no-op. `subtract` fails if backing would go negative (`ErrInsufficientBacking`).
 
 **ICS4**
 
@@ -95,10 +95,11 @@ The `uusdc` minted in step 2 must be the `uusdc` withdrawn in step 3.
 
 ### Invariants (when not `DISABLED`)
 
-- `supply(uusdc) == noble_backing + injective_backing + pending_injective` (`pending_noble` excluded; those coins already left `supply`)
+- `supply(uusdc) == noble_backing + injective_backing + pending_injective` (`pending_noble` excluded; those coins already left `supply`. `legacy_downstream` is a return budget, not backing; consuming it credits `noble_backing`.)
 - Module physical Injective balance `>= injective_backing`
 - Module locked `uusdc` `>= pending_injective` (Noble pending does not lock module `uusdc`)
-- Pending count and per-route sums match stored settlements (`pending_noble` is still counted here)
+- Backing fields stay nonnegative; outbound amount cannot exceed the selected route's backing
+- Pending count and per-route sums match stored settlements (`pending_noble` is still counted here); count `<= max_pending_settlements`
 - Cannot switch to `DISABLED` or change channel/denom identity while pending exists
 
 ## Considered options
