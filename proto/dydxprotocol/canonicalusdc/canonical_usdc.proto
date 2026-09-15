@@ -9,7 +9,7 @@ enum Mode {
   MODE_UNSPECIFIED = 0;
   // MODE_DISABLED preserves the legacy transfer stack exactly.
   MODE_DISABLED = 1;
-  // MODE_GRADUAL enables allowlisted backing replacement and canonical routing.
+  // MODE_GRADUAL enables canonical Injective routing for logical USDC.
   MODE_GRADUAL = 2;
   // MODE_PAUSED rejects canonical USDC transfers while retaining pending state.
   MODE_PAUSED = 3;
@@ -23,8 +23,8 @@ enum Route {
   ROUTE_INJECTIVE = 1;
   // ROUTE_NOBLE settles with Noble-origin USDC.
   ROUTE_NOBLE = 2;
-  // ROUTE_BACKING_SWAP settles a Noble release funded by Injective USDC.
-  ROUTE_BACKING_SWAP = 3;
+  reserved 3;
+  reserved "ROUTE_BACKING_SWAP";
 }
 
 // Controls binds canonical routing to exact channels and denominations.
@@ -40,7 +40,8 @@ message Controls {
   string max_transfer_amount = 9;
   string migration_ceiling = 10;
   uint32 max_pending_settlements = 11;
-  uint32 memo_version = 12;
+  reserved 12;
+  reserved "memo_version";
   string noble_packet_denom = 13;
   string noble_client = 14;
   string noble_connection = 15;
@@ -54,19 +55,10 @@ message Ledger {
   string noble_backing = 1;
   string injective_backing = 2;
   string legacy_downstream = 3;
-  string restricted_funding = 4;
+  reserved 4, 7;
+  reserved "restricted_funding", "pending_backing_swap";
   string pending_injective = 5;
   string pending_noble = 6;
-  string pending_backing_swap = 7;
-}
-
-// Participant is an allowlisted backing-replacement controller.
-message Participant {
-  string controller = 1;
-  string noble_recipient = 2;
-  string max_release = 3;
-  string released = 4;
-  string funded = 5;
 }
 
 // PendingSettlement records enough logical and physical state to settle a
@@ -81,6 +73,6 @@ message PendingSettlement {
   string logical_denom = 7;
   string physical_denom = 8;
   string amount = 9;
-  string memo = 10;
-  string controller = 11;
+  reserved 10, 11;
+  reserved "memo", "controller";
 }

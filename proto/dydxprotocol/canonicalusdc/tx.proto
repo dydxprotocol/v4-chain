@@ -7,45 +7,12 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types";
 
-// Msg defines migration-operator and governance actions. Ordinary users keep
-// using ibc.applications.transfer.v1.MsgTransfer.
+// Msg defines governance actions. Ordinary users keep using
+// ibc.applications.transfer.v1.MsgTransfer.
 service Msg {
-  // ExecuteBackingSwap releases Noble USDC for previously funded Injective
-  // backing.
-  rpc ExecuteBackingSwap(MsgExecuteBackingSwap)
-      returns (MsgExecuteBackingSwapResponse);
-  // CancelBackingSwap returns uncommitted restricted Injective funding to its
-  // controller on dYdX Chain.
-  rpc CancelBackingSwap(MsgCancelBackingSwap)
-      returns (MsgCancelBackingSwapResponse);
   // UpdateControls updates canonical routing controls.
   rpc UpdateControls(MsgUpdateControls) returns (MsgUpdateControlsResponse);
-  // UpdateParticipants replaces the bounded participant allowlist.
-  rpc UpdateParticipants(MsgUpdateParticipants)
-      returns (MsgUpdateParticipantsResponse);
 }
-
-// MsgExecuteBackingSwap requests a bounded Noble release.
-message MsgExecuteBackingSwap {
-  option (cosmos.msg.v1.signer) = "controller";
-  string controller = 1;
-  string amount = 2;
-  string source_port = 3;
-  uint64 timeout_timestamp = 4;
-}
-
-// MsgExecuteBackingSwapResponse returns the emitted packet sequence.
-message MsgExecuteBackingSwapResponse { uint64 sequence = 1; }
-
-// MsgCancelBackingSwap cancels uncommitted restricted backing.
-message MsgCancelBackingSwap {
-  option (cosmos.msg.v1.signer) = "controller";
-  string controller = 1;
-  string amount = 2;
-}
-
-// MsgCancelBackingSwapResponse is the cancellation response.
-message MsgCancelBackingSwapResponse {}
 
 // MsgUpdateControls updates all controls atomically.
 message MsgUpdateControls {
@@ -56,13 +23,3 @@ message MsgUpdateControls {
 
 // MsgUpdateControlsResponse is the controls update response.
 message MsgUpdateControlsResponse {}
-
-// MsgUpdateParticipants replaces the complete participant allowlist.
-message MsgUpdateParticipants {
-  option (cosmos.msg.v1.signer) = "authority";
-  string authority = 1;
-  repeated Participant participants = 2 [ (gogoproto.nullable) = false ];
-}
-
-// MsgUpdateParticipantsResponse is the participant update response.
-message MsgUpdateParticipantsResponse {}
