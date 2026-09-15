@@ -20,9 +20,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genesis types.GenesisState) {
 	if err := k.SetLedger(ctx, genesis.Ledger); err != nil {
 		panic(err)
 	}
-	if err := k.ReplaceParticipants(ctx, genesis.Participants); err != nil {
-		panic(err)
-	}
 	for _, pending := range genesis.PendingSettlements {
 		if err := k.SetPending(ctx, pending); err != nil {
 			panic(err)
@@ -34,7 +31,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Controls:           k.GetControls(ctx),
 		Ledger:             k.GetLedger(ctx),
-		Participants:       k.GetAllParticipants(ctx),
 		PendingSettlements: k.GetAllPending(ctx),
 	}
 }

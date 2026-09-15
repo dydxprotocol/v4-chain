@@ -16,19 +16,16 @@ func DefaultControls() Controls {
 	return Controls{
 		Mode:         Mode_MODE_DISABLED,
 		LogicalDenom: assettypes.UusdcDenom,
-		MemoVersion:  SupportedMemoVersion,
 	}
 }
 
 func DefaultLedger() Ledger {
 	return Ledger{
-		NobleBacking:       "0",
-		InjectiveBacking:   "0",
-		LegacyDownstream:   "0",
-		RestrictedFunding:  "0",
-		PendingInjective:   "0",
-		PendingNoble:       "0",
-		PendingBackingSwap: "0",
+		NobleBacking:     "0",
+		InjectiveBacking: "0",
+		LegacyDownstream: "0",
+		PendingInjective: "0",
+		PendingNoble:     "0",
 	}
 }
 
@@ -64,9 +61,6 @@ func (controls Controls) Validate() error {
 	}
 	if controls.LogicalDenom != assettypes.UusdcDenom {
 		return fmt.Errorf("%w: logical denom must remain %s", ErrInvalidControls, assettypes.UusdcDenom)
-	}
-	if controls.MemoVersion != SupportedMemoVersion {
-		return fmt.Errorf("%w: memo version must be %d", ErrInvalidControls, SupportedMemoVersion)
 	}
 	if controls.Mode == Mode_MODE_DISABLED {
 		return nil
@@ -134,34 +128,12 @@ func (controls Controls) Validate() error {
 func (ledger Ledger) Validate() error {
 	values := []string{
 		ledger.NobleBacking, ledger.InjectiveBacking, ledger.LegacyDownstream,
-		ledger.RestrictedFunding, ledger.PendingInjective, ledger.PendingNoble,
-		ledger.PendingBackingSwap,
+		ledger.PendingInjective, ledger.PendingNoble,
 	}
 	for _, value := range values {
 		if _, err := ParseAmount(value); err != nil {
 			return ErrInvalidLedger
 		}
-	}
-	return nil
-}
-
-func (participant Participant) Validate() error {
-	if _, err := sdk.AccAddressFromBech32(participant.Controller); err != nil {
-		return fmt.Errorf("%w: controller: %v", ErrInvalidParticipant, err)
-	}
-	if participant.NobleRecipient == "" || len(participant.NobleRecipient) > 256 {
-		return fmt.Errorf("%w: Noble recipient", ErrInvalidParticipant)
-	}
-	maxRelease, err := ParsePositiveAmount(participant.MaxRelease)
-	if err != nil {
-		return fmt.Errorf("%w: max release", ErrInvalidParticipant)
-	}
-	released, err := ParseAmount(participant.Released)
-	if err != nil || released.GT(maxRelease) {
-		return fmt.Errorf("%w: released amount", ErrInvalidParticipant)
-	}
-	if _, err := ParseAmount(participant.Funded); err != nil {
-		return fmt.Errorf("%w: funded amount", ErrInvalidParticipant)
 	}
 	return nil
 }
@@ -172,19 +144,6 @@ func (genesis GenesisState) Validate() error {
 	}
 	if err := genesis.Ledger.Validate(); err != nil {
 		return err
-	}
-	if len(genesis.Participants) > MaxParticipants {
-		return fmt.Errorf("%w: too many participants", ErrInvalidParticipant)
-	}
-	seen := make(map[string]struct{}, len(genesis.Participants))
-	for _, participant := range genesis.Participants {
-		if err := participant.Validate(); err != nil {
-			return err
-		}
-		if _, ok := seen[participant.Controller]; ok {
-			return fmt.Errorf("%w: duplicate controller", ErrInvalidParticipant)
-		}
-		seen[participant.Controller] = struct{}{}
 	}
 	if len(genesis.PendingSettlements) > int(genesis.Controls.MaxPendingSettlements) {
 		return ErrPendingLimit
@@ -201,7 +160,7 @@ func (genesis GenesisState) Validate() error {
 }
 
 func (pending PendingSettlement) Validate() error {
-	if pending.Route < Route_ROUTE_INJECTIVE || pending.Route > Route_ROUTE_BACKING_SWAP {
+	if pending.Route < Route_ROUTE_INJECTIVE || pending.Route > Route_ROUTE_NOBLE {
 		return fmt.Errorf("invalid pending route")
 	}
 	if err := host.ChannelIdentifierValidator(pending.SourceChannel); err != nil {

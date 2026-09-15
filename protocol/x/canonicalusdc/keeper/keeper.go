@@ -145,9 +145,7 @@ func (k Keeper) SetLedger(ctx sdk.Context, ledger types.Ledger) error {
 			return err
 		}
 		injective, _ := types.ParseAmount(ledger.InjectiveBacking)
-		restricted, _ := types.ParseAmount(ledger.RestrictedFunding)
-		pendingSwap, _ := types.ParseAmount(ledger.PendingBackingSwap)
-		if injective.Add(restricted).Add(pendingSwap).GT(ceiling) {
+		if injective.GT(ceiling) {
 			return types.ErrMigrationCeiling
 		}
 	}
@@ -155,68 +153,26 @@ func (k Keeper) SetLedger(ctx sdk.Context, ledger types.Ledger) error {
 	return nil
 }
 
-func (k Keeper) GetParticipant(ctx sdk.Context, controller string) (types.Participant, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ParticipantKeyPrefix))
-	bz := store.Get(types.ParticipantKey(controller))
-	if bz == nil {
-		return types.Participant{}, false
-	}
-	var participant types.Participant
-	k.cdc.MustUnmarshal(bz, &participant)
-	return participant, true
-}
-
-func (k Keeper) GetAllParticipants(ctx sdk.Context) []types.Participant {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ParticipantKeyPrefix))
-	iterator := store.Iterator(nil, nil)
-	defer iterator.Close()
-	participants := make([]types.Participant, 0)
-	for ; iterator.Valid(); iterator.Next() {
-		var participant types.Participant
-		k.cdc.MustUnmarshal(iterator.Value(), &participant)
-		participants = append(participants, participant)
-	}
-	return participants
-}
-
-func (k Keeper) ReplaceParticipants(ctx sdk.Context, participants []types.Participant) error {
-	if len(participants) > types.MaxParticipants {
-		return types.ErrInvalidParticipant
-	}
-	seen := make(map[string]struct{}, len(participants))
-	for _, participant := range participants {
-		if err := participant.Validate(); err != nil {
-			return err
-		}
-		if _, exists := seen[participant.Controller]; exists {
-			return fmt.Errorf("%w: duplicate controller", types.ErrInvalidParticipant)
-		}
-		seen[participant.Controller] = struct{}{}
-	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ParticipantKeyPrefix))
-	iterator := store.Iterator(nil, nil)
-	keys := make([][]byte, 0, types.MaxParticipants)
-	for ; iterator.Valid(); iterator.Next() {
-		keys = append(keys, append([]byte(nil), iterator.Key()...))
-	}
-	iterator.Close()
-	for _, key := range keys {
-		store.Delete(key)
-	}
-	for i := range participants {
-		participant := participants[i]
-		store.Set(types.ParticipantKey(participant.Controller), k.cdc.MustMarshal(&participant))
-	}
-	return nil
-}
-
-func (k Keeper) SetParticipant(ctx sdk.Context, participant types.Participant) error {
-	if err := participant.Validate(); err != nil {
+// snapshotNobleBacking classifies residual logical supply as Noble-backed.
+// residual = supply(logical) - injective - pending injective.
+func (k Keeper) snapshotNobleBacking(ctx sdk.Context) error {
+	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	if err != nil {
 		return err
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ParticipantKeyPrefix))
-	store.Set(types.ParticipantKey(participant.Controller), k.cdc.MustMarshal(&participant))
-	return nil
+	classified := amounts.injective.Add(amounts.pendingInjective)
+	supply := k.bankKeeper.GetSupply(ctx, k.GetControls(ctx).LogicalDenom).Amount
+	if supply.LT(classified) {
+		return fmt.Errorf(
+			"%w: logical supply %s is below classified backing %s",
+			types.ErrInvalidLedger,
+			supply,
+			classified,
+		)
+	}
+	ledger := k.GetLedger(ctx)
+	ledger.NobleBacking = supply.Sub(classified).String()
+	return k.SetLedger(ctx, ledger)
 }
 
 func (k Keeper) PendingCount(ctx sdk.Context) uint32 {
@@ -254,7 +210,7 @@ func (k Keeper) SetPending(ctx sdk.Context, pending types.PendingSettlement) err
 
 func (k Keeper) GetPendingForPacket(ctx sdk.Context, channel string, sequence uint64) (types.PendingSettlement, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingKeyPrefix))
-	for route := types.Route_ROUTE_INJECTIVE; route <= types.Route_ROUTE_BACKING_SWAP; route++ {
+	for route := types.Route_ROUTE_INJECTIVE; route <= types.Route_ROUTE_NOBLE; route++ {
 		bz := store.Get(types.PendingKey(route, channel, sequence))
 		if bz != nil {
 			var pending types.PendingSettlement

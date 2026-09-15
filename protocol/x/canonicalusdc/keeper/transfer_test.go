@@ -19,6 +19,7 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	canonicaltypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	"github.com/stretchr/testify/require"
@@ -180,6 +181,8 @@ type transferMock struct {
 	seen          *transfertypes.MsgTransfer
 	senderBalance math.Int
 	logicalOwner  sdk.AccAddress
+	nextSequence  uint64
+	err           error
 }
 
 func (m *transferMock) Transfer(
@@ -188,6 +191,9 @@ func (m *transferMock) Transfer(
 ) (*transfertypes.MsgTransferResponse, error) {
 	m.calls++
 	m.seen = msg
+	if m.err != nil {
+		return nil, m.err
+	}
 	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
 	m.senderBalance = m.bank.amount(m.logicalOwner, types.UusdcDenom)
 	if sender.Equals(canonicaltypes.ModuleAddress) {
@@ -197,7 +203,12 @@ func (m *transferMock) Transfer(
 	} else {
 		m.bank.set(sender, msg.Token.Denom, m.bank.amount(sender, msg.Token.Denom).Sub(msg.Token.Amount))
 	}
-	return &transfertypes.MsgTransferResponse{Sequence: 7}, nil
+	if m.nextSequence == 0 {
+		m.nextSequence = 7
+	}
+	sequence := m.nextSequence
+	m.nextSequence++
+	return &transfertypes.MsgTransferResponse{Sequence: sequence}, nil
 }
 
 func (*transferMock) UpdateParams(
@@ -219,10 +230,40 @@ func setupKeeper(t *testing.T) (sdk.Context, *Keeper, *bankMock, *transferMock, 
 	cdc := codec.NewProtoCodec(registry)
 	bank := newBankMock()
 	ics4 := &ics4Mock{}
-	k := NewKeeper(cdc, key, bank, ics4, nil, nil, nil)
+	k := NewKeeper(cdc, key, bank, ics4, nil, nil, []string{lib.GovModuleAddress.String()})
 	transfer := &transferMock{bank: bank}
 	k.SetTransferMsgServer(transfer)
 	return ctx, k, bank, transfer, ics4
+}
+
+func bindOpenRoutes(k *Keeper, controls canonicaltypes.Controls) {
+	openChannel := func(connection string) channeltypes.Channel {
+		return channeltypes.NewChannel(
+			channeltypes.OPEN,
+			channeltypes.UNORDERED,
+			channeltypes.NewCounterparty(transfertypes.PortID, "channel-remote"),
+			[]string{connection},
+			transfertypes.Version,
+		)
+	}
+	k.channelKeeper = channelMock{
+		controls.NobleChannel:     openChannel(controls.NobleConnection),
+		controls.InjectiveChannel: openChannel(controls.InjectiveConnection),
+	}
+	k.connectionKeeper = connectionMock{
+		controls.NobleConnection: connectiontypes.NewConnectionEnd(
+			connectiontypes.OPEN, controls.NobleClient, connectiontypes.Counterparty{}, nil, 0,
+		),
+		controls.InjectiveConnection: connectiontypes.NewConnectionEnd(
+			connectiontypes.OPEN, controls.InjectiveClient, connectiontypes.Counterparty{}, nil, 0,
+		),
+	}
+}
+
+func requireInvariant(t *testing.T, ctx sdk.Context, k *Keeper) {
+	t.Helper()
+	reason, broken := BackingInvariant(*k)(ctx)
+	require.False(t, broken, reason)
 }
 
 func activeControls() canonicaltypes.Controls {
@@ -238,7 +279,6 @@ func activeControls() canonicaltypes.Controls {
 		MaxTransferAmount:       "1000",
 		MigrationCeiling:        "10000",
 		MaxPendingSettlements:   10,
-		MemoVersion:             1,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",
 		InjectiveClient:         "07-tendermint-1",
@@ -246,40 +286,77 @@ func activeControls() canonicaltypes.Controls {
 	}
 }
 
-func TestTransferDisabledPassesOriginalMessageUnchanged(t *testing.T) {
-	ctx, k, bank, transfer, _ := setupKeeper(t)
-	sender := sdk.AccAddress("disabled-sender")
-	bank.set(sender, "uatom", math.NewInt(10))
-	msg := &transfertypes.MsgTransfer{
-		SourcePort:    transfertypes.PortID,
-		SourceChannel: "channel-7",
-		Token:         sdk.NewInt64Coin("uatom", 2),
-		Sender:        sender.String(),
-		Receiver:      "remote-receiver",
+func TestTransferPassesOriginalMessageUnchanged(t *testing.T) {
+	cases := []struct {
+		name            string
+		controls        func() canonicaltypes.Controls
+		sender          string
+		denom           string
+		channel         string
+		receiver        string
+		wantPendingZero bool
+	}{
+		{
+			name:     "disabled",
+			sender:   "disabled-sender",
+			denom:    "uatom",
+			channel:  "channel-7",
+			receiver: "remote-receiver",
+		},
+		{
+			name:            "physical injective",
+			controls:        activeControls,
+			sender:          "injective-holder",
+			denom:           physicalDenom,
+			channel:         injChannel,
+			receiver:        "inj1receiver",
+			wantPendingZero: true,
+		},
+		{
+			name:     "active non-canonical",
+			controls: activeControls,
+			sender:   "noncanonical-sender",
+			denom:    "uatom",
+			channel:  "channel-7",
+			receiver: "remote-receiver",
+		},
+		{
+			name: "paused non-canonical",
+			controls: func() canonicaltypes.Controls {
+				controls := activeControls()
+				controls.Mode = canonicaltypes.Mode_MODE_PAUSED
+				return controls
+			},
+			sender:   "paused-sender",
+			denom:    "uatom",
+			channel:  "channel-7",
+			receiver: "remote",
+		},
 	}
-	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
-	require.NoError(t, err)
-	require.Equal(t, uint64(7), response.Sequence)
-	require.Same(t, msg, transfer.seen)
-}
-
-func TestActiveNonCanonicalTransferPassesOriginalMessageUnchanged(t *testing.T) {
-	ctx, k, bank, transfer, _ := setupKeeper(t)
-	require.NoError(t, k.SetControls(ctx, activeControls()))
-	sender := sdk.AccAddress("noncanonical-sender")
-	bank.set(sender, "uatom", math.NewInt(10))
-	msg := &transfertypes.MsgTransfer{
-		SourcePort:    transfertypes.PortID,
-		SourceChannel: "channel-7",
-		Token:         sdk.NewInt64Coin("uatom", 2),
-		Sender:        sender.String(),
-		Receiver:      "remote-receiver",
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, k, bank, transfer, _ := setupKeeper(t)
+			if tc.controls != nil {
+				require.NoError(t, k.SetControls(ctx, tc.controls()))
+			}
+			sender := sdk.AccAddress(tc.sender)
+			bank.set(sender, tc.denom, math.NewInt(10))
+			msg := &transfertypes.MsgTransfer{
+				SourcePort:    transfertypes.PortID,
+				SourceChannel: tc.channel,
+				Token:         sdk.NewInt64Coin(tc.denom, 2),
+				Sender:        sender.String(),
+				Receiver:      tc.receiver,
+			}
+			response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+			require.NoError(t, err)
+			require.Equal(t, uint64(7), response.Sequence)
+			require.Same(t, msg, transfer.seen)
+			if tc.wantPendingZero {
+				require.Zero(t, k.PendingCount(ctx))
+			}
+		})
 	}
-
-	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
-	require.NoError(t, err)
-	require.Equal(t, uint64(7), response.Sequence)
-	require.Same(t, msg, transfer.seen)
 }
 
 func TestInjectiveTransferLocksBeforePhysicalSendAndSettlesError(t *testing.T) {
@@ -348,47 +425,100 @@ func TestInjectiveTransferLocksBeforePhysicalSendAndSettlesError(t *testing.T) {
 	require.Zero(t, k.PendingCount(ctx))
 }
 
-func TestCanonicalTransferRejectsUnsupportedChannelBeforeMovement(t *testing.T) {
-	ctx, k, bank, transfer, _ := setupKeeper(t)
-	require.NoError(t, k.SetControls(ctx, activeControls()))
-	sender := sdk.AccAddress("unsupported-sender")
-	bank.set(sender, types.UusdcDenom, math.NewInt(50))
-	msg := &transfertypes.MsgTransfer{
-		SourcePort:       transfertypes.PortID,
-		SourceChannel:    "channel-9",
-		Token:            sdk.NewInt64Coin(types.UusdcDenom, 10),
-		Sender:           sender.String(),
-		Receiver:         "remote",
-		TimeoutTimestamp: 1,
+func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
+	sender := sdk.AccAddress("reject-sender")
+	uusdc := func(port, channel, receiver string, amount int64) *transfertypes.MsgTransfer {
+		return &transfertypes.MsgTransfer{
+			SourcePort: port, SourceChannel: channel,
+			Token: sdk.NewInt64Coin(types.UusdcDenom, amount), Sender: sender.String(),
+			Receiver: receiver, TimeoutTimestamp: 1,
+		}
 	}
-	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
-	require.ErrorIs(t, err, canonicaltypes.ErrUnsupportedChannel)
-	require.Zero(t, transfer.calls)
-	require.Equal(t, "50", bank.amount(sender, types.UusdcDenom).String())
-}
-
-func TestNobleTransferCannotUseInjectiveBacking(t *testing.T) {
-	ctx, k, bank, transfer, _ := setupKeeper(t)
-	require.NoError(t, k.SetControls(ctx, activeControls()))
-	ledger := canonicaltypes.DefaultLedger()
-	ledger.InjectiveBacking = "50"
-	require.NoError(t, k.SetLedger(ctx, ledger))
-	sender := sdk.AccAddress("noble-sender")
-	bank.set(sender, types.UusdcDenom, math.NewInt(50))
-	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
-	msg := &transfertypes.MsgTransfer{
-		SourcePort:       transfertypes.PortID,
-		SourceChannel:    nobleChannel,
-		Token:            sdk.NewInt64Coin(types.UusdcDenom, 10),
-		Sender:           sender.String(),
-		Receiver:         "noble1receiver",
-		TimeoutTimestamp: 1,
+	cases := []struct {
+		name string
+		prep func(*testing.T, sdk.Context, *Keeper, *bankMock)
+		msg  *transfertypes.MsgTransfer
+		err  error
+	}{
+		{
+			name: "unsupported channel",
+			msg:  uusdc(transfertypes.PortID, "channel-9", "remote", 10),
+			err:  canonicaltypes.ErrUnsupportedChannel,
+		},
+		{
+			name: "invalid amount",
+			msg:  uusdc(transfertypes.PortID, injChannel, "inj1receiver", 1001),
+			err:  canonicaltypes.ErrInvalidAmount,
+		},
+		{
+			name: "wrong port",
+			msg:  uusdc("icahost", injChannel, "inj1receiver", 10),
+			err:  canonicaltypes.ErrUnsupportedChannel,
+		},
+		{
+			name: "paused",
+			prep: func(t *testing.T, ctx sdk.Context, k *Keeper, _ *bankMock) {
+				controls := activeControls()
+				controls.Mode = canonicaltypes.Mode_MODE_PAUSED
+				require.NoError(t, k.SetControls(ctx, controls))
+			},
+			msg: uusdc(transfertypes.PortID, injChannel, "inj1receiver", 10),
+			err: canonicaltypes.ErrPaused,
+		},
+		{
+			name: "noble flag off",
+			prep: func(t *testing.T, ctx sdk.Context, k *Keeper, _ *bankMock) {
+				controls := activeControls()
+				controls.NobleWithdrawalsEnabled = false
+				require.NoError(t, k.SetControls(ctx, controls))
+				ledger := canonicaltypes.DefaultLedger()
+				ledger.NobleBacking = "50"
+				require.NoError(t, k.SetLedger(ctx, ledger))
+			},
+			msg: uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
+			err: canonicaltypes.ErrDisabled,
+		},
+		{
+			name: "noble cutoff",
+			prep: func(t *testing.T, ctx sdk.Context, k *Keeper, _ *bankMock) {
+				controls := activeControls()
+				controls.NobleWithdrawalCutoffTimestamp = ctx.BlockTime().Unix()
+				require.NoError(t, k.SetControls(ctx, controls))
+				ledger := canonicaltypes.DefaultLedger()
+				ledger.NobleBacking = "50"
+				require.NoError(t, k.SetLedger(ctx, ledger))
+			},
+			msg: uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
+			err: canonicaltypes.ErrDisabled,
+		},
+		{
+			name: "noble using injective backing",
+			prep: func(t *testing.T, ctx sdk.Context, k *Keeper, bank *bankMock) {
+				require.NoError(t, k.SetControls(ctx, activeControls()))
+				ledger := canonicaltypes.DefaultLedger()
+				ledger.InjectiveBacking = "50"
+				require.NoError(t, k.SetLedger(ctx, ledger))
+				bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+			},
+			msg: uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
+			err: canonicaltypes.ErrInsufficientBacking,
+		},
 	}
-
-	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
-	require.ErrorIs(t, err, canonicaltypes.ErrInsufficientBacking)
-	require.Zero(t, transfer.calls)
-	require.Equal(t, "50", bank.amount(sender, types.UusdcDenom).String())
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, k, bank, transfer, _ := setupKeeper(t)
+			bank.set(sender, types.UusdcDenom, math.NewInt(50))
+			if tc.prep != nil {
+				tc.prep(t, ctx, k, bank)
+			} else {
+				require.NoError(t, k.SetControls(ctx, activeControls()))
+			}
+			_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), tc.msg)
+			require.ErrorIs(t, err, tc.err)
+			require.Zero(t, transfer.calls)
+			require.Equal(t, "50", bank.amount(sender, types.UusdcDenom).String())
+		})
+	}
 }
 
 func TestBackingInvariantRequiresFullyClassifiedLogicalSupply(t *testing.T) {
@@ -396,15 +526,10 @@ func TestBackingInvariantRequiresFullyClassifiedLogicalSupply(t *testing.T) {
 	require.NoError(t, k.SetControls(ctx, activeControls()))
 	owner := sdk.AccAddress("logical-owner")
 	bank.set(owner, types.UusdcDenom, math.NewInt(10))
-	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(16))
+	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(10))
 	ledger := canonicaltypes.DefaultLedger()
 	ledger.InjectiveBacking = "10"
-	ledger.RestrictedFunding = "5"
 	require.NoError(t, k.SetLedger(ctx, ledger))
-	require.NoError(t, k.SetParticipant(ctx, canonicaltypes.Participant{
-		Controller: sdk.AccAddress("funding-controller").String(), NobleRecipient: "noble1receiver",
-		MaxRelease: "5", Released: "0", Funded: "5",
-	}))
 
 	reason, broken := BackingInvariant(*k)(ctx)
 	require.False(t, broken, reason)
@@ -448,60 +573,6 @@ func TestValidateRouteBindingsRequiresExactOpenIcs20Channels(t *testing.T) {
 	require.ErrorIs(t, k.ValidateRouteBindings(ctx, controls), canonicaltypes.ErrInvalidControls)
 }
 
-func TestBackingSwapSettlementLifecycle(t *testing.T) {
-	for _, success := range []bool{true, false} {
-		t.Run(fmt.Sprintf("success=%t", success), func(t *testing.T) {
-			ctx, k, bank, _, _ := setupKeeper(t)
-			require.NoError(t, k.SetControls(ctx, activeControls()))
-			ledger := canonicaltypes.DefaultLedger()
-			ledger.NobleBacking = "100"
-			ledger.RestrictedFunding = "25"
-			require.NoError(t, k.SetLedger(ctx, ledger))
-			owner := sdk.AccAddress("backing-owner")
-			bank.set(owner, types.UusdcDenom, math.NewInt(100))
-			bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(25))
-			controller := sdk.AccAddress("swap-controller")
-			participant := canonicaltypes.Participant{
-				Controller: controller.String(), NobleRecipient: "noble1receiver",
-				MaxRelease: "100", Released: "0", Funded: "25",
-			}
-			require.NoError(t, k.SetParticipant(ctx, participant))
-
-			sequence, err := k.ExecuteBackingSwap(
-				ctx, controller.String(), math.NewInt(10), transfertypes.PortID, uint64(ctx.BlockTime().UnixNano())+1,
-			)
-			require.NoError(t, err)
-			pending, found := k.GetPendingForPacket(ctx, nobleChannel, sequence)
-			require.True(t, found)
-			require.Equal(t, canonicaltypes.Route_ROUTE_BACKING_SWAP, pending.Route)
-			require.Equal(t, "90", k.GetLedger(ctx).NobleBacking)
-			require.Equal(t, "15", k.GetLedger(ctx).RestrictedFunding)
-			require.Equal(t, "10", k.GetLedger(ctx).PendingBackingSwap)
-
-			if !success {
-				require.NoError(t, bank.MintCoins(
-					ctx, canonicaltypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin(types.UusdcDenom, 10)),
-				))
-			}
-			require.NoError(t, k.Settle(ctx, pending, success, canonicaltypes.AttributeValueSuccess))
-			stored, found := k.GetParticipant(ctx, controller.String())
-			require.True(t, found)
-			if success {
-				require.Equal(t, "10", k.GetLedger(ctx).InjectiveBacking)
-				require.Equal(t, "15", stored.Funded)
-				require.Equal(t, "10", stored.Released)
-			} else {
-				require.Equal(t, "100", k.GetLedger(ctx).NobleBacking)
-				require.Equal(t, "25", k.GetLedger(ctx).RestrictedFunding)
-				require.Equal(t, "25", stored.Funded)
-				require.Equal(t, "0", stored.Released)
-			}
-			reason, broken := BackingInvariant(*k)(ctx)
-			require.False(t, broken, reason)
-		})
-	}
-}
-
 func TestICS4GuardRejectsCanonicalBypass(t *testing.T) {
 	ctx, k, _, _, ics4 := setupKeeper(t)
 	require.NoError(t, k.SetControls(ctx, activeControls()))
@@ -520,4 +591,201 @@ func TestICS4GuardRejectsCanonicalBypass(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, ics4.sends)
 	require.Equal(t, data, ics4.data, "authorized physical packet bytes must be forwarded unchanged")
+}
+
+func TestICS4GuardMatchesPacketDenomAndTraces(t *testing.T) {
+	ctx, k, _, _, ics4 := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	gated := []struct {
+		name    string
+		channel string
+		denom   string
+		sender  string
+	}{
+		{name: "noble packet denom", channel: nobleChannel, denom: "uusdc", sender: "sender"},
+		{
+			name:    "noble hashed trace",
+			channel: "channel-9",
+			denom:   transfertypes.GetDenomPrefix(transfertypes.PortID, nobleChannel) + "uusdc",
+			sender:  "sender",
+		},
+		{
+			name:    "module injective packet denom",
+			channel: injChannel,
+			denom:   "uusdc",
+			sender:  canonicaltypes.ModuleAddress.String(),
+		},
+		{
+			name:    "module injective hashed trace",
+			channel: "channel-9",
+			denom:   transfertypes.GetDenomPrefix(transfertypes.PortID, injChannel) + "uusdc",
+			sender:  canonicaltypes.ModuleAddress.String(),
+		},
+	}
+	for _, tc := range gated {
+		t.Run(tc.name, func(t *testing.T) {
+			ics4.sends = 0
+			data := transfertypes.FungibleTokenPacketData{
+				Denom: tc.denom, Amount: "1", Sender: tc.sender, Receiver: "receiver",
+			}.GetBytes()
+			_, err := k.SendPacket(ctx, nil, transfertypes.PortID, tc.channel, clienttypes.ZeroHeight(), 1, data)
+			require.ErrorIs(t, err, canonicaltypes.ErrBypass)
+			require.Zero(t, ics4.sends)
+		})
+	}
+}
+
+func TestICS4AllowsNonGatedPackets(t *testing.T) {
+	cases := []struct {
+		name     string
+		disabled bool
+		channel  string
+		denom    string
+	}{
+		{name: "disabled noble packet", disabled: true, channel: nobleChannel, denom: "uusdc"},
+		{name: "unwind to injective", channel: injChannel, denom: "uusdc"},
+		{
+			name:    "forward injective voucher",
+			channel: "channel-9",
+			denom:   transfertypes.GetDenomPrefix(transfertypes.PortID, injChannel) + "uusdc",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, k, _, _, ics4 := setupKeeper(t)
+			if !tc.disabled {
+				require.NoError(t, k.SetControls(ctx, activeControls()))
+			}
+			data := transfertypes.FungibleTokenPacketData{
+				Denom: tc.denom, Amount: "1", Sender: "sender", Receiver: "receiver",
+			}.GetBytes()
+			_, err := k.SendPacket(ctx, nil, transfertypes.PortID, tc.channel, clienttypes.ZeroHeight(), 1, data)
+			require.NoError(t, err)
+			require.Equal(t, 1, ics4.sends)
+		})
+	}
+}
+
+func TestInjectiveTransferSuccessBurnsLockedLogical(t *testing.T) {
+	ctx, k, bank, _, _ := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.InjectiveBacking = "50"
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("injective-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+	msg := &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: injChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+		Receiver: "inj1receiver", TimeoutTimestamp: 1,
+	}
+	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	require.NoError(t, err)
+	pending, found := k.GetPendingForPacket(ctx, injChannel, response.Sequence)
+	require.True(t, found)
+	require.NoError(t, k.Settle(ctx, pending, true, canonicaltypes.AttributeValueSuccess))
+	require.Equal(t, "40", bank.amount(sender, types.UusdcDenom).String())
+	require.Equal(t, "0", bank.amount(canonicaltypes.ModuleAddress, types.UusdcDenom).String())
+	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking)
+	require.Equal(t, "0", k.GetLedger(ctx).PendingInjective)
+	require.Zero(t, k.PendingCount(ctx))
+	requireInvariant(t, ctx, k)
+}
+
+func TestInnerTransferErrorLeavesPendingAndLedgerUnchanged(t *testing.T) {
+	ctx, k, bank, transfer, _ := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.InjectiveBacking = "50"
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("injective-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+	transfer.err = fmt.Errorf("remote unavailable")
+	msg := &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: injChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+		Receiver: "inj1receiver", TimeoutTimestamp: 1,
+	}
+	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	require.ErrorContains(t, err, "remote unavailable")
+	require.Zero(t, k.PendingCount(ctx))
+	require.Equal(t, "50", k.GetLedger(ctx).InjectiveBacking)
+	require.Equal(t, "0", k.GetLedger(ctx).PendingInjective)
+}
+
+func TestCanonicalTransferRejectsPendingLimitBeforeMovement(t *testing.T) {
+	ctx, k, bank, _, _ := setupKeeper(t)
+	controls := activeControls()
+	controls.MaxPendingSettlements = 1
+	require.NoError(t, k.SetControls(ctx, controls))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.InjectiveBacking = "50"
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("injective-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+	msg := func() *transfertypes.MsgTransfer {
+		return &transfertypes.MsgTransfer{
+			SourcePort: transfertypes.PortID, SourceChannel: injChannel,
+			Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+			Receiver: "inj1receiver", TimeoutTimestamp: 1,
+		}
+	}
+	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg())
+	require.NoError(t, err)
+	require.Equal(t, uint32(1), k.PendingCount(ctx))
+	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking)
+	_, err = NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg())
+	require.ErrorIs(t, err, canonicaltypes.ErrPendingLimit)
+	require.Equal(t, uint32(1), k.PendingCount(ctx))
+	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking)
+}
+
+func TestNobleTransferSuccessRecordsPending(t *testing.T) {
+	ctx, k, bank, transfer, _ := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.NobleBacking = "50"
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("noble-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	msg := &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: nobleChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+		Receiver: "noble1receiver", TimeoutTimestamp: 1,
+	}
+	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	require.NoError(t, err)
+	require.Equal(t, types.UusdcDenom, transfer.seen.Token.Denom)
+	require.Equal(t, sender.String(), transfer.seen.Sender)
+	pending, found := k.GetPendingForPacket(ctx, nobleChannel, response.Sequence)
+	require.True(t, found)
+	require.Equal(t, canonicaltypes.Route_ROUTE_NOBLE, pending.Route)
+	require.Equal(t, "40", k.GetLedger(ctx).NobleBacking)
+	require.Equal(t, "10", k.GetLedger(ctx).PendingNoble)
+}
+
+func TestDuplicatePhysicalSequenceRollsBackPending(t *testing.T) {
+	ctx, k, bank, transfer, _ := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.InjectiveBacking = "50"
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("injective-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+	msg := &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: injChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+		Receiver: "inj1receiver", TimeoutTimestamp: 1,
+	}
+	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	require.NoError(t, err)
+	transfer.nextSequence = 7
+	_, err = NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	require.ErrorIs(t, err, canonicaltypes.ErrDuplicateSettlement)
+	require.Equal(t, uint32(1), k.PendingCount(ctx))
+	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking)
 }

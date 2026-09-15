@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,7 +114,6 @@ func (d TransferDecorator) transferInjective(
 		LogicalDenom:     controls.LogicalDenom,
 		PhysicalDenom:    controls.InjectiveDenom,
 		Amount:           amount.String(),
-		Memo:             msg.Memo,
 	}
 	if err := d.keeper.SetPending(cacheCtx, pending); err != nil {
 		return nil, err
@@ -162,7 +160,6 @@ func (d TransferDecorator) transferNoble(
 		LogicalDenom:     controls.LogicalDenom,
 		PhysicalDenom:    controls.LogicalDenom,
 		Amount:           amount.String(),
-		Memo:             msg.Memo,
 	}
 	if err := d.keeper.SetPending(cacheCtx, pending); err != nil {
 		return nil, err
@@ -173,97 +170,6 @@ func (d TransferDecorator) transferNoble(
 	emitPending(cacheCtx, pending)
 	write()
 	return response, nil
-}
-
-func (k Keeper) ExecuteBackingSwap(
-	ctx sdk.Context,
-	controller string,
-	amount math.Int,
-	sourcePort string,
-	timeoutTimestamp uint64,
-) (uint64, error) {
-	controls := k.GetControls(ctx)
-	if controls.Mode != types.Mode_MODE_GRADUAL {
-		return 0, types.ErrDisabled
-	}
-	if sourcePort != transfertypes.PortID {
-		return 0, fmt.Errorf("%w: backing swaps require the transfer port", types.ErrUnsupportedChannel)
-	}
-	if timeoutTimestamp <= uint64(ctx.BlockTime().UnixNano()) {
-		return 0, fmt.Errorf("%w: timeout must be in the future", types.ErrInvalidControls)
-	}
-	if err := validateTransferAmount(controls, amount); err != nil {
-		return 0, err
-	}
-	participant, ok := k.GetParticipant(ctx, controller)
-	if !ok {
-		return 0, types.ErrUnauthorized
-	}
-	funded, _ := types.ParseAmount(participant.Funded)
-	if funded.LT(amount) {
-		return 0, types.ErrInsufficientBacking
-	}
-	released, _ := types.ParseAmount(participant.Released)
-	maxRelease, _ := types.ParsePositiveAmount(participant.MaxRelease)
-	if released.Add(amount).GT(maxRelease) {
-		return 0, types.ErrMigrationCeiling
-	}
-	ledger := k.GetLedger(ctx)
-	var err error
-	ledger.NobleBacking, err = subtract(ledger.NobleBacking, amount)
-	if err != nil {
-		return 0, err
-	}
-	ledger.RestrictedFunding, err = subtract(ledger.RestrictedFunding, amount)
-	if err != nil {
-		return 0, err
-	}
-	ledger.PendingBackingSwap = add(ledger.PendingBackingSwap, amount)
-	participant.Funded = funded.Sub(amount).String()
-
-	cacheCtx, write := ctx.CacheContext()
-	coins := sdk.NewCoins(sdk.NewCoin(controls.LogicalDenom, amount))
-	if err := k.bankKeeper.MintCoins(cacheCtx, types.ModuleName, coins); err != nil {
-		return 0, err
-	}
-	msg := &transfertypes.MsgTransfer{
-		SourcePort:       sourcePort,
-		SourceChannel:    controls.NobleChannel,
-		Token:            sdk.NewCoin(controls.LogicalDenom, amount),
-		Sender:           types.ModuleAddress.String(),
-		Receiver:         participant.NobleRecipient,
-		TimeoutHeight:    clienttypes.ZeroHeight(),
-		TimeoutTimestamp: timeoutTimestamp,
-	}
-	authorizedCtx := cacheCtx.WithValue(transferAuthorizationKey{}, true)
-	response, err := k.TransferMsgServer().Transfer(sdk.WrapSDKContext(authorizedCtx), msg)
-	if err != nil {
-		return 0, err
-	}
-	pending := types.PendingSettlement{
-		Route:            types.Route_ROUTE_BACKING_SWAP,
-		SourceChannel:    controls.NobleChannel,
-		Sequence:         response.Sequence,
-		Sender:           types.ModuleAddress.String(),
-		LogicalReceiver:  participant.NobleRecipient,
-		PhysicalReceiver: participant.NobleRecipient,
-		LogicalDenom:     controls.LogicalDenom,
-		PhysicalDenom:    controls.LogicalDenom,
-		Amount:           amount.String(),
-		Controller:       controller,
-	}
-	if err := k.SetPending(cacheCtx, pending); err != nil {
-		return 0, err
-	}
-	if err := k.SetParticipant(cacheCtx, participant); err != nil {
-		return 0, err
-	}
-	if err := k.SetLedger(cacheCtx, ledger); err != nil {
-		return 0, err
-	}
-	emitPending(cacheCtx, pending)
-	write()
-	return response.Sequence, nil
 }
 
 func emitLogicalTransfer(ctx sdk.Context, msg *transfertypes.MsgTransfer) {

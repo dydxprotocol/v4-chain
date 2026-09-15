@@ -27,7 +27,7 @@ func (k Keeper) SendPacket(
 		if err := transfertypes.ModuleCdc.UnmarshalJSON(data, &packetData); err != nil {
 			return 0, err
 		}
-		if canonicalPacketData(controls, sourceChannel, packetData.Denom) {
+		if requiresCanonicalAuthorization(controls, sourceChannel, packetData.Denom, packetData.Sender) {
 			authorized, _ := ctx.Value(transferAuthorizationKey{}).(bool)
 			if !authorized {
 				return 0, fmt.Errorf("%w: channel %s", types.ErrBypass, sourceChannel)
@@ -39,15 +39,22 @@ func (k Keeper) SendPacket(
 	)
 }
 
-func canonicalPacketData(controls types.Controls, sourceChannel, denom string) bool {
+func requiresCanonicalAuthorization(controls types.Controls, sourceChannel, denom, sender string) bool {
 	nobleTrace := transfertypes.GetDenomPrefix(transfertypes.PortID, controls.NobleChannel) + controls.NoblePacketDenom
+	if (sourceChannel == controls.NobleChannel && denom == controls.NoblePacketDenom) || denom == nobleTrace {
+		return true
+	}
+	// Users may unwind or forward existing Injective USDC. Only module-sent
+	// Injective packets are canonical (decorator / backing-swap physical sends).
+	if sender != types.ModuleAddress.String() {
+		return false
+	}
 	injectiveTrace := transfertypes.GetDenomPrefix(
 		transfertypes.PortID,
 		controls.InjectiveChannel,
 	) + controls.InjectivePacketDenom
-	return (sourceChannel == controls.NobleChannel && denom == controls.NoblePacketDenom) ||
-		(sourceChannel == controls.InjectiveChannel && denom == controls.InjectivePacketDenom) ||
-		denom == nobleTrace || denom == injectiveTrace
+	return (sourceChannel == controls.InjectiveChannel && denom == controls.InjectivePacketDenom) ||
+		denom == injectiveTrace
 }
 
 func (k Keeper) WriteAcknowledgement(

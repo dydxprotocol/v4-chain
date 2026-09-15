@@ -156,15 +156,8 @@ func (im IBCMiddleware) receiveInjective(
 	if err != nil || amount.GT(maxTransfer) {
 		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
 	}
-	memo, isFunding, err := types.ParseFundingMemo(data.Memo)
+	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
 	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(err)
-	}
-	if !isFunding {
-		if _, err := sdk.AccAddressFromBech32(data.Receiver); err != nil {
-			return channeltypes.NewErrorAcknowledgement(err)
-		}
-	} else if err := im.validateFunding(ctx, data.Receiver, memo, controls); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 
@@ -176,57 +169,22 @@ func (im IBCMiddleware) receiveInjective(
 	if ack == nil || !ack.Success() {
 		return ack
 	}
-	ledger := im.keeper.GetLedger(ctx)
-	if isFunding {
-		participant, _ := im.keeper.GetParticipant(ctx, memo.Controller)
-		participant.Funded = addLedger(participant.Funded, amount)
-		ledger.RestrictedFunding = addLedger(ledger.RestrictedFunding, amount)
-		if err := im.keeper.SetParticipant(ctx, participant); err != nil {
-			return channeltypes.NewErrorAcknowledgement(err)
-		}
-	} else {
-		receiver, _ := sdk.AccAddressFromBech32(data.Receiver)
-		coins := sdk.NewCoins(sdk.NewCoin(controls.LogicalDenom, amount))
-		if err := im.keeper.MintLogicalAndSend(ctx, receiver, coins); err != nil {
-			return channeltypes.NewErrorAcknowledgement(err)
-		}
-		ledger.InjectiveBacking = addLedger(ledger.InjectiveBacking, amount)
+	coins := sdk.NewCoins(sdk.NewCoin(controls.LogicalDenom, amount))
+	if err := im.keeper.MintLogicalAndSend(ctx, receiver, coins); err != nil {
+		return channeltypes.NewErrorAcknowledgement(err)
 	}
+	ledger := im.keeper.GetLedger(ctx)
+	ledger.InjectiveBacking = addLedger(ledger.InjectiveBacking, amount)
 	if err := im.keeper.SetLedger(ctx, ledger); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
-	event := sdk.NewEvent(
-		types.EventTypeBackingFunding,
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeInbound,
 		sdk.NewAttribute(types.AttributeKeyPhysicalDenom, controls.InjectiveDenom),
 		sdk.NewAttribute(types.AttributeKeyLogicalDenom, controls.LogicalDenom),
 		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
-	)
-	if isFunding {
-		event = event.AppendAttributes(
-			sdk.NewAttribute(types.AttributeKeyController, memo.Controller),
-			sdk.NewAttribute(types.AttributeKeyNobleRecipient, memo.NobleRecipient),
-		)
-	}
-	ctx.EventManager().EmitEvent(event)
+	))
 	return ack
-}
-
-func (im IBCMiddleware) validateFunding(
-	ctx sdk.Context,
-	receiver string,
-	memo types.FundingMemo,
-	controls types.Controls,
-) error {
-	if receiver != types.ModuleAddress.String() ||
-		memo.Version != controls.MemoVersion ||
-		memo.Action != types.FundBackingSwapAction {
-		return types.ErrInvalidFundingMemo
-	}
-	participant, ok := im.keeper.GetParticipant(ctx, memo.Controller)
-	if !ok || participant.NobleRecipient != memo.NobleRecipient {
-		return types.ErrUnauthorized
-	}
-	return nil
 }
 
 func (im IBCMiddleware) OnAcknowledgementPacket(
@@ -338,7 +296,7 @@ func validatePendingPacket(
 		return fmt.Errorf("pending settlement denom does not match packet")
 	}
 	expectedSender := pending.Sender
-	if pending.Route == types.Route_ROUTE_INJECTIVE || pending.Route == types.Route_ROUTE_BACKING_SWAP {
+	if pending.Route == types.Route_ROUTE_INJECTIVE {
 		expectedSender = types.ModuleAddress.String()
 	}
 	if data.Sender != expectedSender {

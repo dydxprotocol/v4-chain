@@ -18,7 +18,7 @@ func GetQueryCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	cmd.AddCommand(queryStateCmd(), queryParticipantsCmd(), queryPendingCmd())
+	cmd.AddCommand(queryStateCmd(), queryPendingCmd())
 	return cmd
 }
 
@@ -29,20 +29,6 @@ func queryStateCmd() *cobra.Command {
 		cmd *cobra.Command,
 	) error {
 		response, err := queryClient.State(cmd.Context(), &types.QueryStateRequest{})
-		if err != nil {
-			return err
-		}
-		return clientCtx.PrintProto(response)
-	})
-}
-
-func queryParticipantsCmd() *cobra.Command {
-	return queryCmd("participants", "query backing-swap participants", func(
-		clientCtx client.Context,
-		queryClient types.QueryClient,
-		cmd *cobra.Command,
-	) error {
-		response, err := queryClient.Participants(cmd.Context(), &types.QueryParticipantsRequest{})
 		if err != nil {
 			return err
 		}

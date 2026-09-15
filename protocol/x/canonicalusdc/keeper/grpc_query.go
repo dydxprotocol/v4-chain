@@ -20,18 +20,6 @@ func (k Keeper) State(ctx context.Context, request *types.QueryStateRequest) (*t
 	return &types.QueryStateResponse{Controls: k.GetControls(sdkCtx), Ledger: k.GetLedger(sdkCtx)}, nil
 }
 
-func (k Keeper) Participants(
-	ctx context.Context,
-	request *types.QueryParticipantsRequest,
-) (*types.QueryParticipantsResponse, error) {
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	return &types.QueryParticipantsResponse{
-		Participants: k.GetAllParticipants(sdk.UnwrapSDKContext(ctx)),
-	}, nil
-}
-
 func (k Keeper) PendingSettlements(
 	ctx context.Context,
 	request *types.QueryPendingSettlementsRequest,

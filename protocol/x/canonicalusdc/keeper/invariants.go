@@ -13,10 +13,8 @@ type backingAmounts struct {
 	noble            math.Int
 	injective        math.Int
 	legacyDownstream math.Int
-	restricted       math.Int
 	pendingInjective math.Int
 	pendingNoble     math.Int
-	pendingSwap      math.Int
 }
 
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
@@ -33,13 +31,12 @@ func BackingInvariant(keeper Keeper) sdk.Invariant {
 		if err != nil {
 			return err.Error(), true
 		}
-		physicalRequired := amounts.injective.Add(amounts.restricted)
 		physicalBalance := keeper.bankKeeper.GetBalance(ctx, types.ModuleAddress, controls.InjectiveDenom).Amount
-		if physicalBalance.LT(physicalRequired) {
+		if physicalBalance.LT(amounts.injective) {
 			return fmt.Sprintf(
 				"canonical USDC physical reserve %s is below accounted reserve %s",
 				physicalBalance,
-				physicalRequired,
+				amounts.injective,
 			), true
 		}
 		logicalBalance := keeper.bankKeeper.GetBalance(ctx, types.ModuleAddress, controls.LogicalDenom).Amount
@@ -51,7 +48,7 @@ func BackingInvariant(keeper Keeper) sdk.Invariant {
 			), true
 		}
 		logicalSupply := keeper.bankKeeper.GetSupply(ctx, controls.LogicalDenom).Amount
-		accountedBacking := amounts.noble.Add(amounts.injective).Add(amounts.pendingInjective).Add(amounts.pendingSwap)
+		accountedBacking := amounts.noble.Add(amounts.injective).Add(amounts.pendingInjective)
 		if !logicalSupply.Equal(accountedBacking) {
 			return fmt.Sprintf(
 				"canonical USDC logical supply %s does not equal accounted backing %s",
@@ -67,9 +64,6 @@ func BackingInvariant(keeper Keeper) sdk.Invariant {
 			return "canonical USDC pending count does not match stored settlements", true
 		}
 		if reason := checkPendingTotals(amounts, pending); reason != "" {
-			return reason, true
-		}
-		if reason := checkParticipantFunding(keeper.GetAllParticipants(ctx), amounts.restricted); reason != "" {
 			return reason, true
 		}
 		return "", false
@@ -91,10 +85,6 @@ func parseBackingAmounts(ledger types.Ledger) (backingAmounts, error) {
 	if err != nil {
 		return backingAmounts{}, err
 	}
-	parsed.restricted, err = types.ParseAmount(ledger.RestrictedFunding)
-	if err != nil {
-		return backingAmounts{}, err
-	}
 	parsed.pendingInjective, err = types.ParseAmount(ledger.PendingInjective)
 	if err != nil {
 		return backingAmounts{}, err
@@ -103,18 +93,13 @@ func parseBackingAmounts(ledger types.Ledger) (backingAmounts, error) {
 	if err != nil {
 		return backingAmounts{}, err
 	}
-	parsed.pendingSwap, err = types.ParseAmount(ledger.PendingBackingSwap)
-	if err != nil {
-		return backingAmounts{}, err
-	}
 	return parsed, nil
 }
 
 func checkPendingTotals(amounts backingAmounts, pending []types.PendingSettlement) string {
 	totals := map[types.Route]math.Int{
-		types.Route_ROUTE_INJECTIVE:    math.ZeroInt(),
-		types.Route_ROUTE_NOBLE:        math.ZeroInt(),
-		types.Route_ROUTE_BACKING_SWAP: math.ZeroInt(),
+		types.Route_ROUTE_INJECTIVE: math.ZeroInt(),
+		types.Route_ROUTE_NOBLE:     math.ZeroInt(),
 	}
 	for _, settlement := range pending {
 		amount, err := types.ParsePositiveAmount(settlement.Amount)
@@ -124,24 +109,8 @@ func checkPendingTotals(amounts backingAmounts, pending []types.PendingSettlemen
 		totals[settlement.Route] = totals[settlement.Route].Add(amount)
 	}
 	if !totals[types.Route_ROUTE_INJECTIVE].Equal(amounts.pendingInjective) ||
-		!totals[types.Route_ROUTE_NOBLE].Equal(amounts.pendingNoble) ||
-		!totals[types.Route_ROUTE_BACKING_SWAP].Equal(amounts.pendingSwap) {
+		!totals[types.Route_ROUTE_NOBLE].Equal(amounts.pendingNoble) {
 		return "canonical USDC pending settlement totals do not match the backing ledger"
-	}
-	return ""
-}
-
-func checkParticipantFunding(participants []types.Participant, restricted math.Int) string {
-	total := math.ZeroInt()
-	for _, participant := range participants {
-		funded, err := types.ParseAmount(participant.Funded)
-		if err != nil {
-			return "canonical USDC participant has an invalid funded amount"
-		}
-		total = total.Add(funded)
-	}
-	if !total.Equal(restricted) {
-		return "canonical USDC participant funding does not match restricted backing"
 	}
 	return ""
 }

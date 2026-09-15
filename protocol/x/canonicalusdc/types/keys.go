@@ -18,22 +18,13 @@ const (
 	PendingCountKey  = "PendingCount"
 	CompletedNextKey = "CompletedNext"
 
-	ParticipantKeyPrefix = "Participant:"
-	PendingKeyPrefix     = "Pending:"
-	CompletedKeyPrefix   = "Completed:"
-	CompletedSlotPrefix  = "CompletedSlot:"
+	PendingKeyPrefix    = "Pending:"
+	CompletedKeyPrefix  = "Completed:"
+	CompletedSlotPrefix = "CompletedSlot:"
 
-	MaxParticipants       = 1_024
-	HardMaxPending        = 100_000
-	HardMaxCompleted      = 100_000
-	MaxMemoLength         = 32_768
-	SupportedMemoVersion  = 1
-	FundBackingSwapAction = "fund_backing_swap"
+	HardMaxPending   = 100_000
+	HardMaxCompleted = 100_000
 )
-
-func ParticipantKey(controller string) []byte {
-	return []byte(controller)
-}
 
 // PendingKey is collision-free because validated channel identifiers cannot
 // contain NUL. Route is included so state is explicitly keyed by
