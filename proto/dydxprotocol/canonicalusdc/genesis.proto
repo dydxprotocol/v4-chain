@@ -10,8 +10,6 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/t
 message GenesisState {
   Controls controls = 1 [ (gogoproto.nullable) = false ];
   Ledger ledger = 2 [ (gogoproto.nullable) = false ];
-  reserved 3;
-  reserved "participants";
-  repeated PendingSettlement pending_settlements = 4
+  repeated PendingSettlement pending_settlements = 3
       [ (gogoproto.nullable) = false ];
 }
