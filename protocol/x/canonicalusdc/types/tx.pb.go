@@ -29,210 +29,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgExecuteBackingSwap requests a bounded Noble release.
-type MsgExecuteBackingSwap struct {
-	Controller       string `protobuf:"bytes,1,opt,name=controller,proto3" json:"controller,omitempty"`
-	Amount           string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	SourcePort       string `protobuf:"bytes,3,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty"`
-	TimeoutTimestamp uint64 `protobuf:"varint,4,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
-}
-
-func (m *MsgExecuteBackingSwap) Reset()         { *m = MsgExecuteBackingSwap{} }
-func (m *MsgExecuteBackingSwap) String() string { return proto.CompactTextString(m) }
-func (*MsgExecuteBackingSwap) ProtoMessage()    {}
-func (*MsgExecuteBackingSwap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{0}
-}
-func (m *MsgExecuteBackingSwap) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgExecuteBackingSwap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgExecuteBackingSwap.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgExecuteBackingSwap) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExecuteBackingSwap.Merge(m, src)
-}
-func (m *MsgExecuteBackingSwap) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgExecuteBackingSwap) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExecuteBackingSwap.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgExecuteBackingSwap proto.InternalMessageInfo
-
-func (m *MsgExecuteBackingSwap) GetController() string {
-	if m != nil {
-		return m.Controller
-	}
-	return ""
-}
-
-func (m *MsgExecuteBackingSwap) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-func (m *MsgExecuteBackingSwap) GetSourcePort() string {
-	if m != nil {
-		return m.SourcePort
-	}
-	return ""
-}
-
-func (m *MsgExecuteBackingSwap) GetTimeoutTimestamp() uint64 {
-	if m != nil {
-		return m.TimeoutTimestamp
-	}
-	return 0
-}
-
-// MsgExecuteBackingSwapResponse returns the emitted packet sequence.
-type MsgExecuteBackingSwapResponse struct {
-	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
-}
-
-func (m *MsgExecuteBackingSwapResponse) Reset()         { *m = MsgExecuteBackingSwapResponse{} }
-func (m *MsgExecuteBackingSwapResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgExecuteBackingSwapResponse) ProtoMessage()    {}
-func (*MsgExecuteBackingSwapResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{1}
-}
-func (m *MsgExecuteBackingSwapResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgExecuteBackingSwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgExecuteBackingSwapResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgExecuteBackingSwapResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExecuteBackingSwapResponse.Merge(m, src)
-}
-func (m *MsgExecuteBackingSwapResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgExecuteBackingSwapResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExecuteBackingSwapResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgExecuteBackingSwapResponse proto.InternalMessageInfo
-
-func (m *MsgExecuteBackingSwapResponse) GetSequence() uint64 {
-	if m != nil {
-		return m.Sequence
-	}
-	return 0
-}
-
-// MsgCancelBackingSwap cancels uncommitted restricted backing.
-type MsgCancelBackingSwap struct {
-	Controller string `protobuf:"bytes,1,opt,name=controller,proto3" json:"controller,omitempty"`
-	Amount     string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (m *MsgCancelBackingSwap) Reset()         { *m = MsgCancelBackingSwap{} }
-func (m *MsgCancelBackingSwap) String() string { return proto.CompactTextString(m) }
-func (*MsgCancelBackingSwap) ProtoMessage()    {}
-func (*MsgCancelBackingSwap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{2}
-}
-func (m *MsgCancelBackingSwap) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgCancelBackingSwap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgCancelBackingSwap.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgCancelBackingSwap) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCancelBackingSwap.Merge(m, src)
-}
-func (m *MsgCancelBackingSwap) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgCancelBackingSwap) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCancelBackingSwap.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgCancelBackingSwap proto.InternalMessageInfo
-
-func (m *MsgCancelBackingSwap) GetController() string {
-	if m != nil {
-		return m.Controller
-	}
-	return ""
-}
-
-func (m *MsgCancelBackingSwap) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-// MsgCancelBackingSwapResponse is the cancellation response.
-type MsgCancelBackingSwapResponse struct {
-}
-
-func (m *MsgCancelBackingSwapResponse) Reset()         { *m = MsgCancelBackingSwapResponse{} }
-func (m *MsgCancelBackingSwapResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgCancelBackingSwapResponse) ProtoMessage()    {}
-func (*MsgCancelBackingSwapResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{3}
-}
-func (m *MsgCancelBackingSwapResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgCancelBackingSwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgCancelBackingSwapResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgCancelBackingSwapResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCancelBackingSwapResponse.Merge(m, src)
-}
-func (m *MsgCancelBackingSwapResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgCancelBackingSwapResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCancelBackingSwapResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgCancelBackingSwapResponse proto.InternalMessageInfo
-
 // MsgUpdateControls updates all controls atomically.
 type MsgUpdateControls struct {
 	Authority string   `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -243,7 +39,7 @@ func (m *MsgUpdateControls) Reset()         { *m = MsgUpdateControls{} }
 func (m *MsgUpdateControls) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateControls) ProtoMessage()    {}
 func (*MsgUpdateControls) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{4}
+	return fileDescriptor_c609688058ead510, []int{0}
 }
 func (m *MsgUpdateControls) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -294,7 +90,7 @@ func (m *MsgUpdateControlsResponse) Reset()         { *m = MsgUpdateControlsResp
 func (m *MsgUpdateControlsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateControlsResponse) ProtoMessage()    {}
 func (*MsgUpdateControlsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{5}
+	return fileDescriptor_c609688058ead510, []int{1}
 }
 func (m *MsgUpdateControlsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -323,105 +119,9 @@ func (m *MsgUpdateControlsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateControlsResponse proto.InternalMessageInfo
 
-// MsgUpdateParticipants replaces the complete participant allowlist.
-type MsgUpdateParticipants struct {
-	Authority    string        `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	Participants []Participant `protobuf:"bytes,2,rep,name=participants,proto3" json:"participants"`
-}
-
-func (m *MsgUpdateParticipants) Reset()         { *m = MsgUpdateParticipants{} }
-func (m *MsgUpdateParticipants) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateParticipants) ProtoMessage()    {}
-func (*MsgUpdateParticipants) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{6}
-}
-func (m *MsgUpdateParticipants) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUpdateParticipants) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUpdateParticipants.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUpdateParticipants) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateParticipants.Merge(m, src)
-}
-func (m *MsgUpdateParticipants) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUpdateParticipants) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateParticipants.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUpdateParticipants proto.InternalMessageInfo
-
-func (m *MsgUpdateParticipants) GetAuthority() string {
-	if m != nil {
-		return m.Authority
-	}
-	return ""
-}
-
-func (m *MsgUpdateParticipants) GetParticipants() []Participant {
-	if m != nil {
-		return m.Participants
-	}
-	return nil
-}
-
-// MsgUpdateParticipantsResponse is the participant update response.
-type MsgUpdateParticipantsResponse struct {
-}
-
-func (m *MsgUpdateParticipantsResponse) Reset()         { *m = MsgUpdateParticipantsResponse{} }
-func (m *MsgUpdateParticipantsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateParticipantsResponse) ProtoMessage()    {}
-func (*MsgUpdateParticipantsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c609688058ead510, []int{7}
-}
-func (m *MsgUpdateParticipantsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUpdateParticipantsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUpdateParticipantsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUpdateParticipantsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateParticipantsResponse.Merge(m, src)
-}
-func (m *MsgUpdateParticipantsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUpdateParticipantsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateParticipantsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUpdateParticipantsResponse proto.InternalMessageInfo
-
 func init() {
-	proto.RegisterType((*MsgExecuteBackingSwap)(nil), "dydxprotocol.canonicalusdc.MsgExecuteBackingSwap")
-	proto.RegisterType((*MsgExecuteBackingSwapResponse)(nil), "dydxprotocol.canonicalusdc.MsgExecuteBackingSwapResponse")
-	proto.RegisterType((*MsgCancelBackingSwap)(nil), "dydxprotocol.canonicalusdc.MsgCancelBackingSwap")
-	proto.RegisterType((*MsgCancelBackingSwapResponse)(nil), "dydxprotocol.canonicalusdc.MsgCancelBackingSwapResponse")
 	proto.RegisterType((*MsgUpdateControls)(nil), "dydxprotocol.canonicalusdc.MsgUpdateControls")
 	proto.RegisterType((*MsgUpdateControlsResponse)(nil), "dydxprotocol.canonicalusdc.MsgUpdateControlsResponse")
-	proto.RegisterType((*MsgUpdateParticipants)(nil), "dydxprotocol.canonicalusdc.MsgUpdateParticipants")
-	proto.RegisterType((*MsgUpdateParticipantsResponse)(nil), "dydxprotocol.canonicalusdc.MsgUpdateParticipantsResponse")
 }
 
 func init() {
@@ -429,42 +129,26 @@ func init() {
 }
 
 var fileDescriptor_c609688058ead510 = []byte{
-	// 556 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x3f, 0x6f, 0xd3, 0x40,
-	0x18, 0xc6, 0xe3, 0x26, 0xaa, 0xda, 0x37, 0xa8, 0x90, 0x53, 0x81, 0x60, 0x8a, 0x13, 0x05, 0x24,
-	0x22, 0x50, 0x63, 0x12, 0x40, 0x82, 0x32, 0x20, 0xa5, 0x82, 0x2d, 0x52, 0x09, 0x30, 0xc0, 0x12,
-	0x5d, 0x2f, 0x27, 0xc7, 0xc2, 0xbe, 0x33, 0xbe, 0x73, 0x48, 0x26, 0xa4, 0x4e, 0xb0, 0x31, 0xf2,
-	0x29, 0x10, 0x1f, 0xa3, 0x63, 0x47, 0x26, 0x84, 0x92, 0x81, 0xaf, 0x81, 0xfc, 0x27, 0xae, 0x53,
-	0xbb, 0x09, 0x91, 0x3a, 0xd9, 0xf7, 0xbe, 0xef, 0xf3, 0xbc, 0x3f, 0x5b, 0x8f, 0x0e, 0x6e, 0xf7,
-	0xc7, 0xfd, 0x91, 0xe3, 0x72, 0xc9, 0x09, 0xb7, 0x74, 0x82, 0x19, 0x67, 0x26, 0xc1, 0x96, 0x27,
-	0xfa, 0x44, 0x97, 0xa3, 0x46, 0xd0, 0x41, 0x6a, 0x72, 0xa8, 0x31, 0x37, 0xa4, 0x5e, 0x27, 0x5c,
-	0xd8, 0x5c, 0xe8, 0xb6, 0x30, 0xf4, 0x61, 0xd3, 0x7f, 0x84, 0x22, 0x55, 0x5f, 0xe0, 0x1c, 0x9f,
-	0x7a, 0xfe, 0x31, 0x12, 0x6c, 0x1b, 0xdc, 0xe0, 0xc1, 0xab, 0xee, 0xbf, 0x85, 0xd5, 0xda, 0x0f,
-	0x05, 0xae, 0x76, 0x84, 0xf1, 0x62, 0x44, 0x89, 0x27, 0x69, 0x1b, 0x93, 0x0f, 0x26, 0x33, 0x5e,
-	0x7f, 0xc2, 0x0e, 0xd2, 0x00, 0x08, 0x67, 0xd2, 0xe5, 0x96, 0x45, 0xdd, 0xb2, 0x52, 0x55, 0xea,
-	0x9b, 0xdd, 0x44, 0x05, 0x5d, 0x83, 0x75, 0x6c, 0x73, 0x8f, 0xc9, 0xf2, 0x5a, 0xd0, 0x8b, 0x4e,
-	0xa8, 0x02, 0x45, 0xc1, 0x3d, 0x97, 0xd0, 0x9e, 0xc3, 0x5d, 0x59, 0xce, 0x87, 0xc2, 0xb0, 0x74,
-	0xc0, 0x5d, 0x89, 0xee, 0x43, 0x49, 0x9a, 0x36, 0xe5, 0x9e, 0xec, 0xf9, 0x4f, 0x21, 0xb1, 0xed,
-	0x94, 0x0b, 0x55, 0xa5, 0x5e, 0xe8, 0x5e, 0x89, 0x1a, 0x6f, 0x66, 0xf5, 0xbd, 0xcb, 0x47, 0x7f,
-	0x7f, 0xde, 0x4b, 0xac, 0xad, 0x3d, 0x83, 0x5b, 0x99, 0xbc, 0x5d, 0x2a, 0x1c, 0xce, 0x04, 0x45,
-	0x2a, 0x6c, 0x08, 0xfa, 0xd1, 0xa3, 0x8c, 0xd0, 0x80, 0xba, 0xd0, 0x8d, 0xcf, 0xb5, 0x1e, 0x6c,
-	0x77, 0x84, 0xb1, 0x8f, 0x19, 0xa1, 0xd6, 0x05, 0x7c, 0x6b, 0x9a, 0x4e, 0x83, 0x9d, 0xac, 0x05,
-	0x33, 0xb8, 0xda, 0x57, 0x05, 0x4a, 0x1d, 0x61, 0xbc, 0x75, 0xfa, 0x58, 0xd2, 0xfd, 0x50, 0x27,
-	0xd0, 0x0e, 0x6c, 0x62, 0x4f, 0x0e, 0xb8, 0x6b, 0xca, 0x71, 0xb4, 0xfd, 0xb4, 0x80, 0x5e, 0xc2,
-	0x46, 0xb4, 0x41, 0x04, 0xeb, 0x8b, 0xad, 0x3b, 0x8d, 0xf3, 0x13, 0xd3, 0x98, 0xb9, 0xb6, 0x0b,
-	0xc7, 0xbf, 0x2b, 0xb9, 0x6e, 0xac, 0xdd, 0xdb, 0xf2, 0x61, 0x4f, 0x7d, 0x6b, 0x37, 0xe1, 0x46,
-	0x0a, 0x25, 0x06, 0xfd, 0x1e, 0xe6, 0x22, 0xec, 0x1e, 0x60, 0x57, 0x9a, 0xc4, 0x74, 0x30, 0x93,
-	0xcb, 0x60, 0x5f, 0xc1, 0x25, 0x27, 0x31, 0x5d, 0x5e, 0xab, 0xe6, 0xeb, 0xc5, 0xd6, 0xdd, 0x45,
-	0xc0, 0x09, 0xf7, 0x88, 0x79, 0xce, 0x22, 0xc5, 0x5d, 0x09, 0x12, 0x90, 0x26, 0x9b, 0xb1, 0xb7,
-	0xbe, 0x14, 0x20, 0xdf, 0x11, 0x06, 0x3a, 0x52, 0x00, 0x65, 0x04, 0xbb, 0xb9, 0x08, 0x26, 0x33,
-	0x5b, 0xea, 0xd3, 0x95, 0x25, 0x71, 0x1c, 0x3f, 0x43, 0x29, 0x9d, 0xb7, 0x07, 0x4b, 0xfc, 0x52,
-	0x0a, 0xf5, 0xc9, 0xaa, 0x8a, 0x18, 0x60, 0x08, 0x5b, 0x67, 0xe2, 0xb6, 0xbb, 0xc4, 0x6b, 0x7e,
-	0x5c, 0x7d, 0xbc, 0xd2, 0x78, 0xbc, 0xd7, 0xff, 0xfb, 0x19, 0xf1, 0x69, 0xfe, 0x97, 0x5b, 0x52,
-	0xb2, 0xf4, 0xef, 0x9f, 0x1f, 0x85, 0xf6, 0xbb, 0xe3, 0x89, 0xa6, 0x9c, 0x4c, 0x34, 0xe5, 0xcf,
-	0x44, 0x53, 0xbe, 0x4d, 0xb5, 0xdc, 0xc9, 0x54, 0xcb, 0xfd, 0x9a, 0x6a, 0xb9, 0xf7, 0xcf, 0x0d,
-	0x53, 0x0e, 0xbc, 0xc3, 0x06, 0xe1, 0xf6, 0xfc, 0x55, 0x3a, 0x7c, 0xb4, 0x4b, 0x06, 0xd8, 0x64,
-	0x7a, 0x5c, 0x19, 0x9d, 0xbd, 0xb8, 0xc7, 0x0e, 0x15, 0x87, 0xeb, 0x41, 0xff, 0xe1, 0xbf, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x5a, 0x89, 0xfd, 0x91, 0xe3, 0x05, 0x00, 0x00,
+	// 294 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4e, 0xa9, 0x4c, 0xa9,
+	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x4e, 0xcc, 0xcb, 0xcf, 0xcb, 0x4c,
+	0x4e, 0xcc, 0x29, 0x2d, 0x4e, 0x49, 0xd6, 0x2f, 0xa9, 0xd0, 0x03, 0xcb, 0x08, 0x49, 0x21, 0x2b,
+	0xd2, 0x43, 0x51, 0x24, 0x25, 0x9e, 0x9c, 0x5f, 0x9c, 0x9b, 0x5f, 0xac, 0x9f, 0x5b, 0x9c, 0xae,
+	0x5f, 0x66, 0x08, 0xa2, 0x20, 0x9a, 0xa4, 0xf4, 0xf1, 0x98, 0x0c, 0xe7, 0xc5, 0x83, 0xb8, 0x50,
+	0x0d, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x60, 0xa6, 0x3e, 0x88, 0x05, 0x11, 0x55, 0xea, 0x64, 0xe4,
+	0x12, 0xf4, 0x2d, 0x4e, 0x0f, 0x2d, 0x48, 0x49, 0x2c, 0x49, 0x75, 0xce, 0xcf, 0x2b, 0x29, 0xca,
+	0xcf, 0x29, 0x16, 0x92, 0xe1, 0xe2, 0x4c, 0x2c, 0x2d, 0xc9, 0xc8, 0x2f, 0xca, 0x2c, 0xa9, 0x94,
+	0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x42, 0x08, 0x08, 0xb9, 0x71, 0x71, 0x24, 0x43, 0x55, 0x4a,
+	0x30, 0x29, 0x30, 0x6a, 0x70, 0x1b, 0xa9, 0xe8, 0xe1, 0xf6, 0x82, 0x1e, 0xcc, 0x54, 0x27, 0x96,
+	0x13, 0xf7, 0xe4, 0x19, 0x82, 0xe0, 0x7a, 0xad, 0xf8, 0x9a, 0x9e, 0x6f, 0xd0, 0x42, 0x98, 0xab,
+	0x24, 0xcd, 0x25, 0x89, 0xe1, 0x94, 0xa0, 0xd4, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0xa3, 0x5a,
+	0x2e, 0x66, 0xdf, 0xe2, 0x74, 0xa1, 0x32, 0x2e, 0x3e, 0x34, 0xb7, 0xea, 0xe2, 0xb3, 0x1b, 0xc3,
+	0x3c, 0x29, 0x53, 0x92, 0x94, 0xc3, 0xac, 0x77, 0x8a, 0x3c, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23,
+	0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6,
+	0x63, 0x39, 0x86, 0x28, 0xfb, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0xd4,
+	0x38, 0x29, 0x33, 0xd1, 0x4d, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x87, 0x8b, 0x54, 0xa0, 0xa7, 0x80,
+	0xca, 0x82, 0xd4, 0xe2, 0x24, 0x36, 0xb0, 0xbc, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x3a, 0x9c,
+	0x6b, 0x46, 0x2c, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -479,16 +163,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// ExecuteBackingSwap releases Noble USDC for previously funded Injective
-	// backing.
-	ExecuteBackingSwap(ctx context.Context, in *MsgExecuteBackingSwap, opts ...grpc.CallOption) (*MsgExecuteBackingSwapResponse, error)
-	// CancelBackingSwap returns uncommitted restricted Injective funding to its
-	// controller on dYdX Chain.
-	CancelBackingSwap(ctx context.Context, in *MsgCancelBackingSwap, opts ...grpc.CallOption) (*MsgCancelBackingSwapResponse, error)
 	// UpdateControls updates canonical routing controls.
 	UpdateControls(ctx context.Context, in *MsgUpdateControls, opts ...grpc.CallOption) (*MsgUpdateControlsResponse, error)
-	// UpdateParticipants replaces the bounded participant allowlist.
-	UpdateParticipants(ctx context.Context, in *MsgUpdateParticipants, opts ...grpc.CallOption) (*MsgUpdateParticipantsResponse, error)
 }
 
 type msgClient struct {
@@ -497,24 +173,6 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
-}
-
-func (c *msgClient) ExecuteBackingSwap(ctx context.Context, in *MsgExecuteBackingSwap, opts ...grpc.CallOption) (*MsgExecuteBackingSwapResponse, error) {
-	out := new(MsgExecuteBackingSwapResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.canonicalusdc.Msg/ExecuteBackingSwap", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) CancelBackingSwap(ctx context.Context, in *MsgCancelBackingSwap, opts ...grpc.CallOption) (*MsgCancelBackingSwapResponse, error) {
-	out := new(MsgCancelBackingSwapResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.canonicalusdc.Msg/CancelBackingSwap", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *msgClient) UpdateControls(ctx context.Context, in *MsgUpdateControls, opts ...grpc.CallOption) (*MsgUpdateControlsResponse, error) {
@@ -526,84 +184,22 @@ func (c *msgClient) UpdateControls(ctx context.Context, in *MsgUpdateControls, o
 	return out, nil
 }
 
-func (c *msgClient) UpdateParticipants(ctx context.Context, in *MsgUpdateParticipants, opts ...grpc.CallOption) (*MsgUpdateParticipantsResponse, error) {
-	out := new(MsgUpdateParticipantsResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.canonicalusdc.Msg/UpdateParticipants", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// ExecuteBackingSwap releases Noble USDC for previously funded Injective
-	// backing.
-	ExecuteBackingSwap(context.Context, *MsgExecuteBackingSwap) (*MsgExecuteBackingSwapResponse, error)
-	// CancelBackingSwap returns uncommitted restricted Injective funding to its
-	// controller on dYdX Chain.
-	CancelBackingSwap(context.Context, *MsgCancelBackingSwap) (*MsgCancelBackingSwapResponse, error)
 	// UpdateControls updates canonical routing controls.
 	UpdateControls(context.Context, *MsgUpdateControls) (*MsgUpdateControlsResponse, error)
-	// UpdateParticipants replaces the bounded participant allowlist.
-	UpdateParticipants(context.Context, *MsgUpdateParticipants) (*MsgUpdateParticipantsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) ExecuteBackingSwap(ctx context.Context, req *MsgExecuteBackingSwap) (*MsgExecuteBackingSwapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExecuteBackingSwap not implemented")
-}
-func (*UnimplementedMsgServer) CancelBackingSwap(ctx context.Context, req *MsgCancelBackingSwap) (*MsgCancelBackingSwapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CancelBackingSwap not implemented")
-}
 func (*UnimplementedMsgServer) UpdateControls(ctx context.Context, req *MsgUpdateControls) (*MsgUpdateControlsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateControls not implemented")
-}
-func (*UnimplementedMsgServer) UpdateParticipants(ctx context.Context, req *MsgUpdateParticipants) (*MsgUpdateParticipantsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateParticipants not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_ExecuteBackingSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExecuteBackingSwap)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).ExecuteBackingSwap(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/dydxprotocol.canonicalusdc.Msg/ExecuteBackingSwap",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExecuteBackingSwap(ctx, req.(*MsgExecuteBackingSwap))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_CancelBackingSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCancelBackingSwap)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).CancelBackingSwap(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/dydxprotocol.canonicalusdc.Msg/CancelBackingSwap",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CancelBackingSwap(ctx, req.(*MsgCancelBackingSwap))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_UpdateControls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -624,185 +220,18 @@ func _Msg_UpdateControls_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateParticipants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateParticipants)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UpdateParticipants(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/dydxprotocol.canonicalusdc.Msg/UpdateParticipants",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateParticipants(ctx, req.(*MsgUpdateParticipants))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.canonicalusdc.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ExecuteBackingSwap",
-			Handler:    _Msg_ExecuteBackingSwap_Handler,
-		},
-		{
-			MethodName: "CancelBackingSwap",
-			Handler:    _Msg_CancelBackingSwap_Handler,
-		},
-		{
 			MethodName: "UpdateControls",
 			Handler:    _Msg_UpdateControls_Handler,
-		},
-		{
-			MethodName: "UpdateParticipants",
-			Handler:    _Msg_UpdateParticipants_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/canonicalusdc/tx.proto",
-}
-
-func (m *MsgExecuteBackingSwap) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgExecuteBackingSwap) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgExecuteBackingSwap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.TimeoutTimestamp != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.TimeoutTimestamp))
-		i--
-		dAtA[i] = 0x20
-	}
-	if len(m.SourcePort) > 0 {
-		i -= len(m.SourcePort)
-		copy(dAtA[i:], m.SourcePort)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.SourcePort)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Controller) > 0 {
-		i -= len(m.Controller)
-		copy(dAtA[i:], m.Controller)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Controller)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgExecuteBackingSwapResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgExecuteBackingSwapResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgExecuteBackingSwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Sequence != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.Sequence))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgCancelBackingSwap) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCancelBackingSwap) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCancelBackingSwap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Controller) > 0 {
-		i -= len(m.Controller)
-		copy(dAtA[i:], m.Controller)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Controller)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgCancelBackingSwapResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCancelBackingSwapResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCancelBackingSwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
 }
 
 func (m *MsgUpdateControls) Marshal() (dAtA []byte, err error) {
@@ -868,73 +297,6 @@ func (m *MsgUpdateControlsResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdateParticipants) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUpdateParticipants) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateParticipants) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Participants) > 0 {
-		for iNdEx := len(m.Participants) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Participants[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.Authority) > 0 {
-		i -= len(m.Authority)
-		copy(dAtA[i:], m.Authority)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUpdateParticipantsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUpdateParticipantsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateParticipantsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -946,68 +308,6 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgExecuteBackingSwap) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Controller)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.SourcePort)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.TimeoutTimestamp != 0 {
-		n += 1 + sovTx(uint64(m.TimeoutTimestamp))
-	}
-	return n
-}
-
-func (m *MsgExecuteBackingSwapResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Sequence != 0 {
-		n += 1 + sovTx(uint64(m.Sequence))
-	}
-	return n
-}
-
-func (m *MsgCancelBackingSwap) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Controller)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgCancelBackingSwapResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgUpdateControls) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1032,437 +332,11 @@ func (m *MsgUpdateControlsResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgUpdateParticipants) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Authority)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if len(m.Participants) > 0 {
-		for _, e := range m.Participants {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgUpdateParticipantsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MsgExecuteBackingSwap) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExecuteBackingSwap: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExecuteBackingSwap: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Controller", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Controller = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SourcePort", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SourcePort = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutTimestamp", wireType)
-			}
-			m.TimeoutTimestamp = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TimeoutTimestamp |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgExecuteBackingSwapResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExecuteBackingSwapResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExecuteBackingSwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
-			}
-			m.Sequence = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Sequence |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgCancelBackingSwap) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCancelBackingSwap: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCancelBackingSwap: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Controller", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Controller = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgCancelBackingSwapResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCancelBackingSwapResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCancelBackingSwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *MsgUpdateControls) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1606,172 +480,6 @@ func (m *MsgUpdateControlsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateControlsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUpdateParticipants) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateParticipants: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateParticipants: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Authority = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Participants", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Participants = append(m.Participants, Participant{})
-			if err := m.Participants[len(m.Participants)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUpdateParticipantsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateParticipantsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateParticipantsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

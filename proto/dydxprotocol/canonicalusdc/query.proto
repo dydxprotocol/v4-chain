@@ -13,12 +13,6 @@ service Query {
   rpc State(QueryStateRequest) returns (QueryStateResponse) {
     option (google.api.http).get = "/dydxprotocol/v4/canonicalusdc/state";
   }
-  // Participants returns the bounded backing-swap allowlist.
-  rpc Participants(QueryParticipantsRequest)
-      returns (QueryParticipantsResponse) {
-    option (google.api.http).get =
-        "/dydxprotocol/v4/canonicalusdc/participants";
-  }
   // PendingSettlements returns all in-flight canonical settlements.
   rpc PendingSettlements(QueryPendingSettlementsRequest)
       returns (QueryPendingSettlementsResponse) {
@@ -34,14 +28,6 @@ message QueryStateRequest {}
 message QueryStateResponse {
   Controls controls = 1 [ (gogoproto.nullable) = false ];
   Ledger ledger = 2 [ (gogoproto.nullable) = false ];
-}
-
-// QueryParticipantsRequest requests all configured participants.
-message QueryParticipantsRequest {}
-
-// QueryParticipantsResponse contains all configured participants.
-message QueryParticipantsResponse {
-  repeated Participant participants = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryPendingSettlementsRequest requests all in-flight settlements.
