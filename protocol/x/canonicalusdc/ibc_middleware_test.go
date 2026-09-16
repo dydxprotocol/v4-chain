@@ -412,6 +412,7 @@ func TestClassifiedLegacyReturnDecrementsOutstandingAmount(t *testing.T) {
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.calls)
 	require.Equal(t, "1", k.GetLedger(ctx).LegacyDownstream)
+	require.Equal(t, "1", k.GetLedger(ctx).NobleBacking)
 }
 
 func TestTimeoutCallbackIsIdempotent(t *testing.T) {
@@ -572,6 +573,7 @@ func TestFailedLegacyReturnDoesNotDecrementOutstanding(t *testing.T) {
 	ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
 	require.False(t, ack.Success())
 	require.Equal(t, "2", k.GetLedger(ctx).LegacyDownstream)
+	require.Equal(t, "0", k.GetLedger(ctx).NobleBacking)
 }
 
 func TestPendingPacketMismatchLeavesPending(t *testing.T) {

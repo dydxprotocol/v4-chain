@@ -134,6 +134,7 @@ func (im IBCMiddleware) onRecvPacketActive(
 		ledger := im.keeper.GetLedger(ctx)
 		legacyDownstream, _ := types.ParseAmount(ledger.LegacyDownstream)
 		ledger.LegacyDownstream = legacyDownstream.Sub(legacyReturnAmount).String()
+		ledger.NobleBacking = addLedger(ledger.NobleBacking, legacyReturnAmount)
 		if err := im.keeper.SetLedger(ctx, ledger); err != nil {
 			return channeltypes.NewErrorAcknowledgement(err)
 		}
