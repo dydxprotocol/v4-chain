@@ -23,8 +23,10 @@ case $env in
     "dev5") account=917958511744;;
     "staging") account=677285201534;;
     "testnet") account=013339450148;; # public testnet
-    "mainnet") account=332066407361;; # mainnet
-    *) account=329916310755;;
+    *)
+        echo "Unsupported internal environment: $env" >&2
+        exit 1
+        ;;
 esac
 
 printf "account: %s\n" $account
