@@ -110,7 +110,7 @@ while true; do
   log_this "Creating new snapshot"
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
   tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
-  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --debug || true
+  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
   log_this "Done creating snapshot\n---------------------------\n"
 
