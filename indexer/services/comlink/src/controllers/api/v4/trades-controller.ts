@@ -1,6 +1,7 @@
 import { stats, cacheControlMiddleware } from '@dydxprotocol-indexer/base';
 import {
   IsoString,
+  DEFAULT_POSTGRES_OPTIONS,
   FillTable,
   FillFromDatabase,
   Liquidity,
@@ -74,7 +75,9 @@ class TradesController extends Controller {
         page,
       },
       [QueryableField.LIQUIDITY, QueryableField.CLOB_PAIR_ID, QueryableField.LIMIT],
-      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
+      page !== undefined
+        ? { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [[FillColumns.eventId, Ordering.ASC]] }
+        : undefined,
     );
 
     return {

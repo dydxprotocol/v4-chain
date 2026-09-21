@@ -1,5 +1,6 @@
 import { cacheControlMiddleware, stats } from '@dydxprotocol-indexer/base';
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   FillColumns,
   FillFromDatabase,
   FillTable,
@@ -155,7 +156,7 @@ class TradeHistoryController extends Controller {
     const { results: fills } = await FillTable.findAll(
       { subaccountId: [subaccountId], clobPairId, limit: TRADE_HISTORY_MAX_FILLS + 1 },
       [],
-      { orderBy: fillOrderBy },
+      { ...DEFAULT_POSTGRES_OPTIONS, orderBy: fillOrderBy },
     );
 
     if (fills.length > TRADE_HISTORY_MAX_FILLS) {
@@ -185,7 +186,7 @@ class TradeHistoryController extends Controller {
         limit: TRADE_HISTORY_MAX_FILLS + 1,
       },
       [],
-      { orderBy: fillOrderBy },
+      { ...DEFAULT_POSTGRES_OPTIONS, orderBy: fillOrderBy },
     );
 
     if (fills.length > TRADE_HISTORY_MAX_FILLS) {
