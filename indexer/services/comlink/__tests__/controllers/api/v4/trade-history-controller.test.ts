@@ -1,4 +1,5 @@
 import {
+  DEFAULT_POSTGRES_OPTIONS,
   dbHelpers,
   testMocks,
   testConstants,
@@ -62,6 +63,36 @@ describe('trade-history-controller#V4', () => {
       expect(response.body.totalResults).toBe(1);
       expect(response.body.pageSize).toBeDefined();
       expect(response.body.offset).toBe(0);
+    });
+
+    it('GET / routes reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+      await OrderTable.create(testConstants.defaultOrder);
+      await FillTable.create(testConstants.defaultFill);
+
+      // Mutate the live DEFAULT_POSTGRES_OPTIONS object with a marker property. Since the
+      // controller spreads this object at call time (`{ ...DEFAULT_POSTGRES_OPTIONS, orderBy }`),
+      // the marker will only show up in the findAll call if that spread actually happens -
+      // independent of whatever USE_READ_REPLICA currently evaluates to in this test environment.
+      const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+      (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+      const findAllSpy: jest.SpyInstance = jest.spyOn(FillTable, 'findAll');
+
+      try {
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/tradeHistory?address=${defaultAddress}` +
+            `&subaccountNumber=${defaultSubaccountNumber}`,
+        });
+
+        expect(findAllSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          expect.objectContaining({ [testMarker]: true }),
+        );
+      } finally {
+        delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+        findAllSpy.mockRestore();
+      }
     });
 
     it('returns OPEN then CLOSE for buy-then-sell of same size', async () => {
@@ -341,6 +372,36 @@ describe('trade-history-controller#V4', () => {
       // Both fills should be returned (from subaccount 0 and subaccount 128)
       expect(response.body.tradeHistory.length).toBeGreaterThanOrEqual(2);
       expect(response.body.totalResults).toBeGreaterThanOrEqual(2);
+    });
+
+    it('GET /parentSubaccountNumber routes reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+      await OrderTable.create(testConstants.defaultOrder);
+      await FillTable.create(testConstants.defaultFill);
+
+      // Mutate the live DEFAULT_POSTGRES_OPTIONS object with a marker property. Since the
+      // controller spreads this object at call time (`{ ...DEFAULT_POSTGRES_OPTIONS, orderBy }`),
+      // the marker will only show up in the findAll call if that spread actually happens -
+      // independent of whatever USE_READ_REPLICA currently evaluates to in this test environment.
+      const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+      (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+      const findAllSpy: jest.SpyInstance = jest.spyOn(FillTable, 'findAll');
+
+      try {
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/tradeHistory/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            '&parentSubaccountNumber=0',
+        });
+
+        expect(findAllSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          expect.objectContaining({ [testMarker]: true }),
+        );
+      } finally {
+        delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+        findAllSpy.mockRestore();
+      }
     });
 
     it('paginates parent subaccount results', async () => {
