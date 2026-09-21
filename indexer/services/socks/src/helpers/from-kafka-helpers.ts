@@ -10,6 +10,7 @@ import {
   BlockHeightMessage,
   CandleMessage,
   CandleMessage_Resolution,
+  createProtoReader,
   MarketMessage,
   OrderbookMessage,
   SubaccountMessage,
@@ -48,7 +49,7 @@ export function getMessagesToForward(
 
   switch (topic) {
     case WebsocketTopic.TO_WEBSOCKETS_CANDLES: {
-      const candleMessage: CandleMessage = CandleMessage.decode(message.value);
+      const candleMessage: CandleMessage = CandleMessage.decode(createProtoReader(message.value));
       const id: string = getCandleMessageId(candleMessage);
       if (!hasSubscribers(Channel.V4_CANDLES, id)) {
         return [];
@@ -61,7 +62,7 @@ export function getMessagesToForward(
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_MARKETS: {
-      const marketMessage: MarketMessage = MarketMessage.decode(message.value);
+      const marketMessage: MarketMessage = MarketMessage.decode(createProtoReader(message.value));
       if (!hasSubscribers(Channel.V4_MARKETS, V4_MARKETS_ID)) {
         return [];
       }
@@ -73,7 +74,9 @@ export function getMessagesToForward(
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS: {
-      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(message.value);
+      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(
+        createProtoReader(message.value),
+      );
       const id: string = getTickerOrThrow(orderbookMessage.clobPairId);
       if (!hasSubscribers(Channel.V4_ORDERBOOK, id)) {
         return [];
@@ -86,7 +89,7 @@ export function getMessagesToForward(
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_TRADES: {
-      const tradeMessage: TradeMessage = TradeMessage.decode(message.value);
+      const tradeMessage: TradeMessage = TradeMessage.decode(createProtoReader(message.value));
       const id: string = getTickerOrThrow(tradeMessage.clobPairId);
       if (!hasSubscribers(Channel.V4_TRADES, id)) {
         return [];
@@ -99,7 +102,9 @@ export function getMessagesToForward(
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
+      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(
+        createProtoReader(message.value),
+      );
       const messages: MessageToForward[] = [];
       const accountId: string = getSubaccountMessageId(subaccountMessage);
       if (hasSubscribers(Channel.V4_ACCOUNTS, accountId)) {
@@ -123,7 +128,9 @@ export function getMessagesToForward(
       return messages;
     }
     case WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT: {
-      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(message.value);
+      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(
+        createProtoReader(message.value),
+      );
       if (!hasSubscribers(Channel.V4_BLOCK_HEIGHT, V4_BLOCK_HEIGHT_ID)) {
         return [];
       }

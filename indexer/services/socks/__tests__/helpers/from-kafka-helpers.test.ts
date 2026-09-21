@@ -289,6 +289,20 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
     });
 
+    it('decodes non-ASCII contents unchanged', () => {
+      const contents: object = { note: 'Ünïcödé €', emoji: '😀', cjk: '市场' };
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(
+          { ...subaccountMessage, contents: JSON.stringify(contents) },
+        ).finish())),
+      );
+
+      expect(getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
+        message,
+      )[0].contents).toEqual(contents);
+    });
+
     it('skips a channel without subscribers and does not parse its contents', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(OrderbookMessage.encode(
