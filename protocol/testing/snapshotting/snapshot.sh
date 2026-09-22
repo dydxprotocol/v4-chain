@@ -109,8 +109,10 @@ while true; do
 
   log_this "Creating new snapshot"
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
-  tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
-  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 || true
+  # `tar` is not verbose and `aws s3 cp` only reports errors: both otherwise write one log line per
+  # archived file and a `\r`-delimited progress stream that lands in Datadog as a single ~900KB line.
+  tar czf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
+  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --only-show-errors || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
   log_this "Done creating snapshot\n---------------------------\n"
 
