@@ -88,10 +88,12 @@ while true; do
   kill -TERM $(pidof cosmovisor)
 
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
-  # `tar` is not verbose and `aws s3 cp` only reports errors: both otherwise write one log line per
-  # archived file and a `\r`-delimited progress stream that lands in Datadog as a single ~900KB line.
+  # `tar` is not verbose and `aws s3 cp` omits its progress meter: the former otherwise writes one log
+  # line per archived file, and the latter a `\r`-delimited stream that lands in Datadog as a single
+  # ~900KB line. `--no-progress` (rather than `--only-show-errors`) keeps the one-line upload
+  # confirmation, which is the only per-snapshot success signal in these logs.
   tar czf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
-  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --only-show-errors || true
+  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --no-progress || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
 
 done
