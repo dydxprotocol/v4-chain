@@ -34,8 +34,13 @@ We use [pnpm](https://pnpm.io/) in this repo because it is a "faster and more di
 nvm install
 nvm use
 nvm alias default $(nvm version) # optional
-npm i -g pnpm@6
+npm i -g pnpm@6.34.0
 ```
+
+Use pnpm 6.34.0, the version CI uses: the lockfile is v5.3 and newer pnpm versions reject it.
+Do not let Corepack pick the version from `packageManager` in `package.json`.
+
+Local Postgres, Redis and Kafka run in containers, so you also need Docker (or another runtime) with the Compose v2 plugin (`docker compose`).
 
 ### Installation
 
@@ -99,7 +104,7 @@ Open up 2 terminals (or have another `tmux` or `screen` session) and run:
 
 ```
 # In session / terminal 1
-docker-compose up
+docker compose up
 
 # In session / terminal 2
 pnpm run test:all
