@@ -1,3 +1,5 @@
+import { URL } from 'url';
+
 import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
@@ -168,7 +170,15 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail and targetPublicKey are required for email signin');
       }
       if (magicLink) {
-        const isValidMagicLink = magicLink.startsWith(config.TURNKEY_MAGIC_LINK_VALIDATION);
+        const isValidMagicLink = (() => {
+          try {
+            const allowed = new URL(config.TURNKEY_MAGIC_LINK_VALIDATION);
+            const supplied = new URL(magicLink);
+            return supplied.origin === allowed.origin;
+          } catch {
+            return false;
+          }
+        })();
         if (!isValidMagicLink) {
           throw new Error('Invalid magic link template');
         }
