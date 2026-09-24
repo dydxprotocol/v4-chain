@@ -4,7 +4,7 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import zlib from 'zlib';
 
-import config from '../../../src/config';
+import config, { configSchema } from '../../../src/config';
 import server from '../../../src/request-helpers/server';
 
 // Well above the 1 KB compression threshold.
@@ -67,13 +67,26 @@ function buildApp(): express.Express {
 describe('comlink response compression', () => {
   const originalCompressionEnabled: boolean = config.COMPRESSION_ENABLED;
 
+  beforeEach(() => {
+    // Don't depend on the environment's rollback setting; tests that need it off set it below.
+    config.COMPRESSION_ENABLED = true;
+  });
+
   afterEach(() => {
     config.COMPRESSION_ENABLED = originalCompressionEnabled;
     jest.restoreAllMocks();
   });
 
-  it('is enabled by default', () => {
-    expect(originalCompressionEnabled).toBe(true);
+  it('is enabled by default when COMPRESSION_ENABLED is unset', () => {
+    const originalEnv: string | undefined = process.env.COMPRESSION_ENABLED;
+    delete process.env.COMPRESSION_ENABLED;
+    try {
+      expect(configSchema.COMPRESSION_ENABLED('COMPRESSION_ENABLED')).toBe(true);
+    } finally {
+      if (originalEnv !== undefined) {
+        process.env.COMPRESSION_ENABLED = originalEnv;
+      }
+    }
   });
 
   it('gzips large JSON responses when the client accepts gzip', async () => {
