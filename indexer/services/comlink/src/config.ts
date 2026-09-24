@@ -37,6 +37,8 @@ export const configSchema = {
   CORS_ORIGIN: parseString({ default: '*' }),
   KEEP_ALIVE_MS: parseInteger({ default: 61_000 }),
   HEADERS_TIMEOUT_MS: parseInteger({ default: 65_000 }),
+  // gzip responses for clients that send Accept-Encoding (cuts ALB/NAT egress)
+  COMPRESSION_ENABLED: parseBoolean({ default: true }),
 
   // Rate limit Redis URL
   RATE_LIMIT_REDIS_URL: parseString({
