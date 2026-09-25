@@ -1,15 +1,18 @@
 package streaming_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -604,4 +607,74 @@ func TestFilterStreamUpdatesWithDuplicateSubaccountIds(t *testing.T) {
 			require.Equal(t, testCase.filteredUpdates, filteredUpdates)
 		})
 	}
+}
+
+// testMessageSender is a minimal OutgoingMessageSender used to simulate a client
+// connection whose context is cancelled independently of any Send call.
+type testMessageSender struct {
+	ctx context.Context
+}
+
+var _ streamingtypes.OutgoingMessageSender = (*testMessageSender)(nil)
+
+func (s *testMessageSender) Send(*clobtypes.StreamOrderbookUpdatesResponse) error {
+	return nil
+}
+
+func (s *testMessageSender) Context() context.Context {
+	return s.ctx
+}
+
+func TestSubscribe_RemovesSubscriptionWhenContextIsCancelled(t *testing.T) {
+	sm := streaming.NewFullNodeStreamingManager(
+		log.NewNopLogger(),
+		10_000,
+		1_000,
+		10,
+		0,
+		nil,
+		nil,
+	)
+	defer sm.Stop()
+
+	subaccountId := satypes.SubaccountId{Owner: "disconnect-test", Number: 0}
+	ctx, cancel := context.WithCancel(context.Background())
+	sender := &testMessageSender{ctx: ctx}
+
+	subscribeDone := make(chan error, 1)
+	go func() {
+		subscribeDone <- sm.Subscribe(
+			nil,
+			[]*satypes.SubaccountId{&subaccountId},
+			nil,
+			false,
+			sender,
+		)
+	}()
+
+	// Wait for the subscription to be registered before disconnecting.
+	require.Eventually(
+		t,
+		func() bool { return sm.TracksSubaccountId(subaccountId) },
+		time.Second,
+		time.Millisecond,
+		"subscription was never registered",
+	)
+
+	// Simulate a client disconnect. No updates are ever sent for this subaccount,
+	// mirroring the "clob pair with no updates" scenario from the bug report.
+	cancel()
+
+	select {
+	case err := <-subscribeDone:
+		require.NoError(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("Subscribe did not return after the client context was cancelled")
+	}
+
+	require.False(
+		t,
+		sm.TracksSubaccountId(subaccountId),
+		"subscription should have been removed once the client disconnected",
+	)
 }
