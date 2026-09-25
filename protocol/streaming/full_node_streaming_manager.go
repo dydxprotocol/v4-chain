@@ -385,36 +385,60 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	sm.Unlock()
 
 	// Use current goroutine to consistently poll subscription channel for updates
-	// to send through stream.
-	for updates := range subscription.streamUpdatesChannel {
-		if filterOrdersBySubAccountId {
-			updates = FilterStreamUpdateBySubaccount(updates, sIds, sm.logger)
-		}
-		if len(updates) == 0 {
-			continue
-		}
-		metrics.IncrCounterWithLabels(
-			metrics.GrpcSendResponseToSubscriberCount,
-			1,
-			metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
-		)
-		err = subscription.messageSender.Send(
-			&clobtypes.StreamOrderbookUpdatesResponse{
-				Updates: updates,
-			},
-		)
-		if err != nil {
-			// On error, remove the subscription from the streaming manager
-			sm.logger.Error(
+	// to send through stream. Also watch the sender's context so that a client
+	// disconnect is detected and the subscription is released even if no updates
+	// are ever produced for it.
+	subscriberCtx := subscription.messageSender.Context()
+loop:
+	for {
+		select {
+		case <-subscriberCtx.Done():
+			sm.logger.Info(
 				fmt.Sprintf(
-					"Error sending out update for streaming subscription %+v. Dropping subsciption connection.",
+					"Subscriber for streaming subscription %+v disconnected. Dropping subscription connection.",
 					subscription.subscriptionId,
 				),
-				"err", err,
 			)
-			// Break out of the loop, stopping this goroutine.
-			// The channel will fill up and the main thread will prune the subscription.
-			break
+			sm.Lock()
+			sm.removeSubscription(subscription.subscriptionId)
+			sm.Unlock()
+			break loop
+		case updates, ok := <-subscription.streamUpdatesChannel:
+			if !ok {
+				// Channel was already closed (and the subscription removed) by another
+				// goroutine, e.g. due to the buffer filling up.
+				break loop
+			}
+			if filterOrdersBySubAccountId {
+				updates = FilterStreamUpdateBySubaccount(updates, sIds, sm.logger)
+			}
+			if len(updates) == 0 {
+				continue
+			}
+			metrics.IncrCounterWithLabels(
+				metrics.GrpcSendResponseToSubscriberCount,
+				1,
+				metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
+			)
+			err = subscription.messageSender.Send(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates: updates,
+				},
+			)
+			if err != nil {
+				// On error, remove the subscription from the streaming manager.
+				sm.logger.Error(
+					fmt.Sprintf(
+						"Error sending out update for streaming subscription %+v. Dropping subsciption connection.",
+						subscription.subscriptionId,
+					),
+					"err", err,
+				)
+				sm.Lock()
+				sm.removeSubscription(subscription.subscriptionId)
+				sm.Unlock()
+				break loop
+			}
 		}
 	}
 
