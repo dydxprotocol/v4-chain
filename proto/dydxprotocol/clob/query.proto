@@ -10,6 +10,7 @@ import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
+import "dydxprotocol/clob/block_limits_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 import "dydxprotocol/subaccounts/streaming.proto";
@@ -55,6 +56,12 @@ service Query {
   rpc LiquidationsConfiguration(QueryLiquidationsConfigurationRequest)
       returns (QueryLiquidationsConfigurationResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
+  }
+
+  // Queries BlockLimitsConfiguration.
+  rpc BlockLimitsConfiguration(QueryBlockLimitsConfigurationRequest)
+      returns (QueryBlockLimitsConfigurationResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/block_limits_config";
   }
 
   // Queries the stateful order for a given order id.
@@ -173,6 +180,16 @@ message QueryLiquidationsConfigurationRequest {}
 // the LiquidationsConfiguration.
 message QueryLiquidationsConfigurationResponse {
   LiquidationsConfig liquidations_config = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryBlockLimitsConfigurationRequest is a request message for
+// BlockLimitsConfiguration.
+message QueryBlockLimitsConfigurationRequest {}
+
+// QueryBlockLimitsConfigurationResponse is a response message that contains
+// the BlockLimitsConfiguration.
+message QueryBlockLimitsConfigurationResponse {
+  BlockLimitsConfig block_limits_config = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryNextClobPairIdRequest is a request message for the next clob pair id

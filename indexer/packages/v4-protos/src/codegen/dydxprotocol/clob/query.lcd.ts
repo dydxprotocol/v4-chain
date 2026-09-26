@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryGetClobPairRequest, QueryClobPairResponseSDKType, QueryAllClobPairRequest, QueryClobPairAllResponseSDKType, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponseSDKType, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponseSDKType, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponseSDKType, QueryNextClobPairIdRequest, QueryNextClobPairIdResponseSDKType, QueryLeverageRequest, QueryLeverageResponseSDKType } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponseSDKType, QueryAllClobPairRequest, QueryClobPairAllResponseSDKType, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponseSDKType, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponseSDKType, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponseSDKType, QueryBlockLimitsConfigurationRequest, QueryBlockLimitsConfigurationResponseSDKType, QueryNextClobPairIdRequest, QueryNextClobPairIdResponseSDKType, QueryLeverageRequest, QueryLeverageResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -15,6 +15,7 @@ export class LCDQueryClient {
     this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
     this.blockRateLimitConfiguration = this.blockRateLimitConfiguration.bind(this);
     this.liquidationsConfiguration = this.liquidationsConfiguration.bind(this);
+    this.blockLimitsConfiguration = this.blockLimitsConfiguration.bind(this);
     this.nextClobPairId = this.nextClobPairId.bind(this);
     this.leverage = this.leverage.bind(this);
   }
@@ -62,6 +63,13 @@ export class LCDQueryClient {
   async liquidationsConfiguration(_params: QueryLiquidationsConfigurationRequest = {}): Promise<QueryLiquidationsConfigurationResponseSDKType> {
     const endpoint = `dydxprotocol/clob/liquidations_config`;
     return await this.req.get<QueryLiquidationsConfigurationResponseSDKType>(endpoint);
+  }
+  /* Queries BlockLimitsConfiguration. */
+
+
+  async blockLimitsConfiguration(_params: QueryBlockLimitsConfigurationRequest = {}): Promise<QueryBlockLimitsConfigurationResponseSDKType> {
+    const endpoint = `dydxprotocol/clob/block_limits_config`;
+    return await this.req.get<QueryBlockLimitsConfigurationResponseSDKType>(endpoint);
   }
   /* Queries the next clob pair id. */
 

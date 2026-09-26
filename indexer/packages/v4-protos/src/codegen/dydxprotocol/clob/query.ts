@@ -6,6 +6,7 @@ import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
+import { BlockLimitsConfig, BlockLimitsConfigSDKType } from "./block_limits_config";
 import { StreamSubaccountUpdate, StreamSubaccountUpdateSDKType } from "../subaccounts/streaming";
 import { StreamPriceUpdate, StreamPriceUpdateSDKType } from "../prices/streaming";
 import { OffChainUpdateV1, OffChainUpdateV1SDKType } from "../indexer/off_chain_updates/off_chain_updates";
@@ -245,6 +246,34 @@ export interface QueryLiquidationsConfigurationResponse {
 
 export interface QueryLiquidationsConfigurationResponseSDKType {
   liquidations_config?: LiquidationsConfigSDKType;
+}
+/**
+ * QueryBlockLimitsConfigurationRequest is a request message for
+ * BlockLimitsConfiguration.
+ */
+
+export interface QueryBlockLimitsConfigurationRequest {}
+/**
+ * QueryBlockLimitsConfigurationRequest is a request message for
+ * BlockLimitsConfiguration.
+ */
+
+export interface QueryBlockLimitsConfigurationRequestSDKType {}
+/**
+ * QueryBlockLimitsConfigurationResponse is a response message that contains
+ * the BlockLimitsConfiguration.
+ */
+
+export interface QueryBlockLimitsConfigurationResponse {
+  blockLimitsConfig?: BlockLimitsConfig;
+}
+/**
+ * QueryBlockLimitsConfigurationResponse is a response message that contains
+ * the BlockLimitsConfiguration.
+ */
+
+export interface QueryBlockLimitsConfigurationResponseSDKType {
+  block_limits_config?: BlockLimitsConfigSDKType;
 }
 /** QueryNextClobPairIdRequest is a request message for the next clob pair id */
 
@@ -1272,6 +1301,85 @@ export const QueryLiquidationsConfigurationResponse = {
   fromPartial(object: DeepPartial<QueryLiquidationsConfigurationResponse>): QueryLiquidationsConfigurationResponse {
     const message = createBaseQueryLiquidationsConfigurationResponse();
     message.liquidationsConfig = object.liquidationsConfig !== undefined && object.liquidationsConfig !== null ? LiquidationsConfig.fromPartial(object.liquidationsConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryBlockLimitsConfigurationRequest(): QueryBlockLimitsConfigurationRequest {
+  return {};
+}
+
+export const QueryBlockLimitsConfigurationRequest = {
+  encode(_: QueryBlockLimitsConfigurationRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryBlockLimitsConfigurationRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryBlockLimitsConfigurationRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryBlockLimitsConfigurationRequest>): QueryBlockLimitsConfigurationRequest {
+    const message = createBaseQueryBlockLimitsConfigurationRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryBlockLimitsConfigurationResponse(): QueryBlockLimitsConfigurationResponse {
+  return {
+    blockLimitsConfig: undefined
+  };
+}
+
+export const QueryBlockLimitsConfigurationResponse = {
+  encode(message: QueryBlockLimitsConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.blockLimitsConfig !== undefined) {
+      BlockLimitsConfig.encode(message.blockLimitsConfig, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryBlockLimitsConfigurationResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryBlockLimitsConfigurationResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.blockLimitsConfig = BlockLimitsConfig.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryBlockLimitsConfigurationResponse>): QueryBlockLimitsConfigurationResponse {
+    const message = createBaseQueryBlockLimitsConfigurationResponse();
+    message.blockLimitsConfig = object.blockLimitsConfig !== undefined && object.blockLimitsConfig !== null ? BlockLimitsConfig.fromPartial(object.blockLimitsConfig) : undefined;
     return message;
   }
 

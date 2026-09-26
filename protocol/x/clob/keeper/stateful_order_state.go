@@ -208,6 +208,9 @@ func (k Keeper) AddStatefulOrderIdExpiration(
 
 // RemoveExpiredStatefulOrders removes the stateful order id expirations up to `blockTime` and
 // returns the removed order ids as a slice.
+// To prevent slowdowns from processing too many expired orders at once, this function will
+// process at most `MaxStatefulOrderRemovalsPerBlock` orders per block. Any remaining expired
+// orders will be processed in subsequent blocks.
 func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time) (
 	expiredOrderIds []types.OrderId,
 ) {
@@ -220,11 +223,26 @@ func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time
 		),
 	)
 	defer it.Close()
+
+	// Check if there's a cap on order removals per block.
+	// A value of 0 means no cap (process all expired orders).
+	// This is retrieved from on-chain governance-controlled config.
+	blockLimitsConfig := k.GetBlockLimitsConfig(ctx)
+	maxRemovals := blockLimitsConfig.MaxStatefulOrderRemovalsPerBlock
+	hasCap := maxRemovals > 0
+	numRemoved := uint32(0)
+
+	// Process orders up to the cap (if set), otherwise process all
 	for ; it.Valid(); it.Next() {
+		// If there's a cap and we've reached it, stop processing
+		if hasCap && numRemoved >= maxRemovals {
+			break
+		}
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(it.Value(), &orderId)
 		expiredOrderIds = append(expiredOrderIds, orderId)
 		store.Delete(it.Key())
+		numRemoved++
 	}
 	return expiredOrderIds
 }

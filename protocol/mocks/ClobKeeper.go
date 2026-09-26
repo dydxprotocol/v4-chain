@@ -239,6 +239,24 @@ func (_m *ClobKeeper) GetBankruptcyPriceInQuoteQuantums(ctx types.Context, subac
 	return r0, r1
 }
 
+// GetBlockLimitsConfig provides a mock function with given fields: ctx
+func (_m *ClobKeeper) GetBlockLimitsConfig(ctx types.Context) clobtypes.BlockLimitsConfig {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBlockLimitsConfig")
+	}
+
+	var r0 clobtypes.BlockLimitsConfig
+	if rf, ok := ret.Get(0).(func(types.Context) clobtypes.BlockLimitsConfig); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(clobtypes.BlockLimitsConfig)
+	}
+
+	return r0
+}
+
 // GetBlockRateLimitConfiguration provides a mock function with given fields: ctx
 func (_m *ClobKeeper) GetBlockRateLimitConfiguration(ctx types.Context) clobtypes.BlockRateLimitConfiguration {
 	ret := _m.Called(ctx)
@@ -333,36 +351,6 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 	}
 
 	return r0
-}
-
-// GetLeverage provides a mock function with given fields: ctx, subaccountId
-func (_m *ClobKeeper) GetLeverage(ctx types.Context, subaccountId *subaccountstypes.SubaccountId) (map[uint32]uint32, bool) {
-	ret := _m.Called(ctx, subaccountId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetLeverage")
-	}
-
-	var r0 map[uint32]uint32
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId) (map[uint32]uint32, bool)); ok {
-		return rf(ctx, subaccountId)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.SubaccountId) map[uint32]uint32); ok {
-		r0 = rf(ctx, subaccountId)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[uint32]uint32)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, *subaccountstypes.SubaccountId) bool); ok {
-		r1 = rf(ctx, subaccountId)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
 }
 
 // GetLiquidationInsuranceFundDelta provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
@@ -1193,6 +1181,24 @@ func (_m *ClobKeeper) SetNextClobPairID(ctx types.Context, nextID uint32) {
 // UnsafeMigrateOrderExpirationState provides a mock function with given fields: ctx
 func (_m *ClobKeeper) UnsafeMigrateOrderExpirationState(ctx types.Context) {
 	_m.Called(ctx)
+}
+
+// UpdateBlockLimitsConfig provides a mock function with given fields: ctx, config
+func (_m *ClobKeeper) UpdateBlockLimitsConfig(ctx types.Context, config clobtypes.BlockLimitsConfig) error {
+	ret := _m.Called(ctx, config)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateBlockLimitsConfig")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.BlockLimitsConfig) error); ok {
+		r0 = rf(ctx, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // UpdateClobPair provides a mock function with given fields: ctx, clobPair
