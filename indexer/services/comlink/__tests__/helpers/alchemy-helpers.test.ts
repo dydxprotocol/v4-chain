@@ -89,6 +89,7 @@ describe('alchemy-helpers', () => {
             addresses_to_add: [address],
             addresses_to_remove: [],
           }),
+          signal: expect.any(AbortSignal),
         },
       );
     });
