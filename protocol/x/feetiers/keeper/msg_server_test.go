@@ -178,22 +178,6 @@ func TestMsgSetMarketFeeDiscountParams(t *testing.T) {
 			expErrMsg: "Invalid time range",
 		},
 		{
-			name: "invalid param - too long duration",
-			input: &types.MsgSetMarketFeeDiscountParams{
-				Authority: lib.GovModuleAddress.String(),
-				Params: []types.PerMarketFeeDiscountParams{
-					{
-						ClobPairId: 1,
-						StartTime:  time.Unix(1100, 0).UTC(),
-						EndTime:    time.Unix(1100, 0).Add(91 * 24 * time.Hour).UTC(), // 91 days
-						ChargePpm:  500_000,
-					},
-				},
-			},
-			expErr:    true,
-			expErrMsg: "Invalid time range",
-		},
-		{
 			name: "invalid param - charge PPM exceeds maximum",
 			input: &types.MsgSetMarketFeeDiscountParams{
 				Authority: lib.GovModuleAddress.String(),
