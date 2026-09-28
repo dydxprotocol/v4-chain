@@ -1,0 +1,72 @@
+name: Protocol Build & Push Staging Upgrade-Test Image (Manual)
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+    inputs:
+      old_commit:
+        description: 'Commit to build as the pre-upgrade (cosmovisor "current") binary'
+        required: true
+        default: '5935cb7c5dd684b17836e75093fc5c3ca5019ea3'  # protocol/v9.7.1
+      upgrade_name:
+        description: 'Upgrade name to stage the new binary under (must match a registered x/upgrade handler)'
+        required: true
+        default: 'v9.8'
+
+jobs:
+  build-and-push-staging-upgrade-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails, and we need full history for the old commit.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_STAGING }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build the new (upgrade-target) binary image
+        run: make localnet-build-amd64
+
+      - name: Build the old (pre-upgrade) binary image
+        run: |
+          git worktree add /tmp/old-src ${{ inputs.old_commit }}
+          cd /tmp/old-src/protocol
+          OLD_VERSION=$(git describe --tags --always --match "protocol/v*" | sed 's/^protocol\/v//')
+          OLD_COMMIT=$(git rev-parse HEAD)
+          DOCKER_BUILDKIT=1 docker build \
+            --platform linux/amd64 \
+            --build-arg VERSION=$OLD_VERSION \
+            --build-arg COMMIT=$OLD_COMMIT \
+            -f Dockerfile . \
+            -t dydxprotocol-base:old --no-cache
+
+      - name: Build, tag, and push the upgrade-test image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: staging-validator
+        run: |
+          commit_hash=$(git rev-parse --short=7 HEAD)
+          tag="$commit_hash-upgrade-test"
+          docker build \
+            --platform linux/amd64 \
+            --build-arg OLD_BASE_IMAGE=dydxprotocol-base:old \
+            --build-arg UPGRADE_NAME=${{ inputs.upgrade_name }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$tag \
+            -f testing/testnet-staging/Dockerfile.upgrade-test .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$tag
+          echo "Pushed $ECR_REGISTRY/$ECR_REPOSITORY:$tag"
+
+      - name: Clean up worktree
+        if: always()
+        run: git worktree remove /tmp/old-src --force || true
