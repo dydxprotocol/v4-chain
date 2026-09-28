@@ -174,14 +174,16 @@ setup_preupgrade_binary() {
 
 	local preupgrade_binary_path="/bin/dydxprotocold_preupgrade"
 	local tar_url="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv${PREUPGRADE_VERSION}/dydxprotocold-v${PREUPGRADE_VERSION}-linux-amd64.tar.gz"
-	local tar_path="/tmp/dydxprotocold-preupgrade/dydxprotocold.tar.gz"
+	local tar_path="/tmp/dydxprotocold-preupgrade.tar.gz"
+	local extract_dir="/tmp/dydxprotocold-preupgrade"
 
-	mkdir -p /tmp/dydxprotocold-preupgrade
+	mkdir -p "$extract_dir"
 	curl -sL "$tar_url" -o "$tar_path"
-	tar -xf "$tar_path" --directory /tmp/dydxprotocold-preupgrade
+	tar -xf "$tar_path" --directory "$extract_dir"
 	# The release tarball nests the binary under ./build/ with a version-suffixed name (e.g.
-	# dydxprotocold-v9.7.1-linux-amd64), not a bare top-level `dydxprotocold`.
-	mv "$(find /tmp/dydxprotocold-preupgrade -type f -name 'dydxprotocold*')" "$preupgrade_binary_path"
+	# dydxprotocold-v9.7.1-linux-amd64), not a bare top-level `dydxprotocold`. The tarball itself
+	# is kept outside $extract_dir so this only ever matches the extracted binary.
+	mv "$(find "$extract_dir" -type f -name 'dydxprotocold*')" "$preupgrade_binary_path"
 	chmod +x "$preupgrade_binary_path"
 
 	DYDXPROTOCOLD_BIN="$preupgrade_binary_path"
