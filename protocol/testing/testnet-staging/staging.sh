@@ -179,7 +179,9 @@ setup_preupgrade_binary() {
 	mkdir -p /tmp/dydxprotocold-preupgrade
 	curl -sL "$tar_url" -o "$tar_path"
 	tar -xf "$tar_path" --directory /tmp/dydxprotocold-preupgrade
-	mv /tmp/dydxprotocold-preupgrade/dydxprotocold "$preupgrade_binary_path"
+	# The release tarball nests the binary under ./build/ with a version-suffixed name (e.g.
+	# dydxprotocold-v9.7.1-linux-amd64), not a bare top-level `dydxprotocold`.
+	mv "$(find /tmp/dydxprotocold-preupgrade -type f -name 'dydxprotocold*')" "$preupgrade_binary_path"
 	chmod +x "$preupgrade_binary_path"
 
 	DYDXPROTOCOLD_BIN="$preupgrade_binary_path"
