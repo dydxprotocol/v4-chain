@@ -256,13 +256,27 @@ create_validators() {
 	done
 }
 
+# Stages a not-yet-current binary under the daemon's cosmovisor upgrades directory, so a live
+# governance upgrade can swap to it. Only used when building a staging image for upgrade testing
+# (UPGRADE_NAME/NEW_BINARY set); a no-op for a normal single-binary staging build.
+stage_upgrade_binary() {
+	local daemon_home="$1"
+	if [ -n "$UPGRADE_NAME" ] && [ -n "$NEW_BINARY" ]; then
+		mkdir -p "$daemon_home/cosmovisor/upgrades/$UPGRADE_NAME/bin"
+		cp "$NEW_BINARY" "$daemon_home/cosmovisor/upgrades/$UPGRADE_NAME/bin/dydxprotocold"
+	fi
+}
+
 setup_cosmovisor() {
+	CURRENT_BINARY="${OLD_BINARY:-/bin/dydxprotocold}"
+
 	for i in "${!FULL_NODE_KEYS[@]}"; do
 		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 		export DAEMON_NAME=dydxprotocold
 		export DAEMON_HOME="$HOME/chain/.full-node-$i"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init "$CURRENT_BINARY"
+		stage_upgrade_binary "$DAEMON_HOME"
 	done
 
 	for i in "${!MONIKERS[@]}"; do
@@ -270,7 +284,8 @@ setup_cosmovisor() {
 		export DAEMON_NAME=dydxprotocold
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init "$CURRENT_BINARY"
+		stage_upgrade_binary "$DAEMON_HOME"
 	done
 }
 
