@@ -2,6 +2,15 @@ name: Protocol Build & Push Image to Staging (Manual)
 
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
+    inputs:
+      upgrade_name:
+        description: 'Set to test a live governance upgrade: names the x/upgrade handler this build should be staged under (e.g. v9.8). Leave blank for a normal single-binary staging image.'
+        required: false
+        default: ''
+      preupgrade_version:
+        description: 'Only used with upgrade_name: the released version (e.g. 9.7.1) whose binary cosmovisor starts on. Must have a dydxprotocold-v<version>-linux-amd64.tar.gz GitHub release asset.'
+        required: false
+        default: ''
 
 jobs:
   build-and-push-staging:
@@ -34,8 +43,15 @@ jobs:
         run: |
           make localnet-build-amd64
           commit_hash=$(git rev-parse --short=7 HEAD)
+          tag="$commit_hash"
+          if [ -n "${{ inputs.upgrade_name }}" ]; then
+            tag="$tag-upgrade-test"
+          fi
           docker build \
             --platform amd64 \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
+            --build-arg UPGRADE_NAME=${{ inputs.upgrade_name }} \
+            --build-arg PREUPGRADE_VERSION=${{ inputs.preupgrade_version }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$tag \
             -f testing/testnet-staging/Dockerfile .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$tag
+          echo "Pushed $ECR_REGISTRY/$ECR_REPOSITORY:$tag"
