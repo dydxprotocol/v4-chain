@@ -476,7 +476,7 @@ replace (
 	// TODO(CT-1343): Remove and fix properly by backporting upstream fix to cometbft fork.
 	github.com/cometbft/cometbft-db => github.com/cometbft/cometbft-db v0.12.0
 	// Use dYdX fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20260428191449-a212821dc2c3
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20260930183503-873fbe904943
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85
 )
 
