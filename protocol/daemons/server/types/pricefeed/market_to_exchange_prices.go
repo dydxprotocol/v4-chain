@@ -72,8 +72,10 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		marketId := marketParam.Id
 		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
 		if !ok {
-			// No market price info yet, skip this market.
-			logger.Warn("No market price info", metrics.MarketId, marketId)
+			// No market price info yet, skip this market. This is expected and persists forever for
+			// markets that have been wound down (no exchange reports prices for a delisted market), so
+			// this isn't warn-worthy; the NoMarketPrice counter below is the right signal to alert on.
+			logger.Debug("No market price info", metrics.MarketId, marketId)
 			telemetry.IncrCounterWithLabels(
 				[]string{
 					metrics.PricefeedServer,
