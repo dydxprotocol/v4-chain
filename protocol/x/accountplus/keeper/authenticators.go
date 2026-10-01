@@ -243,6 +243,33 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 				selectedAuthenticator, account.String(), authenticatorFromStore.Type,
 			)
 	}
+	// Recheck the signature-verification invariant on load, not just on add: trees stored before
+	// AddAuthenticator started rejecting unsafe ones (v9.0.0), or imported via SetGenesisState, which
+	// bypasses AddAuthenticator, never went through that check. OnAuthenticatorAdded doesn't write
+	// state, so calling it here is safe.
+	requireSigVerification, err := uninitializedAuthenticator.OnAuthenticatorAdded(
+		ctx,
+		account,
+		authenticatorFromStore.Config,
+		strconv.FormatUint(selectedAuthenticator, 10),
+	)
+	if err != nil {
+		return types.InitializedAuthenticator{},
+			errors.Wrapf(
+				err,
+				"authenticator %d with type %s failed signature-verification recheck for account %s",
+				selectedAuthenticator, authenticatorFromStore.Type, account.String(),
+			)
+	}
+	if !requireSigVerification {
+		return types.InitializedAuthenticator{},
+			errors.Wrapf(
+				types.ErrAuthenticatorUnsafe,
+				"authenticator %d with type %s for account %s",
+				selectedAuthenticator, authenticatorFromStore.Type, account.String(),
+			)
+	}
+
 	// Ensure that initialization of each authenticator works as expected
 	// NOTE: Always return a concrete authenticator not a pointer, do not modify in place
 	// NOTE: The authenticator manager returns a struct that is reused
