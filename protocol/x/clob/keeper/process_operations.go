@@ -812,7 +812,23 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		return nil
 	}
 
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	for _, fill := range matchDeleveraging.GetFills() {
+		// Unlike order fills (ProcessSingleMatch), nothing upstream of this proposer-supplied message
+		// constrains FillAmount to a multiple of StepBaseQuantums. Left unchecked, this lets a byzantine
+		// proposer commit a non-step-multiple position size: harmless by itself, but a later liquidation
+		// attempt against that position (which inherits the non-multiple size) fails deep in the memclob
+		// matching loop with an error no caller there is prepared to recover from.
+		if fill.FillAmount%clobPair.StepBaseQuantums != 0 {
+			return errorsmod.Wrapf(
+				types.ErrFillAmountNotDivisibleByStepSize,
+				"FillAmount %v is not divisible by StepBaseQuantums %v for clob pair %v",
+				fill.FillAmount,
+				clobPair.StepBaseQuantums,
+				clobPair.Id,
+			)
+		}
+
 		deltaBaseQuantums := new(big.Int).SetUint64(fill.FillAmount)
 		if deltaBaseQuantumsIsNegative {
 			deltaBaseQuantums.Neg(deltaBaseQuantums)

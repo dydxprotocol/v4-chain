@@ -3344,3 +3344,92 @@ func assertSubaccountState(
 		require.ElementsMatch(t, subaccount.PerpetualPositions, perpetualPositions)
 	}
 }
+
+// ValidateBasic can't check a proposer-supplied deleveraging FillAmount against StepBaseQuantums, and a
+// non-step-multiple position would later produce a liquidation order that fails mid-match in the memclob.
+func TestPersistMatchDeleveragingToState_RejectsNonStepMultipleFillAmount(t *testing.T) {
+	// Carl is bankrupt (negative TNC): $49,999 quote against a 1 BTC short, i.e. TNC = -$1.
+	liquidatedSubaccount := constants.Carl_Num0_1BTC_Short_49999USD
+	offsettingSubaccount := constants.Dave_Num0_1BTC_Long_50000USD
+
+	testCases := map[string]struct {
+		fillAmount uint64
+		expectErr  bool
+	}{
+		"non-multiple of StepBaseQuantums (5): rejected": {
+			fillAmount: 99_999_998, // not divisible by ClobPair_Btc.StepBaseQuantums (5)
+			expectErr:  true,
+		},
+		"multiple of StepBaseQuantums (5): succeeds": {
+			fillAmount: 100_000_000, // Carl's full position, divisible by 5
+			expectErr:  false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			mockIndexerEventManager.On("Enabled").Return(false)
+			mockIndexerEventManager.On(
+				"AddTxnEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			).Return()
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+
+			btcPerp := constants.BtcUsd_20PercentInitial_10PercentMaintenance
+			_, err := ks.PerpetualsKeeper.CreatePerpetual(
+				ks.Ctx,
+				btcPerp.Params.Id,
+				btcPerp.Params.Ticker,
+				btcPerp.Params.MarketId,
+				btcPerp.Params.AtomicResolution,
+				btcPerp.Params.DefaultFundingPpm,
+				btcPerp.Params.LiquidityTier,
+				btcPerp.Params.MarketType,
+			)
+			require.NoError(t, err)
+			perptest.SetUpDefaultPerpOIsForTest(t, ks.Ctx, ks.PerpetualsKeeper, []perptypes.Perpetual{btcPerp})
+
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				ks.Ctx,
+				constants.ClobPair_Btc.Id,
+				btcPerp.Params.Id,
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+			)
+			require.NoError(t, err)
+
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, liquidatedSubaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, offsettingSubaccount)
+
+			err = ks.ClobKeeper.PersistMatchDeleveragingToState(
+				ks.Ctx,
+				&types.MatchPerpetualDeleveraging{
+					Liquidated:  *liquidatedSubaccount.GetId(),
+					PerpetualId: btcPerp.Params.Id,
+					Fills: []types.MatchPerpetualDeleveraging_Fill{
+						{
+							OffsettingSubaccountId: *offsettingSubaccount.GetId(),
+							FillAmount:             tc.fillAmount,
+						},
+					},
+				},
+			)
+
+			if tc.expectErr {
+				require.ErrorIs(t, err, types.ErrFillAmountNotDivisibleByStepSize)
+				// No funds should have moved.
+				require.Equal(t, liquidatedSubaccount, ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *liquidatedSubaccount.GetId()))
+				require.Equal(t, offsettingSubaccount, ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *offsettingSubaccount.GetId()))
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
