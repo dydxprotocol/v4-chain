@@ -765,6 +765,180 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0: {},
 			},
 		},
+		"Builder fee is waived while the negative-TNC gate is active": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_0,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
+			},
+			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
+				require.NoError(t, ks.SubaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					constants.ClobPair_Btc.MustGetPerpetualId(),
+					uint32(ctx.BlockHeight()),
+				))
+			},
+			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
+				bk.On(
+					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"BlockedAddr",
+					mock.Anything,
+				).Return(false)
+				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+					mock.Anything,
+				).Return(nil).Once()
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(100_000_000_000)))
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000,    // 1 BTC
+						Subticks:     50_000_000_000, // $50,000
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						BuilderCodeParameters: &types.BuilderCodeParameters{
+							BuilderAddress: constants.Carl_Num0.Owner,
+							FeePpm:         10_000,
+						},
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000,
+						Subticks:     50_000_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						BuilderCodeParameters: &types.BuilderCodeParameters{
+							BuilderAddress: constants.Carl_Num0.Owner,
+							FeePpm:         10_000,
+						},
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   100_000_000,
+							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedMatches: []*MatchWithOrdersForTesting{
+				{
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     100_000_000,    // 1 BTC
+							Subticks:     50_000_000_000, // $50,000
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+							BuilderCodeParameters: &types.BuilderCodeParameters{
+								BuilderAddress: constants.Carl_Num0.Owner,
+								FeePpm:         10_000,
+							},
+						},
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
+						FillAmount: 100_000_000,
+						MakerFee:   10_000_000,
+						TakerFee:   25_000_000,
+					},
+					TotalFilledMaker: 100_000_000,
+					TotalFilledTaker: 100_000_000,
+				},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15.GetOrderId(),
+				},
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15.GetOrderId(),
+				},
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Alice_Num0: big.NewInt(100_000_000_000 - 50_010_000_000).Int64(),
+				constants.Bob_Num0: big.NewInt(100_000_000_000 +
+					50_000_000_000 -
+					25_000_000).Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Bob_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-100_000_000),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+				constants.Alice_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+100_000_000),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+				constants.Carl_Num0: {},
+			},
+		},
 		"preexisting stateful maker order partially matches with 2 short term taker orders": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
