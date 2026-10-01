@@ -2361,6 +2361,286 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrDeleveragingIsFinalSettlementFlagMismatch,
 		},
+		"Fails with ClobMatch_MatchOrders when reduce-only taker fill amount exceeds subaccount position, " +
+			"would change position side": reduceOnlyOverfillTestCase(),
+		"Fails with ClobMatch_MatchOrders when reduce-only taker order is on the same side as the " +
+			"existing position, would increase position size": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100_000_000), // 1 BTC long
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+				},
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId: types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						// Alice is already long 1 BTC. A reduce-only order on the buy side would
+						// increase (not reduce) her position, regardless of fill amount.
+						Side:         types.Order_SIDE_BUY,
+						Quantums:     50_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+						ReduceOnly:   true,
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_BUY,
+						Quantums:     50_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+						ReduceOnly:   true,
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   50_000_000,
+							MakerOrderId: types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						},
+					},
+				),
+			},
+			expectedError: types.ErrReduceOnlyWouldIncreasePositionSize,
+		},
+		"Succeeds when reduce-only taker fill amount exactly equals subaccount position size, closing it": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100_000_000), // 1 BTC long
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+				},
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_BUY,
+						Quantums:     100_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000, // exactly closes Alice's 1 BTC position
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+						ReduceOnly:   true,
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+						ReduceOnly:   true,
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   100_000_000,
+							MakerOrderId: types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						},
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+					{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+				},
+				BlockHeight: blockHeight,
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0}: 100_000_000,
+				{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0}:   100_000_000,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// 100_000 usdc + 50_000_000 (proceeds from selling 1 BTC) - 25_000 taker fee
+				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64() + 50_000_000 - 25_000,
+				// 100_000 usdc - 50_000_000 (payment for 1 BTC) - 10_000 maker fee
+				constants.Bob_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64() - 50_000_000 - 10_000,
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				// Position is fully closed and removed from state.
+				constants.Alice_Num0: {},
+				constants.Bob_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(100_000_000),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+			},
+		},
+		"Succeeds when reduce-only taker fill amount is strictly less than subaccount position size": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100_000_000), // 1 BTC long
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+				},
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_BUY,
+						Quantums:     40_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					},
+				),
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     40_000_000, // strictly less than Alice's 1 BTC position
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+						ReduceOnly:   true,
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     40_000_000,
+						Subticks:     50_000_000,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+						ReduceOnly:   true,
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   40_000_000,
+							MakerOrderId: types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						},
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+					{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+				},
+				BlockHeight: blockHeight,
+			},
+			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
+				{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0}: 40_000_000,
+				{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0}:   40_000_000,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				// 100_000 usdc + 20_000_000 (proceeds from selling 0.4 BTC) - 10_000 taker fee
+				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64() + 20_000_000 - 10_000,
+				// 100_000 usdc - 20_000_000 (payment for 0.4 BTC) - 4_000 maker fee
+				constants.Bob_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64() - 20_000_000 - 4_000,
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Alice_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(60_000_000), // 1 BTC - 0.4 BTC, position remains open
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+				constants.Bob_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(40_000_000),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -2368,6 +2648,139 @@ func TestProcessProposerOperations(t *testing.T) {
 			runProcessProposerOperationsTestCase(t, tc)
 		})
 	}
+}
+
+// reduceOnlyOverfillTestCase returns a processProposerOperationsTestCase where a proposer-supplied
+// match overfills a reduce-only taker order (Alice_Num0, 1 BTC long) past her position size,
+// which would flip her position side. This is shared between TestProcessProposerOperations and
+// TestProcessProposerOperations_ReduceOnlyOverfill_StateUnchanged so both exercise the exact same
+// scenario.
+func reduceOnlyOverfillTestCase() processProposerOperationsTestCase {
+	return processProposerOperationsTestCase{
+		perpetuals: []perptypes.Perpetual{
+			constants.BtcUsd_100PercentMarginRequirement,
+		},
+		perpetualFeeParams: &constants.PerpetualFeeParams,
+		clobPairs: []types.ClobPair{
+			constants.ClobPair_Btc,
+		},
+		subaccounts: []satypes.Subaccount{
+			{
+				Id: &constants.Alice_Num0,
+				AssetPositions: []*satypes.AssetPosition{
+					&constants.Usdc_Asset_100_000,
+				},
+				PerpetualPositions: []*satypes.PerpetualPosition{
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(100_000_000), // 1 BTC long
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+			},
+			{
+				Id: &constants.Bob_Num0,
+				AssetPositions: []*satypes.AssetPosition{
+					&constants.Usdc_Asset_100_000,
+				},
+			},
+		},
+		rawOperations: []types.OperationRaw{
+			clobtest.NewShortTermOrderPlacementOperationRaw(
+				types.Order{
+					OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+					Side:         types.Order_SIDE_BUY,
+					Quantums:     150_000_000,
+					Subticks:     50_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+				},
+			),
+			clobtest.NewShortTermOrderPlacementOperationRaw(
+				types.Order{
+					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     150_000_000, // order size exceeds Alice's 1 BTC position
+					Subticks:     50_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+					ReduceOnly:   true,
+				},
+			),
+			clobtest.NewMatchOperationRaw(
+				&types.Order{
+					OrderId:      types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0},
+					Side:         types.Order_SIDE_SELL,
+					Quantums:     150_000_000,
+					Subticks:     50_000_000,
+					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+					TimeInForce:  types.Order_TIME_IN_FORCE_IOC,
+					ReduceOnly:   true,
+				},
+				[]types.MakerFill{
+					{
+						// Exceeds Alice's 1 BTC (100_000_000) position, but does not exceed
+						// either order's quantums (150_000_000), so it passes stateless
+						// validation and is only caught by the reduce-only DeliverTx guard.
+						FillAmount:   120_000_000,
+						MakerOrderId: types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+					},
+				},
+			),
+		},
+		expectedError: types.ErrReduceOnlyWouldChangePositionSide,
+	}
+}
+
+// TestProcessProposerOperations_ReduceOnlyOverfill_StateUnchanged verifies that when a
+// proposer-supplied match overfills a reduce-only order past the subaccount's position size,
+// the entire ops tx is rejected atomically: neither the victim's perpetual position nor any
+// order fill amounts are mutated.
+func TestProcessProposerOperations_ReduceOnlyOverfill_StateUnchanged(t *testing.T) {
+	tc := reduceOnlyOverfillTestCase()
+
+	aliceOrderId := types.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 14, ClobPairId: 0}
+	bobOrderId := types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0}
+
+	ctx, ks := runProcessProposerOperationsTestCase(t, tc)
+
+	// The match was rejected, so neither order should have any recorded fill amount.
+	aliceFillExists, aliceFillAmount, _ := ks.ClobKeeper.GetOrderFillAmount(ctx, aliceOrderId)
+	require.False(t, aliceFillExists)
+	require.Equal(t, satypes.BaseQuantums(0), aliceFillAmount)
+
+	bobFillExists, bobFillAmount, _ := ks.ClobKeeper.GetOrderFillAmount(ctx, bobOrderId)
+	require.False(t, bobFillExists)
+	require.Equal(t, satypes.BaseQuantums(0), bobFillAmount)
+
+	// Alice's perpetual position must be unchanged from its seeded value (1 BTC long).
+	aliceSubaccount := ks.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	require.Equal(
+		t,
+		[]*satypes.PerpetualPosition{
+			testutil.CreateSinglePerpetualPosition(
+				0,
+				big.NewInt(100_000_000),
+				big.NewInt(0),
+				big.NewInt(0),
+			),
+		},
+		aliceSubaccount.PerpetualPositions,
+	)
+	require.Equal(
+		t,
+		constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+		aliceSubaccount.GetUsdcPosition().Int64(),
+	)
+
+	// Bob (the would-be maker) must not have picked up any position either.
+	bobSubaccount := ks.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
+	require.Empty(t, bobSubaccount.PerpetualPositions)
+	require.Equal(
+		t,
+		constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+		bobSubaccount.GetUsdcPosition().Int64(),
+	)
 }
 
 func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
