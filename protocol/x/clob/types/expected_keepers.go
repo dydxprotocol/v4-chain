@@ -84,6 +84,10 @@ type SubaccountsKeeper interface {
 		builderFeeQuantums *big.Int,
 		builderAddress string,
 	) error
+	IsNegativeTncGateActiveForPerpetual(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (bool, error)
 	GetInsuranceFundBalance(
 		ctx sdk.Context,
 		perpetualId uint32,

@@ -425,9 +425,6 @@ func (k Keeper) persistMatchedOrders(
 
 	makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
 	makerBuilderFeeQuantums := makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
-	matchWithOrders.MakerBuilderFee = makerBuilderFeeQuantums.Uint64()
-
-	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
 	makerBuilderAddress := makerBuilderCodeParams.GetBuilderAddress()
 
 	takerBuilderFeeQuantums := big.NewInt(0)
@@ -435,11 +432,29 @@ func (k Keeper) persistMatchedOrders(
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
 		takerBuilderCodeParams := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
 		takerBuilderFeeQuantums = takerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
-		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
-
-		matchWithOrders.TakerBuilderFee = takerBuilderFeeQuantums.Uint64()
 		takerBuilderAddress = takerBuilderCodeParams.GetBuilderAddress()
 	}
+
+	// Builder fees leave the collateral pool just like a withdrawal, so waive them while the pool's
+	// negative-TNC/chain-outage withdrawal gate is active. Waiving instead of failing the match matters
+	// because the gate can turn on mid-block (e.g. a deleveraging match earlier in the same operations
+	// queue), which the proposer can't anticipate from CheckTx state; failing would revert the whole
+	// operations tx.
+	if makerBuilderFeeQuantums.Sign() > 0 || takerBuilderFeeQuantums.Sign() > 0 {
+		gateActive, err := k.subaccountsKeeper.IsNegativeTncGateActiveForPerpetual(ctx, perpetualId)
+		if err != nil {
+			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+		if gateActive {
+			makerBuilderFeeQuantums = big.NewInt(0)
+			takerBuilderFeeQuantums = big.NewInt(0)
+		}
+	}
+
+	matchWithOrders.MakerBuilderFee = makerBuilderFeeQuantums.Uint64()
+	matchWithOrders.TakerBuilderFee = takerBuilderFeeQuantums.Uint64()
+	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
+	bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
 
 	// Do this before subaccount updates so that bank sends are always valid between different
 	// module accounts.
