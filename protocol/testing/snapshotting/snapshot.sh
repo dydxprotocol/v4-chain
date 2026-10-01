@@ -109,17 +109,12 @@ while true; do
 
   log_this "Creating new snapshot"
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
-<<<<<<< HEAD
-  tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
-  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --debug || true
-=======
   # `tar` is not verbose and `aws s3 cp` omits its progress meter: the former otherwise writes one log
   # line per archived file, and the latter a `\r`-delimited stream that lands in Datadog as a single
   # ~900KB line. `--no-progress` (rather than `--only-show-errors`) keeps the one-line upload
   # confirmation, which is the only per-snapshot success signal in these logs.
   tar czf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
   aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --no-progress || true
->>>>>>> 127ef76 (fix(full-node): silence tar/aws output in snapshot scripts (#3398))
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
   log_this "Done creating snapshot\n---------------------------\n"
 
