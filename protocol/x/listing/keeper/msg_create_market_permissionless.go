@@ -13,9 +13,9 @@ func (k msgServer) CreateMarketPermissionless(
 ) (*types.MsgCreateMarketPermissionlessResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	// Check if the number of listed markets is above the hard cap
+	// Reject when already at or above HardCapForMarkets (`>` was off-by-one).
 	numPerpetuals := len(k.PerpetualsKeeper.GetAllPerpetuals(ctx))
-	if uint32(numPerpetuals) > k.Keeper.GetMarketsHardCap(ctx) {
+	if uint32(numPerpetuals) >= k.Keeper.GetMarketsHardCap(ctx) {
 		return nil, types.ErrMarketsHardCapReached
 	}
 
