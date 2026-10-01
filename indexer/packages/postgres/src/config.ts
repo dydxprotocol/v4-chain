@@ -31,6 +31,9 @@ export const postgresConfigSchema = {
   PG_POOL_MIN: parseInteger({ default: 1 }),
   PG_POOL_MAX: parseInteger({ default: 2 }),
   PG_ACQUIRE_CONNECTION_TIMEOUT_MS: parseInteger({ default: 10_000 }),
+  // Abort a transaction left idle (no active query) past this, so a leaked/abandoned
+  // transaction can never pin the vacuum xmin horizon for hours. 0 disables.
+  PG_IDLE_IN_TX_TIMEOUT_MS: parseInteger({ default: 300_000 }), // 5 minutes
   PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
   ASSET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
   MARKET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
