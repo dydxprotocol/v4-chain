@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/mock"
@@ -353,7 +352,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			if tc.isMultiMarket || len(tc.initialMarketConfig) == 0 {
 				require.Equal(t, tc.initialMutableExchangeConfig.GetMarketIds(), taskLoopDefinition.marketIds)
 			} else {
-				numMarkets := lib.Min(len(tc.initialMarketConfig), int(tc.queryConfig.MaxQueries))
+				numMarkets := min(len(tc.initialMarketConfig), int(tc.queryConfig.MaxQueries))
 				require.Len(t, taskLoopDefinition.marketIds, numMarkets)
 
 				for i := 0; i < numMarkets; i++ {
@@ -372,7 +371,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			if tc.isMultiMarket {
 				require.Equal(t, tc.updateMutableExchangeConfig.GetMarketIds(), taskLoopDefinition.marketIds)
 			} else {
-				numMarkets := lib.Min(len(tc.initialMarketConfig), int(tc.queryConfig.MaxQueries))
+				numMarkets := min(len(tc.initialMarketConfig), int(tc.queryConfig.MaxQueries))
 				require.Len(t, taskLoopDefinition.marketIds, int(tc.queryConfig.MaxQueries))
 
 				for i := 0; i < numMarkets; i++ {

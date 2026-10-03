@@ -47,8 +47,8 @@ type PriceTuple struct {
 func isTowardsIndexPrice(
 	priceTuple PriceTuple,
 ) bool {
-	return priceTuple.NewPrice <= lib.Max(priceTuple.OldPrice, priceTuple.IndexPrice) &&
-		priceTuple.NewPrice >= lib.Min(priceTuple.OldPrice, priceTuple.IndexPrice)
+	return priceTuple.NewPrice <= max(priceTuple.OldPrice, priceTuple.IndexPrice) &&
+		priceTuple.NewPrice >= min(priceTuple.OldPrice, priceTuple.IndexPrice)
 }
 
 // isCrossingIndexPrice returns true if index price is between the current and the new price,
@@ -74,7 +74,7 @@ func isCrossingReferencePrice(
 	referencePrice uint64,
 	testPrice uint64,
 ) bool {
-	return referencePrice < lib.Max(basePrice, testPrice) && referencePrice > lib.Min(basePrice, testPrice)
+	return referencePrice < max(basePrice, testPrice) && referencePrice > min(basePrice, testPrice)
 }
 
 // computeTickSizePpm calculates the tick_size of the currency at the current price, in ppm.

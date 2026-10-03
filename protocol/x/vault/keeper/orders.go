@@ -406,7 +406,7 @@ func (k Keeper) GetVaultClobOrders(
 					break
 				}
 
-				order.Quantums = lib.Min(order.Quantums, totalOrderSize)
+				order.Quantums = min(order.Quantums, totalOrderSize)
 				totalOrderSize -= order.Quantums
 				reduceOnlyOrders = append(reduceOnlyOrders, order)
 			}

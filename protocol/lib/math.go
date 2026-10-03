@@ -6,8 +6,6 @@ import (
 	"math"
 	"math/big"
 	"sort"
-
-	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -50,20 +48,6 @@ func MustDivideUint32RoundUp(x, y uint32) uint32 {
 	uint64Y := uint64(y)
 	result := (uint64X + uint64Y - 1) / uint64Y
 	return uint32(result)
-}
-
-func Max[T constraints.Ordered](x, y T) T {
-	if x < y {
-		return y
-	}
-	return x
-}
-
-func Min[T constraints.Ordered](x, y T) T {
-	if x > y {
-		return y
-	}
-	return x
 }
 
 // Int64MulPpm multiplies an int64 by a scaling factor represented in parts per million. If the integer overflows,

@@ -155,7 +155,7 @@ func (k Keeper) ProcessSingleMatch(
 		// Temporarily cap maker rebates to 0 for liquidations. This is to prevent an issue where
 		// the fee collector has insufficient funds to pay the maker rebate.
 		// TODO(CLOB-812): find a longer term solution to handle maker rebates for liquidations.
-		makerFeePpm = lib.Max(makerFeePpm, 0)
+		makerFeePpm = max(makerFeePpm, 0)
 		takerInsuranceFundDelta, err = k.validateMatchedLiquidation(
 			ctx,
 			takerMatchableOrder,
@@ -744,7 +744,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	if !order.IsStatefulOrder() {
 		// Compute the block at which this state fill amount can be pruned. This is the greater of
 		// `GoodTilBlock + ShortBlockWindow` and the existing `pruneableBlockHeight`.
-		pruneableBlockHeight = lib.Max(
+		pruneableBlockHeight = max(
 			order.GetGoodTilBlock()+types.ShortBlockWindow,
 			curPruneableBlockHeight,
 		)
