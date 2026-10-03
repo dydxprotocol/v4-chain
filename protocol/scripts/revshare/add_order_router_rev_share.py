@@ -28,6 +28,18 @@ testnet_chain = "dydxprotocol-testnet"
 
 PROPOSAL_STATUS_PASSED = 3
 
+# Validator configurations by environment
+staging_validators = ["alice", "bob", "carl", "dave", "emily", "fiona", "greg", "henry", "ian", "jeff"]
+testnet_validators = ["dydx-1", "dydx-2"]
+
+def get_validators_and_submitter(chain_id):
+    """Get the appropriate validators and proposal submitter based on chain ID."""
+    if chain_id == "dydx-testnet-4":
+        return testnet_validators, "dydx-1"
+    else:
+        # Default to staging configuration for dydxprotocol-testnet and other chains
+        return staging_validators, "alice"
+
 def vote_for(node, chain, proposal_id, person):
     print("voting as " + person)
     cmd = [
@@ -112,6 +124,10 @@ def main():
                     "title": "Add order router rev share for " + args.order_router_addr,
                     "summary": "Add order router rev share for " + args.order_router_addr
                 }
+
+                # Add expedited flag for dydx-testnet-4
+                if args.chain_id == "dydx-testnet-4":
+                    order_router_rev_share_msg["expedited"] = True
                 json.dump(order_router_rev_share_msg, tmp_file, indent=2)
                 tmp_file_path = tmp_file.name
             print("submitting proposal for order router rev share")
@@ -121,7 +137,7 @@ def main():
                 "gov",
                 "submit-proposal",
                 tmp_file_path,
-                "--from=alice",
+                f"--from={get_validators_and_submitter(args.chain_id)[1]}",
                 "--gas=auto", 
                 "--fees=10000000000000000000000adv4tnt",
                 "--node=" + args.node,
@@ -137,8 +153,8 @@ def main():
             os.remove(tmp_file_path)
             print("voting for order router rev share")
             time.sleep(5)
-            # vote for alice
-            voters = ["alice", "bob", "carl", "dave", "emily", "fiona", "greg", "henry", "ian", "jeff"]
+            # Get appropriate validators for this environment
+            voters, _ = get_validators_and_submitter(args.chain_id)
             proposal_id = get_proposal_id(args.node, args.chain_id)
             for voter in voters:
                 vote_for(args.node, args.chain_id, proposal_id, voter)
