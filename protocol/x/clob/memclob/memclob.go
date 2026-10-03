@@ -750,7 +750,7 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
 		liquidationOrderStatus.OrderStatus,
 		offchainUpdates,
-		err
+		nil
 }
 
 // DeleverageSubaccount will deleverage a subaccount by finding perpetual positions that can be used to offset
