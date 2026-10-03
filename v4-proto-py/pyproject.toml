@@ -1,0 +1,25 @@
+[project]
+name = "v4-proto"
+version = "8.0.6"
+authors = [
+ { name="dYdX", email="contact@dydx.exchange"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+]
+license-files = ["LICENSE"]
+description = "dYdX v4-chain protobufs"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "grpcio~=1.71",
+    "grpcio-tools~=1.71",
+    "protobuf~=5.29",
+]
+
+[project.urls]
+Homepage = "https://docs.dydx.exchange/api_integration-full-node-streaming"
+Issues = "https://github.com/dydxprotocol/v4-chain/issues"
