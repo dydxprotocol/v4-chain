@@ -331,9 +331,10 @@ func (ob *Orderbook) mustAddOrderToOrderbook(
 	newOrder.MustBeValidOrderSide()
 
 	isBuy := newOrder.IsBuy()
-	clobOrder := types.ClobOrder{
-		Order: newOrder,
-	}
+	
+	// Get a ClobOrder from the pool instead of creating a new one
+	clobOrder := GlobalMemPools.ClobOrderPool.Get()
+	clobOrder.Order = newOrder
 
 	// Add the order to the proper side of the orderbook and update orderbook state as necessary.
 	if isBuy {
@@ -361,6 +362,9 @@ func (ob *Orderbook) mustAddOrderToOrderbook(
 	// Verify that the order ID is not already present in the `orderIdToLevelOrder` mapping. If not,
 	// this means a replacement order was not properly validated and we should panic.
 	if levelOrder, exists := ob.orderIdToLevelOrder[newOrder.OrderId]; exists {
+		// Return the ClobOrder to the pool since we won't be using it
+		GlobalMemPools.ClobOrderPool.Put(clobOrder)
+		
 		panic(
 			fmt.Sprintf(
 				"mustAddOrderToOrderbook: order (%+v) should be removed from the orderbook before replacing with order (%+v)",
@@ -374,10 +378,10 @@ func (ob *Orderbook) mustAddOrderToOrderbook(
 	// - The price level (either front or back)
 	// - The orderIdToLevelOrder mapping
 	if forceToFrontOfLevel {
-		level.LevelOrders.PushFront(clobOrder)
+		level.LevelOrders.PushFront(*clobOrder)
 		ob.orderIdToLevelOrder[newOrder.OrderId] = level.LevelOrders.Front
 	} else {
-		level.LevelOrders.PushBack(clobOrder)
+		level.LevelOrders.PushBack(*clobOrder)
 		ob.orderIdToLevelOrder[newOrder.OrderId] = level.LevelOrders.Back
 	}
 
