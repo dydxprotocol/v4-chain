@@ -107,7 +107,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			},
 			Liquidation: LiquidationFlags{
 				Enabled:           true,
-				LoopDelayMs:       1_600,
+				LoopDelayMs:       800,
 				QueryPageLimit:    1_000,
 				ResponsePageLimit: 2_000,
 			},
