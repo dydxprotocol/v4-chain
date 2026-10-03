@@ -35,7 +35,7 @@ export const baseConfigSchema = {
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),
   ENABLE_LOGS_IN_TEST: parseBoolean({ default: false }),
-  STATSD_HOST: parseString({ default: 'localhost' }),
+  STATSD_HOST: parseString({ default: '127.0.0.1' }),
   STATSD_PORT: parseInteger({ default: 8125 }),
   LOG_LEVEL: parseString({ default: 'debug' }),
   ECS_CONTAINER_METADATA_URI_V4: parseString({ default: '' }),
