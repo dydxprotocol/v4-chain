@@ -987,7 +987,6 @@ export async function expectPerpetualPosition(
     sumClose?: string,
     entryPrice?: string,
     exitPrice?: string | null,
-    totalRealizedPnl?: string | null,
   },
 ) {
   const perpetualPosition:
@@ -1008,9 +1007,6 @@ export async function expectPerpetualPosition(
   }
   if (fields.exitPrice !== undefined) {
     expect(perpetualPosition!.exitPrice).toEqual(fields.exitPrice);
-  }
-  if (fields.totalRealizedPnl !== undefined) {
-    expect(perpetualPosition!.totalRealizedPnl).toEqual(fields.totalRealizedPnl);
   }
 }
 

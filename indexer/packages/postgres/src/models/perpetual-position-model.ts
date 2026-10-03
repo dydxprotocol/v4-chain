@@ -97,7 +97,6 @@ export default class PerpetualPositionModel extends Model {
         createdAtHeight: { type: 'string', pattern: IntegerPattern },
         closedAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         settledFunding: { type: 'string', pattern: NumericPattern },
-        totalRealizedPnl: { type: ['string', 'null'], default: null, pattern: NumericPattern },
       },
     };
   }
@@ -129,7 +128,6 @@ export default class PerpetualPositionModel extends Model {
       closeEventId: 'hex-string',
       lastEventId: 'hex-string',
       settledFunding: 'string',
-      totalRealizedPnl: 'string',
     };
   }
 
@@ -170,6 +168,4 @@ export default class PerpetualPositionModel extends Model {
   lastEventId!: Buffer;
 
   settledFunding!: string;
-
-  totalRealizedPnl?: string;
 }
