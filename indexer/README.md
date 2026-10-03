@@ -8,24 +8,133 @@
   </a>
 </div>
 
-This monorepo holds a set of packages and services used to deploy the V4 Indexer.
+## Overview
 
-The V4 Indexer is a set of microservices which provides a set of rich APIs and websocket channels
-for a dYdX V4 application.
+This monorepo contains the dYdX v4 Indexer, the off-chain data and API layer that powers rich,
+low-latency access to the v4 chain.
 
-The services that make up the V4 Indexer are:
-- ender: Receives on-chain events from V4 node via Kafka, archives them to a PostgreSQL database
-and sends websocket events for the on-chain events to Kafka
-- vulcan: Receives off-chain events from V4 node via Kafka, archives them to a PostgreSQL database
-and sends websocket events for the off-chain events to Kafka
-- socks: Websocket server that accepts subscriptions for websocket channels, and forwards websocket
-events from Kafka to websocket clients that are subscribed
-- comlink: Serves all HTTP API calls made to the V4 Indexer
-- roundtable: Periodic job service
-- bazooka: Deploys Indexer services via AWS Lambda
+It is a TypeScript/Node.js monorepo managed with a pnpm workspace, designed to be deployed as a set of independently scalable microservices.
 
-TODO(DEC-784): Add comprehensive descriptions/documentation for each service and the mono-repo as 
-a whole.
+At a high level, the Indexer:
+
+- Consumes on-chain data from the v4 validator node (blocks, transactions, protocol events) via Kafka.
+
+- Processes off-chain updates (primarily order updates) coming from the trading stack into Redis caches.
+
+- Persists normalized historical data into PostgreSQL for querying.
+
+- Exposes public REST APIs and WebSocket streams for markets, orderbooks, trades, subaccounts, funding, and more.
+
+- Runs a background job system to keep derived metrics, rewards, and snapshots up-to-date.
+
+- Provides operational tooling for migrations, fast-syncing, environment resets, and deployments.
+
+The repo is split into:
+
+- Services (services/*) – networked microservices (APIs, workers, WebSocket gateway, deploy tooling).
+
+- Packages (packages/*) – shared libraries for configuration, Postgres access, Redis caches, Kafka, compliance, notifications, and protocol types.
+
+## Infrastructure
+
+The Indexer requires access to the following core infrastructure components (locally via Docker or in
+production via managed services):
+
+- dYdX v4 Indexer Full Node – Tendermint/CometBFT node producing blocks and events to Kafka.
+
+- Kafka – message bus between the chain node, ingestion services, and WebSocket gateways.
+
+- PostgreSQL – primary relational store for historical and queryable state.
+
+- Redis – low-latency cache for real-time order/state and rate limiting.
+
+- Object storage (e.g. S3) – optional, for exporting snapshots and research datasets.
+
+- Datadog – metrics, traces, and logs (see /datadog configuration).
+
+- AWS ECS + Lambda + ECR (typical production deployment) – container orchestration for services
+and Lambda-based deploy/migration tooling.
+
+## Core services
+
+These are the main services that make up the v4 Indexer. Each service has its own README with full
+API and operational details.
+
+### Ender (services/ender): On-chain ingestion and archival service
+Ender consumes IndexerTendermintBlock messages from Kafka, parses all on-chain events (orders, fills,
+transfers, markets, funding, stateful orders, etc.), writes normalized records into PostgreSQL,
+updates Redis caches where needed, and publishes derived messages (trades, markets, candles,
+subaccounts, block height) to Kafka topics consumed by downstream services.
+
+### Vulcan (services/vulcan): Off-chain order update processor
+Vulcan consumes off-chain order updates from Kafka, maintains canonical real-time order state and orderbooks in Redis caches,
+reconciles state with on-chain events, handles cancellations and expiries, and publishes
+subaccount and orderbook updates onto Kafka topics consumed by the WebSocket layer.
+
+### Socks (services/socks): WebSocket gateway. Socks terminates client WebSocket connections,
+validates and manages subscriptions to channels (markets, trades, candles, orderbooks,
+subaccounts, block height), reads messages from Kafka, and pushes them to subscribed clients. It
+enforces subscription limits and rate limits, handles heartbeats, and returns initial snapshots
+when a client subscribes to a channel.
+
+### Comlink (services/comlink): Public REST API service. Comlink serves HTTP endpoints for
+markets, positions, orders, fills, transfers, funding, PnL, rewards, vaults, and more. It
+aggregates data from PostgreSQL and Redis, applies geo-blocking and compliance checks, integrates
+with external providers (wallets, bridges, notifications), and is the primary entrypoint for
+application servers and frontends.
+
+### Roundtable (services/roundtable): Scheduled background job runner. Roundtable executes
+periodic tasks such as computing funding payments and PnL ticks, updating market statistics
+(volume, open interest, price changes), maintaining orderbook health, cleaning up stale cache
+entries, exporting snapshots to object storage, and refreshing compliance and affiliate data. It
+does not expose a public API; it runs entirely on a configurable schedule.
+
+### Bazooka (services/bazooka): Migration and environment management lambda
+Bazooka executes Knex database migrations and rollbacks, manages Kafka topic
+creation and cleanup, clears Redis or database contents when required, and supports fast-sync
+workflows (including sending stateful orders to Vulcan). It is used during environment bring-up,
+resets, and upgrades rather than serving live traffic.
+
+### Auxo (services/auxo): Deployment orchestrator lambda
+Auxo coordinates indexer upgrades by rolling out new Docker images, invoking Bazooka to run migrations
+and topic management, updating ECS task definitions, creating Kafka topics as needed, and rolling
+services (Comlink, Ender, Roundtable, Socks, Vulcan) in a safe order. It validates that new images
+exist in ECR and aims to minimize downtime during upgrades.
+
+There are also example templates under services/example-service and internal helper code under
+services/scripts, which are intended as scaffolding rather than production workloads.
+
+## Internal packages
+
+Internal libraries live in /packages/* and are consumed by the services above. The most important
+ones are:
+
+[@dydxprotocol-indexer/base](packages/base) – shared configuration schemas, logging, metrics, error types,
+Axios helpers, and background task utilities.
+
+[@dydxprotocol-indexer/postgres](packages/postgres) – Objection.js models, query helpers, and migration tooling
+for PostgreSQL.
+
+[@dydxprotocol-indexer/redis](packages/redis) – typed Redis clients and structured caches (orderbooks,
+subaccounts, rate limiting primitives, etc.).
+
+[@dydxprotocol-indexer/kafka](packages/kafka) – Kafka producers/consumers, topic helpers, and message
+builders used by ingestion and websocket services.
+
+[@dydxprotocol-indexer/notifications](packages/notifications) – integration with Firebase Cloud Messaging and related
+notification utilities.
+
+[@dydxprotocol-indexer/compliance](packages/compliance) – integrations with compliance providers and geo-blocking
+utilities.
+
+[@dydxprotocol-indexer/v4-protos](packages/v4-protos) & [@dydxprotocol-indexer/v4-proto-parser](packages/v4-proto-parser) – protobuf
+definitions and helpers for v4 chain messages.
+
+[@dydxprotocol-indexer/dev](packages/dev) – shared development configuration and tooling (linting, build,
+test utilities).
+
+For full package-level APIs and responsibilities, see [packages/README.md](packages/README.md).
+
 ## Setup
 
 We use [pnpm](https://pnpm.io/) in this repo because it is a "faster and more disk efficient package manager" and it works better than `npm` with a monorepo.
@@ -135,7 +244,7 @@ healthy after several minutes, Ctrl-C and run `docker-compose -f docker-compose-
 remove all the containers, then try running `docker-compose -f docker-compose-local-deployment.yml up` again.
 
 ### Running local V4 node
-By default the Indexer services connect to a local V4 node. To run a local V4 node alongside the indexer, 
+By default the Indexer services connect to a local V4 node. To run a local V4 node alongside the indexer,
 follow the instructions [here](https://github.com/dydxprotocol/v4#running-the-chain-locally).
 
 NOTE: The local V4 node needs to be started up before deploying the Indexer locally.
@@ -213,7 +322,7 @@ wscli connect ws://dev-indexer-apne1-lb-public-890774175.ap-northeast-1.elb.amaz
 wscli connect wss://indexer.v4staging.dydx.exchange/v4/ws
 ```
 
-Use a command-line websocket client such as 
+Use a command-line websocket client such as
 [interactive-websocket-cli](https://www.npmjs.com/package/interactive-websocket-cli) to connect and
 subscribe to channels.
 
