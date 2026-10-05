@@ -582,41 +582,12 @@ func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 		if err != nil {
 			return false, nil, err
 		}
-		currentBlock := uint32(ctx.BlockHeight())
-
-		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
-		if negativeTncSubaccountExists && currentBlock < lastBlockNegativeTncSubaccountSeen {
-			panic(
-				fmt.Sprintf(
-					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-						"block a negative TNC subaccount was seen (%d)",
-					currentBlock,
-					lastBlockNegativeTncSubaccountSeen,
-				),
-			)
-		}
-
-		// Panic if the current block is less than the last block a chain outage was seen.
-		downtimeInfo := k.blocktimeKeeper.GetDowntimeInfoFor(
+		negativeTncSubaccountSeen, chainOutageSeen := k.negativeTncGateStatus(
 			ctx,
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_CHAIN_OUTAGE_DURATION,
+			uint32(ctx.BlockHeight()),
+			lastBlockNegativeTncSubaccountSeen,
+			negativeTncSubaccountExists,
 		)
-		chainOutageExists := downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
-		if chainOutageExists && currentBlock < downtimeInfo.BlockInfo.Height {
-			panic(
-				fmt.Sprintf(
-					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-						"block a chain outage was seen (%d)",
-					currentBlock,
-					downtimeInfo.BlockInfo.Height,
-				),
-			)
-		}
-
-		negativeTncSubaccountSeen := negativeTncSubaccountExists && currentBlock-lastBlockNegativeTncSubaccountSeen <
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
-		chainOutageSeen := chainOutageExists && currentBlock-downtimeInfo.BlockInfo.Height <
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
 
 		if negativeTncSubaccountSeen || chainOutageSeen {
 			success = false

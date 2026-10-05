@@ -409,6 +409,59 @@ func TestSigVerification(t *testing.T) {
 	}
 }
 
+// The SIGN_MODE_LEGACY_AMINO_JSON sign doc embeds signerData.Sequence but not AuthInfoBytes, so a signature
+// must stop verifying once AuthInfo.SignerInfo.Sequence is swapped to an unused timestamp nonce.
+func TestSigVerification_RejectsForgedTimestampNonceSequence(t *testing.T) {
+	suite := testante.SetupTestSuite(t, true)
+	suite.Ctx = suite.Ctx.WithBlockHeight(1)
+
+	priv, _, addr := testdata.KeyTestPubAddr()
+	acc := suite.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr)
+	require.NoError(t, acc.SetAccountNumber(1000))
+	const realSequence = uint64(5)
+	require.NoError(t, acc.SetSequence(realSequence))
+	suite.AccountKeeper.SetAccount(suite.Ctx, acc)
+
+	require.NoError(t, suite.TxBuilder.SetMsgs(testdata.NewTestMsg(addr)))
+	suite.TxBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	suite.TxBuilder.SetGasLimit(testdata.NewTestGasLimit())
+
+	tx, err := suite.CreateTestTx(
+		suite.Ctx,
+		[]cryptotypes.PrivKey{priv},
+		[]uint64{acc.GetAccountNumber()},
+		[]uint64{realSequence},
+		suite.Ctx.ChainID(),
+		signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+	)
+	require.NoError(t, err)
+
+	spkd := sdkante.NewSetPubKeyDecorator(suite.AccountKeeper)
+	svd := customante.NewSigVerificationDecorator(suite.AccountKeeper, suite.ClientCtx.TxConfig.SignModeHandler())
+	antehandler := sdk.ChainAnteDecorators(spkd, svd)
+
+	runTx := func(tx sdk.Tx) error {
+		txBytes, encErr := suite.ClientCtx.TxConfig.TxEncoder()(tx)
+		require.NoError(t, encErr)
+		_, anteErr := antehandler(suite.Ctx.WithTxBytes(txBytes), tx, false)
+		return anteErr
+	}
+
+	require.NoError(t, runTx(tx), "originally-signed tx should verify")
+
+	// Forge a new tx with the same body/fee/signature bytes, but AuthInfo.SignerInfo.Sequence swapped
+	// to an unused timestamp nonce, the same way an attacker would to replay the tx.
+	sigsV2, err := tx.GetSignaturesV2()
+	require.NoError(t, err)
+	require.Len(t, sigsV2, 1)
+	forged := sigsV2[0]
+	forged.Sequence = accountpluskeeper.TimestampNonceSequenceCutoff + 123456
+	require.NoError(t, suite.TxBuilder.SetSignatures(forged))
+	forgedTx := suite.TxBuilder.GetTx()
+
+	require.Error(t, runTx(forgedTx), "forged sequence with reused signature bytes must not verify")
+}
+
 func TestSigIntegration(t *testing.T) {
 	// generate private keys
 	privs := []cryptotypes.PrivKey{
