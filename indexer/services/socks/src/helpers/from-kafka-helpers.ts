@@ -10,6 +10,7 @@ import {
   BlockHeightMessage,
   CandleMessage,
   CandleMessage_Resolution,
+  createProtoReader,
   MarketMessage,
   OrderbookMessage,
   SubaccountMessage,
@@ -31,23 +32,40 @@ export function getChannels(topic: WebsocketTopic): Channel[] {
   return TOPIC_TO_CHANNEL[topicEnum];
 }
 
-export function getMessagesToForward(topic: string, message: KafkaMessage): MessageToForward[] {
+export type HasSubscribers = (channel: Channel, id: string) => boolean;
+
+/**
+ * Every socks task consumes every message but most have no subscriber on a given task, so the id
+ * is resolved first and `contents` is only parsed for channels `hasSubscribers` accepts.
+ */
+export function getMessagesToForward(
+  topic: string,
+  message: KafkaMessage,
+  hasSubscribers: HasSubscribers = () => true,
+): MessageToForward[] {
   if (!message || !message.value) {
     throw new InvalidForwardMessageError('Got empty kafka message');
   }
 
   switch (topic) {
     case WebsocketTopic.TO_WEBSOCKETS_CANDLES: {
-      const candleMessage: CandleMessage = CandleMessage.decode(message.value);
+      const candleMessage: CandleMessage = CandleMessage.decode(createProtoReader(message.value));
+      const id: string = getCandleMessageId(candleMessage);
+      if (!hasSubscribers(Channel.V4_CANDLES, id)) {
+        return [];
+      }
       return [{
         channel: Channel.V4_CANDLES,
-        id: getCandleMessageId(candleMessage),
+        id,
         contents: JSON.parse(candleMessage.contents),
         version: candleMessage.version,
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_MARKETS: {
-      const marketMessage: MarketMessage = MarketMessage.decode(message.value);
+      const marketMessage: MarketMessage = MarketMessage.decode(createProtoReader(message.value));
+      if (!hasSubscribers(Channel.V4_MARKETS, V4_MARKETS_ID)) {
+        return [];
+      }
       return [{
         channel: Channel.V4_MARKETS,
         id: V4_MARKETS_ID,
@@ -56,41 +74,66 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS: {
-      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(message.value);
+      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(
+        createProtoReader(message.value),
+      );
+      const id: string = getTickerOrThrow(orderbookMessage.clobPairId);
+      if (!hasSubscribers(Channel.V4_ORDERBOOK, id)) {
+        return [];
+      }
       return [{
         channel: Channel.V4_ORDERBOOK,
-        id: getTickerOrThrow(orderbookMessage.clobPairId),
+        id,
         contents: JSON.parse(orderbookMessage.contents),
         version: orderbookMessage.version,
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_TRADES: {
-      const tradeMessage: TradeMessage = TradeMessage.decode(message.value);
+      const tradeMessage: TradeMessage = TradeMessage.decode(createProtoReader(message.value));
+      const id: string = getTickerOrThrow(tradeMessage.clobPairId);
+      if (!hasSubscribers(Channel.V4_TRADES, id)) {
+        return [];
+      }
       return [{
         channel: Channel.V4_TRADES,
-        id: getTickerOrThrow(tradeMessage.clobPairId),
+        id,
         contents: JSON.parse(tradeMessage.contents),
         version: tradeMessage.version,
       }];
     }
     case WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
-      return [{
-        channel: Channel.V4_ACCOUNTS,
-        id: getSubaccountMessageId(subaccountMessage),
-        contents: JSON.parse(subaccountMessage.contents),
-        version: subaccountMessage.version,
-      },
-      {
-        channel: Channel.V4_PARENT_ACCOUNTS,
-        id: getParentSubaccountMessageId(subaccountMessage),
-        subaccountNumber: subaccountMessage.subaccountId!.number,
-        contents: getParentSubaccountContents(subaccountMessage),
-        version: subaccountMessage.version,
-      }];
+      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(
+        createProtoReader(message.value),
+      );
+      const messages: MessageToForward[] = [];
+      const accountId: string = getSubaccountMessageId(subaccountMessage);
+      if (hasSubscribers(Channel.V4_ACCOUNTS, accountId)) {
+        messages.push({
+          channel: Channel.V4_ACCOUNTS,
+          id: accountId,
+          contents: JSON.parse(subaccountMessage.contents),
+          version: subaccountMessage.version,
+        });
+      }
+      const parentAccountId: string = getParentSubaccountMessageId(subaccountMessage);
+      if (hasSubscribers(Channel.V4_PARENT_ACCOUNTS, parentAccountId)) {
+        messages.push({
+          channel: Channel.V4_PARENT_ACCOUNTS,
+          id: parentAccountId,
+          subaccountNumber: subaccountMessage.subaccountId!.number,
+          contents: getParentSubaccountContents(subaccountMessage),
+          version: subaccountMessage.version,
+        });
+      }
+      return messages;
     }
     case WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT: {
-      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(message.value);
+      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(
+        createProtoReader(message.value),
+      );
+      if (!hasSubscribers(Channel.V4_BLOCK_HEIGHT, V4_BLOCK_HEIGHT_ID)) {
+        return [];
+      }
       return [{
         channel: Channel.V4_BLOCK_HEIGHT,
         id: V4_BLOCK_HEIGHT_ID,

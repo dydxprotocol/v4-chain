@@ -27,7 +27,8 @@ import {
   SubscribedMessage,
   WebsocketEvent,
 } from '../../src/types';
-import { Admin } from 'kafkajs';
+import { Admin, KafkaMessage } from 'kafkajs';
+import { stats } from '@dydxprotocol-indexer/base';
 import { BlockHeightMessage, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
 import {
   dbHelpers,
@@ -46,6 +47,7 @@ import {
   ethClobPairId,
   ethTicker,
   defaultBlockHeightMessage,
+  tradesMessage,
 } from '../constants';
 import _ from 'lodash';
 import { axiosRequest } from '../../src/lib/axios';
@@ -547,6 +549,58 @@ describe('message-forwarder', () => {
         batched: false,
       }));
     });
+  });
+
+  it('reports subscribers for direct and batched subscriptions only', () => {
+    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    subscriptions.subscriptions[Channel.V4_TRADES] = {
+      [ethTicker]: [{ connectionId: 'direct', pending: false, pendingMessages: [] }],
+      [btcTicker]: [],
+    };
+    subscriptions.batchedSubscriptions[Channel.V4_ORDERBOOK] = {
+      [btcTicker]: [{
+        connectionId: 'batched', pending: false, pendingMessages: [], batched: true,
+      }],
+    };
+
+    expect(messageForwarder.hasSubscribers(Channel.V4_TRADES, ethTicker)).toBe(true);
+    expect(messageForwarder.hasSubscribers(Channel.V4_ORDERBOOK, btcTicker)).toBe(true);
+    // An emptied subscriber list is left behind after the last unsubscribe.
+    expect(messageForwarder.hasSubscribers(Channel.V4_TRADES, btcTicker)).toBe(false);
+    expect(messageForwarder.hasSubscribers(Channel.V4_ORDERBOOK, ethTicker)).toBe(false);
+    expect(messageForwarder.hasSubscribers(Channel.V4_CANDLES, btcTicker)).toBe(false);
+  });
+
+  it('skips messages without subscribers without parsing them, and counts them', () => {
+    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    const incrementSpy: jest.SpyInstance = jest.spyOn(stats, 'increment');
+    const forwardSpy: jest.SpyInstance = jest.spyOn(messageForwarder, 'forwardMessage');
+    const message: KafkaMessage = {
+      key: Buffer.from('key'),
+      value: Buffer.from(TradeMessage.encode({ ...tradesMessage, contents: 'not json' }).finish()),
+      timestamp: `${Date.now()}`,
+      size: 0,
+      attributes: 0,
+      offset: '0',
+    };
+
+    expect(() => {
+      messageForwarder.onMessage(WebsocketTopics.TO_WEBSOCKETS_TRADES, message);
+    }).not.toThrow();
+    expect(forwardSpy).not.toHaveBeenCalled();
+    expect(incrementSpy).toHaveBeenCalledWith(
+      `${config.SERVICE_NAME}.message_skipped_no_subscribers`,
+      1,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      expect.any(Object),
+    );
+    // Still counted as a message to forward, so the metric keeps its pre-filter meaning.
+    expect(incrementSpy).toHaveBeenCalledWith(
+      `${config.SERVICE_NAME}.message_to_forward`,
+      1,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      expect.any(Object),
+    );
   });
 
   it('forwards block height messages', (done: jest.DoneCallback) => {
