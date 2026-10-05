@@ -211,8 +211,55 @@ export class MessageForwarder {
     }
     errProps.channels = channels;
 
-    // Decode the message based on the topic
-    for (const messageToForward of getMessagesToForward(topic, message)) {
+    // Recorded per Kafka message, before the subscriber filter: the E2E latency paging monitor
+    // (3442533) averages this metric and must keep sampling tasks with no subscribers.
+    const originalMessageTimestamp = message.headers?.message_received_timestamp;
+    if (originalMessageTimestamp !== undefined) {
+      stats.timing(
+        `${config.SERVICE_NAME}.message_time_since_received`,
+        start - Number(originalMessageTimestamp),
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        {
+          instance: getInstanceId(),
+          topic,
+          event_type: String(message.headers?.event_type),
+        },
+      );
+    }
+
+    let skippedWithoutSubscribers: number = 0;
+    const messagesToForward: MessageToForward[] = getMessagesToForward(
+      topic,
+      message,
+      (channel: Channel, id: string): boolean => {
+        const subscribed: boolean = this.hasSubscribers(channel, id);
+        if (!subscribed) {
+          skippedWithoutSubscribers += 1;
+        }
+        return subscribed;
+      },
+    );
+    // Counts every decoded channel message, skipped or not, so it keeps its pre-filter meaning.
+    stats.increment(
+      `${config.SERVICE_NAME}.message_to_forward`,
+      messagesToForward.length + skippedWithoutSubscribers,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      {
+        instance: getInstanceId(),
+      },
+    );
+    if (skippedWithoutSubscribers > 0) {
+      stats.increment(
+        `${config.SERVICE_NAME}.message_skipped_no_subscribers`,
+        skippedWithoutSubscribers,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        {
+          instance: getInstanceId(),
+        },
+      );
+    }
+
+    for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
@@ -226,33 +273,19 @@ export class MessageForwarder {
           channel: String(messageToForward.channel),
         },
       );
-
-      const originalMessageTimestamp = message.headers?.message_received_timestamp;
-      if (originalMessageTimestamp !== undefined) {
-        stats.timing(
-          `${config.SERVICE_NAME}.message_time_since_received`,
-          startForwardMessage - Number(originalMessageTimestamp),
-          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-          {
-            instance: getInstanceId(),
-            topic,
-            event_type: String(message.headers?.event_type),
-          },
-        );
-      }
     }
   }
 
-  public forwardMessage(message: MessageToForward): void {
-    stats.increment(
-      `${config.SERVICE_NAME}.message_to_forward`,
-      1,
-      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-      {
-        instance: getInstanceId(),
-      },
-    );
+  /**
+   * True when the channel/id has a direct or batched subscriber right now, i.e. when
+   * `forwardMessage` would deliver or buffer the message.
+   */
+  public hasSubscribers(channel: Channel, id: string): boolean {
+    return (this.subscriptions.subscriptions[channel]?.[id]?.length ?? 0) > 0 ||
+      (this.subscriptions.batchedSubscriptions[channel]?.[id]?.length ?? 0) > 0;
+  }
 
+  public forwardMessage(message: MessageToForward): void {
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
       return;
