@@ -66,6 +66,8 @@ type (
 
 		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
 		updateLeverageRateLimiter   rate_limit.RateLimiter[string]
+		// False until a BlockRateLimitConfiguration has been installed into the limiters above.
+		rateLimitersInitialized bool
 
 		// Within a block only optimistic fills can change a subaccount's net collateral, so the result
 		// is held until PrepareCheckState clears it.
@@ -195,9 +197,16 @@ func (k Keeper) IsInMemStructuresInitialized() bool {
 }
 
 // Initialize hydrates the clob keeper with the necessary in memory data structures.
-func (k Keeper) Initialize(ctx sdk.Context) {
+func (k *Keeper) Initialize(ctx sdk.Context) {
 	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
 	k.InitMemStore(ctx)
+
+	// A node bootstrapped through state sync has no state when the app installs the rate
+	// limiters at startup, so the panic placeholders are still in place. The restored snapshot
+	// is in state by the first PreBlocker, so install the real limiters from it here.
+	if !k.rateLimitersInitialized {
+		k.InitalizeBlockRateLimitFromStateIfExists(ctx)
+	}
 
 	// Code below hydrates the in memory data structures and is not rolled back even if
 	// the block execution is discarded by OE. Therefore, they are only called once.
