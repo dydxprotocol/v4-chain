@@ -79,6 +79,17 @@ export const configSchema = {
   RECONNECT_PENALTY_MS: parseInteger({ default: 30_000 }),
   RECONNECT_PENALTY_MAX_TRACKED_CLIENTS: parseInteger({ default: 100_000 }),
 
+  // Websocket compression (permessage-deflate). Outbound websocket data is most of the
+  // indexer's internet egress. At 0 the extension is disabled, as it was before this config
+  // existed. Above 0, this percentage of the connections whose client offers the extension have
+  // it negotiated and their outbound messages compressed; the rest get an unchanged handshake.
+  // The socks.ws_compression.* metrics are emitted at any value, so the share of traffic that
+  // would be compressed can be measured before enabling. See docs/websocket-compression.md.
+  WS_COMPRESSION_ROLLOUT_PERCENT: parseInteger({ default: 0 }),
+  // Messages smaller than this are sent uncompressed.
+  WS_COMPRESSION_THRESHOLD_BYTES: parseInteger({ default: 1024 }),
+  WS_COMPRESSION_METRIC_INTERVAL_MS: parseInteger({ default: 10_000 }),
+
   MESSAGE_FORWARDER_STATSD_SAMPLE_RATE: parseNumber({ default: 1.0 }),
   ENABLE_ORDERBOOK_LOGS: parseBoolean({ default: true }),
   PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes

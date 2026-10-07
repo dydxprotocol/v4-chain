@@ -1,4 +1,5 @@
 import { IncomingMessage as IncomingMessageHttp, OutgoingHttpHeaders } from 'http';
+import { Duplex } from 'stream';
 
 import { stats, getInstanceId, logger } from '@dydxprotocol-indexer/base';
 import WebSocket from 'ws';
@@ -14,6 +15,13 @@ import {
 import { reconnectPenalty } from '../lib/reconnect-penalty';
 import { IncomingMessage, OutgoingMessage, WebsocketEvent } from '../types';
 import { getClientIp } from './header-utils';
+import {
+  flushCompressionStats,
+  getPerMessageDeflateOptions,
+  prepareUpgradeRequest,
+  recordMessageSent,
+  trackConnection,
+} from './ws-compression';
 
 // Status returned for a websocket upgrade refused because the client is in the reconnect
 // penalty box. It is an ordinary HTTP response, which is what makes it visible to Cloudflare.
@@ -106,10 +114,27 @@ export function verifyClientNotPenalized(
   );
 }
 
+/**
+ * `ws` negotiates extensions before it calls `verifyClient`, so the upgrade request has to be
+ * prepared here for the compression rollout to decide whether an offer is honoured.
+ */
+class WebSocketServer extends WebSocket.Server {
+  public handleUpgrade(
+    request: IncomingMessageHttp,
+    socket: Duplex,
+    upgradeHead: Buffer,
+    callback: (client: WebSocket, request: IncomingMessageHttp) => void,
+  ): void {
+    prepareUpgradeRequest(request);
+    super.handleUpgrade(request, socket, upgradeHead, callback);
+  }
+}
+
 export class Wss {
   private wss: WebSocket.Server;
   private started: boolean;
   private closed: boolean;
+  private compressionStatsInterval?: NodeJS.Timeout;
 
   constructor() {
     this.started = false;
@@ -120,8 +145,9 @@ export class Wss {
       allowSynchronousEvents: true,
       autoPong: true,
       verifyClient: verifyClientNotPenalized,
+      perMessageDeflate: getPerMessageDeflateOptions(),
     };
-    this.wss = new WebSocket.Server(serverOptions);
+    this.wss = new WebSocketServer(serverOptions);
   }
 
   public async start(): Promise<void> {
@@ -146,10 +172,20 @@ export class Wss {
       });
       this.wss.on(WebsocketEvent.LISTENING, resolve);
     });
+
+    this.compressionStatsInterval = setInterval(
+      flushCompressionStats,
+      config.WS_COMPRESSION_METRIC_INTERVAL_MS,
+    );
+    // Metrics alone should not keep the process alive.
+    this.compressionStatsInterval.unref();
   }
 
   public onConnection(callback: (ws: WebSocket, req: IncomingMessage) => void): void {
-    this.wss.on(WebsocketEvent.CONNECTION, callback);
+    this.wss.on(WebsocketEvent.CONNECTION, (ws: WebSocket, req: IncomingMessage) => {
+      trackConnection(ws, req);
+      callback(ws, req);
+    });
   }
 
   public async close(): Promise<void> {
@@ -160,6 +196,9 @@ export class Wss {
       throw new Error('Wss not started');
     }
 
+    if (this.compressionStatsInterval) {
+      clearInterval(this.compressionStatsInterval);
+    }
     this.wss.close();
     this.closed = true;
 
@@ -211,6 +250,7 @@ export function sendMessageString(
     return;
   }
 
+  recordMessageSent(ws, message.length);
   ws.send(message, (error) => {
     if (error) {
       const instanceId = getInstanceId();
