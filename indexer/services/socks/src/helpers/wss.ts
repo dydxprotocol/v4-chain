@@ -7,6 +7,7 @@ import WebSocket from 'ws';
 import config from '../config';
 import {
   WS_CLOSE_CODE_ABNORMAL_CLOSURE,
+  ERR_SOCKET_CLOSED_WHILE_COMPRESSING,
   ERR_WRITE_STREAM_DESTROYED,
   RATE_LIMIT_REASON_HEADER,
   RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE,
@@ -20,6 +21,7 @@ import {
   getPerMessageDeflateOptions,
   prepareUpgradeRequest,
   recordMessageSent,
+  shouldCompress,
   trackConnection,
 } from './ws-compression';
 
@@ -53,6 +55,17 @@ function incrementStreamDestroyedErrorStats(instanceId: string): void {
 function incrementWriteEpipeErrorStats(instanceId: string): void {
   stats.increment(
     `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
+    1,
+    {
+      action: 'close',
+      instance: instanceId,
+    },
+  );
+}
+
+function incrementClosedWhileCompressingErrorStats(instanceId: string): void {
+  stats.increment(
+    `${config.SERVICE_NAME}.ws_send.closed_while_compressing_errors`,
     1,
     {
       action: 'close',
@@ -250,8 +263,9 @@ export function sendMessageString(
     return;
   }
 
-  recordMessageSent(ws, message.length);
-  ws.send(message, (error) => {
+  const payloadLength: number = Buffer.byteLength(message);
+  recordMessageSent(ws, payloadLength);
+  ws.send(message, { compress: shouldCompress(payloadLength) }, (error) => {
     if (error) {
       const instanceId = getInstanceId();
       incrementSendErrorStats(instanceId, error as WssError);
@@ -260,6 +274,8 @@ export function sendMessageString(
         incrementStreamDestroyedErrorStats(instanceId);
       } else if (error?.message.includes?.('EPIPE')) {
         incrementWriteEpipeErrorStats(instanceId);
+      } else if (error?.message.includes?.(ERR_SOCKET_CLOSED_WHILE_COMPRESSING)) {
+        incrementClosedWhileCompressingErrorStats(instanceId);
       } else {
         const errorLog = { // type is InfoObject in node-service-base
           at: 'wss#sendMessageString',

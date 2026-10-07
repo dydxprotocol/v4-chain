@@ -24,12 +24,20 @@ Both are emitted at every setting, including with compression disabled, and are 
 | Metric | Meaning |
 | --- | --- |
 | `socks.ws_compression.connections` | New connections, by state. |
-| `socks.ws_compression.payload_bytes` | Outbound message bytes before compression, by state. |
+| `socks.ws_compression.payload_bytes` | Outbound message bytes before compression, by state and `over_threshold`. |
 
-The share of `payload_bytes` in `offered` plus `compressed` is the share of websocket egress that
-compression can reduce. `payload_bytes` is the uncompressed size in every state, so it does not
-show the compression ratio; read that from the service's network bytes sent as the rollout
-ramps.
+`over_threshold` is `true` for messages of at least `WS_COMPRESSION_THRESHOLD_BYTES` and `false`
+for the rest, which are sent uncompressed on every connection.
+
+The share of `payload_bytes` that is `over_threshold:true` and in `offered` plus `compressed` is
+the share of websocket egress that compression can reduce at the current threshold. The same
+share across both `over_threshold` values is the most that lowering the threshold could reach.
+`payload_bytes` is the uncompressed size in every state, so it does not show the compression
+ratio; read that from the service's network bytes sent as the rollout ramps.
+
+`socks.ws_send.closed_while_compressing_errors` counts sends that were still waiting on
+compression when their socket closed. Some are expected whenever clients on compressed
+connections disconnect abruptly.
 
 ## Configuration
 
@@ -45,7 +53,9 @@ is made once per connection and is random, so a reconnecting client may land on 
 
 ## Rolling out
 
-1. Deploy at `0` and read the `offered` share of `payload_bytes`. If it is small, stop here.
+1. Deploy at `0` and read the `offered` share of `payload_bytes`, split by `over_threshold`. If
+   it is small at both values, stop here. If it is only small at `over_threshold:true`, lower
+   `WS_COMPRESSION_THRESHOLD_BYTES` first.
 2. Raise `WS_COMPRESSION_ROLLOUT_PERCENT` in steps, watching on each socks task:
    - CPU. Compression runs off the event loop, but the incident described in
      `subscription-limit-abuse.md` saturated a task on socket writes alone.
@@ -54,5 +64,6 @@ is made once per connection and is random, so a reconnecting client may land on 
    - `socks.message_time_since_received`, for delivery delay.
 3. To roll back, set the percentage to `0` and redeploy.
 
-Most messages may be under the default threshold. If the `compressed` share of `payload_bytes`
-is high but network bytes sent barely move, lower `WS_COMPRESSION_THRESHOLD_BYTES`.
+A client that asks the server not to keep its compression context
+(`server_no_context_takeover`, which some Go clients always send) is still compressed, but each
+message is compressed on its own, so the saving on small messages is lower for those clients.

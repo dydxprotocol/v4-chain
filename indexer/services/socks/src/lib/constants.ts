@@ -27,6 +27,9 @@ export const RATE_LIMIT_REASON_SUBSCRIPTION_LIMIT_ABUSE: string = 'subscription-
 // This error is thrown when trying to send to a destroyed socket, which can happen when closing
 // or writing to a websocket that was disconnected abruptly
 export const ERR_WRITE_STREAM_DESTROYED: string = 'Cannot call write after a stream was destroyed';
+// Error passed by `ws` to the callback of every send still waiting on compression when the socket
+// is destroyed, which can happen when a client on a compressed connection disconnects abruptly
+export const ERR_SOCKET_CLOSED_WHILE_COMPRESSING: string = 'The socket was closed while data was being compressed';
 // Error emitted by websocket connections when an invalid frame is received
 export const ERR_INVALID_WEBSOCKET_FRAME: string = 'Invalid WebSocket frame';
 

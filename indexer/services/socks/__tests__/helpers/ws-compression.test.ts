@@ -1,7 +1,7 @@
 import { IncomingMessage as IncomingMessageHttp } from 'http';
 import { Socket } from 'net';
 
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import WebSocket from 'ws';
 
 import config from '../../src/config';
@@ -51,12 +51,15 @@ describe('ws-compression', () => {
       expect(getPerMessageDeflateOptions()).toEqual(false);
     });
 
-    it('keeps the server compression context when the rollout is above 0', () => {
+    it('enables the extension when the rollout is above 0', () => {
       config.WS_COMPRESSION_ROLLOUT_PERCENT = 1;
-      expect(getPerMessageDeflateOptions()).toEqual(expect.objectContaining({
-        serverNoContextTakeover: false,
+      const options: WebSocket.PerMessageDeflateOptions | false = getPerMessageDeflateOptions();
+
+      expect(options).toEqual(expect.objectContaining({
         threshold: config.WS_COMPRESSION_THRESHOLD_BYTES,
       }));
+      // An explicit `false` makes `ws` reject clients that ask for no server context takeover.
+      expect(options).not.toHaveProperty('serverNoContextTakeover');
     });
   });
 
@@ -116,7 +119,7 @@ describe('ws-compression', () => {
   });
 
   describe('flushCompressionStats', () => {
-    it('emits payload totals by state and resets them', () => {
+    it('emits payload totals by state and threshold and resets them', () => {
       const offeredReq: IncomingMessageHttp = requestWithExtensions(OFFER);
       prepareUpgradeRequest(offeredReq);
       const offeredWs: WebSocket = websocketWithExtensions('');
@@ -125,20 +128,26 @@ describe('ws-compression', () => {
 
       recordMessageSent(offeredWs, 100);
       recordMessageSent(offeredWs, 50);
+      recordMessageSent(offeredWs, config.WS_COMPRESSION_THRESHOLD_BYTES);
       recordMessageSent(untrackedWs, 7);
       (stats.increment as jest.Mock).mockClear();
       flushCompressionStats();
 
-      expect(stats.increment).toHaveBeenCalledTimes(2);
+      expect(stats.increment).toHaveBeenCalledTimes(3);
       expect(stats.increment).toHaveBeenCalledWith(
         `${config.SERVICE_NAME}.ws_compression.payload_bytes`,
         150,
-        expect.objectContaining({ state: CompressionState.OFFERED }),
+        expect.objectContaining({ state: CompressionState.OFFERED, over_threshold: 'false' }),
+      );
+      expect(stats.increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.ws_compression.payload_bytes`,
+        config.WS_COMPRESSION_THRESHOLD_BYTES,
+        expect.objectContaining({ state: CompressionState.OFFERED, over_threshold: 'true' }),
       );
       expect(stats.increment).toHaveBeenCalledWith(
         `${config.SERVICE_NAME}.ws_compression.payload_bytes`,
         7,
-        expect.objectContaining({ state: CompressionState.NOT_OFFERED }),
+        expect.objectContaining({ state: CompressionState.NOT_OFFERED, over_threshold: 'false' }),
       );
 
       (stats.increment as jest.Mock).mockClear();
@@ -162,7 +171,7 @@ describe('ws-compression', () => {
     // Resolves with the extensions the client negotiated and the state the server recorded.
     function connect(
       url: string,
-      perMessageDeflate: boolean,
+      perMessageDeflate: boolean | WebSocket.PerMessageDeflateOptions,
     ): Promise<{ extensions: string, state: CompressionState }> {
       return new Promise((resolve, reject) => {
         const trackedStates: CompressionState[] = [];
@@ -221,6 +230,100 @@ describe('ws-compression', () => {
       });
 
       expect(received).toEqual(message);
+    });
+
+    it('compresses only messages that reach the threshold', async () => {
+      const url: string = await startServer(100);
+      const underThreshold: string = 'a'.repeat(config.WS_COMPRESSION_THRESHOLD_BYTES - 1);
+      const overThreshold: string = 'a'.repeat(config.WS_COMPRESSION_THRESHOLD_BYTES);
+      wss.onConnection((ws: WebSocket) => {
+        // Reply to a message rather than on connection, so that the frames are not delivered in
+        // the same packet as the handshake response.
+        ws.on('message', () => {
+          sendMessageString(ws, 'connectionId', underThreshold);
+          sendMessageString(ws, 'connectionId', overThreshold);
+        });
+      });
+
+      // The raw frames the server sent, alongside the messages the client decoded from them.
+      const { frames, messages }: { frames: Buffer, messages: string[] } = await new Promise(
+        (resolve, reject) => {
+          const chunks: Buffer[] = [];
+          const received: string[] = [];
+          // Default client offer, so the connection keeps the server compression context.
+          const client: WebSocket = new WebSocket(url);
+          client.on('error', reject);
+          client.on('upgrade', (response: IncomingMessageHttp) => {
+            response.socket.on('data', (chunk: Buffer) => chunks.push(chunk));
+          });
+          client.on('open', () => client.send('ready'));
+          client.on('message', (data: WebSocket.RawData) => {
+            received.push(data.toString());
+            if (received.length === 2) {
+              client.close();
+              resolve({ frames: Buffer.concat(chunks), messages: received });
+            }
+          });
+        },
+      );
+
+      expect(messages).toEqual([underThreshold, overThreshold]);
+      // The RSV1 bit of a frame's first byte marks its payload as compressed. The first frame's
+      // payload is too long for the 7-bit length field, so it has a 4-byte header.
+      const RSV1: number = 0x40;
+      const secondFrame: number = 4 + underThreshold.length;
+      // eslint-disable-next-line no-bitwise
+      expect(frames[0] & RSV1).toEqual(0);
+      // eslint-disable-next-line no-bitwise
+      expect(frames[secondFrame] & RSV1).toEqual(RSV1);
+    });
+
+    it('negotiates compression for a client that asks for no server context takeover', async () => {
+      const url: string = await startServer(100);
+      // Offers `server_no_context_takeover; client_no_context_takeover`, as Go clients do.
+      const offer: WebSocket.PerMessageDeflateOptions = {
+        serverNoContextTakeover: true,
+        clientNoContextTakeover: true,
+      };
+      expect(await connect(url, offer)).toEqual({
+        extensions: 'permessage-deflate',
+        state: CompressionState.COMPRESSED,
+      });
+    });
+
+    it('does not log sends that were waiting on compression when the socket closed', async () => {
+      const url: string = await startServer(100);
+      jest.spyOn(logger, 'error');
+      const message: string = 'a'.repeat(config.WS_COMPRESSION_THRESHOLD_BYTES);
+      const numMessages: number = 5;
+
+      // Resolves once every send has failed.
+      await new Promise<void>((resolve, reject) => {
+        let numSendErrors: number = 0;
+        (stats.increment as jest.Mock).mockImplementation((name: string) => {
+          if (name === `${config.SERVICE_NAME}.ws_send.error`) {
+            numSendErrors += 1;
+            if (numSendErrors === numMessages) {
+              resolve();
+            }
+          }
+        });
+        wss.onConnection((ws: WebSocket) => {
+          for (let i: number = 0; i < numMessages; i++) {
+            sendMessageString(ws, 'connectionId', message);
+          }
+          ws.terminate();
+        });
+        const client: WebSocket = new WebSocket(url);
+        client.on('error', reject);
+      });
+
+      expect(logger.error).not.toHaveBeenCalled();
+      const closedWhileCompressingCalls: unknown[][] = (stats.increment as jest.Mock).mock.calls
+        .filter(([name]: [string]) => {
+          return name === `${config.SERVICE_NAME}.ws_send.closed_while_compressing_errors`;
+        });
+      expect(closedWhileCompressingCalls).toHaveLength(numMessages);
     });
 
     it('does not negotiate compression for a client that does not offer it', async () => {

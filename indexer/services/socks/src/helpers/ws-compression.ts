@@ -24,11 +24,19 @@ export enum CompressionState {
 // possibly stripped so that the connection can still be counted as one that would accept it.
 const requestsOfferingCompression: WeakSet<IncomingMessageHttp> = new WeakSet();
 const stateByWebsocket: WeakMap<WebSocket, CompressionState> = new WeakMap();
-const payloadLengthByState: Record<CompressionState, number> = {
-  [CompressionState.NOT_OFFERED]: 0,
-  [CompressionState.OFFERED]: 0,
-  [CompressionState.COMPRESSED]: 0,
-};
+
+function emptyPayloadLengths(): Record<CompressionState, number> {
+  return {
+    [CompressionState.NOT_OFFERED]: 0,
+    [CompressionState.OFFERED]: 0,
+    [CompressionState.COMPRESSED]: 0,
+  };
+}
+
+// Messages under the compression threshold are sent uncompressed on every connection, so they are
+// totalled separately from the ones compression can actually reduce.
+const payloadLengthUnderThreshold: Record<CompressionState, number> = emptyPayloadLengths();
+const payloadLengthOverThreshold: Record<CompressionState, number> = emptyPayloadLengths();
 
 /**
  * Options for the `ws` permessage-deflate extension, or `false` to leave it disabled, which is
@@ -39,12 +47,15 @@ export function getPerMessageDeflateOptions(): WebSocket.PerMessageDeflateOption
     return false;
   }
   return {
-    // Keep the compression context between messages. Channel messages are small and repetitive,
-    // so most of the saving comes from referring back to earlier messages on the connection.
-    serverNoContextTakeover: false,
+    // `serverNoContextTakeover` is deliberately left unset. The server then keeps its compression
+    // context between messages, which is where most of the saving on small, repetitive channel
+    // messages comes from, unless the client asks it not to. Setting it to `false` would instead
+    // make `ws` refuse the handshake of any client that asks, with a 400.
     // Clients send very little, so do not hold a decompression context per connection for it.
     clientNoContextTakeover: true,
     zlibDeflateOptions: { level: DEFLATE_LEVEL },
+    // `ws` only applies this to connections without server context takeover. `shouldCompress`
+    // applies the same threshold to every send, so this just keeps the two in agreement.
     threshold: config.WS_COMPRESSION_THRESHOLD_BYTES,
   };
 }
@@ -89,26 +100,40 @@ export function trackConnection(ws: WebSocket, req: IncomingMessageHttp): Compre
 }
 
 /**
- * Adds an outbound message to the running total for its connection's compression state. The
- * totals are emitted by `flushCompressionStats` rather than here, as this runs on every send.
- * @param payloadLength Length of the message string. Messages are ASCII JSON, so this is the
- * payload size in bytes before compression.
+ * Whether an outbound message is large enough to be compressed. Must be passed to `ws` as the
+ * `compress` option of each send: with server context takeover, which is what most connections
+ * negotiate, `ws` ignores its own `threshold` option and would compress every message.
+ * @param payloadLength Size of the message in bytes before compression.
  */
-export function recordMessageSent(ws: WebSocket, payloadLength: number): void {
-  payloadLengthByState[stateByWebsocket.get(ws) ?? CompressionState.NOT_OFFERED] += payloadLength;
+export function shouldCompress(payloadLength: number): boolean {
+  return payloadLength >= config.WS_COMPRESSION_THRESHOLD_BYTES;
 }
 
 /**
- * Emits and resets the outbound payload totals. The share sent to connections that offered or
- * negotiated compression is the share of websocket egress that compression can reduce.
+ * Adds an outbound message to the running total for its connection's compression state. The
+ * totals are emitted by `flushCompressionStats` rather than here, as this runs on every send.
+ * @param payloadLength Size of the message in bytes before compression.
  */
-export function flushCompressionStats(): void {
+export function recordMessageSent(ws: WebSocket, payloadLength: number): void {
+  const state: CompressionState = stateByWebsocket.get(ws) ?? CompressionState.NOT_OFFERED;
+  if (shouldCompress(payloadLength)) {
+    payloadLengthOverThreshold[state] += payloadLength;
+  } else {
+    payloadLengthUnderThreshold[state] += payloadLength;
+  }
+}
+
+function flushPayloadLengths(
+  payloadLengthByState: Record<CompressionState, number>,
+  overThreshold: boolean,
+): void {
   const instance: string = getInstanceId();
   Object.values(CompressionState).forEach((state: CompressionState) => {
     const payloadLength: number = payloadLengthByState[state];
     if (payloadLength === 0) {
       return;
     }
+    // eslint-disable-next-line no-param-reassign
     payloadLengthByState[state] = 0;
     stats.increment(
       `${config.SERVICE_NAME}.ws_compression.payload_bytes`,
@@ -116,7 +141,18 @@ export function flushCompressionStats(): void {
       {
         instance,
         state,
+        over_threshold: String(overThreshold),
       },
     );
   });
+}
+
+/**
+ * Emits and resets the outbound payload totals. The share that is over the threshold and sent to
+ * connections that offered or negotiated compression is the share of websocket egress that
+ * compression can reduce.
+ */
+export function flushCompressionStats(): void {
+  flushPayloadLengths(payloadLengthUnderThreshold, false);
+  flushPayloadLengths(payloadLengthOverThreshold, true);
 }
