@@ -53,7 +53,6 @@ supply(uusdc) == noble_backing + injective_backing + pending_injective
 | `injective_backing` | Physical Injective USDC on the module. Spent on Injective `MsgTransfer`. |
 | `pending_injective` | In-flight Injective withdraw. Logical `uusdc` is still on the module (locked), so it remains in `supply` and in the equation. |
 | `pending_noble` | In-flight Noble withdraw. The user's `uusdc` already left via ICS20, so `supply` dropped with `noble_backing`. The field is only a ticket for ack/timeout, not backing. |
-| `legacy_downstream` | Budget for `uusdc` that left before enablement and is now returning on some other channel. No increment after genesis. |
 
 IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
@@ -61,7 +60,7 @@ IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
 - Injective channel, matching packet denom: physical tokens to the module, mint `uusdc` to the original receiver, `injective_backing += amount`. Cap: `max_transfer_amount`, `migration_ceiling`.
 - Noble channel, `uusdc`: reject before the inner app (`ErrNobleDepositsDisabled`).
-- Other channel, `uusdc`: if `legacy_downstream >= amount`, accept the ICS20 recv (`supply` rises), then `legacy_downstream -= amount` and `noble_backing += amount`. Those coins were not in the enablement snapshot; they re-enter as Noble-classified. If the budget is too small, reject.
+- Other channel, `uusdc`: passthrough, no ledger change. Before enablement, `uusdc` sent to another chain was escrowed (not burned), so it stayed in `supply` and is already inside the `noble_backing` snapshot. The return unescrows it and `supply` does not move. Escrow bounds what can return, and outbound on other channels is rejected after enablement, so no new escrow is created.
 - `DISABLED`: passthrough, including Noble deposits.
 
 **Outbound (`MsgTransfer` decorator)**
@@ -86,16 +85,16 @@ User-sent physical Injective USDC is allowed so holders can unwind it off-chain 
 While Noble withdrawals are still enabled:
 
 1. Gov enables `GRADUAL` (snapshot).
-2. Receive Injective USDC in chunks `<= max_transfer_amount`. Receiver gets `uusdc`; `injective_backing` rises.
+2. Receive Injective USDC in a batch `<= max_transfer_amount`. Receiver gets `uusdc`; `injective_backing` rises.
 3. Send that same amount out Noble. `noble_backing` falls.
-4. Repeat until `noble_backing` is ~0.
-5. Set `NobleWithdrawalsEnabled = false`. Users then exit only via Injective.
+4. Repeat in batches until `noble_backing == 0`. The full amount does not need to be funded up front; the migrator only needs one batch of Injective USDC at a time.
+5. Set `NobleWithdrawalsEnabled = false`. `MsgUpdateControls` rejects this unless `noble_backing == 0` and no Noble settlement is pending. Users then exit only via Injective.
 
-The `uusdc` minted in step 2 must be the `uusdc` withdrawn in step 3.
+The `uusdc` minted in step 2 must be the `uusdc` withdrawn in step 3. This is an operational requirement of the migrator, not enforced by the module.
 
 ### Invariants (when not `DISABLED`)
 
-- `supply(uusdc) == noble_backing + injective_backing + pending_injective` (`pending_noble` excluded; those coins already left `supply`. `legacy_downstream` is a return budget, not backing; consuming it credits `noble_backing`.)
+- `supply(uusdc) == noble_backing + injective_backing + pending_injective` (`pending_noble` excluded; those coins already left `supply`)
 - Module physical Injective balance `>= injective_backing`
 - Module locked `uusdc` `>= pending_injective` (Noble pending does not lock module `uusdc`)
 - Backing fields stay nonnegative; outbound amount cannot exceed the selected route's backing
@@ -133,9 +132,8 @@ Positive:
 Negative:
 
 - After enable, Noble deposits of `uusdc` stop. Physical Injective USDC already on dYdX does not convert in place; it has to leave and come back on the Injective channel.
-- `legacy_downstream` is an ops input. At 0, unclassified returns of `uusdc` from other chains fail.
 - Enablement should happen with Noble IBC quiet. A timeout that refunds `uusdc` after the snapshot breaks the invariant until the ledger is fixed.
-- Once `NobleWithdrawalsEnabled` is false, the 1:1 loop cannot take remaining Noble backing out. A leftover needs a later gov tool or is left as-is.
+- Noble withdrawals cannot be turned off while `noble_backing > 0`, so the migration cannot be finalized until the loop drains it exactly. If the last residue cannot be drained (for example a Noble timeout refund re-adds backing), Noble withdrawals stay enabled until it can.
 
 ## Confirmation
 
