@@ -1,0 +1,25 @@
+syntax = "proto3";
+package dydxprotocol.canonicalusdc;
+
+import "cosmos/msg/v1/msg.proto";
+import "dydxprotocol/canonicalusdc/canonical_usdc.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types";
+
+// Msg defines governance actions. Ordinary users keep using
+// ibc.applications.transfer.v1.MsgTransfer.
+service Msg {
+  // UpdateControls updates canonical routing controls.
+  rpc UpdateControls(MsgUpdateControls) returns (MsgUpdateControlsResponse);
+}
+
+// MsgUpdateControls updates all controls atomically.
+message MsgUpdateControls {
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1;
+  Controls controls = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateControlsResponse is the controls update response.
+message MsgUpdateControlsResponse {}
