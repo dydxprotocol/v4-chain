@@ -159,8 +159,11 @@ export class Wss {
       autoPong: true,
       verifyClient: verifyClientNotPenalized,
       perMessageDeflate: getPerMessageDeflateOptions(),
+      maxPayload: config.WS_MAX_PAYLOAD_BYTES,
     };
     this.wss = new WebSocketServer(serverOptions);
+    // Registered first, so that the state is known before any callback sends on the connection.
+    this.wss.on(WebsocketEvent.CONNECTION, trackConnection);
   }
 
   public async start(): Promise<void> {
@@ -195,10 +198,7 @@ export class Wss {
   }
 
   public onConnection(callback: (ws: WebSocket, req: IncomingMessage) => void): void {
-    this.wss.on(WebsocketEvent.CONNECTION, (ws: WebSocket, req: IncomingMessage) => {
-      trackConnection(ws, req);
-      callback(ws, req);
-    });
+    this.wss.on(WebsocketEvent.CONNECTION, callback);
   }
 
   public async close(): Promise<void> {

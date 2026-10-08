@@ -46,6 +46,12 @@ connections disconnect abruptly.
 | `WS_COMPRESSION_ROLLOUT_PERCENT` | `0` | Percentage of offering connections that are compressed. `0` disables the extension. |
 | `WS_COMPRESSION_THRESHOLD_BYTES` | `1024` | Messages smaller than this are sent uncompressed. |
 | `WS_COMPRESSION_METRIC_INTERVAL_MS` | `10000` | How often `payload_bytes` is emitted. |
+| `WS_MAX_PAYLOAD_BYTES` | `65536` | Largest message accepted from a client, after decompression. |
+
+`WS_MAX_PAYLOAD_BYTES` applies to every connection, compressed or not. It matters most with
+compression, where a client can send a message that expands roughly a thousandfold: without it,
+under 100 KB on the wire reaches the 100 MiB default of `ws`. A client that exceeds it is closed
+with code 1009.
 
 A connection outside the rollout has the client's offer removed before the handshake is
 answered, so it gets exactly the handshake it would get with compression disabled. The decision

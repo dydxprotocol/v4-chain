@@ -32,6 +32,9 @@ export const ERR_WRITE_STREAM_DESTROYED: string = 'Cannot call write after a str
 export const ERR_SOCKET_CLOSED_WHILE_COMPRESSING: string = 'The socket was closed while data was being compressed';
 // Error emitted by websocket connections when an invalid frame is received
 export const ERR_INVALID_WEBSOCKET_FRAME: string = 'Invalid WebSocket frame';
+// Error emitted by websocket connections when a message larger than WS_MAX_PAYLOAD_BYTES is
+// received
+export const ERR_MAX_PAYLOAD_EXCEEDED: string = 'Max payload size exceeded';
 
 export const WEBSOCKET_NOT_OPEN: string = 'ws not open';
 

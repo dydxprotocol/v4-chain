@@ -89,6 +89,11 @@ export const configSchema = {
   // Messages smaller than this are sent uncompressed.
   WS_COMPRESSION_THRESHOLD_BYTES: parseInteger({ default: 1024 }),
   WS_COMPRESSION_METRIC_INTERVAL_MS: parseInteger({ default: 10_000 }),
+  // Largest message accepted from a client, measured after decompression. A larger one closes the
+  // connection with code 1009. Client messages are small subscribe, unsubscribe and ping requests,
+  // and without a tight limit a compressed message of under 100 KB can expand to the 100 MiB
+  // default of `ws`.
+  WS_MAX_PAYLOAD_BYTES: parseInteger({ default: 65_536 }),
 
   MESSAGE_FORWARDER_STATSD_SAMPLE_RATE: parseNumber({ default: 1.0 }),
   ENABLE_ORDERBOOK_LOGS: parseBoolean({ default: true }),

@@ -182,7 +182,6 @@ describe('ws-compression', () => {
             }
           },
         );
-        wss.onConnection(() => {});
         const client: WebSocket = new WebSocket(url, { perMessageDeflate });
         client.on('error', reject);
         client.on('open', () => {
@@ -276,6 +275,27 @@ describe('ws-compression', () => {
       expect(frames[0] & RSV1).toEqual(0);
       // eslint-disable-next-line no-bitwise
       expect(frames[secondFrame] & RSV1).toEqual(RSV1);
+    });
+
+    it('closes a connection whose message decompresses to more than the limit', async () => {
+      const url: string = await startServer(100);
+      // Compresses to a small fraction of the limit.
+      const message: string = 'a'.repeat(config.WS_MAX_PAYLOAD_BYTES + 1);
+      const received: jest.Mock = jest.fn();
+      wss.onConnection((ws: WebSocket) => {
+        ws.on('message', received);
+        ws.on('error', () => {});
+      });
+
+      const closeCode: number = await new Promise((resolve, reject) => {
+        const client: WebSocket = new WebSocket(url);
+        client.on('error', reject);
+        client.on('open', () => client.send(message));
+        client.on('close', resolve);
+      });
+
+      expect(closeCode).toEqual(1009);
+      expect(received).not.toHaveBeenCalled();
     });
 
     it('negotiates compression for a client that asks for no server context takeover', async () => {
