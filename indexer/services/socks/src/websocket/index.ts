@@ -9,7 +9,12 @@ import config from '../config';
 import { getClientIp, getGeoOriginHeaders } from '../helpers/header-utils';
 import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
 import { sendMessage, Wss } from '../helpers/wss';
-import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART, WS_CLOSE_HEARTBEAT_TIMEOUT } from '../lib/constants';
+import {
+  ERR_INVALID_WEBSOCKET_FRAME,
+  ERR_MAX_PAYLOAD_EXCEEDED,
+  WS_CLOSE_CODE_SERVICE_RESTART,
+  WS_CLOSE_HEARTBEAT_TIMEOUT,
+} from '../lib/constants';
 import { InvalidMessageHandler } from '../lib/invalid-message';
 import { reconnectPenalty } from '../lib/reconnect-penalty';
 import { Subscriptions } from '../lib/subscription';
@@ -195,8 +200,11 @@ export class Index {
         connectionId,
         error,
       };
-      if (error?.message.includes?.(ERR_INVALID_WEBSOCKET_FRAME)) {
-        // Clients sending invalid frames is not considered an error
+      if (
+        error?.message.includes?.(ERR_INVALID_WEBSOCKET_FRAME) ||
+        error?.message.includes?.(ERR_MAX_PAYLOAD_EXCEEDED)
+      ) {
+        // Clients sending invalid or oversized frames is not considered an error
         logger.info(errorLog);
       } else {
         logger.error(errorLog);
