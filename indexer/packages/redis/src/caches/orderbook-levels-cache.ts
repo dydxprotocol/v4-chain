@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -48,22 +48,11 @@ export async function updatePriceLevel(
   // critical error log. As updates to price levels come from updates to orders, and updates to
   // are procesed in order of place -> update -> remove, there should never be quantums removed from
   // a price level in excess of the quantums added by an order.
-  // NOTE: If this happens from a single price level update, it's possible for multiple subsequent
-  // price level updates to fail with the same error due to interleaved price level updates.
+  // NOTE: Once a price level has been reset to zero, removing the orders that were counted in it
+  // will drive it negative again, so one bad update can be followed by several of these errors.
   if (updatedQuantums < 0) {
-    // Set the price level to 0.
-    // Race-condition where it's possible for a price-level to have negative quantums handled in
-    // `getOrderbookLevels` where price-levels with negative quantums are filtered out. Note: even
-    // though we are reverting this information, each call to incrementOrderbookLevel updates the
-    // lastUpdated key in the cache.
-    await incrementOrderbookLevel(
-      ticker,
-      side,
-      humanPrice,
-      // Needs to be an integer
-      Big(updatedQuantums).mul(-1).toFixed(0),
-      client,
-    );
+    // The increment script has already reset the price level to 0.
+    stats.increment('orderbook_levels_cache.negative_price_level', 1, { ticker, side });
     logger.crit({
       at: 'orderbookLevelsCache#updatePriceLevel',
       message: 'Price level updated to negative quantums, set to zero',
@@ -318,8 +307,8 @@ async function getOrderbookSide(
     quantumsByPrice,
     lastUpdatedByPrice,
   );
-  // Remove any negative levels - possible due to race condition in updatePriceLevel
-  // TODO race condition!?
+  // Guards against negative levels already stored in Redis; the increment script resets new ones to
+  // zero.
   sideLevels = sideLevels.filter((level: PriceLevel) => Big(level.quantums).gte(Big(0)));
   if (removeZeros) {
     sideLevels = sideLevels.filter((level: PriceLevel) => level.quantums !== '0');
