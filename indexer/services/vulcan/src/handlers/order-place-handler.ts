@@ -8,15 +8,22 @@ import {
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
+  protocolTranslations,
 } from '@dydxprotocol-indexer/postgres';
 import {
   CanceledOrdersCache,
   convertToRedisOrder,
+  OrderbookLevelsCache,
   placeOrder,
   PlaceOrderResult,
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
-import { getOrderIdHash, isStatefulOrder, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  getOrderIdHash,
+  isStatefulOrder,
+  ORDER_FLAG_SHORT_TERM,
+  requiresImmediateExecution,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerSubaccountId,
@@ -26,6 +33,7 @@ import {
   OrderUpdateV1,
   RedisOrder,
 } from '@dydxprotocol-indexer/v4-protos';
+import { Big } from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
@@ -40,6 +48,8 @@ import { Handler } from './handler';
  * - Add the order to the OrdersCache, OrdersDataCache, and SubaccountOrderIdsCache
  *  - this is done using the `placeOrder` function from the `redis` package
  *  - Remove the order from the CanceledOrdersCache if it exists
+ * - If the order replaced a Short-Term order resting on the book, remove the replaced order's
+ *   remaining size from its price level
  * - If the order is a stateful order, attempt to remove any cached order update from the
  *   StatefulOrderUpdatesCache, and then queue the order update to be re-sent and re-processed
  * - If the order doesn't already exist in the caches, return
@@ -81,6 +91,19 @@ export class OrderPlaceHandler extends Handler {
       }),
       this.generateTimingStatsOptions('place_order_cache_update'),
     );
+    // Done before anything else that can throw: a retried message no longer sees a replacement, so
+    // the replaced order's size could never come off its price level afterwards.
+    let replacedOrderPriceLevelQuantums: number | undefined;
+    if (placeOrderResult.replaced) {
+      stats.increment(
+        `${config.SERVICE_NAME}.place_order_handler.replaced_order`,
+        1,
+        { instance: getInstanceId() },
+      );
+      replacedOrderPriceLevelQuantums = await this.removeReplacedOrderFromPriceLevel(
+        placeOrderResult,
+      );
+    }
     await this.removeOrderFromCanceledOrdersCache(
       OrderTable.orderIdToUuid(redisOrder.order?.orderId!),
     );
@@ -90,14 +113,6 @@ export class OrderPlaceHandler extends Handler {
       order,
       placeOrderResult,
     });
-
-    if (placeOrderResult.replaced) {
-      stats.increment(
-        `${config.SERVICE_NAME}.place_order_handler.replaced_order`,
-        1,
-        { instance: getInstanceId() },
-      );
-    }
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
     // stateful orders in the protocol
@@ -142,6 +157,69 @@ export class OrderPlaceHandler extends Handler {
       };
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
+
+    if (replacedOrderPriceLevelQuantums !== undefined) {
+      const orderbookMessage: Message = {
+        value: this.createOrderbookWebsocketMessage(
+          placeOrderResult.oldOrder!,
+          perpetualMarket,
+          replacedOrderPriceLevelQuantums,
+        ),
+        headers,
+      };
+      sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
+    }
+  }
+
+  /**
+   * The protocol only sends a REPLACED removal ahead of a Short-Term replacement when the old order
+   * is still in its memclob, so the old order can still be resting in Redis here and its remaining
+   * size must come off its price level. Stateful replacements are skipped because replay condenses
+   * away their REPLACED removal, so the replacement's order update can land on the old order before
+   * ender's OrderPlace and nothing would put the replacement's size back.
+   * @returns the updated quantums of the old order's price level, undefined if it was not updated
+   */
+  protected async removeReplacedOrderFromPriceLevel(
+    placeOrderResult: PlaceOrderResult,
+  ): Promise<number | undefined> {
+    const oldOrder: RedisOrder = placeOrderResult.oldOrder!;
+    if (
+      oldOrder.order!.orderId!.orderFlags !== ORDER_FLAG_SHORT_TERM ||
+      placeOrderResult.restingOnBook !== true ||
+      requiresImmediateExecution(oldOrder.order!.timeInForce)
+    ) {
+      return undefined;
+    }
+
+    const remainingQuantums: Big = Big(oldOrder.order!.quantums.toString())
+      .minus(placeOrderResult.oldTotalFilledQuantums!);
+    if (remainingQuantums.lt(0)) {
+      logger.info({
+        at: 'OrderPlaceHandler#removeReplacedOrderFromPriceLevel',
+        message: 'Total filled of replaced order in Redis exceeds order quantums.',
+        placeOrderResult,
+      });
+      stats.increment(
+        `${config.SERVICE_NAME}.order_place_total_filled_exceeds_size`,
+        1,
+        { instance: getInstanceId() },
+      );
+      return undefined;
+    }
+    if (remainingQuantums.eq(0)) {
+      return undefined;
+    }
+
+    return runFuncWithTimingStat(
+      OrderbookLevelsCache.updatePriceLevel(
+        oldOrder.ticker,
+        protocolTranslations.protocolOrderSideToOrderSide(oldOrder.order!.side),
+        oldOrder.price,
+        remainingQuantums.mul(-1).toFixed(0),
+        redisClient,
+      ),
+      this.generateTimingStatsOptions('update_price_level_cache'),
+    );
   }
 
   protected validateOrderPlace(orderPlace: OrderPlaceV1): void {
