@@ -12,6 +12,7 @@ import (
 
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	subaccountskeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -129,17 +130,50 @@ func TestSubaccountQueryPaginated(t *testing.T) {
 			next = resp.Pagination.NextKey
 		}
 	})
-	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.SubaccountAll(ctx, request(nil, 0, 0, true))
+	t.Run("CountTotal is rejected", func(t *testing.T) {
+		_, err := keeper.SubaccountAll(ctx, request(nil, 0, 0, true))
+		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "count_total is not supported for this query"))
+	})
+	t.Run("Limit at the max succeeds", func(t *testing.T) {
+		resp, err := keeper.SubaccountAll(ctx, request(nil, 0, subaccountskeeper.MaxSubaccountAllPageLimit, false))
 		require.NoError(t, err)
-		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
 			nullify.Fill(msgs),            //nolint:staticcheck
 			nullify.Fill(resp.Subaccount), //nolint:staticcheck
 		)
 	})
+	t.Run("Nil or zero-limit pagination does not count total", func(t *testing.T) {
+		for _, req := range []*types.QueryAllSubaccountRequest{{}, request(nil, 0, 0, false)} {
+			resp, err := keeper.SubaccountAll(ctx, req)
+			require.NoError(t, err)
+			require.Zero(t, resp.Pagination.Total)
+			require.ElementsMatch(t,
+				nullify.Fill(msgs),            //nolint:staticcheck
+				nullify.Fill(resp.Subaccount), //nolint:staticcheck
+			)
+		}
+	})
 	t.Run("InvalidRequest", func(t *testing.T) {
 		_, err := keeper.SubaccountAll(ctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
+}
+
+func TestSubaccountQueryPaginated_LimitAboveMaxIsClamped(t *testing.T) {
+	ctx, keeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	createNSubaccount(keeper, ctx, subaccountskeeper.MaxSubaccountAllPageLimit+1, big.NewInt(1_000))
+
+	pagination := &query.PageRequest{Limit: subaccountskeeper.MaxSubaccountAllPageLimit + 500}
+	resp, err := keeper.SubaccountAll(ctx, &types.QueryAllSubaccountRequest{Pagination: pagination})
+	require.NoError(t, err)
+	require.Len(t, resp.Subaccount, subaccountskeeper.MaxSubaccountAllPageLimit)
+	require.NotNil(t, resp.Pagination.NextKey)
+	require.Equal(t, uint64(subaccountskeeper.MaxSubaccountAllPageLimit+500), pagination.Limit)
+
+	resp, err = keeper.SubaccountAll(ctx, &types.QueryAllSubaccountRequest{
+		Pagination: &query.PageRequest{Key: resp.Pagination.NextKey, Limit: pagination.Limit},
+	})
+	require.NoError(t, err)
+	require.Len(t, resp.Subaccount, 1)
+	require.Nil(t, resp.Pagination.NextKey)
 }

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -483,6 +484,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 		// Expectations.
 		panics                            bool
 		expectedError                     error
+		expectedPanicValue                string
 		expectedFilledSize                satypes.BaseQuantums
 		expectedOrderStatus               types.OrderStatus
 		expectedPlacedOrders              []*types.MsgPlaceOrder
@@ -1146,9 +1148,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			order: constants.LiquidationOrder_Carl_Num0_Clob1_Buy1ETH_Price3000,
 
-			expectedError: errorsmod.Wrapf(
-				types.ErrSubaccountHasLiquidatedPerpetual,
-				"Subaccount %v and perpetual %v have already been liquidated within the last block",
+			// A second liquidation of the same perpetual within one block is rejected by
+			// MustUpdateSubaccountPerpetualLiquidated, which panics with a plain string.
+			expectedPanicValue: fmt.Sprintf(
+				"UpdateSubaccountLiquidationInfo: subaccount %v and perpetual %d have already"+
+					" been liquidated within the last block",
 				constants.Carl_Num0,
 				1,
 			),
@@ -1332,7 +1336,15 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			}
 
 			// Run the test case and verify expectations.
-			if tc.expectedError != nil {
+			if tc.expectedPanicValue != "" {
+				require.PanicsWithValue(
+					t,
+					tc.expectedPanicValue,
+					func() {
+						_, _, _ = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
+					},
+				)
+			} else if tc.expectedError != nil {
 				require.PanicsWithError(
 					t,
 					tc.expectedError.Error(),
@@ -4885,6 +4897,164 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				// require.Equal(t, tc.expectedPlacedOrders, placedOrders, "Placed orders lists are not equal")
 				// require.Equal(t, tc.expectedMatchedOrders, matchedOrders, "Matched orders lists are not equal")
 			}
+		})
+	}
+}
+
+func TestLiquidateSubaccountsAgainstOrderbook_DeduplicatesInput(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	mockBankKeeper := &mocks.BankKeeper{}
+	mockBankKeeper.On("SendCoins", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockBankKeeper.On(
+		"SendCoinsFromModuleToModule",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(nil)
+	mockBankKeeper.On(
+		"GetBalance",
+		mock.Anything,
+		perptypes.InsuranceFundModuleAddress,
+		constants.Usdc.Denom,
+	).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(big.NewInt(1_000_000_000_000))))
+
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+	ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
+
+	keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+	keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+	require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
+	require.NoError(t, keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper))
+
+	perpetuals := []perptypes.Perpetual{constants.BtcUsd_20PercentInitial_10PercentMaintenance}
+	for _, p := range perpetuals {
+		_, err := ks.PerpetualsKeeper.CreatePerpetual(
+			ctx,
+			p.Params.Id,
+			p.Params.Ticker,
+			p.Params.MarketId,
+			p.Params.AtomicResolution,
+			p.Params.DefaultFundingPpm,
+			p.Params.LiquidityTier,
+			p.Params.MarketType,
+		)
+		require.NoError(t, err)
+	}
+	perptest.SetUpDefaultPerpOIsForTest(t, ks.Ctx, ks.PerpetualsKeeper, perpetuals)
+
+	for _, subaccount := range []satypes.Subaccount{
+		constants.Carl_Num0_1BTC_Short,
+		constants.Dave_Num0_1BTC_Long_46000USD_Short,
+	} {
+		ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
+	}
+
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ctx,
+		constants.ClobPair_Btc.Id,
+		clobtest.MustPerpetualId(constants.ClobPair_Btc),
+		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+		constants.ClobPair_Btc.QuantumConversionExponent,
+		constants.ClobPair_Btc.SubticksPerTick,
+		constants.ClobPair_Btc.Status,
+	)
+	require.NoError(t, err)
+	require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default))
+
+	for _, order := range []types.Order{
+		constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000,
+		constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price50000,
+		constants.Order_Carl_Num0_Id4_Clob0_Buy05BTC_Price40000,
+	} {
+		_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
+		require.NoError(t, err)
+	}
+
+	// A subaccount id repeated in the input must be liquidated only once. Without de-duplication the
+	// second occurrence produces a second liquidation order for a perpetual that the first already
+	// liquidated in the same block, which the per-subaccount liquidation bookkeeping rejects.
+	require.NotPanics(t, func() {
+		_, err := ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbook(
+			ctx,
+			[]satypes.SubaccountId{constants.Dave_Num0, constants.Dave_Num0},
+		)
+		require.NoError(t, err)
+	})
+}
+
+// TestLiquidateSubaccountsAgainstOrderbook_InternalErrorIsNotDeleveraged tests that a liquidation
+// stopped with InternalError (matching hit an unexpected error) is not queued for deleveraging,
+// while a liquidation that found no liquidity still is.
+func TestLiquidateSubaccountsAgainstOrderbook_InternalErrorIsNotDeleveraged(t *testing.T) {
+	tests := map[string]struct {
+		orderStatus         types.OrderStatus
+		expectedDeleverages int
+	}{
+		"InternalError is not deleveraged": {orderStatus: types.InternalError, expectedDeleverages: 0},
+		"no liquidity is deleveraged":      {orderStatus: types.Success, expectedDeleverages: 1},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := &mocks.MemClob{}
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+			memClob.On("CreateOrderbook", mock.Anything).Return()
+			memClob.On("PlacePerpetualLiquidation", mock.Anything, mock.Anything).Return(
+				satypes.BaseQuantums(0),
+				tc.orderStatus,
+				types.NewOffchainUpdates(),
+				nil,
+			)
+
+			ks := keepertest.NewClobKeepersTestContext(
+				t,
+				memClob,
+				&mocks.BankKeeper{},
+				indexer_manager.NewIndexerEventManagerNoop(),
+			)
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockTime(time.Unix(5, 0))
+
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
+			require.NoError(t, keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper))
+
+			perpetuals := []perptypes.Perpetual{constants.BtcUsd_20PercentInitial_10PercentMaintenance}
+			for _, p := range perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+					p.Params.MarketType,
+				)
+				require.NoError(t, err)
+			}
+			perptest.SetUpDefaultPerpOIsForTest(t, ks.Ctx, ks.PerpetualsKeeper, perpetuals)
+			ks.SubaccountsKeeper.SetSubaccount(ctx, constants.Dave_Num0_1BTC_Long_46000USD_Short)
+
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				ctx,
+				constants.ClobPair_Btc.Id,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+			)
+			require.NoError(t, err)
+			require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default))
+
+			subaccountsToDeleverage, err := ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbook(
+				ctx,
+				[]satypes.SubaccountId{constants.Dave_Num0},
+			)
+			require.NoError(t, err)
+			require.Len(t, subaccountsToDeleverage, tc.expectedDeleverages)
 		})
 	}
 }

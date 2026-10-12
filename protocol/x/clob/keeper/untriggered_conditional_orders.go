@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -235,27 +236,40 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 			continue
 		}
 
-		// Trigger conditional orders using the oracle price.
+		// Trigger conditional orders using the oracle price, skipping a market the oracle hasn't priced
+		// yet: a zero price would trigger every stop-loss sell. (GetOraclePriceSubticksRat isn't used
+		// because it panics on a zero price, which would halt the chain from EndBlocker.)
 		perpetualId := clobPair.MustGetPerpetualId()
-		oraclePrice := k.GetOraclePriceSubticksRat(ctx, clobPair)
-		triggered := k.TriggerOrdersWithPrice(ctx, untriggered, oraclePrice, perpetualId, metrics.OraclePrice)
-		allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
-
-		// Trigger conditional orders using the last traded price.
-		clampedMinTradePrice,
-			clampedMaxTradePrice,
-			found := k.getClampedTradePricesForTriggering(
-			ctx,
-			perpetualId,
-			oraclePrice,
+		perpetual, marketPrice, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, perpetualId)
+		if err != nil {
+			panic(errorsmod.Wrapf(err, "MaybeTriggerConditionalOrders: perpetual ID = (%d)", perpetualId))
+		}
+		oraclePrice := types.PriceToSubticks(
+			marketPrice,
+			clobPair,
+			perpetual.Params.AtomicResolution,
+			lib.QuoteCurrencyAtomicResolution,
 		)
-
-		if found {
-			triggered = k.TriggerOrdersWithPrice(ctx, untriggered, clampedMinTradePrice, perpetualId, metrics.MinTradePrice)
+		if oraclePrice.Sign() != 0 {
+			triggered := k.TriggerOrdersWithPrice(ctx, untriggered, oraclePrice, perpetualId, metrics.OraclePrice)
 			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
 
-			triggered = k.TriggerOrdersWithPrice(ctx, untriggered, clampedMaxTradePrice, perpetualId, metrics.MaxTradePrice)
-			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
+			// Trigger conditional orders using the last traded price.
+			clampedMinTradePrice,
+				clampedMaxTradePrice,
+				found := k.getClampedTradePricesForTriggering(
+				ctx,
+				perpetualId,
+				oraclePrice,
+			)
+
+			if found {
+				triggered = k.TriggerOrdersWithPrice(ctx, untriggered, clampedMinTradePrice, perpetualId, metrics.MinTradePrice)
+				allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
+
+				triggered = k.TriggerOrdersWithPrice(ctx, untriggered, clampedMaxTradePrice, perpetualId, metrics.MaxTradePrice)
+				allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
+			}
 		}
 
 		// Gauge the number of untriggered orders.
