@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 
-	v_9_7 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.7"
+	v_9_8 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.8"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +14,7 @@ var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []upgrades.Upgrade{
-		v_9_7.Upgrade,
+		v_9_8.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -22,16 +22,15 @@ var (
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	if app.UpgradeKeeper.HasHandler(v_9_7.UpgradeName) {
-		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_9_7.UpgradeName))
+	if app.UpgradeKeeper.HasHandler(v_9_8.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_9_8.UpgradeName))
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v_9_7.UpgradeName,
-		v_9_7.CreateUpgradeHandler(
+		v_9_8.UpgradeName,
+		v_9_8.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
 			app.ClobKeeper,
-			&app.SubaccountsKeeper,
 		),
 	)
 }

@@ -283,42 +283,24 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 		return err
 	}
 
+	// Wrap a transfer failure (typically the bank's ErrInsufficientFunds on the source pool) in
+	// ErrFailedToUpdateSubaccounts so callers recognize it via errors.Is as a settlement failure.
 	if err = k.bankKeeper.SendCoins(
 		ctx,
 		fromModuleAddr,
 		toModuleAddr,
 		[]sdk.Coin{coinToTransfer},
 	); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// computeAndExecuteCollateralTransfer computes collateral transfers resulting from updates to
-// a subaccount and executes the collateral transfer using `x/bank`.`
-// The input `settledUpdate` must have an updated subaccount (`settledUpdate.SettledSubaccount`),
-// so all the updates must have been applied already to the subaccount.
-// Note: This uses the `x/bank` keeper and modifies `x/bank` state.
-func (k *Keeper) computeAndExecuteCollateralTransfer(
-	ctx sdk.Context,
-	settledUpdateWithUpdatedSubaccount types.SettledUpdate,
-	perpInfos perptypes.PerpInfos,
-) error {
-	// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
-	// and asset updates applied to it.
-	stateTransition, err := GetIsolatedPerpetualStateTransition(
-		settledUpdateWithUpdatedSubaccount,
-		perpInfos,
-	)
-	if err != nil {
-		return err
-	}
-	if err := k.transferCollateralForIsolatedPerpetual(
-		ctx,
-		stateTransition,
-	); err != nil {
-		return err
+		return errorsmod.Wrapf(
+			types.ErrFailedToUpdateSubaccounts,
+			"transfer of %s from collateral pool %s for %s transition of perpetual %d (subaccount %v): %v",
+			coinToTransfer,
+			fromModuleAddr,
+			stateTransition.Transition,
+			stateTransition.PerpetualId,
+			stateTransition.SubaccountId,
+			err,
+		)
 	}
 
 	return nil

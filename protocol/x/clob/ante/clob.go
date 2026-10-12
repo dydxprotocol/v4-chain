@@ -24,9 +24,9 @@ var (
 // This AnteDecorator also enforces that any Transaction which contains a `MsgPlaceOrder`,
 // or a `MsgCancelOrder`, must consist only of a single message.
 //
-// This AnteDecorator is a no-op if:
-//   - No messages in the transaction are `MsgPlaceOrder` or `MsgCancelOrder`.
-//   - This AnteDecorator is called during `DeliverTx`.
+// Msg composition (see `ValidateMsgsInClobTx`) is validated in every mode, including `DeliverTx` and
+// simulation. The order placement/cancelation processing below is skipped during `DeliverTx` and is
+// a no-op if no messages are `MsgPlaceOrder` or `MsgCancelOrder`.
 //
 // This AnteDecorator returns an error if:
 //   - The transaction contains multiple messages, and one of them is a `MsgPlaceOrder`
@@ -54,14 +54,32 @@ func (cd ClobDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-	// No need to process during `DeliverTx` or simulation, call next `AnteHandler`.
+	// Validate msg composition in every mode, including DeliverTx and simulation. This is the
+	// invariant that justifies installing the free infinite gas meter and skipping fee deduction for
+	// clob txs, so it must be enforced wherever such a tx executes -- not only in CheckTx.
+	if err := ValidateMsgsInClobTx(tx); err != nil {
+		return ctx, err
+	}
+
+	// The remaining order placement/cancelation processing runs only in CheckTx / ReCheckTx; in
+	// DeliverTx or simulation, call the next `AnteHandler`.
 	if lib.IsDeliverTxMode(ctx) || simulate {
 		return next(ctx, tx, simulate)
 	}
 
-	// Check if the transaction is a valid clob tx
-	if err := ValidateMsgsInClobTx(tx); err != nil {
-		return ctx, err
+	// Reject oversized short-term CLOB txs on initial CheckTx. These are fee- and gas-free, and their
+	// raw bytes are stored verbatim and re-emitted in the operations tx, so padding here inflates the
+	// proposed block. Node-local bound; ReCheckTx and DeliverTx are unaffected.
+	if ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+		if isShortTerm, _ := IsShortTermClobMsgTx(ctx, tx); isShortTerm &&
+			len(ctx.TxBytes()) > types.MaxShortTermClobTxBytes {
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrTxTooLarge,
+				"short-term clob tx is %d bytes, max %d",
+				len(ctx.TxBytes()),
+				types.MaxShortTermClobTxBytes,
+			)
+		}
 	}
 
 	// Disable order placement and cancelation processing if the clob keeper is not initialized.

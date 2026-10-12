@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
@@ -137,6 +138,35 @@ func (k Keeper) ProcessSingleMatch(
 	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
 		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+	}
+
+	// In DeliverTx, re-validate reduce-only orders against the committed position before persisting
+	// the match. The memclob resizes reduce-only fills in CheckTx, but MakerFill amounts are supplied
+	// verbatim in DeliverTx and could otherwise overfill a signed reduce-only order past the
+	// subaccount's position and flip its side. Gated on DeliverTx (a tautology in CheckTx); the
+	// perpetual lookup above guarantees the position read does not panic.
+	if lib.IsDeliverTxMode(ctx) {
+		for _, order := range []types.MatchableOrder{takerMatchableOrder, makerMatchableOrder} {
+			if !order.IsReduceOnly() {
+				continue
+			}
+			if roErr := k.MustValidateReduceOnlyOrder(ctx, order, fillAmount.ToUint64()); roErr != nil {
+				telemetry.IncrCounter(
+					1,
+					types.ModuleName,
+					metrics.ProcessOperations,
+					metrics.ReduceOnly,
+					metrics.Rejected,
+				)
+				log.ErrorLogWithError(
+					ctx,
+					"reduce-only order failed DeliverTx validation",
+					roErr,
+					"matchWithOrders", matchWithOrders,
+				)
+				return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, roErr
+			}
+		}
 	}
 
 	// Fee tier for affiliates
@@ -395,9 +425,6 @@ func (k Keeper) persistMatchedOrders(
 
 	makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
 	makerBuilderFeeQuantums := makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
-	matchWithOrders.MakerBuilderFee = makerBuilderFeeQuantums.Uint64()
-
-	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
 	makerBuilderAddress := makerBuilderCodeParams.GetBuilderAddress()
 
 	takerBuilderFeeQuantums := big.NewInt(0)
@@ -405,11 +432,29 @@ func (k Keeper) persistMatchedOrders(
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
 		takerBuilderCodeParams := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
 		takerBuilderFeeQuantums = takerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
-		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
-
-		matchWithOrders.TakerBuilderFee = takerBuilderFeeQuantums.Uint64()
 		takerBuilderAddress = takerBuilderCodeParams.GetBuilderAddress()
 	}
+
+	// Builder fees leave the collateral pool just like a withdrawal, so waive them while the pool's
+	// negative-TNC/chain-outage withdrawal gate is active. Waiving instead of failing the match matters
+	// because the gate can turn on mid-block (e.g. a deleveraging match earlier in the same operations
+	// queue), which the proposer can't anticipate from CheckTx state; failing would revert the whole
+	// operations tx.
+	if makerBuilderFeeQuantums.Sign() > 0 || takerBuilderFeeQuantums.Sign() > 0 {
+		gateActive, err := k.subaccountsKeeper.IsNegativeTncGateActiveForPerpetual(ctx, perpetualId)
+		if err != nil {
+			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+		if gateActive {
+			makerBuilderFeeQuantums = big.NewInt(0)
+			takerBuilderFeeQuantums = big.NewInt(0)
+		}
+	}
+
+	matchWithOrders.MakerBuilderFee = makerBuilderFeeQuantums.Uint64()
+	matchWithOrders.TakerBuilderFee = takerBuilderFeeQuantums.Uint64()
+	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
+	bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
 
 	// Do this before subaccount updates so that bank sends are always valid between different
 	// module accounts.
@@ -808,12 +853,7 @@ func (k Keeper) checkAndUpdateTWAPOrderRemainingQuantity(
 	fillAmount satypes.BaseQuantums,
 ) error {
 	if orderId.IsTwapSuborder() {
-		parentOrderId := types.OrderId{
-			SubaccountId: orderId.SubaccountId,
-			ClientId:     orderId.ClientId,
-			OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
-			ClobPairId:   orderId.ClobPairId,
-		}
+		parentOrderId := k.suborderToTwapId(orderId)
 		if err := k.UpdateTWAPOrderRemainingQuantityOnFill(ctx, parentOrderId, fillAmount.ToUint64()); err != nil {
 			return err
 		}

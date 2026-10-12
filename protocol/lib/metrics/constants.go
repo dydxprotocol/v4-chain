@@ -61,6 +61,7 @@ const (
 	PrepareProposalTxs   = "prepare_proposal_txs"
 	PrepareCheckState    = "prepare_check_state"
 	PricesTx             = "prices_tx"
+	Truncated            = "truncated"
 	TotalNumBytes        = "total_num_bytes"
 	TotalNumTxs          = "total_num_txs"
 	Validate             = "validate"
@@ -210,7 +211,12 @@ const (
 	AddedToOrderBook                     = "added_to_orderbook"
 	AddToOrderbookCollateralizationCheck = "add_to_orderbook_collateralization_check"
 	Memclob                              = "memclob"
+	ProcessSingleMatchUnexpectedError    = "process_single_match_unexpected_error"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
+
+	// TWAP.
+	TwapSweepDuplicateTrigger  = "twap_sweep_duplicate_trigger"
+	TwapSweepSuborderCollision = "twap_sweep_suborder_collision"
 
 	// Daemon
 	DaemonServer    = "daemon_server"
