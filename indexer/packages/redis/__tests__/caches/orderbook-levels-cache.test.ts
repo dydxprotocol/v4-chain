@@ -14,7 +14,7 @@ import {
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '../../src/types';
 import { InvalidOptionsError } from '../../src/errors';
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 
 interface MockMulti {
   hgetall(key: string): MockMulti,
@@ -37,6 +37,7 @@ describe('orderbookLevelsCache', () => {
   beforeEach(async () => {
     await deleteAllAsync(client);
     jest.spyOn(logger, 'crit');
+    jest.spyOn(stats, 'increment');
   });
 
   afterEach(async () => {
@@ -221,8 +222,35 @@ describe('orderbookLevelsCache', () => {
         client,
       );
       expect(logger.crit).toHaveBeenCalledTimes(1);
+      expect(stats.increment).toHaveBeenCalledWith(
+        'orderbook_levels_cache.negative_price_level',
+        1,
+        { ticker, side: OrderSide.BUY },
+      );
 
       // Expect that the value in the orderbook is set to 0
+      const orderbookLevels: OrderbookLevels = await getOrderBookLevels(ticker, client, {
+        removeZeros: false,
+      });
+      expect(orderbookLevels.bids).toMatchObject([
+        {
+          humanPrice,
+          quantums: '0',
+        },
+      ]);
+    });
+
+    it('sets price level to 0 for concurrent updates that cause quantums to be negative', async () => {
+      const humanPrice: string = '50000';
+      await updatePriceLevel(ticker, OrderSide.BUY, humanPrice, '1000', client);
+
+      await Promise.all([
+        updatePriceLevel(ticker, OrderSide.BUY, humanPrice, '-2000', client),
+        updatePriceLevel(ticker, OrderSide.BUY, humanPrice, '-3000', client),
+      ]);
+      expect(logger.crit).toHaveBeenCalledTimes(2);
+      expect(stats.increment).toHaveBeenCalledTimes(2);
+
       const orderbookLevels: OrderbookLevels = await getOrderBookLevels(ticker, client, {
         removeZeros: false,
       });
