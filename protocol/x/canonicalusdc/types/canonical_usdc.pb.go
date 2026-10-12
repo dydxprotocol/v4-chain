@@ -5,7 +5,9 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -92,22 +94,46 @@ func (Route) EnumDescriptor() ([]byte, []int) {
 
 // Controls binds canonical routing to exact channels and denominations.
 type Controls struct {
-	Mode                           Mode   `protobuf:"varint,1,opt,name=mode,proto3,enum=dydxprotocol.canonicalusdc.Mode" json:"mode,omitempty"`
-	LogicalDenom                   string `protobuf:"bytes,2,opt,name=logical_denom,json=logicalDenom,proto3" json:"logical_denom,omitempty"`
-	NobleChannel                   string `protobuf:"bytes,3,opt,name=noble_channel,json=nobleChannel,proto3" json:"noble_channel,omitempty"`
-	InjectiveChannel               string `protobuf:"bytes,4,opt,name=injective_channel,json=injectiveChannel,proto3" json:"injective_channel,omitempty"`
-	InjectivePacketDenom           string `protobuf:"bytes,5,opt,name=injective_packet_denom,json=injectivePacketDenom,proto3" json:"injective_packet_denom,omitempty"`
-	InjectiveDenom                 string `protobuf:"bytes,6,opt,name=injective_denom,json=injectiveDenom,proto3" json:"injective_denom,omitempty"`
-	NobleWithdrawalsEnabled        bool   `protobuf:"varint,7,opt,name=noble_withdrawals_enabled,json=nobleWithdrawalsEnabled,proto3" json:"noble_withdrawals_enabled,omitempty"`
-	NobleWithdrawalCutoffTimestamp int64  `protobuf:"varint,8,opt,name=noble_withdrawal_cutoff_timestamp,json=nobleWithdrawalCutoffTimestamp,proto3" json:"noble_withdrawal_cutoff_timestamp,omitempty"`
-	MaxTransferAmount              string `protobuf:"bytes,9,opt,name=max_transfer_amount,json=maxTransferAmount,proto3" json:"max_transfer_amount,omitempty"`
-	MigrationCeiling               string `protobuf:"bytes,10,opt,name=migration_ceiling,json=migrationCeiling,proto3" json:"migration_ceiling,omitempty"`
-	MaxPendingSettlements          uint32 `protobuf:"varint,11,opt,name=max_pending_settlements,json=maxPendingSettlements,proto3" json:"max_pending_settlements,omitempty"`
-	NoblePacketDenom               string `protobuf:"bytes,12,opt,name=noble_packet_denom,json=noblePacketDenom,proto3" json:"noble_packet_denom,omitempty"`
-	NobleClient                    string `protobuf:"bytes,13,opt,name=noble_client,json=nobleClient,proto3" json:"noble_client,omitempty"`
-	NobleConnection                string `protobuf:"bytes,14,opt,name=noble_connection,json=nobleConnection,proto3" json:"noble_connection,omitempty"`
-	InjectiveClient                string `protobuf:"bytes,15,opt,name=injective_client,json=injectiveClient,proto3" json:"injective_client,omitempty"`
-	InjectiveConnection            string `protobuf:"bytes,16,opt,name=injective_connection,json=injectiveConnection,proto3" json:"injective_connection,omitempty"`
+	// mode is the routing mode for canonical USDC.
+	Mode Mode `protobuf:"varint,1,opt,name=mode,proto3,enum=dydxprotocol.canonicalusdc.Mode" json:"mode,omitempty"`
+	// logical_denom is the application USDC denom (the `uusdc` IBC hash) whose
+	// backing is classified.
+	LogicalDenom string `protobuf:"bytes,2,opt,name=logical_denom,json=logicalDenom,proto3" json:"logical_denom,omitempty"`
+	// noble_channel is the local IBC channel ID bound to Noble.
+	NobleChannel string `protobuf:"bytes,3,opt,name=noble_channel,json=nobleChannel,proto3" json:"noble_channel,omitempty"`
+	// noble_client is the IBC client the Noble channel must be bound to.
+	NobleClient string `protobuf:"bytes,4,opt,name=noble_client,json=nobleClient,proto3" json:"noble_client,omitempty"`
+	// noble_connection is the IBC connection the Noble channel must be bound to.
+	NobleConnection string `protobuf:"bytes,5,opt,name=noble_connection,json=nobleConnection,proto3" json:"noble_connection,omitempty"`
+	// noble_packet_denom is Noble's base denom as it appears in an inbound ICS20
+	// packet (e.g. `uusdc`), not the full trace path. Outbound packets carry
+	// `transfer/<noble_channel>/<noble_packet_denom>`.
+	NoblePacketDenom string `protobuf:"bytes,6,opt,name=noble_packet_denom,json=noblePacketDenom,proto3" json:"noble_packet_denom,omitempty"`
+	// noble_withdrawals_enabled is whether logical USDC may exit over the Noble
+	// channel.
+	NobleWithdrawalsEnabled bool `protobuf:"varint,7,opt,name=noble_withdrawals_enabled,json=nobleWithdrawalsEnabled,proto3" json:"noble_withdrawals_enabled,omitempty"`
+	// injective_channel is the local IBC channel ID bound to Injective.
+	InjectiveChannel string `protobuf:"bytes,8,opt,name=injective_channel,json=injectiveChannel,proto3" json:"injective_channel,omitempty"`
+	// injective_client is the IBC client the Injective channel must be bound to.
+	InjectiveClient string `protobuf:"bytes,9,opt,name=injective_client,json=injectiveClient,proto3" json:"injective_client,omitempty"`
+	// injective_connection is the IBC connection the Injective channel must be
+	// bound to.
+	InjectiveConnection string `protobuf:"bytes,10,opt,name=injective_connection,json=injectiveConnection,proto3" json:"injective_connection,omitempty"`
+	// injective_packet_denom is Injective's base denom as it appears in an
+	// inbound ICS20 packet (e.g. `uusdc`), not the full trace path. Outbound
+	// packets carry `transfer/<injective_channel>/<injective_packet_denom>`.
+	InjectivePacketDenom string `protobuf:"bytes,11,opt,name=injective_packet_denom,json=injectivePacketDenom,proto3" json:"injective_packet_denom,omitempty"`
+	// injective_denom is the local IBC denom of Injective-origin USDC (the hash
+	// of transfer/<injective_channel>/<injective_packet_denom>).
+	InjectiveDenom string `protobuf:"bytes,12,opt,name=injective_denom,json=injectiveDenom,proto3" json:"injective_denom,omitempty"`
+	// max_transfer_amount is the per-packet cap for canonical inbound and
+	// outbound transfers.
+	MaxTransferAmount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,13,opt,name=max_transfer_amount,json=maxTransferAmount,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"max_transfer_amount"`
+	// migration_ceiling is the upper bound on injective_backing.
+	MigrationCeiling github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,14,opt,name=migration_ceiling,json=migrationCeiling,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"migration_ceiling"`
+	// max_pending_settlements is the cap on concurrent in-flight canonical
+	// settlements.
+	MaxPendingSettlements uint32 `protobuf:"varint,15,opt,name=max_pending_settlements,json=maxPendingSettlements,proto3" json:"max_pending_settlements,omitempty"`
 }
 
 func (m *Controls) Reset()         { *m = Controls{} }
@@ -164,23 +190,23 @@ func (m *Controls) GetNobleChannel() string {
 	return ""
 }
 
-func (m *Controls) GetInjectiveChannel() string {
+func (m *Controls) GetNobleClient() string {
 	if m != nil {
-		return m.InjectiveChannel
+		return m.NobleClient
 	}
 	return ""
 }
 
-func (m *Controls) GetInjectivePacketDenom() string {
+func (m *Controls) GetNobleConnection() string {
 	if m != nil {
-		return m.InjectivePacketDenom
+		return m.NobleConnection
 	}
 	return ""
 }
 
-func (m *Controls) GetInjectiveDenom() string {
+func (m *Controls) GetNoblePacketDenom() string {
 	if m != nil {
-		return m.InjectiveDenom
+		return m.NoblePacketDenom
 	}
 	return ""
 }
@@ -192,51 +218,9 @@ func (m *Controls) GetNobleWithdrawalsEnabled() bool {
 	return false
 }
 
-func (m *Controls) GetNobleWithdrawalCutoffTimestamp() int64 {
+func (m *Controls) GetInjectiveChannel() string {
 	if m != nil {
-		return m.NobleWithdrawalCutoffTimestamp
-	}
-	return 0
-}
-
-func (m *Controls) GetMaxTransferAmount() string {
-	if m != nil {
-		return m.MaxTransferAmount
-	}
-	return ""
-}
-
-func (m *Controls) GetMigrationCeiling() string {
-	if m != nil {
-		return m.MigrationCeiling
-	}
-	return ""
-}
-
-func (m *Controls) GetMaxPendingSettlements() uint32 {
-	if m != nil {
-		return m.MaxPendingSettlements
-	}
-	return 0
-}
-
-func (m *Controls) GetNoblePacketDenom() string {
-	if m != nil {
-		return m.NoblePacketDenom
-	}
-	return ""
-}
-
-func (m *Controls) GetNobleClient() string {
-	if m != nil {
-		return m.NobleClient
-	}
-	return ""
-}
-
-func (m *Controls) GetNobleConnection() string {
-	if m != nil {
-		return m.NobleConnection
+		return m.InjectiveChannel
 	}
 	return ""
 }
@@ -255,14 +239,41 @@ func (m *Controls) GetInjectiveConnection() string {
 	return ""
 }
 
+func (m *Controls) GetInjectivePacketDenom() string {
+	if m != nil {
+		return m.InjectivePacketDenom
+	}
+	return ""
+}
+
+func (m *Controls) GetInjectiveDenom() string {
+	if m != nil {
+		return m.InjectiveDenom
+	}
+	return ""
+}
+
+func (m *Controls) GetMaxPendingSettlements() uint32 {
+	if m != nil {
+		return m.MaxPendingSettlements
+	}
+	return 0
+}
+
 // Ledger accounts for backing and in-flight settlement without changing the
 // logical application denomination.
 type Ledger struct {
-	NobleBacking     string `protobuf:"bytes,1,opt,name=noble_backing,json=nobleBacking,proto3" json:"noble_backing,omitempty"`
-	InjectiveBacking string `protobuf:"bytes,2,opt,name=injective_backing,json=injectiveBacking,proto3" json:"injective_backing,omitempty"`
-	LegacyDownstream string `protobuf:"bytes,3,opt,name=legacy_downstream,json=legacyDownstream,proto3" json:"legacy_downstream,omitempty"`
-	PendingInjective string `protobuf:"bytes,4,opt,name=pending_injective,json=pendingInjective,proto3" json:"pending_injective,omitempty"`
-	PendingNoble     string `protobuf:"bytes,5,opt,name=pending_noble,json=pendingNoble,proto3" json:"pending_noble,omitempty"`
+	// noble_backing is the logical supply still classified as Noble-backed.
+	NobleBacking github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,1,opt,name=noble_backing,json=nobleBacking,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"noble_backing"`
+	// injective_backing is the Injective-origin USDC held by the module backing
+	// logical supply.
+	InjectiveBacking github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=injective_backing,json=injectiveBacking,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"injective_backing"`
+	// pending_injective is the logical USDC locked on the module for in-flight
+	// Injective withdrawals.
+	PendingInjective github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=pending_injective,json=pendingInjective,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"pending_injective"`
+	// pending_noble is the logical USDC in flight to Noble awaiting ack or
+	// timeout (already removed from supply).
+	PendingNoble github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=pending_noble,json=pendingNoble,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"pending_noble"`
 }
 
 func (m *Ledger) Reset()         { *m = Ledger{} }
@@ -298,53 +309,27 @@ func (m *Ledger) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Ledger proto.InternalMessageInfo
 
-func (m *Ledger) GetNobleBacking() string {
-	if m != nil {
-		return m.NobleBacking
-	}
-	return ""
-}
-
-func (m *Ledger) GetInjectiveBacking() string {
-	if m != nil {
-		return m.InjectiveBacking
-	}
-	return ""
-}
-
-func (m *Ledger) GetLegacyDownstream() string {
-	if m != nil {
-		return m.LegacyDownstream
-	}
-	return ""
-}
-
-func (m *Ledger) GetPendingInjective() string {
-	if m != nil {
-		return m.PendingInjective
-	}
-	return ""
-}
-
-func (m *Ledger) GetPendingNoble() string {
-	if m != nil {
-		return m.PendingNoble
-	}
-	return ""
-}
-
 // PendingSettlement records enough logical and physical state to settle a
 // packet acknowledgement or timeout exactly once.
 type PendingSettlement struct {
-	Route            Route  `protobuf:"varint,1,opt,name=route,proto3,enum=dydxprotocol.canonicalusdc.Route" json:"route,omitempty"`
-	SourceChannel    string `protobuf:"bytes,2,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty"`
-	Sequence         uint64 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	Sender           string `protobuf:"bytes,4,opt,name=sender,proto3" json:"sender,omitempty"`
-	LogicalReceiver  string `protobuf:"bytes,5,opt,name=logical_receiver,json=logicalReceiver,proto3" json:"logical_receiver,omitempty"`
+	// route is the physical settlement route of the packet.
+	Route Route `protobuf:"varint,1,opt,name=route,proto3,enum=dydxprotocol.canonicalusdc.Route" json:"route,omitempty"`
+	// source_channel is the source channel of the IBC packet.
+	SourceChannel string `protobuf:"bytes,2,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty"`
+	// sequence is the sequence of the IBC packet.
+	Sequence uint64 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	// sender is the dYdX sender of the MsgTransfer.
+	Sender string `protobuf:"bytes,4,opt,name=sender,proto3" json:"sender,omitempty"`
+	// logical_receiver is the counterparty receiver of the logical transfer.
+	LogicalReceiver string `protobuf:"bytes,5,opt,name=logical_receiver,json=logicalReceiver,proto3" json:"logical_receiver,omitempty"`
+	// physical_receiver is the counterparty receiver of the physical packet.
 	PhysicalReceiver string `protobuf:"bytes,6,opt,name=physical_receiver,json=physicalReceiver,proto3" json:"physical_receiver,omitempty"`
-	LogicalDenom     string `protobuf:"bytes,7,opt,name=logical_denom,json=logicalDenom,proto3" json:"logical_denom,omitempty"`
-	PhysicalDenom    string `protobuf:"bytes,8,opt,name=physical_denom,json=physicalDenom,proto3" json:"physical_denom,omitempty"`
-	Amount           string `protobuf:"bytes,9,opt,name=amount,proto3" json:"amount,omitempty"`
+	// logical_denom is the application USDC denom of the transfer.
+	LogicalDenom string `protobuf:"bytes,7,opt,name=logical_denom,json=logicalDenom,proto3" json:"logical_denom,omitempty"`
+	// physical_denom is the denom carried by the physical packet.
+	PhysicalDenom string `protobuf:"bytes,8,opt,name=physical_denom,json=physicalDenom,proto3" json:"physical_denom,omitempty"`
+	// amount is the transfer amount.
+	Amount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,9,opt,name=amount,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"amount"`
 }
 
 func (m *PendingSettlement) Reset()         { *m = PendingSettlement{} }
@@ -436,13 +421,6 @@ func (m *PendingSettlement) GetPhysicalDenom() string {
 	return ""
 }
 
-func (m *PendingSettlement) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterEnum("dydxprotocol.canonicalusdc.Mode", Mode_name, Mode_value)
 	proto.RegisterEnum("dydxprotocol.canonicalusdc.Route", Route_name, Route_value)
@@ -456,59 +434,60 @@ func init() {
 }
 
 var fileDescriptor_43a07a469d79d14a = []byte{
-	// 823 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x95, 0x4d, 0x73, 0xe3, 0x34,
-	0x18, 0xc7, 0xeb, 0xb4, 0xcd, 0x66, 0x9f, 0xe6, 0xc5, 0x51, 0xbb, 0x5d, 0xb3, 0x87, 0x4c, 0x5a,
-	0x66, 0x87, 0xb0, 0x40, 0x3a, 0x40, 0x07, 0x66, 0xb8, 0x30, 0x69, 0x6c, 0x98, 0x30, 0xdd, 0xb6,
-	0xe3, 0x26, 0x30, 0x70, 0xf1, 0x28, 0xb2, 0x9a, 0x98, 0xb5, 0xa5, 0x60, 0x2b, 0x6d, 0xf2, 0x1d,
-	0x38, 0xf0, 0xb1, 0x38, 0xee, 0x11, 0x6e, 0x4c, 0xf3, 0x45, 0x18, 0x4b, 0xb2, 0x9d, 0x64, 0x61,
-	0x8f, 0xfa, 0xff, 0x7f, 0x7a, 0x2c, 0x3d, 0x2f, 0x32, 0x9c, 0xf9, 0x4b, 0x7f, 0x31, 0x8b, 0xb9,
-	0xe0, 0x84, 0x87, 0x67, 0x04, 0x33, 0xce, 0x02, 0x82, 0xc3, 0x79, 0xe2, 0x93, 0x62, 0xe5, 0xa5,
-	0xcb, 0xae, 0xa4, 0xd0, 0x8b, 0xf5, 0x0d, 0xdd, 0x8d, 0x0d, 0xa7, 0xbf, 0x97, 0xa1, 0xd2, 0xe7,
-	0x4c, 0xc4, 0x3c, 0x4c, 0xd0, 0x39, 0xec, 0x45, 0xdc, 0xa7, 0x96, 0xd1, 0x36, 0x3a, 0xf5, 0x2f,
-	0xda, 0xdd, 0xff, 0xdf, 0xd7, 0x7d, 0xcd, 0x7d, 0xea, 0x4a, 0x1a, 0x7d, 0x08, 0xb5, 0x90, 0x4f,
-	0xe4, 0x47, 0x7d, 0xca, 0x78, 0x64, 0x95, 0xda, 0x46, 0xe7, 0xa9, 0x5b, 0xd5, 0xa2, 0x9d, 0x6a,
-	0x29, 0xc4, 0xf8, 0x38, 0xa4, 0x1e, 0x99, 0x62, 0xc6, 0x68, 0x68, 0xed, 0x2a, 0x48, 0x8a, 0x7d,
-	0xa5, 0xa1, 0x4f, 0xa0, 0x19, 0xb0, 0x5f, 0x29, 0x11, 0xc1, 0x7d, 0x01, 0xee, 0x49, 0xd0, 0xcc,
-	0x8d, 0x0c, 0x3e, 0x87, 0xe3, 0x02, 0x9e, 0x61, 0xf2, 0x86, 0x0a, 0xfd, 0xfd, 0x7d, 0xb9, 0xe3,
-	0x28, 0x77, 0x6f, 0xa4, 0xa9, 0xce, 0xf1, 0x11, 0x34, 0x8a, 0x5d, 0x0a, 0x2f, 0x4b, 0xbc, 0x9e,
-	0xcb, 0x0a, 0xfc, 0x06, 0x3e, 0x50, 0x07, 0x7e, 0x08, 0xc4, 0xd4, 0x8f, 0xf1, 0x03, 0x0e, 0x13,
-	0x8f, 0x32, 0x3c, 0x0e, 0xa9, 0x6f, 0x3d, 0x69, 0x1b, 0x9d, 0x8a, 0xfb, 0x5c, 0x02, 0x3f, 0x15,
-	0xbe, 0xa3, 0x6c, 0x34, 0x80, 0x93, 0xed, 0xbd, 0x1e, 0x99, 0x0b, 0x7e, 0x77, 0xe7, 0x89, 0x20,
-	0xa2, 0x89, 0xc0, 0xd1, 0xcc, 0xaa, 0xb4, 0x8d, 0xce, 0xae, 0xdb, 0xda, 0x8a, 0xd1, 0x97, 0xd8,
-	0x30, 0xa3, 0x50, 0x17, 0x0e, 0x23, 0xbc, 0xf0, 0x44, 0x8c, 0x59, 0x72, 0x47, 0x63, 0x0f, 0x47,
-	0x7c, 0xce, 0x84, 0xf5, 0x54, 0x9e, 0xb9, 0x19, 0xe1, 0xc5, 0x50, 0x3b, 0x3d, 0x69, 0xa4, 0x29,
-	0x8c, 0x82, 0x49, 0x8c, 0x45, 0xc0, 0x99, 0x47, 0x68, 0x10, 0x06, 0x6c, 0x62, 0x81, 0x4a, 0x61,
-	0x6e, 0xf4, 0x95, 0x8e, 0xbe, 0x82, 0xe7, 0x69, 0xf0, 0x19, 0x65, 0x7e, 0xc0, 0x26, 0x5e, 0x42,
-	0x85, 0x08, 0x69, 0x44, 0x99, 0x48, 0xac, 0x83, 0xb6, 0xd1, 0xa9, 0xb9, 0xcf, 0x22, 0xbc, 0xb8,
-	0x51, 0xee, 0x6d, 0x61, 0xa2, 0x4f, 0x01, 0xa9, 0xfb, 0x6d, 0xa4, 0xbd, 0xaa, 0xbe, 0x22, 0x9d,
-	0xf5, 0x94, 0x9f, 0x40, 0x55, 0x97, 0x3e, 0x0c, 0x28, 0x13, 0x56, 0x4d, 0x72, 0x07, 0xaa, 0xf2,
-	0x52, 0x42, 0x1f, 0x83, 0xa9, 0x11, 0xce, 0x58, 0x5a, 0x05, 0xce, 0xac, 0xba, 0xc4, 0x1a, 0x0a,
-	0xcb, 0xe5, 0x14, 0x5d, 0xeb, 0x11, 0x15, 0xb1, 0xa1, 0xd0, 0xa2, 0x45, 0x54, 0xd4, 0xcf, 0xe1,
-	0x68, 0x0d, 0x2d, 0x22, 0x9b, 0x12, 0x3f, 0x2c, 0xf0, 0xdc, 0x3a, 0xfd, 0xdb, 0x80, 0xf2, 0x25,
-	0xf5, 0x27, 0x34, 0x2e, 0x3a, 0x76, 0x8c, 0xc9, 0x9b, 0x34, 0x8b, 0xc6, 0x5a, 0xc7, 0x5e, 0x28,
-	0x6d, 0xb3, 0x63, 0x33, 0xb0, 0xb4, 0xd5, 0xb1, 0x6b, 0x70, 0x48, 0x27, 0x98, 0x2c, 0x3d, 0x9f,
-	0x3f, 0xb0, 0x44, 0xc4, 0x14, 0x47, 0x7a, 0x0e, 0x4c, 0x65, 0xd8, 0xb9, 0x9e, 0xc2, 0x59, 0x5d,
-	0xf2, 0x40, 0xd9, 0x2c, 0x68, 0x63, 0x90, 0xe9, 0xe9, 0x59, 0x33, 0x58, 0x1e, 0x4f, 0x8f, 0x40,
-	0x55, 0x8b, 0x57, 0xa9, 0x76, 0xba, 0x2a, 0x41, 0xf3, 0x9d, 0x62, 0xa2, 0xaf, 0x61, 0x3f, 0xe6,
-	0x73, 0x91, 0x0d, 0xfd, 0xc9, 0xfb, 0x86, 0xde, 0x4d, 0x41, 0x57, 0xf1, 0xe8, 0x25, 0xd4, 0x13,
-	0x3e, 0x8f, 0x49, 0x31, 0xa9, 0xea, 0xde, 0x35, 0xa5, 0x66, 0x63, 0xfa, 0x02, 0x2a, 0x09, 0xfd,
-	0x6d, 0x4e, 0x19, 0xa1, 0xf2, 0xae, 0x7b, 0x6e, 0xbe, 0x46, 0xc7, 0x50, 0x4e, 0x28, 0xf3, 0x69,
-	0xac, 0x2f, 0xa6, 0x57, 0x69, 0x8d, 0xb3, 0x17, 0x25, 0xa6, 0x84, 0x06, 0xf7, 0x34, 0xd6, 0x37,
-	0x6a, 0x68, 0xdd, 0xd5, 0xb2, 0x4c, 0xd3, 0x74, 0x99, 0x6c, 0xb2, 0x65, 0x9d, 0x26, 0x6d, 0xe4,
-	0xf0, 0x3b, 0x2f, 0xd5, 0x93, 0xff, 0x78, 0xa9, 0x5e, 0x42, 0x3d, 0x8f, 0xa8, 0xa8, 0x8a, 0xba,
-	0x57, 0xa6, 0x2a, 0xec, 0x18, 0xca, 0x1b, 0xb3, 0xa8, 0x57, 0xaf, 0x5c, 0xd8, 0x4b, 0xdf, 0x46,
-	0x74, 0x04, 0xe6, 0xeb, 0x6b, 0xdb, 0xf1, 0x46, 0x57, 0xb7, 0x37, 0x4e, 0x7f, 0xf0, 0xdd, 0xc0,
-	0xb1, 0xcd, 0x1d, 0xd4, 0x84, 0x9a, 0x54, 0xed, 0xc1, 0x6d, 0xef, 0xe2, 0xd2, 0xb1, 0x4d, 0x03,
-	0x99, 0x50, 0x95, 0xd2, 0xf7, 0x6e, 0xcf, 0x1e, 0xf5, 0x2e, 0xcd, 0x12, 0x6a, 0xc0, 0x81, 0x54,
-	0x6e, 0x7a, 0xa3, 0x5b, 0xc7, 0x36, 0x77, 0x5f, 0xd9, 0xb0, 0x2f, 0x53, 0x8f, 0x9e, 0x41, 0xd3,
-	0xbd, 0x1e, 0x0d, 0xb7, 0xa3, 0x1e, 0x42, 0x43, 0xc9, 0x83, 0xab, 0x1f, 0x9c, 0xfe, 0x70, 0xf0,
-	0xa3, 0x63, 0x1a, 0x69, 0x14, 0x25, 0x5e, 0x5d, 0x5f, 0x5c, 0x3a, 0x66, 0xe9, 0xe2, 0xe7, 0x3f,
-	0x1f, 0x5b, 0xc6, 0xdb, 0xc7, 0x96, 0xf1, 0xcf, 0x63, 0xcb, 0xf8, 0x63, 0xd5, 0xda, 0x79, 0xbb,
-	0x6a, 0xed, 0xfc, 0xb5, 0x6a, 0xed, 0xfc, 0xf2, 0xed, 0x24, 0x10, 0xd3, 0xf9, 0xb8, 0x4b, 0x78,
-	0xb4, 0xf9, 0x73, 0xb9, 0x3f, 0xff, 0x8c, 0x4c, 0x71, 0xc0, 0xce, 0x72, 0x65, 0xb1, 0xf5, 0xc3,
-	0x11, 0xcb, 0x19, 0x4d, 0xc6, 0x65, 0xe9, 0x7f, 0xf9, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xaa,
-	0x56, 0x21, 0x2c, 0x9b, 0x06, 0x00, 0x00,
+	// 841 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xdd, 0x72, 0xdb, 0x44,
+	0x14, 0xc7, 0xad, 0x7c, 0xb8, 0xce, 0x89, 0x3f, 0xe4, 0x4d, 0xda, 0x8a, 0x5c, 0xb8, 0x6e, 0x98,
+	0x0e, 0x6e, 0x01, 0x7b, 0x80, 0x0c, 0xcc, 0x70, 0x03, 0xb6, 0x25, 0xc0, 0x8c, 0xeb, 0x78, 0xe4,
+	0x18, 0x06, 0x6e, 0xc4, 0x5a, 0x5a, 0x64, 0x51, 0x69, 0xd7, 0x48, 0x72, 0xea, 0xf0, 0x14, 0xbc,
+	0x08, 0xef, 0xd1, 0xcb, 0x5e, 0xc0, 0x0c, 0xc3, 0x45, 0x87, 0x49, 0x5e, 0x84, 0xd9, 0x5d, 0x7d,
+	0xd8, 0x0d, 0x30, 0xbd, 0xf0, 0x5d, 0xf4, 0x3f, 0xbf, 0x3d, 0xff, 0x3d, 0x47, 0xf6, 0x3f, 0x86,
+	0x8e, 0x73, 0xe5, 0xac, 0x16, 0x21, 0x8b, 0x99, 0xcd, 0xfc, 0x8e, 0x8d, 0x29, 0xa3, 0x9e, 0x8d,
+	0xfd, 0x65, 0xe4, 0xd8, 0xf9, 0x93, 0xc5, 0x1f, 0xdb, 0x82, 0x42, 0x27, 0xeb, 0x07, 0xda, 0x1b,
+	0x07, 0x4e, 0x8e, 0x5d, 0xe6, 0x32, 0x51, 0xeb, 0xf0, 0xbf, 0xe4, 0x89, 0xd3, 0x3f, 0x8a, 0x50,
+	0xea, 0x33, 0x1a, 0x87, 0xcc, 0x8f, 0xd0, 0x19, 0xec, 0x05, 0xcc, 0x21, 0x9a, 0xd2, 0x54, 0x5a,
+	0xd5, 0x0f, 0x9b, 0xed, 0xff, 0xee, 0xd6, 0x7e, 0xca, 0x1c, 0x62, 0x0a, 0x1a, 0xbd, 0x0d, 0x15,
+	0x9f, 0xb9, 0xe2, 0x2a, 0x0e, 0xa1, 0x2c, 0xd0, 0x76, 0x9a, 0x4a, 0xeb, 0xc0, 0x2c, 0x27, 0xa2,
+	0xce, 0x35, 0x0e, 0x51, 0x36, 0xf3, 0x89, 0x65, 0xcf, 0x31, 0xa5, 0xc4, 0xd7, 0x76, 0x25, 0x24,
+	0xc4, 0xbe, 0xd4, 0xd0, 0x43, 0x28, 0x27, 0x90, 0xef, 0x11, 0x1a, 0x6b, 0x7b, 0x82, 0x39, 0x94,
+	0x8c, 0x90, 0xd0, 0x63, 0x50, 0x13, 0x84, 0x51, 0x4a, 0xec, 0xd8, 0x63, 0x54, 0xdb, 0x17, 0x58,
+	0x4d, 0x62, 0x99, 0x8c, 0xde, 0x03, 0x24, 0xd1, 0x05, 0xb6, 0x9f, 0x91, 0x38, 0xb9, 0x5c, 0x51,
+	0xc0, 0xb2, 0xc9, 0x58, 0x14, 0xe4, 0x05, 0x3f, 0x85, 0xb7, 0x24, 0xfd, 0xdc, 0x8b, 0xe7, 0x4e,
+	0x88, 0x9f, 0x63, 0x3f, 0xb2, 0x08, 0xc5, 0x33, 0x9f, 0x38, 0xda, 0x9d, 0xa6, 0xd2, 0x2a, 0x99,
+	0xf7, 0x05, 0xf0, 0x6d, 0x5e, 0x37, 0x64, 0x19, 0xbd, 0x0b, 0x75, 0x8f, 0xfe, 0xc4, 0x6d, 0x2f,
+	0xf3, 0x01, 0x4b, 0xd2, 0x28, 0x2b, 0xa4, 0x43, 0x3e, 0x06, 0x75, 0x0d, 0x96, 0x83, 0x1e, 0xc8,
+	0x09, 0x72, 0x56, 0x0e, 0xfb, 0x01, 0x1c, 0xaf, 0xa1, 0xf9, 0xc0, 0x20, 0xf0, 0xa3, 0x1c, 0xcf,
+	0x87, 0x3e, 0x83, 0x7b, 0xf9, 0x91, 0x8d, 0xc1, 0x0f, 0xc5, 0xa1, 0xbc, 0xe1, 0xfa, 0xf0, 0xef,
+	0x40, 0xee, 0x9d, 0xe0, 0x65, 0x81, 0x57, 0x33, 0x59, 0x82, 0x2b, 0x38, 0x0a, 0xf0, 0xca, 0x8a,
+	0x43, 0x4c, 0xa3, 0x1f, 0x49, 0x68, 0xe1, 0x80, 0x2d, 0x69, 0xac, 0x55, 0x9a, 0x4a, 0xab, 0xdc,
+	0xfb, 0xea, 0xc5, 0xab, 0x07, 0x85, 0xbf, 0x5e, 0x3d, 0xf8, 0xdc, 0xf5, 0xe2, 0xf9, 0x72, 0xd6,
+	0xb6, 0x59, 0xb0, 0xf9, 0x09, 0xbe, 0x3c, 0x7b, 0xdf, 0x9e, 0x63, 0x8f, 0x76, 0x32, 0xc5, 0x89,
+	0xaf, 0x16, 0x24, 0x6a, 0x4f, 0x48, 0xe8, 0x61, 0xdf, 0xfb, 0x85, 0xaf, 0x73, 0x40, 0x63, 0xb3,
+	0x1e, 0xe0, 0xd5, 0x45, 0xe2, 0xd1, 0x15, 0x16, 0x68, 0x09, 0xf5, 0xc0, 0x73, 0x43, 0xcc, 0xa7,
+	0xb4, 0x6c, 0xe2, 0xf9, 0x1e, 0x75, 0xb5, 0xea, 0x96, 0x7d, 0xd5, 0xcc, 0xa2, 0x2f, 0x1d, 0xd0,
+	0xc7, 0x70, 0x9f, 0x0f, 0xbc, 0x20, 0xd4, 0xf1, 0xa8, 0x6b, 0x45, 0x24, 0x8e, 0x7d, 0x12, 0x10,
+	0x1a, 0x47, 0x5a, 0xad, 0xa9, 0xb4, 0x2a, 0xe6, 0xdd, 0x00, 0xaf, 0xc6, 0xb2, 0x3a, 0xc9, 0x8b,
+	0xa7, 0xbf, 0xef, 0x42, 0x71, 0x48, 0x1c, 0x97, 0x84, 0x28, 0x48, 0x3f, 0xfa, 0x33, 0x6c, 0x3f,
+	0xe3, 0xb7, 0x56, 0xb6, 0x7c, 0x6b, 0xf9, 0xa5, 0xe9, 0xc9, 0xee, 0x7c, 0x51, 0xf9, 0xbb, 0x4c,
+	0x2d, 0x77, 0xb6, 0xbd, 0xa8, 0xcc, 0x62, 0xcd, 0x36, 0x5d, 0x52, 0x56, 0x13, 0x5f, 0xf2, 0xad,
+	0xda, 0x26, 0x16, 0x83, 0xd4, 0x81, 0x2f, 0x37, 0xb5, 0x15, 0x5b, 0x10, 0x99, 0xb1, 0xd5, 0xe5,
+	0x26, 0xed, 0x47, 0xbc, 0xfb, 0xe9, 0x6f, 0xbb, 0x50, 0xbf, 0xf5, 0xb6, 0xd1, 0x27, 0xb0, 0x1f,
+	0xb2, 0x65, 0x9c, 0x06, 0xe7, 0xc3, 0xff, 0x0b, 0x4e, 0x93, 0x83, 0xa6, 0xe4, 0xd1, 0x23, 0xa8,
+	0x46, 0x6c, 0x19, 0xda, 0x79, 0x6a, 0xc8, 0xec, 0xac, 0x48, 0x35, 0x8d, 0x8c, 0x13, 0x28, 0x45,
+	0xe4, 0xe7, 0x25, 0xa1, 0xb6, 0x5c, 0xe9, 0x9e, 0x99, 0x3d, 0xa3, 0x7b, 0x50, 0x8c, 0x08, 0x75,
+	0x48, 0x98, 0xa4, 0x65, 0xf2, 0xc4, 0x63, 0x26, 0x4d, 0xe5, 0x90, 0xd8, 0xc4, 0xbb, 0x24, 0x61,
+	0x1a, 0x94, 0x89, 0x6e, 0x26, 0x32, 0x8f, 0xaf, 0xc5, 0xfc, 0x2a, 0xda, 0x64, 0x93, 0x9c, 0x4c,
+	0x0b, 0x19, 0x7c, 0x2b, 0xed, 0xef, 0xfc, 0x4b, 0xda, 0x3f, 0x82, 0x6a, 0xd6, 0x51, 0x52, 0x32,
+	0x0d, 0x2b, 0xa9, 0x2a, 0xb1, 0x1f, 0xa0, 0x98, 0x04, 0xc8, 0xc1, 0x96, 0xdf, 0x5a, 0xd2, 0xf7,
+	0x89, 0x09, 0x7b, 0xfc, 0x3f, 0x15, 0x3a, 0x06, 0xf5, 0xe9, 0xb9, 0x6e, 0x58, 0xd3, 0xd1, 0x64,
+	0x6c, 0xf4, 0x07, 0x5f, 0x0c, 0x0c, 0x5d, 0x2d, 0xa0, 0x3a, 0x54, 0x84, 0xaa, 0x0f, 0x26, 0xdd,
+	0xde, 0xd0, 0xd0, 0x55, 0x05, 0xa9, 0x50, 0x16, 0xd2, 0x97, 0x66, 0x57, 0x9f, 0x76, 0x87, 0xea,
+	0x0e, 0xaa, 0xc1, 0xa1, 0x50, 0xc6, 0xdd, 0xe9, 0xc4, 0xd0, 0xd5, 0xdd, 0x27, 0x3a, 0xec, 0x8b,
+	0x97, 0x88, 0xee, 0x42, 0xdd, 0x3c, 0x9f, 0x5e, 0xbc, 0xde, 0xf5, 0x08, 0x6a, 0x52, 0x1e, 0x8c,
+	0xbe, 0x36, 0xfa, 0x17, 0x83, 0x6f, 0x0c, 0x55, 0xe1, 0x5d, 0xa4, 0x38, 0x3a, 0xef, 0x0d, 0x0d,
+	0x75, 0xa7, 0xf7, 0xdd, 0x8b, 0xeb, 0x86, 0xf2, 0xf2, 0xba, 0xa1, 0xfc, 0x7d, 0xdd, 0x50, 0x7e,
+	0xbd, 0x69, 0x14, 0x5e, 0xde, 0x34, 0x0a, 0x7f, 0xde, 0x34, 0x0a, 0xdf, 0x7f, 0xf6, 0xe6, 0xd3,
+	0xaf, 0x5e, 0xfb, 0x51, 0x20, 0x96, 0x31, 0x2b, 0x8a, 0xfa, 0x47, 0xff, 0x04, 0x00, 0x00, 0xff,
+	0xff, 0x3f, 0xec, 0x47, 0x1e, 0x3f, 0x08, 0x00, 0x00,
 }
 
 func (m *Controls) Marshal() (dAtA []byte, err error) {
@@ -531,66 +510,65 @@ func (m *Controls) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.MaxPendingSettlements != 0 {
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(m.MaxPendingSettlements))
+		i--
+		dAtA[i] = 0x78
+	}
+	{
+		size := m.MigrationCeiling.Size()
+		i -= size
+		if _, err := m.MigrationCeiling.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x72
+	{
+		size := m.MaxTransferAmount.Size()
+		i -= size
+		if _, err := m.MaxTransferAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x6a
+	if len(m.InjectiveDenom) > 0 {
+		i -= len(m.InjectiveDenom)
+		copy(dAtA[i:], m.InjectiveDenom)
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveDenom)))
+		i--
+		dAtA[i] = 0x62
+	}
+	if len(m.InjectivePacketDenom) > 0 {
+		i -= len(m.InjectivePacketDenom)
+		copy(dAtA[i:], m.InjectivePacketDenom)
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectivePacketDenom)))
+		i--
+		dAtA[i] = 0x5a
+	}
 	if len(m.InjectiveConnection) > 0 {
 		i -= len(m.InjectiveConnection)
 		copy(dAtA[i:], m.InjectiveConnection)
 		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveConnection)))
 		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0x82
+		dAtA[i] = 0x52
 	}
 	if len(m.InjectiveClient) > 0 {
 		i -= len(m.InjectiveClient)
 		copy(dAtA[i:], m.InjectiveClient)
 		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveClient)))
 		i--
-		dAtA[i] = 0x7a
-	}
-	if len(m.NobleConnection) > 0 {
-		i -= len(m.NobleConnection)
-		copy(dAtA[i:], m.NobleConnection)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NobleConnection)))
-		i--
-		dAtA[i] = 0x72
-	}
-	if len(m.NobleClient) > 0 {
-		i -= len(m.NobleClient)
-		copy(dAtA[i:], m.NobleClient)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NobleClient)))
-		i--
-		dAtA[i] = 0x6a
-	}
-	if len(m.NoblePacketDenom) > 0 {
-		i -= len(m.NoblePacketDenom)
-		copy(dAtA[i:], m.NoblePacketDenom)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NoblePacketDenom)))
-		i--
-		dAtA[i] = 0x62
-	}
-	if m.MaxPendingSettlements != 0 {
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(m.MaxPendingSettlements))
-		i--
-		dAtA[i] = 0x58
-	}
-	if len(m.MigrationCeiling) > 0 {
-		i -= len(m.MigrationCeiling)
-		copy(dAtA[i:], m.MigrationCeiling)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.MigrationCeiling)))
-		i--
-		dAtA[i] = 0x52
-	}
-	if len(m.MaxTransferAmount) > 0 {
-		i -= len(m.MaxTransferAmount)
-		copy(dAtA[i:], m.MaxTransferAmount)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.MaxTransferAmount)))
-		i--
 		dAtA[i] = 0x4a
 	}
-	if m.NobleWithdrawalCutoffTimestamp != 0 {
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(m.NobleWithdrawalCutoffTimestamp))
+	if len(m.InjectiveChannel) > 0 {
+		i -= len(m.InjectiveChannel)
+		copy(dAtA[i:], m.InjectiveChannel)
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveChannel)))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x42
 	}
 	if m.NobleWithdrawalsEnabled {
 		i--
@@ -602,24 +580,24 @@ func (m *Controls) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x38
 	}
-	if len(m.InjectiveDenom) > 0 {
-		i -= len(m.InjectiveDenom)
-		copy(dAtA[i:], m.InjectiveDenom)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveDenom)))
+	if len(m.NoblePacketDenom) > 0 {
+		i -= len(m.NoblePacketDenom)
+		copy(dAtA[i:], m.NoblePacketDenom)
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NoblePacketDenom)))
 		i--
 		dAtA[i] = 0x32
 	}
-	if len(m.InjectivePacketDenom) > 0 {
-		i -= len(m.InjectivePacketDenom)
-		copy(dAtA[i:], m.InjectivePacketDenom)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectivePacketDenom)))
+	if len(m.NobleConnection) > 0 {
+		i -= len(m.NobleConnection)
+		copy(dAtA[i:], m.NobleConnection)
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NobleConnection)))
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.InjectiveChannel) > 0 {
-		i -= len(m.InjectiveChannel)
-		copy(dAtA[i:], m.InjectiveChannel)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveChannel)))
+	if len(m.NobleClient) > 0 {
+		i -= len(m.NobleClient)
+		copy(dAtA[i:], m.NobleClient)
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NobleClient)))
 		i--
 		dAtA[i] = 0x22
 	}
@@ -665,41 +643,46 @@ func (m *Ledger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.PendingNoble) > 0 {
-		i -= len(m.PendingNoble)
-		copy(dAtA[i:], m.PendingNoble)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.PendingNoble)))
-		i--
-		dAtA[i] = 0x2a
+	{
+		size := m.PendingNoble.Size()
+		i -= size
+		if _, err := m.PendingNoble.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
 	}
-	if len(m.PendingInjective) > 0 {
-		i -= len(m.PendingInjective)
-		copy(dAtA[i:], m.PendingInjective)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.PendingInjective)))
-		i--
-		dAtA[i] = 0x22
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.PendingInjective.Size()
+		i -= size
+		if _, err := m.PendingInjective.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
 	}
-	if len(m.LegacyDownstream) > 0 {
-		i -= len(m.LegacyDownstream)
-		copy(dAtA[i:], m.LegacyDownstream)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.LegacyDownstream)))
-		i--
-		dAtA[i] = 0x1a
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.InjectiveBacking.Size()
+		i -= size
+		if _, err := m.InjectiveBacking.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
 	}
-	if len(m.InjectiveBacking) > 0 {
-		i -= len(m.InjectiveBacking)
-		copy(dAtA[i:], m.InjectiveBacking)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.InjectiveBacking)))
-		i--
-		dAtA[i] = 0x12
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.NobleBacking.Size()
+		i -= size
+		if _, err := m.NobleBacking.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
 	}
-	if len(m.NobleBacking) > 0 {
-		i -= len(m.NobleBacking)
-		copy(dAtA[i:], m.NobleBacking)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.NobleBacking)))
-		i--
-		dAtA[i] = 0xa
-	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -723,13 +706,16 @@ func (m *PendingSettlement) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0x4a
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCanonicalUsdc(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x4a
 	if len(m.PhysicalDenom) > 0 {
 		i -= len(m.PhysicalDenom)
 		copy(dAtA[i:], m.PhysicalDenom)
@@ -813,7 +799,30 @@ func (m *Controls) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCanonicalUsdc(uint64(l))
 	}
+	l = len(m.NobleClient)
+	if l > 0 {
+		n += 1 + l + sovCanonicalUsdc(uint64(l))
+	}
+	l = len(m.NobleConnection)
+	if l > 0 {
+		n += 1 + l + sovCanonicalUsdc(uint64(l))
+	}
+	l = len(m.NoblePacketDenom)
+	if l > 0 {
+		n += 1 + l + sovCanonicalUsdc(uint64(l))
+	}
+	if m.NobleWithdrawalsEnabled {
+		n += 2
+	}
 	l = len(m.InjectiveChannel)
+	if l > 0 {
+		n += 1 + l + sovCanonicalUsdc(uint64(l))
+	}
+	l = len(m.InjectiveClient)
+	if l > 0 {
+		n += 1 + l + sovCanonicalUsdc(uint64(l))
+	}
+	l = len(m.InjectiveConnection)
 	if l > 0 {
 		n += 1 + l + sovCanonicalUsdc(uint64(l))
 	}
@@ -825,42 +834,12 @@ func (m *Controls) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCanonicalUsdc(uint64(l))
 	}
-	if m.NobleWithdrawalsEnabled {
-		n += 2
-	}
-	if m.NobleWithdrawalCutoffTimestamp != 0 {
-		n += 1 + sovCanonicalUsdc(uint64(m.NobleWithdrawalCutoffTimestamp))
-	}
-	l = len(m.MaxTransferAmount)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.MigrationCeiling)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
+	l = m.MaxTransferAmount.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
+	l = m.MigrationCeiling.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
 	if m.MaxPendingSettlements != 0 {
 		n += 1 + sovCanonicalUsdc(uint64(m.MaxPendingSettlements))
-	}
-	l = len(m.NoblePacketDenom)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.NobleClient)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.NobleConnection)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.InjectiveClient)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.InjectiveConnection)
-	if l > 0 {
-		n += 2 + l + sovCanonicalUsdc(uint64(l))
 	}
 	return n
 }
@@ -871,26 +850,14 @@ func (m *Ledger) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.NobleBacking)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.InjectiveBacking)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.LegacyDownstream)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.PendingInjective)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
-	l = len(m.PendingNoble)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
+	l = m.NobleBacking.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
+	l = m.InjectiveBacking.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
+	l = m.PendingInjective.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
+	l = m.PendingNoble.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
 	return n
 }
 
@@ -930,10 +897,8 @@ func (m *PendingSettlement) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCanonicalUsdc(uint64(l))
 	}
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovCanonicalUsdc(uint64(l))
-	}
+	l = m.Amount.Size()
+	n += 1 + l + sovCanonicalUsdc(uint64(l))
 	return n
 }
 
@@ -1057,256 +1022,6 @@ func (m *Controls) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveChannel", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InjectiveChannel = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InjectivePacketDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InjectivePacketDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InjectiveDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NobleWithdrawalsEnabled", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.NobleWithdrawalsEnabled = bool(v != 0)
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NobleWithdrawalCutoffTimestamp", wireType)
-			}
-			m.NobleWithdrawalCutoffTimestamp = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NobleWithdrawalCutoffTimestamp |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxTransferAmount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MaxTransferAmount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MigrationCeiling", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MigrationCeiling = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 11:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxPendingSettlements", wireType)
-			}
-			m.MaxPendingSettlements = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxPendingSettlements |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 12:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NoblePacketDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.NoblePacketDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 13:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NobleClient", wireType)
 			}
 			var stringLen uint64
@@ -1337,7 +1052,7 @@ func (m *Controls) Unmarshal(dAtA []byte) error {
 			}
 			m.NobleClient = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 14:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NobleConnection", wireType)
 			}
@@ -1369,7 +1084,91 @@ func (m *Controls) Unmarshal(dAtA []byte) error {
 			}
 			m.NobleConnection = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 15:
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NoblePacketDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NoblePacketDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NobleWithdrawalsEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.NobleWithdrawalsEnabled = bool(v != 0)
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveChannel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InjectiveChannel = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveClient", wireType)
 			}
@@ -1401,7 +1200,7 @@ func (m *Controls) Unmarshal(dAtA []byte) error {
 			}
 			m.InjectiveClient = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 16:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveConnection", wireType)
 			}
@@ -1433,6 +1232,155 @@ func (m *Controls) Unmarshal(dAtA []byte) error {
 			}
 			m.InjectiveConnection = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InjectivePacketDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InjectivePacketDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InjectiveDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxTransferAmount", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MaxTransferAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MigrationCeiling", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCanonicalUsdc
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MigrationCeiling.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPendingSettlements", wireType)
+			}
+			m.MaxPendingSettlements = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCanonicalUsdc
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPendingSettlements |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCanonicalUsdc(dAtA[iNdEx:])
@@ -1487,7 +1435,7 @@ func (m *Ledger) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NobleBacking", wireType)
 			}
-			var stringLen uint64
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCanonicalUsdc
@@ -1497,29 +1445,30 @@ func (m *Ledger) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NobleBacking = string(dAtA[iNdEx:postIndex])
+			if err := m.NobleBacking.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InjectiveBacking", wireType)
 			}
-			var stringLen uint64
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCanonicalUsdc
@@ -1529,29 +1478,30 @@ func (m *Ledger) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InjectiveBacking = string(dAtA[iNdEx:postIndex])
+			if err := m.InjectiveBacking.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LegacyDownstream", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingInjective", wireType)
 			}
-			var stringLen uint64
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCanonicalUsdc
@@ -1561,61 +1511,30 @@ func (m *Ledger) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.LegacyDownstream = string(dAtA[iNdEx:postIndex])
+			if err := m.PendingInjective.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PendingInjective", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCanonicalUsdc
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCanonicalUsdc
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.PendingInjective = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PendingNoble", wireType)
 			}
-			var stringLen uint64
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCanonicalUsdc
@@ -1625,23 +1544,24 @@ func (m *Ledger) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PendingNoble = string(dAtA[iNdEx:postIndex])
+			if err := m.PendingNoble.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1927,7 +1847,7 @@ func (m *PendingSettlement) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
 			}
-			var stringLen uint64
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCanonicalUsdc
@@ -1937,23 +1857,24 @@ func (m *PendingSettlement) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCanonicalUsdc
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
