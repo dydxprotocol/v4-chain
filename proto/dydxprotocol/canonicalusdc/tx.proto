@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.canonicalusdc;
 
 import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "dydxprotocol/canonicalusdc/canonical_usdc.proto";
 import "gogoproto/gogo.proto";
 
@@ -17,7 +18,9 @@ service Msg {
 // MsgUpdateControls updates all controls atomically.
 message MsgUpdateControls {
   option (cosmos.msg.v1.signer) = "authority";
-  string authority = 1;
+  // authority is the x/gov or x/delaymsg module address.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // controls is the full replacement set of canonical routing controls.
   Controls controls = 2 [ (gogoproto.nullable) = false ];
 }
 
