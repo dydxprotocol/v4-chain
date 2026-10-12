@@ -37,7 +37,11 @@ Do not snapshot in the upgrade handler. Supply still moves while disabled.
 | `GRADUAL` | Canonical routing. Noble deposits of `uusdc` rejected. Injective deposits mint `uusdc`. |
 | `PAUSED` | Canonical `uusdc` flow fails. Pending settlements still complete. Other IBC unchanged. |
 
-`MsgUpdateControls` is the only module message. It binds Noble/Injective channel, client, connection, packet denoms, `max_transfer_amount`, `migration_ceiling`, `max_pending_settlements`, and the Noble withdrawal flag/cutoff.
+`MsgUpdateControls` is the only module message. It binds Noble/Injective channel, client, connection, packet denoms, `max_transfer_amount`, `migration_ceiling`, `max_pending_settlements`, and the Noble withdrawal flag.
+
+`noble_packet_denom` and `injective_packet_denom` are the counterparty's base denom as it arrives in an inbound packet (e.g. `uusdc`), not the full trace. Outbound packets carry the full trace (`transfer/<channel>/<base>`), because ICS20 writes the voucher's full denom path into the packet. Every comparison against an outbound packet uses the trace form.
+
+Snapshot happens on every transition into `GRADUAL` from `DISABLED` or `PAUSED`.
 
 ### Ledger
 
@@ -54,6 +58,8 @@ supply(uusdc) == noble_backing + injective_backing + pending_injective
 | `pending_injective` | In-flight Injective withdraw. Logical `uusdc` is still on the module (locked), so it remains in `supply` and in the equation. |
 | `pending_noble` | In-flight Noble withdraw. The user's `uusdc` already left via ICS20, so `supply` dropped with `noble_backing`. The field is only a ticket for ack/timeout, not backing. |
 
+All amounts are `bytes` with `(gogoproto.customtype) = "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt"`.
+
 IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
 **Inbound (middleware)**
@@ -65,18 +71,28 @@ IBC stack: `canonicalusdc` → `ratelimit` → `transfer`.
 
 **Outbound (`MsgTransfer` decorator)**
 
-Users still send `ibc.applications.transfer.v1.MsgTransfer` of `uusdc`. Both routes reject unless `amount <= max_transfer_amount` and `PendingCount < max_pending_settlements` (`max_pending_settlements` is a count cap, `<= 100_000` completed-ring size).
+Users still send `ibc.applications.transfer.v1.MsgTransfer` of `uusdc`. Both routes reject unless `amount <= max_transfer_amount` and `PendingCount < max_pending_settlements` (`max_pending_settlements` is a count cap, `<= 100_000`).
 
-- Injective channel: require `amount <= injective_backing`. Lock user `uusdc` on the module (`pending_injective +=`, `injective_backing -=`), send physical Injective USDC. Success ack burns the lock and clears pending. Timeout/error: inner transfer refunds physical to the module, unlock `uusdc` to the user, `injective_backing +=`, pending cleared.
-- Noble channel: require `NobleWithdrawalsEnabled`, cutoff, and `amount <= noble_backing`. `noble_backing -=`, `pending_noble +=`, forward the original packet (user `uusdc` leaves, `supply` drops). Success ack clears pending only. Timeout/error: inner transfer refunds `uusdc` to the user (`supply` rises), `noble_backing +=`, pending cleared.
+- Injective channel: require `amount <= injective_backing`. Charge the `uusdc` withdrawal rate limit for `amount`. Lock user `uusdc` on the module (`pending_injective +=`, `injective_backing -=`), send physical Injective USDC. Success ack burns the lock and clears pending. Timeout/error: inner transfer refunds physical to the module, unlock `uusdc` to the user, `injective_backing +=`, undo the `uusdc` rate-limit charge, pending cleared.
+- Noble channel: require `NobleWithdrawalsEnabled` and `amount <= noble_backing`. `noble_backing -=`, `pending_noble +=`, forward the original packet (user `uusdc` leaves, `supply` drops). Success ack clears pending only. Timeout/error: inner transfer refunds `uusdc` to the user (`supply` rises), `noble_backing +=`, pending cleared.
 - Other channel of `uusdc`: `ErrUnsupportedChannel`.
 - Other denoms: passthrough.
 
-A completed ring (100k slots) makes ack/timeout replay a no-op. `subtract` fails if backing would go negative (`ErrInsufficientBacking`).
+`subtract` fails if backing would go negative (`ErrInsufficientBacking`).
+
+**Rate limiting**
+
+`x/ratelimit` keys capacity on the packet denom. The Injective route's packet carries the physical Injective denom, so the decorator charges `uusdc` capacity on that route and undoes it on failed ack or timeout. The Noble route packet is `uusdc` and is charged by `x/ratelimit` directly. Both routes draw from one `uusdc` bucket.
+
+**Settlement**
+
+IBC core delivers exactly one ack or timeout per packet. Ack and timeout match the pending entry by `(source_channel, sequence)`, then check sender, receiver, amount, and the full-trace denom against the packet.
+
+Settlement checks only what it touches: the pending entry exists, route fields stay nonnegative, and on an Injective refund the module holds the physical coins. The global supply equation is not evaluated during settlement, so drift never blocks in-flight withdrawals. It is reported through `x/crisis` and telemetry.
 
 **ICS4**
 
-Packets that are logical Noble USDC (packet denom `uusdc` on the Noble channel, or the Noble denom trace) require the decorator's authorization key.
+Packets that are logical Noble USDC (the Noble denom trace, on any channel) require the decorator's authorization key. This is also what rejects `uusdc` outbound on other channels after enablement.
 
 User-sent physical Injective USDC is allowed so holders can unwind it off-chain and deposit it back through the Injective inbound path (which mints `uusdc`). Module-sent Injective packets (canonical withdraw) still require authorization.
 
@@ -99,7 +115,16 @@ The `uusdc` minted in step 2 must be the `uusdc` withdrawn in step 3. This is an
 - Module locked `uusdc` `>= pending_injective` (Noble pending does not lock module `uusdc`)
 - Backing fields stay nonnegative; outbound amount cannot exceed the selected route's backing
 - Pending count and per-route sums match stored settlements (`pending_noble` is still counted here); count `<= max_pending_settlements`
-- Cannot switch to `DISABLED` or change channel/denom identity while pending exists
+- Cannot switch to `DISABLED` or change channel/client/connection/denom identity while pending exists
+- `NobleWithdrawalsEnabled` cannot go `true` → `false` unless `noble_backing == 0` and no Noble settlement is pending
+
+`MsgUpdateControls` enforces the transition rules (last two bullets). The supply equation is enforced only on transitions into `GRADUAL`, right after the snapshot, where it holds by construction. A transition into `PAUSED` is never blocked by the supply equation, so governance can always stop canonical flow.
+
+### Queries
+
+- `State`: controls and ledger.
+- `PendingSettlements`: paginated (`cosmos.base.query.v1beta1.PageRequest`).
+- `PendingSettlement`: one entry by `(source_channel, sequence)`.
 
 ## Considered options
 
@@ -117,7 +142,11 @@ An allowlisted controller sends Injective USDC to the module with a JSON memo (n
 
 **4. Snapshot `noble_backing` in the upgrade that adds the module**
 
-Supply still changes while `DISABLED`. The number would be stale by enablement. Rejected. Snapshot in `MsgUpdateControls` on `DISABLED` → not-disabled.
+Supply still changes while `DISABLED`. The number would be stale by enablement. Rejected. Snapshot in `MsgUpdateControls` on transition into `GRADUAL`.
+
+**5. Separate rate-limit bucket for the Injective denom**
+
+Governance would set `LimitParams` for the physical Injective denom. Two independent buckets roughly double the effective `uusdc` outflow cap, and the Injective bucket's baseline would track the module's physical balance rather than user supply. Rejected in favor of charging `uusdc` capacity on both routes.
 
 Chosen: keep `uusdc`. Classify backing. Replace it with Injective-in / Noble-out until `noble_backing` is zero. Snapshot on enable.
 
@@ -132,7 +161,7 @@ Positive:
 Negative:
 
 - After enable, Noble deposits of `uusdc` stop. Physical Injective USDC already on dYdX does not convert in place; it has to leave and come back on the Injective channel.
-- Enablement should happen with Noble IBC quiet. A timeout that refunds `uusdc` after the snapshot breaks the invariant until the ledger is fixed.
+- Enablement should happen with Noble IBC quiet. A Noble packet sent before the snapshot that times out afterward refunds `uusdc` without a matching `noble_backing` credit, so `supply` exceeds the ledger. Governance recovers with `GRADUAL` → `PAUSED` → `GRADUAL`, which re-snapshots `noble_backing`.
 - Noble withdrawals cannot be turned off while `noble_backing > 0`, so the migration cannot be finalized until the loop drains it exactly. If the last residue cannot be drained (for example a Noble timeout refund re-adds backing), Noble withdrawals stay enabled until it can.
 
 ## Confirmation
