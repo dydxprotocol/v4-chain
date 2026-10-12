@@ -28,6 +28,14 @@ export function getConfigForHost(host: string) : Knex.Config {
       max: config.PG_POOL_MAX,
       acquireTimeoutMillis: config.PG_ACQUIRE_CONNECTION_TIMEOUT_MS,
       createTimeoutMillis: config.PG_ACQUIRE_CONNECTION_TIMEOUT_MS,
+      // Bound every connection's idle-in-transaction time so a leaked/abandoned
+      // transaction can't pin the vacuum xmin horizon (0 = disabled).
+      afterCreate: (conn: { query: Function }, done: Function): void => {
+        conn.query(
+          `SET idle_in_transaction_session_timeout = ${config.PG_IDLE_IN_TX_TIMEOUT_MS}`,
+          (err: Error | null) => done(err, conn),
+        );
+      },
     },
     acquireConnectionTimeout: config.PG_ACQUIRE_CONNECTION_TIMEOUT_MS,
     migrations: {
