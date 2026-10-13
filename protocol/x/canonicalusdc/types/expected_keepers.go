@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"math/big"
 
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -30,6 +31,12 @@ type BankKeeper interface {
 	) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+}
+
+// RatelimitKeeper charges and refunds withdrawal capacity for a denom.
+type RatelimitKeeper interface {
+	ProcessWithdrawal(ctx sdk.Context, denom string, amount *big.Int) error
+	UndoWithdrawal(ctx sdk.Context, denom string, amount *big.Int)
 }
 
 type TransferMsgServer interface {

@@ -66,7 +66,7 @@ func validateTransferAmount(controls types.Controls, amount math.Int) error {
 	if !amount.IsPositive() {
 		return types.ErrInvalidAmount
 	}
-	maxAmount, err := types.ParsePositiveAmount(controls.MaxTransferAmount)
+	maxAmount, err := types.PositiveAmountOf(controls.MaxTransferAmount)
 	if err != nil || amount.GT(maxAmount) {
 		return types.ErrInvalidAmount
 	}
@@ -81,17 +81,23 @@ func (d TransferDecorator) transferInjective(
 ) (*transfertypes.MsgTransferResponse, error) {
 	ledger := d.keeper.GetLedger(ctx)
 	var err error
-	ledger.InjectiveBacking, err = subtract(ledger.InjectiveBacking, amount)
-	if err != nil {
+	if ledger.InjectiveBacking, err = subtract(ledger.InjectiveBacking, amount); err != nil {
 		return nil, err
 	}
-	ledger.PendingInjective = add(ledger.PendingInjective, amount)
+	if ledger.PendingInjective, err = add(ledger.PendingInjective, amount); err != nil {
+		return nil, err
+	}
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
 
 	cacheCtx, write := ctx.CacheContext()
+	// The physical packet carries the Injective denom, so x/ratelimit does not
+	// charge it against logical USDC capacity.
+	if err := d.keeper.ratelimitKeeper.ProcessWithdrawal(cacheCtx, controls.LogicalDenom, amount.BigInt()); err != nil {
+		return nil, err
+	}
 	coins := sdk.NewCoins(sdk.NewCoin(controls.LogicalDenom, amount))
 	if err := d.keeper.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, sender, types.ModuleName, coins); err != nil {
 		return nil, err
@@ -100,21 +106,11 @@ func (d TransferDecorator) transferInjective(
 	physical.Token = sdk.NewCoin(controls.InjectiveDenom, amount)
 	physical.Sender = types.ModuleAddress.String()
 	authorizedCtx := cacheCtx.WithValue(transferAuthorizationKey{}, true)
-	response, err := d.keeper.TransferMsgServer().Transfer(sdk.WrapSDKContext(authorizedCtx), &physical)
+	response, err := d.keeper.TransferMsgServer().Transfer(authorizedCtx, &physical)
 	if err != nil {
 		return nil, err
 	}
-	pending := types.PendingSettlement{
-		Route:            types.Route_ROUTE_INJECTIVE,
-		SourceChannel:    msg.SourceChannel,
-		Sequence:         response.Sequence,
-		Sender:           msg.Sender,
-		LogicalReceiver:  msg.Receiver,
-		PhysicalReceiver: msg.Receiver,
-		LogicalDenom:     controls.LogicalDenom,
-		PhysicalDenom:    controls.InjectiveDenom,
-		Amount:           amount.String(),
-	}
+	pending := newPending(types.Route_ROUTE_INJECTIVE, controls, msg, response.Sequence, controls.InjectiveDenom, amount)
 	if err := d.keeper.SetPending(cacheCtx, pending); err != nil {
 		return nil, err
 	}
@@ -133,34 +129,24 @@ func (d TransferDecorator) transferNoble(
 	msg *transfertypes.MsgTransfer,
 	amount math.Int,
 ) (*transfertypes.MsgTransferResponse, error) {
-	if !controls.NobleWithdrawalsEnabled ||
-		(controls.NobleWithdrawalCutoffTimestamp != 0 && ctx.BlockTime().Unix() >= controls.NobleWithdrawalCutoffTimestamp) {
+	if !controls.NobleWithdrawalsEnabled {
 		return nil, types.ErrDisabled
 	}
 	ledger := d.keeper.GetLedger(ctx)
 	var err error
-	ledger.NobleBacking, err = subtract(ledger.NobleBacking, amount)
-	if err != nil {
+	if ledger.NobleBacking, err = subtract(ledger.NobleBacking, amount); err != nil {
 		return nil, err
 	}
-	ledger.PendingNoble = add(ledger.PendingNoble, amount)
+	if ledger.PendingNoble, err = add(ledger.PendingNoble, amount); err != nil {
+		return nil, err
+	}
 	cacheCtx, write := ctx.CacheContext()
 	authorizedCtx := cacheCtx.WithValue(transferAuthorizationKey{}, true)
-	response, err := d.keeper.TransferMsgServer().Transfer(sdk.WrapSDKContext(authorizedCtx), msg)
+	response, err := d.keeper.TransferMsgServer().Transfer(authorizedCtx, msg)
 	if err != nil {
 		return nil, err
 	}
-	pending := types.PendingSettlement{
-		Route:            types.Route_ROUTE_NOBLE,
-		SourceChannel:    msg.SourceChannel,
-		Sequence:         response.Sequence,
-		Sender:           msg.Sender,
-		LogicalReceiver:  msg.Receiver,
-		PhysicalReceiver: msg.Receiver,
-		LogicalDenom:     controls.LogicalDenom,
-		PhysicalDenom:    controls.LogicalDenom,
-		Amount:           amount.String(),
-	}
+	pending := newPending(types.Route_ROUTE_NOBLE, controls, msg, response.Sequence, controls.LogicalDenom, amount)
 	if err := d.keeper.SetPending(cacheCtx, pending); err != nil {
 		return nil, err
 	}
@@ -170,6 +156,27 @@ func (d TransferDecorator) transferNoble(
 	emitPending(cacheCtx, pending)
 	write()
 	return response, nil
+}
+
+func newPending(
+	route types.Route,
+	controls types.Controls,
+	msg *transfertypes.MsgTransfer,
+	sequence uint64,
+	physicalDenom string,
+	amount math.Int,
+) types.PendingSettlement {
+	return types.PendingSettlement{
+		Route:            route,
+		SourceChannel:    msg.SourceChannel,
+		Sequence:         sequence,
+		Sender:           msg.Sender,
+		LogicalReceiver:  msg.Receiver,
+		PhysicalReceiver: msg.Receiver,
+		LogicalDenom:     controls.LogicalDenom,
+		PhysicalDenom:    physicalDenom,
+		Amount:           types.NewAmount(amount),
+	}
 }
 
 func emitLogicalTransfer(ctx sdk.Context, msg *transfertypes.MsgTransfer) {

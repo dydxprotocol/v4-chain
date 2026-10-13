@@ -27,40 +27,56 @@ func (m msgServer) UpdateControls(
 	if msg == nil || !m.keeper.HasAuthority(msg.Authority) {
 		return nil, types.ErrUnauthorized
 	}
-	if err := msg.Controls.Validate(); err != nil {
+	next := msg.Controls
+	if err := next.Validate(); err != nil {
 		return nil, err
 	}
-	if err := m.keeper.ValidateRouteBindings(ctx, msg.Controls); err != nil {
+	if err := m.keeper.ValidateRouteBindings(ctx, next); err != nil {
 		return nil, err
 	}
 	current := m.keeper.GetControls(ctx)
 	if m.keeper.PendingCount(ctx) != 0 {
-		if msg.Controls.Mode == types.Mode_MODE_DISABLED {
+		if next.Mode == types.Mode_MODE_DISABLED {
 			return nil, fmt.Errorf("%w: cannot disable with pending settlements", types.ErrInvalidControls)
 		}
-		if current.NobleChannel != msg.Controls.NobleChannel ||
-			current.InjectiveChannel != msg.Controls.InjectiveChannel ||
-			current.NoblePacketDenom != msg.Controls.NoblePacketDenom ||
-			current.InjectivePacketDenom != msg.Controls.InjectivePacketDenom ||
-			current.InjectiveDenom != msg.Controls.InjectiveDenom ||
-			current.LogicalDenom != msg.Controls.LogicalDenom {
+		if !current.SameRoute(next) {
 			return nil, fmt.Errorf("%w: cannot change route identity with pending settlements", types.ErrInvalidControls)
 		}
 	}
 	cacheCtx, write := ctx.CacheContext()
-	if err := m.keeper.SetControls(cacheCtx, msg.Controls); err != nil {
+	if err := m.keeper.SetControls(cacheCtx, next); err != nil {
 		return nil, err
 	}
-	if current.Mode == types.Mode_MODE_DISABLED && msg.Controls.Mode != types.Mode_MODE_DISABLED {
-		if err := m.keeper.snapshotNobleBacking(cacheCtx); err != nil {
+	if next.Mode == types.Mode_MODE_GRADUAL {
+		if err := m.keeper.enterGradual(cacheCtx, current.Mode); err != nil {
 			return nil, err
 		}
-	} else if err := m.keeper.SetLedger(cacheCtx, m.keeper.GetLedger(cacheCtx)); err != nil {
-		return nil, err
-	}
-	if reason, broken := BackingInvariant(*m.keeper)(cacheCtx); broken {
-		return nil, fmt.Errorf("%w: %s", types.ErrInvalidLedger, reason)
 	}
 	write()
 	return &types.MsgUpdateControlsResponse{}, nil
+}
+
+// enterGradual snapshots Noble backing when GRADUAL is entered, verifies the
+// backing invariant at that point, and requires the Noble route to stay open
+// while any Noble backing or Noble settlement remains.
+func (k Keeper) enterGradual(ctx sdk.Context, previous types.Mode) error {
+	if previous != types.Mode_MODE_GRADUAL {
+		if err := k.snapshotNobleBacking(ctx); err != nil {
+			return err
+		}
+		if reason, broken := BackingInvariant(k)(ctx); broken {
+			return fmt.Errorf("%w: %s", types.ErrInvalidLedger, reason)
+		}
+	}
+	if k.GetControls(ctx).NobleWithdrawalsEnabled {
+		return nil
+	}
+	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	if err != nil {
+		return err
+	}
+	if !amounts.noble.IsZero() || !amounts.pendingNoble.IsZero() {
+		return types.ErrNobleBackingRemains
+	}
+	return nil
 }

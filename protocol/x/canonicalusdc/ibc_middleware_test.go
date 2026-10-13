@@ -3,6 +3,7 @@ package canonicalusdc
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -16,6 +17,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	"github.com/stretchr/testify/require"
@@ -64,12 +66,27 @@ func (b *receiveBank) GetSupply(_ context.Context, denom string) sdk.Coin {
 }
 
 func (b *receiveBank) SendCoinsFromAccountToModule(
-	context.Context,
-	sdk.AccAddress,
-	string,
-	sdk.Coins,
+	_ context.Context,
+	sender sdk.AccAddress,
+	module string,
+	coins sdk.Coins,
 ) error {
-	return fmt.Errorf("unexpected account-to-module send")
+	if module != types.ModuleName {
+		return fmt.Errorf("unexpected module")
+	}
+	return b.move(sender, types.ModuleAddress, coins)
+}
+
+func (b *receiveBank) move(from, to sdk.AccAddress, coins sdk.Coins) error {
+	for _, coin := range coins {
+		balance := b.amount(from, coin.Denom)
+		if balance.LT(coin.Amount) {
+			return fmt.Errorf("insufficient funds")
+		}
+		b.set(from, coin.Denom, balance.Sub(coin.Amount))
+		b.set(to, coin.Denom, b.amount(to, coin.Denom).Add(coin.Amount))
+	}
+	return nil
 }
 
 func (b *receiveBank) SendCoinsFromModuleToAccount(
@@ -215,6 +232,20 @@ func (*receiveApp) OnChanCloseConfirm(sdk.Context, string, string) error        
 
 func setupReceiveKeeper(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank) {
 	t.Helper()
+	ctx, k, bank, _ := setupReceiveKeeperWithRatelimit(t)
+	return ctx, k, bank
+}
+
+func setupReceiveKeeperWithRatelimit(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank, *undoRatelimit) {
+	t.Helper()
+	return setupKeeperWithICS4(t, nil)
+}
+
+func setupKeeperWithICS4(
+	t *testing.T,
+	ics4 types.ICS4Wrapper,
+) (sdk.Context, *keeper.Keeper, *receiveBank, *undoRatelimit) {
+	t.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	database := db.NewMemDB()
 	multiStore := store.NewCommitMultiStore(database, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
@@ -223,7 +254,24 @@ func setupReceiveKeeper(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank
 	ctx := sdk.NewContext(multiStore, cmtproto.Header{}, false, log.NewNopLogger())
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 	bank := newReceiveBank()
-	return ctx, keeper.NewKeeper(cdc, key, bank, nil, nil, nil, nil), bank
+	ratelimit := &undoRatelimit{}
+	return ctx, keeper.NewKeeper(cdc, key, bank, ics4, ratelimit, nil, nil, nil), bank, ratelimit
+}
+
+// undoRatelimit records refunded capacity. Charging happens in the transfer
+// decorator, which these middleware tests do not exercise.
+type undoRatelimit struct {
+	charged int64
+	undone  int64
+}
+
+func (r *undoRatelimit) ProcessWithdrawal(_ sdk.Context, _ string, amount *big.Int) error {
+	r.charged += amount.Int64()
+	return nil
+}
+
+func (r *undoRatelimit) UndoWithdrawal(_ sdk.Context, _ string, amount *big.Int) {
+	r.undone += amount.Int64()
 }
 
 func receiveControls() types.Controls {
@@ -237,8 +285,8 @@ func receiveControls() types.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          physical,
 		NobleWithdrawalsEnabled: true,
-		MaxTransferAmount:       "1000",
-		MigrationCeiling:        "10000",
+		MaxTransferAmount:       dtypes.NewInt(1000),
+		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",
@@ -276,7 +324,7 @@ func TestInboundInjectiveCanonicalizationPreservesLogicalReceiver(t *testing.T) 
 	require.Equal(t, receiver.String(), data.Receiver, "logical packet data must remain unchanged")
 	require.Equal(t, "25", bank.amount(receiver, controls.LogicalDenom).String())
 	require.Equal(t, "25", bank.amount(types.ModuleAddress, controls.InjectiveDenom).String())
-	require.Equal(t, "25", k.GetLedger(ctx).InjectiveBacking)
+	require.Equal(t, "25", k.GetLedger(ctx).InjectiveBacking.String())
 }
 
 func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
@@ -291,7 +339,7 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 		destChannel   string
 		sequence      uint64
 		injectivePhys bool
-		wantLegacy    string
+		wantErr       error
 	}{
 		{
 			name:          "noble deposit",
@@ -301,11 +349,12 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			sourceChannel: "channel-88",
 			destChannel:   receiveControls().NobleChannel,
 			sequence:      1,
+			wantErr:       types.ErrNobleDepositsDisabled,
 		},
 		{
 			name: "injective transfer limit",
 			prepControls: func(controls types.Controls) types.Controls {
-				controls.MaxTransferAmount = "24"
+				controls.MaxTransferAmount = dtypes.NewInt(24)
 				return controls
 			},
 			denom:         "uusdc",
@@ -315,15 +364,22 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			destChannel:   receiveControls().InjectiveChannel,
 			sequence:      2,
 			injectivePhys: true,
+			wantErr:       types.ErrInvalidAmount,
 		},
 		{
-			name:          "unclassified legacy return",
-			denom:         "transfer/channel-88/transfer/channel-0/uusdc",
-			amount:        "1",
-			sender:        "legacy-sender",
-			sourceChannel: "channel-88",
-			destChannel:   "channel-9",
+			name: "migration ceiling",
+			prepLedger: func(ledger types.Ledger) types.Ledger {
+				ledger.InjectiveBacking = dtypes.NewInt(9990)
+				return ledger
+			},
+			denom:         "uusdc",
+			amount:        "25",
+			sender:        "injective-sender",
+			sourceChannel: "channel-99",
+			destChannel:   receiveControls().InjectiveChannel,
 			sequence:      3,
+			injectivePhys: true,
+			wantErr:       types.ErrMigrationCeiling,
 		},
 		{
 			name: "paused injective deposit",
@@ -338,20 +394,7 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			destChannel:   receiveControls().InjectiveChannel,
 			sequence:      2,
 			injectivePhys: true,
-		},
-		{
-			name: "legacy return over outstanding",
-			prepLedger: func(ledger types.Ledger) types.Ledger {
-				ledger.LegacyDownstream = "1"
-				return ledger
-			},
-			denom:         "transfer/channel-88/transfer/channel-0/uusdc",
-			amount:        "2",
-			sender:        "legacy-sender",
-			sourceChannel: "channel-88",
-			destChannel:   "channel-9",
-			sequence:      4,
-			wantLegacy:    "1",
+			wantErr:       types.ErrPaused,
 		},
 	}
 	for _, tc := range cases {
@@ -367,9 +410,9 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 				ledger = tc.prepLedger(ledger)
 			}
 			require.NoError(t, k.SetLedger(ctx, ledger))
+			receiver := sdk.AccAddress("receiver")
 			data := transfertypes.FungibleTokenPacketData{
-				Denom: tc.denom, Amount: tc.amount, Sender: tc.sender,
-				Receiver: sdk.AccAddress("receiver").String(),
+				Denom: tc.denom, Amount: tc.amount, Sender: tc.sender, Receiver: receiver.String(),
 			}
 			packet := channeltypes.Packet{
 				Sequence: tc.sequence, SourcePort: transfertypes.PortID, SourceChannel: tc.sourceChannel,
@@ -382,46 +425,54 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			app := &receiveApp{bank: bank, physicalDenom: physical}
 			ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
 			require.False(t, ack.Success())
+			require.Equal(t, channeltypes.NewErrorAcknowledgement(tc.wantErr), ack)
 			require.Zero(t, app.calls)
-			if tc.wantLegacy != "" {
-				require.Equal(t, tc.wantLegacy, k.GetLedger(ctx).LegacyDownstream)
-			}
+			require.Equal(t, "0", bank.amount(receiver, controls.LogicalDenom).String())
+			require.Equal(t, ledger, k.GetLedger(ctx))
 		})
 	}
 }
 
-func TestClassifiedLegacyReturnDecrementsOutstandingAmount(t *testing.T) {
-	ctx, k, bank := setupReceiveKeeper(t)
-	controls := receiveControls()
-	require.NoError(t, k.SetControls(ctx, controls))
-	ledger := types.DefaultLedger()
-	ledger.LegacyDownstream = "2"
-	require.NoError(t, k.SetLedger(ctx, ledger))
-	receiver := sdk.AccAddress("receiver").String()
-	data := transfertypes.FungibleTokenPacketData{
-		Denom:  "transfer/channel-88/transfer/channel-0/uusdc",
-		Amount: "1", Sender: "legacy-sender", Receiver: receiver,
-	}
-	packet := channeltypes.Packet{
-		Sequence: 4, SourcePort: transfertypes.PortID, SourceChannel: "channel-88",
-		DestinationPort: transfertypes.PortID, DestinationChannel: "channel-9", Data: data.GetBytes(),
-	}
-	app := &receiveApp{bank: bank, physicalDenom: controls.LogicalDenom, expectedReceiver: receiver}
+func TestLogicalReturnOnOtherChannelPassesThroughWithoutLedgerChange(t *testing.T) {
+	for _, failRecv := range []bool{false, true} {
+		t.Run(fmt.Sprintf("failRecv=%t", failRecv), func(t *testing.T) {
+			ctx, k, bank := setupReceiveKeeper(t)
+			controls := receiveControls()
+			require.NoError(t, k.SetControls(ctx, controls))
+			ledger := types.DefaultLedger()
+			ledger.NobleBacking = dtypes.NewInt(7)
+			require.NoError(t, k.SetLedger(ctx, ledger))
+			receiver := sdk.AccAddress("receiver").String()
+			data := transfertypes.FungibleTokenPacketData{
+				Denom:  "transfer/channel-88/transfer/channel-0/uusdc",
+				Amount: "1", Sender: "remote-sender", Receiver: receiver,
+			}
+			packet := channeltypes.Packet{
+				Sequence: 4, SourcePort: transfertypes.PortID, SourceChannel: "channel-88",
+				DestinationPort: transfertypes.PortID, DestinationChannel: "channel-9", Data: data.GetBytes(),
+			}
+			app := &receiveApp{
+				bank: bank, physicalDenom: controls.LogicalDenom, expectedReceiver: receiver, failRecv: failRecv,
+			}
 
-	ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
-	require.True(t, ack.Success())
-	require.Equal(t, 1, app.calls)
-	require.Equal(t, "1", k.GetLedger(ctx).LegacyDownstream)
-	require.Equal(t, "1", k.GetLedger(ctx).NobleBacking)
+			ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
+			require.Equal(t, !failRecv, ack.Success())
+			require.Equal(t, 1, app.calls)
+			if !failRecv {
+				require.Equal(t, receiver, app.data.Receiver)
+			}
+			require.Equal(t, ledger, k.GetLedger(ctx))
+		})
+	}
 }
 
-func TestTimeoutCallbackIsIdempotent(t *testing.T) {
+func TestNobleTimeoutRefundRestoresBacking(t *testing.T) {
 	ctx, k, bank := setupReceiveKeeper(t)
 	controls := receiveControls()
 	require.NoError(t, k.SetControls(ctx, controls))
 	ledger := types.DefaultLedger()
-	ledger.NobleBacking = "5"
-	ledger.PendingNoble = "5"
+	ledger.NobleBacking = dtypes.NewInt(5)
+	ledger.PendingNoble = dtypes.NewInt(5)
 	require.NoError(t, k.SetLedger(ctx, ledger))
 	pending := types.PendingSettlement{
 		Route:            types.Route_ROUTE_NOBLE,
@@ -432,42 +483,32 @@ func TestTimeoutCallbackIsIdempotent(t *testing.T) {
 		PhysicalReceiver: "noble1receiver",
 		LogicalDenom:     controls.LogicalDenom,
 		PhysicalDenom:    controls.LogicalDenom,
-		Amount:           "5",
+		Amount:           dtypes.NewInt(5),
 	}
 	require.NoError(t, k.SetPending(ctx, pending))
 	sender, err := sdk.AccAddressFromBech32(pending.Sender)
 	require.NoError(t, err)
 	bank.set(sender, controls.LogicalDenom, math.NewInt(5))
-	data := transfertypes.FungibleTokenPacketData{
-		Denom: controls.NoblePacketDenom, Amount: pending.Amount, Sender: pending.Sender, Receiver: pending.PhysicalReceiver,
-	}
-	packet := channeltypes.Packet{
-		Sequence:      pending.Sequence,
-		SourcePort:    transfertypes.PortID,
-		SourceChannel: pending.SourceChannel,
-		Data:          data.GetBytes(),
-	}
+	packet := outboundPacket(pending, controls.NobleTrace(), pending.Sender)
 	refund := sdk.NewInt64Coin(controls.LogicalDenom, 5)
 	app := &receiveApp{bank: bank, timeoutRefund: &refund, timeoutReceiver: sender}
-	middleware := NewIBCMiddleware(k, app)
 
-	require.NoError(t, middleware.OnTimeoutPacket(ctx, packet, nil))
-	require.NoError(t, middleware.OnTimeoutPacket(ctx, packet, nil))
+	require.NoError(t, NewIBCMiddleware(k, app).OnTimeoutPacket(ctx, packet, nil))
 	require.Equal(t, 1, app.timeoutCalls)
-	require.True(t, k.HasCompleted(ctx, pending.SourceChannel, pending.Sequence))
 	require.Zero(t, k.PendingCount(ctx))
-	require.Equal(t, "10", k.GetLedger(ctx).NobleBacking)
+	require.Equal(t, "10", k.GetLedger(ctx).NobleBacking.String())
+	require.Equal(t, "0", k.GetLedger(ctx).PendingNoble.String())
 }
 
-func TestInjectiveAcknowledgementLifecycleIsIdempotent(t *testing.T) {
+func TestInjectiveAcknowledgementLifecycle(t *testing.T) {
 	for _, success := range []bool{true, false} {
 		t.Run(fmt.Sprintf("success=%t", success), func(t *testing.T) {
-			ctx, k, bank := setupReceiveKeeper(t)
+			ctx, k, bank, ratelimit := setupReceiveKeeperWithRatelimit(t)
 			controls := receiveControls()
 			require.NoError(t, k.SetControls(ctx, controls))
 			ledger := types.DefaultLedger()
-			ledger.InjectiveBacking = "40"
-			ledger.PendingInjective = "10"
+			ledger.InjectiveBacking = dtypes.NewInt(40)
+			ledger.PendingInjective = dtypes.NewInt(10)
 			require.NoError(t, k.SetLedger(ctx, ledger))
 			sender := sdk.AccAddress("ack-sender")
 			bank.set(sender, controls.LogicalDenom, math.NewInt(40))
@@ -477,17 +518,10 @@ func TestInjectiveAcknowledgementLifecycleIsIdempotent(t *testing.T) {
 				Route: types.Route_ROUTE_INJECTIVE, SourceChannel: controls.InjectiveChannel,
 				Sequence: 18, Sender: sender.String(), LogicalReceiver: "inj1receiver",
 				PhysicalReceiver: "inj1receiver", LogicalDenom: controls.LogicalDenom,
-				PhysicalDenom: controls.InjectiveDenom, Amount: "10",
+				PhysicalDenom: controls.InjectiveDenom, Amount: dtypes.NewInt(10),
 			}
 			require.NoError(t, k.SetPending(ctx, pending))
-			data := transfertypes.FungibleTokenPacketData{
-				Denom: controls.InjectivePacketDenom, Amount: pending.Amount,
-				Sender: types.ModuleAddress.String(), Receiver: pending.PhysicalReceiver,
-			}
-			packet := channeltypes.Packet{
-				Sequence: pending.Sequence, SourcePort: transfertypes.PortID,
-				SourceChannel: pending.SourceChannel, Data: data.GetBytes(),
-			}
+			packet := outboundPacket(pending, controls.InjectiveTrace(), types.ModuleAddress.String())
 			app := &receiveApp{bank: bank}
 			var acknowledgement []byte
 			if success {
@@ -497,18 +531,18 @@ func TestInjectiveAcknowledgementLifecycleIsIdempotent(t *testing.T) {
 				app.ackRefund = &refund
 				acknowledgement = channeltypes.NewErrorAcknowledgement(fmt.Errorf("remote error")).Acknowledgement()
 			}
-			middleware := NewIBCMiddleware(k, app)
 
-			require.NoError(t, middleware.OnAcknowledgementPacket(ctx, packet, acknowledgement, nil))
-			require.NoError(t, middleware.OnAcknowledgementPacket(ctx, packet, acknowledgement, nil))
+			require.NoError(t, NewIBCMiddleware(k, app).OnAcknowledgementPacket(ctx, packet, acknowledgement, nil))
 			require.Equal(t, 1, app.ackCalls)
 			require.Zero(t, k.PendingCount(ctx))
 			if success {
-				require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking)
+				require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking.String())
 				require.Equal(t, "0", bank.amount(types.ModuleAddress, controls.LogicalDenom).String())
+				require.Zero(t, ratelimit.undone)
 			} else {
-				require.Equal(t, "50", k.GetLedger(ctx).InjectiveBacking)
+				require.Equal(t, "50", k.GetLedger(ctx).InjectiveBacking.String())
 				require.Equal(t, "50", bank.amount(sender, controls.LogicalDenom).String())
+				require.Equal(t, int64(10), ratelimit.undone)
 			}
 		})
 	}
@@ -550,56 +584,61 @@ func TestFailedInnerRecvDoesNotMintOrUpdateLedger(t *testing.T) {
 	require.False(t, ack.Success())
 	require.Equal(t, 1, app.calls)
 	require.Equal(t, "0", bank.amount(receiver, controls.LogicalDenom).String())
-	require.Equal(t, "0", k.GetLedger(ctx).InjectiveBacking)
-}
-
-func TestFailedLegacyReturnDoesNotDecrementOutstanding(t *testing.T) {
-	ctx, k, bank := setupReceiveKeeper(t)
-	controls := receiveControls()
-	require.NoError(t, k.SetControls(ctx, controls))
-	ledger := types.DefaultLedger()
-	ledger.LegacyDownstream = "2"
-	require.NoError(t, k.SetLedger(ctx, ledger))
-	receiver := sdk.AccAddress("receiver").String()
-	data := transfertypes.FungibleTokenPacketData{
-		Denom: "transfer/channel-88/transfer/channel-0/uusdc", Amount: "1",
-		Sender: "legacy-sender", Receiver: receiver,
-	}
-	packet := channeltypes.Packet{
-		Sequence: 4, SourcePort: transfertypes.PortID, SourceChannel: "channel-88",
-		DestinationPort: transfertypes.PortID, DestinationChannel: "channel-9", Data: data.GetBytes(),
-	}
-	app := &receiveApp{bank: bank, physicalDenom: controls.LogicalDenom, expectedReceiver: receiver, failRecv: true}
-	ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
-	require.False(t, ack.Success())
-	require.Equal(t, "2", k.GetLedger(ctx).LegacyDownstream)
-	require.Equal(t, "0", k.GetLedger(ctx).NobleBacking)
+	require.Equal(t, "0", k.GetLedger(ctx).InjectiveBacking.String())
 }
 
 func TestPendingPacketMismatchLeavesPending(t *testing.T) {
-	ctx, k, bank := setupReceiveKeeper(t)
 	controls := receiveControls()
-	require.NoError(t, k.SetControls(ctx, controls))
-	ledger := types.DefaultLedger()
-	ledger.PendingNoble = "5"
-	ledger.NobleBacking = "0"
-	require.NoError(t, k.SetLedger(ctx, ledger))
 	pending := types.PendingSettlement{
 		Route: types.Route_ROUTE_NOBLE, SourceChannel: controls.NobleChannel, Sequence: 17,
 		Sender: sdk.AccAddress("timeout-sender").String(), LogicalReceiver: "noble1receiver",
 		PhysicalReceiver: "noble1receiver", LogicalDenom: controls.LogicalDenom,
-		PhysicalDenom: controls.LogicalDenom, Amount: "5",
+		PhysicalDenom: controls.LogicalDenom, Amount: dtypes.NewInt(5),
 	}
-	require.NoError(t, k.SetPending(ctx, pending))
+	cases := []struct {
+		name   string
+		mutate func(*transfertypes.FungibleTokenPacketData)
+	}{
+		{name: "amount", mutate: func(data *transfertypes.FungibleTokenPacketData) { data.Amount = "4" }},
+		{name: "receiver", mutate: func(data *transfertypes.FungibleTokenPacketData) { data.Receiver = "other" }},
+		{name: "sender", mutate: func(data *transfertypes.FungibleTokenPacketData) { data.Sender = "other" }},
+		{
+			name:   "base denom",
+			mutate: func(data *transfertypes.FungibleTokenPacketData) { data.Denom = controls.NoblePacketDenom },
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, k, bank := setupReceiveKeeper(t)
+			require.NoError(t, k.SetControls(ctx, controls))
+			ledger := types.DefaultLedger()
+			ledger.PendingNoble = dtypes.NewInt(5)
+			require.NoError(t, k.SetLedger(ctx, ledger))
+			require.NoError(t, k.SetPending(ctx, pending))
+			data := transfertypes.FungibleTokenPacketData{
+				Denom: controls.NobleTrace(), Amount: "5", Sender: pending.Sender, Receiver: pending.PhysicalReceiver,
+			}
+			tc.mutate(&data)
+			packet := channeltypes.Packet{
+				Sequence: pending.Sequence, SourcePort: transfertypes.PortID,
+				SourceChannel: pending.SourceChannel, Data: data.GetBytes(),
+			}
+			err := NewIBCMiddleware(k, &receiveApp{bank: bank}).OnTimeoutPacket(ctx, packet, nil)
+			require.Error(t, err)
+			require.Equal(t, uint32(1), k.PendingCount(ctx))
+			require.Equal(t, "5", k.GetLedger(ctx).PendingNoble.String())
+		})
+	}
+}
+
+// outboundPacket builds the packet ICS20 sends for a pending settlement. ICS20
+// writes the voucher's full denom trace into outbound packet data.
+func outboundPacket(pending types.PendingSettlement, trace, sender string) channeltypes.Packet {
 	data := transfertypes.FungibleTokenPacketData{
-		Denom: controls.NoblePacketDenom, Amount: "4", Sender: pending.Sender, Receiver: pending.PhysicalReceiver,
+		Denom: trace, Amount: pending.Amount.String(), Sender: sender, Receiver: pending.PhysicalReceiver,
 	}
-	packet := channeltypes.Packet{
+	return channeltypes.Packet{
 		Sequence: pending.Sequence, SourcePort: transfertypes.PortID,
 		SourceChannel: pending.SourceChannel, Data: data.GetBytes(),
 	}
-	err := NewIBCMiddleware(k, &receiveApp{bank: bank}).OnTimeoutPacket(ctx, packet, nil)
-	require.Error(t, err)
-	require.Equal(t, uint32(1), k.PendingCount(ctx))
-	require.Equal(t, "5", k.GetLedger(ctx).PendingNoble)
 }

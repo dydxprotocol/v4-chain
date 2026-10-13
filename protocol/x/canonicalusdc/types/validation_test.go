@@ -2,10 +2,13 @@ package types_test
 
 import (
 	"encoding/hex"
+	"math/big"
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	"github.com/stretchr/testify/require"
 )
@@ -24,6 +27,74 @@ func TestControlsRequireFixedLogicalDenomAndBounds(t *testing.T) {
 	controls = validControls()
 	controls.MaxPendingSettlements = types.HardMaxPending + 1
 	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
+
+	controls = validControls()
+	controls.MaxTransferAmount = dtypes.SerializableInt{}
+	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
+
+	controls = validControls()
+	controls.MigrationCeiling = dtypes.NewInt(999)
+	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
+
+	require.NoError(t, validControls().Validate())
+}
+
+func TestAmountOf(t *testing.T) {
+	zero, err := types.AmountOf(dtypes.SerializableInt{})
+	require.NoError(t, err)
+	require.True(t, zero.IsZero())
+
+	amount, err := types.AmountOf(dtypes.NewInt(42))
+	require.NoError(t, err)
+	require.Equal(t, int64(42), amount.Int64())
+
+	_, err = types.AmountOf(dtypes.NewInt(-1))
+	require.ErrorIs(t, err, types.ErrInvalidAmount)
+
+	tooWide := new(big.Int).Lsh(big.NewInt(1), math.MaxBitLen)
+	_, err = types.AmountOf(dtypes.NewIntFromBigInt(tooWide))
+	require.ErrorIs(t, err, types.ErrInvalidAmount)
+
+	_, err = types.PositiveAmountOf(dtypes.ZeroInt())
+	require.ErrorIs(t, err, types.ErrInvalidAmount)
+
+	require.Equal(t, "42", types.NewAmount(math.NewInt(42)).String())
+}
+
+func TestControlsTracesMatchOutboundPacketDenoms(t *testing.T) {
+	controls := validControls()
+	require.Equal(t, "transfer/channel-0/uusdc", controls.NobleTrace())
+	require.Equal(t, "transfer/channel-1/uusdc", controls.InjectiveTrace())
+	require.Equal(t, controls.LogicalDenom, transfertypes.ParseDenomTrace(controls.NobleTrace()).IBCDenom())
+	require.Equal(t, controls.InjectiveDenom, transfertypes.ParseDenomTrace(controls.InjectiveTrace()).IBCDenom())
+}
+
+func TestControlsSameRoute(t *testing.T) {
+	base := validControls()
+	require.True(t, base.SameRoute(base))
+
+	limitsOnly := base
+	limitsOnly.MaxTransferAmount = dtypes.NewInt(1)
+	limitsOnly.NobleWithdrawalsEnabled = false
+	limitsOnly.Mode = types.Mode_MODE_PAUSED
+	require.True(t, base.SameRoute(limitsOnly))
+
+	mutations := []func(*types.Controls){
+		func(c *types.Controls) { c.NobleChannel = "channel-9" },
+		func(c *types.Controls) { c.NobleClient = "07-tendermint-9" },
+		func(c *types.Controls) { c.NobleConnection = "connection-9" },
+		func(c *types.Controls) { c.NoblePacketDenom = "uother" },
+		func(c *types.Controls) { c.InjectiveChannel = "channel-9" },
+		func(c *types.Controls) { c.InjectiveClient = "07-tendermint-9" },
+		func(c *types.Controls) { c.InjectiveConnection = "connection-9" },
+		func(c *types.Controls) { c.InjectivePacketDenom = "uother" },
+		func(c *types.Controls) { c.InjectiveDenom = "ibc/OTHER" },
+	}
+	for _, mutate := range mutations {
+		changed := base
+		mutate(&changed)
+		require.False(t, base.SameRoute(changed))
+	}
 }
 
 func TestExistingMsgTransferWireEncodingGolden(t *testing.T) {
@@ -62,8 +133,8 @@ func validControls() types.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          injectiveDenom,
 		NobleWithdrawalsEnabled: true,
-		MaxTransferAmount:       "1000",
-		MigrationCeiling:        "10000",
+		MaxTransferAmount:       dtypes.NewInt(1000),
+		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",

@@ -23,9 +23,3 @@ func TestParsePendingKeyRejectsMalformed(t *testing.T) {
 	_, _, _, err := types.ParsePendingKey([]byte{1, 2, 3})
 	require.Error(t, err)
 }
-
-func TestCompletedSlotKeyIsFixedWidth(t *testing.T) {
-	require.Len(t, types.CompletedSlotKey(0), 8)
-	require.Len(t, types.CompletedSlotKey(types.HardMaxCompleted), 8)
-	require.NotEqual(t, types.CompletedKey("channel-0", 1), types.CompletedKey("channel-0", 2))
-}

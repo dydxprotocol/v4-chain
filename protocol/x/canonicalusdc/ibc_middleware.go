@@ -117,29 +117,9 @@ func (im IBCMiddleware) onRecvPacketActive(
 		}
 		return im.receiveInjective(ctx, packet, data, relayer, controls)
 	}
-	var legacyReturnAmount math.Int
-	if physicalDenom == controls.LogicalDenom {
-		amount, ok := math.NewIntFromString(data.Amount)
-		if !ok || !amount.IsPositive() {
-			return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
-		}
-		legacyDownstream, err := types.ParseAmount(im.keeper.GetLedger(ctx).LegacyDownstream)
-		if err != nil || legacyDownstream.LT(amount) {
-			return channeltypes.NewErrorAcknowledgement(types.ErrUnclassifiedReturn)
-		}
-		legacyReturnAmount = amount
-	}
-	ack := im.app.OnRecvPacket(ctx, packet, relayer)
-	if ack != nil && ack.Success() && !legacyReturnAmount.IsNil() {
-		ledger := im.keeper.GetLedger(ctx)
-		legacyDownstream, _ := types.ParseAmount(ledger.LegacyDownstream)
-		ledger.LegacyDownstream = legacyDownstream.Sub(legacyReturnAmount).String()
-		ledger.NobleBacking = addLedger(ledger.NobleBacking, legacyReturnAmount)
-		if err := im.keeper.SetLedger(ctx, ledger); err != nil {
-			return channeltypes.NewErrorAcknowledgement(err)
-		}
-	}
-	return ack
+	// Logical USDC returning on any other channel unescrows coins that are
+	// already part of supply, so the ledger does not change.
+	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
 func (im IBCMiddleware) receiveInjective(
@@ -153,12 +133,15 @@ func (im IBCMiddleware) receiveInjective(
 	if !ok || !amount.IsPositive() {
 		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
 	}
-	maxTransfer, err := types.ParsePositiveAmount(controls.MaxTransferAmount)
+	maxTransfer, err := types.PositiveAmountOf(controls.MaxTransferAmount)
 	if err != nil || amount.GT(maxTransfer) {
 		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
 	}
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
 	if err != nil {
+		return channeltypes.NewErrorAcknowledgement(err)
+	}
+	if err := im.keeper.CreditInjectiveInbound(ctx, controls, amount); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 
@@ -172,11 +155,6 @@ func (im IBCMiddleware) receiveInjective(
 	}
 	coins := sdk.NewCoins(sdk.NewCoin(controls.LogicalDenom, amount))
 	if err := im.keeper.MintLogicalAndSend(ctx, receiver, coins); err != nil {
-		return channeltypes.NewErrorAcknowledgement(err)
-	}
-	ledger := im.keeper.GetLedger(ctx)
-	ledger.InjectiveBacking = addLedger(ledger.InjectiveBacking, amount)
-	if err := im.keeper.SetLedger(ctx, ledger); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
@@ -196,9 +174,6 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 ) error {
 	pending, found := im.keeper.GetPendingForPacket(ctx, packet.SourceChannel, packet.Sequence)
 	if !found {
-		if im.keeper.HasCompleted(ctx, packet.SourceChannel, packet.Sequence) {
-			return nil
-		}
 		return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	}
 	if err := validatePendingPacket(pending, im.keeper.GetControls(ctx), packet); err != nil {
@@ -230,9 +205,6 @@ func (im IBCMiddleware) OnTimeoutPacket(
 ) error {
 	pending, found := im.keeper.GetPendingForPacket(ctx, packet.SourceChannel, packet.Sequence)
 	if !found {
-		if im.keeper.HasCompleted(ctx, packet.SourceChannel, packet.Sequence) {
-			return nil
-		}
 		return im.app.OnTimeoutPacket(ctx, packet, relayer)
 	}
 	if err := validatePendingPacket(pending, im.keeper.GetControls(ctx), packet); err != nil {
@@ -286,30 +258,20 @@ func validatePendingPacket(
 	if packet.SourcePort != transfertypes.PortID || packet.SourceChannel != pending.SourceChannel {
 		return fmt.Errorf("pending settlement source does not match packet")
 	}
-	if data.Amount != pending.Amount || data.Receiver != pending.PhysicalReceiver {
+	packetAmount, ok := math.NewIntFromString(data.Amount)
+	pendingAmount, err := types.PositiveAmountOf(pending.Amount)
+	if !ok || err != nil || !packetAmount.Equal(pendingAmount) || data.Receiver != pending.PhysicalReceiver {
 		return fmt.Errorf("pending settlement does not match packet")
 	}
-	expectedDenom := controls.NoblePacketDenom
+	expectedDenom, expectedSender := controls.NobleTrace(), pending.Sender
 	if pending.Route == types.Route_ROUTE_INJECTIVE {
-		expectedDenom = controls.InjectivePacketDenom
+		expectedDenom, expectedSender = controls.InjectiveTrace(), types.ModuleAddress.String()
 	}
 	if data.Denom != expectedDenom {
 		return fmt.Errorf("pending settlement denom does not match packet")
-	}
-	expectedSender := pending.Sender
-	if pending.Route == types.Route_ROUTE_INJECTIVE {
-		expectedSender = types.ModuleAddress.String()
 	}
 	if data.Sender != expectedSender {
 		return fmt.Errorf("pending settlement sender does not match packet")
 	}
 	return nil
-}
-
-func addLedger(value string, amount math.Int) string {
-	current, err := types.ParseAmount(value)
-	if err != nil {
-		panic(err)
-	}
-	return current.Add(amount).String()
 }

@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,18 +15,19 @@ import (
 
 func DefaultControls() Controls {
 	return Controls{
-		Mode:         Mode_MODE_DISABLED,
-		LogicalDenom: assettypes.UusdcDenom,
+		Mode:              Mode_MODE_DISABLED,
+		LogicalDenom:      assettypes.UusdcDenom,
+		MaxTransferAmount: dtypes.ZeroInt(),
+		MigrationCeiling:  dtypes.ZeroInt(),
 	}
 }
 
 func DefaultLedger() Ledger {
 	return Ledger{
-		NobleBacking:     "0",
-		InjectiveBacking: "0",
-		LegacyDownstream: "0",
-		PendingInjective: "0",
-		PendingNoble:     "0",
+		NobleBacking:     dtypes.ZeroInt(),
+		InjectiveBacking: dtypes.ZeroInt(),
+		PendingInjective: dtypes.ZeroInt(),
+		PendingNoble:     dtypes.ZeroInt(),
 	}
 }
 
@@ -33,23 +35,59 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{Controls: DefaultControls(), Ledger: DefaultLedger()}
 }
 
-func ParseAmount(value string) (math.Int, error) {
-	if len(value) == 0 || len(value) > 78 {
+// AmountOf converts a stored amount to math.Int. An unset value is zero.
+// Negative values and values wider than math.Int are rejected.
+func AmountOf(value dtypes.SerializableInt) (math.Int, error) {
+	if value.IsNil() {
+		return math.ZeroInt(), nil
+	}
+	bigValue := value.BigInt()
+	if bigValue.Sign() < 0 || bigValue.BitLen() > math.MaxBitLen {
 		return math.Int{}, ErrInvalidAmount
 	}
-	amount, ok := math.NewIntFromString(value)
-	if !ok || amount.IsNegative() {
+	return math.NewIntFromBigInt(bigValue), nil
+}
+
+// PositiveAmountOf is AmountOf restricted to strictly positive values.
+func PositiveAmountOf(value dtypes.SerializableInt) (math.Int, error) {
+	amount, err := AmountOf(value)
+	if err != nil || !amount.IsPositive() {
 		return math.Int{}, ErrInvalidAmount
 	}
 	return amount, nil
 }
 
-func ParsePositiveAmount(value string) (math.Int, error) {
-	amount, err := ParseAmount(value)
-	if err != nil || !amount.IsPositive() {
-		return math.Int{}, ErrInvalidAmount
-	}
-	return amount, nil
+// NewAmount converts a math.Int to its stored form.
+func NewAmount(amount math.Int) dtypes.SerializableInt {
+	return dtypes.NewIntFromBigInt(amount.BigInt())
+}
+
+// NobleTrace is the full denom path that ICS20 writes into packets carrying
+// Noble-origin USDC out of this chain.
+func (controls Controls) NobleTrace() string {
+	return transfertypes.GetDenomPrefix(transfertypes.PortID, controls.NobleChannel) + controls.NoblePacketDenom
+}
+
+// InjectiveTrace is the full denom path that ICS20 writes into packets carrying
+// Injective-origin USDC out of this chain.
+func (controls Controls) InjectiveTrace() string {
+	return transfertypes.GetDenomPrefix(transfertypes.PortID, controls.InjectiveChannel) +
+		controls.InjectivePacketDenom
+}
+
+// SameRoute reports whether both controls bind the same channels, clients,
+// connections, and denoms.
+func (controls Controls) SameRoute(other Controls) bool {
+	return controls.LogicalDenom == other.LogicalDenom &&
+		controls.NobleChannel == other.NobleChannel &&
+		controls.NobleClient == other.NobleClient &&
+		controls.NobleConnection == other.NobleConnection &&
+		controls.NoblePacketDenom == other.NoblePacketDenom &&
+		controls.InjectiveChannel == other.InjectiveChannel &&
+		controls.InjectiveClient == other.InjectiveClient &&
+		controls.InjectiveConnection == other.InjectiveConnection &&
+		controls.InjectivePacketDenom == other.InjectivePacketDenom &&
+		controls.InjectiveDenom == other.InjectiveDenom
 }
 
 func (controls Controls) Validate() error {
@@ -65,6 +103,13 @@ func (controls Controls) Validate() error {
 	if controls.Mode == Mode_MODE_DISABLED {
 		return nil
 	}
+	if err := controls.validateRoutes(); err != nil {
+		return err
+	}
+	return controls.validateLimits()
+}
+
+func (controls Controls) validateRoutes() error {
 	if controls.NobleChannel == controls.InjectiveChannel {
 		return fmt.Errorf("%w: route channels must differ", ErrInvalidControls)
 	}
@@ -92,46 +137,41 @@ func (controls Controls) Validate() error {
 	if controls.InjectivePacketDenom == "" || controls.NoblePacketDenom == "" {
 		return fmt.Errorf("%w: packet denoms must be set", ErrInvalidControls)
 	}
-	nobleDenom := transfertypes.ParseDenomTrace(
-		transfertypes.GetDenomPrefix(transfertypes.PortID, controls.NobleChannel) + controls.NoblePacketDenom,
-	).IBCDenom()
-	if nobleDenom != controls.LogicalDenom {
-		return fmt.Errorf("%w: Noble trace resolves to %s, not logical denom", ErrInvalidControls, nobleDenom)
-	}
-	injectiveDenom := transfertypes.ParseDenomTrace(
-		transfertypes.GetDenomPrefix(transfertypes.PortID, controls.InjectiveChannel) + controls.InjectivePacketDenom,
-	).IBCDenom()
-	if injectiveDenom != controls.InjectiveDenom {
-		return fmt.Errorf("%w: Injective trace resolves to %s, not physical denom", ErrInvalidControls, injectiveDenom)
-	}
 	if strings.ContainsRune(controls.InjectivePacketDenom, '\x00') ||
 		strings.ContainsRune(controls.NoblePacketDenom, '\x00') {
 		return fmt.Errorf("%w: packet denoms contain NUL", ErrInvalidControls)
 	}
-	maxTransfer, err := ParsePositiveAmount(controls.MaxTransferAmount)
+	if nobleDenom := transfertypes.ParseDenomTrace(controls.NobleTrace()).IBCDenom(); nobleDenom != controls.LogicalDenom {
+		return fmt.Errorf("%w: Noble trace resolves to %s, not logical denom", ErrInvalidControls, nobleDenom)
+	}
+	injectiveDenom := transfertypes.ParseDenomTrace(controls.InjectiveTrace()).IBCDenom()
+	if injectiveDenom != controls.InjectiveDenom {
+		return fmt.Errorf("%w: Injective trace resolves to %s, not physical denom", ErrInvalidControls, injectiveDenom)
+	}
+	return nil
+}
+
+func (controls Controls) validateLimits() error {
+	maxTransfer, err := PositiveAmountOf(controls.MaxTransferAmount)
 	if err != nil {
 		return fmt.Errorf("%w: max transfer amount", ErrInvalidControls)
 	}
-	ceiling, err := ParsePositiveAmount(controls.MigrationCeiling)
+	ceiling, err := PositiveAmountOf(controls.MigrationCeiling)
 	if err != nil || ceiling.LT(maxTransfer) {
 		return fmt.Errorf("%w: migration ceiling", ErrInvalidControls)
 	}
 	if controls.MaxPendingSettlements == 0 || controls.MaxPendingSettlements > HardMaxPending {
 		return fmt.Errorf("%w: max pending settlements", ErrInvalidControls)
 	}
-	if controls.NobleWithdrawalCutoffTimestamp < 0 {
-		return fmt.Errorf("%w: negative Noble cutoff", ErrInvalidControls)
-	}
 	return nil
 }
 
 func (ledger Ledger) Validate() error {
-	values := []string{
-		ledger.NobleBacking, ledger.InjectiveBacking, ledger.LegacyDownstream,
-		ledger.PendingInjective, ledger.PendingNoble,
+	values := []dtypes.SerializableInt{
+		ledger.NobleBacking, ledger.InjectiveBacking, ledger.PendingInjective, ledger.PendingNoble,
 	}
 	for _, value := range values {
-		if _, err := ParseAmount(value); err != nil {
+		if _, err := AmountOf(value); err != nil {
 			return ErrInvalidLedger
 		}
 	}
@@ -169,6 +209,6 @@ func (pending PendingSettlement) Validate() error {
 	if pending.Sequence == 0 {
 		return fmt.Errorf("pending sequence must be positive")
 	}
-	_, err := ParsePositiveAmount(pending.Amount)
+	_, err := PositiveAmountOf(pending.Amount)
 	return err
 }

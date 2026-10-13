@@ -27,7 +27,7 @@ func (k Keeper) SendPacket(
 		if err := transfertypes.ModuleCdc.UnmarshalJSON(data, &packetData); err != nil {
 			return 0, err
 		}
-		if requiresCanonicalAuthorization(controls, sourceChannel, packetData.Denom, packetData.Sender) {
+		if requiresCanonicalAuthorization(controls, packetData.Denom, packetData.Sender) {
 			authorized, _ := ctx.Value(transferAuthorizationKey{}).(bool)
 			if !authorized {
 				return 0, fmt.Errorf("%w: channel %s", types.ErrBypass, sourceChannel)
@@ -39,22 +39,15 @@ func (k Keeper) SendPacket(
 	)
 }
 
-func requiresCanonicalAuthorization(controls types.Controls, sourceChannel, denom, sender string) bool {
-	nobleTrace := transfertypes.GetDenomPrefix(transfertypes.PortID, controls.NobleChannel) + controls.NoblePacketDenom
-	if (sourceChannel == controls.NobleChannel && denom == controls.NoblePacketDenom) || denom == nobleTrace {
+// requiresCanonicalAuthorization matches the full denom trace, which is what
+// ICS20 writes into packets for vouchers leaving this chain. Logical Noble USDC
+// is gated on every channel. Users may move existing Injective USDC; only
+// module-sent Injective packets are canonical.
+func requiresCanonicalAuthorization(controls types.Controls, denom, sender string) bool {
+	if denom == controls.NobleTrace() {
 		return true
 	}
-	// Users may unwind or forward existing Injective USDC. Only module-sent
-	// Injective packets are canonical (decorator / backing-swap physical sends).
-	if sender != types.ModuleAddress.String() {
-		return false
-	}
-	injectiveTrace := transfertypes.GetDenomPrefix(
-		transfertypes.PortID,
-		controls.InjectiveChannel,
-	) + controls.InjectivePacketDenom
-	return (sourceChannel == controls.InjectiveChannel && denom == controls.InjectivePacketDenom) ||
-		denom == injectiveTrace
+	return sender == types.ModuleAddress.String() && denom == controls.InjectiveTrace()
 }
 
 func (k Keeper) WriteAcknowledgement(

@@ -9,7 +9,7 @@ import (
 func RegisterCodec(*codec.LegacyAmino) {}
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	msgservice.RegisterMsgServiceDesc(registry, &Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

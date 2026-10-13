@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	canonicaltypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
@@ -27,12 +28,12 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 		Controls:  activeControls(),
 	})
 	require.NoError(t, err)
-	require.Equal(t, "100", k.GetLedger(ctx).NobleBacking)
+	require.Equal(t, "100", k.GetLedger(ctx).NobleBacking.String())
 
 	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(100))
 	require.NoError(t, k.MintLogicalAndSend(ctx, operator, sdk.NewCoins(sdk.NewInt64Coin(types.UusdcDenom, 100))))
 	ledger := k.GetLedger(ctx)
-	ledger.InjectiveBacking = "100"
+	ledger.InjectiveBacking = dtypes.NewInt(100)
 	require.NoError(t, k.SetLedger(ctx, ledger))
 	requireInvariant(t, ctx, k)
 
@@ -46,9 +47,9 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 	require.NoError(t, k.Settle(
 		ctx, mustPending(t, k, ctx, nobleChannel, resp.Sequence), true, canonicaltypes.AttributeValueSuccess,
 	))
-	require.Equal(t, "0", k.GetLedger(ctx).NobleBacking)
-	require.Equal(t, "100", k.GetLedger(ctx).InjectiveBacking)
-	require.Equal(t, "0", k.GetLedger(ctx).PendingNoble)
+	require.Equal(t, "0", k.GetLedger(ctx).NobleBacking.String())
+	require.Equal(t, "100", k.GetLedger(ctx).InjectiveBacking.String())
+	require.Equal(t, "0", k.GetLedger(ctx).PendingNoble.String())
 	requireInvariant(t, ctx, k)
 
 	_, err = decorator.Transfer(sdk.WrapSDKContext(ctx), &transfertypes.MsgTransfer{
@@ -57,4 +58,18 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 		Receiver: "noble1receiver", TimeoutTimestamp: 1,
 	})
 	require.ErrorIs(t, err, canonicaltypes.ErrInsufficientBacking)
+
+	final := activeControls()
+	final.NobleWithdrawalsEnabled = false
+	_, err = server.UpdateControls(ctx, &canonicaltypes.MsgUpdateControls{
+		Authority: lib.GovModuleAddress.String(),
+		Controls:  final,
+	})
+	require.NoError(t, err)
+	_, err = decorator.Transfer(ctx, &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: nobleChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 1), Sender: operator.String(),
+		Receiver: "noble1receiver", TimeoutTimestamp: 1,
+	})
+	require.ErrorIs(t, err, canonicaltypes.ErrDisabled)
 }

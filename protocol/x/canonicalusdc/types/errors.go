@@ -17,5 +17,5 @@ var (
 	ErrNobleDepositsDisabled = errorsmod.Register(ModuleName, 13, "new Noble USDC deposits are disabled")
 	ErrMigrationCeiling      = errorsmod.Register(ModuleName, 15, "migration ceiling exceeded")
 	ErrBypass                = errorsmod.Register(ModuleName, 16, "canonical USDC transfer bypass rejected")
-	ErrUnclassifiedReturn    = errorsmod.Register(ModuleName, 17, "unclassified legacy canonical USDC return")
+	ErrNobleBackingRemains   = errorsmod.Register(ModuleName, 17, "noble withdrawals required while Noble backing remains")
 )

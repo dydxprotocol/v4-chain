@@ -10,6 +10,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	db "github.com/cosmos/cosmos-db"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
@@ -31,6 +32,7 @@ func genesisKeeper(t *testing.T) (sdk.Context, *keeper.Keeper) {
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(cdctypes.NewInterfaceRegistry()),
 		key,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -64,7 +66,7 @@ func TestGenesisValidateRejects(t *testing.T) {
 					Route:         types.Route_ROUTE_NOBLE,
 					SourceChannel: "channel-0",
 					Sequence:      1,
-					Amount:        "1",
+					Amount:        dtypes.NewInt(1),
 				}}
 			},
 			err: types.ErrInvalidControls,
@@ -100,4 +102,26 @@ func TestDefaultGenesisIsDisabled(t *testing.T) {
 	require.Equal(t, types.DefaultControls().LogicalDenom, transfertypes.ParseDenomTrace(
 		"transfer/channel-0/uusdc",
 	).IBCDenom())
+}
+
+func TestGenesisLedgerAmountsRoundTrip(t *testing.T) {
+	ctx, k := genesisKeeper(t)
+	genesis := types.DefaultGenesis()
+	genesis.Ledger = types.Ledger{
+		NobleBacking:     dtypes.NewInt(123),
+		InjectiveBacking: dtypes.NewInt(45),
+		PendingInjective: dtypes.NewInt(6),
+		PendingNoble:     dtypes.NewInt(7),
+	}
+	canonicalusdc.InitGenesis(ctx, *k, *genesis)
+	exported := canonicalusdc.ExportGenesis(ctx, *k)
+	require.Equal(t, genesis.Ledger, exported.Ledger)
+
+	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
+	bz, err := cdc.MarshalJSON(exported)
+	require.NoError(t, err)
+	require.Contains(t, string(bz), `"noble_backing":"123"`)
+	var decoded types.GenesisState
+	require.NoError(t, cdc.UnmarshalJSON(bz, &decoded))
+	require.Equal(t, exported.Ledger, decoded.Ledger)
 }

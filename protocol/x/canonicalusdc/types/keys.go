@@ -13,17 +13,13 @@ const (
 	ModuleName = "canonicalusdc"
 	StoreKey   = ModuleName
 
-	ControlsKey      = "Controls"
-	LedgerKey        = "Ledger"
-	PendingCountKey  = "PendingCount"
-	CompletedNextKey = "CompletedNext"
+	ControlsKey     = "Controls"
+	LedgerKey       = "Ledger"
+	PendingCountKey = "PendingCount"
 
-	PendingKeyPrefix    = "Pending:"
-	CompletedKeyPrefix  = "Completed:"
-	CompletedSlotPrefix = "CompletedSlot:"
+	PendingKeyPrefix = "Pending:"
 
-	HardMaxPending   = 100_000
-	HardMaxCompleted = 100_000
+	HardMaxPending = 100_000
 )
 
 // PendingKey is collision-free because validated channel identifiers cannot
@@ -42,17 +38,4 @@ func ParsePendingKey(key []byte) (Route, string, uint64, error) {
 		return Route_ROUTE_UNSPECIFIED, "", 0, fmt.Errorf("invalid pending settlement key")
 	}
 	return Route(key[0]), string(key[1 : len(key)-9]), binary.BigEndian.Uint64(key[len(key)-8:]), nil
-}
-
-func CompletedKey(channel string, sequence uint64) []byte {
-	key := make([]byte, len(channel)+1+8)
-	copy(key, channel)
-	binary.BigEndian.PutUint64(key[len(key)-8:], sequence)
-	return key
-}
-
-func CompletedSlotKey(slot uint64) []byte {
-	key := make([]byte, 8)
-	binary.BigEndian.PutUint64(key, slot)
-	return key
 }

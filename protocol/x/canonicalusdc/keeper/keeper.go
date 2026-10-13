@@ -8,11 +8,13 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
@@ -23,6 +25,7 @@ type Keeper struct {
 	storeKey          storetypes.StoreKey
 	bankKeeper        types.BankKeeper
 	ics4Wrapper       types.ICS4Wrapper
+	ratelimitKeeper   types.RatelimitKeeper
 	channelKeeper     types.ChannelKeeper
 	connectionKeeper  types.ConnectionKeeper
 	transferMsgServer types.TransferMsgServer
@@ -34,6 +37,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	ics4Wrapper types.ICS4Wrapper,
+	ratelimitKeeper types.RatelimitKeeper,
 	channelKeeper types.ChannelKeeper,
 	connectionKeeper types.ConnectionKeeper,
 	authorities []string,
@@ -43,6 +47,7 @@ func NewKeeper(
 		storeKey:         storeKey,
 		bankKeeper:       bankKeeper,
 		ics4Wrapper:      ics4Wrapper,
+		ratelimitKeeper:  ratelimitKeeper,
 		channelKeeper:    channelKeeper,
 		connectionKeeper: connectionKeeper,
 		authorities:      lib.UniqueSliceToSet(authorities),
@@ -68,7 +73,7 @@ func (k Keeper) ValidateRouteBindings(ctx sdk.Context, controls types.Controls) 
 		},
 	}
 	for _, route := range routes {
-		channel, found := k.channelKeeper.GetChannel(ctx, "transfer", route.channel)
+		channel, found := k.channelKeeper.GetChannel(ctx, transfertypes.PortID, route.channel)
 		if !found || channel.State != channeltypes.OPEN || channel.Ordering != channeltypes.UNORDERED ||
 			channel.Version != transfertypes.Version ||
 			channel.Counterparty.PortId != transfertypes.PortID ||
@@ -138,25 +143,35 @@ func (k Keeper) SetLedger(ctx sdk.Context, ledger types.Ledger) error {
 	if err := ledger.Validate(); err != nil {
 		return err
 	}
-	controls := k.GetControls(ctx)
-	if controls.Mode != types.Mode_MODE_DISABLED {
-		ceiling, err := types.ParsePositiveAmount(controls.MigrationCeiling)
-		if err != nil {
-			return err
-		}
-		injective, _ := types.ParseAmount(ledger.InjectiveBacking)
-		if injective.GT(ceiling) {
-			return types.ErrMigrationCeiling
-		}
-	}
 	ctx.KVStore(k.storeKey).Set([]byte(types.LedgerKey), k.cdc.MustMarshal(&ledger))
 	return nil
+}
+
+// CreditInjectiveInbound records Injective-origin USDC received by the module.
+// The resulting injective backing must not exceed the migration ceiling.
+func (k Keeper) CreditInjectiveInbound(ctx sdk.Context, controls types.Controls, amount math.Int) error {
+	ceiling, err := types.PositiveAmountOf(controls.MigrationCeiling)
+	if err != nil {
+		return err
+	}
+	ledger := k.GetLedger(ctx)
+	current, err := types.AmountOf(ledger.InjectiveBacking)
+	if err != nil {
+		return err
+	}
+	next := current.Add(amount)
+	if next.GT(ceiling) {
+		return types.ErrMigrationCeiling
+	}
+	ledger.InjectiveBacking = types.NewAmount(next)
+	return k.SetLedger(ctx, ledger)
 }
 
 // snapshotNobleBacking classifies residual logical supply as Noble-backed.
 // residual = supply(logical) - injective - pending injective.
 func (k Keeper) snapshotNobleBacking(ctx sdk.Context) error {
-	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	ledger := k.GetLedger(ctx)
+	amounts, err := parseBackingAmounts(ledger)
 	if err != nil {
 		return err
 	}
@@ -170,8 +185,7 @@ func (k Keeper) snapshotNobleBacking(ctx sdk.Context) error {
 			classified,
 		)
 	}
-	ledger := k.GetLedger(ctx)
-	ledger.NobleBacking = supply.Sub(classified).String()
+	ledger.NobleBacking = types.NewAmount(supply.Sub(classified))
 	return k.SetLedger(ctx, ledger)
 }
 
@@ -189,6 +203,10 @@ func (k Keeper) setPendingCount(ctx sdk.Context, count uint32) {
 	ctx.KVStore(k.storeKey).Set([]byte(types.PendingCountKey), bz)
 }
 
+func (k Keeper) pendingStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingKeyPrefix))
+}
+
 func (k Keeper) SetPending(ctx sdk.Context, pending types.PendingSettlement) error {
 	if err := pending.Validate(); err != nil {
 		return err
@@ -198,7 +216,7 @@ func (k Keeper) SetPending(ctx sdk.Context, pending types.PendingSettlement) err
 	if count >= controls.MaxPendingSettlements {
 		return types.ErrPendingLimit
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingKeyPrefix))
+	store := k.pendingStore(ctx)
 	key := types.PendingKey(pending.Route, pending.SourceChannel, pending.Sequence)
 	if store.Has(key) {
 		return types.ErrDuplicateSettlement
@@ -209,7 +227,7 @@ func (k Keeper) SetPending(ctx sdk.Context, pending types.PendingSettlement) err
 }
 
 func (k Keeper) GetPendingForPacket(ctx sdk.Context, channel string, sequence uint64) (types.PendingSettlement, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingKeyPrefix))
+	store := k.pendingStore(ctx)
 	for route := types.Route_ROUTE_INJECTIVE; route <= types.Route_ROUTE_NOBLE; route++ {
 		bz := store.Get(types.PendingKey(route, channel, sequence))
 		if bz != nil {
@@ -222,7 +240,7 @@ func (k Keeper) GetPendingForPacket(ctx sdk.Context, channel string, sequence ui
 }
 
 func (k Keeper) RemovePending(ctx sdk.Context, pending types.PendingSettlement) bool {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingKeyPrefix))
+	store := k.pendingStore(ctx)
 	key := types.PendingKey(pending.Route, pending.SourceChannel, pending.Sequence)
 	if !store.Has(key) {
 		return false
@@ -237,8 +255,7 @@ func (k Keeper) RemovePending(ctx sdk.Context, pending types.PendingSettlement) 
 }
 
 func (k Keeper) GetAllPending(ctx sdk.Context) []types.PendingSettlement {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingKeyPrefix))
-	iterator := store.Iterator(nil, nil)
+	iterator := k.pendingStore(ctx).Iterator(nil, nil)
 	defer iterator.Close()
 	pending := make([]types.PendingSettlement, 0, k.PendingCount(ctx))
 	for ; iterator.Valid(); iterator.Next() {
@@ -249,51 +266,41 @@ func (k Keeper) GetAllPending(ctx sdk.Context) []types.PendingSettlement {
 	return pending
 }
 
-func (k Keeper) HasCompleted(ctx sdk.Context, channel string, sequence uint64) bool {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CompletedKeyPrefix))
-	return store.Has(types.CompletedKey(channel, sequence))
-}
-
-// markCompleted retains a bounded replay window for idempotent callbacks.
-// Slots form a fixed-size ring; replacing a slot evicts its previous lookup key.
-func (k Keeper) markCompleted(ctx sdk.Context, channel string, sequence uint64) {
-	root := ctx.KVStore(k.storeKey)
-	nextBytes := root.Get([]byte(types.CompletedNextKey))
-	var next uint64
-	if len(nextBytes) != 0 {
-		next = binary.BigEndian.Uint64(nextBytes)
-	}
-	slot := next % types.HardMaxCompleted
-	slots := prefix.NewStore(root, []byte(types.CompletedSlotPrefix))
-	completed := prefix.NewStore(root, []byte(types.CompletedKeyPrefix))
-	slotKey := types.CompletedSlotKey(slot)
-	if previous := slots.Get(slotKey); previous != nil {
-		completed.Delete(previous)
-	}
-	key := types.CompletedKey(channel, sequence)
-	completed.Set(key, []byte{1})
-	slots.Set(slotKey, key)
-
-	nextBytes = make([]byte, 8)
-	binary.BigEndian.PutUint64(nextBytes, next+1)
-	root.Set([]byte(types.CompletedNextKey), nextBytes)
-}
-
-func add(value string, amount math.Int) string {
-	current, err := types.ParseAmount(value)
+// GetPendingPage returns one page of pending settlements in key order.
+func (k Keeper) GetPendingPage(
+	ctx sdk.Context,
+	pageRequest *query.PageRequest,
+) ([]types.PendingSettlement, *query.PageResponse, error) {
+	var pending []types.PendingSettlement
+	pageResponse, err := query.Paginate(k.pendingStore(ctx), pageRequest, func(_ []byte, value []byte) error {
+		var settlement types.PendingSettlement
+		if err := k.cdc.Unmarshal(value, &settlement); err != nil {
+			return err
+		}
+		pending = append(pending, settlement)
+		return nil
+	})
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
-	return current.Add(amount).String()
+	return pending, pageResponse, nil
 }
 
-func subtract(value string, amount math.Int) (string, error) {
-	current, err := types.ParseAmount(value)
+func add(value dtypes.SerializableInt, amount math.Int) (dtypes.SerializableInt, error) {
+	current, err := types.AmountOf(value)
 	if err != nil {
-		return "", err
+		return dtypes.SerializableInt{}, err
+	}
+	return types.NewAmount(current.Add(amount)), nil
+}
+
+func subtract(value dtypes.SerializableInt, amount math.Int) (dtypes.SerializableInt, error) {
+	current, err := types.AmountOf(value)
+	if err != nil {
+		return dtypes.SerializableInt{}, err
 	}
 	if current.LT(amount) {
-		return "", types.ErrInsufficientBacking
+		return dtypes.SerializableInt{}, types.ErrInsufficientBacking
 	}
-	return current.Sub(amount).String(), nil
+	return types.NewAmount(current.Sub(amount)), nil
 }
