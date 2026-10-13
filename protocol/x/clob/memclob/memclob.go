@@ -808,8 +808,14 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	orderbook := m.mustGetOrderbook(order.GetClobPairId())
 	offchainUpdates = types.NewOffchainUpdates()
 
-	// Branch the state. State will be wrote to only if matching does not return an error.
-	branchedContext, writeCache := ctx.CacheContext()
+	// Branch the state so it is written to only if matching does not return an error. A taker that does
+	// not cross the best resting order on the opposite side cannot match anything and writes no state,
+	// so for it the branch, a copy of every store taken under the global lock, is skipped.
+	branchedContext := ctx
+	writeCache := func() {}
+	if orderbook.takerCrossesBook(order) {
+		branchedContext, writeCache = ctx.CacheContext()
+	}
 
 	// Attempt to match the order against the orderbook.
 	newMakerFills,

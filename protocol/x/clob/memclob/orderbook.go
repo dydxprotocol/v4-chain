@@ -192,6 +192,19 @@ func (ob *Orderbook) getFirstOrderAtSideAndSubticks(
 
 // getBestOrderOnSide returns a reference to the best order on the passed in side of the book, along with a boolean
 // indicating whether such an order exists at that subtick.
+// takerCrossesBook reports whether the taker crosses the best resting order on the opposite side,
+// the same test the matching loop applies to its first maker. A taker that fails it matches nothing.
+func (ob *Orderbook) takerCrossesBook(taker types.MatchableOrder) bool {
+	best, found := ob.getBestOrderOnSide(!taker.IsBuy())
+	if !found {
+		return false
+	}
+	if taker.IsBuy() {
+		return taker.GetOrderSubticks() >= best.Value.Order.GetOrderSubticks()
+	}
+	return taker.GetOrderSubticks() <= best.Value.Order.GetOrderSubticks()
+}
+
 func (ob *Orderbook) getBestOrderOnSide(
 	isBuy bool,
 ) (
