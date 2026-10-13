@@ -270,3 +270,66 @@ func getWriteKeys(suffix string, times int) []string {
 	}
 	return writeKeys
 }
+
+func TestIsNegativeTncGateActiveForPerpetual(t *testing.T) {
+	const perpetualId = uint32(0) // BTC-USD from CreateTestPerpetuals, cross-margined.
+	const seenAtBlock = uint32(10)
+	const window = types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
+
+	tests := map[string]struct {
+		currentBlockHeight uint32
+		isCheckTx          bool
+		expectedActive     bool
+	}{
+		"just seen": {
+			currentBlockHeight: seenAtBlock,
+			expectedActive:     true,
+		},
+		"within the window": {
+			currentBlockHeight: seenAtBlock + window - 1,
+			expectedActive:     true,
+		},
+		"window has passed": {
+			currentBlockHeight: seenAtBlock + window,
+			expectedActive:     false,
+		},
+		"CheckTx: just seen": {
+			currentBlockHeight: seenAtBlock,
+			isCheckTx:          true,
+			expectedActive:     true,
+		},
+		"CheckTx: last block of the window is evaluated for the next block": {
+			currentBlockHeight: seenAtBlock + window - 1,
+			isCheckTx:          true,
+			expectedActive:     false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, subaccountsKeeper, pricesKeeper, perpetualsKeeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(
+				t,
+				true,
+			)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+			active, err := subaccountsKeeper.IsNegativeTncGateActiveForPerpetual(ctx, perpetualId)
+			require.NoError(t, err)
+			require.False(t, active)
+
+			require.NoError(t, subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+				ctx.WithBlockHeight(int64(seenAtBlock)),
+				perpetualId,
+				seenAtBlock,
+			))
+			active, err = subaccountsKeeper.IsNegativeTncGateActiveForPerpetual(
+				ctx.WithBlockHeight(int64(tc.currentBlockHeight)).WithIsCheckTx(tc.isCheckTx),
+				perpetualId,
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedActive, active)
+		})
+	}
+}

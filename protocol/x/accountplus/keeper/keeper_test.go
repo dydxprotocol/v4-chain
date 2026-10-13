@@ -158,6 +158,47 @@ func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	s.Require().Contains(err.Error(), "authenticator type MessageFilter is not registered")
 }
 
+// AnyOf(SignatureVerification, MessageFilter) doesn't require a signature, since the MessageFilter branch
+// doesn't. AddAuthenticator rejects it, so store it directly, as a pre-v9.0.0 or genesis-imported tree would
+// be, and check it's rejected on load.
+func (s *KeeperTestSuite) TestGetInitializedAuthenticatorForAccount_RejectsUnsafeStoredAuthenticator() {
+	ctx := s.Ctx
+
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+	accAddress := sdk.AccAddress(priv.PubKey().Address())
+
+	unsafeConfig := []types.SubAuthenticatorInitData{
+		{
+			Type:   "SignatureVerification",
+			Config: priv.PubKey().Bytes(),
+		},
+		{
+			Type:   "MessageFilter",
+			Config: []byte("/dydxprotocol.clob.MsgPlaceOrder"),
+		},
+	}
+	unsafeConfigBytes, err := json.Marshal(unsafeConfig)
+	s.Require().NoError(err)
+
+	// Sanity check: AddAuthenticator itself still rejects this shape (unchanged behavior).
+	_, err = s.tApp.App.AccountPlusKeeper.AddAuthenticator(ctx, accAddress, "AnyOf", unsafeConfigBytes)
+	s.Require().Error(err, "AddAuthenticator should still reject AnyOf(SignatureVerification, MessageFilter)")
+
+	// Bypass AddAuthenticator entirely, the same way legacy pre-guard state or a genesis import would.
+	const unsafeId = uint64(0)
+	s.tApp.App.AccountPlusKeeper.SetAuthenticator(ctx, accAddress.String(), unsafeId, types.AccountAuthenticator{
+		Id:     unsafeId,
+		Type:   "AnyOf",
+		Config: unsafeConfigBytes,
+	})
+
+	_, err = s.tApp.App.AccountPlusKeeper.GetInitializedAuthenticatorForAccount(ctx, accAddress, unsafeId)
+	s.Require().Error(err, "should reject a stored authenticator that doesn't require signature verification")
+	s.Require().ErrorIs(err, types.ErrAuthenticatorUnsafe)
+}
+
 func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 	ctx := s.Ctx
 

@@ -33,6 +33,11 @@ var (
 		6,
 		"The transaction has multiple signers",
 	)
+	ErrAuthenticatorUnsafe = errorsmod.Register(
+		ModuleName,
+		7,
+		"Authenticator does not require signature verification on all paths",
+	)
 
 	// Errors for failing authenticator validation
 	ErrSignatureVerification = errorsmod.Register(

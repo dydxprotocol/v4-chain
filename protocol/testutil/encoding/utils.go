@@ -29,6 +29,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/app/txdecoder"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
@@ -103,6 +104,9 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 			msg,
 		)
 	}
+
+	// Use the same duplicate-TxRaw-rejecting decoder as production so tests exercise it.
+	encodingCfg.TxConfig = txdecoder.NewTxConfig(encodingCfg.Codec)
 
 	return encodingCfg
 }
