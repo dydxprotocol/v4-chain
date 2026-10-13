@@ -13,6 +13,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -626,6 +628,42 @@ func TestPlaceOrder(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPlaceOrder_PartiallyFilledMakerExpiringInMatchBlockIsRemovedFromIndexer(t *testing.T) {
+	msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(map[string]interface{}{
+		indexer.MsgSenderInstanceForTest: msgSender,
+	}).Build()
+	ctx := tApp.InitChain()
+
+	makerOrder := PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20
+	makerOrder.Order.GoodTilOneof = &clobtypes.Order_GoodTilBlock{GoodTilBlock: 2}
+	takerOrder := PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20
+	takerOrder.Order.GoodTilOneof = &clobtypes.Order_GoodTilBlock{GoodTilBlock: 2}
+	for _, order := range []clobtypes.MsgPlaceOrder{makerOrder, takerOrder} {
+		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+		}
+	}
+
+	// The maker is partially filled in block 2 and expires with it, so the Indexer must be told to
+	// remove its remaining size rather than the order silently leaving the memclob.
+	msgSender.Clear()
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	require.ElementsMatch(
+		t,
+		[]msgsender.Message{
+			off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+				ctx,
+				makerOrder.Order.OrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+			),
+		},
+		msgSender.GetOffchainMessages(),
+	)
 }
 
 func TestShortTermOrderReplacements(t *testing.T) {
