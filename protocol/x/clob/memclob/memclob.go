@@ -1233,7 +1233,9 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 // It performs the following steps:
 // 1. Copy the operations queue.
 // 2. Clear the OTP. Note that this also removes nonces for every operation in the OTP.
-// 3. For each order placement operation in the copy, remove the order from the book if it exists.
+// 3. For each order placement operation in the copy, remove the order from the book if it exists,
+// unless it is a Short-Term order expiring at this block height, which is left for
+// `PurgeInvalidMemclobState` to expire.
 func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 	ctx sdk.Context,
 	localValidatorOperationsQueue []types.InternalOperation,
@@ -1247,11 +1249,13 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 		metrics.Latency,
 	)
 
+	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
+
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
 	m.operationsToPropose.ClearOperationsQueue()
 
 	// For each order placement operation in the copy, remove the order from the book
-	// if it exists.
+	// if it exists, unless it is a Short-Term order expiring at this block height.
 	for _, operation := range localValidatorOperationsQueue {
 		switch operation.Operation.(type) {
 		case *types.InternalOperation_ShortTermOrderPlacement:
@@ -1264,7 +1268,13 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 			orderbook := m.mustGetOrderbook(types.ClobPairId(otpOrderId.GetClobPairId()))
 			existingOrder, found := orderbook.getOrder(otpOrderId)
 			if found && existingOrder.GetOrderHash() == otpOrderHash {
-				m.mustRemoveOrder(ctx, otpOrderId)
+				// An order expiring at this height fails replay with `ErrHeightExceedsGoodTilBlock`,
+				// which sends no Indexer removal. Removing it here would also drop its block
+				// expiration, so `PurgeInvalidMemclobState` would never send the expiry either and
+				// the Indexer would keep the order on its book.
+				if existingOrder.GetGoodTilBlock() != blockHeight {
+					m.mustRemoveOrder(ctx, otpOrderId)
+				}
 			} else {
 				order := operation.GetShortTermOrderPlacement().Order
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
