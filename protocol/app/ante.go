@@ -1,7 +1,10 @@
 package app
 
 import (
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"sync"
+	"time"
 
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 
@@ -286,10 +289,19 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	}
 
 	// We now acquire the global ante handler since the clob decorator is not thread safe and performs
-	// several reads and writes across many stores.
+	// several reads and writes across many stores. The wait and hold times are the two halves of
+	// CheckTx throughput on this lock, which serializes every clob tx on the node.
 	if !simulate && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
+		lockRequested := time.Now()
 		h.globalLock.Lock()
-		defer h.globalLock.Unlock()
+		lockAcquired := time.Now()
+		defer func() {
+			hold := time.Since(lockAcquired)
+			h.globalLock.Unlock()
+			// Both timings are emitted after the unlock so they do not lengthen the hold they measure.
+			telemetry.MeasureSince(lockAcquired, metrics.Ante, metrics.ClobGlobalLock, metrics.Hold)
+			telemetry.MeasureSince(lockRequested.Add(hold), metrics.Ante, metrics.ClobGlobalLock, metrics.Wait)
+		}()
 	}
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
