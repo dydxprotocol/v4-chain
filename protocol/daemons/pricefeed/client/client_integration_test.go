@@ -469,7 +469,7 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_AddMarketWithUSDTCon
 	)
 }
 
-// TestUpdateMarkets_PartialUpdates tests that the pricefeed daemon applies valid market params and discards invalid
+// TestUpdateMarkets_PartialUpdate tests that the pricefeed daemon applies valid market params and discards invalid
 // params whenever an update is partially valid.
 func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_PartialUpdate() {
 	// Start the daemon with a single market. Then, update the endpoint to return partially valid params.
