@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
@@ -15,6 +14,8 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 func OpenOrder(
@@ -602,6 +603,107 @@ func TestFilterStreamUpdatesWithDuplicateSubaccountIds(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			filteredUpdates := streaming.FilterStreamUpdateBySubaccount(testCase.updates, testCase.subaccountIds, logger)
 			require.Equal(t, testCase.filteredUpdates, filteredUpdates)
+		})
+	}
+}
+
+func TestDoFilterTakerOrderBySubaccount(t *testing.T) {
+	tests := map[string]struct {
+		takerOrder    *clobtypes.StreamUpdate_TakerOrder
+		subaccountIds []satypes.SubaccountId
+		shouldFilter  bool
+	}{
+		"nilStreamUpdateTakerOrder": {
+			takerOrder:    nil,
+			subaccountIds: []satypes.SubaccountId{},
+			shouldFilter:  false,
+		},
+		"nilTakerOrder": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: nil,
+			},
+			subaccountIds: []satypes.SubaccountId{},
+			shouldFilter:  false,
+		},
+		"nilTakerOrderTakerOrder": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder{
+					TakerOrder: nil,
+				},
+			},
+			subaccountIds: []satypes.SubaccountId{},
+			shouldFilter:  false,
+		},
+		"nilOrder": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder{
+					TakerOrder: &clobtypes.StreamTakerOrder_Order{
+						Order: nil,
+					},
+				},
+			},
+			subaccountIds: []satypes.SubaccountId{},
+			shouldFilter:  false,
+		},
+		"TakerOrderSubaccountIdNotInSubaccountIds": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder{
+					TakerOrder: &clobtypes.StreamTakerOrder_Order{
+						Order: &clobtypes.Order{
+							OrderId: NewOrderId("foo", 23),
+						},
+					},
+				},
+			},
+			subaccountIds: []satypes.SubaccountId{
+				{
+					Owner:  "me",
+					Number: 1337,
+				},
+			},
+			shouldFilter: false,
+		},
+		"TakerOrderSubaccountIdInSubaccountIds": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder{
+					TakerOrder: &clobtypes.StreamTakerOrder_Order{
+						Order: &clobtypes.Order{
+							OrderId: NewOrderId("me", 1337),
+						},
+					},
+				},
+			},
+			subaccountIds: []satypes.SubaccountId{
+				{
+					Owner:  "me",
+					Number: 1337,
+				},
+			},
+			shouldFilter: true,
+		},
+		"nilTakerOrderSubaccountIdNotInSubaccountIds": {
+			takerOrder: &clobtypes.StreamUpdate_TakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder{
+					TakerOrder: &clobtypes.StreamTakerOrder_Order{
+						Order: &clobtypes.Order{
+							OrderId: NewOrderId("me", 1337),
+						},
+					},
+				},
+			},
+			subaccountIds: []satypes.SubaccountId{
+				{
+					Owner:  "me",
+					Number: 1338,
+				},
+			},
+			shouldFilter: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			shouldFilter := streaming.DoFilterTakerOrderBySubaccount(tc.takerOrder, tc.subaccountIds)
+			require.Equal(t, tc.shouldFilter, shouldFilter)
 		})
 	}
 }
