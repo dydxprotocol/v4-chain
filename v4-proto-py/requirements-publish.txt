@@ -1,5 +1,5 @@
-protobuf>=4.23
-grpcio-tools>=1.54
-grpcio>=1.54
+grpcio-tools~=1.71
+grpcio~=1.71
 poetry>=1.5.1
+protobuf~=5.29
 twine>=4.0.2
