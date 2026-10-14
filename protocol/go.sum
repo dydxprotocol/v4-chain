@@ -956,8 +956,8 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/dvsekhvalnov/jose2go v1.7.0 h1:bnQc8+GMnidJZA8zc6lLEAb4xNrIqHwO+9TzqvtQZPo=
 github.com/dvsekhvalnov/jose2go v1.7.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
-github.com/dydxprotocol/cometbft v0.38.6-0.20261013181351-914b8ebb3b0d h1:jKYHyRO5yF7CDcOfhlqYi0QWq/RPxgSZ6i6/aqKGYJ0=
-github.com/dydxprotocol/cometbft v0.38.6-0.20261013181351-914b8ebb3b0d/go.mod h1:XSQX1hQbr54qaJb4/5YNNZGXkAQHHa6bi/KMcN1SQ7w=
+github.com/dydxprotocol/cometbft v0.38.6-0.20261014020802-ab0baf2bacac h1:/M6OA1xr8edb6nf0Yq8YdmEd8n7k4VqaV5ltDAY/1T8=
+github.com/dydxprotocol/cometbft v0.38.6-0.20261014020802-ab0baf2bacac/go.mod h1:XSQX1hQbr54qaJb4/5YNNZGXkAQHHa6bi/KMcN1SQ7w=
 github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20261013183403-524ebaad71e5 h1:UPGuAxlDtjnMkm3t/mTy0U/M6Yewgb2dgtnJFINH6lc=
 github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20261013183403-524ebaad71e5/go.mod h1:sy90WxNfXAl3AcIMV+cVRf4XzTwn0LVgBIZ5yVGK/Dc=
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20261013180346-ba9f530c41c6 h1:Ojjlw2GYi9AduiS4Yd9iGJP71BRWrTUEXn9lRsTnA5g=
