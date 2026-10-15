@@ -3,6 +3,39 @@
 # declared package:
 #   kafkajs: 2.2.4
 #
+diff --git a/node_modules/kafkajs/src/consumer/consumerGroup.js b/node_modules/kafkajs/src/consumer/consumerGroup.js
+index 442312c..e226243 100644
+--- a/node_modules/kafkajs/src/consumer/consumerGroup.js
++++ b/node_modules/kafkajs/src/consumer/consumerGroup.js
+@@ -597,7 +597,7 @@ module.exports = class ConsumerGroup {
+   async recoverFromOffsetOutOfRange(e) {
+     // If we are fetching from a follower try with the leader before resetting offsets
+     const preferredReadReplicas = this.preferredReadReplicasPerTopicPartition[e.topic]
+-    if (preferredReadReplicas && typeof preferredReadReplicas[e.partition] === 'number') {
++    if (preferredReadReplicas && preferredReadReplicas[e.partition] != null) {
+       this.logger.info('Offset out of range while fetching from follower, retrying with leader', {
+         topic: e.topic,
+         partition: e.partition,
+@@ -720,7 +720,7 @@ module.exports = class ConsumerGroup {
+           // Valid entry, check whether it is not offline
+           // Note that we don't delete the preference here, and rather hope that eventually that replica comes online again
+           const offlineReplicas = metadata.offlineReplicas
+-          if (Array.isArray(offlineReplicas) && offlineReplicas.includes(nodeId)) {
++          if (Array.isArray(offlineReplicas) && offlineReplicas.includes(preferredReadReplica)) {
+             this.logger.debug('Preferred read replica is offline, using leader', {
+               topic,
+               partitionId,
+@@ -729,6 +729,10 @@ module.exports = class ConsumerGroup {
+               preferredReadReplica,
+               leader: metadata.leader,
+             })
++            // Our metadata may be stale (e.g. the replica is back and the leader keeps redirecting to it), so, like
++            // the Java client, refresh it within a second. This runs on every fetch, so only ever bring the refresh forward.
++            const brokerPool = this.cluster.brokerPool
++            brokerPool.metadataExpireAt = Math.min(brokerPool.metadataExpireAt || 0, Date.now() + 1000)
+           } else {
+             nodeId = preferredReadReplica
+           }
 diff --git a/node_modules/kafkajs/src/network/connection.js b/node_modules/kafkajs/src/network/connection.js
 index dded584..50492b4 100644
 --- a/node_modules/kafkajs/src/network/connection.js
