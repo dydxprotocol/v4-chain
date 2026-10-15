@@ -11,6 +11,10 @@ export async function axiosRequest(
 ): Promise<any> {
   return safeAxiosRequest({
     ...axiosConfig,
+    // Comlink compresses responses, and serves brotli to clients that accept it. axios 1.2.x
+    // advertises brotli but intermittently fails to decode it ("unexpected end of file"), so ask
+    // for gzip, which it decodes reliably.
+    headers: { ...axiosConfig.headers, 'Accept-Encoding': 'gzip' },
     timeout: config.AXIOS_TIMEOUT_MS,
   });
 }
