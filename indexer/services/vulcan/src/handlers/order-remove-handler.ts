@@ -76,7 +76,7 @@ import { getStateRemainingQuantums } from './helpers';
 export class OrderRemoveHandler extends Handler {
   // eslint-disable-next-line @typescript-eslint/require-await
   protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
-    logger.info({
+    logger.debug({
       at: 'OrderRemoveHandler#handle',
       message: 'Received OffChainUpdate with OrderRemove.',
       update,
@@ -113,7 +113,7 @@ export class OrderRemoveHandler extends Handler {
       }),
       this.generateTimingStatsOptions('remove_order'),
     );
-    logger.info({
+    logger.debug({
       at: 'OrderRemoveHandler#handle',
       message: 'OrderRemove processed',
       orderRemove,
@@ -128,7 +128,7 @@ export class OrderRemoveHandler extends Handler {
         1,
         { instance: getInstanceId() },
       );
-      logger.info({
+      logger.debug({
         at: 'OrderRemoveHandler#handle',
         message: 'Order was expired by Indexer',
         orderRemove,
@@ -794,7 +794,7 @@ export class OrderRemoveHandler extends Handler {
     const status: OrderRemoveV1_OrderRemovalStatus = orderRemove.removalStatus;
     const reason: OrderRemovalReason = orderRemove.reason;
 
-    logger.info({
+    logger.debug({
       at: 'orderRemoveHandler#shouldSendSubaccountMessage',
       message: 'Compared state filled quantums and size',
       stateRemainingQuantums: stateRemainingQuantums.toFixed(),

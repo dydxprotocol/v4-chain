@@ -45,11 +45,7 @@ export function getCandle(
   ticker: string,
   resolution: CandleResolution,
 ): CandleFromDatabase | undefined {
-  if (ticker in candlesMap && resolution in candlesMap[ticker]) {
-    return candlesMap[ticker][resolution];
-  }
-
-  return undefined;
+  return candlesMap[ticker]?.[resolution];
 }
 
 export function updateCandleCacheWithCandle(candle: CandleFromDatabase): void {

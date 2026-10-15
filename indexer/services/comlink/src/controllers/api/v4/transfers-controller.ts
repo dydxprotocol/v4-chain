@@ -268,7 +268,10 @@ class TransfersController extends Controller {
         createdBeforeOrAtHeight: createdBeforeOrAtHeight
           ? createdBeforeOrAtHeight.toString()
           : undefined,
-      }, [], { orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]] }),
+      }, [], {
+        ...DEFAULT_POSTGRES_OPTIONS,
+        orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+      }),
       idToSubaccountFromSubaccountIds([sourceSubaccountId, recipientSubaccountId]),
       getAssetById(),
       TransferTable.getNetTransfersBetweenSubaccountIds(

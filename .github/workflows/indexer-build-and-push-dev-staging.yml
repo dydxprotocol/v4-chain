@@ -25,14 +25,6 @@ jobs:
       ENVIRONMENT: dev2
     secrets: inherit
 
-  # Build and push to dev4
-  call-build-and-push-ecs-services-dev4:
-    name: (Dev4) Build and Push ECS Services
-    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
-    with:
-      ENVIRONMENT: dev4
-    secrets: inherit
-
   # Build and push to staging
   call-build-and-push-ecs-services-staging:
     name: (Staging) Build and Push ECS Services

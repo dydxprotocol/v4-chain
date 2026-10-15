@@ -1,6 +1,7 @@
 import {
   BlockCreateObject,
   BlockTable,
+  DEFAULT_POSTGRES_OPTIONS,
   dbHelpers,
   IsoString,
   SubaccountTable,
@@ -428,6 +429,35 @@ describe('transfers-controller#V4', () => {
       });
 
       expect(response.body.transfers).toHaveLength(0);
+    });
+
+    it('Get /transfers routes reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+      await testMocks.seedData();
+
+      // Mutate the live DEFAULT_POSTGRES_OPTIONS object with a marker property. Since the
+      // controller spreads this object at call time (`{ ...DEFAULT_POSTGRES_OPTIONS, orderBy }`),
+      // the marker will only show up in the findAll call if that spread actually happens -
+      // independent of whatever USE_READ_REPLICA currently evaluates to in this test environment.
+      const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+      (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+      const findAllSpy: jest.SpyInstance = jest.spyOn(TransferTable, 'findAllToOrFromSubaccountId');
+
+      try {
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/transfers?address=${testConstants.defaultAddress}` +
+            `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
+        });
+
+        expect(findAllSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          expect.objectContaining({ [testMarker]: true }),
+        );
+      } finally {
+        delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+        findAllSpy.mockRestore();
+      }
     });
 
     it('Get /transfers with non-existent address and subaccount number returns 404', async () => {
@@ -927,6 +957,31 @@ describe('transfers-controller#V4', () => {
       });
 
       expect(response.body.transfers).toHaveLength(0);
+    });
+
+    it('Get /transfers/parentSubaccountNumber routes reads through DEFAULT_POSTGRES_OPTIONS (read-replica regression guard)', async () => {
+      await testMocks.seedData();
+
+      const testMarker: unique symbol = Symbol('read-replica-regression-marker');
+      (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker] = true;
+      const findAllSpy: jest.SpyInstance = jest.spyOn(TransferTable, 'findAllToOrFromParentSubaccount');
+
+      try {
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/transfers/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
+        });
+
+        expect(findAllSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          expect.objectContaining({ [testMarker]: true }),
+        );
+      } finally {
+        delete (DEFAULT_POSTGRES_OPTIONS as Record<string | symbol, unknown>)[testMarker];
+        findAllSpy.mockRestore();
+      }
     });
 
     it('Get /transfers/parentSubaccountNumber with non-existent address returns 404', async () => {

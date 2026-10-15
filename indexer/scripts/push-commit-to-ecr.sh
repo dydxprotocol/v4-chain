@@ -4,7 +4,7 @@
 # It pushes an ECR image with tag local_<commit>
 
 # To run the script, use the following command:
-#   scripts/push-commit-to-ecr.sh <service> <commit> <dev|dev2|dev3|dev4|dev5|staging>
+#   scripts/push-commit-to-ecr.sh <service> <commit> <dev|dev2|dev3|dev5|staging>
 # For example:
 #   scripts/push-commit-to-ecr.sh comlink 875aecd staging
 
@@ -20,7 +20,6 @@ case $env in
     "dev") account=329916310755;;
     "dev2") account=220669270420;;
     "dev3") account=295746761472;;
-    "dev4") account=525975847385;;
     "dev5") account=917958511744;;
     "staging") account=677285201534;;
     "public-testnet") account=013339450148;; # public testnet

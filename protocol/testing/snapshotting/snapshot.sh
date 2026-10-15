@@ -6,7 +6,7 @@ set -x
 # Snapshots can be used to start a new full-node from the height the snapshot
 # was taken at.
 
-# Example usage: ./snapshot.sh --s3_snapshot_bucket dev4fullnodesnapshots \
+# Example usage: ./snapshot.sh --s3_snapshot_bucket dev5fullnodesnapshots \
 # --genesis_file_rpc_address http://18.178.88.89:26657 \
 # --p2p_seeds dfa67970296bbecce14daba6cb0da516ed60458a@3.129.102.24:26656 \
 # --upload_period 300
@@ -18,7 +18,7 @@ function display_usage() {
     echo "  --genesis_file_rpc_address      RPC address of a validator node to retrieve the genesis file from, e.g. http://18.178.88.89:26657"
     echo "  --p2p_seeds                     List of seed nodes to peer with, e.g. dfa67970296bbecce14daba6cb0da516ed60458a@3.129.102.24:26656"
     echo "  --upload_period                 Upload frequency in seconds, e.g. 300"
-    echo "  --s3_snapshot_bucket            Name of the S3 bucket to upload snapshots to, e.g. dev4fullnodesnapshots"
+    echo "  --s3_snapshot_bucket            Name of the S3 bucket to upload snapshots to, e.g. dev5fullnodesnapshots"
 }
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then

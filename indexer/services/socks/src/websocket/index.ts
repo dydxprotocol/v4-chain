@@ -9,7 +9,12 @@ import config from '../config';
 import { getClientIp, getGeoOriginHeaders } from '../helpers/header-utils';
 import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
 import { sendMessage, Wss } from '../helpers/wss';
-import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART, WS_CLOSE_HEARTBEAT_TIMEOUT } from '../lib/constants';
+import {
+  ERR_INVALID_WEBSOCKET_FRAME,
+  ERR_MAX_PAYLOAD_EXCEEDED,
+  WS_CLOSE_CODE_SERVICE_RESTART,
+  WS_CLOSE_HEARTBEAT_TIMEOUT,
+} from '../lib/constants';
 import { InvalidMessageHandler } from '../lib/invalid-message';
 import { reconnectPenalty } from '../lib/reconnect-penalty';
 import { Subscriptions } from '../lib/subscription';
@@ -104,7 +109,7 @@ export class Index {
     const connection: Connection = this.connections[connectionId];
 
     const numConcurrentConnections: number = Object.keys(this.connections).length;
-    logger.info({
+    logger.debug({
       at: 'index#onConnection',
       message: 'Received websocket connection',
       url: ws.url,
@@ -166,7 +171,7 @@ export class Index {
       // TODO remove use as developer indicates
       const reasonStr = safeJsonStringify(reason);
 
-      logger.info({
+      logger.debug({
         at: 'index#onClose',
         message: 'Connection closed',
         connectionId,
@@ -195,8 +200,11 @@ export class Index {
         connectionId,
         error,
       };
-      if (error?.message.includes?.(ERR_INVALID_WEBSOCKET_FRAME)) {
-        // Clients sending invalid frames is not considered an error
+      if (
+        error?.message.includes?.(ERR_INVALID_WEBSOCKET_FRAME) ||
+        error?.message.includes?.(ERR_MAX_PAYLOAD_EXCEEDED)
+      ) {
+        // Clients sending invalid or oversized frames is not considered an error
         logger.info(errorLog);
       } else {
         logger.error(errorLog);
@@ -238,7 +246,7 @@ export class Index {
       },
     );
     if (!connection) {
-      logger.info({
+      logger.debug({
         at: 'index#onMessage',
         message: 'Received message for closed connection',
         connectionId,
@@ -291,7 +299,7 @@ export class Index {
           return;
         }
 
-        logger.info({
+        logger.debug({
           at: 'index#onSubscribe',
           message: 'Received websocket subscribe',
           connectionId,
@@ -381,7 +389,7 @@ export class Index {
     }
 
     try {
-      logger.info({
+      logger.debug({
         at: 'index#heartbeat',
         message: 'Sending heartbeat ping',
         connectionId,
@@ -444,7 +452,7 @@ export class Index {
       return;
     }
     try {
-      logger.info({
+      logger.debug({
         at: 'index#disconnect',
         message: 'Disconnecting websocket connection',
         connectionId,
