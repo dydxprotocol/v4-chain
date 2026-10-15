@@ -12,12 +12,12 @@ describe('axiosRequest', () => {
   it('asks comlink for gzip and keeps the caller\'s headers', async () => {
     await axiosRequest({
       url: 'http://comlink/v4/trades/perpetualMarket/BTC-USD',
-      headers: { 'cf-ipcountry': 'GB' },
+      headers: { 'geo-origin-country': 'GB' },
     });
 
     expect(safeAxiosRequest).toHaveBeenCalledWith({
       url: 'http://comlink/v4/trades/perpetualMarket/BTC-USD',
-      headers: { 'cf-ipcountry': 'GB', 'Accept-Encoding': 'gzip' },
+      headers: { 'geo-origin-country': 'GB', 'Accept-Encoding': 'gzip' },
       timeout: config.AXIOS_TIMEOUT_MS,
     });
   });

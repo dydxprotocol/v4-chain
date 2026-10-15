@@ -11,9 +11,10 @@ export async function axiosRequest(
 ): Promise<any> {
   return safeAxiosRequest({
     ...axiosConfig,
-    // Comlink compresses responses, and serves brotli to clients that accept it. axios 1.2.x
-    // advertises brotli but intermittently fails to decode it ("unexpected end of file"), so ask
-    // for gzip, which it decodes reliably.
+    // Comlink serves brotli to clients that accept it. The axios that makes this request is the
+    // one @dydxprotocol-indexer/base resolves (1.2.1), which decodes brotli with zlib flush options
+    // and intermittently fails with "unexpected end of file" (fixed in axios 1.2.2, axios#5353).
+    // Ask for gzip until base's axios is upgraded; bumping socks' own axios does not help.
     headers: { ...axiosConfig.headers, 'Accept-Encoding': 'gzip' },
     timeout: config.AXIOS_TIMEOUT_MS,
   });
