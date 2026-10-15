@@ -34,6 +34,14 @@ describe('kafkajs patch: follower fetching', () => {
       .toBeLessThanOrEqual(Date.now() + 1000);
   });
 
+  it('does not push back a metadata refresh that is already due sooner', () => {
+    const consumerGroup = makeConsumerGroup([2], { nodeId: 2, expireAt });
+    const due: number = Date.now() + 200;
+    consumerGroup.cluster.brokerPool.metadataExpireAt = due;
+    consumerGroup.findReadReplicaForPartitions('topic', [0]);
+    expect(consumerGroup.cluster.brokerPool.metadataExpireAt).toBe(due);
+  });
+
   it('retries the leader instead of resetting the offset when out of range on a follower', async () => {
     const consumerGroup = makeConsumerGroup([], { nodeId: 2, expireAt });
     await consumerGroup.recoverFromOffsetOutOfRange({ topic: 'topic', partition: 0 });
