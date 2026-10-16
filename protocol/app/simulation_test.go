@@ -52,6 +52,7 @@ import (
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
+	canonicalusdcmodule "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -121,6 +122,7 @@ var genesisModuleOrder = []string{
 	exportedtypes.ModuleName,
 	evidencetypes.ModuleName,
 	ratelimitmodule.ModuleName,
+	canonicalusdcmodule.ModuleName,
 	ibctransfertypes.ModuleName,
 	icatypes.ModuleName,
 	pricestypes.ModuleName,

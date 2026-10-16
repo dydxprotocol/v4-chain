@@ -151,6 +151,9 @@ import (
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
 	bridgemodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	canonicalusdcmodule "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc"
+	canonicalusdcmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/keeper"
+	canonicalusdcmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	clobmodule "github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	clobflags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -301,6 +304,7 @@ type App struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	RatelimitKeeper       ratelimitmodulekeeper.Keeper
+	CanonicalUsdcKeeper   *canonicalusdcmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
@@ -450,6 +454,7 @@ func New(
 		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,
 		ratelimitmoduletypes.StoreKey,
+		canonicalusdcmoduletypes.StoreKey,
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 		evidencetypes.StoreKey,
@@ -725,13 +730,26 @@ func New(
 		},
 	)
 	rateLimitModule := ratelimitmodule.NewAppModule(appCodec, app.RatelimitKeeper)
+	app.CanonicalUsdcKeeper = canonicalusdcmodulekeeper.NewKeeper(
+		appCodec,
+		keys[canonicalusdcmoduletypes.StoreKey],
+		app.BankKeeper,
+		app.RatelimitKeeper, // ICS4Wrapper
+		app.RatelimitKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ConnectionKeeper,
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
 
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
 		app.getSubspace(ibctransfertypes.ModuleName),
-		app.RatelimitKeeper, // ICS4Wrapper
+		app.CanonicalUsdcKeeper, // ICS4Wrapper
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.PortKeeper,
 		app.AccountKeeper,
@@ -739,12 +757,16 @@ func New(
 		scopedIBCTransferKeeper,
 		lib.GovModuleAddress.String(),
 	)
+	app.CanonicalUsdcKeeper.SetTransferMsgServer(app.TransferKeeper)
+	transferMsgServer := canonicalusdcmodulekeeper.NewTransferDecorator(app.CanonicalUsdcKeeper)
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
+	canonicalUsdcModule := canonicalusdcmodule.NewAppModule(*app.CanonicalUsdcKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
 	// Wrap the x/ratelimit middlware over the IBC Transfer module
 	var transferStack ibcporttypes.IBCModule = transferIBCModule
 	transferStack = ratelimitmodule.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
+	transferStack = canonicalusdcmodule.NewIBCMiddleware(app.CanonicalUsdcKeeper, transferStack)
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 	// Create static IBC router, add transfer route, then set and seal it
@@ -1315,6 +1337,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		transferModule,
+		canonicalUsdcModule,
 		pricesModule,
 		assetsModule,
 		blockTimeModule,
@@ -1361,6 +1384,7 @@ func New(
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
+		canonicalusdcmoduletypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -1412,6 +1436,7 @@ func New(
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
+		canonicalusdcmoduletypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
 		pricesmoduletypes.ModuleName,
@@ -1463,6 +1488,7 @@ func New(
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
+		canonicalusdcmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
@@ -1508,6 +1534,7 @@ func New(
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
+		canonicalusdcmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
@@ -1538,7 +1565,10 @@ func New(
 	)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	msgServer := newMsgServerOverrides(app.MsgServiceRouter(), map[string]any{
+		ibcTransferMsgServiceName: transferMsgServer,
+	})
+	app.configurator = module.NewConfigurator(app.appCodec, msgServer, app.GRPCQueryRouter())
 	err := app.ModuleManager.RegisterServices(app.configurator)
 	app.ModuleBasics = module.NewBasicManagerFromManager(
 		app.ModuleManager,

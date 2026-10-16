@@ -261,6 +261,10 @@ var (
 		"/dydxprotocol.ratelimit.MsgSetLimitParams":         {},
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": {},
 
+		// canonicalusdc
+		"/dydxprotocol.canonicalusdc.MsgUpdateControls":         {},
+		"/dydxprotocol.canonicalusdc.MsgUpdateControlsResponse": {},
+
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                  {},
 		"/dydxprotocol.sending.MsgCreateTransferResponse":          {},
