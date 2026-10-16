@@ -82,7 +82,7 @@ sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/.full-node-2/con
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do
   # p2p.seeds taken from --p2p.persistent_peers flag of full node
-  cosmovisor run start --log_level info --home /dydxprotocol/chain/.full-node-2 --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true --dd-agent-host=${dd_agent_host} &
+  cosmovisor run start --log_format json --log_level info --home /dydxprotocol/chain/.full-node-2 --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true --dd-agent-host=${dd_agent_host} &
 
   sleep ${upload_period}
   kill -TERM $(pidof cosmovisor)

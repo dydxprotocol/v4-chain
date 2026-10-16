@@ -53,7 +53,23 @@ func TestRecordMevMetrics(t *testing.T) {
 		expectedValidatorVolumeQuoteQuantums *big.Int
 		expectedProposerNumFills             int
 		expectedProposerVolumeQuoteQuantums  *big.Int
+		expectNoLog                          bool
 	}{
+		"No fills and zero MEV - does not log": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+				constants.Dave_Num1_10_000USD,
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			feeParams: constants.PerpetualFeeParamsNoFee,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			proposedOperations: &types.MsgProposedOperations{},
+			expectNoLog:        true,
+		},
 		"Case 1 - capturing the spread": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_10_000USD,
@@ -993,39 +1009,41 @@ func TestRecordMevMetrics(t *testing.T) {
 			mockLogger := &mocks.Logger{}
 			mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
-			mockLogger.On(
-				"Info",
-				"Measuring MEV for proposed matches",
-				metrics.Mev,
-				tc.expectedMev,
-				// Common metadata.
-				metrics.BlockHeight,
-				ctx.BlockHeight(),
-				metrics.ConsensusRound,
-				int64(0),
-				metrics.Proposer,
-				"alice",
-				metrics.ClobPairId,
-				uint32(0),
-				metrics.MidPrice,
-				tc.expectedMidPrice,
-				metrics.OraclePrice,
-				uint64(100_000_000),
-				metrics.BestBid,
-				mock.Anything,
-				metrics.BestAsk,
-				mock.Anything,
-				// Validator stats.
-				metrics.ValidatorNumFills,
-				tc.expectedValidatorNumFills,
-				metrics.ValidatorVolumeQuoteQuantums,
-				tc.expectedValidatorVolumeQuoteQuantums.String(),
-				// Proposer stats.
-				metrics.ProposerNumFills,
-				tc.expectedProposerNumFills,
-				metrics.ProposerVolumeQuoteQuantums,
-				tc.expectedProposerVolumeQuoteQuantums.String(),
-			).Once()
+			if !tc.expectNoLog {
+				mockLogger.On(
+					"Info",
+					"Measuring MEV for proposed matches",
+					metrics.Mev,
+					tc.expectedMev,
+					// Common metadata.
+					metrics.BlockHeight,
+					ctx.BlockHeight(),
+					metrics.ConsensusRound,
+					int64(0),
+					metrics.Proposer,
+					"alice",
+					metrics.ClobPairId,
+					uint32(0),
+					metrics.MidPrice,
+					tc.expectedMidPrice,
+					metrics.OraclePrice,
+					uint64(100_000_000),
+					metrics.BestBid,
+					mock.Anything,
+					metrics.BestAsk,
+					mock.Anything,
+					// Validator stats.
+					metrics.ValidatorNumFills,
+					tc.expectedValidatorNumFills,
+					metrics.ValidatorVolumeQuoteQuantums,
+					tc.expectedValidatorVolumeQuoteQuantums.String(),
+					// Proposer stats.
+					metrics.ProposerNumFills,
+					tc.expectedProposerNumFills,
+					metrics.ProposerVolumeQuoteQuantums,
+					tc.expectedProposerVolumeQuoteQuantums.String(),
+				).Once()
+			}
 
 			ctx = ctx.WithLogger(mockLogger)
 			ks.ClobKeeper.RecordMevMetrics(ctx, mockStakingKeeper, mockPerpetualKeeper, tc.proposedOperations)
