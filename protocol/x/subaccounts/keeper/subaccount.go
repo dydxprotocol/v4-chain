@@ -180,6 +180,25 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 	return
 }
 
+// GetSubaccountIdsByOwner returns up to limit of the owner's subaccount ids, in store order.
+func (k Keeper) GetSubaccountIdsByOwner(ctx sdk.Context, owner string, limit int) []types.SubaccountId {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
+	// A state key is the id's proto encoding, and number 0 encodes to nothing, so the key of (owner, 0) is a
+	// prefix of every key the owner has.
+	iterator := storetypes.KVStorePrefixIterator(store, (&types.SubaccountId{Owner: owner}).ToStateKey())
+	defer iterator.Close()
+
+	var ids []types.SubaccountId
+	for ; iterator.Valid() && len(ids) < limit; iterator.Next() {
+		var id types.SubaccountId
+		if err := id.Unmarshal(iterator.Key()); err != nil {
+			panic(err)
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // ForEachSubaccount performs a callback across all subaccounts.
 // The callback function should return a boolean if we should end iteration or not.
 // This is more performant than GetAllSubaccount because it does not fetch all at once.
