@@ -37,14 +37,8 @@ func BackingInvariant(keeper Keeper) sdk.Invariant {
 			return reason, true
 		}
 		if controls.Mode == types.Mode_MODE_GRADUAL {
-			logicalSupply := keeper.bankKeeper.GetSupply(ctx, controls.LogicalDenom).Amount
-			accountedBacking := amounts.noble.Add(amounts.injective).Add(amounts.pendingInjective)
-			if !logicalSupply.Equal(accountedBacking) {
-				return fmt.Sprintf(
-					"canonical USDC logical supply %s does not equal accounted backing %s",
-					logicalSupply,
-					accountedBacking,
-				), true
+			if reason := checkSupply(ctx, keeper, controls, amounts); reason != "" {
+				return reason, true
 			}
 		}
 		pending := keeper.GetAllPending(ctx)
@@ -117,4 +111,49 @@ func checkPendingTotals(amounts backingAmounts, pending []types.PendingSettlemen
 		return "canonical USDC pending settlement totals do not match the backing ledger"
 	}
 	return ""
+}
+
+func checkSupply(ctx sdk.Context, keeper Keeper, controls types.Controls, amounts backingAmounts) string {
+	logicalSupply := keeper.bankKeeper.GetSupply(ctx, controls.LogicalDenom).Amount
+	accountedBacking := amounts.noble.Add(amounts.injective).Add(amounts.pendingInjective)
+	if logicalSupply.Equal(accountedBacking) {
+		return ""
+	}
+	return fmt.Sprintf(
+		"canonical USDC logical supply %s does not equal accounted backing %s",
+		logicalSupply,
+		accountedBacking,
+	)
+}
+
+// EnforceBacking runs the constant-cost part of BackingInvariant (supply
+// equation and module balances, no pending scan) every block in GRADUAL and
+// pauses canonical routing if it breaks. Crisis invariants do not run on dYdX,
+// so this is the on-chain backstop. Governance resumes with PAUSED -> GRADUAL,
+// which re-snapshots Noble backing and re-checks the invariant.
+func (k Keeper) EnforceBacking(ctx sdk.Context) {
+	controls := k.GetControls(ctx)
+	if controls.Mode != types.Mode_MODE_GRADUAL {
+		return
+	}
+	reason := ""
+	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	if err != nil {
+		reason = err.Error()
+	} else if reason = checkModuleBalances(ctx, k, controls, amounts); reason == "" {
+		reason = checkSupply(ctx, k, controls, amounts)
+	}
+	if reason == "" {
+		return
+	}
+	controls.Mode = types.Mode_MODE_PAUSED
+	if err := k.SetControls(ctx, controls); err != nil {
+		k.Logger(ctx).Error("failed to pause canonical USDC after backing breach", "reason", reason, "error", err)
+		return
+	}
+	k.Logger(ctx).Error("canonical USDC backing breached; routing paused", "reason", reason)
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeBackingBreach,
+		sdk.NewAttribute(types.AttributeKeyReason, reason),
+	))
 }

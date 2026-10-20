@@ -26,6 +26,7 @@ var (
 	_ module.HasConsensusVersion = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
 )
 
 type AppModuleBasic struct{}
@@ -92,3 +93,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+func (am AppModule) EndBlock(ctx context.Context) error {
+	am.keeper.EnforceBacking(sdk.UnwrapSDKContext(ctx))
+	return nil
+}

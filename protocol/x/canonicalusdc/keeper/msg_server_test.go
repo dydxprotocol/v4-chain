@@ -104,7 +104,7 @@ func TestUpdateControlsPendingFreeze(t *testing.T) {
 		{
 			name:        "disable",
 			mode:        canonicaltypes.Mode_MODE_DISABLED,
-			errContains: "cannot disable with pending",
+			errContains: "cannot disable while",
 		},
 		{
 			name: "retarget",

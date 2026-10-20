@@ -63,23 +63,28 @@ message Controls {
   // injective_denom is the local IBC denom of Injective-origin USDC (the hash
   // of transfer/<injective_channel>/<injective_packet_denom>).
   string injective_denom = 12;
+  // injective_deposits_disabled stops Injective-origin USDC received on the
+  // Injective channel from being credited as logical USDC. When true, those
+  // deposits are rejected with an error acknowledgement and refunded on
+  // Injective. Withdrawals and in-flight settlements are unaffected.
+  bool injective_deposits_disabled = 13;
 
   // max_transfer_amount is the per-packet cap for canonical inbound and
   // outbound transfers.
-  bytes max_transfer_amount = 13 [
+  bytes max_transfer_amount = 14 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // migration_ceiling is the upper bound on injective_backing.
-  bytes migration_ceiling = 14 [
+  bytes migration_ceiling = 15 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // max_pending_settlements is the cap on concurrent in-flight canonical
   // settlements.
-  uint32 max_pending_settlements = 15;
+  uint32 max_pending_settlements = 16;
 }
 
 // Ledger accounts for backing and in-flight settlement without changing the

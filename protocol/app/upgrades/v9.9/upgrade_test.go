@@ -1,10 +1,10 @@
-package v_9_8_test
+package v_9_9_test
 
 import (
 	"testing"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	v_9_8 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.8"
+	v_9_9 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.9"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	canonicalusdc "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc"
@@ -13,7 +13,7 @@ import (
 )
 
 func TestUpgradeAddsCanonicalUsdcStore(t *testing.T) {
-	require.Equal(t, []string{canonicalusdctypes.StoreKey}, v_9_8.Upgrade.StoreUpgrades.Added)
+	require.Equal(t, []string{canonicalusdctypes.StoreKey}, v_9_9.Upgrade.StoreUpgrades.Added)
 }
 
 func TestUpgradeInitializesCanonicalUsdc(t *testing.T) {
@@ -36,7 +36,7 @@ func TestUpgradeInitializesCanonicalUsdc(t *testing.T) {
 	require.NoError(t, err)
 	require.NotContains(t, versions, canonicalusdctypes.ModuleName)
 
-	plan := upgradetypes.Plan{Name: v_9_8.UpgradeName, Height: ctx.BlockHeight()}
+	plan := upgradetypes.Plan{Name: v_9_9.UpgradeName, Height: ctx.BlockHeight()}
 	require.NoError(t, app.UpgradeKeeper.ApplyUpgrade(ctx, plan))
 
 	// Getters fall back to defaults on an empty store. Require persisted keys so
@@ -68,7 +68,7 @@ func TestUpgradeIsNoOpWhenCanonicalUsdcAlreadyInitialized(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), versions[canonicalusdctypes.ModuleName])
 
-	plan := upgradetypes.Plan{Name: v_9_8.UpgradeName, Height: ctx.BlockHeight()}
+	plan := upgradetypes.Plan{Name: v_9_9.UpgradeName, Height: ctx.BlockHeight()}
 	require.NoError(t, app.UpgradeKeeper.ApplyUpgrade(ctx, plan))
 
 	require.Equal(t, ledger, app.CanonicalUsdcKeeper.GetLedger(ctx))

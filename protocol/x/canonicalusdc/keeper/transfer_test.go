@@ -271,7 +271,7 @@ func setupKeeper(t *testing.T) (sdk.Context, *Keeper, *bankMock, *transferMock, 
 	cdc := codec.NewProtoCodec(registry)
 	bank := newBankMock()
 	ics4 := &ics4Mock{}
-	k := NewKeeper(cdc, key, bank, ics4, newRatelimitMock(), nil, nil, []string{lib.GovModuleAddress.String()})
+	k := NewKeeper(cdc, key, nil, bank, ics4, newRatelimitMock(), nil, nil, []string{lib.GovModuleAddress.String()})
 	transfer := &transferMock{bank: bank}
 	k.SetTransferMsgServer(transfer)
 	return ctx, k, bank, transfer, ics4

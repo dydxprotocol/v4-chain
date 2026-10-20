@@ -123,7 +123,7 @@ func (a ics20App) OnAcknowledgementPacket(
 	if err := transfertypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return err
 	}
-	if ack.Success() {
+	if _, isError := ack.Response.(*channeltypes.Acknowledgement_Error); !isError {
 		return nil
 	}
 	return a.stub.refund(packet)

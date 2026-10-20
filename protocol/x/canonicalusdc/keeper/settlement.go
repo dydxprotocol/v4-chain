@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +51,7 @@ func (k Keeper) Settle(ctx sdk.Context, pending types.PendingSettlement, success
 		sdk.NewAttribute(types.AttributeKeySourceChannel, pending.SourceChannel),
 		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(pending.Sequence)),
 		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
+		sdk.NewAttribute(sdk.AttributeKeySender, pending.Sender),
 		sdk.NewAttribute(types.AttributeKeyOutcome, outcome),
 	))
 	write()
@@ -107,4 +109,33 @@ func settleNoble(ledger types.Ledger, amount math.Int, success bool) (types.Ledg
 		ledger.NobleBacking, err = add(ledger.NobleBacking, amount)
 	}
 	return ledger, err
+}
+
+// CreditLegacyNobleRefund restores Noble backing for a refunded Noble packet
+// that has no pending settlement. Such a packet was sent while DISABLED, so the
+// GRADUAL snapshot excluded its burned amount; the ICS20 refund re-mints it.
+func (k Keeper) CreditLegacyNobleRefund(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	sender string,
+	amount math.Int,
+) error {
+	ledger := k.GetLedger(ctx)
+	var err error
+	if ledger.NobleBacking, err = add(ledger.NobleBacking, amount); err != nil {
+		return err
+	}
+	if err := k.SetLedger(ctx, ledger); err != nil {
+		return err
+	}
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeSettlement,
+		sdk.NewAttribute(types.AttributeKeyRoute, types.Route_ROUTE_NOBLE.String()),
+		sdk.NewAttribute(types.AttributeKeySourceChannel, packet.SourceChannel),
+		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(packet.Sequence)),
+		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
+		sdk.NewAttribute(sdk.AttributeKeySender, sender),
+		sdk.NewAttribute(types.AttributeKeyOutcome, types.AttributeValueLegacyRefund),
+	))
+	return nil
 }

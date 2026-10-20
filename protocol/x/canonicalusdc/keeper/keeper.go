@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
@@ -23,6 +24,7 @@ import (
 type Keeper struct {
 	cdc               codec.BinaryCodec
 	storeKey          storetypes.StoreKey
+	accountKeeper     types.AccountKeeper
 	bankKeeper        types.BankKeeper
 	ics4Wrapper       types.ICS4Wrapper
 	ratelimitKeeper   types.RatelimitKeeper
@@ -35,6 +37,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	ratelimitKeeper types.RatelimitKeeper,
@@ -45,6 +48,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:              cdc,
 		storeKey:         storeKey,
+		accountKeeper:    accountKeeper,
 		bankKeeper:       bankKeeper,
 		ics4Wrapper:      ics4Wrapper,
 		ratelimitKeeper:  ratelimitKeeper,
@@ -52,6 +56,34 @@ func NewKeeper(
 		connectionKeeper: connectionKeeper,
 		authorities:      lib.UniqueSliceToSet(authorities),
 	}
+}
+
+// EnsureModuleAccount makes the module address a module account. Coins can be
+// sent to the address before the module exists, leaving a plain BaseAccount
+// there that bank refuses to mint into or burn from, so that account is
+// converted in place, keeping its number and balances.
+func (k Keeper) EnsureModuleAccount(ctx sdk.Context) error {
+	existing := k.accountKeeper.GetAccount(ctx, types.ModuleAddress)
+	if existing == nil {
+		k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+		return nil
+	}
+	if _, ok := existing.(sdk.ModuleAccountI); ok {
+		return nil
+	}
+	base, ok := existing.(*authtypes.BaseAccount)
+	if !ok {
+		return fmt.Errorf("%w: unexpected account type %T", types.ErrModuleAccount, existing)
+	}
+	if base.GetPubKey() != nil {
+		return fmt.Errorf("%w: module address has a public key", types.ErrModuleAccount)
+	}
+	_, permissions := k.accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
+	if len(permissions) == 0 {
+		return fmt.Errorf("%w: module permissions are not registered", types.ErrModuleAccount)
+	}
+	k.accountKeeper.SetAccount(ctx, authtypes.NewModuleAccount(base, types.ModuleName, permissions...))
+	return nil
 }
 
 func (k Keeper) ValidateRouteBindings(ctx sdk.Context, controls types.Controls) error {
@@ -159,11 +191,12 @@ func (k Keeper) CreditInjectiveInbound(ctx sdk.Context, controls types.Controls,
 	if err != nil {
 		return err
 	}
-	next := current.Add(amount)
-	if next.GT(ceiling) {
+	// Compare against the remaining room so an amount near the Int bound cannot
+	// overflow the addition.
+	if amount.GT(ceiling.Sub(current)) {
 		return types.ErrMigrationCeiling
 	}
-	ledger.InjectiveBacking = types.NewAmount(next)
+	ledger.InjectiveBacking = types.NewAmount(current.Add(amount))
 	return k.SetLedger(ctx, ledger)
 }
 

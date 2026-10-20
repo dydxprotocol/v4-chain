@@ -115,6 +115,9 @@ func (im IBCMiddleware) onRecvPacketActive(
 		if controls.Mode == types.Mode_MODE_PAUSED {
 			return channeltypes.NewErrorAcknowledgement(types.ErrPaused)
 		}
+		if controls.InjectiveDepositsDisabled {
+			return channeltypes.NewErrorAcknowledgement(types.ErrInjectiveDepositsDisabled)
+		}
 		return im.receiveInjective(ctx, packet, data, relayer, controls)
 	}
 	// Logical USDC returning on any other channel unescrows coins that are
@@ -162,6 +165,10 @@ func (im IBCMiddleware) receiveInjective(
 		sdk.NewAttribute(types.AttributeKeyPhysicalDenom, controls.InjectiveDenom),
 		sdk.NewAttribute(types.AttributeKeyLogicalDenom, controls.LogicalDenom),
 		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
+		sdk.NewAttribute(transfertypes.AttributeKeyReceiver, receiver.String()),
+		sdk.NewAttribute(sdk.AttributeKeySender, data.Sender),
+		sdk.NewAttribute(types.AttributeKeySourceChannel, packet.SourceChannel),
+		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(packet.Sequence)),
 	))
 	return ack
 }
@@ -174,7 +181,9 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 ) error {
 	pending, found := im.keeper.GetPendingForPacket(ctx, packet.SourceChannel, packet.Sequence)
 	if !found {
-		return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+		return im.forwardUnsettled(ctx, packet, isErrorAck(acknowledgement), func(ctx sdk.Context) error {
+			return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+		})
 	}
 	if err := validatePendingPacket(pending, im.keeper.GetControls(ctx), packet); err != nil {
 		return err
@@ -183,15 +192,16 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 	if err := transfertypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return err
 	}
-	outcome := types.AttributeValueError
-	if ack.Success() {
-		outcome = types.AttributeValueSuccess
+	refunded := refundsSender(ack)
+	outcome := types.AttributeValueSuccess
+	if refunded {
+		outcome = types.AttributeValueError
 	}
 	cacheCtx, write := ctx.CacheContext()
 	if err := im.app.OnAcknowledgementPacket(cacheCtx, packet, acknowledgement, relayer); err != nil {
 		return err
 	}
-	if err := im.keeper.Settle(cacheCtx, pending, ack.Success(), outcome); err != nil {
+	if err := im.keeper.Settle(cacheCtx, pending, !refunded, outcome); err != nil {
 		return err
 	}
 	write()
@@ -205,7 +215,9 @@ func (im IBCMiddleware) OnTimeoutPacket(
 ) error {
 	pending, found := im.keeper.GetPendingForPacket(ctx, packet.SourceChannel, packet.Sequence)
 	if !found {
-		return im.app.OnTimeoutPacket(ctx, packet, relayer)
+		return im.forwardUnsettled(ctx, packet, true, func(ctx sdk.Context) error {
+			return im.app.OnTimeoutPacket(ctx, packet, relayer)
+		})
 	}
 	if err := validatePendingPacket(pending, im.keeper.GetControls(ctx), packet); err != nil {
 		return err
@@ -244,6 +256,70 @@ func (im IBCMiddleware) WriteAcknowledgement(
 
 func (im IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	return im.keeper.GetAppVersion(ctx, portID, channelID)
+}
+
+// forwardUnsettled hands a packet without a pending settlement to the inner
+// app. In GRADUAL every logical send is gated and recorded, so an unsettled
+// refunded Noble-trace packet was sent while DISABLED: ICS20 re-mints logical
+// USDC that the GRADUAL snapshot excluded, and it is credited back to Noble
+// backing so the supply equation keeps holding.
+func (im IBCMiddleware) forwardUnsettled(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	refunded bool,
+	forward func(sdk.Context) error,
+) error {
+	sender, amount, ok := im.legacyNobleRefund(ctx, packet, refunded)
+	if !ok {
+		return forward(ctx)
+	}
+	cacheCtx, write := ctx.CacheContext()
+	if err := forward(cacheCtx); err != nil {
+		return err
+	}
+	if err := im.keeper.CreditLegacyNobleRefund(cacheCtx, packet, sender, amount); err != nil {
+		return err
+	}
+	write()
+	return nil
+}
+
+func (im IBCMiddleware) legacyNobleRefund(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	refunded bool,
+) (string, math.Int, bool) {
+	controls := im.keeper.GetControls(ctx)
+	if !refunded || controls.Mode == types.Mode_MODE_DISABLED ||
+		packet.SourcePort != transfertypes.PortID || packet.SourceChannel != controls.NobleChannel {
+		return "", math.Int{}, false
+	}
+	var data transfertypes.FungibleTokenPacketData
+	if err := transfertypes.ModuleCdc.UnmarshalJSON(packet.Data, &data); err != nil {
+		return "", math.Int{}, false
+	}
+	amount, ok := math.NewIntFromString(data.Amount)
+	if !ok || !amount.IsPositive() || data.Denom != controls.NobleTrace() {
+		return "", math.Int{}, false
+	}
+	return data.Sender, amount, true
+}
+
+// isErrorAck reports whether the bytes decode to an ack that ICS20 refunds.
+// Bytes that do not decode are left to the inner app, which rejects them.
+func isErrorAck(acknowledgement []byte) bool {
+	var ack channeltypes.Acknowledgement
+	if err := transfertypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
+		return false
+	}
+	return refundsSender(ack)
+}
+
+// refundsSender mirrors ICS20, which refunds only on an error response and
+// treats any other decodable ack as delivered.
+func refundsSender(ack channeltypes.Acknowledgement) bool {
+	_, isError := ack.Response.(*channeltypes.Acknowledgement_Error)
+	return isError
 }
 
 func validatePendingPacket(

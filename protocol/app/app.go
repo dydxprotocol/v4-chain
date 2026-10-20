@@ -733,6 +733,7 @@ func New(
 	app.CanonicalUsdcKeeper = canonicalusdcmodulekeeper.NewKeeper(
 		appCodec,
 		keys[canonicalusdcmoduletypes.StoreKey],
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.RatelimitKeeper, // ICS4Wrapper
 		app.RatelimitKeeper,

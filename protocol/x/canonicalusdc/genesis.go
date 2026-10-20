@@ -11,6 +11,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genesis types.GenesisState) {
 	if err := genesis.Validate(); err != nil {
 		panic(err)
 	}
+	if err := k.EnsureModuleAccount(ctx); err != nil {
+		panic(err)
+	}
 	if err := k.ValidateRouteBindings(ctx, genesis.Controls); err != nil {
 		panic(err)
 	}

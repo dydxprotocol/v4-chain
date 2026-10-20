@@ -33,6 +33,13 @@ type BankKeeper interface {
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 }
 
+type AccountKeeper interface {
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx context.Context, acc sdk.AccountI)
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
+	GetModuleAddressAndPermissions(moduleName string) (sdk.AccAddress, []string)
+}
+
 // RatelimitKeeper charges and refunds withdrawal capacity for a denom.
 type RatelimitKeeper interface {
 	ProcessWithdrawal(ctx sdk.Context, denom string, amount *big.Int) error

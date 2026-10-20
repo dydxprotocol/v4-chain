@@ -385,6 +385,19 @@ localnet-continue:
 localnet-stop:
 	@docker compose -f docker-compose.yml -f docker-compose.local.yml down
 
+# Native dYdX + two ibc-go simd chains + hermes; see testing/ibc-local.
+ibc-local-up:
+	@./testing/ibc-local/setup.sh
+	@./testing/ibc-local/up.sh
+
+ibc-local-test:
+	@./testing/ibc-local/test.sh $(SCENARIOS)
+
+ibc-local-down:
+	@./testing/ibc-local/down.sh $(ARGS)
+
+.PHONY: ibc-local-up ibc-local-test ibc-local-down
+
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark

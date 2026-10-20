@@ -255,7 +255,7 @@ func setupKeeperWithICS4(
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 	bank := newReceiveBank()
 	ratelimit := &undoRatelimit{}
-	return ctx, keeper.NewKeeper(cdc, key, bank, ics4, ratelimit, nil, nil, nil), bank, ratelimit
+	return ctx, keeper.NewKeeper(cdc, key, nil, bank, ics4, ratelimit, nil, nil, nil), bank, ratelimit
 }
 
 // undoRatelimit records refunded capacity. Charging happens in the transfer
@@ -325,6 +325,27 @@ func TestInboundInjectiveCanonicalizationPreservesLogicalReceiver(t *testing.T) 
 	require.Equal(t, "25", bank.amount(receiver, controls.LogicalDenom).String())
 	require.Equal(t, "25", bank.amount(types.ModuleAddress, controls.InjectiveDenom).String())
 	require.Equal(t, "25", k.GetLedger(ctx).InjectiveBacking.String())
+
+	var inbound []sdk.Event
+	for _, event := range ctx.EventManager().Events() {
+		if event.Type == types.EventTypeInbound {
+			inbound = append(inbound, event)
+		}
+	}
+	require.Len(t, inbound, 1)
+	attributes := map[string]string{}
+	for _, attribute := range inbound[0].Attributes {
+		attributes[attribute.Key] = attribute.Value
+	}
+	require.Equal(t, map[string]string{
+		types.AttributeKeyPhysicalDenom:    controls.InjectiveDenom,
+		types.AttributeKeyLogicalDenom:     controls.LogicalDenom,
+		transfertypes.AttributeKeyAmount:   "25",
+		transfertypes.AttributeKeyReceiver: receiver.String(),
+		sdk.AttributeKeySender:             "injective-sender",
+		types.AttributeKeySourceChannel:    "channel-99",
+		types.AttributeKeySequence:         "9",
+	}, attributes)
 }
 
 func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
@@ -395,6 +416,21 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			sequence:      2,
 			injectivePhys: true,
 			wantErr:       types.ErrPaused,
+		},
+		{
+			name: "injective deposits disabled",
+			prepControls: func(controls types.Controls) types.Controls {
+				controls.InjectiveDepositsDisabled = true
+				return controls
+			},
+			denom:         "uusdc",
+			amount:        "25",
+			sender:        "injective-sender",
+			sourceChannel: "channel-99",
+			destChannel:   receiveControls().InjectiveChannel,
+			sequence:      4,
+			injectivePhys: true,
+			wantErr:       types.ErrInjectiveDepositsDisabled,
 		},
 	}
 	for _, tc := range cases {
