@@ -124,6 +124,8 @@ const (
 	ConvertToUpdates                                        = "convert_to_updates"
 	CreateClobPair                                          = "create_clob_pair"
 	EquityTierLimit                                         = "equity_tier_limit"
+	ShadowRejected                                          = "shadow_rejected"
+	TokenBucket                                             = "token_bucket"
 	Expired                                                 = "expired"
 	FullyFilled                                             = "fully_filled"
 	Hydrate                                                 = "hydrate"
