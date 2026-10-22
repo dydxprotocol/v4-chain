@@ -5,7 +5,7 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// MarketPriceDecoder is an interface for decoding market price transactions, This interface is responsible
+// UpdateMarketPriceTxDecoder is an interface for decoding market price transactions, This interface is responsible
 // for distinguishing between logic for unmarshalling MarketPriceUpdates, between MarketPriceUpdates
 // determined by the proposer's price-cache, and from VoteExtensions.
 type UpdateMarketPriceTxDecoder interface {
