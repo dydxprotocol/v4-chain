@@ -132,6 +132,7 @@ export interface FillFromDatabase {
   positionSizeBefore?: string,
   entryPriceBefore?: string,
   positionSideBefore?: PositionSide,
+  closedPnl?: string,
 }
 
 export interface BlockFromDatabase {
