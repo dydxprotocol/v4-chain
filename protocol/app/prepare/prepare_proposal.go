@@ -353,7 +353,7 @@ func uvarintLen(x uint64) uint64 {
 	return n
 }
 
-// GetAcknowledgeBridgeTx returns a tx containing a list of `MsgAcknowledgeBridge`.
+// GetAcknowledgeBridgesTx returns a tx containing a list of `MsgAcknowledgeBridge`.
 func GetAcknowledgeBridgesTx(
 	ctx sdk.Context,
 	txConfig client.TxConfig,
