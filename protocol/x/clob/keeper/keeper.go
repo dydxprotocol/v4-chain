@@ -73,6 +73,10 @@ type (
 		// is held until PrepareCheckState clears it.
 		shortTermEquityTierResults map[satypes.SubaccountId]error
 
+		// Node-local short-term order token buckets by owner address. Touched only under the CheckTx global
+		// lock or in PrepareCheckState, which never overlap.
+		shortTermTokenBuckets map[string]*shortTermTokenBucket
+
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}
 )
@@ -141,6 +145,7 @@ func NewKeeper(
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		updateLeverageRateLimiter:   updateLeverageRateLimiter,
 		shortTermEquityTierResults:  make(map[satypes.SubaccountId]error),
+		shortTermTokenBuckets:       make(map[string]*shortTermTokenBucket),
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
 		revshareKeeper:              revshareKeeper,
 		finalizeBlockEventStager: finalizeblock.NewEventStager[*types.ClobStagedFinalizeBlockEvent](
