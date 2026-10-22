@@ -1,0 +1,142 @@
+syntax = "proto3";
+package dydxprotocol.canonicalusdc;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types";
+
+// Mode controls whether canonical USDC routing is active.
+enum Mode {
+  // MODE_UNSPECIFIED is invalid in configured state.
+  MODE_UNSPECIFIED = 0;
+  // MODE_DISABLED preserves the legacy transfer stack exactly.
+  MODE_DISABLED = 1;
+  // MODE_GRADUAL enables canonical Injective routing for logical USDC.
+  MODE_GRADUAL = 2;
+  // MODE_PAUSED rejects canonical USDC transfers while retaining pending state.
+  MODE_PAUSED = 3;
+}
+
+// Route identifies the physical settlement route for a logical USDC transfer.
+enum Route {
+  // ROUTE_UNSPECIFIED is not a valid settlement route.
+  ROUTE_UNSPECIFIED = 0;
+  // ROUTE_INJECTIVE settles with Injective-origin USDC.
+  ROUTE_INJECTIVE = 1;
+  // ROUTE_NOBLE settles with Noble-origin USDC.
+  ROUTE_NOBLE = 2;
+}
+
+// Controls binds canonical routing to exact channels and denominations.
+message Controls {
+  // mode is the routing mode for canonical USDC.
+  Mode mode = 1;
+  // logical_denom is the application USDC denom (the `uusdc` IBC hash) whose
+  // backing is classified.
+  string logical_denom = 2;
+
+  // noble_channel is the local IBC channel ID bound to Noble.
+  string noble_channel = 3;
+  // noble_client is the IBC client the Noble channel must be bound to.
+  string noble_client = 4;
+  // noble_connection is the IBC connection the Noble channel must be bound to.
+  string noble_connection = 5;
+  // noble_packet_denom is Noble's base denom as it appears in an inbound ICS20
+  // packet (e.g. `uusdc`), not the full trace path. Outbound packets carry
+  // `transfer/<noble_channel>/<noble_packet_denom>`.
+  string noble_packet_denom = 6;
+  // noble_withdrawals_enabled is whether logical USDC may exit over the Noble
+  // channel.
+  bool noble_withdrawals_enabled = 7;
+
+  // injective_channel is the local IBC channel ID bound to Injective.
+  string injective_channel = 8;
+  // injective_client is the IBC client the Injective channel must be bound to.
+  string injective_client = 9;
+  // injective_connection is the IBC connection the Injective channel must be
+  // bound to.
+  string injective_connection = 10;
+  // injective_packet_denom is Injective's base denom as it appears in an
+  // inbound ICS20 packet (e.g. `uusdc`), not the full trace path. Outbound
+  // packets carry `transfer/<injective_channel>/<injective_packet_denom>`.
+  string injective_packet_denom = 11;
+  // injective_denom is the local IBC denom of Injective-origin USDC (the hash
+  // of transfer/<injective_channel>/<injective_packet_denom>).
+  string injective_denom = 12;
+
+  // max_transfer_amount is the per-packet cap for canonical inbound and
+  // outbound transfers.
+  bytes max_transfer_amount = 13 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // migration_ceiling is the upper bound on injective_backing.
+  bytes migration_ceiling = 14 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // max_pending_settlements is the cap on concurrent in-flight canonical
+  // settlements.
+  uint32 max_pending_settlements = 15;
+}
+
+// Ledger accounts for backing and in-flight settlement without changing the
+// logical application denomination.
+message Ledger {
+  // noble_backing is the logical supply still classified as Noble-backed.
+  bytes noble_backing = 1 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // injective_backing is the Injective-origin USDC held by the module backing
+  // logical supply.
+  bytes injective_backing = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // pending_injective is the logical USDC locked on the module for in-flight
+  // Injective withdrawals.
+  bytes pending_injective = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // pending_noble is the logical USDC in flight to Noble awaiting ack or
+  // timeout (already removed from supply).
+  bytes pending_noble = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// PendingSettlement records enough logical and physical state to settle a
+// packet acknowledgement or timeout exactly once.
+message PendingSettlement {
+  // route is the physical settlement route of the packet.
+  Route route = 1;
+  // source_channel is the source channel of the IBC packet.
+  string source_channel = 2;
+  // sequence is the sequence of the IBC packet.
+  uint64 sequence = 3;
+  // sender is the dYdX sender of the MsgTransfer.
+  string sender = 4;
+  // logical_receiver is the counterparty receiver of the logical transfer.
+  string logical_receiver = 5;
+  // physical_receiver is the counterparty receiver of the physical packet.
+  string physical_receiver = 6;
+  // logical_denom is the application USDC denom of the transfer.
+  string logical_denom = 7;
+  // physical_denom is the denom carried by the physical packet.
+  string physical_denom = 8;
+  // amount is the transfer amount.
+  bytes amount = 9 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
