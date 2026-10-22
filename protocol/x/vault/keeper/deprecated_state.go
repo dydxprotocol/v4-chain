@@ -211,7 +211,7 @@ func (k Keeper) UnsafeGetAllOwnerEquities(ctx sdk.Context) map[string]*big.Rat {
 	return ownerEquities
 }
 
-// UnsafeDeleteVaultTotalShares deletes total shares of a given vault from state.
+// UnsafeDeleteAllVaultTotalShares deletes total shares of a given vault from state.
 // Used for v7.x upgrade handler
 func (k Keeper) UnsafeDeleteAllVaultTotalShares(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(TotalSharesKeyPrefix))
@@ -222,7 +222,7 @@ func (k Keeper) UnsafeDeleteAllVaultTotalShares(ctx sdk.Context) {
 	}
 }
 
-// UnsafeDeleteVaultOwnerShares deletes all owner shares of a given vault from state.
+// UnsafeDeleteAllVaultOwnerShares deletes all owner shares of a given vault from state.
 // Used for v7.x upgrade handler
 func (k Keeper) UnsafeDeleteAllVaultOwnerShares(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(OwnerSharesKeyPrefix))
