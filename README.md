@@ -63,3 +63,4 @@ If you encounter a bug, please file an [issue](https://github.com/dydxprotocol/v
 # License and Terms
 
 The dYdX Chain is licensed under AGPLv3 and subject to the [v4 Terms of Use](https://dydx.exchange/v4-terms). The full license can be found [here](https://github.com/dydxprotocol/v4-chain/blob/main/LICENSE). dYdX does not deploy or run v4 software for public use, or operate or control any dYdX Chain infrastructure. dYdX products and services are not available to persons or entities who reside in, are located in, are incorporated in, or have registered offices in the United States or Canada, or Restricted Persons (as defined in the dYdX [Terms of Use](https://dydx.exchange/terms)).
+protocol/cmd/dydxprotocold
