@@ -23,7 +23,7 @@ import (
 
 const (
 	port                 = "9092"
-	ip                   = "localhost"
+	ip                   = "127.0.0.1"
 	protocol             = "tcp"
 	messageKeyOnchain    = "keyOnchain"
 	messageValueOnchain  = "valueOnchain"
@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 		},
 		ExposedPorts: []string{fmt.Sprintf("%s/%s", port, protocol)},
 		PortBindings: map[docker.Port][]docker.PortBinding{
-			"9092/tcp": {{HostIP: ip, HostPort: fmt.Sprintf("%s/%s", port, protocol)}},
+			"9092/tcp": {{HostIP: ip, HostPort: port}},
 		},
 	}, func(config *docker.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
