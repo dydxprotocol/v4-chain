@@ -130,7 +130,11 @@ export const configSchema = {
   TURNKEY_MAGIC_LINK_VALIDATION: parseString({ default: 'https://dydx.trade' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
-  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
+  // Default slippage tolerance for Skip bridge routes, in percent units
+  // ('0.1' = 0.1%). The effective tolerance per route is the smaller of this
+  // and SKIP_SLIPPAGE_TOLERANCE_USDC / estimatedAmountOut
+  // (see getSlippageTolerancePercent in helpers/skip-helper.ts).
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0.1' }),
   // this is the largest allowed slippage amount in USDC.
   SKIP_SLIPPAGE_TOLERANCE_USDC: parseInteger({ default: 100 }),
   TURNKEY_EMAIL_SENDER_ADDRESS: parseString({ default: 'notifications@mail.dydx.trade' }),
