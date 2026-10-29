@@ -487,7 +487,7 @@ replace (
 	// Use dYdX fork of Cosmos SDK/store
 	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20261013180346-ba9f530c41c6
 	// Use dYdX fork of CometBFT
-	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20261014020802-ab0baf2bacac
+	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20261029164742-00f56e561ffd
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20261028165009-dbf5fc6a5b03
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20261028165034-c7fad16eb6fb
