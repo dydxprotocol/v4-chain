@@ -182,8 +182,6 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 		1,
 	)
 
-	foundNegativeTncSubaccount := false
-	var negativeTncSubaccountId satypes.SubaccountId
 	for _, subaccountId := range negativeTncSubaccountIds {
 		risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 			ctx,
@@ -192,39 +190,37 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 		if err != nil {
 			return err
 		}
-
-		// If the subaccount has negative TNC, mark that a negative TNC subaccount was found.
-		if risk.NC.Sign() == -1 {
-			foundNegativeTncSubaccount = true
-			negativeTncSubaccountId = subaccountId
-			break
+		if risk.NC.Sign() != -1 {
+			continue
 		}
-	}
 
-	if !foundNegativeTncSubaccount {
+		// The daemon's list can predate the close of this subaccount's last position. With
+		// nothing left to deleverage there is no perpetual to key the gate on, so move on to
+		// the next candidate the way the liquidation and deleveraging steps already do.
+		subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+		perpetualPositions := subaccount.GetPerpetualPositions()
+		if len(perpetualPositions) == 0 {
+			log.InfoLog(
+				ctx,
+				"GateWithdrawalsIfNegativeTncSubaccountSeen: skipping subaccount with negative TNC and no open positions",
+				"subaccount", subaccountId,
+			)
+			continue
+		}
+
+		// A negative TNC subaccount was found, therefore insert a zero-fill deleveraging operation into
+		// the operations queue to indicate withdrawals should be gated.
+		perpetualId := perpetualPositions[0].PerpetualId
+		k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(subaccountId, perpetualId)
+		metrics.IncrCountMetricWithLabels(
+			types.ModuleName,
+			metrics.SubaccountsNegativeTncSubaccountSeen,
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.IsLong, perpetualPositions[0].GetIsLong()),
+			metrics.GetLabelForBoolValue(metrics.DeliverTx, false),
+		)
 		return nil
 	}
-
-	// A negative TNC subaccount was found, therefore insert a zero-fill deleveraging operation into
-	// the operations queue to indicate withdrawals should be gated.
-	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, negativeTncSubaccountId)
-	perpetualPositions := subaccount.GetPerpetualPositions()
-	if len(perpetualPositions) == 0 {
-		return errorsmod.Wrapf(
-			types.ErrNoPerpetualPositionsToLiquidate,
-			"GateWithdrawalsIfNegativeTncSubaccountSeen: subaccount has no open positions: (%s)",
-			lib.MaybeGetJsonString(subaccount),
-		)
-	}
-	perpetualId := subaccount.PerpetualPositions[0].PerpetualId
-	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(negativeTncSubaccountId, perpetualId)
-	metrics.IncrCountMetricWithLabels(
-		types.ModuleName,
-		metrics.SubaccountsNegativeTncSubaccountSeen,
-		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-		metrics.GetLabelForBoolValue(metrics.IsLong, subaccount.PerpetualPositions[0].GetIsLong()),
-		metrics.GetLabelForBoolValue(metrics.DeliverTx, false),
-	)
 
 	return nil
 }
