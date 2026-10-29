@@ -9,8 +9,6 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/dydxprotocol/v4-chain/protocol/finalizeblock"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
@@ -21,6 +19,9 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ types.FullNodeStreamingManager = (*FullNodeStreamingManagerImpl)(nil)
@@ -216,11 +217,18 @@ func doFilterOrderbookUpdateBySubaccount(
 	return false, nil
 }
 
-func doFilterTakerOrderBySubaccount(
+func DoFilterTakerOrderBySubaccount(
 	takerOrder *clobtypes.StreamUpdate_TakerOrder,
 	subaccountIds []satypes.SubaccountId,
 ) bool {
-	return slices.Contains(subaccountIds, takerOrder.TakerOrder.GetOrder().OrderId.SubaccountId)
+	if takerOrder == nil || takerOrder.TakerOrder == nil {
+		return false
+	}
+	order := takerOrder.TakerOrder.GetOrder()
+	if order == nil {
+		return false
+	}
+	return slices.Contains(subaccountIds, order.OrderId.SubaccountId)
 }
 
 func doFilterOrderFillBySubaccount(
@@ -273,7 +281,7 @@ func doFilterStreamUpdateBySubaccount(
 	case *clobtypes.StreamUpdate_OrderbookUpdate:
 		return doFilterOrderbookUpdateBySubaccount(updateMessage, subaccountIds)
 	case *clobtypes.StreamUpdate_TakerOrder:
-		return doFilterTakerOrderBySubaccount(updateMessage, subaccountIds), nil
+		return DoFilterTakerOrderBySubaccount(updateMessage, subaccountIds), nil
 	case *clobtypes.StreamUpdate_OrderFill:
 		return doFilterOrderFillBySubaccount(updateMessage, subaccountIds), nil
 	}
