@@ -168,6 +168,32 @@ func NewStreamTakerOrder(
 	}
 }
 
+func NewStreamLiquidationTakerOrder(
+	blockHeight uint32,
+	execMode uint32,
+	liquidated satypes.SubaccountId,
+) *clobtypes.StreamUpdate {
+	return &clobtypes.StreamUpdate{
+		BlockHeight: blockHeight,
+		ExecMode:    execMode,
+		UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
+			TakerOrder: &clobtypes.StreamTakerOrder{
+				TakerOrder: &clobtypes.StreamTakerOrder_LiquidationOrder{
+					LiquidationOrder: &clobtypes.StreamLiquidationOrder{
+						LiquidationInfo: &clobtypes.PerpetualLiquidationInfo{
+							SubaccountId: liquidated,
+							PerpetualId:  0,
+						},
+					},
+				},
+				TakerOrderStatus: &clobtypes.StreamTakerOrderStatus{
+					OrderStatus: uint32(clobtypes.Success),
+				},
+			},
+		},
+	}
+}
+
 func NewSubaccountUpdate(
 	blockHeight uint32,
 	execMode uint32,
@@ -346,6 +372,10 @@ func TestFilterStreamUpdates(t *testing.T) {
 
 	neverInScopeTakerOrderUpdate := NewStreamTakerOrder(0, 0, NewOrder(NewOrderId("foo", 23)), 0, 0)
 
+	liquidationTakerOrderUpdate := NewStreamLiquidationTakerOrder(0, 0, subaccountId)
+
+	neverInScopeLiquidationTakerOrderUpdate := NewStreamLiquidationTakerOrder(0, 0, neverInScopeSubaccountId)
+
 	subaccountUpdate := NewSubaccountUpdate(
 		0,
 		0,
@@ -498,6 +528,16 @@ func TestFilterStreamUpdates(t *testing.T) {
 			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
 			subaccountIds:   []satypes.SubaccountId{subaccountId},
 			filteredUpdates: []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
+		},
+		"liquidationTakerOrderUpdates": {
+			updates:         []clobtypes.StreamUpdate{*neverInScopeLiquidationTakerOrderUpdate, *liquidationTakerOrderUpdate},
+			subaccountIds:   []satypes.SubaccountId{subaccountId},
+			filteredUpdates: []clobtypes.StreamUpdate{*liquidationTakerOrderUpdate},
+		},
+		"liquidationTakerOrderUpdatesDropUpdate": {
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *neverInScopeLiquidationTakerOrderUpdate},
+			subaccountIds:   []satypes.SubaccountId{subaccountId},
+			filteredUpdates: []clobtypes.StreamUpdate{baseStreamUpdate},
 		},
 		"takerOrderUpdatesFilterAndDropUpdate": {
 			updates: []clobtypes.StreamUpdate{
