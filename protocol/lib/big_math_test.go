@@ -678,7 +678,7 @@ func TestBigDivCeil(t *testing.T) {
 			}
 			// Otherwise test the result
 			result := lib.BigDivCeil(tc.numerator, tc.denominator)
-			require.Equal(t, tc.expectedResult, result)
+			require.Zero(t, tc.expectedResult.Cmp(result), "expected %v, got %v", tc.expectedResult, result)
 		})
 	}
 }
