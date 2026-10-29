@@ -487,7 +487,7 @@ replace (
 	// Use dYdX fork of Cosmos SDK/store
 	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20261013180346-ba9f530c41c6
 	// Use dYdX fork of CometBFT
-	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20261014020802-ab0baf2bacac
+	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20261029164742-00f56e561ffd
 	// Fixes the issue that `tx_search` resolves to a single entry, due to an cometbft-db interface
 	// change in v0.13.0+.
 	// TODO(CT-1343): Remove and fix properly by backporting upstream fix to cometbft fork.
