@@ -3,6 +3,9 @@ FROM dydxprotocol/indexer-node:16-alpine-m1
 ENV NODE_ENV=development
 ARG service
 
+ARG UV_THREADPOOL_SIZE
+ENV UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-4}
+
 RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
