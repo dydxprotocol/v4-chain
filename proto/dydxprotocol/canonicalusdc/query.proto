@@ -1,0 +1,70 @@
+syntax = "proto3";
+package dydxprotocol.canonicalusdc;
+
+import "dydxprotocol/canonicalusdc/canonical_usdc.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types";
+
+// Query defines the canonical USDC query service.
+service Query {
+  // State returns controls and aggregate backing state.
+  rpc State(QueryStateRequest) returns (QueryStateResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/canonicalusdc/state";
+  }
+  // PendingSettlements returns a page of in-flight canonical settlements.
+  rpc PendingSettlements(QueryPendingSettlementsRequest)
+      returns (QueryPendingSettlementsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/canonicalusdc/pending_settlements";
+  }
+  // PendingSettlement returns the in-flight canonical settlement for an IBC
+  // packet identified by source channel and sequence.
+  rpc PendingSettlement(QueryPendingSettlementRequest)
+      returns (QueryPendingSettlementResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/canonicalusdc/pending_settlements/{source_channel}/{sequence}";
+  }
+}
+
+// QueryStateRequest requests canonical controls and ledger state.
+message QueryStateRequest {}
+
+// QueryStateResponse contains canonical controls and ledger state.
+message QueryStateResponse {
+  // controls is the current canonical routing controls.
+  Controls controls = 1 [ (gogoproto.nullable) = false ];
+  // ledger is the current backing and in-flight accounting.
+  Ledger ledger = 2 [ (gogoproto.nullable) = false ];
+}
+
+// QueryPendingSettlementsRequest requests a page of in-flight settlements.
+message QueryPendingSettlementsRequest {
+  // pagination defines the page request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryPendingSettlementsResponse contains a page of in-flight settlements.
+message QueryPendingSettlementsResponse {
+  // pending_settlements is the page of in-flight settlements.
+  repeated PendingSettlement pending_settlements = 1
+      [ (gogoproto.nullable) = false ];
+  // pagination defines the page response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryPendingSettlementRequest requests one in-flight settlement.
+message QueryPendingSettlementRequest {
+  // source_channel is the source channel of the IBC packet.
+  string source_channel = 1;
+  // sequence is the sequence of the IBC packet.
+  uint64 sequence = 2;
+}
+
+// QueryPendingSettlementResponse contains one in-flight settlement.
+message QueryPendingSettlementResponse {
+  // pending_settlement is the in-flight settlement for the packet.
+  PendingSettlement pending_settlement = 1 [ (gogoproto.nullable) = false ];
+}
