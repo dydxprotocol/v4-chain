@@ -21,6 +21,29 @@
           "name": "dydx_migration_api"
         },
         "type": "market_map_provider"
+      },
+      "stork_api": {
+        "name": "stork_api",
+        "api": {
+          "enabled": true,
+          "timeout": 3000000000,
+          "interval": 2000000000,
+          "reconnectTimeout": 2000000000,
+          "maxQueries": 1,
+          "atomic": true,
+          "endpoints": [
+            {
+              "url": "https://rest.jp.stork-oracle.network",
+              "authentication": {
+                "apiKey": "",
+                "apiKeyHeader": "Authorization"
+              }
+            }
+          ],
+          "batchSize": 0,
+          "name": "stork_api"
+        },
+        "type": "price_provider"
       }
     }
 }
