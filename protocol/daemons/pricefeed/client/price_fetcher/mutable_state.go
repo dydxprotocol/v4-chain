@@ -21,7 +21,7 @@ type mutableState struct {
 	// It is updated periodically by the daemon's PriceFeedMutableMarketConfig when a change in the
 	// exchange's configuration is reported by the pricefeed server.
 	mutableExchangeConfig *types.MutableExchangeMarketConfig
-	// marketExponenets maps market ids to exponents for all markets supported by the exchange.
+	// marketExponents maps market ids to exponents for all markets supported by the exchange.
 	// It is updated every time the price fetcher's `UpdateMutableExchangeConfig` method is called.
 	marketExponents map[types.MarketId]types.Exponent
 	// marketIdsRing tracks the pointer to the next market to query for the upcoming task loop.

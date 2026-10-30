@@ -124,7 +124,7 @@ func (f *FakeSubTaskRunner) RunBridgeDaemonTaskLoop(
 
 func TestHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
-		// updateResult represents the list of responses for individual daemon task loops. Add a nil value to represent
+		// updateResults represents the list of responses for individual daemon task loops. Add a nil value to represent
 		// a successful update.
 		updateResults        []error
 		expectedHealthStatus error
