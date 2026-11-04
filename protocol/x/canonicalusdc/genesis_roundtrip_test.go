@@ -96,14 +96,13 @@ func genControls(mode types.Mode) types.Controls {
 		InjectiveConnection:     "connection-1",
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          transfertypes.ParseDenomTrace("transfer/channel-1/uusdc").IBCDenom(),
-		MaxTransferAmount:       dtypes.NewInt(1_000_000),
 		MigrationCeiling:        dtypes.NewInt(10_000_000),
 		MaxPendingSettlements:   10,
 	}
 }
 
 func genPending(route types.Route, channel string, sequence uint64, amount int64, controls types.Controls) types.PendingSettlement {
-	physical, sender := controls.LogicalDenom, "dydx1sender"
+	physical, sender := controls.LogicalDenom, sdk.AccAddress("genesis-sender").String()
 	if route == types.Route_ROUTE_INJECTIVE {
 		physical = controls.InjectiveDenom
 	}

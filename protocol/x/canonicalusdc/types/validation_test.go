@@ -3,6 +3,7 @@ package types_test
 import (
 	"encoding/hex"
 	"math/big"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -29,11 +30,11 @@ func TestControlsRequireFixedLogicalDenomAndBounds(t *testing.T) {
 	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
 
 	controls = validControls()
-	controls.MaxTransferAmount = dtypes.SerializableInt{}
+	controls.MigrationCeiling = dtypes.SerializableInt{}
 	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
 
 	controls = validControls()
-	controls.MigrationCeiling = dtypes.NewInt(999)
+	controls.MigrationCeiling = dtypes.NewInt(0)
 	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
 
 	require.NoError(t, validControls().Validate())
@@ -74,7 +75,7 @@ func TestControlsSameRoute(t *testing.T) {
 	require.True(t, base.SameRoute(base))
 
 	limitsOnly := base
-	limitsOnly.MaxTransferAmount = dtypes.NewInt(1)
+	limitsOnly.MigrationCeiling = dtypes.NewInt(1)
 	limitsOnly.NobleWithdrawalsEnabled = false
 	limitsOnly.Mode = types.Mode_MODE_PAUSED
 	require.True(t, base.SameRoute(limitsOnly))
@@ -133,12 +134,35 @@ func validControls() types.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          injectiveDenom,
 		NobleWithdrawalsEnabled: true,
-		MaxTransferAmount:       dtypes.NewInt(1000),
 		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",
 		InjectiveClient:         "07-tendermint-1",
 		InjectiveConnection:     "connection-1",
+	}
+}
+
+func TestPendingSettlementRequiresCanonicalSender(t *testing.T) {
+	sender := sdk.AccAddress("pending-sender").String()
+	pending := types.PendingSettlement{
+		Route:         types.Route_ROUTE_NOBLE,
+		SourceChannel: "channel-0",
+		Sequence:      1,
+		Sender:        sender,
+		Amount:        dtypes.NewInt(1),
+	}
+	require.NoError(t, pending.Validate())
+
+	for name, invalid := range map[string]string{
+		"uppercase": strings.ToUpper(sender),
+		"malformed": "sender",
+		"empty":     "",
+	} {
+		t.Run(name, func(t *testing.T) {
+			changed := pending
+			changed.Sender = invalid
+			require.Error(t, changed.Validate())
+		})
 	}
 }

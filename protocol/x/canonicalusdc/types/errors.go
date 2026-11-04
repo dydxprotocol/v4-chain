@@ -20,4 +20,5 @@ var (
 	ErrNobleBackingRemains       = errorsmod.Register(ModuleName, 17, "noble withdrawals required while Noble backing remains")
 	ErrModuleAccount             = errorsmod.Register(ModuleName, 18, "canonical USDC module account cannot be established")
 	ErrInjectiveDepositsDisabled = errorsmod.Register(ModuleName, 19, "Injective USDC deposits are disabled")
+	ErrInvalidReceiver           = errorsmod.Register(ModuleName, 20, "invalid canonical USDC receiver")
 )

@@ -223,7 +223,6 @@ const GenesisState = `{
         "injective_denom": "",
         "injective_deposits_disabled": false,
         "noble_withdrawals_enabled": false,
-        "max_transfer_amount": "0",
         "migration_ceiling": "0",
         "max_pending_settlements": 0,
         "noble_packet_denom": "",

@@ -15,10 +15,9 @@ import (
 
 func DefaultControls() Controls {
 	return Controls{
-		Mode:              Mode_MODE_DISABLED,
-		LogicalDenom:      assettypes.UusdcDenom,
-		MaxTransferAmount: dtypes.ZeroInt(),
-		MigrationCeiling:  dtypes.ZeroInt(),
+		Mode:             Mode_MODE_DISABLED,
+		LogicalDenom:     assettypes.UusdcDenom,
+		MigrationCeiling: dtypes.ZeroInt(),
 	}
 }
 
@@ -152,12 +151,7 @@ func (controls Controls) validateRoutes() error {
 }
 
 func (controls Controls) validateLimits() error {
-	maxTransfer, err := PositiveAmountOf(controls.MaxTransferAmount)
-	if err != nil {
-		return fmt.Errorf("%w: max transfer amount", ErrInvalidControls)
-	}
-	ceiling, err := PositiveAmountOf(controls.MigrationCeiling)
-	if err != nil || ceiling.LT(maxTransfer) {
+	if _, err := PositiveAmountOf(controls.MigrationCeiling); err != nil {
 		return fmt.Errorf("%w: migration ceiling", ErrInvalidControls)
 	}
 	if controls.MaxPendingSettlements == 0 || controls.MaxPendingSettlements > HardMaxPending {
@@ -209,6 +203,13 @@ func (pending PendingSettlement) Validate() error {
 	if pending.Sequence == 0 {
 		return fmt.Errorf("pending sequence must be positive")
 	}
-	_, err := PositiveAmountOf(pending.Amount)
+	sender, err := sdk.AccAddressFromBech32(pending.Sender)
+	if err != nil {
+		return fmt.Errorf("invalid pending sender: %w", err)
+	}
+	if sender.String() != pending.Sender {
+		return fmt.Errorf("pending sender %q is not in canonical form", pending.Sender)
+	}
+	_, err = PositiveAmountOf(pending.Amount)
 	return err
 }

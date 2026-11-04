@@ -285,7 +285,6 @@ func receiveControls() types.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          physical,
 		NobleWithdrawalsEnabled: true,
-		MaxTransferAmount:       dtypes.NewInt(1000),
 		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
@@ -371,21 +370,6 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			destChannel:   receiveControls().NobleChannel,
 			sequence:      1,
 			wantErr:       types.ErrNobleDepositsDisabled,
-		},
-		{
-			name: "injective transfer limit",
-			prepControls: func(controls types.Controls) types.Controls {
-				controls.MaxTransferAmount = dtypes.NewInt(24)
-				return controls
-			},
-			denom:         "uusdc",
-			amount:        "25",
-			sender:        "injective-sender",
-			sourceChannel: "channel-99",
-			destChannel:   receiveControls().InjectiveChannel,
-			sequence:      2,
-			injectivePhys: true,
-			wantErr:       types.ErrInvalidAmount,
 		},
 		{
 			name: "migration ceiling",
@@ -676,5 +660,33 @@ func outboundPacket(pending types.PendingSettlement, trace, sender string) chann
 	return channeltypes.Packet{
 		Sequence: pending.Sequence, SourcePort: transfertypes.PortID,
 		SourceChannel: pending.SourceChannel, Data: data.GetBytes(),
+	}
+}
+
+func TestInboundInjectiveDepositCeilingRoom(t *testing.T) {
+	for _, tc := range []struct {
+		amount   string
+		accepted bool
+	}{{"10000", true}, {"10001", false}} {
+		t.Run(tc.amount, func(t *testing.T) {
+			ctx, k, bank := setupReceiveKeeper(t)
+			controls := receiveControls()
+			require.NoError(t, k.SetControls(ctx, controls))
+			require.NoError(t, k.SetLedger(ctx, types.DefaultLedger()))
+			receiver := sdk.AccAddress("logical-receiver")
+			data := transfertypes.FungibleTokenPacketData{Denom: "uusdc", Amount: tc.amount, Sender: "injective-sender", Receiver: receiver.String()}
+			packet := channeltypes.Packet{Sequence: 1, SourcePort: transfertypes.PortID, SourceChannel: "channel-99", DestinationPort: transfertypes.PortID, DestinationChannel: controls.InjectiveChannel, Data: data.GetBytes()}
+			app := &receiveApp{bank: bank, physicalDenom: controls.InjectiveDenom}
+			ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
+			require.Equal(t, tc.accepted, ack.Success())
+			if tc.accepted {
+				require.Equal(t, tc.amount, bank.amount(receiver, controls.LogicalDenom).String())
+				require.Equal(t, tc.amount, k.GetLedger(ctx).InjectiveBacking.String())
+			} else {
+				require.Zero(t, app.calls)
+				require.True(t, bank.amount(receiver, controls.LogicalDenom).IsZero())
+				require.Equal(t, "0", k.GetLedger(ctx).InjectiveBacking.String())
+			}
+		})
 	}
 }

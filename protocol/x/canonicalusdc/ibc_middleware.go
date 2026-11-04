@@ -136,13 +136,14 @@ func (im IBCMiddleware) receiveInjective(
 	if !ok || !amount.IsPositive() {
 		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
 	}
-	maxTransfer, err := types.PositiveAmountOf(controls.MaxTransferAmount)
-	if err != nil || amount.GT(maxTransfer) {
-		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
-	}
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
+	}
+	// The module holds the reserve and locked liabilities, so it cannot be a
+	// deposit owner; the error ack refunds the sender on the source chain.
+	if receiver.Equals(types.ModuleAddress) {
+		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidReceiver)
 	}
 	if err := im.keeper.CreditInjectiveInbound(ctx, controls, amount); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)

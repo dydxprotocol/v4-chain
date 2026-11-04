@@ -527,7 +527,6 @@ func TestPropInjectiveCreditOverflowIsAnErrorAck(t *testing.T) {
 	p := propSetup(t)
 	maxInt := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), math.MaxBitLen), big.NewInt(1))
 	controls := p.r.keeper.GetControls(p.r.ctx)
-	controls.MaxTransferAmount = dtypes.NewIntFromBigInt(maxInt)
 	controls.MigrationCeiling = dtypes.NewIntFromBigInt(maxInt)
 	require.NoError(t, p.r.keeper.SetControls(p.r.ctx, controls))
 	ledger := p.r.keeper.GetLedger(p.r.ctx)
