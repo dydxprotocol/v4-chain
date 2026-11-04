@@ -320,7 +320,7 @@ func TestUpdateControlsPauseThenResumeResnapshotsDrift(t *testing.T) {
 
 	// Updates that stay in GRADUAL do not re-check the supply equation.
 	limits := activeControls()
-	limits.MaxTransferAmount = dtypes.NewInt(500)
+	limits.MigrationCeiling = dtypes.NewInt(500)
 	require.NoError(t, updateControls(t, ctx, k, limits))
 
 	require.NoError(t, updateControls(t, ctx, k, withMode(canonicaltypes.Mode_MODE_PAUSED)))

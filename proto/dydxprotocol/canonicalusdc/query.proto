@@ -25,7 +25,8 @@ service Query {
   rpc PendingSettlement(QueryPendingSettlementRequest)
       returns (QueryPendingSettlementResponse) {
     option (google.api.http).get =
-        "/dydxprotocol/v4/canonicalusdc/pending_settlements/{source_channel}/{sequence}";
+        "/dydxprotocol/v4/canonicalusdc/pending_settlements/{source_channel}/"
+        "{sequence}";
   }
 }
 

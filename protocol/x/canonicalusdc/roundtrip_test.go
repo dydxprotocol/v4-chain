@@ -204,11 +204,17 @@ func setupRoundTrip(t *testing.T, ledger types.Ledger) roundTrip {
 
 func (r roundTrip) send(t *testing.T, channel string, amount int64) channeltypes.Packet {
 	t.Helper()
+	return r.sendAs(t, channel, amount, r.holder.String())
+}
+
+// sendAs sends from the holder using the given Bech32 encoding of its address.
+func (r roundTrip) sendAs(t *testing.T, channel string, amount int64, sender string) channeltypes.Packet {
+	t.Helper()
 	_, err := keeper.NewTransferDecorator(r.keeper).Transfer(r.ctx, &transfertypes.MsgTransfer{
 		SourcePort:       transfertypes.PortID,
 		SourceChannel:    channel,
 		Token:            sdk.NewInt64Coin(r.controls.LogicalDenom, amount),
-		Sender:           r.holder.String(),
+		Sender:           sender,
 		Receiver:         "remote1receiver",
 		TimeoutTimestamp: 1,
 	})
@@ -221,6 +227,15 @@ func (r roundTrip) requireInvariant(t *testing.T) {
 	t.Helper()
 	reason, broken := keeper.BackingInvariant(*r.keeper)(r.ctx)
 	require.False(t, broken, reason)
+}
+
+// senderEncodings are the Bech32 spellings of one address that decode to the
+// same bytes: Bech32 accepts all-lowercase and all-uppercase strings.
+func senderEncodings(address sdk.AccAddress) map[string]string {
+	return map[string]string{
+		"lowercase sender": address.String(),
+		"uppercase sender": strings.ToUpper(address.String()),
+	}
 }
 
 func errorAck() []byte {
@@ -264,28 +279,34 @@ func TestRoundTripNobleWithdrawal(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			ledger := types.DefaultLedger()
-			ledger.NobleBacking = dtypes.NewInt(10)
-			r := setupRoundTrip(t, ledger)
-			r.bank.set(r.holder, r.controls.LogicalDenom, math.NewInt(10))
-			r.requireInvariant(t)
+		for encoding, sender := range senderEncodings(sdk.AccAddress("holder")) {
+			t.Run(tc.name+"/"+encoding, func(t *testing.T) {
+				ledger := types.DefaultLedger()
+				ledger.NobleBacking = dtypes.NewInt(10)
+				r := setupRoundTrip(t, ledger)
+				r.bank.set(r.holder, r.controls.LogicalDenom, math.NewInt(10))
+				r.requireInvariant(t)
 
-			packet := r.send(t, r.controls.NobleChannel, 4)
-			var data transfertypes.FungibleTokenPacketData
-			require.NoError(t, transfertypes.ModuleCdc.UnmarshalJSON(packet.Data, &data))
-			require.Equal(t, r.controls.NobleTrace(), data.Denom)
-			require.Equal(t, "6", r.bank.amount(r.holder, r.controls.LogicalDenom).String())
-			require.Equal(t, "4", r.keeper.GetLedger(r.ctx).PendingNoble.String())
-			r.requireInvariant(t)
+				packet := r.sendAs(t, r.controls.NobleChannel, 4, sender)
+				var data transfertypes.FungibleTokenPacketData
+				require.NoError(t, transfertypes.ModuleCdc.UnmarshalJSON(packet.Data, &data))
+				require.Equal(t, r.controls.NobleTrace(), data.Denom)
+				require.Equal(t, r.holder.String(), data.Sender)
+				pending, found := r.keeper.GetPendingForPacket(r.ctx, packet.SourceChannel, packet.Sequence)
+				require.True(t, found)
+				require.Equal(t, r.holder.String(), pending.Sender)
+				require.Equal(t, "6", r.bank.amount(r.holder, r.controls.LogicalDenom).String())
+				require.Equal(t, "4", r.keeper.GetLedger(r.ctx).PendingNoble.String())
+				r.requireInvariant(t)
 
-			require.NoError(t, tc.settle(r, packet))
-			require.Zero(t, r.keeper.PendingCount(r.ctx))
-			require.Equal(t, tc.wantNoble, r.keeper.GetLedger(r.ctx).NobleBacking.String())
-			require.Equal(t, "0", r.keeper.GetLedger(r.ctx).PendingNoble.String())
-			require.Equal(t, tc.wantUser, r.bank.amount(r.holder, r.controls.LogicalDenom).String())
-			r.requireInvariant(t)
-		})
+				require.NoError(t, tc.settle(r, packet))
+				require.Zero(t, r.keeper.PendingCount(r.ctx))
+				require.Equal(t, tc.wantNoble, r.keeper.GetLedger(r.ctx).NobleBacking.String())
+				require.Equal(t, "0", r.keeper.GetLedger(r.ctx).PendingNoble.String())
+				require.Equal(t, tc.wantUser, r.bank.amount(r.holder, r.controls.LogicalDenom).String())
+				r.requireInvariant(t)
+			})
+		}
 	}
 }
 
@@ -325,32 +346,37 @@ func TestRoundTripInjectiveWithdrawal(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			ledger := types.DefaultLedger()
-			ledger.InjectiveBacking = dtypes.NewInt(10)
-			r := setupRoundTrip(t, ledger)
-			r.bank.set(r.holder, r.controls.LogicalDenom, math.NewInt(10))
-			r.bank.set(types.ModuleAddress, r.controls.InjectiveDenom, math.NewInt(10))
-			r.requireInvariant(t)
+		for encoding, sender := range senderEncodings(sdk.AccAddress("holder")) {
+			t.Run(tc.name+"/"+encoding, func(t *testing.T) {
+				ledger := types.DefaultLedger()
+				ledger.InjectiveBacking = dtypes.NewInt(10)
+				r := setupRoundTrip(t, ledger)
+				r.bank.set(r.holder, r.controls.LogicalDenom, math.NewInt(10))
+				r.bank.set(types.ModuleAddress, r.controls.InjectiveDenom, math.NewInt(10))
+				r.requireInvariant(t)
 
-			packet := r.send(t, r.controls.InjectiveChannel, 4)
-			var data transfertypes.FungibleTokenPacketData
-			require.NoError(t, transfertypes.ModuleCdc.UnmarshalJSON(packet.Data, &data))
-			require.Equal(t, r.controls.InjectiveTrace(), data.Denom)
-			require.Equal(t, types.ModuleAddress.String(), data.Sender)
-			require.Equal(t, "4", r.bank.amount(types.ModuleAddress, r.controls.LogicalDenom).String())
-			require.Equal(t, "6", r.bank.amount(types.ModuleAddress, r.controls.InjectiveDenom).String())
-			r.requireInvariant(t)
+				packet := r.sendAs(t, r.controls.InjectiveChannel, 4, sender)
+				var data transfertypes.FungibleTokenPacketData
+				require.NoError(t, transfertypes.ModuleCdc.UnmarshalJSON(packet.Data, &data))
+				require.Equal(t, r.controls.InjectiveTrace(), data.Denom)
+				require.Equal(t, types.ModuleAddress.String(), data.Sender)
+				pending, found := r.keeper.GetPendingForPacket(r.ctx, packet.SourceChannel, packet.Sequence)
+				require.True(t, found)
+				require.Equal(t, r.holder.String(), pending.Sender)
+				require.Equal(t, "4", r.bank.amount(types.ModuleAddress, r.controls.LogicalDenom).String())
+				require.Equal(t, "6", r.bank.amount(types.ModuleAddress, r.controls.InjectiveDenom).String())
+				r.requireInvariant(t)
 
-			require.NoError(t, tc.settle(r, packet))
-			require.Zero(t, r.keeper.PendingCount(r.ctx))
-			require.Equal(t, tc.wantInjective, r.keeper.GetLedger(r.ctx).InjectiveBacking.String())
-			require.Equal(t, "0", r.keeper.GetLedger(r.ctx).PendingInjective.String())
-			require.Equal(t, tc.wantUser, r.bank.amount(r.holder, r.controls.LogicalDenom).String())
-			require.Equal(t, "0", r.bank.amount(types.ModuleAddress, r.controls.LogicalDenom).String())
-			require.Equal(t, tc.wantUndone, r.ratelimit.undone)
-			r.requireInvariant(t)
-		})
+				require.NoError(t, tc.settle(r, packet))
+				require.Zero(t, r.keeper.PendingCount(r.ctx))
+				require.Equal(t, tc.wantInjective, r.keeper.GetLedger(r.ctx).InjectiveBacking.String())
+				require.Equal(t, "0", r.keeper.GetLedger(r.ctx).PendingInjective.String())
+				require.Equal(t, tc.wantUser, r.bank.amount(r.holder, r.controls.LogicalDenom).String())
+				require.Equal(t, "0", r.bank.amount(types.ModuleAddress, r.controls.LogicalDenom).String())
+				require.Equal(t, tc.wantUndone, r.ratelimit.undone)
+				r.requireInvariant(t)
+			})
+		}
 	}
 }
 

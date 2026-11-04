@@ -69,13 +69,6 @@ message Controls {
   // Injective. Withdrawals and in-flight settlements are unaffected.
   bool injective_deposits_disabled = 13;
 
-  // max_transfer_amount is the per-packet cap for canonical inbound and
-  // outbound transfers.
-  bytes max_transfer_amount = 14 [
-    (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
-  ];
   // migration_ceiling is the upper bound on injective_backing.
   bytes migration_ceiling = 15 [
     (gogoproto.customtype) =

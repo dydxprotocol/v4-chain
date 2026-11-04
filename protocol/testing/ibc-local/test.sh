@@ -90,9 +90,9 @@ transfer_tx() {
 	tx "$chain" "$from" ibc-transfer transfer transfer "$channel" "$receiver" "$amount" "$@"
 }
 
-# Per-packet cap and Injective backing ceiling for GRADUAL. Kept small enough
-# that the limit scenarios can exceed them with test balances.
-MAX_TRANSFER=1000000000
+# Migration batch size and Injective backing ceiling for GRADUAL. The ceiling
+# is small enough to exceed with test balances.
+BATCH_SIZE=1000000000
 MIGRATION_CEILING=1000000000
 
 # propose_controls MODE EXPECTED [JQ_FILTER]
@@ -109,7 +109,7 @@ propose_controls() {
 		--arg nch "$DYDX_NOBLE_CHANNEL" --arg ncl "$noble_client" --arg nco "$noble_conn" \
 		--arg ich "$DYDX_INJECTIVE_CHANNEL" --arg icl "$inj_client" --arg ico "$inj_conn" \
 		--arg idenom "$INJECTIVE_DENOM" --arg pd "$COUNTERPARTY_USDC" --arg dep "10000000$NATIVE_TOKEN" \
-		--arg max "$MAX_TRANSFER" --arg ceiling "$MIGRATION_CEILING" '{
+		--arg ceiling "$MIGRATION_CEILING" '{
 		messages: [{
 			"@type": "/dydxprotocol.canonicalusdc.MsgUpdateControls",
 			authority: $gov,
@@ -119,7 +119,7 @@ propose_controls() {
 				noble_packet_denom: $pd, noble_withdrawals_enabled: true,
 				injective_channel: $ich, injective_client: $icl, injective_connection: $ico,
 				injective_packet_denom: $pd, injective_denom: $idenom,
-				max_transfer_amount: $max, migration_ceiling: $ceiling,
+				migration_ceiling: $ceiling,
 				max_pending_settlements: 100
 			} | '"$filter"')
 		}],
@@ -464,22 +464,10 @@ expect_injective_deposit_refunded() {
 }
 
 scenario_gradual_limits() {
-	log "GRADUAL: per-transfer cap and migration ceiling"
-	local over out backing room
-	over=$(bc_calc "$MAX_TRANSFER + 1")
-	for channel in "$DYDX_INJECTIVE_CHANNEL" "$DYDX_NOBLE_CHANNEL"; do
-		out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$channel" "$INJECTIVE_USER" \
-			"$over$USDC_DENOM")
-		assert_contains "outbound over cap on $channel" "$out" "invalid canonical USDC amount"
-	done
-	pass "outbound logical transfers above max_transfer_amount rejected"
-
-	expect_injective_deposit_refunded "$over"
-	pass "inbound Injective deposit above max_transfer_amount refunded"
-
+	log "GRADUAL: migration ceiling"
+	local backing room
 	backing=$(ledger_field injective_backing)
 	room=$(bc_calc "$MIGRATION_CEILING - $backing")
-	[ "$(bc_calc "$room + 1 <= $MAX_TRANSFER")" = 1 ] || die "ceiling room $room not testable under cap"
 	expect_injective_deposit_refunded "$(bc_calc "$room + 1")"
 	pass "inbound Injective deposit past migration_ceiling refunded"
 }
@@ -651,7 +639,7 @@ scenario_migration_finalize() {
 		noble=$(ledger_field noble_backing)
 		[ "$noble" = "0" ] && break
 		batch=$noble
-		[ "$(bc_calc "$batch > $MAX_TRANSFER")" = 1 ] && batch=$MAX_TRANSFER
+		[ "$(bc_calc "$batch > $BATCH_SIZE")" = 1 ] && batch=$BATCH_SIZE
 		log "  batch $i: $batch (noble_backing $noble)"
 		migration_batch "$batch"
 	done

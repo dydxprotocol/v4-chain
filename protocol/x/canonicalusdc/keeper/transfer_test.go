@@ -317,7 +317,6 @@ func activeControls() canonicaltypes.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          physicalDenom,
 		NobleWithdrawalsEnabled: true,
-		MaxTransferAmount:       dtypes.NewInt(1000),
 		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
@@ -485,11 +484,6 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 			name: "unsupported channel",
 			msg:  uusdc(transfertypes.PortID, "channel-9", "remote", 10),
 			err:  canonicaltypes.ErrUnsupportedChannel,
-		},
-		{
-			name: "invalid amount",
-			msg:  uusdc(transfertypes.PortID, injChannel, "inj1receiver", 1001),
-			err:  canonicaltypes.ErrInvalidAmount,
 		},
 		{
 			name: "wrong port",
@@ -957,7 +951,6 @@ func TestInjectiveRefundIgnoresLoweredMigrationCeiling(t *testing.T) {
 
 	lowered := activeControls()
 	lowered.MigrationCeiling = dtypes.NewInt(500)
-	lowered.MaxTransferAmount = dtypes.NewInt(10)
 	require.NoError(t, k.SetControls(ctx, lowered))
 	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(1000))
 	pending, found := k.GetPendingForPacket(ctx, injChannel, response.Sequence)
