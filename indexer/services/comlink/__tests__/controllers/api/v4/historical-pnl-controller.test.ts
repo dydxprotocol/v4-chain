@@ -67,6 +67,32 @@ describe('pnlTicks-controller#V4', () => {
       );
     });
 
+    it('Get /historical-pnl returns the newest ticks by createdAt', async () => {
+      await testMocks.seedData();
+      // Older createdAt but higher blockHeight, so a blockHeight sort would return this tick first.
+      const olderTick: PnlTicksCreateObject = {
+        ...testConstants.defaultPnlTick,
+        createdAt: '2000-05-25T00:00:00.000Z',
+        blockHeight: '999',
+      };
+      await Promise.all([
+        PnlTicksTable.create(testConstants.defaultPnlTick),
+        PnlTicksTable.create(olderTick),
+      ]);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/historical-pnl?address=${testConstants.defaultAddress}` +
+          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&limit=1`,
+      });
+
+      expect(response.body.historicalPnl).toEqual([
+        expect.objectContaining(
+          pnlTickCreateObjectToResponseObject(testConstants.defaultPnlTick),
+        ),
+      ]);
+    });
+
     it('Get /historical-pnl respects pagination', async () => {
       await testMocks.seedData();
       const createdAt: string = '2000-05-25T00:00:00.000Z';
