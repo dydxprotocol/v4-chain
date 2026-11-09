@@ -30,11 +30,7 @@ func TestControlsRequireFixedLogicalDenomAndBounds(t *testing.T) {
 	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
 
 	controls = validControls()
-	controls.MigrationCeiling = dtypes.SerializableInt{}
-	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
-
-	controls = validControls()
-	controls.MigrationCeiling = dtypes.NewInt(0)
+	controls.MaxPendingSettlements = 0
 	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
 
 	require.NoError(t, validControls().Validate())
@@ -75,7 +71,7 @@ func TestControlsSameRoute(t *testing.T) {
 	require.True(t, base.SameRoute(base))
 
 	limitsOnly := base
-	limitsOnly.MigrationCeiling = dtypes.NewInt(1)
+	limitsOnly.MaxPendingSettlements = 1
 	limitsOnly.NobleWithdrawalsEnabled = false
 	limitsOnly.Mode = types.Mode_MODE_PAUSED
 	require.True(t, base.SameRoute(limitsOnly))
@@ -134,7 +130,6 @@ func validControls() types.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          injectiveDenom,
 		NobleWithdrawalsEnabled: true,
-		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",

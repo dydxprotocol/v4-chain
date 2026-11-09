@@ -180,23 +180,17 @@ func (k Keeper) SetLedger(ctx sdk.Context, ledger types.Ledger) error {
 }
 
 // CreditInjectiveInbound records Injective-origin USDC received by the module.
-// The resulting injective backing must not exceed the migration ceiling.
-func (k Keeper) CreditInjectiveInbound(ctx sdk.Context, controls types.Controls, amount math.Int) error {
-	ceiling, err := types.PositiveAmountOf(controls.MigrationCeiling)
-	if err != nil {
-		return err
-	}
+func (k Keeper) CreditInjectiveInbound(ctx sdk.Context, amount math.Int) error {
 	ledger := k.GetLedger(ctx)
 	current, err := types.AmountOf(ledger.InjectiveBacking)
 	if err != nil {
 		return err
 	}
-	// Compare against the remaining room so an amount near the Int bound cannot
-	// overflow the addition.
-	if amount.GT(ceiling.Sub(current)) {
-		return types.ErrMigrationCeiling
+	next, err := current.SafeAdd(amount)
+	if err != nil {
+		return types.ErrInvalidAmount
 	}
-	ledger.InjectiveBacking = types.NewAmount(current.Add(amount))
+	ledger.InjectiveBacking = types.NewAmount(next)
 	return k.SetLedger(ctx, ledger)
 }
 

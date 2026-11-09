@@ -14,7 +14,6 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibccoretypes "github.com/cosmos/ibc-go/v8/modules/core/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -37,7 +36,6 @@ const (
 	advInjectiveCounterparty = "channel-200"
 	advThirdChannel          = "channel-2"
 	advThirdCounterparty     = "channel-300"
-	advCeiling               = 3_000_000
 )
 
 var (
@@ -60,7 +58,6 @@ func advControls(mode canonicalusdctypes.Mode) canonicalusdctypes.Controls {
 		InjectiveConnection:     "connection-1",
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          advInjectiveDenom,
-		MigrationCeiling:        dtypes.NewInt(advCeiling),
 		MaxPendingSettlements:   100,
 	}
 }
@@ -255,17 +252,16 @@ func TestAdvMalformedInjectivePacketsLeaveNoState(t *testing.T) {
 		amount   string
 		receiver string
 	}{
-		"zero amount":            {amount: "0", receiver: advReceiver.String()},
-		"negative amount":        {amount: "-5", receiver: advReceiver.String()},
-		"non-numeric amount":     {amount: "abc", receiver: advReceiver.String()},
-		"257-bit amount":         {amount: "231584178474632390847141970017375815706539969331281128078915168015826259279872", receiver: advReceiver.String()},
-		"over migration ceiling": {amount: "3000001", receiver: advReceiver.String()},
-		"invalid receiver":       {amount: "10", receiver: "not-bech32"},
-		"wrong hrp receiver":     {amount: "10", receiver: "cosmos1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn5cyl7e"},
-		"blocked receiver":       {amount: "10", receiver: authtypes.NewModuleAddress(authtypes.FeeCollectorName).String()},
-		"transfer escrow mod":    {amount: "10", receiver: authtypes.NewModuleAddress(transfertypes.ModuleName).String()},
-		"empty receiver":         {amount: "10", receiver: ""},
-		"leading space amount":   {amount: " 10", receiver: advReceiver.String()},
+		"zero amount":          {amount: "0", receiver: advReceiver.String()},
+		"negative amount":      {amount: "-5", receiver: advReceiver.String()},
+		"non-numeric amount":   {amount: "abc", receiver: advReceiver.String()},
+		"257-bit amount":       {amount: "231584178474632390847141970017375815706539969331281128078915168015826259279872", receiver: advReceiver.String()},
+		"invalid receiver":     {amount: "10", receiver: "not-bech32"},
+		"wrong hrp receiver":   {amount: "10", receiver: "cosmos1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn5cyl7e"},
+		"blocked receiver":     {amount: "10", receiver: authtypes.NewModuleAddress(authtypes.FeeCollectorName).String()},
+		"transfer escrow mod":  {amount: "10", receiver: authtypes.NewModuleAddress(transfertypes.ModuleName).String()},
+		"empty receiver":       {amount: "10", receiver: ""},
+		"leading space amount": {amount: " 10", receiver: advReceiver.String()},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -279,7 +275,10 @@ func TestAdvMalformedInjectivePacketsLeaveNoState(t *testing.T) {
 	}
 }
 
-func TestAdvMigrationCeilingRollsBackEverything(t *testing.T) {
+// TestAdvFailedDepositAfterCreditRollsBackEverything: a blocked receiver fails
+// the logical mint after the ledger credit and the physical receive, so the
+// error ack must roll back both on top of existing backing.
+func TestAdvFailedDepositAfterCreditRollsBackEverything(t *testing.T) {
 	env := advSetup(t, canonicalusdctypes.Mode_MODE_GRADUAL)
 	for i := 0; i < 3; i++ {
 		require.True(t, env.recv(env.packet("channel-1", "uusdc", "1000000", advReceiver.String(), "")).Success())
@@ -288,7 +287,8 @@ func TestAdvMigrationCeilingRollsBackEverything(t *testing.T) {
 	before := env.snapshot(advReceiver)
 	require.Equal(t, "3000000", before.Ledger.InjectiveBacking.String())
 
-	ack := env.recvRaw(env.packet("channel-1", "uusdc", "1", advReceiver.String(), ""))
+	blocked := authtypes.NewModuleAddress(authtypes.FeeCollectorName).String()
+	ack := env.recvRaw(env.packet("channel-1", "uusdc", "1", blocked, ""))
 	requireErrorAck(t, ack)
 	require.Equal(t, before, env.snapshot(advReceiver))
 	env.requireBacking()

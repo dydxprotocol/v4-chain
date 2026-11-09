@@ -317,7 +317,6 @@ func activeControls() canonicaltypes.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          physicalDenom,
 		NobleWithdrawalsEnabled: true,
-		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",
@@ -930,31 +929,4 @@ func TestSettlementIgnoresSupplyDrift(t *testing.T) {
 	require.NoError(t, k.Settle(ctx, pending, true, canonicaltypes.AttributeValueSuccess))
 	require.Zero(t, k.PendingCount(ctx))
 	require.Equal(t, "0", k.GetLedger(ctx).PendingNoble.String())
-}
-
-func TestInjectiveRefundIgnoresLoweredMigrationCeiling(t *testing.T) {
-	ctx, k, bank, _, _ := setupKeeper(t)
-	require.NoError(t, k.SetControls(ctx, activeControls()))
-	ledger := canonicaltypes.DefaultLedger()
-	ledger.InjectiveBacking = dtypes.NewInt(1000)
-	require.NoError(t, k.SetLedger(ctx, ledger))
-	sender := sdk.AccAddress("injective-sender")
-	bank.set(sender, types.UusdcDenom, math.NewInt(1000))
-	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(1000))
-	msg := &transfertypes.MsgTransfer{
-		SourcePort: transfertypes.PortID, SourceChannel: injChannel,
-		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
-		Receiver: "inj1receiver", TimeoutTimestamp: 1,
-	}
-	response, err := NewTransferDecorator(k).Transfer(ctx, msg)
-	require.NoError(t, err)
-
-	lowered := activeControls()
-	lowered.MigrationCeiling = dtypes.NewInt(500)
-	require.NoError(t, k.SetControls(ctx, lowered))
-	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(1000))
-	pending, found := k.GetPendingForPacket(ctx, injChannel, response.Sequence)
-	require.True(t, found)
-	require.NoError(t, k.Settle(ctx, pending, false, canonicaltypes.AttributeValueTimeout))
-	require.Equal(t, "1000", k.GetLedger(ctx).InjectiveBacking.String())
 }

@@ -15,9 +15,8 @@ import (
 
 func DefaultControls() Controls {
 	return Controls{
-		Mode:             Mode_MODE_DISABLED,
-		LogicalDenom:     assettypes.UusdcDenom,
-		MigrationCeiling: dtypes.ZeroInt(),
+		Mode:         Mode_MODE_DISABLED,
+		LogicalDenom: assettypes.UusdcDenom,
 	}
 }
 
@@ -151,9 +150,6 @@ func (controls Controls) validateRoutes() error {
 }
 
 func (controls Controls) validateLimits() error {
-	if _, err := PositiveAmountOf(controls.MigrationCeiling); err != nil {
-		return fmt.Errorf("%w: migration ceiling", ErrInvalidControls)
-	}
 	if controls.MaxPendingSettlements == 0 || controls.MaxPendingSettlements > HardMaxPending {
 		return fmt.Errorf("%w: max pending settlements", ErrInvalidControls)
 	}

@@ -14,7 +14,6 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibccoretypes "github.com/cosmos/ibc-go/v8/modules/core/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -109,7 +108,6 @@ func gradualControls() canonicalusdctypes.Controls {
 		InjectiveConnection:     "connection-1",
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          transfertypes.ParseDenomTrace("transfer/channel-1/uusdc").IBCDenom(),
-		MigrationCeiling:        dtypes.NewInt(10_000_000),
 		MaxPendingSettlements:   100,
 	}
 }

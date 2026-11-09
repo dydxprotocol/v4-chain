@@ -145,7 +145,7 @@ func (im IBCMiddleware) receiveInjective(
 	if receiver.Equals(types.ModuleAddress) {
 		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidReceiver)
 	}
-	if err := im.keeper.CreditInjectiveInbound(ctx, controls, amount); err != nil {
+	if err := im.keeper.CreditInjectiveInbound(ctx, amount); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 

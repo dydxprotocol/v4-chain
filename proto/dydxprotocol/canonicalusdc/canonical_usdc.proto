@@ -69,15 +69,9 @@ message Controls {
   // Injective. Withdrawals and in-flight settlements are unaffected.
   bool injective_deposits_disabled = 13;
 
-  // migration_ceiling is the upper bound on injective_backing.
-  bytes migration_ceiling = 15 [
-    (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
-  ];
   // max_pending_settlements is the cap on concurrent in-flight canonical
   // settlements.
-  uint32 max_pending_settlements = 16;
+  uint32 max_pending_settlements = 14;
 }
 
 // Ledger accounts for backing and in-flight settlement without changing the
