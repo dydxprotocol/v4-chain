@@ -15,7 +15,6 @@ var (
 	ErrSettlementNotFound        = errorsmod.Register(ModuleName, 11, "pending settlement not found")
 	ErrDuplicateSettlement       = errorsmod.Register(ModuleName, 12, "pending settlement already exists")
 	ErrNobleDepositsDisabled     = errorsmod.Register(ModuleName, 13, "new Noble USDC deposits are disabled")
-	ErrMigrationCeiling          = errorsmod.Register(ModuleName, 15, "migration ceiling exceeded")
 	ErrBypass                    = errorsmod.Register(ModuleName, 16, "canonical USDC transfer bypass rejected")
 	ErrNobleBackingRemains       = errorsmod.Register(ModuleName, 17, "noble withdrawals required while Noble backing remains")
 	ErrModuleAccount             = errorsmod.Register(ModuleName, 18, "canonical USDC module account cannot be established")

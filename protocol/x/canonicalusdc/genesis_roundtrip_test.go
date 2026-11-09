@@ -96,7 +96,6 @@ func genControls(mode types.Mode) types.Controls {
 		InjectiveConnection:     "connection-1",
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          transfertypes.ParseDenomTrace("transfer/channel-1/uusdc").IBCDenom(),
-		MigrationCeiling:        dtypes.NewInt(10_000_000),
 		MaxPendingSettlements:   10,
 	}
 }

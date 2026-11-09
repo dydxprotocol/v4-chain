@@ -520,15 +520,13 @@ func TestPropMaxPendingCannotDropBelowLiveCount(t *testing.T) {
 	require.NoError(t, ExportGenesis(p.r.ctx, *p.r.keeper).Validate(), "exported genesis must stay valid")
 }
 
-// TestPropInjectiveCreditOverflowIsAnErrorAck: with 256-bit governance limits,
-// crediting backing overflows math.Int. The middleware should return an error
-// ack instead of panicking inside OnRecvPacket.
+// TestPropInjectiveCreditOverflowIsAnErrorAck: crediting backing near the
+// 256-bit bound overflows math.Int. The middleware should return an error ack
+// instead of panicking inside OnRecvPacket.
 func TestPropInjectiveCreditOverflowIsAnErrorAck(t *testing.T) {
 	p := propSetup(t)
 	maxInt := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), math.MaxBitLen), big.NewInt(1))
 	controls := p.r.keeper.GetControls(p.r.ctx)
-	controls.MigrationCeiling = dtypes.NewIntFromBigInt(maxInt)
-	require.NoError(t, p.r.keeper.SetControls(p.r.ctx, controls))
 	ledger := p.r.keeper.GetLedger(p.r.ctx)
 	ledger.InjectiveBacking = dtypes.NewIntFromBigInt(new(big.Int).Sub(maxInt, big.NewInt(1)))
 	require.NoError(t, p.r.keeper.SetLedger(p.r.ctx, ledger))

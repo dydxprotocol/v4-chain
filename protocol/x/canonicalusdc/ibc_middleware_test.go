@@ -285,7 +285,6 @@ func receiveControls() types.Controls {
 		InjectivePacketDenom:    "uusdc",
 		InjectiveDenom:          physical,
 		NobleWithdrawalsEnabled: true,
-		MigrationCeiling:        dtypes.NewInt(10000),
 		MaxPendingSettlements:   10,
 		NobleClient:             "07-tendermint-0",
 		NobleConnection:         "connection-0",
@@ -351,7 +350,6 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 	cases := []struct {
 		name          string
 		prepControls  func(types.Controls) types.Controls
-		prepLedger    func(types.Ledger) types.Ledger
 		denom         string
 		amount        string
 		sender        string
@@ -370,21 +368,6 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			destChannel:   receiveControls().NobleChannel,
 			sequence:      1,
 			wantErr:       types.ErrNobleDepositsDisabled,
-		},
-		{
-			name: "migration ceiling",
-			prepLedger: func(ledger types.Ledger) types.Ledger {
-				ledger.InjectiveBacking = dtypes.NewInt(9990)
-				return ledger
-			},
-			denom:         "uusdc",
-			amount:        "25",
-			sender:        "injective-sender",
-			sourceChannel: "channel-99",
-			destChannel:   receiveControls().InjectiveChannel,
-			sequence:      3,
-			injectivePhys: true,
-			wantErr:       types.ErrMigrationCeiling,
 		},
 		{
 			name: "paused injective deposit",
@@ -426,9 +409,6 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			}
 			require.NoError(t, k.SetControls(ctx, controls))
 			ledger := types.DefaultLedger()
-			if tc.prepLedger != nil {
-				ledger = tc.prepLedger(ledger)
-			}
 			require.NoError(t, k.SetLedger(ctx, ledger))
 			receiver := sdk.AccAddress("receiver")
 			data := transfertypes.FungibleTokenPacketData{
@@ -660,33 +640,5 @@ func outboundPacket(pending types.PendingSettlement, trace, sender string) chann
 	return channeltypes.Packet{
 		Sequence: pending.Sequence, SourcePort: transfertypes.PortID,
 		SourceChannel: pending.SourceChannel, Data: data.GetBytes(),
-	}
-}
-
-func TestInboundInjectiveDepositCeilingRoom(t *testing.T) {
-	for _, tc := range []struct {
-		amount   string
-		accepted bool
-	}{{"10000", true}, {"10001", false}} {
-		t.Run(tc.amount, func(t *testing.T) {
-			ctx, k, bank := setupReceiveKeeper(t)
-			controls := receiveControls()
-			require.NoError(t, k.SetControls(ctx, controls))
-			require.NoError(t, k.SetLedger(ctx, types.DefaultLedger()))
-			receiver := sdk.AccAddress("logical-receiver")
-			data := transfertypes.FungibleTokenPacketData{Denom: "uusdc", Amount: tc.amount, Sender: "injective-sender", Receiver: receiver.String()}
-			packet := channeltypes.Packet{Sequence: 1, SourcePort: transfertypes.PortID, SourceChannel: "channel-99", DestinationPort: transfertypes.PortID, DestinationChannel: controls.InjectiveChannel, Data: data.GetBytes()}
-			app := &receiveApp{bank: bank, physicalDenom: controls.InjectiveDenom}
-			ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
-			require.Equal(t, tc.accepted, ack.Success())
-			if tc.accepted {
-				require.Equal(t, tc.amount, bank.amount(receiver, controls.LogicalDenom).String())
-				require.Equal(t, tc.amount, k.GetLedger(ctx).InjectiveBacking.String())
-			} else {
-				require.Zero(t, app.calls)
-				require.True(t, bank.amount(receiver, controls.LogicalDenom).IsZero())
-				require.Equal(t, "0", k.GetLedger(ctx).InjectiveBacking.String())
-			}
-		})
 	}
 }

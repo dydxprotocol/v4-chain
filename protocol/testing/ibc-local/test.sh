@@ -90,10 +90,8 @@ transfer_tx() {
 	tx "$chain" "$from" ibc-transfer transfer transfer "$channel" "$receiver" "$amount" "$@"
 }
 
-# Migration batch size and Injective backing ceiling for GRADUAL. The ceiling
-# is small enough to exceed with test balances.
+# Migration batch size for draining Noble backing.
 BATCH_SIZE=1000000000
-MIGRATION_CEILING=1000000000
 
 # propose_controls MODE EXPECTED [JQ_FILTER]
 # Submits MsgUpdateControls through governance with the live route bindings,
@@ -108,8 +106,7 @@ propose_controls() {
 	jq -n --arg gov "$GOV_MODULE" --arg mode "$mode" --arg logical "$USDC_DENOM" \
 		--arg nch "$DYDX_NOBLE_CHANNEL" --arg ncl "$noble_client" --arg nco "$noble_conn" \
 		--arg ich "$DYDX_INJECTIVE_CHANNEL" --arg icl "$inj_client" --arg ico "$inj_conn" \
-		--arg idenom "$INJECTIVE_DENOM" --arg pd "$COUNTERPARTY_USDC" --arg dep "10000000$NATIVE_TOKEN" \
-		--arg ceiling "$MIGRATION_CEILING" '{
+		--arg idenom "$INJECTIVE_DENOM" --arg pd "$COUNTERPARTY_USDC" --arg dep "10000000$NATIVE_TOKEN" '{
 		messages: [{
 			"@type": "/dydxprotocol.canonicalusdc.MsgUpdateControls",
 			authority: $gov,
@@ -119,7 +116,6 @@ propose_controls() {
 				noble_packet_denom: $pd, noble_withdrawals_enabled: true,
 				injective_channel: $ich, injective_client: $icl, injective_connection: $ico,
 				injective_packet_denom: $pd, injective_denom: $idenom,
-				migration_ceiling: $ceiling,
 				max_pending_settlements: 100
 			} | '"$filter"')
 		}],
@@ -463,15 +459,6 @@ expect_injective_deposit_refunded() {
 	check_backing
 }
 
-scenario_gradual_limits() {
-	log "GRADUAL: migration ceiling"
-	local backing room
-	backing=$(ledger_field injective_backing)
-	room=$(bc_calc "$MIGRATION_CEILING - $backing")
-	expect_injective_deposit_refunded "$(bc_calc "$room + 1")"
-	pass "inbound Injective deposit past migration_ceiling refunded"
-}
-
 scenario_gradual_invalid_receiver() {
 	log "GRADUAL: Injective withdrawal to an invalid receiver is refunded"
 	local dydx_before ledger reserve
@@ -608,9 +595,6 @@ scenario_paused_rejects_transfers() {
 	pass "PAUSED blocks logical USDC transfers"
 }
 
-# Ceiling used while draining: every Noble-backed coin becomes Injective-backed.
-MIGRATION_FINAL_CEILING=100000000000
-
 # One replacement batch: Injective USDC in to the migrator, the same logical
 # amount out over Noble, settled.
 migration_batch() {
@@ -627,11 +611,9 @@ migration_batch() {
 
 scenario_migration_finalize() {
 	log "migration: drain Noble backing into Injective backing, then disable Noble withdrawals"
-	local ceiling_filter=".migration_ceiling = \"$MIGRATION_FINAL_CEILING\""
 	local i noble batch supply dydx_before noble_before out
-	propose_controls MODE_GRADUAL PASSED "$ceiling_filter" >/dev/null
 	assert_eq "mode" "$(state | jq -r '.controls.mode')" MODE_GRADUAL
-	propose_controls MODE_GRADUAL FAILED "$ceiling_filter | .noble_withdrawals_enabled = false" >/dev/null
+	propose_controls MODE_GRADUAL FAILED ".noble_withdrawals_enabled = false" >/dev/null
 	assert_eq "Noble withdrawals still enabled" "$(state | jq -r '.controls.noble_withdrawals_enabled')" true
 	pass "Noble withdrawals cannot be disabled while Noble backing remains"
 
@@ -649,7 +631,7 @@ scenario_migration_finalize() {
 	pass "Noble backing replaced by Injective backing"
 
 	assert_eq "no legacy Noble packets in flight" "$(legacy_noble_in_flight)" 0
-	propose_controls MODE_GRADUAL PASSED "$ceiling_filter | .noble_withdrawals_enabled = false" >/dev/null
+	propose_controls MODE_GRADUAL PASSED ".noble_withdrawals_enabled = false" >/dev/null
 	assert_eq "Noble withdrawals disabled" "$(state | jq -r '.controls.noble_withdrawals_enabled')" false
 	check_backing
 
@@ -687,7 +669,7 @@ DIAGNOSTICS="dydx_tx_index enable_gradual"
 SCENARIOS="disabled_noble_roundtrip disabled_legacy_positions disabled_noble_refunded_after_gradual
 gradual_noble_deposit_rejected gradual_injective_roundtrip gradual_noble_withdrawal gradual_noble_timeout
 gradual_noble_invalid_receiver gradual_injective_timeout
-gradual_legacy_positions_unwind gradual_noncanonical_channel gradual_noble_via_injective gradual_limits gradual_invalid_receiver
+gradual_legacy_positions_unwind gradual_noncanonical_channel gradual_noble_via_injective gradual_invalid_receiver
 gradual_injective_deposits_toggle gradual_relayer_backlog governance_mismatched_route_rejected pending_blocks_disable_then_resume
 paused_rejects_transfers migration_finalize"
 
