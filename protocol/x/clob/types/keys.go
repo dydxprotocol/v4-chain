@@ -71,6 +71,10 @@ const (
 	// TWAPTriggerOrderKeyPrefix is the key to retrieve TWAP suborder information.
 	TWAPTriggerOrderKeyPrefix = "TWAP/T:"
 
+	// TWAPTriggerIndexKeyPrefix maps a TWAP suborder id to the trigger time of its single pending
+	// trigger-store entry, so the entry can be found without scanning the trigger store.
+	TWAPTriggerIndexKeyPrefix = "TWAP/TI:"
+
 	// LongTermOrderPlacementKeyPrefix is the key to retrieve a long term order and information about
 	// when it was placed.
 	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "L:"

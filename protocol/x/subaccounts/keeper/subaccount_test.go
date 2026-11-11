@@ -13,7 +13,6 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
@@ -236,6 +235,30 @@ func TestSubaccountGetNonExistent(t *testing.T) {
 	require.Empty(t, acct.AssetPositions)
 	require.Empty(t, acct.PerpetualPositions)
 	require.False(t, acct.MarginEnabled)
+}
+
+func TestGetSubaccountIdsByOwner(t *testing.T) {
+	ctx, keeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	alice := constants.Alice_Num0.Owner
+	aliceChild := types.SubaccountId{Owner: alice, Number: 128}
+	for _, id := range []types.SubaccountId{constants.Bob_Num0, aliceChild, constants.Alice_Num1, constants.Alice_Num0} {
+		keeper.SetSubaccount(ctx, types.Subaccount{
+			Id:             &id,
+			AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000)),
+		})
+	}
+
+	require.Equal(
+		t,
+		[]types.SubaccountId{constants.Alice_Num0, constants.Alice_Num1, aliceChild},
+		keeper.GetSubaccountIdsByOwner(ctx, alice, 10),
+	)
+	require.Equal(
+		t,
+		[]types.SubaccountId{constants.Alice_Num0, constants.Alice_Num1},
+		keeper.GetSubaccountIdsByOwner(ctx, alice, 2),
+	)
+	require.Empty(t, keeper.GetSubaccountIdsByOwner(ctx, constants.Carl_Num0.Owner, 10))
 }
 
 func TestGetAllSubaccount(t *testing.T) {
@@ -2536,7 +2559,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			expectedErr:      types.ErrFailedToUpdateSubaccounts,
 			msgSenderEnabled: true,
 		},
 		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual,
@@ -2581,7 +2604,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			expectedErr:      types.ErrFailedToUpdateSubaccounts,
 			msgSenderEnabled: true,
 		},
 		"Match updates increase OI: 0 -> 0.9, 0 -> -0.9": {

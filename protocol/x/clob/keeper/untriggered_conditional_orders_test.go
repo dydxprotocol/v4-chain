@@ -5,9 +5,16 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -521,4 +528,90 @@ func TestPollTriggeredConditionalOrders(t *testing.T) {
 			)
 		})
 	}
+}
+
+// A market the oracle hasn't priced yet must not panic EndBlocker; its conditional orders stay untriggered
+// until it has a real price.
+func TestMaybeTriggerConditionalOrders_SkipsZeroPriceMarket(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	mockIndexerEventManager.On("Enabled").Return(false)
+	mockIndexerEventManager.On(
+		"AddTxnEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+	).Return()
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+	// A freshly listed market with no oracle price yet.
+	marketParam := pricestypes.MarketParam{
+		Id:                 10,
+		Pair:               "ZEROPRICE-USD",
+		Exponent:           -6,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+	}
+	_, err := keepertest.CreateTestMarket(
+		t, ks.Ctx, ks.PricesKeeper, marketParam,
+		pricestypes.MarketPrice{Id: marketParam.Id, Exponent: marketParam.Exponent, Price: 0},
+	)
+	require.NoError(t, err)
+
+	const perpetualId = uint32(10)
+	perpetual, err := ks.PerpetualsKeeper.CreatePerpetual(
+		ks.Ctx, perpetualId, "ZEROPRICE-USD", marketParam.Id, int32(-8), int32(0),
+		uint32(0), perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+	)
+	require.NoError(t, err)
+
+	clobPair, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ks.Ctx, 10, perpetual.Params.Id, satypes.BaseQuantums(10), -8, 1, types.ClobPair_STATUS_ACTIVE,
+	)
+	require.NoError(t, err)
+
+	order := types.Order{
+		OrderId: types.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   types.OrderIdFlags_Conditional,
+			ClobPairId:   clobPair.Id,
+		},
+		Side:                            types.Order_SIDE_BUY,
+		Quantums:                        5,
+		Subticks:                        10,
+		GoodTilOneof:                    &types.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
+		ConditionType:                   types.Order_CONDITION_TYPE_STOP_LOSS,
+		ConditionalOrderTriggerSubticks: 1,
+	}
+	// A stop-loss sell would trigger against a zero price.
+	sellOrder := order
+	sellOrder.OrderId.ClientId = 1
+	sellOrder.Side = types.Order_SIDE_SELL
+	for i, o := range []types.Order{order, sellOrder} {
+		ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ks.Ctx).Set(
+			o.OrderId.ToStateKey(),
+			ks.Cdc.MustMarshal(&types.LongTermOrderPlacement{
+				Order:          o,
+				PlacementIndex: types.TransactionOrdering{TransactionIndex: uint32(i)},
+			}),
+		)
+	}
+
+	require.NotPanics(t, func() {
+		triggered := ks.ClobKeeper.MaybeTriggerConditionalOrders(ks.Ctx)
+		require.Empty(t, triggered, "zero-price market's conditional orders must not be triggered")
+	})
+	for _, o := range []types.Order{order, sellOrder} {
+		_, found := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacement(ks.Ctx, o.OrderId)
+		require.True(t, found, "order must remain untriggered, not dropped")
+	}
+
+	// Once the oracle catches up with a real price, the same order triggers normally.
+	require.NoError(t, ks.PricesKeeper.UpdateMarketPrices(ks.Ctx, []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+		{MarketId: marketParam.Id, Price: 1_000_000},
+	}))
+	triggered := ks.ClobKeeper.MaybeTriggerConditionalOrders(ks.Ctx)
+	require.Equal(t, []types.OrderId{order.OrderId}, triggered)
 }

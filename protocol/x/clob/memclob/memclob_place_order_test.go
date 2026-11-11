@@ -2,10 +2,14 @@ package memclob
 
 import (
 	"encoding/json"
+	"errors"
 	"math/big"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -3107,7 +3111,10 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 					constants.Alice_Num0: satypes.StillUndercollateralized,
 				},
 				2: {
-					constants.Alice_Num1: satypes.UpdateCausedError,
+					// A genuine collateralization failure. Not UpdateCausedError: that is an unattributable
+					// failure removed from the local book only (neither proposed on chain nor reported to
+					// the indexer), covered by TestPlaceOrder_UpdateCausedErrorMaker_RemovedLocallyOnly.
+					constants.Alice_Num1: satypes.NewlyUndercollateralized,
 				},
 			},
 
@@ -3673,4 +3680,274 @@ func TestPlaceOrder_DuplicateOrder(t *testing.T) {
 	require.NoError(t, err)
 	_, _, _, err = memclob.PlaceOrder(ctx, order)
 	require.Error(t, err, types.ErrInvalidReplacement)
+}
+
+// TestPlaceOrder_UnexpectedProcessSingleMatchError_DropsTakerAndMakerLocally tests that when
+// `ProcessSingleMatch` returns an unexpected error (i.e. not `ErrFailedToUpdateSubaccounts` and not
+// one of the liquidation-specific errors), the memclob does not panic. Instead it drops the taker
+// order with `InternalError`, removes the maker order from this node's book only, and never proposes
+// an on-chain `OrderRemoval` for the maker (since the removal reason is not attributable).
+func TestPlaceOrder_UnexpectedProcessSingleMatchError_DropsTakerAndMakerLocally(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
+	errFn := func(_ sdk.Context, _ *types.MatchWithOrders) error {
+		return errors.New("injected boom")
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(false)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	maker := constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20
+	taker := constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker})
+
+	var filled satypes.BaseQuantums
+	var status types.OrderStatus
+	var err error
+	require.NotPanics(t, func() {
+		filled, status, _, err = memclob.PlaceOrder(ctx, taker)
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, types.InternalError, status)
+	require.Equal(t, satypes.BaseQuantums(0), filled)
+
+	_, found := memclob.GetOrder(maker.OrderId)
+	require.False(t, found, "maker order should have been removed from the book")
+
+	_, found = memclob.GetOrder(taker.OrderId)
+	require.False(t, found, "taker order should not have been added to the book")
+
+	require.False(t, memclob.operationsToPropose.IsOrderRemovalInOperationsQueue(maker.OrderId))
+}
+
+// TestPlaceOrder_UnexpectedProcessSingleMatchError_StatefulMaker_NoOrderRemovalProposed tests that
+// when the poisoned maker order is a stateful (long-term) order, the `LocalOnly` removal is never
+// added to the operations queue (unlike a normal stateful order removal, which would be proposed
+// on-chain).
+func TestPlaceOrder_UnexpectedProcessSingleMatchError_StatefulMaker_NoOrderRemovalProposed(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
+	errFn := func(_ sdk.Context, _ *types.MatchWithOrders) error {
+		return errors.New("injected boom")
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(false)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	maker := constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell5_Price10_GTBT10
+	taker := constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB20
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker})
+
+	var status types.OrderStatus
+	var err error
+	require.NotPanics(t, func() {
+		_, status, _, err = memclob.PlaceOrder(ctx, taker)
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, types.InternalError, status)
+
+	_, found := memclob.GetOrder(maker.OrderId)
+	require.False(t, found, "stateful maker order should have been removed from the book")
+
+	require.False(
+		t,
+		memclob.operationsToPropose.IsOrderRemovalInOperationsQueue(maker.OrderId),
+		"a LocalOnly removal must never enter the operations queue",
+	)
+}
+
+// TestPlaceOrder_UnexpectedProcessSingleMatchError_AfterSuccessfulMatch_KeepsEarlierFills tests that
+// if the taker order matches successfully against one maker order and then hits an unexpected error
+// on a subsequent match, the fills from the earlier successful match are kept (not rolled back), while
+// the poisoned second maker is dropped locally and the taker stops with `InternalError`.
+func TestPlaceOrder_UnexpectedProcessSingleMatchError_AfterSuccessfulMatch_KeepsEarlierFills(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
+	// maker1 has the best (lowest) ask price and will be matched first. maker2 has a worse price and
+	// will be matched second, once maker1 has been fully filled.
+	maker1 := constants.Order_Alice_Num1_Id12_Clob0_Sell20_Price5_GTB25
+	maker2 := constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20
+	taker := constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32
+
+	errFn := func(_ sdk.Context, matchWithOrders *types.MatchWithOrders) error {
+		if matchWithOrders.MakerOrder.MustGetOrder().OrderId == maker2.OrderId {
+			return errors.New("injected boom")
+		}
+		return nil
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(false)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker1, maker2})
+
+	var filled satypes.BaseQuantums
+	var status types.OrderStatus
+	var err error
+	require.NotPanics(t, func() {
+		filled, status, _, err = memclob.PlaceOrder(ctx, taker)
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, types.InternalError, status)
+	require.Equal(t, satypes.BaseQuantums(maker1.Quantums), filled, "first successful match's fill should be kept")
+
+	_, found := memclob.GetOrder(maker2.OrderId)
+	require.False(t, found, "second (poisoned) maker order should have been removed from the book")
+
+	require.False(t, memclob.operationsToPropose.IsOrderRemovalInOperationsQueue(maker2.OrderId))
+}
+
+// TestPlaceOrder_FailedMatchLeavesNoPartialState tests that any state written by `ProcessSingleMatch`
+// (or by the injected function simulating it) prior to returning an unexpected error is fully isolated
+// to the per-match `CacheContext` and never leaks into the parent context.
+func TestPlaceOrder_FailedMatchLeavesNoPartialState(t *testing.T) {
+	ctx, stateStore, _ := sdktest.NewSdkContextWithMultistore()
+	markerKey := storetypes.NewKVStoreKey("test_marker")
+	stateStore.MountStoreWithDB(markerKey, storetypes.StoreTypeIAVL, nil)
+	require.NoError(t, stateStore.LoadLatestVersion())
+	ctx = ctx.WithIsCheckTx(true)
+
+	errFn := func(c sdk.Context, _ *types.MatchWithOrders) error {
+		c.KVStore(markerKey).Set([]byte("marker"), []byte("1"))
+		return errors.New("injected boom")
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(false)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	maker := constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20
+	taker := constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker})
+
+	require.NotPanics(t, func() {
+		_, _, _, _ = memclob.PlaceOrder(ctx, taker)
+	})
+
+	require.Nil(t, ctx.KVStore(markerKey).Get([]byte("marker")))
+}
+
+// TestPlaceOrder_UpdateCausedErrorMaker_RemovedLocallyOnly tests that when `ProcessSingleMatch` returns
+// a wrapped `ErrFailedToUpdateSubaccounts` (taking the `!success` branch with `UpdateCausedError` on
+// both sides), the maker is removed from the book without an on-chain `OrderRemoval` being proposed,
+// and the non-liquidation taker is dropped with `InternalError`.
+func TestPlaceOrder_UpdateCausedErrorMaker_RemovedLocallyOnly(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
+	errFn := func(_ sdk.Context, _ *types.MatchWithOrders) error {
+		return errorsmod.Wrapf(satypes.ErrFailedToUpdateSubaccounts, "injected pool insufficient")
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(false)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	maker := constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20
+	taker := constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker})
+
+	var status types.OrderStatus
+	var err error
+	require.NotPanics(t, func() {
+		_, status, _, err = memclob.PlaceOrder(ctx, taker)
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, types.InternalError, status)
+
+	_, found := memclob.GetOrder(maker.OrderId)
+	require.False(t, found, "maker order should have been removed from the book")
+
+	require.False(t, memclob.operationsToPropose.IsOrderRemovalInOperationsQueue(maker.OrderId))
+}
+
+// TestPlaceOrder_LocalOnlyRemoval_NoIndexerRemoveMessage tests that a maker dropped from the local
+// book by a fail-soft match is not reported to the indexer as removed: the order is still live in
+// state and on every other node.
+func TestPlaceOrder_LocalOnlyRemoval_NoIndexerRemoveMessage(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
+	errFn := func(_ sdk.Context, _ *types.MatchWithOrders) error {
+		return errors.New("injected boom")
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(true)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	maker := constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20
+	taker := constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker})
+
+	_, status, offchainUpdates, err := memclob.PlaceOrder(ctx, taker)
+	require.NoError(t, err)
+	require.Equal(t, types.InternalError, status)
+
+	_, found := memclob.GetOrder(maker.OrderId)
+	require.False(t, found, "maker order should have been removed from the book")
+	require.False(
+		t,
+		testutil_memclob.HasMessage(offchainUpdates, maker.OrderId, types.RemoveMessageType),
+		"a LocalOnly removal must not be reported to the indexer",
+	)
+}
+
+// TestPlacePerpetualLiquidation_UnexpectedProcessSingleMatchError_StopsMatching tests that an
+// unexpected `ProcessSingleMatch` error encountered while matching a liquidation order does not
+// panic, stops matching, and removes the poisoned maker from the local book only.
+func TestPlacePerpetualLiquidation_UnexpectedProcessSingleMatchError_StopsMatching(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
+	errFn := func(_ sdk.Context, _ *types.MatchWithOrders) error {
+		return errors.New("injected boom")
+	}
+
+	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper().WithProcessSingleMatchErrFn(errFn)
+	memclob := NewMemClobPriceTimePriority(false)
+	memclob.SetClobKeeper(memClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
+
+	maker := constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15
+	liquidationOrder := constants.LiquidationOrder_Bob_Num0_Clob0_Buy100_Price20_BTC
+
+	createAllOrders(t, ctx, memclob, []types.Order{maker})
+
+	var filled satypes.BaseQuantums
+	var status types.OrderStatus
+	var err error
+	require.NotPanics(t, func() {
+		filled, status, _, err = memclob.PlacePerpetualLiquidation(ctx, liquidationOrder)
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, types.InternalError, status)
+	require.Equal(t, satypes.BaseQuantums(0), filled)
+
+	_, found := memclob.GetOrder(maker.OrderId)
+	require.False(t, found, "maker order should have been removed from the book")
+
+	require.False(t, memclob.operationsToPropose.IsOrderRemovalInOperationsQueue(maker.OrderId))
 }

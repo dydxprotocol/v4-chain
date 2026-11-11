@@ -66,7 +66,8 @@ export async function initConsumer(): Promise<void> {
     heartbeatInterval: config.KAFKA_HEARTBEAT_INTERVAL_MS,
     maxWaitTimeInMs: config.KAFKA_WAIT_MAX_TIME_MS,
     readUncommitted: false,
-    maxBytes: 4194304, // 4MB
+    maxBytes: config.KAFKA_FETCH_MAX_BYTES,
+    maxBytesPerPartition: config.KAFKA_FETCH_MAX_BYTES_PER_PARTITION,
     rackId: await getAvailabilityZoneId(),
   });
 

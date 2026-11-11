@@ -5,7 +5,25 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 )
+
+// txProtoSize returns the number of bytes a tx contributes to a block's data size, matching how
+// CometBFT accounts for it in Txs.Validate (1 + varint(len) + len per tx). Budgeting against the raw
+// len(tx) undercounts by the per-tx proto framing, which can push the proposal over MaxTxBytes and
+// panic the proposer.
+func txProtoSize(tx []byte) uint64 {
+	return uint64(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{tx}))
+}
+
+// txProtoSizeOrZero is txProtoSize but returns 0 for an unset (empty) slot, which contributes
+// nothing to the block, rather than the ~2 bytes of framing txProtoSize would report for empty bytes.
+func txProtoSizeOrZero(tx []byte) uint64 {
+	if len(tx) == 0 {
+		return 0
+	}
+	return txProtoSize(tx)
+}
 
 // PrepareProposalTxs is used as an intermediary storage for transactions when creating
 // a proposal for `PrepareProposal`.
@@ -40,8 +58,8 @@ func NewPrepareProposalTxs(
 
 // SetUpdateMarketPricesTx sets the tx used for updating market prices.
 func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
-	oldBytes := uint64(len(t.UpdateMarketPricesTx))
-	newBytes := uint64(len(tx))
+	oldBytes := txProtoSizeOrZero(t.UpdateMarketPricesTx)
+	newBytes := txProtoSizeOrZero(tx)
 	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
@@ -51,8 +69,8 @@ func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
 
 // SetAddPremiumVotesTx sets the tx used for adding premium votes.
 func (t *PrepareProposalTxs) SetAddPremiumVotesTx(tx []byte) error {
-	oldBytes := uint64(len(t.AddPremiumVotesTx))
-	newBytes := uint64(len(tx))
+	oldBytes := txProtoSizeOrZero(t.AddPremiumVotesTx)
+	newBytes := txProtoSizeOrZero(tx)
 	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
@@ -62,8 +80,8 @@ func (t *PrepareProposalTxs) SetAddPremiumVotesTx(tx []byte) error {
 
 // SetProposedOperationsTx sets the tx used for order operations.
 func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
-	oldBytes := uint64(len(t.ProposedOperationsTx))
-	newBytes := uint64(len(tx))
+	oldBytes := txProtoSizeOrZero(t.ProposedOperationsTx)
+	newBytes := txProtoSizeOrZero(tx)
 	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
@@ -73,8 +91,8 @@ func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
 
 // SetAcknowledgeBridgesTx sets the tx used for acknowledging bridges.
 func (t *PrepareProposalTxs) SetAcknowledgeBridgesTx(tx []byte) error {
-	oldBytes := uint64(len(t.AcknowledgeBridgesTx))
-	newBytes := uint64(len(tx))
+	oldBytes := txProtoSizeOrZero(t.AcknowledgeBridgesTx)
+	newBytes := txProtoSizeOrZero(tx)
 	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
@@ -86,11 +104,10 @@ func (t *PrepareProposalTxs) SetAcknowledgeBridgesTx(tx []byte) error {
 func (t *PrepareProposalTxs) AddOtherTxs(allTxs [][]byte) error {
 	bytesToAdd := uint64(0)
 	for _, tx := range allTxs {
-		txSize := uint64(len(tx))
-		if txSize == 0 {
+		if len(tx) == 0 {
 			return fmt.Errorf("Cannot add zero length tx: %v", tx)
 		}
-		bytesToAdd += txSize
+		bytesToAdd += txProtoSize(tx)
 	}
 
 	if bytesToAdd == 0 { // no new txs, so return early.

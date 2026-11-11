@@ -131,3 +131,29 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Contex
 	}
 	return nil
 }
+
+// ValidateSubaccountEquityTierLimitForShortTermOrder rejects a short-term order from a subaccount whose net
+// collateral falls in a tier permitting zero open orders. Short-term orders have no committed open-order count,
+// so the short-term tiers act only as a collateral floor. Reduce-only orders are exempt so a subaccount below
+// the floor can still close its position; the memclob rejects reduce-only orders that would not reduce one.
+func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Context, order types.Order) error {
+	if order.IsReduceOnly() {
+		return nil
+	}
+	subaccountId := order.GetSubaccountId()
+	if err, found := k.shortTermEquityTierResults[subaccountId]; found {
+		return err
+	}
+	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
+	if len(equityTierLimits) == 0 {
+		return nil
+	}
+
+	_, _, err := k.getEquityTierLimitForSubaccount(ctx, subaccountId, equityTierLimits)
+	k.shortTermEquityTierResults[subaccountId] = err
+	return err
+}
+
+func (k Keeper) ClearShortTermEquityTierResults() {
+	clear(k.shortTermEquityTierResults)
+}

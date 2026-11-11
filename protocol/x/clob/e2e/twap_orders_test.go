@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -12,6 +14,26 @@ import (
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/stretchr/testify/require"
 )
+
+// countTwapTriggerPlacements returns the number of pending trigger-store entries for the given
+// suborder id. A live TWAP has at most one pending trigger for its suborder id at any time; a
+// count greater than one indicates a duplicate/orphaned trigger left behind by a prior parent.
+func countTwapTriggerPlacements(store storetypes.KVStore, suborderId clobtypes.OrderId) int {
+	iterator := store.Iterator(nil, nil)
+	defer iterator.Close()
+
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		var id clobtypes.OrderId
+		if err := id.Unmarshal(iterator.Key()[8:]); err != nil {
+			panic(err)
+		}
+		if id == suborderId {
+			count++
+		}
+	}
+	return count
+}
 
 func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
@@ -780,6 +802,12 @@ func TestTwapOrderCancellation(t *testing.T) {
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
 	require.False(t, found, "Suborder should be removed from memclob")
 
+	// Verify the pending trigger for the parent's next leg was cleared by cancellation. Without
+	// this, the trigger would remain in the store indefinitely (or be inherited by a future TWAP
+	// order re-using the same ClientId), causing a spurious/duplicate suborder trigger.
+	_, _, found = tApp.App.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.False(t, found, "TWAP trigger placement should be cleared after cancellation")
+
 	// Verify no more suborders will be triggered
 	tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 		BlockTime: ctx.BlockTime().Add(time.Second * 60),
@@ -963,4 +991,128 @@ func TestTwapOrderStatefulOrderCount(t *testing.T) {
 	// Verify stateful order count is 0 after completion
 	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
 	require.Equal(t, uint32(0), statefulOrderCount, "Stateful order count should be 0 after completion")
+}
+
+// TestTwapCancelAndReplaceSameClientId_SingleTriggerNoOrphan places a TWAP order, lets its first
+// suborder trigger (which queues a pending trigger for the next leg), cancels the parent, and then
+// places a brand new TWAP order re-using the same ClientId (and therefore the same suborder id).
+// Regression test: without clearing the cancelled parent's pending trigger, the new TWAP would
+// inherit an orphaned duplicate trigger for its suborder id, causing a collision when both triggers
+// eventually fire (a parentless suborder can end up resting in state, panicking a later match).
+func TestTwapCancelAndReplaceSameClientId_SingleTriggerNoOrphan(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	suborderId := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	triggerStore := func(ctx sdktypes.Context) storetypes.KVStore {
+		return tApp.App.ClobKeeper.GetTWAPTriggerOrderPlacementStore(ctx)
+	}
+
+	twapOrder := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Alice_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_Twap,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_BUY,
+			Quantums: 100_000_000_000,
+			Subticks: 0,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 300),
+			},
+			TwapParameters: &clobtypes.TwapParameters{
+				Duration:       300,
+				Interval:       60,
+				PriceTolerance: 0,
+			},
+		},
+	)
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, twapOrder) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance a block: the first suborder triggers immediately and a new trigger is queued for the
+	// second leg.
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	require.Equal(t, 1, countTwapTriggerPlacements(triggerStore(ctx), suborderId))
+
+	// Cancel the parent while the second-leg trigger is still pending.
+	cancelMsg := clobtypes.MsgCancelOrder{
+		OrderId: twapOrder.Order.OrderId,
+		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 1000),
+		},
+	}
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, cancelMsg) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+	require.Equal(t, 0, countTwapTriggerPlacements(triggerStore(ctx), suborderId),
+		"Cancellation should clear the pending trigger, leaving no orphan for the new TWAP to inherit")
+
+	// Place a brand new TWAP order re-using the same ClientId (and therefore the same suborder id).
+	newTwapOrder := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Alice_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_Twap,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_BUY,
+			Quantums: 50_000_000_000,
+			Subticks: 0,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 300),
+			},
+			TwapParameters: &clobtypes.TwapParameters{
+				Duration:       300,
+				Interval:       60,
+				PriceTolerance: 0,
+			},
+		},
+	)
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, newTwapOrder) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance through several sweeps. Pre-fix, the inherited orphan trigger would collide with the
+	// new TWAP's own trigger for the same suborder id once both come due, corrupting the parent's
+	// state and eventually leaving a parentless suborder resting in state.
+	require.NotPanics(t, func() {
+		ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+	})
+	require.Equal(t, 1, countTwapTriggerPlacements(triggerStore(ctx), suborderId))
+
+	require.NotPanics(t, func() {
+		ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
+			BlockTime: ctx.BlockTime().Add(time.Second * 60),
+		})
+	})
+	require.Equal(t, 1, countTwapTriggerPlacements(triggerStore(ctx), suborderId))
+
+	require.NotPanics(t, func() {
+		ctx = tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{
+			BlockTime: ctx.BlockTime().Add(time.Second * 60),
+		})
+	})
+	require.Equal(t, 1, countTwapTriggerPlacements(triggerStore(ctx), suborderId))
+
+	// The new TWAP order should still be tracking its own placement correctly (not corrupted by any
+	// inherited orphan collision).
+	twapOrderPlacement, found := tApp.App.ClobKeeper.GetTwapOrderPlacement(ctx, newTwapOrder.Order.OrderId)
+	require.True(t, found, "New TWAP order placement should still exist")
+	require.Equal(t, uint32(2), twapOrderPlacement.RemainingLegs)
 }

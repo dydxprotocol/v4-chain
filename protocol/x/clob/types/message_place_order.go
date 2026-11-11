@@ -90,6 +90,16 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 	}
 
 	orderId := msg.Order.GetOrderId()
+	// TWAP suborders are produced only by the in-protocol TWAP scheduler. A user-signed MsgPlaceOrder
+	// carrying this flag is always invalid: accepting one lets a parentless suborder enter committed
+	// state and fail matching on a later block.
+	if orderId.IsTwapSuborder() {
+		return errorsmod.Wrapf(
+			ErrInvalidOrderFlag,
+			"TWAP suborders are for internal use only and cannot be placed via MsgPlaceOrder (order flag %v)",
+			orderId.OrderFlags,
+		)
+	}
 	if orderId.IsShortTermOrder() {
 		// This also implicitly verifies that GoodTilBlockTime is not set / is zero for short-term orders.
 		if msg.Order.GetGoodTilBlock() == uint32(0) {

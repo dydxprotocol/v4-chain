@@ -93,11 +93,18 @@ func (svd SigVerificationDecorator) AnteHandle(
 		if !simulate && !ctx.IsReCheckTx() {
 			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
 
+			// Verify against the sequence the tx carries, not the stored account sequence. The
+			// SIGN_MODE_LEGACY_AMINO_JSON sign doc embeds signerData.Sequence rather than AuthInfoBytes,
+			// so with acc.GetSequence() a signature made for sequence N would verify under any forged
+			// AuthInfo.SignerInfo.Sequence while the account is still at N. Where replay protection
+			// enforces sig.Sequence == acc.GetSequence() this changes nothing. Timestamp-nonce and
+			// GoodTilBlock-only txs skip that check, and for them amino now binds SignerInfo.Sequence
+			// the same way SIGN_MODE_DIRECT already does.
 			signerData := txsigning.SignerData{
 				Address:       acc.GetAddress().String(),
 				ChainID:       chainID,
 				AccountNumber: accNum,
-				Sequence:      acc.GetSequence(),
+				Sequence:      sig.Sequence,
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,
@@ -118,7 +125,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 						"signature verification failed; please verify account number (%d), sequence (%d)"+
 							" and chain-id (%s)",
 						accNum,
-						acc.GetSequence(),
+						sig.Sequence,
 						chainID,
 					)
 				} else {

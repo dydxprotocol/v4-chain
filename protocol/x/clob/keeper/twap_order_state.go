@@ -1,17 +1,20 @@
 package keeper
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -29,11 +32,13 @@ const (
 	parentTwapCompleted twapOperationType = iota
 	parentTwapCancelled
 	createSuborder
+	duplicateSuborderTrigger
 )
 
 type twapOrderOperation struct {
 	operationType      twapOperationType
 	keyToDelete        []byte
+	suborderId         types.OrderId
 	suborderToPlace    *types.Order
 	twapOrderPlacement *types.TwapOrderPlacement
 }
@@ -112,29 +117,114 @@ func (k Keeper) twapToSuborderId(twapOrderId types.OrderId) types.OrderId {
 	}
 }
 
+// suborderToTwapId returns the parent TWAP order id for a given suborder id (the inverse of
+// twapToSuborderId). The parent is recovered purely by swapping the order flag.
+func (k Keeper) suborderToTwapId(suborderId types.OrderId) types.OrderId {
+	return types.OrderId{
+		SubaccountId: suborderId.SubaccountId,
+		ClientId:     suborderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_Twap,
+		ClobPairId:   suborderId.ClobPairId,
+	}
+}
+
+// IsOrphanTwapSuborder returns true if orderId is a TWAP suborder whose parent TWAP placement no
+// longer exists in state. Such a suborder can never be matched (fills recover the parent by flag
+// swap and panic when it is missing), so it must be skipped during hydration/replay and purged.
+func (k Keeper) IsOrphanTwapSuborder(ctx sdk.Context, orderId types.OrderId) bool {
+	if !orderId.IsTwapSuborder() {
+		return false
+	}
+	_, found := k.GetTwapOrderPlacement(ctx, k.suborderToTwapId(orderId))
+	return !found
+}
+
+// IndexTwapTriggers builds the suborder-id -> trigger-time index from the trigger store, deleting
+// trigger entries whose parent placement is gone and, since a live parent has exactly one pending
+// trigger, any later duplicate entry for the same suborder id. It is intended to run once from the
+// upgrade handler, before the clob module's PreBlocker hydrates the memclob. Returns the number of
+// entries indexed and the number deleted.
+func (k Keeper) IndexTwapTriggers(ctx sdk.Context) (indexed int, deleted int) {
+	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
+	indexStore := k.GetTWAPTriggerIndexStore(ctx)
+
+	seen := make(map[types.OrderId]struct{})
+	var keysToIndex, keysToDelete [][]byte
+	func() {
+		iterator := triggerStore.Iterator(nil, nil)
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var suborderId types.OrderId
+			k.cdc.MustUnmarshal(iterator.Key()[8:], &suborderId)
+			key := append([]byte{}, iterator.Key()...)
+			_, parentFound := k.GetTwapOrderPlacement(ctx, k.suborderToTwapId(suborderId))
+			if _, duplicate := seen[suborderId]; !parentFound || duplicate {
+				keysToDelete = append(keysToDelete, key)
+				continue
+			}
+			seen[suborderId] = struct{}{}
+			keysToIndex = append(keysToIndex, key)
+		}
+	}()
+
+	for _, key := range keysToIndex {
+		indexStore.Set(key[8:], key[:8])
+	}
+	for _, key := range keysToDelete {
+		triggerStore.Delete(key)
+	}
+	return len(keysToIndex), len(keysToDelete)
+}
+
 // AddSuborderToTriggerStore adds a suborder to the trigger store with the
-// binary encoded [timestamp][suborderId] key.
+// binary encoded [timestamp][suborderId] key and indexes it by suborder id.
 func (k Keeper) AddSuborderToTriggerStore(
 	ctx sdk.Context,
 	suborderId types.OrderId,
 	triggerOffset int64,
 ) []byte {
-	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
 	triggerTime := ctx.BlockTime().Unix() + triggerOffset
-
 	triggerKey := types.GetTWAPTriggerKey(triggerTime, suborderId)
 
 	// The value in the map is not used, so we can set it to an empty byte slice.
-	triggerStore.Set(triggerKey, []byte{})
+	k.GetTWAPTriggerOrderPlacementStore(ctx).Set(triggerKey, []byte{})
+	k.GetTWAPTriggerIndexStore(ctx).Set(suborderId.ToStateKey(), triggerKey[:8])
 	return triggerKey
 }
 
-func (k Keeper) DeleteSuborderFromTriggerStore(
+// GetPendingTwapTrigger returns the trigger time of the pending trigger-store entry for the given
+// suborder id.
+func (k Keeper) GetPendingTwapTrigger(
 	ctx sdk.Context,
-	triggerKey []byte,
-) {
-	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
-	triggerStore.Delete(triggerKey)
+	suborderId types.OrderId,
+) (triggerTime int64, found bool) {
+	timeBytes := k.GetTWAPTriggerIndexStore(ctx).Get(suborderId.ToStateKey())
+	if timeBytes == nil {
+		return 0, false
+	}
+	return types.TimeFromTriggerKey(timeBytes), true
+}
+
+// DeletePendingTwapTrigger removes the pending trigger-store entry for the given suborder id, if
+// any, together with its index entry. Returns whether an entry was removed.
+func (k Keeper) DeletePendingTwapTrigger(ctx sdk.Context, suborderId types.OrderId) bool {
+	triggerTime, found := k.GetPendingTwapTrigger(ctx, suborderId)
+	if !found {
+		return false
+	}
+	k.GetTWAPTriggerOrderPlacementStore(ctx).Delete(types.GetTWAPTriggerKey(triggerTime, suborderId))
+	k.GetTWAPTriggerIndexStore(ctx).Delete(suborderId.ToStateKey())
+	return true
+}
+
+// deleteTwapTrigger removes one trigger-store entry and, when the index points at that entry, its
+// index entry.
+func (k Keeper) deleteTwapTrigger(ctx sdk.Context, triggerKey []byte, suborderId types.OrderId) {
+	k.GetTWAPTriggerOrderPlacementStore(ctx).Delete(triggerKey)
+	indexStore := k.GetTWAPTriggerIndexStore(ctx)
+	if bytes.Equal(indexStore.Get(suborderId.ToStateKey()), triggerKey[:8]) {
+		indexStore.Delete(suborderId.ToStateKey())
+	}
 }
 
 // GenerateAndPlaceTriggeredTwapSuborders will iterate over the twap trigger
@@ -148,6 +238,10 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
 	blockTime := ctx.BlockTime().Unix()
 	var operationsToProcess []twapOrderOperation
+	// Suborder ids carry no nonce, so at most one trigger per suborder id should be processed per
+	// sweep. A second due trigger for the same suborder id (e.g. an orphan inherited from a prior
+	// parent) is dropped, first-due wins; iteration is timestamp-ordered.
+	seen := make(map[types.OrderId]struct{})
 
 	iterator := triggerStore.Iterator(nil, nil)
 	for ; iterator.Valid(); iterator.Next() {
@@ -160,12 +254,21 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			break // all remaining suborders are in the future
 		}
 
-		parentOrderId := types.OrderId{
-			SubaccountId: orderId.SubaccountId,
-			ClientId:     orderId.ClientId,
-			OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
-			ClobPairId:   orderId.ClobPairId,
+		if _, isDuplicate := seen[orderId]; isDuplicate {
+			// Placing this would collide on ErrStatefulOrderAlreadyExists with the first-due trigger;
+			// drop the duplicate key instead.
+			k.Logger(ctx).Error("twap sweep: dropping duplicate suborder trigger", "suborderId", orderId)
+			telemetry.IncrCounter(1, types.ModuleName, metrics.TwapSweepDuplicateTrigger, metrics.Count)
+			operationsToProcess = append(operationsToProcess, twapOrderOperation{
+				operationType: duplicateSuborderTrigger,
+				keyToDelete:   append([]byte{}, iterator.Key()...),
+				suborderId:    orderId,
+			})
+			continue
 		}
+		seen[orderId] = struct{}{}
+
+		parentOrderId := k.suborderToTwapId(orderId)
 
 		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, parentOrderId)
 		if !found {
@@ -173,6 +276,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			operationsToProcess = append(operationsToProcess, twapOrderOperation{
 				operationType: parentTwapCancelled,
 				keyToDelete:   append([]byte{}, iterator.Key()...),
+				suborderId:    orderId,
 			})
 			continue
 		}
@@ -185,6 +289,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 		operationsToProcess = append(operationsToProcess, twapOrderOperation{
 			operationType:      operationType,
 			keyToDelete:        append([]byte{}, iterator.Key()...),
+			suborderId:         orderId,
 			suborderToPlace:    order,
 			twapOrderPlacement: &twapOrderPlacement,
 		})
@@ -192,29 +297,48 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 	iterator.Close()
 
 	for _, op := range operationsToProcess {
-		// Delete from trigger store
-		triggerStore.Delete(op.keyToDelete)
+		k.deleteTwapTrigger(ctx, op.keyToDelete, op.suborderId)
 
 		switch op.operationType {
 		case parentTwapCancelled:
 			// no-op after trigger key has been deleted
+		case duplicateSuborderTrigger:
+			// no-op after the duplicate trigger key has been deleted
 		case parentTwapCompleted:
 			k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
 		case createSuborder:
-			// decrement remaining legs
-			k.DecrementTwapOrderRemainingLegs(ctx, *op.twapOrderPlacement)
-			// add the next suborder to the trigger store
-			triggerKey := k.AddSuborderToTriggerStore(
+			// Queue the next trigger before placing so the parent keeps advancing whatever happens to
+			// this leg.
+			k.AddSuborderToTriggerStore(
 				ctx,
 				op.suborderToPlace.OrderId,
 				int64(op.twapOrderPlacement.Order.TwapParameters.Interval),
 			)
 
-			// place triggered suborder
 			err := k.safeHandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
-			if err != nil {
+			if err == nil {
+				k.DecrementTwapOrderRemainingLegs(ctx, *op.twapOrderPlacement)
+			} else if errors.Is(err, types.ErrStatefulOrderAlreadyExists) ||
+				errors.Is(err, types.ErrStatefulOrderPreviouslyCancelled) ||
+				errors.Is(err, types.ErrStatefulOrderPreviouslyRemoved) {
+				// A collision on the suborder id (it already exists, or was cancelled/removed this
+				// block) is benign: keep the parent and the next trigger. A skipped non-final leg
+				// still counts, since calculateSuborderQuantums catches its quantity up on the next
+				// interval; the final leg has no later leg to absorb it, so it keeps its count and
+				// is retried instead.
+				if op.twapOrderPlacement.RemainingLegs > 1 {
+					k.DecrementTwapOrderRemainingLegs(ctx, *op.twapOrderPlacement)
+				}
+				k.Logger(ctx).Error(
+					"twap sweep: suborder collision, keeping parent",
+					"suborderId", op.suborderToPlace.OrderId,
+					"error", err,
+				)
+				telemetry.IncrCounter(1, types.ModuleName, metrics.TwapSweepSuborderCollision, metrics.Count)
+			} else {
+				// DeleteTWAPOrderPlacement clears this parent's pending suborder trigger, so the
+				// trigger added above for this leg is removed with it.
 				k.DeleteTWAPOrderPlacement(ctx, op.twapOrderPlacement.Order.GetOrderId())
-				k.DeleteSuborderFromTriggerStore(ctx, triggerKey)
 
 				k.GetIndexerEventManager().AddTxnEvent(
 					ctx,
@@ -247,6 +371,11 @@ func (k Keeper) DeleteTWAPOrderPlacement(
 	store := k.GetTWAPOrderPlacementStore(ctx)
 	orderKey := orderId.ToStateKey()
 	store.Delete(orderKey)
+
+	// Clear any pending trigger for this parent's suborder id. Without this, cancelling or completing
+	// a TWAP parent leaves an orphan trigger; because suborder ids carry no nonce, a later parent
+	// re-placed with the same ClientId would inherit it and desynchronize the sweep.
+	k.DeletePendingTwapTrigger(ctx, k.twapToSuborderId(orderId))
 }
 
 func (k Keeper) DecrementTwapOrderRemainingLegs(

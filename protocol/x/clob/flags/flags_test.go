@@ -125,3 +125,41 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		})
 	}
 }
+
+func TestGetFlagValuesFromOptions_ShortTermTokenBucket(t *testing.T) {
+	cmd := cobra.Command{}
+	flags.AddClobFlagsToCmd(&cmd)
+	for _, name := range []string{
+		flags.ShortTermTokenBucketEnabled,
+		flags.ShortTermTokenBucketShadow,
+		flags.ShortTermTokenBucketMinCapacity,
+		flags.ShortTermTokenBucketBurstBlocks,
+		flags.ShortTermTokenBucketVolumePerOrder,
+		flags.ShortTermTokenBucketCollateralPerOrder,
+	} {
+		require.Contains(t, cmd.Flags().FlagUsages(), name)
+	}
+
+	optsMap := map[string]any{
+		flags.ShortTermTokenBucketEnabled:            false,
+		flags.ShortTermTokenBucketShadow:             true,
+		flags.ShortTermTokenBucketMinCapacity:        uint32(7),
+		flags.ShortTermTokenBucketBurstBlocks:        uint32(8),
+		flags.ShortTermTokenBucketVolumePerOrder:     uint64(9),
+		flags.ShortTermTokenBucketCollateralPerOrder: uint64(10),
+	}
+	mockOpts := mocks.AppOptions{}
+	mockOpts.On("Get", mock.AnythingOfType("string")).
+		Return(func(key string) interface{} {
+			return optsMap[key]
+		})
+
+	got := flags.GetClobFlagValuesFromOptions(&mockOpts)
+	require.False(t, got.ShortTermTokenBucketEnabled)
+	require.True(t, got.ShortTermTokenBucketShadow)
+	require.Equal(t, uint32(7), got.ShortTermTokenBucketMinCapacity)
+	require.Equal(t, uint32(8), got.ShortTermTokenBucketBurstBlocks)
+	require.Equal(t, uint64(9), got.ShortTermTokenBucketVolumePerOrder)
+	require.Equal(t, uint64(10), got.ShortTermTokenBucketCollateralPerOrder)
+	require.True(t, flags.GetDefaultClobFlags().ShortTermTokenBucketEnabled)
+}

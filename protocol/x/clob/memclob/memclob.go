@@ -52,6 +52,10 @@ type MemClobPriceTimePriority struct {
 type OrderWithRemovalReason struct {
 	Order         types.Order
 	RemovalReason types.OrderRemoval_RemovalReason
+	// LocalOnly removes the maker from this node's in-memory book without proposing an on-chain
+	// OrderRemoval or reporting a cancel to the indexer. Used when a match fails with an
+	// unattributable error: the order stays live in state and on every other node.
+	LocalOnly bool
 }
 
 func NewMemClobPriceTimePriority(
@@ -804,8 +808,14 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	orderbook := m.mustGetOrderbook(order.GetClobPairId())
 	offchainUpdates = types.NewOffchainUpdates()
 
-	// Branch the state. State will be wrote to only if matching does not return an error.
-	branchedContext, writeCache := ctx.CacheContext()
+	// Branch the state so it is written to only if matching does not return an error. A taker that does
+	// not cross the best resting order on the opposite side cannot match anything and writes no state,
+	// so for it the branch, a copy of every store taken under the global lock, is skipped.
+	branchedContext := ctx
+	writeCache := func() {}
+	if orderbook.takerCrossesBook(order) {
+		branchedContext, writeCache = ctx.CacheContext()
+	}
 
 	// Attempt to match the order against the orderbook.
 	newMakerFills,
@@ -844,7 +854,10 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		makerOrderId := makerOrderWithRemovalReason.Order.OrderId
 		// TODO(CLOB-669): Move logic outside of `memclob.go` by returning a slice of removed orders.
 		// If the order is a replacement order, a message was already added above the place message.
-		if m.generateOffchainUpdates && (order.IsLiquidation() || makerOrderId != order.MustGetOrder().OrderId) {
+		// A LocalOnly removal only drops the maker from this node's book; the order stays live in state
+		// and on every other node, so it is not reported to the indexer as canceled.
+		if m.generateOffchainUpdates && !makerOrderWithRemovalReason.LocalOnly &&
+			(order.IsLiquidation() || makerOrderId != order.MustGetOrder().OrderId) {
 			// If the taker order and the removed maker order are from the same subaccount, set
 			// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
 			// TODO(DEC-1409): Update this to support order replacements on indexer.
@@ -862,7 +875,11 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		}
 
 		m.mustRemoveOrder(branchedContext, makerOrderId)
-		if makerOrderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
+		// Never propose an on-chain OrderRemoval for a LocalOnly removal: the reason is unattributable
+		// and would either be rejected in ProcessProposal or falsely broadcast to every node.
+		if !makerOrderWithRemovalReason.LocalOnly &&
+			makerOrderId.IsStatefulOrder() &&
+			!m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				makerOrderId,
 				makerOrderWithRemovalReason.RemovalReason,
@@ -1216,7 +1233,9 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 // It performs the following steps:
 // 1. Copy the operations queue.
 // 2. Clear the OTP. Note that this also removes nonces for every operation in the OTP.
-// 3. For each order placement operation in the copy, remove the order from the book if it exists.
+// 3. For each order placement operation in the copy, remove the order from the book if it exists,
+// unless it is a Short-Term order expiring at this block height, which is left for
+// `PurgeInvalidMemclobState` to expire.
 func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 	ctx sdk.Context,
 	localValidatorOperationsQueue []types.InternalOperation,
@@ -1230,11 +1249,13 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 		metrics.Latency,
 	)
 
+	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
+
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
 	m.operationsToPropose.ClearOperationsQueue()
 
 	// For each order placement operation in the copy, remove the order from the book
-	// if it exists.
+	// if it exists, unless it is a Short-Term order expiring at this block height.
 	for _, operation := range localValidatorOperationsQueue {
 		switch operation.Operation.(type) {
 		case *types.InternalOperation_ShortTermOrderPlacement:
@@ -1247,7 +1268,13 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 			orderbook := m.mustGetOrderbook(types.ClobPairId(otpOrderId.GetClobPairId()))
 			existingOrder, found := orderbook.getOrder(otpOrderId)
 			if found && existingOrder.GetOrderHash() == otpOrderHash {
-				m.mustRemoveOrder(ctx, otpOrderId)
+				// An order expiring at this height fails replay with `ErrHeightExceedsGoodTilBlock`,
+				// which sends no Indexer removal. Removing it here would also drop its block
+				// expiration, so `PurgeInvalidMemclobState` would never send the expiry either and
+				// the Indexer would keep the order on its book.
+				if existingOrder.GetGoodTilBlock() != blockHeight {
+					m.mustRemoveOrder(ctx, otpOrderId)
+				}
 			} else {
 				order := operation.GetShortTermOrderPlacement().Order
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
@@ -1787,8 +1814,15 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// from `DeliverTx` which accounts for affiliate whitelist correctly. This deviation is ok because rev
 		// shares/fees are distributed to the recipient’s bank balance and not settled at the subaccount level,
 		// and won’t affect the collateralization of future operations in the operations queue.
+		// Isolate this match's state writes. ProcessSingleMatch can write subaccount, open-interest,
+		// and insurance-fund state before returning an error, so without a per-match branch a failed
+		// match would leak partial writes into check state. Persist only on success.
+		matchCtx, writeMatch := ctx.CacheContext()
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
-			ctx, &matchWithOrders, map[string]bool{}, affiliatetypes.AffiliateParameters{})
+			matchCtx, &matchWithOrders, map[string]bool{}, affiliatetypes.AffiliateParameters{})
+		if err == nil {
+			writeMatch()
+		}
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.
@@ -1808,15 +1842,32 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 				takerOrderStatus.OrderStatus = types.LiquidationRequiresDeleveraging
 				break
 			}
-
-			// Panic since this is an unknown error.
+			// Fail soft on an unexpected error. Matching also runs in PrepareCheckState (invoked from
+			// Commit, outside the recovery middleware), so returning the error would stop the node at
+			// that height. Drop both sides of this match on this node only: stop the taker with
+			// InternalError and remove the maker from the local book. No OrderRemoval is proposed
+			// because the reason is unattributable (PersistOrderRemovalToState rejects UNSPECIFIED).
+			telemetry.IncrCounter(
+				1,
+				types.ModuleName,
+				metrics.Memclob,
+				metrics.ProcessSingleMatchUnexpectedError,
+				metrics.Count,
+			)
 			log.ErrorLogWithError(
 				ctx,
-				"Unexpected error from `ProcessSingleMatch`",
+				"mustPerformTakerOrderMatching: unexpected error from ProcessSingleMatch, "+
+					"dropping taker and maker locally",
 				err,
 				"matchWithOrders", matchWithOrders,
+				"isLiquidation", takerIsLiquidation,
 			)
-			panic(err)
+			makerOrdersToRemove = append(
+				makerOrdersToRemove,
+				OrderWithRemovalReason{Order: makerOrder.Order, LocalOnly: true},
+			)
+			takerOrderStatus.OrderStatus = types.InternalError
+			break
 		}
 
 		// If the collateralization check has failed, one or both of the taker or maker orders have failed the
@@ -1835,13 +1886,23 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			// If the maker order failed collateralization checks, add the maker order ID to the
 			// list of order IDs to be removed after matching has ended.
 			if !makerCollatOkay {
-				makerOrdersToRemove = append(
-					makerOrdersToRemove,
-					OrderWithRemovalReason{
-						Order:         makerOrder.Order,
-						RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					},
-				)
+				if makerUpdateResult == satypes.UpdateCausedError {
+					// UpdateCausedError means UpdateSubaccounts itself errored, so the failure is not
+					// attributable to this maker; remove it locally instead of broadcasting an
+					// UNDERCOLLATERALIZED removal that would cancel an honest resting maker chain-wide.
+					makerOrdersToRemove = append(
+						makerOrdersToRemove,
+						OrderWithRemovalReason{Order: makerOrder.Order, LocalOnly: true},
+					)
+				} else {
+					makerOrdersToRemove = append(
+						makerOrdersToRemove,
+						OrderWithRemovalReason{
+							Order:         makerOrder.Order,
+							RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+						},
+					)
+				}
 			}
 
 			// If this is not a liquidation order and the taker order failed collateralization checks,

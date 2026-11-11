@@ -34,6 +34,15 @@ func (r ClobRateLimitDecorator) AnteHandle(
 	tx sdktypes.Tx, simulate bool,
 	next sdktypes.AnteHandler,
 ) (newCtx sdktypes.Context, err error) {
+	// The rate limiters mutate unsynchronized maps, which is only safe under the per-account and global
+	// locks app/ante.go holds around CheckTx/ReCheckTx. Those locks are skipped under simulate, and the
+	// keeper can't detect simulate on its own: baseapp derives the simulate ctx from checkState without
+	// setting ExecModeSimulate, so it reports IsCheckTx() and ExecModeCheck. Rate limiting here would let
+	// concurrent Simulate calls race on the maps (a fatal runtime error) and spend the signer's real
+	// rate-limit budget.
+	if simulate {
+		return next(ctx, tx, simulate)
+	}
 	for _, msg := range tx.GetMsgs() {
 		switch msg := msg.(type) {
 		case *types.MsgCancelOrder:

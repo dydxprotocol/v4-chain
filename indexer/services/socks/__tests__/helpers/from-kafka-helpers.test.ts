@@ -289,6 +289,118 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
     });
 
+    it('decodes non-ASCII contents unchanged', () => {
+      const contents: object = { note: 'Ünïcödé €', emoji: '😀', cjk: '市场' };
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(
+          { ...subaccountMessage, contents: JSON.stringify(contents) },
+        ).finish())),
+      );
+
+      expect(getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
+        message,
+      )[0].contents).toEqual(contents);
+    });
+
+    it('skips a channel without subscribers and does not parse its contents', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(OrderbookMessage.encode(
+          { ...orderbookMessage, contents: 'not json' },
+        ).finish())),
+      );
+      const hasSubscribers: jest.Mock = jest.fn().mockReturnValue(false);
+
+      expect(getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS,
+        message,
+        hasSubscribers,
+      )).toEqual([]);
+      expect(hasSubscribers).toHaveBeenCalledWith(Channel.V4_ORDERBOOK, btcTicker);
+    });
+
+    it.each([
+      [
+        WebsocketTopic.TO_WEBSOCKETS_CANDLES,
+        CandleMessage.encode(candlesMessage).finish(),
+        Channel.V4_CANDLES,
+      ],
+      [
+        WebsocketTopic.TO_WEBSOCKETS_MARKETS,
+        MarketMessage.encode(marketsMessage).finish(),
+        Channel.V4_MARKETS,
+      ],
+      [
+        WebsocketTopic.TO_WEBSOCKETS_TRADES,
+        TradeMessage.encode(tradesMessage).finish(),
+        Channel.V4_TRADES,
+      ],
+      [
+        WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT,
+        BlockHeightMessage.encode(defaultBlockHeightMessage).finish(),
+        Channel.V4_BLOCK_HEIGHT,
+      ],
+    ])('skips %s without subscribers', (
+      topic: WebsocketTopic,
+      encoded: Uint8Array,
+      channel: Channel,
+    ) => {
+      const hasSubscribers: jest.Mock = jest.fn().mockReturnValue(false);
+
+      expect(getMessagesToForward(
+        topic,
+        createKafkaMessage(Buffer.from(encoded)),
+        hasSubscribers,
+      )).toEqual([]);
+      expect(hasSubscribers).toHaveBeenCalledWith(channel, expect.any(String));
+    });
+
+    it('returns only the accounts channel for a subaccount message', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish())),
+      );
+      const messagesToForward: MessageToForward[] = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
+        message,
+        (channel: Channel) => channel === Channel.V4_ACCOUNTS,
+      );
+
+      expect(messagesToForward).toHaveLength(1);
+      expect(messagesToForward[0].channel).toEqual(Channel.V4_ACCOUNTS);
+      expect(messagesToForward[0].id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messagesToForward[0].contents).toEqual(defaultContents);
+    });
+
+    it('returns only the subscribed channel for a subaccount message', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(childSubaccountMessage).finish())),
+      );
+      const messagesToForward: MessageToForward[] = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
+        message,
+        (channel: Channel) => channel === Channel.V4_PARENT_ACCOUNTS,
+      );
+
+      expect(messagesToForward).toHaveLength(1);
+      expect(messagesToForward[0].channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messagesToForward[0].id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messagesToForward[0].contents).toEqual(defaultContents);
+    });
+
+    it('throws InvalidForwardMessageError for invalid clobPairId even without subscribers', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(TradeMessage.encode(
+          { ...tradesMessage, clobPairId: invalidClobPairId },
+        ).finish())),
+      );
+
+      expect(() => {
+        getMessagesToForward(WebsocketTopic.TO_WEBSOCKETS_TRADES, message, () => false);
+      }).toThrow(
+        new InvalidForwardMessageError(`Invalid clob pair id: ${invalidClobPairId}`),
+      );
+    });
+
     it('throws InvalidForwardMessageError for empty message', () => {
       const message: KafkaMessage = createKafkaMessage(null);
 

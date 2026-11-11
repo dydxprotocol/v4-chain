@@ -22,6 +22,11 @@ export const configSchema = {
   API_LIMIT_V4: parseInteger({
     default: 1000,
   }),
+  // Hard ceiling on (page - 1) * limit for paginated endpoints. Validated against 30d of real
+  // comlink traffic: sits well below the offset range (~91k-149k) that triggered the 2026-07-11
+  // weekend paging incident, while clearing the extreme scraper tiers observed (offsets in the
+  // millions) by 2+ orders of magnitude.
+  MAX_PAGINATION_OFFSET: parseInteger({ default: 25_000 }),
   API_ORDERBOOK_LEVELS_PER_SIDE_LIMIT: parseInteger({ default: 100 }),
 
   // Logging config
@@ -32,6 +37,8 @@ export const configSchema = {
   CORS_ORIGIN: parseString({ default: '*' }),
   KEEP_ALIVE_MS: parseInteger({ default: 61_000 }),
   HEADERS_TIMEOUT_MS: parseInteger({ default: 65_000 }),
+  // gzip responses for clients that send Accept-Encoding (cuts ALB/NAT egress)
+  COMPRESSION_ENABLED: parseBoolean({ default: true }),
 
   // Rate limit Redis URL
   RATE_LIMIT_REDIS_URL: parseString({
@@ -123,7 +130,11 @@ export const configSchema = {
   TURNKEY_MAGIC_LINK_VALIDATION: parseString({ default: 'https://dydx.trade' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
-  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0' }),
+  // Default slippage tolerance for Skip bridge routes, in percent units
+  // ('0.1' = 0.1%). The effective tolerance per route is the smaller of this
+  // and SKIP_SLIPPAGE_TOLERANCE_USDC / estimatedAmountOut
+  // (see getSlippageTolerancePercent in helpers/skip-helper.ts).
+  SKIP_SLIPPAGE_TOLERANCE_PERCENTAGE: parseString({ default: '0.1' }),
   // this is the largest allowed slippage amount in USDC.
   SKIP_SLIPPAGE_TOLERANCE_USDC: parseInteger({ default: 100 }),
   TURNKEY_EMAIL_SENDER_ADDRESS: parseString({ default: 'notifications@mail.dydx.trade' }),

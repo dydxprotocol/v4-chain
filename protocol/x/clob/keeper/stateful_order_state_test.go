@@ -11,6 +11,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -862,6 +863,41 @@ func TestRemoveExpiredStatefulOrders(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMustRemoveStatefulOrder_TwapParent_DeletesPendingTrigger(t *testing.T) {
+	ks := setupTestTWAPOrderState(t)
+	ctx := ks.Ctx.WithBlockTime(time.Unix(1000, 0))
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    0,
+		Timestamp: time.Unix(1000, 0),
+	})
+
+	twapOrder := constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO
+	ks.ClobKeeper.SetTWAPOrderPlacement(ctx, twapOrder, 0)
+
+	suborderId := types.OrderId{
+		SubaccountId: twapOrder.OrderId.SubaccountId,
+		ClientId:     twapOrder.OrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrder.OrderId.ClobPairId,
+	}
+
+	// Sanity check: the pending suborder trigger exists before removal.
+	_, _, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.True(t, found)
+
+	require.NotPanics(t, func() {
+		ks.ClobKeeper.MustRemoveStatefulOrder(ctx, twapOrder.OrderId)
+	})
+
+	// The parent placement is gone.
+	_, found = ks.ClobKeeper.GetTwapOrderPlacement(ctx, twapOrder.OrderId)
+	require.False(t, found)
+
+	// The pending suborder trigger is gone.
+	_, _, found = ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+	require.False(t, found)
 }
 
 func TestRemoveLongTermOrder_PanicsIfNotFound(t *testing.T) {

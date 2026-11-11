@@ -496,6 +496,11 @@ var (
 		5001,
 		"Block rate limit exceeded",
 	)
+	ErrShortTermOrderRateExceeded = errorsmod.Register(
+		ModuleName,
+		5002,
+		"Short-term order rate exceeded: an address's 30-day volume and collateral set its order budget",
+	)
 
 	// Conditional order errors.
 	ErrInvalidConditionType = errorsmod.Register(

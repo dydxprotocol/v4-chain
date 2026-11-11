@@ -712,3 +712,85 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 		})
 	}
 }
+
+func TestPlaceShortTermOrder_EquityTierLimit(t *testing.T) {
+	reduceOnlyIOC := constants.Order_Alice_Num0_Id1_Clob0_Buy5_Price15_GTB20_IOC
+	reduceOnlyIOC.ReduceOnly = true
+
+	// Alice has $10,000.
+	floorAbove := clobtypes.EquityTierLimitConfiguration{
+		ShortTermOrderEquityTiers: []clobtypes.EquityTierLimit{
+			{UsdTncRequired: dtypes.NewInt(0), Limit: 0},
+			{UsdTncRequired: dtypes.NewInt(70_000_000_000), Limit: 1000}, // $70,000
+		},
+	}
+	floorBelow := clobtypes.EquityTierLimitConfiguration{
+		ShortTermOrderEquityTiers: []clobtypes.EquityTierLimit{
+			{UsdTncRequired: dtypes.NewInt(0), Limit: 0},
+			{UsdTncRequired: dtypes.NewInt(5_000_000_000), Limit: 1},    // $5,000
+			{UsdTncRequired: dtypes.NewInt(70_000_000_000), Limit: 100}, // $70,000
+		},
+	}
+
+	tests := map[string]struct {
+		order                        clobtypes.Order
+		equityTierLimitConfiguration clobtypes.EquityTierLimitConfiguration
+		expectedErrContains          string
+	}{
+		"Resting order rejected below the floor": {
+			order:                        constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
+			equityTierLimitConfiguration: floorAbove,
+			expectedErrContains:          "Opening order would exceed equity tier limit of 0",
+		},
+		"IOC order rejected below the floor": {
+			order:                        constants.Order_Alice_Num0_Id1_Clob0_Buy5_Price15_GTB20_IOC,
+			equityTierLimitConfiguration: floorAbove,
+			expectedErrContains:          "Opening order would exceed equity tier limit of 0",
+		},
+		"Reduce-only order below the floor skips the gate and fails the reduce-only check instead": {
+			order:                        reduceOnlyIOC,
+			equityTierLimitConfiguration: floorAbove,
+			expectedErrContains:          clobtypes.ErrReduceOnlyWouldIncreasePositionSize.Error(),
+		},
+		"Resting order allowed at or above the floor": {
+			order:                        constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
+			equityTierLimitConfiguration: floorBelow,
+		},
+		"Resting order allowed when no short-term tiers are configured": {
+			order: constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).
+				WithGenesisDocFn(func() types.GenesisDoc {
+					genesis := testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
+						state.Subaccounts = []satypes.Subaccount{
+							constants.Alice_Num0_10_000USD,
+						}
+					})
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
+						state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
+						// Don't enforce the block rate limit.
+						state.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{}
+					})
+					return genesis
+				}).Build()
+
+			ctx := tApp.InitChain()
+
+			order := testapp.MustScaleOrder(tc.order, testapp.DefaultGenesis())
+			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(order)) {
+				resp := tApp.CheckTx(tx)
+				if tc.expectedErrContains == "" {
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				} else {
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, tc.expectedErrContains)
+				}
+			}
+		})
+	}
+}

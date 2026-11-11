@@ -51,6 +51,17 @@ func (msg *MsgCancelOrder) ValidateBasic() (err error) {
 		return err
 	}
 
+	// TWAP suborder lifecycle is owned by the parent TWAP order; users cancel the parent (flag 128),
+	// not individual suborders. Reject the suborder flag at the message boundary so a user-signed
+	// MsgCancelOrder cannot target one.
+	if orderId.IsTwapSuborder() {
+		return errorsmod.Wrapf(
+			ErrInvalidOrderFlag,
+			"TWAP suborders cannot be cancelled via MsgCancelOrder (order flag %v)",
+			orderId.OrderFlags,
+		)
+	}
+
 	if orderId.IsStatefulOrder() {
 		if msg.GetGoodTilBlockTime() == 0 {
 			return errorsmod.Wrapf(

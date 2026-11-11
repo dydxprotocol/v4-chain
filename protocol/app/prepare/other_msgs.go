@@ -24,7 +24,7 @@ func GetGroupMsgOther(availableTxs [][]byte, maxBytes uint64) ([][]byte, [][]byt
 	)
 
 	for _, tx := range availableTxs {
-		byteCount += uint64(len(tx))
+		byteCount += txProtoSize(tx)
 		if byteCount <= maxBytes {
 			txsToInclude = append(txsToInclude, tx)
 		} else {

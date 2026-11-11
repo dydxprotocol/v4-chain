@@ -82,14 +82,18 @@ sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/.full-node-2/con
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do
   # p2p.seeds taken from --p2p.persistent_peers flag of full node
-  cosmovisor run start --log_level info --home /dydxprotocol/chain/.full-node-2 --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true --dd-agent-host=${dd_agent_host} &
+  cosmovisor run start --log_format json --log_level info --home /dydxprotocol/chain/.full-node-2 --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true --dd-agent-host=${dd_agent_host} &
 
   sleep ${upload_period}
   kill -TERM $(pidof cosmovisor)
 
   SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
-  tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
-  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --debug || true
+  # `tar` is not verbose and `aws s3 cp` omits its progress meter: the former otherwise writes one log
+  # line per archived file, and the latter a `\r`-delimited stream that lands in Datadog as a single
+  # ~900KB line. `--no-progress` (rather than `--only-show-errors`) keeps the one-line upload
+  # confirmation, which is the only per-snapshot success signal in these logs.
+  tar czf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
+  aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --no-progress || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
 
 done

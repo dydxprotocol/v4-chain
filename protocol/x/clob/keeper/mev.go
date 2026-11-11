@@ -257,41 +257,44 @@ func (k Keeper) RecordMevMetrics(
 		// Log MEV metric.
 		// TODO(CLOB-1051) change to use new logger library. Be careful the values are not changed
 		// because mev dashboards rely on this log.
-		k.Logger(ctx).Info(
-			"Measuring MEV for proposed matches",
-			metrics.Mev,
-			mev,
-			// Common metadata.
-			metrics.BlockHeight,
-			ctx.BlockHeight(),
-			metrics.ConsensusRound,
-			consensusRound,
-			metrics.Proposer,
-			proposer.Description.Moniker,
-			metrics.ClobPairId,
-			clobPairId.ToUint32(),
-			metrics.MidPrice,
-			validatorPnL[clobPairId].Metadata.MidPrice.ToUint64(),
-			metrics.OraclePrice,
-			validatorPnL[clobPairId].Metadata.OraclePrice.ToUint64(),
-			metrics.BestBid,
-			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestBid),
-			metrics.BestAsk,
-			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestAsk),
-			// Validator stats.
-			metrics.ValidatorNumFills,
-			validatorPnL[clobPairId].NumFills,
-			metrics.ValidatorVolumeQuoteQuantums,
-			validatorVolumeQuoteQuantums.String(),
-			// Proposer stats.
-			metrics.ProposerNumFills,
-			blockProposerPnL[clobPairId].NumFills,
-			metrics.ProposerVolumeQuoteQuantums,
-			new(big.Int).Div(
-				blockProposerPnL[clobPairId].VolumeQuoteQuantums,
-				big.NewInt(2),
-			).String(),
-		)
+		// Zero-MEV, zero-fill lines are ~99.9% of volume and carry no signal; the ClobMev gauge below still covers them.
+		if mev != 0 || validatorPnL[clobPairId].NumFills != 0 || blockProposerPnL[clobPairId].NumFills != 0 {
+			k.Logger(ctx).Info(
+				"Measuring MEV for proposed matches",
+				metrics.Mev,
+				mev,
+				// Common metadata.
+				metrics.BlockHeight,
+				ctx.BlockHeight(),
+				metrics.ConsensusRound,
+				consensusRound,
+				metrics.Proposer,
+				proposer.Description.Moniker,
+				metrics.ClobPairId,
+				clobPairId.ToUint32(),
+				metrics.MidPrice,
+				validatorPnL[clobPairId].Metadata.MidPrice.ToUint64(),
+				metrics.OraclePrice,
+				validatorPnL[clobPairId].Metadata.OraclePrice.ToUint64(),
+				metrics.BestBid,
+				fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestBid),
+				metrics.BestAsk,
+				fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestAsk),
+				// Validator stats.
+				metrics.ValidatorNumFills,
+				validatorPnL[clobPairId].NumFills,
+				metrics.ValidatorVolumeQuoteQuantums,
+				validatorVolumeQuoteQuantums.String(),
+				// Proposer stats.
+				metrics.ProposerNumFills,
+				blockProposerPnL[clobPairId].NumFills,
+				metrics.ProposerVolumeQuoteQuantums,
+				new(big.Int).Div(
+					blockProposerPnL[clobPairId].VolumeQuoteQuantums,
+					big.NewInt(2),
+				).String(),
+			)
+		}
 
 		metrics.SetGaugeWithLabels(
 			metrics.ClobMev,

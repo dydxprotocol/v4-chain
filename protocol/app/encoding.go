@@ -3,12 +3,12 @@ package app
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/app/txdecoder"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 var encodingConfig = initEncodingConfig()
@@ -32,7 +32,7 @@ func makeEncodingConfig() EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := module.InterfaceRegistry
 	codec := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
+	txCfg := txdecoder.NewTxConfig(codec)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

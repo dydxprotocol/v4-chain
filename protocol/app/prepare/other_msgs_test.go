@@ -56,15 +56,17 @@ func TestGetGroupMsgOther(t *testing.T) {
 			expectedTxsRemainder: [][]byte{{1, 2}, {3, 4}},
 		},
 		"valid: subset under max": {
-			txs:      [][]byte{{1, 2}, {3, 4}},
-			maxBytes: 3,
+			txs: [][]byte{{1, 2}, {3, 4}},
+			// Budget for exactly one proto-framed 2-byte tx (1 tag + 1 varint + 2 = 4); the second overflows.
+			maxBytes: protoTxSize([]byte{1, 2}),
 
 			expectedTxsInclude:   [][]byte{{1, 2}},
 			expectedTxsRemainder: [][]byte{{3, 4}},
 		},
 		"valid: all under max": {
-			txs:      [][]byte{{1, 2}, {3, 4}},
-			maxBytes: 4,
+			txs: [][]byte{{1, 2}, {3, 4}},
+			// Budget for both proto-framed 2-byte txs.
+			maxBytes: 2 * protoTxSize([]byte{1, 2}),
 
 			expectedTxsInclude:   [][]byte{{1, 2}, {3, 4}},
 			expectedTxsRemainder: nil,

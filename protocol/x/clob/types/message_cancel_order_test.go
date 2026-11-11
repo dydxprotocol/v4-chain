@@ -92,6 +92,16 @@ func TestMsgCancelOrder_ValidateBasic(t *testing.T) {
 				OrderFlags: OrderIdFlags_Conditional,
 			}, 100),
 		},
+		"twap suborder rejected": {
+			msg: *NewMsgCancelOrderStateful(OrderId{
+				SubaccountId: satypes.SubaccountId{
+					Owner:  sample.AccAddress(),
+					Number: uint32(0),
+				},
+				OrderFlags: OrderIdFlags_TwapSuborder,
+			}, 100),
+			err: ErrInvalidOrderFlag,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

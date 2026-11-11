@@ -1,4 +1,5 @@
 import bodyParser from 'body-parser';
+import compression from 'compression';
 import cors from 'cors';
 import express, { Express } from 'express';
 import requestId from 'express-request-id';
@@ -22,6 +23,12 @@ export default function server(
   app.use(responseTime({ suffix: false }));
 
   app.use(requestId());
+
+  // Must be registered before resBodyCapture so that res.body (logged by RequestLogger) holds the
+  // uncompressed response rather than gzip bytes.
+  if (config.COMPRESSION_ENABLED) {
+    app.use(compression());
+  }
 
   app.use(resBodyCapture);
 
