@@ -180,6 +180,25 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 	return
 }
 
+// GetSubaccountIdsByOwner returns up to limit of the owner's subaccount ids, in store order.
+func (k Keeper) GetSubaccountIdsByOwner(ctx sdk.Context, owner string, limit int) []types.SubaccountId {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
+	// A state key is the id's proto encoding, and number 0 encodes to nothing, so the key of (owner, 0) is a
+	// prefix of every key the owner has.
+	iterator := storetypes.KVStorePrefixIterator(store, (&types.SubaccountId{Owner: owner}).ToStateKey())
+	defer iterator.Close()
+
+	var ids []types.SubaccountId
+	for ; iterator.Valid() && len(ids) < limit; iterator.Next() {
+		var id types.SubaccountId
+		if err := id.Unmarshal(iterator.Key()); err != nil {
+			panic(err)
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // ForEachSubaccount performs a callback across all subaccounts.
 // The callback function should return a boolean if we should end iteration or not.
 // This is more performant than GetAllSubaccount because it does not fetch all at once.
@@ -422,16 +441,29 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
-	// state due to an update.
+	// state. Run inflows (Opened, into a pool) before outflows (Closed, out of a pool) so a pool is
+	// funded by an opener's deposit before a closer's payout is drawn from it. Bank transfers commute,
+	// so final balances are unchanged wherever the previous ordering succeeded.
+	stateTransitions := make([]*types.IsolatedPerpetualPositionStateTransition, 0, len(settledUpdates))
 	for _, settledUpdateWithUpdatedSubaccount := range settledUpdates {
-		if err := k.computeAndExecuteCollateralTransfer(
-			ctx,
-			// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
-			// and asset updates applied to it.
+		stateTransition, err := GetIsolatedPerpetualStateTransition(
 			settledUpdateWithUpdatedSubaccount,
 			perpInfos,
-		); err != nil {
+		)
+		if err != nil {
 			return false, nil, err
+		}
+		if stateTransition != nil {
+			stateTransitions = append(stateTransitions, stateTransition)
+		}
+	}
+	for _, phase := range []types.PositionStateTransition{types.Opened, types.Closed} {
+		for _, stateTransition := range stateTransitions {
+			if stateTransition.Transition == phase {
+				if err := k.transferCollateralForIsolatedPerpetual(ctx, stateTransition); err != nil {
+					return false, nil, err
+				}
+			}
 		}
 	}
 
@@ -569,41 +601,12 @@ func (k Keeper) internalCanUpdateSubaccountsWithLeverage(
 		if err != nil {
 			return false, nil, err
 		}
-		currentBlock := uint32(ctx.BlockHeight())
-
-		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
-		if negativeTncSubaccountExists && currentBlock < lastBlockNegativeTncSubaccountSeen {
-			panic(
-				fmt.Sprintf(
-					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-						"block a negative TNC subaccount was seen (%d)",
-					currentBlock,
-					lastBlockNegativeTncSubaccountSeen,
-				),
-			)
-		}
-
-		// Panic if the current block is less than the last block a chain outage was seen.
-		downtimeInfo := k.blocktimeKeeper.GetDowntimeInfoFor(
+		negativeTncSubaccountSeen, chainOutageSeen := k.negativeTncGateStatus(
 			ctx,
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_CHAIN_OUTAGE_DURATION,
+			uint32(ctx.BlockHeight()),
+			lastBlockNegativeTncSubaccountSeen,
+			negativeTncSubaccountExists,
 		)
-		chainOutageExists := downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
-		if chainOutageExists && currentBlock < downtimeInfo.BlockInfo.Height {
-			panic(
-				fmt.Sprintf(
-					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-						"block a chain outage was seen (%d)",
-					currentBlock,
-					downtimeInfo.BlockInfo.Height,
-				),
-			)
-		}
-
-		negativeTncSubaccountSeen := negativeTncSubaccountExists && currentBlock-lastBlockNegativeTncSubaccountSeen <
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
-		chainOutageSeen := chainOutageExists && currentBlock-downtimeInfo.BlockInfo.Height <
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
 
 		if negativeTncSubaccountSeen || chainOutageSeen {
 			success = false

@@ -65,9 +65,9 @@ func TestGetOrderRemovalReason_Success(t *testing.T) {
 			orderError:     clobtypes.ErrNotImplemented,
 			expectedReason: 0,
 			expectedErr: fmt.Errorf(
-				"unrecognized order status %d and error \"%w\"",
+				"unrecognized order status %d and error \"%s\"",
 				clobtypes.Success,
-				clobtypes.ErrNotImplemented,
+				clobtypes.ErrNotImplemented.Error(),
 			),
 		},
 	}

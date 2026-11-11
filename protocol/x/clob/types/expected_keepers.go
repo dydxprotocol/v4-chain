@@ -40,6 +40,7 @@ type SubaccountsKeeper interface {
 	) (
 		val satypes.Subaccount,
 	)
+	GetSubaccountIdsByOwner(ctx sdk.Context, owner string, limit int) []satypes.SubaccountId
 	GetStreamSubaccountUpdate(
 		ctx sdk.Context,
 		id satypes.SubaccountId,
@@ -84,6 +85,10 @@ type SubaccountsKeeper interface {
 		builderFeeQuantums *big.Int,
 		builderAddress string,
 	) error
+	IsNegativeTncGateActiveForPerpetual(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (bool, error)
 	GetInsuranceFundBalance(
 		ctx sdk.Context,
 		perpetualId uint32,

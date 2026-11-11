@@ -70,7 +70,9 @@ message Controls {
   bool injective_deposits_disabled = 13;
 
   // max_pending_settlements is the cap on concurrent in-flight canonical
-  // settlements.
+  // settlements, at most 100000. It bounds module state and the scans over
+  // it; it is not a throttle. A withdrawal on either route needs a free slot,
+  // so it is sized well above the expected in-flight volume.
   uint32 max_pending_settlements = 14;
 }
 

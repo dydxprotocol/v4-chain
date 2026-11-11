@@ -16,6 +16,7 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 		// State.
 		placedOperations          []types.Operation
 		preexistingStatefulOrders []types.LongTermOrderPlacement
+		blockHeight               int64
 
 		// Expectations.
 		expectedRemainingBids []OrderWithRemainingSize
@@ -129,6 +130,29 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 			},
 			expectedRemainingBids: []OrderWithRemainingSize{},
 		},
+		"a partially filled short-term order expiring at the current block height stays on the book": {
+			placedOperations: []types.Operation{
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy10_Price30_GTB34),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+			},
+			blockHeight: 20,
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20,
+					RemainingSize: 15,
+				},
+			},
+			expectedRemainingBids: []OrderWithRemainingSize{},
+		},
+		"a partially filled short-term order expiring after the current block height is removed": {
+			placedOperations: []types.Operation{
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy10_Price30_GTB34),
+				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+			},
+			blockHeight:           19,
+			expectedRemainingAsks: []OrderWithRemainingSize{},
+			expectedRemainingBids: []OrderWithRemainingSize{},
+		},
 		"a pre-existing stateful order crosses a short-term order": {
 			placedOperations: []types.Operation{
 				clobtest.NewPreexistingStatefulOrderPlacementOperation(
@@ -162,6 +186,7 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 				tc.preexistingStatefulOrders,
 			)
 
+			ctx = ctx.WithBlockHeight(tc.blockHeight)
 			operations, _ := memclob.operationsToPropose.GetOperationsToReplay()
 			memclob.RemoveAndClearOperationsQueue(
 				ctx,
@@ -181,4 +206,44 @@ func TestRemoveAndClearOperationsQueue(t *testing.T) {
 			require.Empty(t, shortTermTxBytes)
 		})
 	}
+}
+
+func TestRemoveAndClearOperationsQueue_ExpiringOrderIsExpiredByPurge(t *testing.T) {
+	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+	memclob, _ := memclobOperationsTestSetupWithCustomCollatCheck(
+		t,
+		ctx,
+		[]types.Operation{
+			clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num1_Id10_Clob0_Buy10_Price30_GTB34),
+			clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20),
+		},
+		memclobtestutil.AlwaysSuccessfulCollatCheckFn,
+		constants.GetStatePosition_ZeroPositionSize,
+		nil,
+	)
+
+	ctx = ctx.WithBlockHeight(20)
+	operations, _ := memclob.operationsToPropose.GetOperationsToReplay()
+	memclob.RemoveAndClearOperationsQueue(ctx, operations)
+
+	offchainUpdates := memclob.PurgeInvalidMemclobState(
+		ctx,
+		nil,
+		nil,
+		nil,
+		nil,
+		types.NewOffchainUpdates(),
+	)
+
+	require.Equal(t, 1, memclobtestutil.MessageCountOfType(offchainUpdates, types.RemoveMessageType))
+	require.True(
+		t,
+		memclobtestutil.HasMessage(
+			offchainUpdates,
+			constants.Order_Alice_Num0_Id10_Clob0_Sell25_Price15_GTB20.OrderId,
+			types.RemoveMessageType,
+		),
+	)
+	AssertMemclobHasOrders(t, ctx, memclob, []OrderWithRemainingSize{}, []OrderWithRemainingSize{})
 }

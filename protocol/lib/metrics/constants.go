@@ -20,6 +20,9 @@ const (
 	HttpGetTimeout   = "http_get_timeout"
 	Invalid          = "invalid"
 	Latency          = "latency"
+	ClobGlobalLock   = "clob_global_lock"
+	Wait             = "wait"
+	Hold             = "hold"
 	Matched          = "matched"
 	MessageType      = "message_type"
 	Msg              = "msg"
@@ -61,6 +64,7 @@ const (
 	PrepareProposalTxs   = "prepare_proposal_txs"
 	PrepareCheckState    = "prepare_check_state"
 	PricesTx             = "prices_tx"
+	Truncated            = "truncated"
 	TotalNumBytes        = "total_num_bytes"
 	TotalNumTxs          = "total_num_txs"
 	Validate             = "validate"
@@ -119,6 +123,9 @@ const (
 	ConditionalOrderUntriggered                             = "conditional_order_untriggered"
 	ConvertToUpdates                                        = "convert_to_updates"
 	CreateClobPair                                          = "create_clob_pair"
+	EquityTierLimit                                         = "equity_tier_limit"
+	ShadowRejected                                          = "shadow_rejected"
+	TokenBucket                                             = "token_bucket"
 	Expired                                                 = "expired"
 	FullyFilled                                             = "fully_filled"
 	Hydrate                                                 = "hydrate"
@@ -209,7 +216,12 @@ const (
 	AddedToOrderBook                     = "added_to_orderbook"
 	AddToOrderbookCollateralizationCheck = "add_to_orderbook_collateralization_check"
 	Memclob                              = "memclob"
+	ProcessSingleMatchUnexpectedError    = "process_single_match_unexpected_error"
 	RemovedFromOrderBook                 = "removed_from_orderbook"
+
+	// TWAP.
+	TwapSweepDuplicateTrigger  = "twap_sweep_duplicate_trigger"
+	TwapSweepSuborderCollision = "twap_sweep_suborder_collision"
 
 	// Daemon
 	DaemonServer    = "daemon_server"

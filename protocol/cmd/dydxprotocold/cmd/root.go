@@ -395,6 +395,14 @@ func newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
+	// baseapp treats a query-gas-limit of 0 as unbounded, and every app.toml generated before
+	// DefaultQueryGasLimit existed has it explicitly set to "0", so a default in initAppConfig alone
+	// never reaches existing nodes. Operators who want a higher budget must set one explicitly.
+	queryGasLimit := cast.ToUint64(appOpts.Get(server.FlagQueryGasLimit))
+	if queryGasLimit == 0 {
+		queryGasLimit = DefaultQueryGasLimit
+	}
+
 	return dydxapp.New(
 		logger,
 		db,
@@ -403,6 +411,7 @@ func newApp(
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
+		baseapp.SetQueryGasLimit(queryGasLimit),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
 		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),

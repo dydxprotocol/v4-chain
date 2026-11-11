@@ -18,6 +18,13 @@ type ClobFlags struct {
 	MevTelemetryEnabled    bool
 	MevTelemetryHosts      []string
 	MevTelemetryIdentifier string
+
+	ShortTermTokenBucketEnabled            bool
+	ShortTermTokenBucketShadow             bool
+	ShortTermTokenBucketMinCapacity        uint32
+	ShortTermTokenBucketBurstBlocks        uint32
+	ShortTermTokenBucketVolumePerOrder     uint64
+	ShortTermTokenBucketCollateralPerOrder uint64
 }
 
 // List of CLI flags.
@@ -31,6 +38,14 @@ const (
 	MevTelemetryEnabled    = "mev-telemetry-enabled"
 	MevTelemetryHosts      = "mev-telemetry-hosts"
 	MevTelemetryIdentifier = "mev-telemetry-identifier"
+
+	// Short-term order token bucket.
+	ShortTermTokenBucketEnabled            = "short-term-token-bucket-enabled"
+	ShortTermTokenBucketShadow             = "short-term-token-bucket-shadow"
+	ShortTermTokenBucketMinCapacity        = "short-term-token-bucket-min-capacity"
+	ShortTermTokenBucketBurstBlocks        = "short-term-token-bucket-burst-blocks"
+	ShortTermTokenBucketVolumePerOrder     = "short-term-token-bucket-volume-per-order-quote-quantums"
+	ShortTermTokenBucketCollateralPerOrder = "short-term-token-bucket-collateral-per-order-quote-quantums"
 )
 
 // Default values.
@@ -43,6 +58,13 @@ const (
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHostsFlag  = ""
 	DefaultMevTelemetryIdentifier = ""
+
+	DefaultShortTermTokenBucketEnabled            = true
+	DefaultShortTermTokenBucketShadow             = false
+	DefaultShortTermTokenBucketMinCapacity        = 100
+	DefaultShortTermTokenBucketBurstBlocks        = 1000
+	DefaultShortTermTokenBucketVolumePerOrder     = 50_000_000_000 // $50k of 30-day volume
+	DefaultShortTermTokenBucketCollateralPerOrder = 500_000_000    // $500 of net collateral
 )
 
 var DefaultMevTelemetryHosts = []string{}
@@ -90,16 +112,67 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 		DefaultMevTelemetryIdentifier,
 		"Sets the identifier to use for MEV Telemetry collection agents.",
 	)
+	cmd.Flags().Bool(
+		ShortTermTokenBucketEnabled,
+		DefaultShortTermTokenBucketEnabled,
+		"Rejects short-term orders in CheckTx once the owner address's token bucket is empty. The bucket "+
+			"refills each block from the address's 30-day volume and the net collateral across its subaccounts.",
+	)
+	cmd.Flags().Bool(
+		ShortTermTokenBucketShadow,
+		DefaultShortTermTokenBucketShadow,
+		"Counts orders the token bucket would reject without rejecting them.",
+	)
+	cmd.Flags().Uint32(
+		ShortTermTokenBucketMinCapacity,
+		DefaultShortTermTokenBucketMinCapacity,
+		fmt.Sprintf(
+			"Short-term orders any address can place in a burst. Default = %d",
+			DefaultShortTermTokenBucketMinCapacity,
+		),
+	)
+	cmd.Flags().Uint32(
+		ShortTermTokenBucketBurstBlocks,
+		DefaultShortTermTokenBucketBurstBlocks,
+		fmt.Sprintf(
+			"Blocks of refill a bucket holds when that exceeds the minimum capacity. Default = %d",
+			DefaultShortTermTokenBucketBurstBlocks,
+		),
+	)
+	cmd.Flags().Uint64(
+		ShortTermTokenBucketVolumePerOrder,
+		DefaultShortTermTokenBucketVolumePerOrder,
+		fmt.Sprintf(
+			"30-day volume in quote quantums that refills one short-term order per block. 0 disables the "+
+				"volume term. Default = %d",
+			DefaultShortTermTokenBucketVolumePerOrder,
+		),
+	)
+	cmd.Flags().Uint64(
+		ShortTermTokenBucketCollateralPerOrder,
+		DefaultShortTermTokenBucketCollateralPerOrder,
+		fmt.Sprintf(
+			"Net collateral in quote quantums that refills one short-term order per block. 0 disables the "+
+				"collateral term. Default = %d",
+			DefaultShortTermTokenBucketCollateralPerOrder,
+		),
+	)
 }
 
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
-		MaxLiquidationAttemptsPerBlock:      DefaultMaxLiquidationAttemptsPerBlock,
-		MaxDeleveragingAttemptsPerBlock:     DefaultMaxDeleveragingAttemptsPerBlock,
-		MaxDeleveragingSubaccountsToIterate: DefaultMaxDeleveragingSubaccountsToIterate,
-		MevTelemetryEnabled:                 DefaultMevTelemetryEnabled,
-		MevTelemetryHosts:                   DefaultMevTelemetryHosts,
-		MevTelemetryIdentifier:              DefaultMevTelemetryIdentifier,
+		MaxLiquidationAttemptsPerBlock:         DefaultMaxLiquidationAttemptsPerBlock,
+		MaxDeleveragingAttemptsPerBlock:        DefaultMaxDeleveragingAttemptsPerBlock,
+		MaxDeleveragingSubaccountsToIterate:    DefaultMaxDeleveragingSubaccountsToIterate,
+		MevTelemetryEnabled:                    DefaultMevTelemetryEnabled,
+		MevTelemetryHosts:                      DefaultMevTelemetryHosts,
+		MevTelemetryIdentifier:                 DefaultMevTelemetryIdentifier,
+		ShortTermTokenBucketEnabled:            DefaultShortTermTokenBucketEnabled,
+		ShortTermTokenBucketShadow:             DefaultShortTermTokenBucketShadow,
+		ShortTermTokenBucketMinCapacity:        DefaultShortTermTokenBucketMinCapacity,
+		ShortTermTokenBucketBurstBlocks:        DefaultShortTermTokenBucketBurstBlocks,
+		ShortTermTokenBucketVolumePerOrder:     DefaultShortTermTokenBucketVolumePerOrder,
+		ShortTermTokenBucketCollateralPerOrder: DefaultShortTermTokenBucketCollateralPerOrder,
 	}
 }
 
@@ -145,6 +218,42 @@ func GetClobFlagValuesFromOptions(
 	if option := appOpts.Get(MaxDeleveragingSubaccountsToIterate); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.MaxDeleveragingSubaccountsToIterate = v
+		}
+	}
+
+	if option := appOpts.Get(ShortTermTokenBucketEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.ShortTermTokenBucketEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(ShortTermTokenBucketShadow); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.ShortTermTokenBucketShadow = v
+		}
+	}
+
+	if option := appOpts.Get(ShortTermTokenBucketMinCapacity); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.ShortTermTokenBucketMinCapacity = v
+		}
+	}
+
+	if option := appOpts.Get(ShortTermTokenBucketBurstBlocks); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.ShortTermTokenBucketBurstBlocks = v
+		}
+	}
+
+	if option := appOpts.Get(ShortTermTokenBucketVolumePerOrder); option != nil {
+		if v, err := cast.ToUint64E(option); err == nil {
+			result.ShortTermTokenBucketVolumePerOrder = v
+		}
+	}
+
+	if option := appOpts.Get(ShortTermTokenBucketCollateralPerOrder); option != nil {
+		if v, err := cast.ToUint64E(option); err == nil {
+			result.ShortTermTokenBucketCollateralPerOrder = v
 		}
 	}
 

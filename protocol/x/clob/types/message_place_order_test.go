@@ -429,6 +429,26 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 			},
 			err: ErrInvalidPlaceOrder,
 		},
+		"twap suborder rejected": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_TwapSuborder,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+				},
+			},
+			err: ErrInvalidOrderFlag,
+		},
 		"twap: interval too small": {
 			msg: MsgPlaceOrder{
 				Order: Order{

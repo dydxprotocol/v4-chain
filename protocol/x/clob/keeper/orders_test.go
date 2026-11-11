@@ -997,6 +997,28 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 	}
 }
 
+func TestAddPreexistingStatefulOrder_RejectsOrphanTwapSuborder(t *testing.T) {
+	memClob := &mocks.MemClob{}
+	memClob.On("SetClobKeeper", mock.Anything).Return()
+
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		indexer_manager.NewIndexerEventManagerNoop(),
+	)
+
+	// An orphan TWAP suborder: no TWAP parent placement exists for it in state.
+	orphanSuborder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20
+	orphanSuborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
+
+	var err error
+	require.NotPanics(t, func() {
+		_, _, _, err = ks.ClobKeeper.AddPreexistingStatefulOrder(ks.Ctx, &orphanSuborder, memClob)
+	})
+	require.ErrorIs(t, err, types.ErrInvalidTwapOrderPlacement)
+}
+
 func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	indexerEventManager := &mocks.IndexerEventManager{}
 	for _, message := range constants.TestOffchainMessages {
@@ -2432,6 +2454,89 @@ func TestInitStatefulOrders_SkipsBlockedBuilderAddress(t *testing.T) {
 	}
 }
 
+func TestInitStatefulOrders_SkipsOrphanTwapSuborder(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	mockBankKeeper := &mocks.BankKeeper{}
+	mockBankKeeper.On(
+		"SendCoins",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(nil)
+
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+	ctx := ks.Ctx.WithIsCheckTx(true)
+
+	// Create the default markets.
+	keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+	// Create liquidity tiers.
+	keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+	require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParamsNoFee))
+
+	// Set up USDC asset in assets module.
+	require.NoError(t, keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper))
+
+	// Create the perpetual.
+	perpetual := constants.BtcUsd_SmallMarginRequirement
+	_, err := ks.PerpetualsKeeper.CreatePerpetual(
+		ctx,
+		perpetual.Params.Id,
+		perpetual.Params.Ticker,
+		perpetual.Params.MarketId,
+		perpetual.Params.AtomicResolution,
+		perpetual.Params.DefaultFundingPpm,
+		perpetual.Params.LiquidityTier,
+		perpetual.Params.MarketType,
+	)
+	require.NoError(t, err)
+	perptest.SetUpDefaultPerpOIsForTest(t, ks.Ctx, ks.PerpetualsKeeper, []perptypes.Perpetual{perpetual})
+
+	ks.SubaccountsKeeper.SetSubaccount(ctx, constants.Carl_Num0_1BTC_Short)
+
+	// Create the CLOB pair.
+	clobPair := constants.ClobPair_Btc
+	_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ctx,
+		clobPair.Id,
+		clobPair.GetPerpetualClobMetadata().PerpetualId,
+		satypes.BaseQuantums(clobPair.StepBaseQuantums),
+		clobPair.QuantumConversionExponent,
+		clobPair.SubticksPerTick,
+		clobPair.Status,
+	)
+	require.NoError(t, err)
+
+	blockHeight := uint32(2)
+	ctx = ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(time.Unix(5, 0))
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    2,
+		Timestamp: time.Unix(int64(5), 0),
+	})
+
+	// A normal order that should be placed on the memclob.
+	normalOrder := constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10
+	// An orphan TWAP suborder (parent TWAP placement missing) that must be skipped.
+	orphanSuborder := normalOrder
+	orphanSuborder.OrderId.ClientId = normalOrder.OrderId.ClientId + 1
+	orphanSuborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
+
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx, normalOrder, blockHeight)
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx, orphanSuborder, blockHeight)
+
+	require.NotPanics(t, func() {
+		ks.ClobKeeper.InitStatefulOrders(ctx)
+	})
+
+	_, foundNormal := ks.ClobKeeper.MemClob.GetOrder(normalOrder.OrderId)
+	require.True(t, foundNormal)
+
+	_, foundOrphan := ks.ClobKeeper.MemClob.GetOrder(orphanSuborder.OrderId)
+	require.False(t, foundOrphan)
+}
+
 func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 	tests := map[string]struct {
 		orders []types.Order
@@ -2742,6 +2847,71 @@ func TestPlaceStatefulOrdersFromLastBlock_PostOnly(t *testing.T) {
 			memClob.AssertExpectations(t)
 		})
 	}
+}
+
+func TestPlaceStatefulOrdersFromLastBlock_SkipsOrphanTwapSuborder(t *testing.T) {
+	// Setup state.
+	memClob := &mocks.MemClob{}
+	memClob.On("SetClobKeeper", mock.Anything).Return()
+
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		indexer_manager.NewIndexerEventManagerNoop(),
+	)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+	ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
+	ctx = ctx.WithIsCheckTx(true)
+	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+		Height:    100,
+		Timestamp: time.Unix(int64(5), 0),
+	})
+
+	// Create CLOB pair.
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ctx,
+		constants.ClobPair_Btc.Id,
+		clobtest.MustPerpetualId(constants.ClobPair_Btc),
+		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+		constants.ClobPair_Btc.QuantumConversionExponent,
+		constants.ClobPair_Btc.SubticksPerTick,
+		constants.ClobPair_Btc.Status,
+	)
+	require.NoError(t, err)
+
+	normalOrder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
+	// An orphan TWAP suborder (parent TWAP placement missing) placed alongside a normal order.
+	orphanSuborder := normalOrder
+	orphanSuborder.OrderId.ClientId = normalOrder.OrderId.ClientId + 1
+	orphanSuborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
+
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx.WithIsCheckTx(false), normalOrder, 0)
+	ks.ClobKeeper.SetLongTermOrderPlacement(ctx.WithIsCheckTx(false), orphanSuborder, 1)
+
+	// Only the normal order is expected to be placed on the memclob; the orphan suborder must be
+	// skipped before ever reaching the memclob (no PlaceOrder stub registered for it, so an
+	// unexpected call would fail the test).
+	memClob.On("PlaceOrder", mock.Anything, normalOrder).Return(
+		satypes.BaseQuantums(0),
+		types.Success,
+		constants.TestOffchainUpdates,
+		nil,
+	).Once()
+
+	offchainUpdates := types.NewOffchainUpdates()
+	orderIds := []types.OrderId{normalOrder.OrderId, orphanSuborder.OrderId}
+
+	require.NotPanics(t, func() {
+		ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates, false)
+	})
+
+	memClob.AssertExpectations(t)
 }
 
 func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {

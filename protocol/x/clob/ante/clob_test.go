@@ -30,8 +30,10 @@ type TestCase struct {
 	useWithIsRecheckTxContext bool
 	isSimulate                bool
 	timeoutHeight             uint64
-	expectedErr               error
-	additionalAssertions      func(ctx sdk.Context, mck *mocks.ClobKeeper)
+	// txBytesLen overrides the default (1-byte) tx bytes length when > 0.
+	txBytesLen           int
+	expectedErr          error
+	additionalAssertions func(ctx sdk.Context, mck *mocks.ClobKeeper)
 }
 
 func runTestCase(t *testing.T, tc TestCase) {
@@ -48,6 +50,10 @@ func runTestCase(t *testing.T, tc TestCase) {
 
 	if tc.useWithIsRecheckTxContext && tc.useWithIsCheckTxContext {
 		t.Error("Expected only one of useWithIsCheckTxContext or useWithIsCheckTxContext to be true")
+	}
+
+	if tc.txBytesLen > 0 {
+		ctx = ctx.WithTxBytes(make([]byte, tc.txBytesLen))
 	}
 
 	// Setup AnteHandler.
@@ -445,6 +451,14 @@ func TestIsValidClobTransaction(t *testing.T) {
 			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
 			expectedErr: nil,
 		},
+		"Failure on mix of long term `PlaceOrder` and `MsgSend` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_Send},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on mix of long term `CancelOrder` and `MsgSend` messages": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_Send},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
 		"Failure on more than one `Transfer` msg": {
 			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
 			expectedErr: sdkerrors.ErrInvalidRequest,
@@ -498,6 +512,162 @@ func TestIsValidClobTransaction(t *testing.T) {
 				require.ErrorIs(t, tc.expectedErr, err)
 			},
 		)
+	}
+}
+
+// TestClobDecorator_ValidatesMsgsInAllModes proves that `ValidateMsgsInClobTx` is enforced by the
+// ante decorator in every mode (DeliverTx, simulation, and ReCheckTx), not only CheckTx, and that
+// rejection happens before any order placement/cancelation keeper call.
+func TestClobDecorator_ValidatesMsgsInAllModes(t *testing.T) {
+	rejectedMixedMsgs := []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_Send}
+	validSingleMsg := []sdk.Msg{constants.Msg_PlaceOrder_LongTerm}
+	validComboMsgs := []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_Transfer}
+
+	assertNoPlacementCalls := func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+		mck.AssertNotCalled(t, "PlaceStatefulOrder", ctx, constants.Msg_PlaceOrder_LongTerm, false)
+		mck.AssertNotCalled(t, "PlaceShortTermOrder", ctx, constants.Msg_PlaceOrder_LongTerm)
+	}
+
+	tests := map[string]TestCase{
+		"DeliverTx: rejects mixed clob tx with a disallowed message": {
+			msgs:                    rejectedMixedMsgs,
+			useWithIsCheckTxContext: false,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"DeliverTx: accepts a single valid stateful PlaceOrder without placing it": {
+			msgs:                    validSingleMsg,
+			useWithIsCheckTxContext: false,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"DeliverTx: accepts a valid stateful PlaceOrder + Transfer combo without placing it": {
+			msgs:                    validComboMsgs,
+			useWithIsCheckTxContext: false,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"Simulate: rejects mixed clob tx with a disallowed message": {
+			msgs:                    rejectedMixedMsgs,
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"Simulate: accepts a single valid stateful PlaceOrder without placing it": {
+			msgs:                    validSingleMsg,
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"Simulate: accepts a valid stateful PlaceOrder + Transfer combo without placing it": {
+			msgs:                    validComboMsgs,
+			useWithIsCheckTxContext: false,
+			isSimulate:              true,
+			expectedErr:             nil,
+			additionalAssertions:    assertNoPlacementCalls,
+		},
+		"ReCheckTx: rejects mixed clob tx with a disallowed message": {
+			msgs:                      rejectedMixedMsgs,
+			useWithIsRecheckTxContext: true,
+			expectedErr:               sdkerrors.ErrInvalidRequest,
+			additionalAssertions:      assertNoPlacementCalls,
+		},
+		"ReCheckTx: places a single valid stateful order": {
+			msgs: validSingleMsg,
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+				mck.On("PlaceStatefulOrder", ctx, constants.Msg_PlaceOrder_LongTerm, false).Return(nil)
+			},
+			useWithIsRecheckTxContext: true,
+			expectedErr:               nil,
+		},
+		"ReCheckTx: places a valid stateful order + transfer combo": {
+			msgs: validComboMsgs,
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+				mck.On("PlaceStatefulOrder", ctx, constants.Msg_PlaceOrder_LongTerm, false).Return(nil)
+				sendingmck.On("ProcessTransfer", ctx, constants.Msg_Transfer.Transfer).Return(nil)
+			},
+			useWithIsRecheckTxContext: true,
+			expectedErr:               nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			runTestCase(t, tc)
+		})
+	}
+}
+
+func TestClobDecorator_RejectsOversizedShortTermTx(t *testing.T) {
+	placeShortTermOrderMocks := func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+		mck.On("PlaceShortTermOrder",
+			ctx,
+			constants.Msg_PlaceOrder,
+		).Return(
+			satypes.BaseQuantums(0),
+			clobtypes.Success,
+			nil,
+		)
+	}
+	placeStatefulOrderMocks := func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
+		mck.On("PlaceStatefulOrder",
+			ctx,
+			constants.Msg_PlaceOrder_LongTerm,
+			false,
+		).Return(
+			nil,
+		)
+	}
+
+	tests := map[string]TestCase{
+		"Rejects a short term tx over the byte limit on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr:             sdkerrors.ErrTxTooLarge,
+		},
+		"Accepts a short term tx at the byte limit on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
+			setupMocks:              placeShortTermOrderMocks,
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes,
+			expectedErr:             nil,
+		},
+		"Accepts a short term tx just below the byte limit on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder},
+			setupMocks:              placeShortTermOrderMocks,
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes - 1,
+			expectedErr:             nil,
+		},
+		"Accepts an over-the-limit short term tx on ReCheckTx": {
+			msgs:                      []sdk.Msg{constants.Msg_PlaceOrder},
+			useWithIsRecheckTxContext: true,
+			txBytesLen:                clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr:               nil,
+		},
+		"Accepts an over-the-limit short term tx on DeliverTx": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder},
+			txBytesLen:  clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr: nil,
+		},
+		"Accepts an over-the-limit stateful tx on initial CheckTx": {
+			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			setupMocks:              placeStatefulOrderMocks,
+			useWithIsCheckTxContext: true,
+			txBytesLen:              clobtypes.MaxShortTermClobTxBytes + 1,
+			expectedErr:             nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			runTestCase(t, tc)
+		})
 	}
 }
 

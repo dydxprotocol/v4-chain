@@ -132,7 +132,9 @@ type Controls struct {
 	// Injective. Withdrawals and in-flight settlements are unaffected.
 	InjectiveDepositsDisabled bool `protobuf:"varint,13,opt,name=injective_deposits_disabled,json=injectiveDepositsDisabled,proto3" json:"injective_deposits_disabled,omitempty"`
 	// max_pending_settlements is the cap on concurrent in-flight canonical
-	// settlements.
+	// settlements, at most 100000. It bounds module state and the scans over
+	// it; it is not a throttle. A withdrawal on either route needs a free slot,
+	// so it is sized well above the expected in-flight volume.
 	MaxPendingSettlements uint32 `protobuf:"varint,14,opt,name=max_pending_settlements,json=maxPendingSettlements,proto3" json:"max_pending_settlements,omitempty"`
 }
 

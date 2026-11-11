@@ -177,6 +177,81 @@ func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	return lastBlockNegativeSubaccountSeen, negativeSubaccountExists, nil
 }
 
+// IsNegativeTncGateActiveForPerpetual returns true if withdrawals/transfers are currently blocked for
+// the collateral pool backing perpetualId, for callers that move collateral out of a pool through an
+// update type other than Withdrawal/Transfer (e.g. builder fees, paid via a Match update).
+func (k Keeper) IsNegativeTncGateActiveForPerpetual(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (bool, error) {
+	lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists, err := k.GetNegativeTncSubaccountSeenAtBlock(
+		ctx,
+		perpetualId,
+	)
+	if err != nil {
+		return false, err
+	}
+	// CheckTx state is at the last committed height, but a match validated there is persisted in the
+	// next block. Evaluate the gate for that block, or a builder fee waived in CheckTx during the gate's
+	// last block would be charged in DeliverTx, where it could fail the collateral check and revert the
+	// whole operations tx.
+	currentBlock := uint32(ctx.BlockHeight())
+	if ctx.IsCheckTx() {
+		currentBlock++
+	}
+	negativeTncSubaccountSeen, chainOutageSeen := k.negativeTncGateStatus(
+		ctx,
+		currentBlock,
+		lastBlockNegativeTncSubaccountSeen,
+		negativeTncSubaccountExists,
+	)
+	return negativeTncSubaccountSeen || chainOutageSeen, nil
+}
+
+// negativeTncGateStatus reports whether, within the
+// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS` blocks before currentBlock,
+// a negative TNC subaccount was seen (given the last block one was seen in the relevant collateral pools)
+// or there was a chain outage that lasted at least five minutes.
+func (k Keeper) negativeTncGateStatus(
+	ctx sdk.Context,
+	currentBlock uint32,
+	lastBlockNegativeTncSubaccountSeen uint32,
+	negativeTncSubaccountExists bool,
+) (negativeTncSubaccountSeen bool, chainOutageSeen bool) {
+	if negativeTncSubaccountExists && currentBlock < lastBlockNegativeTncSubaccountSeen {
+		panic(
+			fmt.Sprintf(
+				"negativeTncGateStatus: current block (%d) is less than the last "+
+					"block a negative TNC subaccount was seen (%d)",
+				currentBlock,
+				lastBlockNegativeTncSubaccountSeen,
+			),
+		)
+	}
+
+	downtimeInfo := k.blocktimeKeeper.GetDowntimeInfoFor(
+		ctx,
+		types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_CHAIN_OUTAGE_DURATION,
+	)
+	chainOutageExists := downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
+	if chainOutageExists && currentBlock < downtimeInfo.BlockInfo.Height {
+		panic(
+			fmt.Sprintf(
+				"negativeTncGateStatus: current block (%d) is less than the last "+
+					"block a chain outage was seen (%d)",
+				currentBlock,
+				downtimeInfo.BlockInfo.Height,
+			),
+		)
+	}
+
+	negativeTncSubaccountSeen = negativeTncSubaccountExists && currentBlock-lastBlockNegativeTncSubaccountSeen <
+		types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
+	chainOutageSeen = chainOutageExists && currentBlock-downtimeInfo.BlockInfo.Height <
+		types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
+	return negativeTncSubaccountSeen, chainOutageSeen
+}
+
 // LegacyGetNegativeTncSubaccountSeenAtBlock gets the last block height a negative TNC subaccount was
 // seen in state and a boolean for whether it exists in state.
 // Deprecated: This is the legacy implementation and meant to be used for the v5.0.0 state migration.

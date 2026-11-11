@@ -37,6 +37,12 @@ export const kafkaConfigSchema = {
     default: 900000, // ~900 kB, 100 kB smaller than the 1 MB default max size of messages in Kafka
   }),
   KAFKA_WAIT_MAX_TIME_MS: parseInteger({ default: 5_000 }),
+  // Most data one fetch request to a broker returns, and the most of each partition within it. A
+  // consumer that has fallen behind gets at most the per-partition amount of each partition per
+  // fetch, so it only catches up if it completes fetches faster than a partition's write rate
+  // divided by that amount. Raise both together, so that one fetch still covers several partitions.
+  KAFKA_FETCH_MAX_BYTES: parseInteger({ default: 4_194_304 }), // 4 MiB
+  KAFKA_FETCH_MAX_BYTES_PER_PARTITION: parseInteger({ default: 1_048_576 }), // 1 MiB, as kafkajs
 };
 
 export default parseSchema(kafkaConfigSchema);

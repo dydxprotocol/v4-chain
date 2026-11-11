@@ -1590,3 +1590,91 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 		})
 	}
 }
+
+func TestGateWithdrawalsIfNegativeTncSubaccountSeen(t *testing.T) {
+	tests := map[string]struct {
+		btcOraclePrice           uint64
+		subaccounts              []satypes.Subaccount
+		negativeTncSubaccountIds []satypes.SubaccountId
+		expectedGatedSubaccount  *satypes.SubaccountId
+	}{
+		"does not gate when no listed subaccount has negative TNC": {
+			btcOraclePrice:           5_000_000_000, // $50,000 / BTC
+			subaccounts:              []satypes.Subaccount{constants.Carl_Num0_1BTC_Short_54999USD},
+			negativeTncSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
+		},
+		"gates on a negative TNC subaccount with an open position": {
+			btcOraclePrice:           5_500_000_000, // $55,000 / BTC
+			subaccounts:              []satypes.Subaccount{constants.Carl_Num0_1BTC_Short_54999USD},
+			negativeTncSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
+			expectedGatedSubaccount:  &constants.Carl_Num0,
+		},
+		"skips a negative TNC subaccount with no open positions": {
+			btcOraclePrice: 5_500_000_000,
+			subaccounts: []satypes.Subaccount{
+				{
+					Id:             &constants.Dave_Num0,
+					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-1_000_000)),
+				},
+			},
+			negativeTncSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0},
+		},
+		"gates on the next negative TNC subaccount after skipping one without positions": {
+			btcOraclePrice: 5_500_000_000,
+			subaccounts: []satypes.Subaccount{
+				{
+					Id:             &constants.Dave_Num0,
+					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-1_000_000)),
+				},
+				constants.Carl_Num0_1BTC_Short_54999USD,
+			},
+			negativeTncSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0, constants.Carl_Num0},
+			expectedGatedSubaccount:  &constants.Carl_Num0,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+			require.NoError(t, ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, constants.LiquidationsConfig_No_Limit))
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+			require.NoError(t, ks.PricesKeeper.UpdateMarketPrices(
+				ks.Ctx,
+				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+					{MarketId: constants.BtcUsd.MarketId, Price: tc.btcOraclePrice},
+				},
+			))
+			perpetual := constants.BtcUsd_20PercentInitial_10PercentMaintenance
+			_, err := ks.PerpetualsKeeper.CreatePerpetual(
+				ks.Ctx,
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.DefaultFundingPpm,
+				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
+			)
+			require.NoError(t, err)
+			for _, subaccount := range tc.subaccounts {
+				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
+			}
+
+			require.NoError(t, ks.ClobKeeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ks.Ctx, tc.negativeTncSubaccountIds))
+
+			operations, _ := memClob.GetOperationsToReplay(ks.Ctx)
+			if tc.expectedGatedSubaccount == nil {
+				require.Empty(t, operations)
+				return
+			}
+			require.Len(t, operations, 1)
+			deleveraging := operations[0].GetMatch().GetMatchPerpetualDeleveraging()
+			require.NotNil(t, deleveraging)
+			require.Equal(t, *tc.expectedGatedSubaccount, deleveraging.Liquidated)
+			require.Equal(t, perpetual.Params.Id, deleveraging.PerpetualId)
+			require.Empty(t, deleveraging.Fills)
+		})
+	}
+}

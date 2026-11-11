@@ -2,6 +2,7 @@ package prepare
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -83,6 +85,17 @@ func PrepareProposalHandler(
 			extCommitBzTx = req.Txs[constants.OracleInfoIndex]
 		}
 
+		// The slinky vote-extension wrapper (RetainOracleDataInWrappedProposalHandler) re-injects the
+		// extended-commit tx accounting only its raw length against MaxTxBytes, while CometBFT validates
+		// the block against the proto-framed size. Reserve that per-tx framing overhead here so the
+		// combined proposal does not exceed MaxTxBytes and panic the proposer.
+		if ve.VoteExtensionsEnabled(ctx) && len(extCommitBzTx) > 0 {
+			framingOverhead := txProtoSize(extCommitBzTx) - uint64(len(extCommitBzTx))
+			if framingOverhead < txs.MaxBytes {
+				txs.MaxBytes -= framingOverhead
+			}
+		}
+
 		// get the update market prices tx
 		msg, err := priceUpdateGenerator.GetValidMarketPriceUpdates(ctx, extCommitBzTx)
 		if err != nil {
@@ -146,25 +159,33 @@ func PrepareProposalHandler(
 		if len(otherTxsToInclude) > 0 {
 			err := txs.AddOtherTxs(otherTxsToInclude)
 			if err != nil {
+				// Continue without these "other" txs rather than emptying the proposal.
 				ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
 				recordErrorMetricsWithLabel(metrics.OtherTxs)
-				return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 			}
 		}
 
-		// Gather "OperationsRelated" group messages.
-		// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
-		operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
+		// Gather "OperationsRelated" group messages, bounded to the remaining budget. An over-budget
+		// operations queue is truncated to its longest fitting prefix rather than dropped, so the
+		// proposal never collapses to an empty (and therefore rejected) block.
+		operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper, txs.GetAvailableBytes())
 		if err != nil {
+			// Fall back to an empty operations tx rather than an empty proposal: a proposal missing the
+			// fixed operations tx has fewer than the required txs and is rejected by every validator.
 			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
-			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
+			emptyOperationsTx, encodeErr := EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{})
+			if encodeErr != nil {
+				ctx.Logger().Error(fmt.Sprintf("EncodeMsgsIntoTxBytes empty operations error: %v", encodeErr))
+				return &EmptyResponse, nil
+			}
+			operationsTxResp = OperationsTxResponse{Tx: emptyOperationsTx}
 		}
 		err = txs.SetProposedOperationsTx(operationsTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
-			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
+			return &EmptyResponse, nil
 		}
 
 		// Try to pack in more "Other" txs.
@@ -174,9 +195,9 @@ func PrepareProposalHandler(
 			if len(moreOtherTxsToInclude) > 0 {
 				err = txs.AddOtherTxs(moreOtherTxsToInclude)
 				if err != nil {
+					// Continue without the additional "other" txs rather than emptying the proposal.
 					ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
 					recordErrorMetricsWithLabel(metrics.OtherTxs)
-					return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 				}
 			}
 		}
@@ -255,6 +276,7 @@ func GetProposedOperationsTx(
 	ctx sdk.Context,
 	txConfig client.TxConfig,
 	clobKeeper PrepareClobKeeper,
+	maxBytes uint64,
 ) (OperationsTxResponse, error) {
 	// Get the order and fill messages from the CLOB keeper.
 	msgOperations := clobKeeper.GetOperations(ctx)
@@ -262,18 +284,73 @@ func GetProposedOperationsTx(
 		return OperationsTxResponse{}, fmt.Errorf("MsgProposedOperations cannot be nil")
 	}
 
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgOperations)
+	ops := msgOperations.GetOperationsQueue()
+	encode := func(n int) ([]byte, error) {
+		return EncodeMsgsIntoTxBytes(txConfig, &clobtypes.MsgProposedOperations{OperationsQueue: ops[:n]})
+	}
+
+	tx, err := encode(len(ops))
 	if err != nil {
 		return OperationsTxResponse{}, err
 	}
 	if len(tx) == 0 {
 		return OperationsTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
 	}
+	if txProtoSize(tx) <= maxBytes {
+		return OperationsTxResponse{Tx: tx, NumOperations: len(ops)}, nil
+	}
 
-	return OperationsTxResponse{
-		Tx:            tx,
-		NumOperations: len(msgOperations.GetOperationsQueue()),
-	}, nil
+	// The full operations queue is over budget. Propose the longest prefix that fits. Prefix
+	// truncation is replay-safe: MustAddMatchToOperationsQueue guarantees placements precede the
+	// matches that reference them and ValidateAndTransformRawOperations is prefix-closed, while
+	// non-proposer nodes already reconcile "my local ops were not fully included" in PrepareCheckState.
+	//
+	// Each operation contributes its own length-delimited encoding to the tx, and every enclosing
+	// length prefix only shrinks with fewer operations, so the full tx's bytes beyond the operations
+	// themselves (including the CometBFT per-tx framing) bound the framing of any prefix. Pick the
+	// longest prefix under that bound without encoding, then extend it with exact encodes in the
+	// rare case the bound left slack.
+	opsBytes := make([]uint64, len(ops)+1)
+	for i := range ops {
+		size := uint64(ops[i].Size())
+		opsBytes[i+1] = opsBytes[i] + 1 + uvarintLen(size) + size
+	}
+	framing := txProtoSize(tx) - opsBytes[len(ops)]
+	n := sort.Search(len(ops)+1, func(i int) bool { return opsBytes[i]+framing > maxBytes })
+	if n > 0 {
+		n--
+	}
+	if tx, err = encode(n); err != nil {
+		return OperationsTxResponse{}, err
+	}
+	if txProtoSize(tx) > maxBytes {
+		return OperationsTxResponse{}, fmt.Errorf(
+			"empty operations tx (%d bytes) exceeds budget %d",
+			txProtoSize(tx),
+			maxBytes,
+		)
+	}
+	for n < len(ops) {
+		next, encodeErr := encode(n + 1)
+		if encodeErr != nil || txProtoSize(next) > maxBytes {
+			break
+		}
+		n, tx = n+1, next
+	}
+
+	telemetry.IncrCounter(1, ModuleName, metrics.OperationsTx, metrics.Truncated)
+
+	return OperationsTxResponse{Tx: tx, NumOperations: n}, nil
+}
+
+// uvarintLen returns the encoded size of x as a protobuf varint.
+func uvarintLen(x uint64) uint64 {
+	n := uint64(1)
+	for x >= 0x80 {
+		x >>= 7
+		n++
+	}
+	return n
 }
 
 // GetAcknowledgeBridgeTx returns a tx containing a list of `MsgAcknowledgeBridge`.

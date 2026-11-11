@@ -5,6 +5,7 @@ import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   createKafkaMessage,
   getTriggerPrice,
+  ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
@@ -15,6 +16,7 @@ import {
   blockHeightRefresher,
   BlockTable,
   dbHelpers,
+  OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -62,6 +64,7 @@ import {
 } from '../helpers/websocket-helpers';
 import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
+import { OrderbookSide } from '../../src/lib/types';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -327,8 +330,6 @@ describe('order-place-handler', () => {
       expectStats();
     });
 
-    // TODO(IND-68): Remove this test once order replacement logic does not change price levels as
-    // orders are removed before being re-placed.
     it.each([
       [
         'goodTilBlock',
@@ -463,8 +464,6 @@ describe('order-place-handler', () => {
       expectStats(true);
     });
 
-    // TODO(IND-68): Remove this test once order replacement logic does not change price levels as
-    // orders are removed before being re-placed.
     it.each([
       [
         'goodTilBlock',
@@ -477,6 +476,8 @@ describe('order-place-handler', () => {
         true,
         true,
       ],
+      // Stateful replacements leave the replaced order's size on its price level, see
+      // `OrderPlaceHandler#removeReplacedOrderFromPriceLevel`.
       [
         'goodTilBlockTime',
         redisTestConstants.defaultOrderGoodTilBlockTime,
@@ -486,7 +487,7 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         replacedOrderGoodTilBlockTime,
         false,
-        true,
+        false,
       ],
       [
         'conditional',
@@ -497,7 +498,7 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderUuidConditional,
         replacedOrderConditional,
         false,
-        true,
+        false,
       ],
       [
         'Fill-or-Kill',
@@ -534,9 +535,15 @@ describe('order-place-handler', () => {
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
+      const oldOrderRemainingQuantums: number = (
+        Number(initialOrderToPlace.quantums) - oldOrderTotalFilled
+      );
+      const expectedPriceLevelQuantums: number = expectOrderBookUpdate
+        ? oldPriceLevelInitialQuantums - oldOrderRemainingQuantums
+        : oldPriceLevelInitialQuantums;
       const expectedPriceLevel: PriceLevel = {
         humanPrice: expectedRedisOrder.price,
-        quantums: oldPriceLevelInitialQuantums.toString(),
+        quantums: expectedPriceLevelQuantums.toString(),
         lastUpdated: expect.stringMatching(/^[0-9]{10}$/),
       };
 
@@ -593,13 +600,19 @@ describe('order-place-handler', () => {
         client,
       );
 
-      // Check the order book levels were updated
-      if (expectOrderBookUpdate) {
-        expect(orderbook.bids).toHaveLength(1);
-        expect(orderbook.asks).toHaveLength(0);
-        expect(orderbook.bids).toContainEqual(expectedPriceLevel);
-      }
+      expect(orderbook.bids).toHaveLength(1);
+      expect(orderbook.asks).toHaveLength(0);
+      expect(orderbook.bids).toContainEqual(expectedPriceLevel);
 
+      const orderbookContents: OrderbookMessageContents = {
+        [OrderbookSide.BIDS]: [[
+          expectedRedisOrder.price,
+          protocolTranslations.quantumsToHumanFixedString(
+            expectedPriceLevelQuantums.toString(),
+            testConstants.defaultPerpetualMarket.atomicResolution,
+          ),
+        ]],
+      };
       expect(logger.error).not.toHaveBeenCalled();
       expectWebsocketMessagesSent(
         producerSendSpy,
@@ -608,12 +621,17 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
+        expectOrderBookUpdate
+          ? OrderbookMessage.fromPartial({
+            contents: JSON.stringify(orderbookContents),
+            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
+          })
+          : undefined,
       );
       expectStats(true);
     });
 
-    // TODO(IND-68): Remove this test once order replacement logic does not change price levels as
-    // orders are removed before being re-placed.
     it.each([
       [
         'goodTilBlock',
@@ -1063,6 +1081,10 @@ describe('order-place-handler', () => {
       );
       // Order book price levels should not have been updated
       expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'OrderPlaceHandler#removeReplacedOrderFromPriceLevel',
+        message: 'Total filled of replaced order in Redis exceeds order quantums.',
+      }));
       expectWebsocketMessagesSent(
         producerSendSpy,
         replacedOrder,

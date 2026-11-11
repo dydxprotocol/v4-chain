@@ -21,6 +21,11 @@ const (
 	minGasPriceStakeToken = "25000000000adv4tnt"
 	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
 	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
+
+	// DefaultQueryGasLimit is the default `query-gas-limit` attribute in validator's `app.toml` file.
+	// Sized to comfortably cover legitimate large paginated queries (tens of thousands of records)
+	// while bounding the worst case well below what it takes to OOM a node via a single request.
+	DefaultQueryGasLimit = uint64(50_000_000)
 )
 
 // DydxAppConfig specifies dYdX app specific config.
@@ -51,6 +56,10 @@ func initAppConfig() (string, *DydxAppConfig) {
 	//
 	// In simapp, we set the min gas prices to 0.
 	srvCfg.MinGasPrices = MinGasPrice
+
+	// The SDK's default query-gas-limit is 0, which baseapp treats as unbounded. newApp also maps an
+	// explicit 0 to this default, so there is no unlimited setting; set a larger non-zero value instead.
+	srvCfg.QueryGasLimit = DefaultQueryGasLimit
 
 	appConfig := DydxAppConfig{
 		Config: *srvCfg,

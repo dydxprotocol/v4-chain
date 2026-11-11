@@ -166,17 +166,9 @@ func TestListSubaccount(t *testing.T) {
 			next = resp.Pagination.NextKey
 		}
 	})
-	t.Run("Total", func(t *testing.T) {
+	t.Run("CountTotal is rejected", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSubaccount(), args)
-		require.NoError(t, err)
-		var resp types.QuerySubaccountAllResponse
-		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-		require.NoError(t, err)
-		require.Equal(t, len(objs), int(resp.Pagination.Total))
-		require.ElementsMatch(t,
-			nullify.Fill(objs),            //nolint:staticcheck
-			nullify.Fill(resp.Subaccount), //nolint:staticcheck
-		)
+		_, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSubaccount(), args)
+		require.ErrorContains(t, err, "count_total is not supported for this query")
 	})
 }
