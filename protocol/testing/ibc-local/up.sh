@@ -77,7 +77,7 @@ init_dydx() {
 }
 
 init_simd() {
-	local chain=$1 rpc=$2 p2p=$3 grpc=$4 api=$5 pprof=$6
+	local chain=$1 rpc=$2 p2p=$3 grpc=$4 api=$5 pprof=$6 usdc=$7
 	local home id config
 	home=$(chain_home "$chain")
 	id=$(chain_id "$chain")
@@ -90,7 +90,7 @@ init_simd() {
 	recover_key "$chain" relayer
 	"$SIMD_BIN" genesis add-genesis-account "$(addr "$chain" validator)" 1000000000000stake --home "$home"
 	"$SIMD_BIN" genesis add-genesis-account "$(addr "$chain" user)" \
-		"1000000000000000$COUNTERPARTY_USDC,1000000000stake" --home "$home"
+		"1000000000000000$usdc,1000000000stake" --home "$home"
 	"$SIMD_BIN" genesis add-genesis-account "$(addr "$chain" relayer)" 1000000000stake --home "$home"
 	"$SIMD_BIN" genesis gentx validator 500000000000stake --keyring-backend test \
 		--chain-id "$id" --home "$home" >/dev/null 2>&1
@@ -170,8 +170,6 @@ address_type = { derivation = 'cosmos' }
 EOF
 }
 
-hermes() { "$HERMES_BIN" --config "$HERMES_CONFIG" "$@"; }
-
 open_channel() {
 	local counterparty=$1 want=$2 out got
 	log "opening transfer channel $DYDX_CHAIN_ID <-> $counterparty"
@@ -181,31 +179,11 @@ open_channel() {
 	[ "$got" = "$want" ] || die "expected dYdX $want for $counterparty, got '$got': $out"
 }
 
-# Opens an extra transfer channel and appends its two ends to CHANNELS_ENV as
-# <prefix>_A and <prefix>_B. With a connection it reuses that connection on
-# chain a; otherwise it creates a new client and connection.
-open_extra_channel() {
-	local prefix=$1 a_chain=$2 b_chain=$3 connection=$4 out a b
-	log "opening extra transfer channel $a_chain <-> $b_chain"
-	if [ -n "$connection" ]; then
-		out=$(hermes --json create channel --a-chain "$a_chain" --a-connection "$connection" \
-			--a-port transfer --b-port transfer --yes 2>>"$LOG_DIR/hermes-setup.log" | tail -1)
-	else
-		out=$(hermes --json create channel --a-chain "$a_chain" --b-chain "$b_chain" \
-			--a-port transfer --b-port transfer --new-client-connection --yes 2>>"$LOG_DIR/hermes-setup.log" | tail -1)
-	fi
-	a=$(echo "$out" | jq -r '.result.a_side.channel_id')
-	b=$(echo "$out" | jq -r '.result.b_side.channel_id')
-	case "$a$b" in
-	*null* | "") die "could not open $a_chain <-> $b_chain channel: $out" ;;
-	esac
-	printf '%s_A=%s\n%s_B=%s\n' "$prefix" "$a" "$prefix" "$b" >>"$CHANNELS_ENV"
-}
-
 init_dydx
-init_simd noble "$NOBLE_RPC_PORT" "$NOBLE_P2P_PORT" "$NOBLE_GRPC_PORT" "$NOBLE_API_PORT" "$NOBLE_PPROF_PORT"
+init_simd noble "$NOBLE_RPC_PORT" "$NOBLE_P2P_PORT" "$NOBLE_GRPC_PORT" "$NOBLE_API_PORT" "$NOBLE_PPROF_PORT" \
+	"$NOBLE_USDC"
 init_simd injective "$INJECTIVE_RPC_PORT" "$INJECTIVE_P2P_PORT" "$INJECTIVE_GRPC_PORT" \
-	"$INJECTIVE_API_PORT" "$INJECTIVE_PPROF_PORT"
+	"$INJECTIVE_API_PORT" "$INJECTIVE_PPROF_PORT" "$INJECTIVE_USDC"
 
 start_dydx
 start_process noble "$SIMD_BIN" start --home "$NOBLE_HOME"
@@ -225,11 +203,9 @@ done
 open_channel "$NOBLE_CHAIN_ID" "$DYDX_NOBLE_CHANNEL"
 open_channel "$INJECTIVE_CHAIN_ID" "$DYDX_INJECTIVE_CHANNEL"
 : >"$CHANNELS_ENV"
-# A second dYdX<->Injective channel on the canonical connection, which canonical
-# routing must treat as unsupported.
-injective_connection=$("$DYDX_BIN" query ibc channel end transfer "$DYDX_INJECTIVE_CHANNEL" \
-	--node "$(chain_node dydx)" --output json | jq -r '.channel.connection_hops[0]')
-open_extra_channel DYDX_INJECTIVE_ALT "$DYDX_CHAIN_ID" "$INJECTIVE_CHAIN_ID" "$injective_connection"
+# upgrade.sh defers the alternate Injective channel until after the upgrade,
+# so the handler finds exactly one channel to Injective.
+[ -n "${IBC_LOCAL_DEFER_ALT_CHANNEL:-}" ] || open_alt_injective_channel
 # Injective<->Noble, to route Noble-origin USDC to dYdX through Injective.
 open_extra_channel INJECTIVE_NOBLE "$INJECTIVE_CHAIN_ID" "$NOBLE_CHAIN_ID" ""
 start_hermes

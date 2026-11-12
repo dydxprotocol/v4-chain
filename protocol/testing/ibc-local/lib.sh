@@ -29,7 +29,10 @@ HERMES_CONFIG="$HERMES_HOME/config.toml"
 # stand-in must own channel-0 on dYdX. up.sh opens it first and asserts this.
 USDC_DENOM="ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
 NATIVE_TOKEN="adv4tnt"
-COUNTERPARTY_USDC="uusdc"
+# Packet denoms: Noble USDC is uusdc, and the Injective stand-in mints native
+# USDC's denom on Injective so the upgrade handler's bindings match mainnet.
+NOBLE_USDC="uusdc"
+INJECTIVE_USDC="erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a"
 DYDX_NOBLE_CHANNEL="channel-0"
 DYDX_INJECTIVE_CHANNEL="channel-1"
 
@@ -43,7 +46,8 @@ DYDX_PPROF_PORT=6060
 DYDX_FEES="10000000000000000$NATIVE_TOKEN"
 DYDX_GAS=400000
 
-NOBLE_CHAIN_ID="noble-local"
+# The v9.9 upgrade handler resolves the routes by these chain ids.
+NOBLE_CHAIN_ID="noble-1"
 NOBLE_HOME="$STATE_DIR/noble"
 NOBLE_RPC_PORT=27657
 NOBLE_P2P_PORT=27656
@@ -51,7 +55,7 @@ NOBLE_GRPC_PORT=9190
 NOBLE_API_PORT=1417
 NOBLE_PPROF_PORT=6160
 
-INJECTIVE_CHAIN_ID="injective-local"
+INJECTIVE_CHAIN_ID="injective-1"
 INJECTIVE_HOME="$STATE_DIR/injective"
 INJECTIVE_RPC_PORT=28657
 INJECTIVE_P2P_PORT=28656
@@ -253,6 +257,49 @@ start_hermes() {
 }
 
 stop_hermes() { stop_process hermes; }
+
+hermes() { "$HERMES_BIN" --config "$HERMES_CONFIG" "$@"; }
+
+# Opens an extra transfer channel and appends its two ends to CHANNELS_ENV as
+# <prefix>_A and <prefix>_B. With a connection it reuses that connection on
+# chain a; otherwise it creates a new client and connection.
+open_extra_channel() {
+	local prefix=$1 a_chain=$2 b_chain=$3 connection=$4 out a b
+	log "opening extra transfer channel $a_chain <-> $b_chain"
+	if [ -n "$connection" ]; then
+		out=$(hermes --json create channel --a-chain "$a_chain" --a-connection "$connection" \
+			--a-port transfer --b-port transfer --yes 2>>"$LOG_DIR/hermes-setup.log" | tail -1)
+	else
+		out=$(hermes --json create channel --a-chain "$a_chain" --b-chain "$b_chain" \
+			--a-port transfer --b-port transfer --new-client-connection --yes 2>>"$LOG_DIR/hermes-setup.log" | tail -1)
+	fi
+	a=$(echo "$out" | jq -r '.result.a_side.channel_id')
+	b=$(echo "$out" | jq -r '.result.b_side.channel_id')
+	case "$a$b" in
+	*null* | "") die "could not open $a_chain <-> $b_chain channel: $out" ;;
+	esac
+	printf '%s_A=%s\n%s_B=%s\n' "$prefix" "$a" "$prefix" "$b" >>"$CHANNELS_ENV"
+}
+
+# A second dYdX<->Injective channel on the canonical connection, which
+# canonical routing must treat as unsupported.
+open_alt_injective_channel() {
+	local connection
+	connection=$("$DYDX_BIN" query ibc channel end transfer "$DYDX_INJECTIVE_CHANNEL" \
+		--node "$(chain_node dydx)" --output json | jq -r '.channel.connection_hops[0]')
+	open_extra_channel DYDX_INJECTIVE_ALT "$DYDX_CHAIN_ID" "$INJECTIVE_CHAIN_ID" "$connection"
+}
+
+# Noble packets sent before the module existed or while it was DISABLED: ICS20
+# commitments on the Noble channel with no pending settlement.
+legacy_noble_in_flight() {
+	local commitments pending
+	commitments=$(q dydx ibc channel packet-commitments transfer "$DYDX_NOBLE_CHANNEL" |
+		jq -c '[.commitments[].sequence | tostring]')
+	pending=$(q dydx canonicalusdc pending-settlements |
+		jq -c '[.pending_settlements[] | select(.route == "ROUTE_NOBLE") | .sequence | tostring]')
+	jq -n --argjson c "$commitments" --argjson p "$pending" '$c - $p | length'
+}
 
 start_dydx() {
 	start_process dydx "$DYDX_BIN" start --home "$DYDX_HOME" \
