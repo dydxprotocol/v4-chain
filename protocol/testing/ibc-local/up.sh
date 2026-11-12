@@ -207,9 +207,7 @@ init_simd noble "$NOBLE_RPC_PORT" "$NOBLE_P2P_PORT" "$NOBLE_GRPC_PORT" "$NOBLE_A
 init_simd injective "$INJECTIVE_RPC_PORT" "$INJECTIVE_P2P_PORT" "$INJECTIVE_GRPC_PORT" \
 	"$INJECTIVE_API_PORT" "$INJECTIVE_PPROF_PORT"
 
-start_process dydx "$DYDX_BIN" start --home "$DYDX_HOME" \
-	--price-daemon-enabled=false --bridge-daemon-enabled=false --liquidation-daemon-enabled=false \
-	--max-daemon-unhealthy-seconds 4294967295
+start_dydx
 start_process noble "$SIMD_BIN" start --home "$NOBLE_HOME"
 start_process injective "$SIMD_BIN" start --home "$INJECTIVE_HOME"
 wait_for_height dydx 3

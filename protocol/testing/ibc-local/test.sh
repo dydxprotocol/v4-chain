@@ -27,10 +27,6 @@ mkdir -p "$WORK_DIR"
 
 assert_eq "noble route trace" "$(ibc_denom "transfer/$DYDX_NOBLE_CHANNEL/$COUNTERPARTY_USDC")" "$USDC_DENOM"
 
-module_address() {
-	q dydx auth module-account "$1" |
-		jq -r '.account.value.address // .account.base_account.address // .account.address'
-}
 CANONICAL_MODULE=$(module_address canonicalusdc)
 GOV_MODULE=$(module_address gov)
 
@@ -90,8 +86,9 @@ transfer_tx() {
 	tx "$chain" "$from" ibc-transfer transfer transfer "$channel" "$receiver" "$amount" "$@"
 }
 
-# Migration batch size for draining Noble backing.
-BATCH_SIZE=1000000000
+# Migration batch size for draining Noble backing; small enough that the
+# finalize scenario loops several times.
+BATCH_SIZE=200000000
 
 # propose_controls MODE EXPECTED [JQ_FILTER]
 # Submits MsgUpdateControls through governance with the live route bindings,
@@ -133,30 +130,40 @@ propose_controls() {
 		deposit: $dep, title: ("canonical USDC " + $mode), summary: "ibc-local test", expedited: false
 	}' >"$WORK_DIR/proposal.json"
 
-	tx dydx validator gov submit-proposal "$WORK_DIR/proposal.json" >/dev/null
-	id=$(q dydx gov proposals | jq -r '.proposals | map(.id | tonumber) | max')
-	tx dydx validator gov vote "$id" yes >/dev/null
-	status=""
-	for i in $(seq 1 "$RELAY_TIMEOUT_SECONDS"); do
-		status=$(q dydx gov proposal "$id" | jq -r '.proposal.status // .status')
-		case "$status" in
-		PROPOSAL_STATUS_PASSED | 3 | PROPOSAL_STATUS_REJECTED | 4 | PROPOSAL_STATUS_FAILED | 5) break ;;
-		esac
-		sleep 1
-	done
-	case "$expected:$status" in
-	PASSED:PROPOSAL_STATUS_PASSED | PASSED:3 | FAILED:PROPOSAL_STATUS_FAILED | FAILED:5) ;;
-	*)
-		die "proposal $id ($mode) ended '$status', want $expected: $(q dydx gov proposal "$id" |
-			jq -c '.proposal.failed_reason // .failed_reason // empty')"
-		;;
-	esac
-	echo "$id"
+	govern "$WORK_DIR/proposal.json" "$expected" "$mode"
 }
 
 submit_controls() {
 	propose_controls "$1" PASSED >/dev/null
 	assert_eq "controls mode" "$(state | jq -r '.controls.mode')" "$1"
+}
+
+
+# propose_limit_params DENOM BASELINE
+# Sets one limiter for the denom with a one hour period and the given
+# baseline, which also resets its capacity to that baseline.
+propose_limit_params() {
+	local denom=$1 baseline=$2
+	jq -n --arg gov "$GOV_MODULE" --arg denom "$denom" --arg baseline "$baseline" \
+		--arg dep "10000000$NATIVE_TOKEN" '{
+		messages: [{
+			"@type": "/dydxprotocol.ratelimit.MsgSetLimitParams",
+			authority: $gov,
+			limit_params: {
+				denom: $denom,
+				limiters: [{ period: "3600s", baseline_minimum: $baseline, baseline_tvl_ppm: 1 }]
+			}
+		}],
+		deposit: $dep, title: ("rate limit " + $denom + " " + $baseline), summary: "ibc-local test", expedited: false
+	}' >"$WORK_DIR/proposal.json"
+	govern "$WORK_DIR/proposal.json" PASSED "limit params $denom $baseline"
+}
+
+capacity() { q dydx ratelimit capacity-by-denom "$1" | jq -r '.limiter_capacity_list[0].capacity // "0"'; }
+
+assert_in_range() {
+	local label=$1 got=$2 lo=$3 hi=$4
+	[ "$(bc_calc "$got >= $lo")" = 1 ] && [ "$(bc_calc "$got <= $hi")" = 1 ] || die "$label: $got not in [$lo, $hi]"
 }
 
 ledger_json() { state | jq -c '.ledger'; }
@@ -235,17 +242,33 @@ legacy_noble_in_flight() {
 	jq -n --argjson c "$commitments" --argjson p "$pending" '$c - $p | length'
 }
 
-scenario_gradual_noble_deposit_rejected() {
-	log "GRADUAL: Noble deposit is refused with an error ack"
-	local noble_before dydx_before
+scenario_gradual_noble_deposit() {
+	log "GRADUAL: Noble deposit is minted by ICS20 and credited to Noble backing; the flag refuses it"
+	local noble_before dydx_before backing
 	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
 	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
+	backing=$(ledger_field noble_backing)
+	transfer noble user "$NOBLE_CHANNEL" "$DYDX_USER" "50000000$COUNTERPARTY_USDC"
+	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 50000000")"
+	assert_eq "noble_backing" "$(ledger_field noble_backing)" "$(bc_calc "$backing + 50000000")"
+	check_backing
+	pass "Noble deposit credited to Noble backing while Noble deposits are enabled"
+
+	propose_controls MODE_GRADUAL PASSED '.noble_deposits_disabled = true' >/dev/null
+	assert_eq "Noble deposits disabled" "$(state | jq -r '.controls.noble_deposits_disabled')" true
+	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
+	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
+	backing=$(ledger_field noble_backing)
 	transfer noble user "$NOBLE_CHANNEL" "$DYDX_USER" "50000000$COUNTERPARTY_USDC"
 	assert_eq "Noble escrowed" "$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")" "$(bc_calc "$noble_before - 50000000")"
 	wait_for_balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC" "$noble_before"
 	assert_eq "dYdX user USDC" "$(balance dydx "$DYDX_USER" "$USDC_DENOM")" "$dydx_before"
+	assert_eq "noble_backing" "$(ledger_field noble_backing)" "$backing"
 	check_backing
-	pass "Noble deposit refunded on Noble, nothing minted on dYdX"
+	pass "Noble deposit refunded on Noble, nothing minted on dYdX, while Noble deposits are disabled"
+
+	propose_controls MODE_GRADUAL PASSED >/dev/null
+	assert_eq "Noble deposits enabled" "$(state | jq -r '.controls.noble_deposits_disabled')" false
 }
 
 scenario_gradual_injective_roundtrip() {
@@ -273,6 +296,58 @@ scenario_gradual_injective_roundtrip() {
 	assert_eq "logical supply" "$(supply_of dydx "$USDC_DENOM")" "$(bc_calc "$supply_before + 300000000")"
 	check_backing
 	pass "logical withdrawal to Injective delivers native uusdc and burns on ack"
+}
+
+# Each route spends its own x/ratelimit bucket: Injective withdrawals the
+# Injective denom's, Noble withdrawals uusdc's. An Injective round trip is
+# neutral, and because Injective deposits never refill uusdc, Injective-in,
+# Noble-out is bounded by the uusdc limiter. Both limiters are set to 60 USDC
+# for the scenario and lifted afterwards; capacity drifts by under 1 USDC per
+# minute toward the baseline, hence the ranges.
+scenario_gradual_rate_limits() {
+	log "GRADUAL: each route is bounded by its own rate-limit bucket"
+	local dydx_before inj_before noble_before out
+	assert_eq "mode" "$(state | jq -r '.controls.mode')" MODE_GRADUAL
+	propose_limit_params "$USDC_DENOM" 60000000 >/dev/null
+	propose_limit_params "$INJECTIVE_DENOM" 60000000 >/dev/null
+	assert_in_range "uusdc capacity at baseline" "$(capacity "$USDC_DENOM")" 59000000 61000000
+	assert_in_range "Injective capacity at baseline" "$(capacity "$INJECTIVE_DENOM")" 59000000 61000000
+
+	inj_before=$(balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC")
+	transfer dydx user "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" "30000000$USDC_DENOM"
+	transfer dydx user "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" "30000000$USDC_DENOM"
+	wait_for_balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$inj_before + 60000000")"
+	wait_for_no_pending
+	assert_in_range "Injective capacity spent" "$(capacity "$INJECTIVE_DENOM")" 0 2000000
+	assert_in_range "uusdc capacity untouched" "$(capacity "$USDC_DENOM")" 59000000 61000000
+	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" \
+		"10000000$USDC_DENOM")
+	assert_contains "Injective withdrawal beyond capacity" "$out" "rate-limit capacity"
+	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
+	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "60000000$COUNTERPARTY_USDC"
+	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 60000000")"
+	assert_in_range "Injective capacity restored by the deposit" "$(capacity "$INJECTIVE_DENOM")" 58000000 62000000
+	assert_in_range "uusdc capacity still untouched" "$(capacity "$USDC_DENOM")" 59000000 61000000
+	check_backing
+	pass "an Injective round trip is neutral for both buckets"
+
+	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
+	transfer dydx user "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "50000000$USDC_DENOM"
+	wait_for_balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$noble_before + 50000000")"
+	wait_for_no_pending
+	assert_in_range "uusdc capacity spent by the Noble withdrawal" "$(capacity "$USDC_DENOM")" 8000000 12000000
+	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
+	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "50000000$COUNTERPARTY_USDC"
+	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 50000000")"
+	assert_in_range "Injective deposit does not refill uusdc" "$(capacity "$USDC_DENOM")" 8000000 12000000
+	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" \
+		"50000000$USDC_DENOM")
+	assert_contains "Noble withdrawal beyond capacity" "$out" "rate-limit capacity"
+	check_backing
+	pass "Injective-in, Noble-out is bounded by the uusdc limiter"
+
+	propose_limit_params "$USDC_DENOM" 1000000000000000 >/dev/null
+	propose_limit_params "$INJECTIVE_DENOM" 1000000000000000 >/dev/null
 }
 
 scenario_gradual_noble_withdrawal() {
@@ -547,6 +622,51 @@ scenario_gradual_relayer_backlog() {
 	pass "backlog relayed after restart with ledger consistent"
 }
 
+# Dust withdrawals fill the pending-settlement cap while the relayer is down.
+# The cap is shared by both routes, so an operator batch is refused too, until
+# the dust settles and frees it.
+scenario_gradual_pending_cap() {
+	log "GRADUAL: dust withdrawals fill the shared pending cap until they settle"
+	local dydx_before noble_before inj_before first second third out
+	wait_for_no_pending
+	propose_controls MODE_GRADUAL PASSED '.max_pending_settlements = 3' >/dev/null
+	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
+	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
+	inj_before=$(balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC")
+
+	stop_hermes
+	first=$(transfer_tx dydx user "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "1$USDC_DENOM")
+	second=$(transfer_tx dydx user "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "1$USDC_DENOM")
+	third=$(transfer_tx dydx user "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" "1$USDC_DENOM")
+	assert_eq "pending" "$(pending_count)" 3
+	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "1$USDC_DENOM")
+	assert_contains "fourth dust withdrawal" "$out" "pending settlement limit reached"
+	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" \
+		"100000000$USDC_DENOM")
+	assert_contains "Injective-route withdrawal behind the cap" "$out" "pending settlement limit reached"
+	assert_eq "only the pending dust left the user" "$(balance dydx "$DYDX_USER" "$USDC_DENOM")" \
+		"$(bc_calc "$dydx_before - 3")"
+	propose_controls MODE_GRADUAL FAILED '.max_pending_settlements = 2' >/dev/null
+	assert_eq "cap unchanged" "$(state | jq -r '.controls.max_pending_settlements')" 3
+	check_backing
+	pass "shared pending cap blocks both routes once dust withdrawals fill it"
+
+	start_hermes
+	relay_dydx_packet "$first"
+	relay_dydx_packet "$second"
+	relay_dydx_packet "$third"
+	wait_for_no_pending
+	wait_for_balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$noble_before + 2")"
+	wait_for_balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$inj_before + 1")"
+	transfer dydx user "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" "100000000$USDC_DENOM"
+	wait_for_balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$inj_before + 1 + 100000000")"
+	wait_for_no_pending
+	propose_controls MODE_GRADUAL PASSED >/dev/null
+	assert_eq "cap restored" "$(state | jq -r '.controls.max_pending_settlements')" 100
+	check_backing
+	pass "settlement frees the cap and withdrawals resume"
+}
+
 scenario_governance_mismatched_route_rejected() {
 	log "governance: controls bound to the wrong client fail and change nothing"
 	local controls inj_client
@@ -604,16 +724,35 @@ scenario_paused_rejects_transfers() {
 	assert_contains "PAUSED transfer" "$out" "paused"
 	check_backing
 	pass "PAUSED blocks logical USDC transfers"
+	submit_controls MODE_GRADUAL
 }
 
-# One replacement batch: Injective USDC in to the migrator, the same logical
-# amount out over Noble, settled.
+# migration_batch AMOUNT [timeout]
+# Deposits AMOUNT from Injective and withdraws it to Noble. With "timeout" the
+# first Noble leg is left unrelayed until it expires and is refunded, as a
+# relayer outage would do to an operator, before the withdrawal is repeated.
 migration_batch() {
-	local amount=$1 dydx_before noble_before
+	local amount=$1 mode=${2:-} dydx_before noble_before backing sent
 	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
 	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
 	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "$amount$COUNTERPARTY_USDC"
 	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + $amount")"
+	if [ "$mode" = timeout ]; then
+		backing=$(ledger_field noble_backing)
+		stop_hermes
+		sent=$(transfer_tx dydx user "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "$amount$USDC_DENOM" \
+			--packet-timeout-height 0-0 --packet-timeout-timestamp 15000000000)
+		assert_eq "pending_noble" "$(ledger_field pending_noble)" "$amount"
+		assert_eq "noble_backing reduced" "$(ledger_field noble_backing)" "$(bc_calc "$backing - $amount")"
+		sleep 25
+		start_hermes
+		relay_dydx_packet "$sent"
+		wait_for_no_pending
+		wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + $amount")"
+		assert_eq "noble_backing restored after timeout" "$(ledger_field noble_backing)" "$backing"
+		assert_eq "Noble user unchanged" "$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")" "$noble_before"
+		check_backing
+	fi
 	transfer dydx user "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "$amount$USDC_DENOM"
 	wait_for_balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$noble_before + $amount")"
 	wait_for_no_pending
@@ -622,33 +761,39 @@ migration_batch() {
 
 scenario_migration_finalize() {
 	log "migration: drain Noble backing into Injective backing, then disable Noble withdrawals"
-	local i noble batch supply dydx_before noble_before out
+	local batches noble batch supply dydx_before noble_before out
 	assert_eq "mode" "$(state | jq -r '.controls.mode')" MODE_GRADUAL
-	propose_controls MODE_GRADUAL FAILED ".noble_withdrawals_enabled = false" >/dev/null
+	propose_controls MODE_GRADUAL FAILED ".noble_withdrawals_enabled = false | .noble_deposits_disabled = true" >/dev/null
 	assert_eq "Noble withdrawals still enabled" "$(state | jq -r '.controls.noble_withdrawals_enabled')" true
 	pass "Noble withdrawals cannot be disabled while Noble backing remains"
 
-	for i in $(seq 1 20); do
+	batches=0
+	while [ "$(ledger_field noble_backing)" != "0" ]; do
 		noble=$(ledger_field noble_backing)
-		[ "$noble" = "0" ] && break
 		batch=$noble
 		[ "$(bc_calc "$batch > $BATCH_SIZE")" = 1 ] && batch=$BATCH_SIZE
-		log "  batch $i: $batch (noble_backing $noble)"
-		migration_batch "$batch"
+		batches=$((batches + 1))
+		[ "$batches" -le 50 ] || die "Noble backing not drained after $batches batches"
+		log "  batch $batches: $batch (noble_backing $noble)"
+		if [ "$batches" = 2 ]; then
+			migration_batch "$batch" timeout
+		else
+			migration_batch "$batch"
+		fi
 	done
-	assert_eq "noble_backing drained" "$(ledger_field noble_backing)" 0
+	[ "$batches" -ge 3 ] || die "only $batches migration batches; lower BATCH_SIZE so the loop repeats"
 	supply=$(supply_of dydx "$USDC_DENOM")
 	assert_eq "supply fully Injective-backed" "$(ledger_field injective_backing)" "$supply"
-	pass "Noble backing replaced by Injective backing"
+	pass "Noble backing replaced by Injective backing over $batches batches, one with a timed-out Noble leg"
 
 	assert_eq "no legacy Noble packets in flight" "$(legacy_noble_in_flight)" 0
-	propose_controls MODE_GRADUAL PASSED ".noble_withdrawals_enabled = false" >/dev/null
+	propose_controls MODE_GRADUAL PASSED ".noble_withdrawals_enabled = false | .noble_deposits_disabled = true" >/dev/null
 	assert_eq "Noble withdrawals disabled" "$(state | jq -r '.controls.noble_withdrawals_enabled')" false
 	check_backing
 
 	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" \
 		"1000000$USDC_DENOM")
-	assert_contains "Noble withdrawal after finalization" "$out" "routing is disabled"
+	assert_contains "Noble withdrawal after finalization" "$out" "withdrawals are disabled"
 	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
 	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
 	transfer noble user "$NOBLE_CHANNEL" "$DYDX_USER" "1000000$COUNTERPARTY_USDC"
@@ -678,10 +823,11 @@ scenario_dydx_tx_index() {
 DIAGNOSTICS="dydx_tx_index enable_gradual"
 
 SCENARIOS="disabled_noble_roundtrip disabled_legacy_positions disabled_noble_refunded_after_gradual
-gradual_noble_deposit_rejected gradual_injective_roundtrip gradual_noble_withdrawal gradual_noble_timeout
+gradual_noble_deposit gradual_injective_roundtrip gradual_rate_limits gradual_noble_withdrawal gradual_noble_timeout
 gradual_noble_invalid_receiver gradual_injective_timeout
 gradual_legacy_positions_unwind gradual_noncanonical_channel gradual_noble_via_injective gradual_invalid_receiver
-gradual_injective_deposits_toggle gradual_relayer_backlog governance_mismatched_route_rejected pending_blocks_disable_then_resume
+gradual_injective_deposits_toggle gradual_relayer_backlog gradual_pending_cap governance_mismatched_route_rejected
+pending_blocks_disable_then_resume
 paused_rejects_transfers migration_finalize"
 
 # With arguments, runs only the named scenarios (in the given order), e.g. to
