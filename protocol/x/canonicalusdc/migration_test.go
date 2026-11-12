@@ -40,6 +40,7 @@ func migrationLoop(t *testing.T, p *propChain, migrator sdk.AccAddress, batch in
 func migrationFinalize(p *propChain) error {
 	controls := p.r.keeper.GetControls(p.r.ctx)
 	controls.NobleWithdrawalsEnabled = false
+	controls.NobleDepositsDisabled = true
 	return p.updateControls(controls)
 }
 

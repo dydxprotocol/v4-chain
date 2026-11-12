@@ -74,6 +74,13 @@ message Controls {
   // it; it is not a throttle. A withdrawal on either route needs a free slot,
   // so it is sized well above the expected in-flight volume.
   uint32 max_pending_settlements = 14;
+
+  // noble_deposits_disabled rejects Noble USDC received on the Noble channel
+  // with an error acknowledgement, refunding the sender on Noble. While false,
+  // those deposits mint logical USDC through ICS20 as before and are credited
+  // to noble_backing. It must be true before noble_withdrawals_enabled is
+  // false, or deposits would create Noble backing that cannot leave.
+  bool noble_deposits_disabled = 15;
 }
 
 // Ledger accounts for backing and in-flight settlement without changing the

@@ -497,6 +497,7 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 			prep: func(t *testing.T, ctx sdk.Context, k *Keeper, _ *bankMock) {
 				controls := activeControls()
 				controls.NobleWithdrawalsEnabled = false
+				controls.NobleDepositsDisabled = true
 				require.NoError(t, k.SetControls(ctx, controls))
 				ledger := canonicaltypes.DefaultLedger()
 				ledger.NobleBacking = dtypes.NewInt(50)

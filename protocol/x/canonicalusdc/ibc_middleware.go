@@ -108,7 +108,13 @@ func (im IBCMiddleware) onRecvPacketActive(
 	}
 	physicalDenom := ratelimitutil.ParseDenomFromRecvPacket(packet, data)
 	if packet.DestinationChannel == controls.NobleChannel && physicalDenom == controls.LogicalDenom {
-		return channeltypes.NewErrorAcknowledgement(types.ErrNobleDepositsDisabled)
+		if controls.Mode == types.Mode_MODE_PAUSED {
+			return channeltypes.NewErrorAcknowledgement(types.ErrPaused)
+		}
+		if controls.NobleDepositsDisabled {
+			return channeltypes.NewErrorAcknowledgement(types.ErrNobleDepositsDisabled)
+		}
+		return im.receiveNoble(ctx, packet, data, relayer, controls)
 	}
 	if packet.DestinationChannel == controls.InjectiveChannel &&
 		data.Denom == controls.InjectivePacketDenom &&
@@ -124,6 +130,33 @@ func (im IBCMiddleware) onRecvPacketActive(
 	// Logical USDC returning on any other channel unescrows coins that are
 	// already part of supply, so the ledger does not change.
 	return im.app.OnRecvPacket(ctx, packet, relayer)
+}
+
+// receiveNoble lets ICS20 mint logical USDC for Noble USDC as it did before
+// the module, then classifies the amount as Noble backing.
+func (im IBCMiddleware) receiveNoble(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	data transfertypes.FungibleTokenPacketData,
+	relayer sdk.AccAddress,
+	controls types.Controls,
+) ibcexported.Acknowledgement {
+	amount, ok := math.NewIntFromString(data.Amount)
+	if !ok || !amount.IsPositive() {
+		return channeltypes.NewErrorAcknowledgement(types.ErrInvalidAmount)
+	}
+	ack := im.app.OnRecvPacket(ctx, packet, relayer)
+	if ack == nil || !ack.Success() {
+		return ack
+	}
+	if err := im.keeper.CreditNobleInbound(ctx, amount); err != nil {
+		return channeltypes.NewErrorAcknowledgement(err)
+	}
+	emitInbound(
+		ctx, types.Route_ROUTE_NOBLE, controls.LogicalDenom, controls.LogicalDenom,
+		amount, data.Receiver, data.Sender, packet,
+	)
+	return ack
 }
 
 func (im IBCMiddleware) receiveInjective(
@@ -162,17 +195,32 @@ func (im IBCMiddleware) receiveInjective(
 	if err := im.keeper.MintLogicalAndSend(ctx, receiver, coins); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
+	emitInbound(
+		ctx, types.Route_ROUTE_INJECTIVE, controls.InjectiveDenom, controls.LogicalDenom,
+		amount, receiver.String(), data.Sender, packet,
+	)
+	return ack
+}
+
+func emitInbound(
+	ctx sdk.Context,
+	route types.Route,
+	physicalDenom, logicalDenom string,
+	amount math.Int,
+	receiver, sender string,
+	packet channeltypes.Packet,
+) {
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeInbound,
-		sdk.NewAttribute(types.AttributeKeyPhysicalDenom, controls.InjectiveDenom),
-		sdk.NewAttribute(types.AttributeKeyLogicalDenom, controls.LogicalDenom),
+		sdk.NewAttribute(types.AttributeKeyRoute, route.String()),
+		sdk.NewAttribute(types.AttributeKeyPhysicalDenom, physicalDenom),
+		sdk.NewAttribute(types.AttributeKeyLogicalDenom, logicalDenom),
 		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
-		sdk.NewAttribute(transfertypes.AttributeKeyReceiver, receiver.String()),
-		sdk.NewAttribute(sdk.AttributeKeySender, data.Sender),
+		sdk.NewAttribute(transfertypes.AttributeKeyReceiver, receiver),
+		sdk.NewAttribute(sdk.AttributeKeySender, sender),
 		sdk.NewAttribute(types.AttributeKeySourceChannel, packet.SourceChannel),
 		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(packet.Sequence)),
 	))
-	return ack
 }
 
 func (im IBCMiddleware) OnAcknowledgementPacket(
