@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	v_9_9 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v9.9"
@@ -51,7 +52,12 @@ func TestCanonicalUsdcUpgrade(t *testing.T) {
 	require.Equal(t, "0", state.Ledger.PendingInjective.String())
 	require.Equal(t, "0", state.Ledger.PendingNoble.String())
 
-	require.Equal(t, aliceBefore, queryUsdcBalance(node, t, nodeAddress))
+	// Alice paid the test fee for the proposal and for her vote; the upgrade
+	// itself moved nothing.
+	fees := constants.TestFeeCoins_5Cents.AmountOf(usdcDenom).MulRaw(2)
+	before, ok := sdkmath.NewIntFromString(aliceBefore)
+	require.True(t, ok)
+	require.Equal(t, before.Sub(fees).String(), queryUsdcBalance(node, t, nodeAddress))
 
 	accountResp, err := containertest.Query(
 		node,
