@@ -159,10 +159,11 @@ assert_eq "MegaVault shares" "$(q dydx vault total-shares | jq -r '.total_shares
 positions_before=$(positions_snapshot)
 pass "100 USDC deposited into MegaVault before the upgrade"
 
-# Two legacy Noble withdrawals cross the upgrade unrelayed: one is delivered
-# under GRADUAL, the other expires and is refunded under GRADUAL, as on mainnet
-# for anything in flight at the upgrade height.
-log "pre-upgrade: Noble withdrawals left in flight across the upgrade"
+# Two legacy Noble withdrawals and one Noble deposit cross the upgrade
+# unrelayed: one withdrawal is delivered under GRADUAL, the other expires and
+# is refunded, and the deposit bounces because Noble deposits close at the
+# upgrade, as on mainnet for anything in flight at the upgrade height.
+log "pre-upgrade: Noble withdrawals and a Noble deposit left in flight across the upgrade"
 noble_before=$(balance noble "$NOBLE_USER" "$NOBLE_USDC")
 stop_hermes
 sent_at=$(date +%s)
@@ -170,10 +171,12 @@ expiring=$(tx dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$N
 	--packet-timeout-height 0-0 --packet-timeout-timestamp 180000000000)
 lasting=$(tx dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "30000000$USDC_DENOM" \
 	--packet-timeout-height 0-0 --packet-timeout-timestamp 3600000000000)
+tx noble user ibc-transfer transfer transfer "$NOBLE_CHANNEL" "$DYDX_USER" "40000000$NOBLE_USDC" >/dev/null
+assert_eq "Noble deposit escrowed" "$(balance noble "$NOBLE_USER" "$NOBLE_USDC")" "$(bc_calc "$noble_before - 40000000")"
 user_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
 supply_before=$(supply_of dydx "$USDC_DENOM")
 assert_eq "USDC in circulation before the upgrade" "$supply_before" 800000000
-pass "two Noble withdrawals in flight before the upgrade"
+pass "two Noble withdrawals and a Noble deposit in flight before the upgrade"
 
 # 120 blocks at 500ms leaves the 20s voting period plus margin.
 target=$(($(height dydx) + 120))
@@ -219,7 +222,7 @@ assert_eq "Injective route" "$(echo "$state" | jq -r '.controls |
 assert_eq "Injective denom" "$(echo "$state" | jq -r '.controls.injective_denom')" "$INJECTIVE_DENOM"
 assert_eq "flags" "$(echo "$state" | jq -r '.controls |
 	"\(.noble_withdrawals_enabled) \(.noble_deposits_disabled) \(.injective_deposits_disabled) \(.max_pending_settlements)"')" \
-	"true false false 10000"
+	"true true false 10000"
 assert_eq "Noble backing snapshots the supply" "$(echo "$state" | jq -r '.ledger.noble_backing')" "$supply_before"
 assert_eq "rest of the ledger" "$(echo "$state" | jq -r '.ledger |
 	"\(.injective_backing) \(.pending_injective) \(.pending_noble) \(.refillable_capacity)"')" "0 0 0 0"
@@ -233,6 +236,13 @@ pass "upgrade handler entered GRADUAL bound to the Noble and Injective channels,
 # so the handler saw a single channel to Injective.
 open_alt_injective_channel
 start_hermes
+# hermes clears the Noble-side deposit itself; the module refuses it and
+# Noble refunds the sender.
+wait_for_balance noble "$NOBLE_USER" "$NOBLE_USDC" "$noble_before"
+assert_eq "bounced deposit minted nothing" "$(balance dydx "$DYDX_USER" "$USDC_DENOM")" "$user_before"
+assert_eq "bounced deposit left Noble backing alone" "$(q dydx canonicalusdc state | jq -r '.ledger.noble_backing')" \
+	"$supply_before"
+pass "a Noble deposit in flight at the upgrade is refunded on Noble under GRADUAL"
 relay_dydx_packet "$lasting"
 wait_for_balance noble "$NOBLE_USER" "$NOBLE_USDC" "$(bc_calc "$noble_before + 30000000")"
 assert_eq "delivered legacy withdrawal leaves Noble backing alone" "$(q dydx canonicalusdc state |

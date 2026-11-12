@@ -227,6 +227,9 @@ scenario_disabled_noble_refunded_after_gradual() {
 scenario_gradual_noble_deposit() {
 	log "GRADUAL: Noble deposit is minted by ICS20 and credited to Noble backing; the flag refuses it"
 	local noble_before dydx_before backing
+	# The upgrade handler closes Noble deposits; open them for this scenario.
+	propose_controls MODE_GRADUAL PASSED >/dev/null
+	assert_eq "Noble deposits enabled" "$(state | jq -r '.controls.noble_deposits_disabled')" false
 	noble_before=$(balance noble "$NOBLE_USER" "$NOBLE_USDC")
 	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
 	backing=$(ledger_field noble_backing)
