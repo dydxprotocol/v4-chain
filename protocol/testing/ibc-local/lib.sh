@@ -16,7 +16,9 @@ DASEL_VERSION="v2.8.1"
 # Matches the upstream ibc-go version in go.mod; the counterparties run its simd.
 IBC_GO_VERSION="v8.5.1"
 
-DYDX_BIN="$BIN_DIR/dydxprotocold"
+# IBC_LOCAL_DYDX_BIN runs another build of dydxprotocold, e.g. an earlier
+# release that upgrade.sh starts from.
+DYDX_BIN="${IBC_LOCAL_DYDX_BIN:-$BIN_DIR/dydxprotocold}"
 SIMD_BIN="$BIN_DIR/ibc-simd"
 HERMES_BIN="$BIN_DIR/hermes"
 DASEL_BIN="$BIN_DIR/dasel"
@@ -251,6 +253,43 @@ start_hermes() {
 }
 
 stop_hermes() { stop_process hermes; }
+
+start_dydx() {
+	start_process dydx "$DYDX_BIN" start --home "$DYDX_HOME" \
+		--price-daemon-enabled=false --bridge-daemon-enabled=false --liquidation-daemon-enabled=false \
+		--max-daemon-unhealthy-seconds 4294967295
+}
+
+module_address() {
+	q dydx auth module-account "$1" |
+		jq -r '.account.value.address // .account.base_account.address // .account.address'
+}
+
+# govern PROPOSAL_FILE EXPECTED LABEL
+# Submits the proposal, votes yes and waits for EXPECTED: PASSED or FAILED
+# (message execution rejected). Prints the proposal id.
+govern() {
+	local file=$1 expected=$2 label=$3 id i status
+	tx dydx validator gov submit-proposal "$file" >/dev/null
+	id=$(q dydx gov proposals | jq -r '.proposals | map(.id | tonumber) | max')
+	tx dydx validator gov vote "$id" yes >/dev/null
+	status=""
+	for i in $(seq 1 "$RELAY_TIMEOUT_SECONDS"); do
+		status=$(q dydx gov proposal "$id" | jq -r '.proposal.status // .status')
+		case "$status" in
+		PROPOSAL_STATUS_PASSED | 3 | PROPOSAL_STATUS_REJECTED | 4 | PROPOSAL_STATUS_FAILED | 5) break ;;
+		esac
+		sleep 1
+	done
+	case "$expected:$status" in
+	PASSED:PROPOSAL_STATUS_PASSED | PASSED:3 | FAILED:PROPOSAL_STATUS_FAILED | FAILED:5) ;;
+	*)
+		die "proposal $id ($label) ended '$status', want $expected: $(q dydx gov proposal "$id" |
+			jq -c '.proposal.failed_reason // .failed_reason // empty')"
+		;;
+	esac
+	echo "$id"
+}
 
 # Like tx, but the tx must fail, either at submission or in the block.
 # Prints the failure log so callers can check the reason.

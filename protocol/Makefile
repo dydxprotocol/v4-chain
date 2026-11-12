@@ -396,7 +396,11 @@ ibc-local-test:
 ibc-local-down:
 	@./testing/ibc-local/down.sh $(ARGS)
 
-.PHONY: ibc-local-up ibc-local-test ibc-local-down
+# In-place x/upgrade from FROM_REF (default protocol/v9.8.2), then all scenarios.
+ibc-local-upgrade:
+	@./testing/ibc-local/upgrade.sh $(FROM_REF)
+
+.PHONY: ibc-local-up ibc-local-test ibc-local-down ibc-local-upgrade
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
