@@ -18,6 +18,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	canonicalusdctypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,14 +47,22 @@ func TestUpdateControlsDisabledProposal(t *testing.T) {
 func TestUpdateControlsEnableGradualProposal(t *testing.T) {
 	tests := map[string]struct {
 		openRoutes     bool
+		rateLimit      bool
 		expectedStatus govtypesv1.ProposalStatus
 	}{
 		"routes open": {
 			openRoutes:     true,
+			rateLimit:      true,
 			expectedStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
 		"routes missing": {
 			openRoutes:     false,
+			rateLimit:      true,
+			expectedStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"no Injective rate limit": {
+			openRoutes:     true,
+			rateLimit:      false,
 			expectedStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 		},
 	}
@@ -66,14 +75,28 @@ func TestUpdateControlsEnableGradualProposal(t *testing.T) {
 			supply := tApp.App.BankKeeper.GetSupply(ctx, assettypes.UusdcDenom).Amount
 			require.True(t, supply.IsPositive())
 
+			// The Injective limiters are set by the proposal that enables routing.
+			msgs := []sdk.Msg{}
+			if tc.rateLimit {
+				msgs = append(msgs, &ratelimittypes.MsgSetLimitParams{
+					Authority: lib.GovModuleAddress.String(),
+					LimitParams: ratelimittypes.LimitParams{
+						Denom: gradualControls().InjectiveDenom,
+						Limiters: []ratelimittypes.Limiter{
+							ratelimittypes.DefaultUsdcHourlyLimter, ratelimittypes.DefaultUsdcDailyLimiter,
+						},
+					},
+				})
+			}
+			msgs = append(msgs, &canonicalusdctypes.MsgUpdateControls{
+				Authority: lib.GovModuleAddress.String(),
+				Controls:  gradualControls(),
+			})
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
 				tApp,
-				[]sdk.Msg{&canonicalusdctypes.MsgUpdateControls{
-					Authority: lib.GovModuleAddress.String(),
-					Controls:  gradualControls(),
-				}},
+				msgs,
 				testapp.TestSubmitProposalTxHeight,
 				false,
 				false,
@@ -82,7 +105,7 @@ func TestUpdateControlsEnableGradualProposal(t *testing.T) {
 
 			controls := tApp.App.CanonicalUsdcKeeper.GetControls(ctx)
 			ledger := tApp.App.CanonicalUsdcKeeper.GetLedger(ctx)
-			if !tc.openRoutes {
+			if tc.expectedStatus != govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
 				require.Equal(t, canonicalusdctypes.DefaultControls(), controls)
 				require.Equal(t, "0", ledger.NobleBacking.String())
 				return

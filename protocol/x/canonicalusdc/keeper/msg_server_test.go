@@ -361,3 +361,22 @@ func mustPending(
 	require.True(t, found)
 	return pending
 }
+
+// GRADUAL cannot be entered while the Injective denom has no limiters, since
+// nothing else bounds the Injective route. PAUSED stays reachable.
+func TestUpdateControlsGradualRequiresInjectiveRateLimit(t *testing.T) {
+	ctx, k, _, _, _ := setupKeeper(t)
+	rateLimit(k).unlimited[physicalDenom] = true
+
+	require.ErrorIs(
+		t,
+		updateControls(t, ctx, k, withMode(canonicaltypes.Mode_MODE_GRADUAL)),
+		canonicaltypes.ErrRateLimitRequired,
+	)
+	require.Equal(t, canonicaltypes.Mode_MODE_DISABLED, k.GetControls(ctx).Mode)
+
+	require.NoError(t, updateControls(t, ctx, k, withMode(canonicaltypes.Mode_MODE_PAUSED)))
+
+	rateLimit(k).unlimited[physicalDenom] = false
+	require.NoError(t, updateControls(t, ctx, k, withMode(canonicaltypes.Mode_MODE_GRADUAL)))
+}

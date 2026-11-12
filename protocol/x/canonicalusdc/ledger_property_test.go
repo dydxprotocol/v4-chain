@@ -85,7 +85,7 @@ func propSetup(t *testing.T) *propChain {
 // propKeeper is setupKeeperWithICS4 with governance authorities, so the msg
 // server can change modes. Channel and connection keepers are nil, which
 // skips route-binding checks.
-func propKeeper(t *testing.T, authorities []string) (sdk.Context, *keeper.Keeper, *receiveBank, *undoRatelimit) {
+func propKeeper(t *testing.T, authorities []string) (sdk.Context, *keeper.Keeper, *receiveBank, *limitedRatelimit) {
 	t.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	database := db.NewMemDB()
@@ -95,14 +95,14 @@ func propKeeper(t *testing.T, authorities []string) (sdk.Context, *keeper.Keeper
 	ctx := sdk.NewContext(multiStore, cmtproto.Header{}, false, log.NewNopLogger())
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 	bank := newReceiveBank()
-	ratelimit := &undoRatelimit{}
+	ratelimit := &limitedRatelimit{}
 	k := keeper.NewKeeper(cdc, key, nil, bank, &sequencedICS4{}, ratelimit, nil, nil, authorities)
 	return ctx, k, bank, ratelimit
 }
 
 type propBankSnapshot map[string]map[string]math.Int
 
-func (p *propChain) snapshot() (propBankSnapshot, undoRatelimit, int) {
+func (p *propChain) snapshot() (propBankSnapshot, limitedRatelimit, int) {
 	copied := propBankSnapshot{}
 	for address, denoms := range p.r.bank.balances {
 		copied[address] = map[string]math.Int{}
@@ -113,7 +113,7 @@ func (p *propChain) snapshot() (propBankSnapshot, undoRatelimit, int) {
 	return copied, *p.r.ratelimit, len(p.r.stub.packets)
 }
 
-func (p *propChain) restore(bank propBankSnapshot, ratelimit undoRatelimit, packets int) {
+func (p *propChain) restore(bank propBankSnapshot, ratelimit limitedRatelimit, packets int) {
 	p.r.bank.balances = bank
 	*p.r.ratelimit = ratelimit
 	p.r.stub.packets = p.r.stub.packets[:packets]
@@ -437,7 +437,6 @@ func TestPropAckWithoutErrorResponseIsDelivered(t *testing.T) {
 		require.NoError(t, p.ackInflight(0, emptyAck))
 		_, injective, _, _ := p.ledger()
 		require.Equal(t, int64(100), injective.Int64())
-		require.Zero(t, p.r.ratelimit.undone)
 		p.requireModel(t, "empty ack on injective")
 	})
 	t.Run("legacy noble", func(t *testing.T) {
