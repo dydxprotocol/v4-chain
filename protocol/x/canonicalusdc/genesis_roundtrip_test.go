@@ -100,7 +100,13 @@ func genControls(mode types.Mode) types.Controls {
 	}
 }
 
-func genPending(route types.Route, channel string, sequence uint64, amount int64, controls types.Controls) types.PendingSettlement {
+func genPending(
+	route types.Route,
+	channel string,
+	sequence uint64,
+	amount int64,
+	controls types.Controls,
+) types.PendingSettlement {
 	physical, sender := controls.LogicalDenom, sdk.AccAddress("genesis-sender").String()
 	if route == types.Route_ROUTE_INJECTIVE {
 		physical = controls.InjectiveDenom

@@ -1,7 +1,7 @@
 package types
 
 import (
-	"fmt"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,7 +15,7 @@ func signer(address string) []sdk.AccAddress {
 
 func validateSigner(address string) error {
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		return fmt.Errorf("%w: invalid signer: %v", ErrUnauthorized, err)
+		return errorsmod.Wrapf(ErrUnauthorized, "invalid signer: %v", err)
 	}
 	return nil
 }

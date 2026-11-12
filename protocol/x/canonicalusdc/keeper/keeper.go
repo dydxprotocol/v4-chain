@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"encoding/binary"
-	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
@@ -73,14 +73,14 @@ func (k Keeper) EnsureModuleAccount(ctx sdk.Context) error {
 	}
 	base, ok := existing.(*authtypes.BaseAccount)
 	if !ok {
-		return fmt.Errorf("%w: unexpected account type %T", types.ErrModuleAccount, existing)
+		return errorsmod.Wrapf(types.ErrModuleAccount, "unexpected account type %T", existing)
 	}
 	if base.GetPubKey() != nil {
-		return fmt.Errorf("%w: module address has a public key", types.ErrModuleAccount)
+		return errorsmod.Wrap(types.ErrModuleAccount, "module address has a public key")
 	}
 	_, permissions := k.accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if len(permissions) == 0 {
-		return fmt.Errorf("%w: module permissions are not registered", types.ErrModuleAccount)
+		return errorsmod.Wrap(types.ErrModuleAccount, "module permissions are not registered")
 	}
 	k.accountKeeper.SetAccount(ctx, authtypes.NewModuleAccount(base, types.ModuleName, permissions...))
 	return nil
@@ -110,11 +110,11 @@ func (k Keeper) ValidateRouteBindings(ctx sdk.Context, controls types.Controls) 
 			channel.Version != transfertypes.Version ||
 			channel.Counterparty.PortId != transfertypes.PortID ||
 			len(channel.ConnectionHops) != 1 || channel.ConnectionHops[0] != route.connection {
-			return fmt.Errorf("%w: %s channel binding mismatch", types.ErrInvalidControls, route.name)
+			return errorsmod.Wrapf(types.ErrInvalidControls, "%s channel binding mismatch", route.name)
 		}
 		connection, found := k.connectionKeeper.GetConnection(ctx, route.connection)
 		if !found || connection.State != connectiontypes.OPEN || connection.ClientId != route.client {
-			return fmt.Errorf("%w: %s client binding mismatch", types.ErrInvalidControls, route.name)
+			return errorsmod.Wrapf(types.ErrInvalidControls, "%s client binding mismatch", route.name)
 		}
 	}
 	return nil
@@ -205,11 +205,8 @@ func (k Keeper) snapshotNobleBacking(ctx sdk.Context) error {
 	classified := amounts.injective.Add(amounts.pendingInjective)
 	supply := k.bankKeeper.GetSupply(ctx, k.GetControls(ctx).LogicalDenom).Amount
 	if supply.LT(classified) {
-		return fmt.Errorf(
-			"%w: logical supply %s is below classified backing %s",
-			types.ErrInvalidLedger,
-			supply,
-			classified,
+		return errorsmod.Wrapf(
+			types.ErrInvalidLedger, "logical supply %s is below classified backing %s", supply, classified,
 		)
 	}
 	ledger.NobleBacking = types.NewAmount(supply.Sub(classified))
@@ -293,7 +290,9 @@ func (k Keeper) GetAllPending(ctx sdk.Context) []types.PendingSettlement {
 	return pending
 }
 
-// GetPendingPage returns one page of pending settlements in key order.
+// GetPendingPage returns one page of pending settlements in key order. A stored
+// record that does not decode is reported as ErrInvalidSettlement; any other
+// error comes from the page request.
 func (k Keeper) GetPendingPage(
 	ctx sdk.Context,
 	pageRequest *query.PageRequest,
@@ -302,7 +301,7 @@ func (k Keeper) GetPendingPage(
 	pageResponse, err := query.Paginate(k.pendingStore(ctx), pageRequest, func(_ []byte, value []byte) error {
 		var settlement types.PendingSettlement
 		if err := k.cdc.Unmarshal(value, &settlement); err != nil {
-			return err
+			return errorsmod.Wrap(types.ErrInvalidSettlement, err.Error())
 		}
 		pending = append(pending, settlement)
 		return nil

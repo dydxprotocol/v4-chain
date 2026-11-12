@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	"google.golang.org/grpc/codes"
@@ -28,6 +29,9 @@ func (k Keeper) PendingSettlements(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	pending, pageResponse, err := k.GetPendingPage(sdk.UnwrapSDKContext(ctx), request.Pagination)
+	if errors.Is(err, types.ErrInvalidSettlement) {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}

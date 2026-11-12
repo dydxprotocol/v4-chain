@@ -38,7 +38,7 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 	requireInvariant(t, ctx, k)
 
 	transfer.logicalOwner = operator
-	resp, err := decorator.Transfer(sdk.WrapSDKContext(ctx), &transfertypes.MsgTransfer{
+	resp, err := decorator.Transfer(ctx, &transfertypes.MsgTransfer{
 		SourcePort: transfertypes.PortID, SourceChannel: nobleChannel,
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 100), Sender: operator.String(),
 		Receiver: "noble1receiver", TimeoutTimestamp: 1,
@@ -52,7 +52,7 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 	require.Equal(t, "0", k.GetLedger(ctx).PendingNoble.String())
 	requireInvariant(t, ctx, k)
 
-	_, err = decorator.Transfer(sdk.WrapSDKContext(ctx), &transfertypes.MsgTransfer{
+	_, err = decorator.Transfer(ctx, &transfertypes.MsgTransfer{
 		SourcePort: transfertypes.PortID, SourceChannel: nobleChannel,
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 1), Sender: operator.String(),
 		Receiver: "noble1receiver", TimeoutTimestamp: 1,
@@ -71,5 +71,5 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 1), Sender: operator.String(),
 		Receiver: "noble1receiver", TimeoutTimestamp: 1,
 	})
-	require.ErrorIs(t, err, canonicaltypes.ErrDisabled)
+	require.ErrorIs(t, err, canonicaltypes.ErrNobleWithdrawalsDisabled)
 }

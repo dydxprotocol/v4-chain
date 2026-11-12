@@ -252,10 +252,13 @@ func TestAdvMalformedInjectivePacketsLeaveNoState(t *testing.T) {
 		amount   string
 		receiver string
 	}{
-		"zero amount":          {amount: "0", receiver: advReceiver.String()},
-		"negative amount":      {amount: "-5", receiver: advReceiver.String()},
-		"non-numeric amount":   {amount: "abc", receiver: advReceiver.String()},
-		"257-bit amount":       {amount: "231584178474632390847141970017375815706539969331281128078915168015826259279872", receiver: advReceiver.String()},
+		"zero amount":        {amount: "0", receiver: advReceiver.String()},
+		"negative amount":    {amount: "-5", receiver: advReceiver.String()},
+		"non-numeric amount": {amount: "abc", receiver: advReceiver.String()},
+		"257-bit amount": {
+			amount:   "231584178474632390847141970017375815706539969331281128078915168015826259279872",
+			receiver: advReceiver.String(),
+		},
 		"invalid receiver":     {amount: "10", receiver: "not-bech32"},
 		"wrong hrp receiver":   {amount: "10", receiver: "cosmos1qqqsyqcyq5rqwzqfpg9scrgwpugpzysn5cyl7e"},
 		"blocked receiver":     {amount: "10", receiver: authtypes.NewModuleAddress(authtypes.FeeCollectorName).String()},
@@ -488,7 +491,9 @@ func TestAdvMalformedPacketData(t *testing.T) {
 		"not json":      []byte("garbage"),
 		"empty":         {},
 		"amount number": []byte(`{"denom":"uusdc","amount":10,"sender":"s","receiver":"` + advReceiver.String() + `"}`),
-		"unknown field": []byte(`{"denom":"uusdc","amount":"10","sender":"s","receiver":"` + advReceiver.String() + `","x":1}`),
+		"unknown field": []byte(
+			`{"denom":"uusdc","amount":"10","sender":"s","receiver":"` + advReceiver.String() + `","x":1}`,
+		),
 	} {
 		t.Run(name, func(t *testing.T) {
 			p := packet

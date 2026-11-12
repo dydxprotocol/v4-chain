@@ -2,14 +2,20 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// forwardMemoKey is the top-level memo key that packet-forward-middleware
+// reads its forwarding instruction from.
+const forwardMemoKey = "forward"
 
 type transferAuthorizationKey struct{}
 
@@ -39,7 +45,7 @@ func (d TransferDecorator) Transfer(
 		return nil, err
 	}
 	if msg.SourcePort != transfertypes.PortID {
-		return nil, fmt.Errorf("%w: canonical transfers require the transfer port", types.ErrUnsupportedChannel)
+		return nil, errorsmod.Wrap(types.ErrUnsupportedChannel, "canonical transfers require the transfer port")
 	}
 	amount := msg.Token.Amount
 	if !amount.IsPositive() {
@@ -49,14 +55,17 @@ func (d TransferDecorator) Transfer(
 	if err != nil {
 		return nil, err
 	}
-	switch msg.SourceChannel {
-	case controls.InjectiveChannel:
-		return d.transferInjective(ctx, controls, msg, sender, amount)
-	case controls.NobleChannel:
-		return d.transferNoble(ctx, controls, msg, sender, amount)
-	default:
-		return nil, fmt.Errorf("%w: %s", types.ErrUnsupportedChannel, msg.SourceChannel)
+	route, err := routeOf(controls, msg.SourceChannel)
+	if err != nil {
+		return nil, err
 	}
+	if err := d.checkWithdrawal(ctx, controls, route, msg.Memo); err != nil {
+		return nil, err
+	}
+	if route == types.Route_ROUTE_INJECTIVE {
+		return d.transferInjective(ctx, controls, msg, sender, amount)
+	}
+	return d.transferNoble(ctx, controls, msg, sender, amount)
 }
 
 func (d TransferDecorator) UpdateParams(
@@ -64,6 +73,71 @@ func (d TransferDecorator) UpdateParams(
 	msg *transfertypes.MsgUpdateParams,
 ) (*transfertypes.MsgUpdateParamsResponse, error) {
 	return d.keeper.TransferMsgServer().UpdateParams(ctx, msg)
+}
+
+func routeOf(controls types.Controls, channel string) (types.Route, error) {
+	switch channel {
+	case controls.InjectiveChannel:
+		return types.Route_ROUTE_INJECTIVE, nil
+	case controls.NobleChannel:
+		return types.Route_ROUTE_NOBLE, nil
+	default:
+		return types.Route_ROUTE_UNSPECIFIED, errorsmod.Wrap(types.ErrUnsupportedChannel, channel)
+	}
+}
+
+// checkWithdrawal applies the admission rules that need no ledger access,
+// before any state moves or a packet is sent.
+func (d TransferDecorator) checkWithdrawal(
+	ctx sdk.Context,
+	controls types.Controls,
+	route types.Route,
+	memo string,
+) error {
+	if route == types.Route_ROUTE_NOBLE && !controls.NobleWithdrawalsEnabled {
+		return types.ErrNobleWithdrawalsDisabled
+	}
+	if err := checkMemo(route, memo); err != nil {
+		return err
+	}
+	if d.keeper.PendingCount(ctx) >= controls.MaxPendingSettlements {
+		return types.ErrPendingLimit
+	}
+	return nil
+}
+
+// checkMemo rejects memos that the destination chain acts on.
+//
+// An Injective-route packet is sent by the module account, so a memo-triggered
+// call on Injective would run under one identity shared by every canonical
+// withdrawer. That route carries no memo at all.
+//
+// A Noble-route packet keeps the user's own sender, so only a packet-forward
+// instruction is rejected: the acknowledgement of a forwarded packet is held
+// until the next hop settles, which keeps its pending settlement open for as
+// long as the sender chooses.
+func checkMemo(route types.Route, memo string) error {
+	if memo == "" {
+		return nil
+	}
+	if route == types.Route_ROUTE_INJECTIVE {
+		return errorsmod.Wrap(types.ErrMemoNotAllowed, "the Injective route carries no memo")
+	}
+	if hasForwardKey(memo) {
+		return errorsmod.Wrap(types.ErrMemoNotAllowed, "packet forwarding")
+	}
+	return nil
+}
+
+// hasForwardKey decodes the memo the way packet-forward-middleware does: as a
+// JSON object whose top-level keys are matched exactly.
+func hasForwardKey(memo string) bool {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(memo), &fields); err != nil {
+		return false
+	}
+	_, found := fields[forwardMemoKey]
+	return found
 }
 
 func (d TransferDecorator) transferInjective(
@@ -110,7 +184,7 @@ func (d TransferDecorator) transferInjective(
 		return nil, err
 	}
 	emitLogicalTransfer(cacheCtx, msg)
-	emitPending(cacheCtx, pending)
+	emitPending(cacheCtx, pending, amount)
 	write()
 	return response, nil
 }
@@ -122,9 +196,6 @@ func (d TransferDecorator) transferNoble(
 	sender sdk.AccAddress,
 	amount math.Int,
 ) (*transfertypes.MsgTransferResponse, error) {
-	if !controls.NobleWithdrawalsEnabled {
-		return nil, types.ErrDisabled
-	}
 	ledger := d.keeper.GetLedger(ctx)
 	var err error
 	if ledger.NobleBacking, err = subtract(ledger.NobleBacking, amount); err != nil {
@@ -146,7 +217,7 @@ func (d TransferDecorator) transferNoble(
 	if err := d.keeper.SetLedger(cacheCtx, ledger); err != nil {
 		return nil, err
 	}
-	emitPending(cacheCtx, pending)
+	emitPending(cacheCtx, pending, amount)
 	write()
 	return response, nil
 }
@@ -175,6 +246,9 @@ func newPending(
 	}
 }
 
+// emitLogicalTransfer emits the ICS20 transfer event for the user's logical
+// withdrawal on the Injective route. The inner transfer emits a second one for
+// the physical packet, which names the module account as sender.
 func emitLogicalTransfer(ctx sdk.Context, msg *transfertypes.MsgTransfer) {
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		transfertypes.EventTypeTransfer,
@@ -186,7 +260,7 @@ func emitLogicalTransfer(ctx sdk.Context, msg *transfertypes.MsgTransfer) {
 	))
 }
 
-func emitPending(ctx sdk.Context, pending types.PendingSettlement) {
+func emitPending(ctx sdk.Context, pending types.PendingSettlement, amount math.Int) {
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeCanonicalTransfer,
 		sdk.NewAttribute(types.AttributeKeyRoute, pending.Route.String()),
@@ -194,6 +268,26 @@ func emitPending(ctx sdk.Context, pending types.PendingSettlement) {
 		sdk.NewAttribute(types.AttributeKeyPhysicalDenom, pending.PhysicalDenom),
 		sdk.NewAttribute(types.AttributeKeySourceChannel, pending.SourceChannel),
 		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(pending.Sequence)),
+		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
+		sdk.NewAttribute(sdk.AttributeKeySender, pending.Sender),
+		sdk.NewAttribute(transfertypes.AttributeKeyReceiver, pending.LogicalReceiver),
 		sdk.NewAttribute(types.AttributeKeyPending, "true"),
+	))
+}
+
+// emitSettlement reports the final outcome of a withdrawal, keyed by the same
+// channel and sequence as its canonical_usdc_transfer event.
+func emitSettlement(ctx sdk.Context, settled types.PendingSettlement, amount math.Int, outcome string) {
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeSettlement,
+		sdk.NewAttribute(types.AttributeKeyRoute, settled.Route.String()),
+		sdk.NewAttribute(types.AttributeKeyLogicalDenom, settled.LogicalDenom),
+		sdk.NewAttribute(types.AttributeKeyPhysicalDenom, settled.PhysicalDenom),
+		sdk.NewAttribute(types.AttributeKeySourceChannel, settled.SourceChannel),
+		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(settled.Sequence)),
+		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
+		sdk.NewAttribute(sdk.AttributeKeySender, settled.Sender),
+		sdk.NewAttribute(transfertypes.AttributeKeyReceiver, settled.LogicalReceiver),
+		sdk.NewAttribute(types.AttributeKeyOutcome, outcome),
 	))
 }
