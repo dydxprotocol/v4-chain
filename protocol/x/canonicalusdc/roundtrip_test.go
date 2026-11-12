@@ -168,7 +168,7 @@ type roundTrip struct {
 	ctx        sdk.Context
 	keeper     *keeper.Keeper
 	bank       *receiveBank
-	ratelimit  *limitedRatelimit
+	ratelimit  *undoRatelimit
 	stub       *ics20Stub
 	middleware IBCMiddleware
 	controls   types.Controls
@@ -316,6 +316,7 @@ func TestRoundTripInjectiveWithdrawal(t *testing.T) {
 		settle        func(roundTrip, channeltypes.Packet) error
 		wantInjective string
 		wantUser      string
+		wantUndone    int64
 	}{
 		{
 			name: "success",
@@ -332,6 +333,7 @@ func TestRoundTripInjectiveWithdrawal(t *testing.T) {
 			},
 			wantInjective: "10",
 			wantUser:      "10",
+			wantUndone:    4,
 		},
 		{
 			name: "timeout",
@@ -340,6 +342,7 @@ func TestRoundTripInjectiveWithdrawal(t *testing.T) {
 			},
 			wantInjective: "10",
 			wantUser:      "10",
+			wantUndone:    4,
 		},
 	}
 	for _, tc := range cases {
@@ -370,6 +373,7 @@ func TestRoundTripInjectiveWithdrawal(t *testing.T) {
 				require.Equal(t, "0", r.keeper.GetLedger(r.ctx).PendingInjective.String())
 				require.Equal(t, tc.wantUser, r.bank.amount(r.holder, r.controls.LogicalDenom).String())
 				require.Equal(t, "0", r.bank.amount(types.ModuleAddress, r.controls.LogicalDenom).String())
+				require.Equal(t, tc.wantUndone, r.ratelimit.undone)
 				r.requireInvariant(t)
 			})
 		}
@@ -458,6 +462,8 @@ func TestRoundTripExistingInjectiveHolderCanUnwind(t *testing.T) {
 				require.Equal(t, "10", r.bank.amount(r.holder, r.controls.LogicalDenom).String())
 				require.Equal(t, "10", r.bank.amount(types.ModuleAddress, r.controls.InjectiveDenom).String())
 				require.Equal(t, "10", r.keeper.GetLedger(r.ctx).InjectiveBacking.String())
+				require.Equal(t, int64(0), r.ratelimit.charged)
+				require.Equal(t, int64(0), r.ratelimit.undone)
 				r.requireInvariant(t)
 			})
 		}

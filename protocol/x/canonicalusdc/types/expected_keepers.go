@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"math/big"
 
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -9,7 +10,6 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -40,9 +40,10 @@ type AccountKeeper interface {
 	GetModuleAddressAndPermissions(moduleName string) (sdk.AccAddress, []string)
 }
 
-// RatelimitKeeper reads the withdrawal limits configured for a denom.
+// RatelimitKeeper charges and refunds withdrawal capacity for a denom.
 type RatelimitKeeper interface {
-	GetLimitParams(ctx sdk.Context, denom string) ratelimittypes.LimitParams
+	ProcessWithdrawal(ctx sdk.Context, denom string, amount *big.Int) error
+	UndoWithdrawal(ctx sdk.Context, denom string, amount *big.Int)
 }
 
 type TransferMsgServer interface {

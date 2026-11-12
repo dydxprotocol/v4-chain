@@ -50,7 +50,7 @@ func (k Keeper) Settle(ctx sdk.Context, pending types.PendingSettlement, success
 
 // settleInjective burns the locked logical USDC on success. On failure the
 // inner transfer has already refunded the physical coins to the module, so the
-// logical USDC is unlocked to the sender.
+// logical USDC is unlocked to the sender and the rate-limit charge is undone.
 func (k Keeper) settleInjective(
 	ctx sdk.Context,
 	ledger types.Ledger,
@@ -84,6 +84,7 @@ func (k Keeper) settleInjective(
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, logical); err != nil {
 		return ledger, err
 	}
+	k.ratelimitKeeper.UndoWithdrawal(ctx, pending.LogicalDenom, amount.BigInt())
 	return ledger, nil
 }
 

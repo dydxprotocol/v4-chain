@@ -27,5 +27,4 @@ var (
 	ErrNobleWithdrawalsDisabled  = errorsmod.Register(ModuleName, 22, "Noble USDC withdrawals are disabled")
 	ErrSettlementMismatch        = errorsmod.Register(ModuleName, 23, "pending settlement does not match packet")
 	ErrInvalidSettlement         = errorsmod.Register(ModuleName, 24, "invalid pending settlement")
-	ErrRateLimitRequired         = errorsmod.Register(ModuleName, 25, "no rate limit configured for Injective USDC")
 )

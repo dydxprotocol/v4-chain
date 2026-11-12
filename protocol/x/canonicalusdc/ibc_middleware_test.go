@@ -3,6 +3,7 @@ package canonicalusdc
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -20,7 +21,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
-	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -237,7 +237,7 @@ func setupReceiveKeeper(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank
 	return ctx, k, bank
 }
 
-func setupReceiveKeeperWithRatelimit(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank, *limitedRatelimit) {
+func setupReceiveKeeperWithRatelimit(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank, *undoRatelimit) {
 	t.Helper()
 	return setupKeeperWithICS4(t, nil)
 }
@@ -245,7 +245,7 @@ func setupReceiveKeeperWithRatelimit(t *testing.T) (sdk.Context, *keeper.Keeper,
 func setupKeeperWithICS4(
 	t *testing.T,
 	ics4 types.ICS4Wrapper,
-) (sdk.Context, *keeper.Keeper, *receiveBank, *limitedRatelimit) {
+) (sdk.Context, *keeper.Keeper, *receiveBank, *undoRatelimit) {
 	t.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	database := db.NewMemDB()
@@ -255,16 +255,24 @@ func setupKeeperWithICS4(
 	ctx := sdk.NewContext(multiStore, cmtproto.Header{}, false, log.NewNopLogger())
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 	bank := newReceiveBank()
-	ratelimit := &limitedRatelimit{}
+	ratelimit := &undoRatelimit{}
 	return ctx, keeper.NewKeeper(cdc, key, nil, bank, ics4, ratelimit, nil, nil, nil), bank, ratelimit
 }
 
-// limitedRatelimit reports limiters for every denom. The module only reads
-// them; x/ratelimit charges and refunds packets below the middleware.
-type limitedRatelimit struct{}
+// undoRatelimit records refunded capacity. Charging happens in the transfer
+// decorator, which these middleware tests do not exercise.
+type undoRatelimit struct {
+	charged int64
+	undone  int64
+}
 
-func (limitedRatelimit) GetLimitParams(_ sdk.Context, denom string) ratelimittypes.LimitParams {
-	return ratelimittypes.LimitParams{Denom: denom, Limiters: []ratelimittypes.Limiter{{}}}
+func (r *undoRatelimit) ProcessWithdrawal(_ sdk.Context, _ string, amount *big.Int) error {
+	r.charged += amount.Int64()
+	return nil
+}
+
+func (r *undoRatelimit) UndoWithdrawal(_ sdk.Context, _ string, amount *big.Int) {
+	r.undone += amount.Int64()
 }
 
 func receiveControls() types.Controls {
@@ -588,7 +596,7 @@ func TestNobleTimeoutRefundRestoresBacking(t *testing.T) {
 func TestInjectiveAcknowledgementLifecycle(t *testing.T) {
 	for _, success := range []bool{true, false} {
 		t.Run(fmt.Sprintf("success=%t", success), func(t *testing.T) {
-			ctx, k, bank, _ := setupReceiveKeeperWithRatelimit(t)
+			ctx, k, bank, ratelimit := setupReceiveKeeperWithRatelimit(t)
 			controls := receiveControls()
 			require.NoError(t, k.SetControls(ctx, controls))
 			ledger := types.DefaultLedger()
@@ -623,9 +631,11 @@ func TestInjectiveAcknowledgementLifecycle(t *testing.T) {
 			if success {
 				require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking.String())
 				require.Equal(t, "0", bank.amount(types.ModuleAddress, controls.LogicalDenom).String())
+				require.Zero(t, ratelimit.undone)
 			} else {
 				require.Equal(t, "50", k.GetLedger(ctx).InjectiveBacking.String())
 				require.Equal(t, "50", bank.amount(sender, controls.LogicalDenom).String())
+				require.Equal(t, int64(10), ratelimit.undone)
 			}
 		})
 	}

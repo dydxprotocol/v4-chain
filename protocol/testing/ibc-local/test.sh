@@ -92,7 +92,6 @@ BATCH_SIZE=200000000
 
 # propose_controls MODE EXPECTED [JQ_FILTER]
 # Submits MsgUpdateControls through governance with the live route bindings,
-# preceded by the x/ratelimit limiters the Injective route requires,
 # optionally rewritten by JQ_FILTER (applied to the controls object), votes yes
 # and waits for EXPECTED: PASSED or FAILED (message execution rejected).
 propose_controls() {
@@ -106,16 +105,6 @@ propose_controls() {
 		--arg ich "$DYDX_INJECTIVE_CHANNEL" --arg icl "$inj_client" --arg ico "$inj_conn" \
 		--arg idenom "$INJECTIVE_DENOM" --arg pd "$COUNTERPARTY_USDC" --arg dep "10000000$NATIVE_TOKEN" '{
 		messages: [{
-			"@type": "/dydxprotocol.ratelimit.MsgSetLimitParams",
-			authority: $gov,
-			limit_params: {
-				denom: $idenom,
-				limiters: [
-					{period: "3600s", baseline_minimum: "1000000000000", baseline_tvl_ppm: 10000},
-					{period: "86400s", baseline_minimum: "10000000000000", baseline_tvl_ppm: 100000}
-				]
-			}
-		}, {
 			"@type": "/dydxprotocol.canonicalusdc.MsgUpdateControls",
 			authority: $gov,
 			controls: ({

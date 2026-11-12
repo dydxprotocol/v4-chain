@@ -100,11 +100,6 @@ func (d TransferDecorator) checkWithdrawal(
 	if err := checkMemo(route, memo); err != nil {
 		return err
 	}
-	if route == types.Route_ROUTE_INJECTIVE {
-		if err := d.keeper.requireInjectiveRateLimit(ctx, controls); err != nil {
-			return err
-		}
-	}
 	if d.keeper.PendingCount(ctx) >= controls.MaxPendingSettlements {
 		return types.ErrPendingLimit
 	}
@@ -162,6 +157,11 @@ func (d TransferDecorator) transferInjective(
 	}
 
 	cacheCtx, write := ctx.CacheContext()
+	// The physical packet carries the Injective denom, so x/ratelimit does not
+	// charge it against logical USDC capacity.
+	if err := d.keeper.ratelimitKeeper.ProcessWithdrawal(cacheCtx, controls.LogicalDenom, amount.BigInt()); err != nil {
+		return nil, err
+	}
 	coins := sdk.NewCoins(sdk.NewCoin(controls.LogicalDenom, amount))
 	if err := d.keeper.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, sender, types.ModuleName, coins); err != nil {
 		return nil, err

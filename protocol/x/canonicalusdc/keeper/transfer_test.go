@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"testing"
 	"time"
 
@@ -23,7 +24,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	canonicaltypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
-	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -37,7 +37,8 @@ const (
 )
 
 var (
-	physicalDenom = transfertypes.ParseDenomTrace("transfer/" + injChannel + "/uusdc").IBCDenom()
+	physicalDenom  = transfertypes.ParseDenomTrace("transfer/" + injChannel + "/uusdc").IBCDenom()
+	errRateLimited = fmt.Errorf("withdrawal exceeds capacity")
 )
 
 type bankMock struct {
@@ -129,18 +130,38 @@ func (b *bankMock) BurnCoins(_ context.Context, module string, coins sdk.Coins) 
 	return nil
 }
 
-// ratelimitMock reports limiters for every denom except those marked unlimited.
 type ratelimitMock struct {
-	unlimited map[string]bool
+	charged map[string]*big.Int
+	err     error
 }
 
-func newRatelimitMock() *ratelimitMock { return &ratelimitMock{unlimited: make(map[string]bool)} }
+func newRatelimitMock() *ratelimitMock { return &ratelimitMock{charged: make(map[string]*big.Int)} }
 
-func (m *ratelimitMock) GetLimitParams(_ sdk.Context, denom string) ratelimittypes.LimitParams {
-	if m.unlimited[denom] {
-		return ratelimittypes.LimitParams{Denom: denom}
+func (m *ratelimitMock) ProcessWithdrawal(_ sdk.Context, denom string, amount *big.Int) error {
+	if m.err != nil {
+		return m.err
 	}
-	return ratelimittypes.LimitParams{Denom: denom, Limiters: []ratelimittypes.Limiter{{}}}
+	m.add(denom, amount)
+	return nil
+}
+
+func (m *ratelimitMock) UndoWithdrawal(_ sdk.Context, denom string, amount *big.Int) {
+	m.add(denom, new(big.Int).Neg(amount))
+}
+
+func (m *ratelimitMock) add(denom string, amount *big.Int) {
+	current, ok := m.charged[denom]
+	if !ok {
+		current = new(big.Int)
+	}
+	m.charged[denom] = new(big.Int).Add(current, amount)
+}
+
+func (m *ratelimitMock) chargedFor(denom string) int64 {
+	if current, ok := m.charged[denom]; ok {
+		return current.Int64()
+	}
+	return 0
 }
 
 func rateLimit(k *Keeper) *ratelimitMock { return k.ratelimitKeeper.(*ratelimitMock) }
@@ -507,13 +528,17 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 			err: canonicaltypes.ErrNobleWithdrawalsDisabled,
 		},
 		{
-			name: "injective route without a rate limit",
+			name: "injective rate limit exhausted",
 			prep: func(t *testing.T, ctx sdk.Context, k *Keeper, bank *bankMock) {
-				funded(t, ctx, k, bank)
-				rateLimit(k).unlimited[physicalDenom] = true
+				require.NoError(t, k.SetControls(ctx, activeControls()))
+				ledger := canonicaltypes.DefaultLedger()
+				ledger.InjectiveBacking = dtypes.NewInt(50)
+				require.NoError(t, k.SetLedger(ctx, ledger))
+				bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+				rateLimit(k).err = errRateLimited
 			},
 			msg: uusdc(transfertypes.PortID, injChannel, "inj1receiver", 10),
-			err: canonicaltypes.ErrRateLimitRequired,
+			err: errRateLimited,
 		},
 		{
 			name: "noble using injective backing",
@@ -878,18 +903,77 @@ func TestDuplicatePhysicalSequenceRollsBackPending(t *testing.T) {
 	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking.String())
 }
 
-// The Noble route is limited by logical USDC capacity, which x/ratelimit
-// charges from the packet, so it does not depend on the Injective limiters.
-func TestNobleWithdrawalNeedsNoInjectiveRateLimit(t *testing.T) {
-	ctx, k, bank, transfer, _ := setupKeeper(t)
+func TestInjectiveTransferChargesLogicalRateLimit(t *testing.T) {
+	ctx, k, bank, _, _ := setupKeeper(t)
 	require.NoError(t, k.SetControls(ctx, activeControls()))
-	rateLimit(k).unlimited[physicalDenom] = true
-	sender := sdk.AccAddress("noble-sender")
-	fundRoutes(t, ctx, k, bank, sender)
-
-	_, err := NewTransferDecorator(k).Transfer(ctx, withdrawal(sender, nobleChannel, 10))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.InjectiveBacking = dtypes.NewInt(50)
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("injective-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+	msg := &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: injChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+		Receiver: "inj1receiver", TimeoutTimestamp: 1,
+	}
+	response, err := NewTransferDecorator(k).Transfer(ctx, msg)
 	require.NoError(t, err)
-	require.Equal(t, 1, transfer.calls)
+	require.Equal(t, int64(10), rateLimit(k).chargedFor(types.UusdcDenom))
+	require.Zero(t, rateLimit(k).chargedFor(physicalDenom))
+
+	pending, found := k.GetPendingForPacket(ctx, injChannel, response.Sequence)
+	require.True(t, found)
+	require.NoError(t, k.Settle(ctx, pending, true, canonicaltypes.AttributeValueSuccess))
+	require.Equal(t, int64(10), rateLimit(k).chargedFor(types.UusdcDenom), "success keeps the charge")
+}
+
+func TestInjectiveSettlementFailureUndoesLogicalRateLimit(t *testing.T) {
+	for _, outcome := range []string{canonicaltypes.AttributeValueError, canonicaltypes.AttributeValueTimeout} {
+		t.Run(outcome, func(t *testing.T) {
+			ctx, k, bank, _, _ := setupKeeper(t)
+			require.NoError(t, k.SetControls(ctx, activeControls()))
+			ledger := canonicaltypes.DefaultLedger()
+			ledger.InjectiveBacking = dtypes.NewInt(50)
+			require.NoError(t, k.SetLedger(ctx, ledger))
+			sender := sdk.AccAddress("injective-sender")
+			bank.set(sender, types.UusdcDenom, math.NewInt(50))
+			bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+			msg := &transfertypes.MsgTransfer{
+				SourcePort: transfertypes.PortID, SourceChannel: injChannel,
+				Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+				Receiver: "inj1receiver", TimeoutTimestamp: 1,
+			}
+			response, err := NewTransferDecorator(k).Transfer(ctx, msg)
+			require.NoError(t, err)
+			pending, found := k.GetPendingForPacket(ctx, injChannel, response.Sequence)
+			require.True(t, found)
+
+			// The inner transfer refunds the physical coins before the middleware settles.
+			bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+			require.NoError(t, k.Settle(ctx, pending, false, outcome))
+			require.Zero(t, rateLimit(k).chargedFor(types.UusdcDenom))
+			require.Equal(t, "50", bank.amount(sender, types.UusdcDenom).String())
+		})
+	}
+}
+
+func TestNobleTransferDoesNotChargeLogicalRateLimitDirectly(t *testing.T) {
+	ctx, k, bank, _, _ := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	ledger := canonicaltypes.DefaultLedger()
+	ledger.NobleBacking = dtypes.NewInt(50)
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	sender := sdk.AccAddress("noble-sender")
+	bank.set(sender, types.UusdcDenom, math.NewInt(50))
+	msg := &transfertypes.MsgTransfer{
+		SourcePort: transfertypes.PortID, SourceChannel: nobleChannel,
+		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
+		Receiver: "noble1receiver", TimeoutTimestamp: 1,
+	}
+	_, err := NewTransferDecorator(k).Transfer(ctx, msg)
+	require.NoError(t, err)
+	require.Zero(t, rateLimit(k).chargedFor(types.UusdcDenom), "x/ratelimit charges the uusdc packet itself")
 }
 
 func TestSettlementIgnoresSupplyDrift(t *testing.T) {

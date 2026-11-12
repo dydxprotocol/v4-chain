@@ -168,7 +168,7 @@ func bypassGovKeeper(t *testing.T) (sdk.Context, *keeper.Keeper, *receiveBank) {
 	bank := newReceiveBank()
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(cdctypes.NewInterfaceRegistry()), key, nil, bank, &sequencedICS4{},
-		&limitedRatelimit{}, nil, nil, []string{lib.GovModuleAddress.String()},
+		&undoRatelimit{}, nil, nil, []string{lib.GovModuleAddress.String()},
 	)
 	return ctx, k, bank
 }
