@@ -47,3 +47,33 @@ Then `snapshot.sh take after` and `snapshot.sh diff before after`: subaccounts, 
 - Injective withdrawal: `dydxprotocold tx ibc-transfer transfer transfer channel-94 <cosmos addr> <amt>ibc/8E27... --from dydx-1 ...`; settles on ack, burns backing.
 - Rate limit: `q ratelimit capacity-by-denom ibc/8E27...` before/after; a round trip is neutral.
 - Noble route only with a channel-0 relayer. Finalize (disable Noble withdrawals) is reversible by proposal on testnet.
+
+## 0. Cutting protocol/v9.9.0-rc0 for testnet
+Testnet images are built by `protocol-build-and-push-testnet.yml` on pushes to `main` or `release/protocol/vX[.Y].x`
+in dydxprotocol/v4-chain, tagged by 7-char commit hash in ECR `testnet-validator`. Tags `protocol/vX.Y.Z-rcN` trigger
+`protocol-release.yml`, which builds reproducible linux binaries into a draft GitHub release. `release/protocol/v9.x`
+carries the 9.8 line and has diverged from main, so 9.9 gets its own branch from the PR tip (main lineage).
+```
+tip=<green tip>                                   # after the last ibc-local upgrade run passes
+git branch release/protocol/v9.9.x $tip
+git tag -s protocol/v9.9.0-rc0 $tip -m "protocol/v9.9.0-rc0"   # signed, like the 9.8 tags
+git push origin release/protocol/v9.9.x protocol/v9.9.0-rc0    # one push: image gets version 9.9.0-rc0
+```
+Then: approve nothing, CI runs on the branch push; publish the draft release (needed by cosmovisor flows and by the
+staging image's PREUPGRADE_VERSION); note the ECR image tag (`git rev-parse --short=7 $tip`).
+Testnet validators on 9.8.2 crash-loop at the plan height with `UPGRADE "v9.9" NEEDED`; switch both validator task
+definitions (useast2 first, apne1 ~8 min) and the full nodes to the rc0 image then. The new binary applies the upgrade
+on start and enters GRADUAL with the pinned testnet routes.
+
+Optional cosmovisor dress rehearsal on the staging chain: run `protocol-build-and-push-staging-manual.yml` with
+upgrade_name=v9.9, preupgrade_version=9.8.2. That chain (dydxprotocol-testnet) has no IBC channels, so expect the
+store migration and the logged DISABLED fallback, not GRADUAL.
+
+### Release-note draft (rc0)
+- x/canonicalusdc: canonical USDC backing migration from Noble to Injective (#3465): GRADUAL/PAUSED controls,
+  Noble and Injective routes, backing ledger, settlement tracking, Informal Systems audit fixes, audit report under audits/.
+- v9.9 upgrade handler adds the module store and enters GRADUAL bound to Noble channel-0 and Injective channel-62
+  on dydx-mainnet-1 (pinned testnet routes for dydx-testnet-4); falls back to DISABLED for governance if a binding fails.
+- Injective deposits refill uusdc rate-limit capacity that Injective withdrawals spent (bounded, shared limiter).
+- Since 9.8.2 (main): Go 1.26.10 and grpc/x deps (#3458), cometbft fork bump (#3461), x/clob withdrawal gating skips
+  negative-TNC subaccounts with no positions (#3452), streaming liquidation taker orders (#3451).
