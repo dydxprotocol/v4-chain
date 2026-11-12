@@ -3,6 +3,7 @@ package canonicalusdc
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -270,7 +271,7 @@ func (im IBCMiddleware) forwardUnsettled(
 	refunded bool,
 	forward func(sdk.Context) error,
 ) error {
-	sender, amount, ok := im.legacyNobleRefund(ctx, packet, refunded)
+	refund, ok := im.legacyNobleRefund(ctx, packet, refunded)
 	if !ok {
 		return forward(ctx)
 	}
@@ -278,32 +279,44 @@ func (im IBCMiddleware) forwardUnsettled(
 	if err := forward(cacheCtx); err != nil {
 		return err
 	}
-	if err := im.keeper.CreditLegacyNobleRefund(cacheCtx, packet, sender, amount); err != nil {
+	if err := im.keeper.CreditLegacyNobleRefund(cacheCtx, refund); err != nil {
 		return err
 	}
 	write()
 	return nil
 }
 
+// legacyNobleRefund describes a refunded Noble-trace packet as the settlement
+// it would have had if it had been sent through the module.
 func (im IBCMiddleware) legacyNobleRefund(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	refunded bool,
-) (string, math.Int, bool) {
+) (types.PendingSettlement, bool) {
 	controls := im.keeper.GetControls(ctx)
 	if !refunded || controls.Mode == types.Mode_MODE_DISABLED ||
 		packet.SourcePort != transfertypes.PortID || packet.SourceChannel != controls.NobleChannel {
-		return "", math.Int{}, false
+		return types.PendingSettlement{}, false
 	}
 	var data transfertypes.FungibleTokenPacketData
 	if err := transfertypes.ModuleCdc.UnmarshalJSON(packet.Data, &data); err != nil {
-		return "", math.Int{}, false
+		return types.PendingSettlement{}, false
 	}
 	amount, ok := math.NewIntFromString(data.Amount)
 	if !ok || !amount.IsPositive() || data.Denom != controls.NobleTrace() {
-		return "", math.Int{}, false
+		return types.PendingSettlement{}, false
 	}
-	return data.Sender, amount, true
+	return types.PendingSettlement{
+		Route:            types.Route_ROUTE_NOBLE,
+		SourceChannel:    packet.SourceChannel,
+		Sequence:         packet.Sequence,
+		Sender:           data.Sender,
+		LogicalReceiver:  data.Receiver,
+		PhysicalReceiver: data.Receiver,
+		LogicalDenom:     controls.LogicalDenom,
+		PhysicalDenom:    controls.LogicalDenom,
+		Amount:           types.NewAmount(amount),
+	}, true
 }
 
 // isErrorAck reports whether the bytes decode to an ack that ICS20 refunds.
@@ -333,22 +346,25 @@ func validatePendingPacket(
 		return err
 	}
 	if packet.SourcePort != transfertypes.PortID || packet.SourceChannel != pending.SourceChannel {
-		return fmt.Errorf("pending settlement source does not match packet")
+		return errorsmod.Wrap(types.ErrSettlementMismatch, "source")
+	}
+	pendingAmount, err := types.PositiveAmountOf(pending.Amount)
+	if err != nil {
+		return errorsmod.Wrap(types.ErrInvalidSettlement, "amount")
 	}
 	packetAmount, ok := math.NewIntFromString(data.Amount)
-	pendingAmount, err := types.PositiveAmountOf(pending.Amount)
-	if !ok || err != nil || !packetAmount.Equal(pendingAmount) || data.Receiver != pending.PhysicalReceiver {
-		return fmt.Errorf("pending settlement does not match packet")
+	if !ok || !packetAmount.Equal(pendingAmount) || data.Receiver != pending.PhysicalReceiver {
+		return errorsmod.Wrap(types.ErrSettlementMismatch, "amount or receiver")
 	}
 	expectedDenom, expectedSender := controls.NobleTrace(), pending.Sender
 	if pending.Route == types.Route_ROUTE_INJECTIVE {
 		expectedDenom, expectedSender = controls.InjectiveTrace(), types.ModuleAddress.String()
 	}
 	if data.Denom != expectedDenom {
-		return fmt.Errorf("pending settlement denom does not match packet")
+		return errorsmod.Wrap(types.ErrSettlementMismatch, "denom")
 	}
 	if data.Sender != expectedSender {
-		return fmt.Errorf("pending settlement sender does not match packet")
+		return errorsmod.Wrap(types.ErrSettlementMismatch, "sender")
 	}
 	return nil
 }

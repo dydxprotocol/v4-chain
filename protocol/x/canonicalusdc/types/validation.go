@@ -1,9 +1,9 @@
 package types
 
 import (
-	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
@@ -90,13 +90,13 @@ func (controls Controls) SameRoute(other Controls) bool {
 
 func (controls Controls) Validate() error {
 	if controls.Mode < Mode_MODE_DISABLED || controls.Mode > Mode_MODE_PAUSED {
-		return fmt.Errorf("%w: unsupported mode %s", ErrInvalidControls, controls.Mode)
+		return errorsmod.Wrapf(ErrInvalidControls, "unsupported mode %s", controls.Mode)
 	}
 	if err := sdk.ValidateDenom(controls.LogicalDenom); err != nil {
-		return fmt.Errorf("%w: logical denom: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "logical denom: %v", err)
 	}
 	if controls.LogicalDenom != assettypes.UusdcDenom {
-		return fmt.Errorf("%w: logical denom must remain %s", ErrInvalidControls, assettypes.UusdcDenom)
+		return errorsmod.Wrapf(ErrInvalidControls, "logical denom must remain %s", assettypes.UusdcDenom)
 	}
 	if controls.Mode == Mode_MODE_DISABLED {
 		return nil
@@ -109,49 +109,51 @@ func (controls Controls) Validate() error {
 
 func (controls Controls) validateRoutes() error {
 	if controls.NobleChannel == controls.InjectiveChannel {
-		return fmt.Errorf("%w: route channels must differ", ErrInvalidControls)
+		return errorsmod.Wrap(ErrInvalidControls, "route channels must differ")
 	}
 	if err := host.ChannelIdentifierValidator(controls.NobleChannel); err != nil {
-		return fmt.Errorf("%w: Noble channel: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Noble channel: %v", err)
 	}
 	if err := host.ChannelIdentifierValidator(controls.InjectiveChannel); err != nil {
-		return fmt.Errorf("%w: Injective channel: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Injective channel: %v", err)
 	}
 	if err := host.ClientIdentifierValidator(controls.NobleClient); err != nil {
-		return fmt.Errorf("%w: Noble client: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Noble client: %v", err)
 	}
 	if err := host.ClientIdentifierValidator(controls.InjectiveClient); err != nil {
-		return fmt.Errorf("%w: Injective client: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Injective client: %v", err)
 	}
 	if err := host.ConnectionIdentifierValidator(controls.NobleConnection); err != nil {
-		return fmt.Errorf("%w: Noble connection: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Noble connection: %v", err)
 	}
 	if err := host.ConnectionIdentifierValidator(controls.InjectiveConnection); err != nil {
-		return fmt.Errorf("%w: Injective connection: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Injective connection: %v", err)
 	}
 	if err := sdk.ValidateDenom(controls.InjectiveDenom); err != nil {
-		return fmt.Errorf("%w: Injective denom: %v", ErrInvalidControls, err)
+		return errorsmod.Wrapf(ErrInvalidControls, "Injective denom: %v", err)
 	}
 	if controls.InjectivePacketDenom == "" || controls.NoblePacketDenom == "" {
-		return fmt.Errorf("%w: packet denoms must be set", ErrInvalidControls)
+		return errorsmod.Wrap(ErrInvalidControls, "packet denoms must be set")
 	}
 	if strings.ContainsRune(controls.InjectivePacketDenom, '\x00') ||
 		strings.ContainsRune(controls.NoblePacketDenom, '\x00') {
-		return fmt.Errorf("%w: packet denoms contain NUL", ErrInvalidControls)
+		return errorsmod.Wrap(ErrInvalidControls, "packet denoms contain NUL")
 	}
 	if nobleDenom := transfertypes.ParseDenomTrace(controls.NobleTrace()).IBCDenom(); nobleDenom != controls.LogicalDenom {
-		return fmt.Errorf("%w: Noble trace resolves to %s, not logical denom", ErrInvalidControls, nobleDenom)
+		return errorsmod.Wrapf(ErrInvalidControls, "Noble trace resolves to %s, not logical denom", nobleDenom)
 	}
 	injectiveDenom := transfertypes.ParseDenomTrace(controls.InjectiveTrace()).IBCDenom()
 	if injectiveDenom != controls.InjectiveDenom {
-		return fmt.Errorf("%w: Injective trace resolves to %s, not physical denom", ErrInvalidControls, injectiveDenom)
+		return errorsmod.Wrapf(
+			ErrInvalidControls, "Injective trace resolves to %s, not physical denom", injectiveDenom,
+		)
 	}
 	return nil
 }
 
 func (controls Controls) validateLimits() error {
 	if controls.MaxPendingSettlements == 0 || controls.MaxPendingSettlements > HardMaxPending {
-		return fmt.Errorf("%w: max pending settlements", ErrInvalidControls)
+		return errorsmod.Wrap(ErrInvalidControls, "max pending settlements")
 	}
 	return nil
 }
@@ -179,7 +181,7 @@ func (genesis GenesisState) Validate() error {
 		return ErrPendingLimit
 	}
 	if genesis.Controls.Mode == Mode_MODE_DISABLED && len(genesis.PendingSettlements) != 0 {
-		return fmt.Errorf("%w: disabled genesis cannot contain pending settlements", ErrInvalidControls)
+		return errorsmod.Wrap(ErrInvalidControls, "disabled genesis cannot contain pending settlements")
 	}
 	for _, pending := range genesis.PendingSettlements {
 		if err := pending.Validate(); err != nil {
@@ -191,21 +193,23 @@ func (genesis GenesisState) Validate() error {
 
 func (pending PendingSettlement) Validate() error {
 	if pending.Route < Route_ROUTE_INJECTIVE || pending.Route > Route_ROUTE_NOBLE {
-		return fmt.Errorf("invalid pending route")
+		return errorsmod.Wrap(ErrInvalidSettlement, "route")
 	}
 	if err := host.ChannelIdentifierValidator(pending.SourceChannel); err != nil {
-		return err
+		return errorsmod.Wrapf(ErrInvalidSettlement, "source channel: %v", err)
 	}
 	if pending.Sequence == 0 {
-		return fmt.Errorf("pending sequence must be positive")
+		return errorsmod.Wrap(ErrInvalidSettlement, "sequence must be positive")
 	}
 	sender, err := sdk.AccAddressFromBech32(pending.Sender)
 	if err != nil {
-		return fmt.Errorf("invalid pending sender: %w", err)
+		return errorsmod.Wrapf(ErrInvalidSettlement, "sender: %v", err)
 	}
 	if sender.String() != pending.Sender {
-		return fmt.Errorf("pending sender %q is not in canonical form", pending.Sender)
+		return errorsmod.Wrapf(ErrInvalidSettlement, "sender %q is not in canonical form", pending.Sender)
 	}
-	_, err = PositiveAmountOf(pending.Amount)
-	return err
+	if _, err := PositiveAmountOf(pending.Amount); err != nil {
+		return errorsmod.Wrap(ErrInvalidSettlement, "amount must be positive")
+	}
+	return nil
 }

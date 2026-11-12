@@ -68,7 +68,7 @@ func TestMigrationReplacesNobleBackingWithInjective(t *testing.T) {
 	require.False(t, p.r.keeper.GetControls(p.r.ctx).NobleWithdrawalsEnabled)
 	p.requireModel(t, "finalized")
 
-	require.ErrorIs(t, p.send(holder, p.r.controls.NobleChannel, 10), types.ErrDisabled)
+	require.ErrorIs(t, p.send(holder, p.r.controls.NobleChannel, 10), types.ErrNobleWithdrawalsDisabled)
 	require.Error(t, p.recv(p.r.controls.NobleChannel, p.r.controls.NoblePacketDenom, holder, 10),
 		"Noble deposits stay rejected")
 	require.NoError(t, p.send(holder, p.r.controls.InjectiveChannel, 100))

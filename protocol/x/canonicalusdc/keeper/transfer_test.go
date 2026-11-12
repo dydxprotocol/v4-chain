@@ -387,7 +387,7 @@ func TestTransferPassesOriginalMessageUnchanged(t *testing.T) {
 				Sender:        sender.String(),
 				Receiver:      tc.receiver,
 			}
-			response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+			response, err := NewTransferDecorator(k).Transfer(ctx, msg)
 			require.NoError(t, err)
 			require.Equal(t, uint64(7), response.Sequence)
 			require.Same(t, msg, transfer.seen)
@@ -415,9 +415,8 @@ func TestInjectiveTransferLocksBeforePhysicalSendAndSettlesError(t *testing.T) {
 		Sender:           sender.String(),
 		Receiver:         "inj1receiver",
 		TimeoutTimestamp: 1,
-		Memo:             "partner-memo",
 	}
-	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	response, err := NewTransferDecorator(k).Transfer(ctx, msg)
 	require.NoError(t, err)
 	require.Equal(t, uint64(7), response.Sequence)
 	require.Equal(t, "40", transfer.senderBalance.String(), "logical USDC must be locked before the original keeper runs")
@@ -442,7 +441,10 @@ func TestInjectiveTransferLocksBeforePhysicalSendAndSettlesError(t *testing.T) {
 		attributes[attribute.Key] = attribute.Value
 	}
 	require.Equal(t, types.UusdcDenom, attributes[transfertypes.AttributeKeyDenom])
-	require.Equal(t, "partner-memo", attributes[transfertypes.AttributeKeyMemo])
+	require.Equal(t, sender.String(), attributes[sdk.AttributeKeySender])
+	require.Equal(t, "inj1receiver", attributes[transfertypes.AttributeKeyReceiver])
+	require.Equal(t, "10", attributes[transfertypes.AttributeKeyAmount])
+	require.Empty(t, attributes[transfertypes.AttributeKeyMemo])
 
 	pending, found := k.GetPendingForPacket(ctx, injChannel, 7)
 	require.True(t, found)
@@ -472,6 +474,18 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 			Token: sdk.NewInt64Coin(types.UusdcDenom, amount), Sender: sender.String(),
 			Receiver: receiver, TimeoutTimestamp: 1,
 		}
+	}
+	funded := func(t *testing.T, ctx sdk.Context, k *Keeper, bank *bankMock) {
+		require.NoError(t, k.SetControls(ctx, activeControls()))
+		ledger := canonicaltypes.DefaultLedger()
+		ledger.NobleBacking = dtypes.NewInt(50)
+		ledger.InjectiveBacking = dtypes.NewInt(50)
+		require.NoError(t, k.SetLedger(ctx, ledger))
+		bank.set(canonicaltypes.ModuleAddress, physicalDenom, math.NewInt(50))
+	}
+	withMemo := func(msg *transfertypes.MsgTransfer, memo string) *transfertypes.MsgTransfer {
+		msg.Memo = memo
+		return msg
 	}
 	cases := []struct {
 		name string
@@ -510,7 +524,7 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 				require.NoError(t, k.SetLedger(ctx, ledger))
 			},
 			msg: uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
-			err: canonicaltypes.ErrDisabled,
+			err: canonicaltypes.ErrNobleWithdrawalsDisabled,
 		},
 		{
 			name: "injective rate limit exhausted",
@@ -537,6 +551,63 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 			msg: uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
 			err: canonicaltypes.ErrInsufficientBacking,
 		},
+		{
+			name: "injective plain memo",
+			prep: funded,
+			msg:  withMemo(uusdc(transfertypes.PortID, injChannel, "inj1receiver", 10), "partner-memo"),
+			err:  canonicaltypes.ErrMemoNotAllowed,
+		},
+		{
+			name: "injective wasm hook memo",
+			prep: funded,
+			msg: withMemo(
+				uusdc(transfertypes.PortID, injChannel, "inj1contract", 10),
+				`{"wasm":{"contract":"inj1contract","msg":{"deposit":{}}}}`,
+			),
+			err: canonicaltypes.ErrMemoNotAllowed,
+		},
+		{
+			name: "injective forward memo",
+			prep: funded,
+			msg: withMemo(
+				uusdc(transfertypes.PortID, injChannel, "inj1receiver", 10),
+				`{"forward":{"receiver":"x","port":"transfer","channel":"channel-9"}}`,
+			),
+			err: canonicaltypes.ErrMemoNotAllowed,
+		},
+		{
+			name: "noble forward memo",
+			prep: funded,
+			msg: withMemo(
+				uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
+				`{"forward":{"receiver":"x","port":"transfer","channel":"channel-9","timeout":"8760h"}}`,
+			),
+			err: canonicaltypes.ErrMemoNotAllowed,
+		},
+		{
+			name: "noble forward memo among other keys",
+			prep: funded,
+			msg: withMemo(
+				uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
+				" {\"note\":\"x\",\"forward\":{\"receiver\":\"x\"}}\n",
+			),
+			err: canonicaltypes.ErrMemoNotAllowed,
+		},
+		{
+			name: "noble forward memo with a null value",
+			prep: funded,
+			msg:  withMemo(uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10), `{"forward":null}`),
+			err:  canonicaltypes.ErrMemoNotAllowed,
+		},
+		{
+			name: "noble forward memo with a repeated key",
+			prep: funded,
+			msg: withMemo(
+				uusdc(transfertypes.PortID, nobleChannel, "noble1receiver", 10),
+				`{"forward":{"receiver":"x"},"forward":null}`,
+			),
+			err: canonicaltypes.ErrMemoNotAllowed,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -547,7 +618,7 @@ func TestCanonicalTransferRejectsBeforeMovement(t *testing.T) {
 			} else {
 				require.NoError(t, k.SetControls(ctx, activeControls()))
 			}
-			_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), tc.msg)
+			_, err := NewTransferDecorator(k).Transfer(ctx, tc.msg)
 			require.ErrorIs(t, err, tc.err)
 			require.Zero(t, transfer.calls)
 			require.Equal(t, "50", bank.amount(sender, types.UusdcDenom).String())
@@ -720,7 +791,7 @@ func TestInjectiveTransferSuccessBurnsLockedLogical(t *testing.T) {
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
 		Receiver: "inj1receiver", TimeoutTimestamp: 1,
 	}
-	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	response, err := NewTransferDecorator(k).Transfer(ctx, msg)
 	require.NoError(t, err)
 	pending, found := k.GetPendingForPacket(ctx, injChannel, response.Sequence)
 	require.True(t, found)
@@ -748,7 +819,7 @@ func TestInnerTransferErrorLeavesPendingAndLedgerUnchanged(t *testing.T) {
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
 		Receiver: "inj1receiver", TimeoutTimestamp: 1,
 	}
-	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	_, err := NewTransferDecorator(k).Transfer(ctx, msg)
 	require.ErrorContains(t, err, "remote unavailable")
 	require.Zero(t, k.PendingCount(ctx))
 	require.Equal(t, "50", k.GetLedger(ctx).InjectiveBacking.String())
@@ -756,7 +827,7 @@ func TestInnerTransferErrorLeavesPendingAndLedgerUnchanged(t *testing.T) {
 }
 
 func TestCanonicalTransferRejectsPendingLimitBeforeMovement(t *testing.T) {
-	ctx, k, bank, _, _ := setupKeeper(t)
+	ctx, k, bank, transfer, _ := setupKeeper(t)
 	controls := activeControls()
 	controls.MaxPendingSettlements = 1
 	require.NoError(t, k.SetControls(ctx, controls))
@@ -773,12 +844,13 @@ func TestCanonicalTransferRejectsPendingLimitBeforeMovement(t *testing.T) {
 			Receiver: "inj1receiver", TimeoutTimestamp: 1,
 		}
 	}
-	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg())
+	_, err := NewTransferDecorator(k).Transfer(ctx, msg())
 	require.NoError(t, err)
 	require.Equal(t, uint32(1), k.PendingCount(ctx))
 	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking.String())
-	_, err = NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg())
+	_, err = NewTransferDecorator(k).Transfer(ctx, msg())
 	require.ErrorIs(t, err, canonicaltypes.ErrPendingLimit)
+	require.Equal(t, 1, transfer.calls, "a withdrawal over the pending limit must not reach the transfer keeper")
 	require.Equal(t, uint32(1), k.PendingCount(ctx))
 	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking.String())
 }
@@ -796,7 +868,7 @@ func TestNobleTransferSuccessRecordsPending(t *testing.T) {
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
 		Receiver: "noble1receiver", TimeoutTimestamp: 1,
 	}
-	response, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	response, err := NewTransferDecorator(k).Transfer(ctx, msg)
 	require.NoError(t, err)
 	require.Equal(t, types.UusdcDenom, transfer.seen.Token.Denom)
 	require.Equal(t, sender.String(), transfer.seen.Sender)
@@ -821,10 +893,10 @@ func TestDuplicatePhysicalSequenceRollsBackPending(t *testing.T) {
 		Token: sdk.NewInt64Coin(types.UusdcDenom, 10), Sender: sender.String(),
 		Receiver: "inj1receiver", TimeoutTimestamp: 1,
 	}
-	_, err := NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	_, err := NewTransferDecorator(k).Transfer(ctx, msg)
 	require.NoError(t, err)
 	transfer.nextSequence = 7
-	_, err = NewTransferDecorator(k).Transfer(sdk.WrapSDKContext(ctx), msg)
+	_, err = NewTransferDecorator(k).Transfer(ctx, msg)
 	require.ErrorIs(t, err, canonicaltypes.ErrDuplicateSettlement)
 	require.Equal(t, uint32(1), k.PendingCount(ctx))
 	require.Equal(t, "40", k.GetLedger(ctx).InjectiveBacking.String())

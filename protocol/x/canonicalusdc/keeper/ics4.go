@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"fmt"
-
+	errorsmod "cosmossdk.io/errors"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -30,7 +29,7 @@ func (k Keeper) SendPacket(
 		if requiresCanonicalAuthorization(controls, packetData.Denom, packetData.Sender) {
 			authorized, _ := ctx.Value(transferAuthorizationKey{}).(bool)
 			if !authorized {
-				return 0, fmt.Errorf("%w: channel %s", types.ErrBypass, sourceChannel)
+				return 0, errorsmod.Wrapf(types.ErrBypass, "channel %s", sourceChannel)
 			}
 		}
 	}

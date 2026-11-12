@@ -69,7 +69,8 @@ func TestEnforceBackingPausesOnBreach(t *testing.T) {
 			reason: "does not equal accounted backing",
 		},
 		"missing physical reserve": {
-			noble: 6, injective: 4, reserve: 0, mode: canonicaltypes.Mode_MODE_GRADUAL, wantMode: canonicaltypes.Mode_MODE_PAUSED,
+			noble: 6, injective: 4, reserve: 0,
+			mode: canonicaltypes.Mode_MODE_GRADUAL, wantMode: canonicaltypes.Mode_MODE_PAUSED,
 			reason: "physical reserve",
 		},
 		"paused is left alone": {

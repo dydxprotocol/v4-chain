@@ -318,12 +318,15 @@ func TestPropDisabledEraNobleRefundRestoresBacking(t *testing.T) {
 	settlements := propEvents(p.r.ctx, types.EventTypeSettlement)
 	require.Len(t, settlements, 1)
 	require.Equal(t, map[string]string{
-		types.AttributeKeyRoute:          types.Route_ROUTE_NOBLE.String(),
-		types.AttributeKeySourceChannel:  inflight.SourceChannel,
-		types.AttributeKeySequence:       fmt.Sprint(inflight.Sequence),
-		transfertypes.AttributeKeyAmount: "100",
-		sdk.AttributeKeySender:           p.holders[0].String(),
-		types.AttributeKeyOutcome:        types.AttributeValueLegacyRefund,
+		types.AttributeKeyRoute:            types.Route_ROUTE_NOBLE.String(),
+		types.AttributeKeySourceChannel:    inflight.SourceChannel,
+		types.AttributeKeySequence:         fmt.Sprint(inflight.Sequence),
+		types.AttributeKeyLogicalDenom:     p.r.controls.LogicalDenom,
+		types.AttributeKeyPhysicalDenom:    p.r.controls.LogicalDenom,
+		transfertypes.AttributeKeyAmount:   "100",
+		sdk.AttributeKeySender:             p.holders[0].String(),
+		transfertypes.AttributeKeyReceiver: "remote1receiver",
+		types.AttributeKeyOutcome:          types.AttributeValueLegacyRefund,
 	}, settlements[0])
 }
 
@@ -360,12 +363,15 @@ func TestPropGradualNobleFailureRefundsSender(t *testing.T) {
 			settlements := propEvents(p.r.ctx, types.EventTypeSettlement)
 			require.Len(t, settlements, 1)
 			require.Equal(t, map[string]string{
-				types.AttributeKeyRoute:          types.Route_ROUTE_NOBLE.String(),
-				types.AttributeKeySourceChannel:  packet.SourceChannel,
-				types.AttributeKeySequence:       fmt.Sprint(packet.Sequence),
-				transfertypes.AttributeKeyAmount: "100",
-				sdk.AttributeKeySender:           holder.String(),
-				types.AttributeKeyOutcome:        tc.wantOutcome,
+				types.AttributeKeyRoute:            types.Route_ROUTE_NOBLE.String(),
+				types.AttributeKeySourceChannel:    packet.SourceChannel,
+				types.AttributeKeySequence:         fmt.Sprint(packet.Sequence),
+				types.AttributeKeyLogicalDenom:     p.r.controls.LogicalDenom,
+				types.AttributeKeyPhysicalDenom:    p.r.controls.LogicalDenom,
+				transfertypes.AttributeKeyAmount:   "100",
+				sdk.AttributeKeySender:             holder.String(),
+				transfertypes.AttributeKeyReceiver: "remote1receiver",
+				types.AttributeKeyOutcome:          tc.wantOutcome,
 			}, settlements[0])
 		})
 	}

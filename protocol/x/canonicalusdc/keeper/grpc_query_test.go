@@ -95,3 +95,21 @@ func TestQueryNilRequests(t *testing.T) {
 	_, err = k.PendingSettlement(ctx, nil)
 	require.Equal(t, status.Error(codes.InvalidArgument, "invalid request"), err)
 }
+
+// A bad page request is the caller's error; a stored record that does not
+// decode is the node's.
+func TestQueryPendingSettlementsErrorCodes(t *testing.T) {
+	ctx, k, _, _, _ := setupKeeper(t)
+	require.NoError(t, k.SetControls(ctx, activeControls()))
+	require.NoError(t, k.SetPending(ctx, noblePending(1, 1)))
+
+	_, err := k.PendingSettlements(ctx, &canonicaltypes.QueryPendingSettlementsRequest{
+		Pagination: &query.PageRequest{Key: []byte("key"), Offset: 1},
+	})
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	key := canonicaltypes.PendingKey(canonicaltypes.Route_ROUTE_NOBLE, nobleChannel, 2)
+	k.pendingStore(ctx).Set(key, []byte{0xff})
+	_, err = k.PendingSettlements(ctx, &canonicaltypes.QueryPendingSettlementsRequest{})
+	require.Equal(t, codes.Internal, status.Code(err))
+}

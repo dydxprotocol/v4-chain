@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store"
@@ -624,11 +625,28 @@ func TestPendingPacketMismatchLeavesPending(t *testing.T) {
 				SourceChannel: pending.SourceChannel, Data: data.GetBytes(),
 			}
 			err := NewIBCMiddleware(k, &receiveApp{bank: bank}).OnTimeoutPacket(ctx, packet, nil)
-			require.Error(t, err)
+			require.ErrorIs(t, err, types.ErrSettlementMismatch)
+			codespace, code, _ := errorsmod.ABCIInfo(err, false)
+			require.Equal(t, types.ModuleName, codespace)
+			require.Equal(t, types.ErrSettlementMismatch.ABCICode(), code)
 			require.Equal(t, uint32(1), k.PendingCount(ctx))
 			require.Equal(t, "5", k.GetLedger(ctx).PendingNoble.String())
 		})
 	}
+}
+
+func TestPendingPacketWithInvalidStoredAmountIsInvalidSettlement(t *testing.T) {
+	controls := receiveControls()
+	pending := types.PendingSettlement{
+		Route: types.Route_ROUTE_NOBLE, SourceChannel: controls.NobleChannel, Sequence: 17,
+		Sender: sdk.AccAddress("timeout-sender").String(), LogicalReceiver: "noble1receiver",
+		PhysicalReceiver: "noble1receiver", LogicalDenom: controls.LogicalDenom,
+		PhysicalDenom: controls.LogicalDenom, Amount: dtypes.NewInt(0),
+	}
+	packet := outboundPacket(pending, controls.NobleTrace(), pending.Sender)
+	err := validatePendingPacket(pending, controls, packet)
+	require.ErrorIs(t, err, types.ErrInvalidSettlement)
+	require.NotErrorIs(t, err, types.ErrSettlementMismatch)
 }
 
 // outboundPacket builds the packet ICS20 sends for a pending settlement. ICS20

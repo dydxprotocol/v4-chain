@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,7 +60,7 @@ func (k Keeper) enterGradual(ctx sdk.Context, previous types.Mode) error {
 			return err
 		}
 		if reason, broken := BackingInvariant(k)(ctx); broken {
-			return fmt.Errorf("%w: %s", types.ErrInvalidLedger, reason)
+			return errorsmod.Wrap(types.ErrInvalidLedger, reason)
 		}
 	}
 	if k.GetControls(ctx).NobleWithdrawalsEnabled {
@@ -91,17 +91,21 @@ func (k Keeper) validateTransition(ctx sdk.Context, current, next types.Controls
 	outstanding := pendingCount != 0 || !amounts.injective.IsZero() ||
 		!amounts.pendingInjective.IsZero() || !amounts.pendingNoble.IsZero()
 	if outstanding && next.Mode == types.Mode_MODE_DISABLED {
-		return fmt.Errorf("%w: cannot disable while Injective backing or settlements are outstanding",
-			types.ErrInvalidControls)
+		return errorsmod.Wrap(
+			types.ErrInvalidControls, "cannot disable while Injective backing or settlements are outstanding",
+		)
 	}
 	// DISABLED binds no route, and it cannot be entered with anything outstanding.
 	if outstanding && current.Mode != types.Mode_MODE_DISABLED && !current.SameRoute(next) {
-		return fmt.Errorf("%w: cannot change route identity while Injective backing or settlements are outstanding",
-			types.ErrInvalidControls)
+		return errorsmod.Wrap(
+			types.ErrInvalidControls,
+			"cannot change route identity while Injective backing or settlements are outstanding",
+		)
 	}
 	if next.Mode != types.Mode_MODE_DISABLED && next.MaxPendingSettlements < pendingCount {
-		return fmt.Errorf("%w: max pending settlements below current pending count %d",
-			types.ErrInvalidControls, pendingCount)
+		return errorsmod.Wrapf(
+			types.ErrInvalidControls, "max pending settlements below current pending count %d", pendingCount,
+		)
 	}
 	return nil
 }

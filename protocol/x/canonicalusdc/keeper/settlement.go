@@ -2,11 +2,9 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,15 +43,7 @@ func (k Keeper) Settle(ctx sdk.Context, pending types.PendingSettlement, success
 	if !k.RemovePending(cacheCtx, pending) {
 		return types.ErrSettlementNotFound
 	}
-	cacheCtx.EventManager().EmitEvent(sdk.NewEvent(
-		types.EventTypeSettlement,
-		sdk.NewAttribute(types.AttributeKeyRoute, pending.Route.String()),
-		sdk.NewAttribute(types.AttributeKeySourceChannel, pending.SourceChannel),
-		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(pending.Sequence)),
-		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
-		sdk.NewAttribute(sdk.AttributeKeySender, pending.Sender),
-		sdk.NewAttribute(types.AttributeKeyOutcome, outcome),
-	))
+	emitSettlement(cacheCtx, pending, amount, outcome)
 	write()
 	return nil
 }
@@ -85,7 +75,7 @@ func (k Keeper) settleInjective(
 	}
 	physicalBalance := k.bankKeeper.GetBalance(ctx, types.ModuleAddress, pending.PhysicalDenom).Amount
 	if physicalBalance.LT(injective) {
-		return ledger, fmt.Errorf("%w: physical refund missing", types.ErrInsufficientBacking)
+		return ledger, errorsmod.Wrap(types.ErrInsufficientBacking, "physical refund missing")
 	}
 	sender, err := sdk.AccAddressFromBech32(pending.Sender)
 	if err != nil {
@@ -114,28 +104,19 @@ func settleNoble(ledger types.Ledger, amount math.Int, success bool) (types.Ledg
 // CreditLegacyNobleRefund restores Noble backing for a refunded Noble packet
 // that has no pending settlement. Such a packet was sent while DISABLED, so the
 // GRADUAL snapshot excluded its burned amount; the ICS20 refund re-mints it.
-func (k Keeper) CreditLegacyNobleRefund(
-	ctx sdk.Context,
-	packet channeltypes.Packet,
-	sender string,
-	amount math.Int,
-) error {
+// The refund is described as the settlement the packet would have had.
+func (k Keeper) CreditLegacyNobleRefund(ctx sdk.Context, refund types.PendingSettlement) error {
+	amount, err := types.PositiveAmountOf(refund.Amount)
+	if err != nil {
+		return err
+	}
 	ledger := k.GetLedger(ctx)
-	var err error
 	if ledger.NobleBacking, err = add(ledger.NobleBacking, amount); err != nil {
 		return err
 	}
 	if err := k.SetLedger(ctx, ledger); err != nil {
 		return err
 	}
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		types.EventTypeSettlement,
-		sdk.NewAttribute(types.AttributeKeyRoute, types.Route_ROUTE_NOBLE.String()),
-		sdk.NewAttribute(types.AttributeKeySourceChannel, packet.SourceChannel),
-		sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprint(packet.Sequence)),
-		sdk.NewAttribute(transfertypes.AttributeKeyAmount, amount.String()),
-		sdk.NewAttribute(sdk.AttributeKeySender, sender),
-		sdk.NewAttribute(types.AttributeKeyOutcome, types.AttributeValueLegacyRefund),
-	))
+	emitSettlement(ctx, refund, amount, types.AttributeValueLegacyRefund)
 	return nil
 }
