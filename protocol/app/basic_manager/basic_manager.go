@@ -29,6 +29,7 @@ import (
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
+	canonicalusdcmodule "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc"
 	clobmodule "github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
@@ -85,6 +86,7 @@ var (
 		assetsmodule.AppModuleBasic{},
 		blocktimemodule.AppModuleBasic{},
 		bridgemodule.AppModuleBasic{},
+		canonicalusdcmodule.AppModuleBasic{},
 		feetiersmodule.AppModuleBasic{},
 		perpetualsmodule.AppModuleBasic{},
 		statsmodule.AppModuleBasic{},

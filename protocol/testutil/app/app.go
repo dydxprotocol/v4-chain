@@ -54,6 +54,7 @@ import (
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	canonicalusdctypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -203,6 +204,7 @@ type GenesisStates interface {
 		sendingtypes.GenesisState |
 		delaymsgtypes.GenesisState |
 		bridgetypes.GenesisState |
+		canonicalusdctypes.GenesisState |
 		govtypesv1.GenesisState |
 		ratelimittypes.GenesisState |
 		govplus.GenesisState |
@@ -233,6 +235,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = blocktimetypes.ModuleName
 	case bridgetypes.GenesisState:
 		moduleName = bridgetypes.ModuleName
+	case canonicalusdctypes.GenesisState:
+		moduleName = canonicalusdctypes.ModuleName
 	case delaymsgtypes.GenesisState:
 		moduleName = delaymsgtypes.ModuleName
 	case perptypes.GenesisState:

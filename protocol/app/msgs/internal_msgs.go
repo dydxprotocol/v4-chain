@@ -20,6 +20,7 @@ import (
 	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	canonicalusdc "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -194,6 +195,10 @@ var (
 		// ratelimit
 		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
+
+		// canonicalusdc
+		"/dydxprotocol.canonicalusdc.MsgUpdateControls":         &canonicalusdc.MsgUpdateControls{},
+		"/dydxprotocol.canonicalusdc.MsgUpdateControlsResponse": nil,
 
 		// revshare
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         &revshare.MsgSetMarketMapperRevShareDetailsForMarket{}, //nolint:lll
