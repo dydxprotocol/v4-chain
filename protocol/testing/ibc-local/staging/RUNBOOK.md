@@ -61,9 +61,13 @@ git push origin tq/canonicalusdc-v9.x protocol/v9.9.0-rcN     # PR #3466 into re
 ```
 Then: approve nothing, CI runs on the branch push; publish the draft release (needed by cosmovisor flows and by the
 staging image's PREUPGRADE_VERSION); note the ECR image tag (`git rev-parse --short=7 $tip`).
-Testnet validators on 9.8.2 crash-loop at the plan height with `UPGRADE "v9.9" NEEDED`; switch both validator task
-definitions (useast2 first, apne1 ~8 min) and the full nodes to the rc0 image then. The new binary applies the upgrade
-on start and enters GRADUAL with the pinned testnet routes.
+STAGED 2026-11-12 22:07 UTC on all seven testnet nodes (validators useast2 + apne1, full nodes useast2-0/1/2, indexer
+full node and indexer snapshot node in apne1): the rc1 binary (sha256 b85ab68c...) sits at
+`<chain home>/cosmovisor/upgrades/v9.9/bin/dydxprotocold` on each node's volume, `current` still points at v9.8, so
+cosmovisor swaps by itself at the plan height. No task-definition change is needed for the upgrade. AFTER the upgrade,
+move the task definitions to the rc1 image (`testnet-validator:f9d4939` or later) in a maintenance window: start.sh
+copies the image's cosmovisor tree on every container start and would point `current` back at v9.8 on a restart.
+The staging script is `protocol/testing/ibc-local/staging/stage-cosmovisor.sh`, run over SSM RunShellScript.
 
 Optional cosmovisor dress rehearsal on the staging chain: run `protocol-build-and-push-staging-manual.yml` with
 upgrade_name=v9.9, preupgrade_version=9.8.2. That chain (dydxprotocol-testnet) has no IBC channels, so expect the
