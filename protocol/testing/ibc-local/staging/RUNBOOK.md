@@ -37,7 +37,7 @@ Check the gov min deposit first (`q gov params`). Expect the halt at the height;
 dydxprotocold q canonicalusdc state --node tcp://3.22.142.107:26657 -o json
 ```
 Expect: mode MODE_GRADUAL, noble channel-0, injective channel-94, injective_denom ibc/26148908E8C7EB6D652F73103F9BDF39B3C602F9B5C73EEC6F1F20ACFB5B7466,
-noble_withdrawals_enabled true, deposits enabled, max_pending_settlements 10000, ledger.noble_backing == USDC supply, other ledger fields 0.
+noble_withdrawals_enabled true, noble_deposits_disabled true (Noble deposits bounce from the upgrade height), injective_deposits_disabled false, max_pending_settlements 10000, ledger.noble_backing == USDC supply, other ledger fields 0.
 If the node log says "canonicalusdc stays DISABLED after the upgrade", the bindings did not validate; the proposal path remains.
 Then `snapshot.sh take after` and `snapshot.sh diff before after`: subaccounts, vault, supply and perpetuals identical apart from accounts that traded meanwhile.
 

@@ -58,6 +58,9 @@ func enterGradual(ctx sdk.Context, keeper *canonicalusdckeeper.Keeper) error {
 	controls.NobleClient = noble.Client
 	controls.NoblePacketDenom = NoblePacketDenom
 	controls.NobleWithdrawalsEnabled = true
+	// Noble deposits close at the upgrade, as announced; the route stays open
+	// for withdrawals until the migration is finalized.
+	controls.NobleDepositsDisabled = true
 	controls.InjectiveChannel = injective.Channel
 	controls.InjectiveConnection = injective.Connection
 	controls.InjectiveClient = injective.Client

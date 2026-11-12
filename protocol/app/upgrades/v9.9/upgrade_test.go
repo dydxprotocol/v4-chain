@@ -117,7 +117,7 @@ func TestUpgradeEntersGradualWhenBothRoutesResolve(t *testing.T) {
 	require.Equal(t, "07-tendermint-0", controls.NobleClient)
 	require.Equal(t, v_9_9.NoblePacketDenom, controls.NoblePacketDenom)
 	require.True(t, controls.NobleWithdrawalsEnabled)
-	require.False(t, controls.NobleDepositsDisabled)
+	require.True(t, controls.NobleDepositsDisabled)
 	require.Equal(t, "channel-62", controls.InjectiveChannel)
 	require.Equal(t, "connection-30", controls.InjectiveConnection)
 	require.Equal(t, "07-tendermint-26", controls.InjectiveClient)
