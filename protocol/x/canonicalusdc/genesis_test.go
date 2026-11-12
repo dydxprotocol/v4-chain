@@ -120,10 +120,11 @@ func TestGenesisLedgerAmountsRoundTrip(t *testing.T) {
 	ctx, k := genesisKeeper(t)
 	genesis := types.DefaultGenesis()
 	genesis.Ledger = types.Ledger{
-		NobleBacking:     dtypes.NewInt(123),
-		InjectiveBacking: dtypes.NewInt(45),
-		PendingInjective: dtypes.NewInt(6),
-		PendingNoble:     dtypes.NewInt(7),
+		NobleBacking:       dtypes.NewInt(123),
+		InjectiveBacking:   dtypes.NewInt(45),
+		PendingInjective:   dtypes.NewInt(6),
+		PendingNoble:       dtypes.NewInt(7),
+		RefillableCapacity: dtypes.NewInt(8),
 	}
 	canonicalusdc.InitGenesis(ctx, *k, *genesis)
 	exported := canonicalusdc.ExportGenesis(ctx, *k)

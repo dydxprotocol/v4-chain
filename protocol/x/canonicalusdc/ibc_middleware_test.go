@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"testing"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -21,6 +22,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -262,8 +264,23 @@ func setupKeeperWithICS4(
 // undoRatelimit records refunded capacity. Charging happens in the transfer
 // decorator, which these middleware tests do not exercise.
 type undoRatelimit struct {
-	charged int64
-	undone  int64
+	charged  int64
+	undone   int64
+	credited int64
+	params   ratelimittypes.LimitParams
+	capacity ratelimittypes.DenomCapacity
+}
+
+func (r *undoRatelimit) IncrementCapacitiesForDenom(_ sdk.Context, _ string, amount *big.Int) {
+	r.credited += amount.Int64()
+}
+
+func (r *undoRatelimit) GetLimitParams(_ sdk.Context, _ string) ratelimittypes.LimitParams {
+	return r.params
+}
+
+func (r *undoRatelimit) GetDenomCapacity(_ sdk.Context, _ string) ratelimittypes.DenomCapacity {
+	return r.capacity
 }
 
 func (r *undoRatelimit) ProcessWithdrawal(_ sdk.Context, _ string, amount *big.Int) error {
@@ -419,6 +436,43 @@ func TestInboundNobleDepositFailureLeavesLedger(t *testing.T) {
 	require.False(t, ack.Success())
 	require.Equal(t, 1, app.calls)
 	require.Equal(t, ledger, k.GetLedger(ctx))
+}
+
+func TestInboundInjectiveDepositRefillsLogicalCapacity(t *testing.T) {
+	ctx, k, bank, ratelimit := setupReceiveKeeperWithRatelimit(t)
+	controls := receiveControls()
+	require.NoError(t, k.SetControls(ctx, controls))
+	ratelimit.params = ratelimittypes.LimitParams{
+		Denom:    controls.LogicalDenom,
+		Limiters: []ratelimittypes.Limiter{{Period: time.Hour, BaselineMinimum: dtypes.NewInt(100)}},
+	}
+	ratelimit.capacity = ratelimittypes.DenomCapacity{
+		Denom: controls.LogicalDenom, CapacityList: []dtypes.SerializableInt{dtypes.NewInt(50)},
+	}
+	ledger := types.DefaultLedger()
+	ledger.RefillableCapacity = dtypes.NewInt(10)
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	receiver := sdk.AccAddress("receiver")
+	deposit := func(sequence uint64) ibcexported.Acknowledgement {
+		data := transfertypes.FungibleTokenPacketData{
+			Denom: "uusdc", Amount: "25", Sender: "injective-sender", Receiver: receiver.String(),
+		}
+		packet := channeltypes.Packet{
+			Sequence: sequence, SourcePort: transfertypes.PortID, SourceChannel: "channel-99",
+			DestinationPort: transfertypes.PortID, DestinationChannel: controls.InjectiveChannel, Data: data.GetBytes(),
+		}
+		app := &receiveApp{bank: bank, physicalDenom: controls.InjectiveDenom}
+		return NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
+	}
+
+	require.True(t, deposit(1).Success())
+	require.Equal(t, int64(10), ratelimit.credited, "refill is capped by what Injective withdrawals spent")
+	require.Equal(t, "0", k.GetLedger(ctx).RefillableCapacity.String())
+	require.Equal(t, "25", k.GetLedger(ctx).InjectiveBacking.String())
+
+	require.True(t, deposit(2).Success())
+	require.Equal(t, int64(10), ratelimit.credited, "nothing left to refill")
+	require.Equal(t, "50", k.GetLedger(ctx).InjectiveBacking.String())
 }
 
 func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {

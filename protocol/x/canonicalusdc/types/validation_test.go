@@ -36,6 +36,12 @@ func TestControlsRequireFixedLogicalDenomAndBounds(t *testing.T) {
 	require.NoError(t, validControls().Validate())
 }
 
+func TestLedgerRejectsNegativeRefillableCapacity(t *testing.T) {
+	ledger := types.DefaultLedger()
+	ledger.RefillableCapacity = dtypes.NewInt(-1)
+	require.ErrorIs(t, ledger.Validate(), types.ErrInvalidLedger)
+}
+
 func TestControlsRequireNobleDepositsOffBeforeWithdrawalsOff(t *testing.T) {
 	controls := validControls()
 	controls.NobleWithdrawalsEnabled = false

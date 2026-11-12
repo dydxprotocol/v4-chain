@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"math/big"
 
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
@@ -44,6 +45,9 @@ type AccountKeeper interface {
 type RatelimitKeeper interface {
 	ProcessWithdrawal(ctx sdk.Context, denom string, amount *big.Int) error
 	UndoWithdrawal(ctx sdk.Context, denom string, amount *big.Int)
+	IncrementCapacitiesForDenom(ctx sdk.Context, denom string, amount *big.Int)
+	GetLimitParams(ctx sdk.Context, denom string) ratelimittypes.LimitParams
+	GetDenomCapacity(ctx sdk.Context, denom string) ratelimittypes.DenomCapacity
 }
 
 type TransferMsgServer interface {

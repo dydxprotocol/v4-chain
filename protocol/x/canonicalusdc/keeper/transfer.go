@@ -155,6 +155,9 @@ func (d TransferDecorator) transferInjective(
 	if ledger.PendingInjective, err = add(ledger.PendingInjective, amount); err != nil {
 		return nil, err
 	}
+	if ledger, err = d.keeper.addRefillable(ctx, ledger, controls.LogicalDenom, amount); err != nil {
+		return nil, err
+	}
 
 	cacheCtx, write := ctx.CacheContext()
 	// The physical packet carries the Injective denom, so x/ratelimit does not

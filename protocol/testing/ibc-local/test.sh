@@ -287,48 +287,61 @@ scenario_gradual_injective_roundtrip() {
 	pass "logical withdrawal to Injective delivers native uusdc and burns on ack"
 }
 
-# Each route spends its own x/ratelimit bucket: Injective withdrawals the
-# Injective denom's, Noble withdrawals uusdc's. An Injective round trip is
-# neutral, and because Injective deposits never refill uusdc, Injective-in,
-# Noble-out is bounded by the uusdc limiter. Both limiters are set to 60 USDC
-# for the scenario and lifted afterwards; capacity drifts by under 1 USDC per
-# minute toward the baseline, hence the ranges.
+# Both routes spend the uusdc limiter. An Injective deposit refills only what
+# Injective withdrawals spent and is still missing from the bucket, capped at
+# one period's baseline: an Injective round trip is neutral, a deposit cannot
+# create capacity that was never spent, and Injective-in, Noble-out stays
+# bounded by the limiter. The limiter is set to 60 USDC for the scenario and
+# lifted afterwards; capacity drifts by under 1 USDC per minute toward the
+# baseline, hence the ranges.
 scenario_gradual_rate_limits() {
-	log "GRADUAL: each route is bounded by its own rate-limit bucket"
+	log "GRADUAL: both routes share the uusdc limiter; Injective deposits refill only Injective spend"
 	local dydx_before inj_before noble_before out
 	assert_eq "mode" "$(state | jq -r '.controls.mode')" MODE_GRADUAL
 	propose_limit_params "$USDC_DENOM" 60000000 >/dev/null
-	propose_limit_params "$INJECTIVE_DENOM" 60000000 >/dev/null
-	assert_in_range "uusdc capacity at baseline" "$(capacity "$USDC_DENOM")" 59000000 61000000
-	assert_in_range "Injective capacity at baseline" "$(capacity "$INJECTIVE_DENOM")" 59000000 61000000
+	assert_in_range "capacity at baseline" "$(capacity "$USDC_DENOM")" 59000000 61000000
+
+	# Earlier scenarios withdrew to Injective under the genesis limiters; a
+	# full bucket takes no refill and the deposit consumes that stale amount.
+	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
+	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "200000000$COUNTERPARTY_USDC"
+	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 200000000")"
+	assert_in_range "a full bucket takes no refill" "$(capacity "$USDC_DENOM")" 59000000 61000000
+	assert_eq "stale refillable consumed" "$(ledger_field refillable_capacity)" 0
 
 	inj_before=$(balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC")
 	transfer dydx user "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" "30000000$USDC_DENOM"
 	transfer dydx user "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" "30000000$USDC_DENOM"
 	wait_for_balance injective "$INJECTIVE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$inj_before + 60000000")"
 	wait_for_no_pending
-	assert_in_range "Injective capacity spent" "$(capacity "$INJECTIVE_DENOM")" 0 2000000
-	assert_in_range "uusdc capacity untouched" "$(capacity "$USDC_DENOM")" 59000000 61000000
+	assert_in_range "capacity spent" "$(capacity "$USDC_DENOM")" 0 2000000
+	assert_eq "Injective withdrawals accrue refillable capacity" "$(ledger_field refillable_capacity)" 60000000
 	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_INJECTIVE_CHANNEL" "$INJECTIVE_USER" \
 		"10000000$USDC_DENOM")
 	assert_contains "Injective withdrawal beyond capacity" "$out" "rate-limit capacity"
+	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" \
+		"10000000$USDC_DENOM")
+	assert_contains "Noble withdrawal beyond the shared capacity" "$out" "rate-limit capacity"
+	pass "Injective withdrawals spend the shared uusdc capacity"
+
 	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
-	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "60000000$COUNTERPARTY_USDC"
-	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 60000000")"
-	assert_in_range "Injective capacity restored by the deposit" "$(capacity "$INJECTIVE_DENOM")" 58000000 62000000
-	assert_in_range "uusdc capacity still untouched" "$(capacity "$USDC_DENOM")" 59000000 61000000
+	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "100000000$COUNTERPARTY_USDC"
+	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 100000000")"
+	assert_in_range "deposit refills the Injective spend, not the whole deposit" "$(capacity "$USDC_DENOM")" 58000000 62000000
+	assert_eq "refillable consumed" "$(ledger_field refillable_capacity)" 0
 	check_backing
-	pass "an Injective round trip is neutral for both buckets"
+	pass "an Injective round trip is neutral and refills at most one period's spend"
 
 	noble_before=$(balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC")
 	transfer dydx user "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" "50000000$USDC_DENOM"
 	wait_for_balance noble "$NOBLE_USER" "$COUNTERPARTY_USDC" "$(bc_calc "$noble_before + 50000000")"
 	wait_for_no_pending
-	assert_in_range "uusdc capacity spent by the Noble withdrawal" "$(capacity "$USDC_DENOM")" 8000000 12000000
+	assert_in_range "capacity spent by the Noble withdrawal" "$(capacity "$USDC_DENOM")" 8000000 12000000
+	assert_eq "Noble withdrawals accrue nothing" "$(ledger_field refillable_capacity)" 0
 	dydx_before=$(balance dydx "$DYDX_USER" "$USDC_DENOM")
 	transfer injective user "$INJECTIVE_CHANNEL" "$DYDX_USER" "50000000$COUNTERPARTY_USDC"
 	wait_for_balance dydx "$DYDX_USER" "$USDC_DENOM" "$(bc_calc "$dydx_before + 50000000")"
-	assert_in_range "Injective deposit does not refill uusdc" "$(capacity "$USDC_DENOM")" 8000000 12000000
+	assert_in_range "Injective deposit does not refill Noble spend" "$(capacity "$USDC_DENOM")" 8000000 12000000
 	out=$(tx_expect_fail dydx user ibc-transfer transfer transfer "$DYDX_NOBLE_CHANNEL" "$NOBLE_USER" \
 		"50000000$USDC_DENOM")
 	assert_contains "Noble withdrawal beyond capacity" "$out" "rate-limit capacity"
@@ -336,7 +349,6 @@ scenario_gradual_rate_limits() {
 	pass "Injective-in, Noble-out is bounded by the uusdc limiter"
 
 	propose_limit_params "$USDC_DENOM" 1000000000000000 >/dev/null
-	propose_limit_params "$INJECTIVE_DENOM" 1000000000000000 >/dev/null
 }
 
 scenario_gradual_noble_withdrawal() {

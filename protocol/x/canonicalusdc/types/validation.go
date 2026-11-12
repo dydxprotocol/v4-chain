@@ -22,10 +22,11 @@ func DefaultControls() Controls {
 
 func DefaultLedger() Ledger {
 	return Ledger{
-		NobleBacking:     dtypes.ZeroInt(),
-		InjectiveBacking: dtypes.ZeroInt(),
-		PendingInjective: dtypes.ZeroInt(),
-		PendingNoble:     dtypes.ZeroInt(),
+		NobleBacking:       dtypes.ZeroInt(),
+		InjectiveBacking:   dtypes.ZeroInt(),
+		PendingInjective:   dtypes.ZeroInt(),
+		PendingNoble:       dtypes.ZeroInt(),
+		RefillableCapacity: dtypes.ZeroInt(),
 	}
 }
 
@@ -169,6 +170,7 @@ func (controls Controls) validateLimits() error {
 func (ledger Ledger) Validate() error {
 	values := []dtypes.SerializableInt{
 		ledger.NobleBacking, ledger.InjectiveBacking, ledger.PendingInjective, ledger.PendingNoble,
+		ledger.RefillableCapacity,
 	}
 	for _, value := range values {
 		if _, err := AmountOf(value); err != nil {

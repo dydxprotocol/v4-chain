@@ -24,6 +24,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	canonicaltypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -131,11 +132,39 @@ func (b *bankMock) BurnCoins(_ context.Context, module string, coins sdk.Coins) 
 }
 
 type ratelimitMock struct {
-	charged map[string]*big.Int
-	err     error
+	charged  map[string]*big.Int
+	credited map[string]*big.Int
+	params   ratelimittypes.LimitParams
+	capacity ratelimittypes.DenomCapacity
+	err      error
 }
 
-func newRatelimitMock() *ratelimitMock { return &ratelimitMock{charged: make(map[string]*big.Int)} }
+func newRatelimitMock() *ratelimitMock {
+	return &ratelimitMock{charged: make(map[string]*big.Int), credited: make(map[string]*big.Int)}
+}
+
+func (m *ratelimitMock) IncrementCapacitiesForDenom(_ sdk.Context, denom string, amount *big.Int) {
+	current, ok := m.credited[denom]
+	if !ok {
+		current = new(big.Int)
+	}
+	m.credited[denom] = new(big.Int).Add(current, amount)
+}
+
+func (m *ratelimitMock) GetLimitParams(_ sdk.Context, _ string) ratelimittypes.LimitParams {
+	return m.params
+}
+
+func (m *ratelimitMock) GetDenomCapacity(_ sdk.Context, _ string) ratelimittypes.DenomCapacity {
+	return m.capacity
+}
+
+func (m *ratelimitMock) creditedFor(denom string) int64 {
+	if current, ok := m.credited[denom]; ok {
+		return current.Int64()
+	}
+	return 0
+}
 
 func (m *ratelimitMock) ProcessWithdrawal(_ sdk.Context, denom string, amount *big.Int) error {
 	if m.err != nil {

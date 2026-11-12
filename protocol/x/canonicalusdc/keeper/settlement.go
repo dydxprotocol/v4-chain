@@ -85,7 +85,7 @@ func (k Keeper) settleInjective(
 		return ledger, err
 	}
 	k.ratelimitKeeper.UndoWithdrawal(ctx, pending.LogicalDenom, amount.BigInt())
-	return ledger, nil
+	return subtractRefillable(ledger, amount)
 }
 
 // settleNoble clears the in-flight amount. On failure the inner transfer has

@@ -131,10 +131,11 @@ func genConsistentState(mode types.Mode) (types.GenesisState, *genBank) {
 	genesis := types.GenesisState{
 		Controls: controls,
 		Ledger: types.Ledger{
-			NobleBacking:     dtypes.NewInt(1_000),
-			InjectiveBacking: dtypes.NewInt(200),
-			PendingInjective: dtypes.NewInt(30),
-			PendingNoble:     dtypes.NewInt(40),
+			NobleBacking:       dtypes.NewInt(1_000),
+			InjectiveBacking:   dtypes.NewInt(200),
+			PendingInjective:   dtypes.NewInt(30),
+			PendingNoble:       dtypes.NewInt(40),
+			RefillableCapacity: dtypes.NewInt(50),
 		},
 		PendingSettlements: []types.PendingSettlement{
 			genPending(types.Route_ROUTE_INJECTIVE, controls.InjectiveChannel, 7, 30, controls),

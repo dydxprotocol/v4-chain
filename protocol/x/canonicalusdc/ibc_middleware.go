@@ -195,6 +195,9 @@ func (im IBCMiddleware) receiveInjective(
 	if err := im.keeper.MintLogicalAndSend(ctx, receiver, coins); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
+	if err := im.keeper.RefillCapacity(ctx, controls.LogicalDenom, amount); err != nil {
+		return channeltypes.NewErrorAcknowledgement(err)
+	}
 	emitInbound(
 		ctx, types.Route_ROUTE_INJECTIVE, controls.InjectiveDenom, controls.LogicalDenom,
 		amount, receiver.String(), data.Sender, packet,

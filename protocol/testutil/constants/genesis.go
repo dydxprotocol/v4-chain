@@ -235,7 +235,8 @@ const GenesisState = `{
         "noble_backing": "0",
         "injective_backing": "0",
         "pending_injective": "0",
-        "pending_noble": "0"
+        "pending_noble": "0",
+        "refillable_capacity": "0"
       },
       "pending_settlements": []
     },

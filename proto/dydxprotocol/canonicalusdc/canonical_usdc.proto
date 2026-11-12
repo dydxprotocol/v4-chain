@@ -113,6 +113,15 @@ message Ledger {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+  // refillable_capacity is logical USDC withdrawal capacity that Injective
+  // withdrawals consumed and that Injective deposits may restore, capped at
+  // the largest x/ratelimit baseline for the logical denom. A failed Injective
+  // settlement lowers it, since x/ratelimit undoes that charge itself.
+  bytes refillable_capacity = 5 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // PendingSettlement records enough logical and physical state to settle a
