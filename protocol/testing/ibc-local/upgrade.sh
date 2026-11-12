@@ -250,6 +250,11 @@ assert_eq "refund credited to Noble backing" "$(echo "$state" | jq -r '.ledger.n
 assert_eq "supply restored" "$(supply_of dydx "$USDC_DENOM")" "$(bc_calc "$supply_before + 70000000")"
 assert_eq "Noble user unchanged by the refund" "$(balance noble "$NOBLE_USER" "$NOBLE_USDC")" \
 	"$(bc_calc "$noble_before + 30000000")"
+# The delivered packet's acknowledgement comes back on its own schedule.
+for i in $(seq 1 "$RELAY_TIMEOUT_SECONDS"); do
+	[ "$(legacy_noble_in_flight)" = 0 ] && break
+	sleep 1
+done
 assert_eq "no legacy packets left" "$(legacy_noble_in_flight)" 0
 assert_eq "still GRADUAL" "$(echo "$state" | jq -r '.controls.mode')" MODE_GRADUAL
 pass "Noble withdrawals in flight at the upgrade deliver and refund under GRADUAL"
