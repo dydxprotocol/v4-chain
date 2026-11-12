@@ -48,16 +48,16 @@ Then `snapshot.sh take after` and `snapshot.sh diff before after`: subaccounts, 
 - Rate limit: `q ratelimit capacity-by-denom ibc/8E27...` before/after; a round trip is neutral.
 - Noble route only with a channel-0 relayer. Finalize (disable Noble withdrawals) is reversible by proposal on testnet.
 
-## 0. Cutting protocol/v9.9.0-rc0 for testnet
+## 0. Cutting the testnet rc (rc0 = 1bc6a8009, superseded; rc1 = c6a7d60c3 with Noble deposits closed at the upgrade)
 Testnet images are built by `protocol-build-and-push-testnet.yml` on pushes to `main` or `release/protocol/vX[.Y].x`
 in dydxprotocol/v4-chain, tagged by 7-char commit hash in ECR `testnet-validator`. Tags `protocol/vX.Y.Z-rcN` trigger
 `protocol-release.yml`, which builds reproducible linux binaries into a draft GitHub release. `release/protocol/v9.x`
 carries the 9.8 line and has diverged from main, so 9.9 gets its own branch from the PR tip (main lineage).
 ```
 tip=<green tip>                                   # after the last ibc-local upgrade run passes
-git branch release/protocol/v9.9.x $tip
-git tag -s protocol/v9.9.0-rc0 $tip -m "protocol/v9.9.0-rc0"   # signed, like the 9.8 tags
-git push origin release/protocol/v9.9.x protocol/v9.9.0-rc0    # one push: image gets version 9.9.0-rc0
+# (branch is tq/canonicalusdc-v9.x on release/protocol/v9.x; the image for rc1 is testnet-validator:f9d4939)
+git tag -s protocol/v9.9.0-rcN $tip -m "protocol/v9.9.0-rcN"   # signed, like the 9.8 tags; never re-tag, cut the next rc
+git push origin tq/canonicalusdc-v9.x protocol/v9.9.0-rcN     # PR #3466 into release/protocol/v9.x builds testnet-validator:<merge-commit hash>
 ```
 Then: approve nothing, CI runs on the branch push; publish the draft release (needed by cosmovisor flows and by the
 staging image's PREUPGRADE_VERSION); note the ECR image tag (`git rev-parse --short=7 $tip`).
