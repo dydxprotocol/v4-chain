@@ -237,8 +237,15 @@ pass "upgrade handler entered GRADUAL bound to the Noble and Injective channels,
 open_alt_injective_channel
 start_hermes
 # hermes clears the Noble-side deposit itself; the module refuses it and
-# Noble refunds the sender.
-wait_for_balance noble "$NOBLE_USER" "$NOBLE_USDC" "$noble_before"
+# Noble refunds the sender. hermes may also deliver the lasting withdrawal
+# before the manual relay below, so accept either Noble balance.
+for i in $(seq 1 "$RELAY_TIMEOUT_SECONDS"); do
+	got=$(balance noble "$NOBLE_USER" "$NOBLE_USDC")
+	[ "$got" = "$noble_before" ] || [ "$got" = "$(bc_calc "$noble_before + 30000000")" ] && break
+	sleep 1
+done
+[ "$got" = "$noble_before" ] || [ "$got" = "$(bc_calc "$noble_before + 30000000")" ] ||
+	die "Noble deposit not refunded: Noble user has $got, escrowed from $noble_before"
 assert_eq "bounced deposit minted nothing" "$(balance dydx "$DYDX_USER" "$USDC_DENOM")" "$user_before"
 assert_eq "bounced deposit left Noble backing alone" "$(q dydx canonicalusdc state | jq -r '.ledger.noble_backing')" \
 	"$supply_before"
