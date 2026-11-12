@@ -156,6 +156,7 @@ event_source = { mode = 'push', url = 'ws://127.0.0.1:$rpc/websocket', batch_del
 rpc_timeout = '10s'
 account_prefix = '$prefix'
 key_name = 'relayer'
+key_store_folder = '$HERMES_HOME/keys'
 store_prefix = 'ibc'
 default_gas = 500000
 max_gas = 10000000
