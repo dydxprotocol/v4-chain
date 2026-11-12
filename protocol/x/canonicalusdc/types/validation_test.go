@@ -36,6 +36,20 @@ func TestControlsRequireFixedLogicalDenomAndBounds(t *testing.T) {
 	require.NoError(t, validControls().Validate())
 }
 
+func TestControlsRequireNobleDepositsOffBeforeWithdrawalsOff(t *testing.T) {
+	controls := validControls()
+	controls.NobleWithdrawalsEnabled = false
+	require.ErrorIs(t, controls.Validate(), types.ErrInvalidControls)
+
+	controls.NobleDepositsDisabled = true
+	require.NoError(t, controls.Validate())
+
+	// DISABLED binds no route, so the flags are not checked.
+	controls = types.DefaultControls()
+	controls.NobleWithdrawalsEnabled = false
+	require.NoError(t, controls.Validate())
+}
+
 func TestAmountOf(t *testing.T) {
 	zero, err := types.AmountOf(dtypes.SerializableInt{})
 	require.NoError(t, err)

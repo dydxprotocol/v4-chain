@@ -270,6 +270,7 @@ func TestUpdateControlsNobleWithdrawalsRequiredWhileNobleBackingRemains(t *testi
 
 	closed := activeControls()
 	closed.NobleWithdrawalsEnabled = false
+	closed.NobleDepositsDisabled = true
 	require.ErrorIs(t, updateControls(t, ctx, k, closed), canonicaltypes.ErrNobleBackingRemains)
 	require.Equal(t, canonicaltypes.Mode_MODE_DISABLED, k.GetControls(ctx).Mode)
 
@@ -299,6 +300,7 @@ func TestUpdateControlsNobleWithdrawalsBlockedByPendingNoble(t *testing.T) {
 
 	closed := activeControls()
 	closed.NobleWithdrawalsEnabled = false
+	closed.NobleDepositsDisabled = true
 	require.ErrorIs(t, updateControls(t, ctx, k, closed), canonicaltypes.ErrNobleBackingRemains)
 
 	require.NoError(t, k.Settle(ctx, mustPending(t, k, ctx, nobleChannel, 1), true, canonicaltypes.AttributeValueSuccess))

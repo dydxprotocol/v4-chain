@@ -61,6 +61,7 @@ func TestInjectiveInboundThenNobleWithdrawRehearsal(t *testing.T) {
 
 	final := activeControls()
 	final.NobleWithdrawalsEnabled = false
+	final.NobleDepositsDisabled = true
 	_, err = server.UpdateControls(ctx, &canonicaltypes.MsgUpdateControls{
 		Authority: lib.GovModuleAddress.String(),
 		Controls:  final,

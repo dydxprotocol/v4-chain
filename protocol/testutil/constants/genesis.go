@@ -228,7 +228,8 @@ const GenesisState = `{
         "noble_client": "",
         "noble_connection": "",
         "injective_client": "",
-        "injective_connection": ""
+        "injective_connection": "",
+        "noble_deposits_disabled": false
       },
       "ledger": {
         "noble_backing": "0",

@@ -447,6 +447,18 @@ func TestAdvLegacyEscrowUnwindsOverInjectiveWithoutLedgerChange(t *testing.T) {
 	require.Equal(t, before, env.snapshot(advReceiver))
 }
 
+func TestAdvNobleDepositsDisabledRefusesNobleChannel(t *testing.T) {
+	env := advSetup(t, canonicalusdctypes.Mode_MODE_GRADUAL)
+	controls := env.app.CanonicalUsdcKeeper.GetControls(env.ctx)
+	controls.NobleDepositsDisabled = true
+	require.NoError(t, env.app.CanonicalUsdcKeeper.SetControls(env.ctx, controls))
+	before := env.snapshot(advReceiver)
+	ack := env.recvRaw(env.packet("channel-0", "uusdc", "500", advReceiver.String(), ""))
+	requireErrorAck(t, ack)
+	require.Equal(t, before, env.snapshot(advReceiver))
+	env.requireBacking()
+}
+
 func TestAdvInjectiveDenomOnOtherChannels(t *testing.T) {
 	for _, channel := range []string{"channel-0", advThirdChannel} {
 		t.Run(channel, func(t *testing.T) {
@@ -455,8 +467,14 @@ func TestAdvInjectiveDenomOnOtherChannels(t *testing.T) {
 			ack := env.recvRaw(env.packet(channel, "uusdc", "500", advReceiver.String(), ""))
 			after := env.snapshot(advReceiver)
 			if channel == "channel-0" {
-				requireErrorAck(t, ack)
-				require.Equal(t, before, after)
+				// uusdc on the Noble channel is a Noble deposit while those are
+				// enabled: ICS20 mints it and the module classifies it as Noble backing.
+				require.True(t, ack.Success())
+				require.Equal(t, before.RecvLogical.AddRaw(500), after.RecvLogical)
+				require.Equal(t, before.LogicalSupply.AddRaw(500), after.LogicalSupply)
+				require.Equal(t, before.Ledger.InjectiveBacking, after.Ledger.InjectiveBacking)
+				require.Equal(t, before.Ledger.NobleBacking.BigInt().Int64()+500, after.Ledger.NobleBacking.BigInt().Int64())
+				env.requireBacking()
 			} else {
 				require.True(t, ack.Success())
 				require.Equal(t, before.Ledger, after.Ledger)

@@ -144,6 +144,7 @@
         "noble_channel": "",
         "noble_client": "",
         "noble_connection": "",
+        "noble_deposits_disabled": false,
         "noble_packet_denom": "",
         "noble_withdrawals_enabled": false
       },

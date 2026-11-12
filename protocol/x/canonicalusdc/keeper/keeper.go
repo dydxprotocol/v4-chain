@@ -194,6 +194,21 @@ func (k Keeper) CreditInjectiveInbound(ctx sdk.Context, amount math.Int) error {
 	return k.SetLedger(ctx, ledger)
 }
 
+// CreditNobleInbound records Noble USDC that ICS20 minted as logical USDC.
+func (k Keeper) CreditNobleInbound(ctx sdk.Context, amount math.Int) error {
+	ledger := k.GetLedger(ctx)
+	current, err := types.AmountOf(ledger.NobleBacking)
+	if err != nil {
+		return err
+	}
+	next, err := current.SafeAdd(amount)
+	if err != nil {
+		return types.ErrInvalidAmount
+	}
+	ledger.NobleBacking = types.NewAmount(next)
+	return k.SetLedger(ctx, ledger)
+}
+
 // snapshotNobleBacking classifies residual logical supply as Noble-backed.
 // residual = supply(logical) - injective - pending injective.
 func (k Keeper) snapshotNobleBacking(ctx sdk.Context) error {

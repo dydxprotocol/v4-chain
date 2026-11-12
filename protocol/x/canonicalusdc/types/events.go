@@ -14,7 +14,8 @@ package types
 // canonical_usdc_settlement with the same route, source_channel and sequence.
 // A settlement with outcome legacy_refund is the exception: its packet was sent
 // while DISABLED, so it has no canonical_usdc_transfer. A deposit is one
-// canonical_usdc_inbound.
+// canonical_usdc_inbound; its route attribute says whether Noble USDC was
+// minted by ICS20 or Injective USDC was credited by the module.
 const (
 	// EventTypeCanonicalTransfer is emitted when a withdrawal is accepted and
 	// its packet is sent. Attributes: route, logical_denom, physical_denom,
@@ -24,10 +25,10 @@ const (
 	// timeout is processed. Attributes: route, logical_denom, physical_denom,
 	// source_channel, sequence, amount, sender, receiver, outcome.
 	EventTypeSettlement = "canonical_usdc_settlement"
-	// EventTypeInbound is emitted when an Injective deposit is credited.
-	// Attributes: physical_denom, logical_denom, amount, receiver (the dYdX
-	// account credited), sender (the Injective sender), source_channel,
-	// sequence.
+	// EventTypeInbound is emitted when a Noble or Injective deposit is
+	// credited to its backing. Attributes: route, physical_denom,
+	// logical_denom, amount, receiver (the dYdX account credited), sender (the
+	// counterparty sender), source_channel, sequence.
 	EventTypeInbound = "canonical_usdc_inbound"
 	// EventTypeBackingBreach is emitted when the EndBlocker pauses routing.
 	// Attributes: reason.

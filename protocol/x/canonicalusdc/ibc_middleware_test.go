@@ -329,6 +329,7 @@ func TestInboundInjectiveCanonicalizationPreservesLogicalReceiver(t *testing.T) 
 		attributes[attribute.Key] = attribute.Value
 	}
 	require.Equal(t, map[string]string{
+		types.AttributeKeyRoute:            types.Route_ROUTE_INJECTIVE.String(),
 		types.AttributeKeyPhysicalDenom:    controls.InjectiveDenom,
 		types.AttributeKeyLogicalDenom:     controls.LogicalDenom,
 		transfertypes.AttributeKeyAmount:   "25",
@@ -337,6 +338,79 @@ func TestInboundInjectiveCanonicalizationPreservesLogicalReceiver(t *testing.T) 
 		types.AttributeKeySourceChannel:    "channel-99",
 		types.AttributeKeySequence:         "9",
 	}, attributes)
+}
+
+func inboundAttributes(t *testing.T, ctx sdk.Context) map[string]string {
+	t.Helper()
+	var inbound []sdk.Event
+	for _, event := range ctx.EventManager().Events() {
+		if event.Type == types.EventTypeInbound {
+			inbound = append(inbound, event)
+		}
+	}
+	require.Len(t, inbound, 1)
+	attributes := map[string]string{}
+	for _, attribute := range inbound[0].Attributes {
+		attributes[attribute.Key] = attribute.Value
+	}
+	return attributes
+}
+
+func TestInboundNobleDepositCreditsNobleBacking(t *testing.T) {
+	ctx, k, bank := setupReceiveKeeper(t)
+	controls := receiveControls()
+	require.NoError(t, k.SetControls(ctx, controls))
+	ledger := types.DefaultLedger()
+	ledger.NobleBacking = dtypes.NewInt(7)
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	receiver := sdk.AccAddress("receiver").String()
+	data := transfertypes.FungibleTokenPacketData{
+		Denom: "uusdc", Amount: "25", Sender: "noble-sender", Receiver: receiver, Memo: "wallet-memo",
+	}
+	packet := channeltypes.Packet{
+		Sequence: 12, SourcePort: transfertypes.PortID, SourceChannel: "channel-88",
+		DestinationPort: transfertypes.PortID, DestinationChannel: controls.NobleChannel, Data: data.GetBytes(),
+	}
+	app := &receiveApp{bank: bank, physicalDenom: controls.LogicalDenom, expectedReceiver: receiver}
+
+	ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
+	require.True(t, ack.Success())
+	require.Equal(t, 1, app.calls)
+	require.Equal(t, data, app.data, "packet reaches ICS20 unchanged")
+	require.Equal(t, "32", k.GetLedger(ctx).NobleBacking.String())
+	require.Equal(t, "0", k.GetLedger(ctx).InjectiveBacking.String())
+	require.Equal(t, map[string]string{
+		types.AttributeKeyRoute:            types.Route_ROUTE_NOBLE.String(),
+		types.AttributeKeyPhysicalDenom:    controls.LogicalDenom,
+		types.AttributeKeyLogicalDenom:     controls.LogicalDenom,
+		transfertypes.AttributeKeyAmount:   "25",
+		transfertypes.AttributeKeyReceiver: receiver,
+		sdk.AttributeKeySender:             "noble-sender",
+		types.AttributeKeySourceChannel:    "channel-88",
+		types.AttributeKeySequence:         "12",
+	}, inboundAttributes(t, ctx))
+}
+
+func TestInboundNobleDepositFailureLeavesLedger(t *testing.T) {
+	ctx, k, bank := setupReceiveKeeper(t)
+	controls := receiveControls()
+	require.NoError(t, k.SetControls(ctx, controls))
+	ledger := types.DefaultLedger()
+	ledger.NobleBacking = dtypes.NewInt(7)
+	require.NoError(t, k.SetLedger(ctx, ledger))
+	data := transfertypes.FungibleTokenPacketData{
+		Denom: "uusdc", Amount: "25", Sender: "noble-sender", Receiver: sdk.AccAddress("receiver").String(),
+	}
+	packet := channeltypes.Packet{
+		Sequence: 13, SourcePort: transfertypes.PortID, SourceChannel: "channel-88",
+		DestinationPort: transfertypes.PortID, DestinationChannel: controls.NobleChannel, Data: data.GetBytes(),
+	}
+	app := &receiveApp{bank: bank, physicalDenom: controls.LogicalDenom, failRecv: true}
+
+	ack := NewIBCMiddleware(k, app).OnRecvPacket(ctx, packet, nil)
+	require.False(t, ack.Success())
+	require.Equal(t, 1, app.calls)
+	require.Equal(t, ledger, k.GetLedger(ctx))
 }
 
 func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
@@ -353,7 +427,11 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 		wantErr       error
 	}{
 		{
-			name:          "noble deposit",
+			name: "noble deposits disabled",
+			prepControls: func(controls types.Controls) types.Controls {
+				controls.NobleDepositsDisabled = true
+				return controls
+			},
 			denom:         "uusdc",
 			amount:        "25",
 			sender:        "noble-sender",
@@ -361,6 +439,20 @@ func TestInboundRecvRejectsBeforeTokenMovement(t *testing.T) {
 			destChannel:   receiveControls().NobleChannel,
 			sequence:      1,
 			wantErr:       types.ErrNobleDepositsDisabled,
+		},
+		{
+			name: "paused noble deposit",
+			prepControls: func(controls types.Controls) types.Controls {
+				controls.Mode = types.Mode_MODE_PAUSED
+				return controls
+			},
+			denom:         "uusdc",
+			amount:        "25",
+			sender:        "noble-sender",
+			sourceChannel: "channel-88",
+			destChannel:   receiveControls().NobleChannel,
+			sequence:      3,
+			wantErr:       types.ErrPaused,
 		},
 		{
 			name: "paused injective deposit",

@@ -104,7 +104,15 @@ func (controls Controls) Validate() error {
 	if err := controls.validateRoutes(); err != nil {
 		return err
 	}
-	return controls.validateLimits()
+	if err := controls.validateLimits(); err != nil {
+		return err
+	}
+	// Deposits that land after the Noble route is closed would create Noble
+	// backing with no way out.
+	if !controls.NobleWithdrawalsEnabled && !controls.NobleDepositsDisabled {
+		return errorsmod.Wrap(ErrInvalidControls, "Noble deposits must be disabled before Noble withdrawals")
+	}
+	return nil
 }
 
 func (controls Controls) validateRoutes() error {
