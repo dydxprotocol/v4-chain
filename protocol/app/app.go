@@ -739,6 +739,7 @@ func New(
 		app.RatelimitKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ConnectionKeeper,
+		app.IBCKeeper.ClientKeeper,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),

@@ -96,7 +96,7 @@ func propKeeper(t *testing.T, authorities []string) (sdk.Context, *keeper.Keeper
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 	bank := newReceiveBank()
 	ratelimit := &undoRatelimit{}
-	k := keeper.NewKeeper(cdc, key, nil, bank, &sequencedICS4{}, ratelimit, nil, nil, authorities)
+	k := keeper.NewKeeper(cdc, key, nil, bank, &sequencedICS4{}, ratelimit, nil, nil, nil, authorities)
 	return ctx, k, bank, ratelimit
 }
 

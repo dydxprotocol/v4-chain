@@ -50,6 +50,7 @@ func genesisKeeperWithAccounts(t *testing.T) (sdk.Context, *keeper.Keeper, *acco
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	return ctx, k, accounts
 }

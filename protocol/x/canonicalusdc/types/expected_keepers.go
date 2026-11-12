@@ -57,6 +57,11 @@ type TransferMsgServer interface {
 
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool)
+	GetAllChannelsWithPortPrefix(ctx sdk.Context, portPrefix string) []channeltypes.IdentifiedChannel
+}
+
+type ClientKeeper interface {
+	GetClientState(ctx sdk.Context, clientID string) (ibcexported.ClientState, bool)
 }
 
 type ConnectionKeeper interface {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"sort"
 	"testing"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -214,6 +216,30 @@ func (m channelMock) GetChannel(_ sdk.Context, _ string, channel string) (channe
 	return value, found
 }
 
+func (m channelMock) GetAllChannelsWithPortPrefix(_ sdk.Context, _ string) []channeltypes.IdentifiedChannel {
+	ids := make([]string, 0, len(m))
+	for id := range m {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	channels := make([]channeltypes.IdentifiedChannel, 0, len(m))
+	for _, id := range ids {
+		channels = append(channels, channeltypes.NewIdentifiedChannel(transfertypes.PortID, id, m[id]))
+	}
+	return channels
+}
+
+// clientMock maps client ids to the chain id each light client tracks.
+type clientMock map[string]string
+
+func (m clientMock) GetClientState(_ sdk.Context, client string) (ibcexported.ClientState, bool) {
+	chainID, found := m[client]
+	if !found {
+		return nil, false
+	}
+	return &ibctm.ClientState{ChainId: chainID}, true
+}
+
 type connectionMock map[string]connectiontypes.ConnectionEnd
 
 func (m connectionMock) GetConnection(_ sdk.Context, connection string) (connectiontypes.ConnectionEnd, bool) {
@@ -300,7 +326,7 @@ func setupKeeper(t *testing.T) (sdk.Context, *Keeper, *bankMock, *transferMock, 
 	cdc := codec.NewProtoCodec(registry)
 	bank := newBankMock()
 	ics4 := &ics4Mock{}
-	k := NewKeeper(cdc, key, nil, bank, ics4, newRatelimitMock(), nil, nil, []string{lib.GovModuleAddress.String()})
+	k := NewKeeper(cdc, key, nil, bank, ics4, newRatelimitMock(), nil, nil, nil, []string{lib.GovModuleAddress.String()})
 	transfer := &transferMock{bank: bank}
 	k.SetTransferMsgServer(transfer)
 	return ctx, k, bank, transfer, ics4

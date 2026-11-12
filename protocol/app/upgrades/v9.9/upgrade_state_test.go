@@ -60,7 +60,7 @@ func TestUpgradeOnLiveStateOnlyInitializesCanonicalUsdc(t *testing.T) {
 	fromVM := app.ModuleManager.GetVersionMap()
 	delete(fromVM, canonicalusdctypes.ModuleName)
 	configurator := module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
-	toVM, err := v_9_9.CreateUpgradeHandler(app.ModuleManager, configurator)(
+	toVM, err := v_9_9.CreateUpgradeHandler(app.ModuleManager, configurator, app.CanonicalUsdcKeeper)(
 		ctx, upgradetypes.Plan{Name: v_9_9.UpgradeName}, fromVM,
 	)
 	require.NoError(t, err)

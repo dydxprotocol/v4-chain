@@ -40,7 +40,7 @@ func (app *App) setupUpgradeHandlers() {
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v_9_9.UpgradeName,
-		v_9_9.CreateUpgradeHandler(app.ModuleManager, app.configurator),
+		v_9_9.CreateUpgradeHandler(app.ModuleManager, app.configurator, app.CanonicalUsdcKeeper),
 	)
 }
 

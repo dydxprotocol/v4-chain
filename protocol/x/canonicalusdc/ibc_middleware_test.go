@@ -258,7 +258,7 @@ func setupKeeperWithICS4(
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 	bank := newReceiveBank()
 	ratelimit := &undoRatelimit{}
-	return ctx, keeper.NewKeeper(cdc, key, nil, bank, ics4, ratelimit, nil, nil, nil), bank, ratelimit
+	return ctx, keeper.NewKeeper(cdc, key, nil, bank, ics4, ratelimit, nil, nil, nil, nil), bank, ratelimit
 }
 
 // undoRatelimit records refunded capacity. Charging happens in the transfer

@@ -30,6 +30,7 @@ type Keeper struct {
 	ratelimitKeeper   types.RatelimitKeeper
 	channelKeeper     types.ChannelKeeper
 	connectionKeeper  types.ConnectionKeeper
+	clientKeeper      types.ClientKeeper
 	transferMsgServer types.TransferMsgServer
 	authorities       map[string]struct{}
 }
@@ -43,6 +44,7 @@ func NewKeeper(
 	ratelimitKeeper types.RatelimitKeeper,
 	channelKeeper types.ChannelKeeper,
 	connectionKeeper types.ConnectionKeeper,
+	clientKeeper types.ClientKeeper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
@@ -54,6 +56,7 @@ func NewKeeper(
 		ratelimitKeeper:  ratelimitKeeper,
 		channelKeeper:    channelKeeper,
 		connectionKeeper: connectionKeeper,
+		clientKeeper:     clientKeeper,
 		authorities:      lib.UniqueSliceToSet(authorities),
 	}
 }

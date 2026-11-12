@@ -77,7 +77,7 @@ func genKeeper(t *testing.T, bank *genBank) (sdk.Context, *keeper.Keeper) {
 	// genesis before this module, which the app-level tests cover.
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(cdctypes.NewInterfaceRegistry()),
-		key, newAccountKeeperFake(), bank, nil, nil, nil, nil, nil,
+		key, newAccountKeeperFake(), bank, nil, nil, nil, nil, nil, nil,
 	)
 	return ctx, k
 }

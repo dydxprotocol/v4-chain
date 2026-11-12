@@ -27,28 +27,37 @@ func (m msgServer) UpdateControls(
 	if msg == nil || !m.keeper.HasAuthority(msg.Authority) {
 		return nil, types.ErrUnauthorized
 	}
-	next := msg.Controls
+	if err := m.keeper.ApplyControls(ctx, msg.Controls); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateControlsResponse{}, nil
+}
+
+// ApplyControls validates and stores next, entering GRADUAL when it says so.
+// Governance goes through here, and so does the upgrade handler that enters
+// GRADUAL without a proposal.
+func (k Keeper) ApplyControls(ctx sdk.Context, next types.Controls) error {
 	if err := next.Validate(); err != nil {
-		return nil, err
+		return err
 	}
-	if err := m.keeper.ValidateRouteBindings(ctx, next); err != nil {
-		return nil, err
+	if err := k.ValidateRouteBindings(ctx, next); err != nil {
+		return err
 	}
-	current := m.keeper.GetControls(ctx)
-	if err := m.keeper.validateTransition(ctx, current, next); err != nil {
-		return nil, err
+	current := k.GetControls(ctx)
+	if err := k.validateTransition(ctx, current, next); err != nil {
+		return err
 	}
 	cacheCtx, write := ctx.CacheContext()
-	if err := m.keeper.SetControls(cacheCtx, next); err != nil {
-		return nil, err
+	if err := k.SetControls(cacheCtx, next); err != nil {
+		return err
 	}
 	if next.Mode == types.Mode_MODE_GRADUAL {
-		if err := m.keeper.enterGradual(cacheCtx, current.Mode); err != nil {
-			return nil, err
+		if err := k.enterGradual(cacheCtx, current.Mode); err != nil {
+			return err
 		}
 	}
 	write()
-	return &types.MsgUpdateControlsResponse{}, nil
+	return nil
 }
 
 // enterGradual snapshots Noble backing when GRADUAL is entered, verifies the
