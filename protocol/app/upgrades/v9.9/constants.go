@@ -27,6 +27,10 @@ type Routes struct {
 	Injective canonicalusdckeeper.RouteBinding
 }
 
+func route(channel, connection, client string) canonicalusdckeeper.RouteBinding {
+	return canonicalusdckeeper.RouteBinding{Channel: channel, Connection: connection, Client: client}
+}
+
 // PinnedRoutes were checked against dydx-mainnet-1 on 2026-11-12: the only
 // open transfer channels to noble-1 and injective-1, the latter already
 // carrying USDC vouchers. dydx-testnet-4 binds the Noble testnet channel its
@@ -34,12 +38,12 @@ type Routes struct {
 // rehearsal; it has several channels to grand-1, so discovery would not do.
 var PinnedRoutes = map[string]Routes{
 	"dydx-mainnet-1": {
-		Noble:     canonicalusdckeeper.RouteBinding{Channel: "channel-0", Connection: "connection-0", Client: "07-tendermint-0"},
-		Injective: canonicalusdckeeper.RouteBinding{Channel: "channel-62", Connection: "connection-30", Client: "07-tendermint-26"},
+		Noble:     route("channel-0", "connection-0", "07-tendermint-0"),
+		Injective: route("channel-62", "connection-30", "07-tendermint-26"),
 	},
 	"dydx-testnet-4": {
-		Noble:     canonicalusdckeeper.RouteBinding{Channel: "channel-0", Connection: "connection-0", Client: "07-tendermint-0"},
-		Injective: canonicalusdckeeper.RouteBinding{Channel: "channel-94", Connection: "connection-58", Client: "07-tendermint-62"},
+		Noble:     route("channel-0", "connection-0", "07-tendermint-0"),
+		Injective: route("channel-94", "connection-58", "07-tendermint-62"),
 	},
 }
 
