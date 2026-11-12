@@ -29,11 +29,17 @@ type Routes struct {
 
 // PinnedRoutes were checked against dydx-mainnet-1 on 2026-11-12: the only
 // open transfer channels to noble-1 and injective-1, the latter already
-// carrying USDC vouchers.
+// carrying USDC vouchers. dydx-testnet-4 binds the Noble testnet channel its
+// USDC comes from and the Injective stand-in opened for the upgrade
+// rehearsal; it has several channels to grand-1, so discovery would not do.
 var PinnedRoutes = map[string]Routes{
 	"dydx-mainnet-1": {
 		Noble:     canonicalusdckeeper.RouteBinding{Channel: "channel-0", Connection: "connection-0", Client: "07-tendermint-0"},
 		Injective: canonicalusdckeeper.RouteBinding{Channel: "channel-62", Connection: "connection-30", Client: "07-tendermint-26"},
+	},
+	"dydx-testnet-4": {
+		Noble:     canonicalusdckeeper.RouteBinding{Channel: "channel-0", Connection: "connection-0", Client: "07-tendermint-0"},
+		Injective: canonicalusdckeeper.RouteBinding{Channel: "channel-94", Connection: "connection-58", Client: "07-tendermint-62"},
 	},
 }
 
