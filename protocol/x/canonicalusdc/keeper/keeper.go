@@ -330,3 +330,15 @@ func subtract(value dtypes.SerializableInt, amount math.Int) (dtypes.Serializabl
 	}
 	return types.NewAmount(current.Sub(amount)), nil
 }
+
+// requireInjectiveRateLimit reports an error unless x/ratelimit has limiters
+// for the Injective denom. x/ratelimit charges a packet's own denom on send,
+// refunds it on a failed acknowledgement or timeout, and credits it on receive,
+// so those limiters are what bound the Injective route. Logical USDC capacity
+// is spent only by the Noble route.
+func (k Keeper) requireInjectiveRateLimit(ctx sdk.Context, controls types.Controls) error {
+	if len(k.ratelimitKeeper.GetLimitParams(ctx, controls.InjectiveDenom).Limiters) == 0 {
+		return errorsmod.Wrap(types.ErrRateLimitRequired, controls.InjectiveDenom)
+	}
+	return nil
+}

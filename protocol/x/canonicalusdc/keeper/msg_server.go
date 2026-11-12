@@ -51,10 +51,14 @@ func (m msgServer) UpdateControls(
 	return &types.MsgUpdateControlsResponse{}, nil
 }
 
-// enterGradual snapshots Noble backing when GRADUAL is entered, verifies the
-// backing invariant at that point, and requires the Noble route to stay open
-// while any Noble backing or Noble settlement remains.
+// enterGradual requires a rate limit for the Injective route, snapshots Noble
+// backing when GRADUAL is entered, verifies the backing invariant at that
+// point, and requires the Noble route to stay open while any Noble backing or
+// Noble settlement remains.
 func (k Keeper) enterGradual(ctx sdk.Context, previous types.Mode) error {
+	if err := k.requireInjectiveRateLimit(ctx, k.GetControls(ctx)); err != nil {
+		return err
+	}
 	if previous != types.Mode_MODE_GRADUAL {
 		if err := k.snapshotNobleBacking(ctx); err != nil {
 			return err

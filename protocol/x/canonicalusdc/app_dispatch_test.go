@@ -29,6 +29,7 @@ import (
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -76,7 +77,8 @@ func dispatchControls() types.Controls {
 
 // dispatchGenesis starts the chain in GRADUAL with both routes open and able
 // to send: active light clients, channel capabilities, registered denom traces,
-// an Injective reserve, and an interchain account owned by dispatchOwner.
+// rate limits for both denoms, an Injective reserve, and an interchain account
+// owned by dispatchOwner.
 func dispatchGenesis(t *testing.T) cmttypes.GenesisDoc {
 	t.Helper()
 	genesis := testapp.DefaultGenesis()
@@ -97,6 +99,14 @@ func dispatchGenesis(t *testing.T) cmttypes.GenesisDoc {
 		for _, balance := range state.Balances {
 			supply = supply.Add(balance.Coins.AmountOf(controls.LogicalDenom))
 		}
+	})
+	testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *ratelimittypes.GenesisState) {
+		state.LimitParamsList = append(state.LimitParamsList, ratelimittypes.LimitParams{
+			Denom: controls.InjectiveDenom,
+			Limiters: []ratelimittypes.Limiter{
+				ratelimittypes.DefaultUsdcHourlyLimter, ratelimittypes.DefaultUsdcDailyLimiter,
+			},
+		})
 	})
 	testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
 		state.Controls = controls
@@ -266,8 +276,12 @@ func (e dispatchEnv) supply(denom string) math.Int {
 	return e.app.BankKeeper.GetSupply(e.ctx, denom).Amount
 }
 
-func (e dispatchEnv) capacity() []dtypes.SerializableInt {
-	return e.app.RatelimitKeeper.GetDenomCapacity(e.ctx, e.controls.LogicalDenom).CapacityList
+// capacity is the hourly withdrawal capacity x/ratelimit holds for denom.
+func (e dispatchEnv) capacity(denom string) string {
+	e.t.Helper()
+	list := e.app.RatelimitKeeper.GetDenomCapacity(e.ctx, denom).CapacityList
+	require.NotEmpty(e.t, list, "no rate limit for %s", denom)
+	return list[0].String()
 }
 
 func (e dispatchEnv) module(port string) porttypes.IBCModule {
@@ -418,23 +432,24 @@ type dispatchState struct {
 	injectiveBacking string
 	pendingNoble     string
 	pendingInjective string
-	hourlyCapacity   string
+	// logicalCapacity bounds the Noble route, injectiveCapacity the Injective one.
+	logicalCapacity   string
+	injectiveCapacity string
 }
 
 func snapshot(env dispatchEnv) dispatchState {
 	ledger := env.app.CanonicalUsdcKeeper.GetLedger(env.ctx)
-	capacity := env.capacity()
-	require.NotEmpty(env.t, capacity)
 	return dispatchState{
-		owner:            env.balance(dispatchOwner, env.controls.LogicalDenom),
-		lockedLogical:    env.balance(types.ModuleAddress, env.controls.LogicalDenom),
-		reserve:          env.balance(types.ModuleAddress, env.controls.InjectiveDenom),
-		logicalSupply:    env.supply(env.controls.LogicalDenom).String(),
-		nobleBacking:     ledger.NobleBacking.String(),
-		injectiveBacking: ledger.InjectiveBacking.String(),
-		pendingNoble:     ledger.PendingNoble.String(),
-		pendingInjective: ledger.PendingInjective.String(),
-		hourlyCapacity:   capacity[0].String(),
+		owner:             env.balance(dispatchOwner, env.controls.LogicalDenom),
+		lockedLogical:     env.balance(types.ModuleAddress, env.controls.LogicalDenom),
+		reserve:           env.balance(types.ModuleAddress, env.controls.InjectiveDenom),
+		logicalSupply:     env.supply(env.controls.LogicalDenom).String(),
+		nobleBacking:      ledger.NobleBacking.String(),
+		injectiveBacking:  ledger.InjectiveBacking.String(),
+		pendingNoble:      ledger.PendingNoble.String(),
+		pendingInjective:  ledger.PendingInjective.String(),
+		logicalCapacity:   env.capacity(env.controls.LogicalDenom),
+		injectiveCapacity: env.capacity(env.controls.InjectiveDenom),
 	}
 }
 
@@ -451,12 +466,13 @@ func requireInFlight(t *testing.T, route types.Route, before, inFlight dispatchS
 	t.Helper()
 	want := before
 	want.owner -= dispatchAmount
-	want.hourlyCapacity = minus(before.hourlyCapacity, dispatchAmount)
 	if route == types.Route_ROUTE_NOBLE {
+		want.logicalCapacity = minus(before.logicalCapacity, dispatchAmount)
 		want.logicalSupply = minus(before.logicalSupply, dispatchAmount)
 		want.nobleBacking = minus(before.nobleBacking, dispatchAmount)
 		want.pendingNoble = "40"
 	} else {
+		want.injectiveCapacity = minus(before.injectiveCapacity, dispatchAmount)
 		want.lockedLogical += dispatchAmount
 		want.reserve -= dispatchAmount
 		want.injectiveBacking = minus(before.injectiveBacking, dispatchAmount)
@@ -470,13 +486,91 @@ func requireDelivered(t *testing.T, route types.Route, before, settled dispatchS
 	t.Helper()
 	want := before
 	want.owner -= dispatchAmount
-	want.hourlyCapacity = minus(before.hourlyCapacity, dispatchAmount)
 	want.logicalSupply = minus(before.logicalSupply, dispatchAmount)
 	if route == types.Route_ROUTE_NOBLE {
+		want.logicalCapacity = minus(before.logicalCapacity, dispatchAmount)
 		want.nobleBacking = minus(before.nobleBacking, dispatchAmount)
 	} else {
+		want.injectiveCapacity = minus(before.injectiveCapacity, dispatchAmount)
 		want.reserve -= dispatchAmount
 		want.injectiveBacking = minus(before.injectiveBacking, dispatchAmount)
 	}
 	require.Equal(t, want, settled)
+}
+
+// execute runs the withdrawal as a transaction signed by dispatchOwner.
+func (e dispatchEnv) execute(msg *transfertypes.MsgTransfer) error {
+	e.t.Helper()
+	handler := e.app.MsgServiceRouter().Handler(msg)
+	require.NotNil(e.t, handler)
+	_, err := handler(e.ctx, msg)
+	return err
+}
+
+// deposit delivers Injective USDC for dispatchOwner on the Injective channel.
+func (e dispatchEnv) deposit(amount int64) {
+	e.t.Helper()
+	data := transfertypes.NewFungibleTokenPacketData(
+		e.controls.InjectivePacketDenom, math.NewInt(amount).String(), "inj1sender", dispatchOwner.String(), "",
+	)
+	packet := channeltypes.NewPacket(
+		data.GetBytes(), 1,
+		transfertypes.PortID, dispatchRemoteChannel,
+		transfertypes.PortID, e.controls.InjectiveChannel,
+		clienttypes.NewHeight(1, 1_000_000), 0,
+	)
+	ack := e.module(transfertypes.ModuleName).OnRecvPacket(e.ctx, packet, nil)
+	require.True(e.t, ack.Success(), string(ack.Acknowledgement()))
+}
+
+// A withdrawal to Injective followed by a deposit of the same amount leaves
+// every balance, ledger field and rate limit where it started.
+func TestInjectiveRoundTripRestoresRateLimits(t *testing.T) {
+	env := newDispatchEnv(t)
+	before := snapshot(env)
+
+	require.NoError(t, env.execute(env.withdrawal(env.controls.InjectiveChannel)))
+	pending := env.app.CanonicalUsdcKeeper.GetAllPending(env.ctx)
+	require.Len(t, pending, 1)
+	ack := channeltypes.NewResultAcknowledgement([]byte{1})
+	require.NoError(t, env.module(transfertypes.ModuleName).OnAcknowledgementPacket(
+		env.ctx, env.sentPacket(pending[0]), ack.Acknowledgement(), nil,
+	))
+	requireDelivered(t, types.Route_ROUTE_INJECTIVE, before, snapshot(env))
+
+	env.deposit(dispatchAmount)
+	require.Equal(t, before, snapshot(env))
+	env.requireInvariant()
+}
+
+// An Injective deposit adds no logical USDC capacity, so withdrawing it
+// through Noble is charged in full.
+func TestInjectiveDepositDoesNotFundNobleWithdrawals(t *testing.T) {
+	env := newDispatchEnv(t)
+	before := snapshot(env)
+
+	env.deposit(dispatchAmount)
+	deposited := snapshot(env)
+	require.Equal(t, before.logicalCapacity, deposited.logicalCapacity)
+	require.Equal(t, minus(before.injectiveCapacity, -dispatchAmount), deposited.injectiveCapacity)
+
+	require.NoError(t, env.execute(env.withdrawal(env.controls.NobleChannel)))
+	require.Equal(t, minus(before.logicalCapacity, dispatchAmount), snapshot(env).logicalCapacity)
+	env.requireInvariant()
+}
+
+// Without limiters for the Injective denom nothing bounds that route, so its
+// withdrawals are rejected. The Noble route is unaffected.
+func TestInjectiveWithdrawalRequiresRateLimit(t *testing.T) {
+	env := newDispatchEnv(t)
+	require.NoError(t, env.app.RatelimitKeeper.SetLimitParams(
+		env.ctx, ratelimittypes.LimitParams{Denom: env.controls.InjectiveDenom},
+	))
+
+	err := env.execute(env.withdrawal(env.controls.InjectiveChannel))
+	require.ErrorIs(t, err, types.ErrRateLimitRequired)
+	require.Zero(t, env.app.CanonicalUsdcKeeper.PendingCount(env.ctx))
+
+	require.NoError(t, env.execute(env.withdrawal(env.controls.NobleChannel)))
+	env.requireInvariant()
 }

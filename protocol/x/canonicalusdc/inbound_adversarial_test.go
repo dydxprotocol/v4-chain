@@ -2,6 +2,7 @@ package canonicalusdc_test
 
 import (
 	"encoding/json"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -130,6 +131,12 @@ func advSetup(t *testing.T, mode canonicalusdctypes.Mode) *advEnv {
 	ctx := tApp.InitChain()
 	env := &advEnv{t: t, ctx: ctx, app: tApp.App}
 	if mode != canonicalusdctypes.Mode_MODE_DISABLED {
+		require.NoError(t, tApp.App.RatelimitKeeper.SetLimitParams(ctx, ratelimittypes.LimitParams{
+			Denom: advInjectiveDenom,
+			Limiters: []ratelimittypes.Limiter{
+				ratelimittypes.DefaultUsdcHourlyLimter, ratelimittypes.DefaultUsdcDailyLimiter,
+			},
+		}))
 		_, err := keeper.NewMsgServer(tApp.App.CanonicalUsdcKeeper).UpdateControls(ctx, &canonicalusdctypes.MsgUpdateControls{
 			Authority: lib.GovModuleAddress.String(),
 			Controls:  advControls(canonicalusdctypes.Mode_MODE_GRADUAL),
@@ -331,6 +338,11 @@ func TestAdvInjectiveDepositCreditsLogicalOnly(t *testing.T) {
 	require.Equal(t, "500", after.Ledger.InjectiveBacking.String())
 	// Inbound Injective USDC raises capacity for the physical denom only.
 	require.Equal(t, before.LogicalCap, after.LogicalCap)
+	require.Len(t, after.PhysicalCap.CapacityList, 2)
+	for i, capacity := range before.PhysicalCap.CapacityList {
+		want := new(big.Int).Add(capacity.BigInt(), big.NewInt(500))
+		require.Equal(t, want.String(), after.PhysicalCap.CapacityList[i].String())
+	}
 	env.requireBacking()
 }
 
