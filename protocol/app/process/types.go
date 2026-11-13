@@ -6,11 +6,11 @@ import (
 
 // SingleMsgTx represents a tx with a single msg.
 type SingleMsgTx interface {
-	// validate checks if the underlying msg is valid or not.
+	// Validate checks if the underlying msg is valid or not.
 	// Returns error if invalid. Otherwise, returns nil.
 	Validate() error
 
-	// getMsg returns the underlying msg in the tx.
+	// GetMsg returns the underlying msg in the tx.
 	GetMsg() sdk.Msg
 }
 
