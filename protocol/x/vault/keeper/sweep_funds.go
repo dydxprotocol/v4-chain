@@ -7,7 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// SweepMainVaultBankBalances deposits any usdc balance from the Megavault main vault bank balance
+// SweepMainVaultBankBalance deposits any usdc balance from the Megavault main vault bank balance
 // into the Megavault main vault subaccount balance.
 func (k Keeper) SweepMainVaultBankBalance(
 	ctx sdk.Context,
