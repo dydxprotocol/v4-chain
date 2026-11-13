@@ -308,7 +308,7 @@ func GenerateLiquidateSubaccountsPaginatedRequests(
 
 	requests := make([]*api.LiquidateSubaccountsRequest, 0)
 	for start := 0; start < len(ids); start += int(pageLimit) {
-		end := lib.Min(start+int(pageLimit), len(ids))
+		end := min(start+int(pageLimit), len(ids))
 		request := &api.LiquidateSubaccountsRequest{
 			BlockHeight:               blockHeight,
 			LiquidatableSubaccountIds: ids[start:end],
@@ -334,7 +334,7 @@ func GenerateNegativeTNCSubaccountsPaginatedRequests(
 
 	requests := make([]*api.LiquidateSubaccountsRequest, 0)
 	for start := 0; start < len(ids); start += int(pageLimit) {
-		end := lib.Min(start+int(pageLimit), len(ids))
+		end := min(start+int(pageLimit), len(ids))
 		request := &api.LiquidateSubaccountsRequest{
 			BlockHeight:              blockHeight,
 			NegativeTncSubaccountIds: ids[start:end],
@@ -362,7 +362,7 @@ func GenerateSubaccountOpenPositionPaginatedRequests(
 	for _, info := range subaccountOpenPositionInfo {
 		// Long positions.
 		for start := 0; start < len(info.SubaccountsWithLongPosition); start += int(pageLimit) {
-			end := lib.Min(start+int(pageLimit), len(info.SubaccountsWithLongPosition))
+			end := min(start+int(pageLimit), len(info.SubaccountsWithLongPosition))
 			request := &api.LiquidateSubaccountsRequest{
 				BlockHeight: blockHeight,
 				SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
@@ -377,7 +377,7 @@ func GenerateSubaccountOpenPositionPaginatedRequests(
 
 		// Short positions.
 		for start := 0; start < len(info.SubaccountsWithShortPosition); start += int(pageLimit) {
-			end := lib.Min(start+int(pageLimit), len(info.SubaccountsWithShortPosition))
+			end := min(start+int(pageLimit), len(info.SubaccountsWithShortPosition))
 			request := &api.LiquidateSubaccountsRequest{
 				BlockHeight: blockHeight,
 				SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{

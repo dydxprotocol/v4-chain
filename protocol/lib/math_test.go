@@ -165,7 +165,7 @@ func TestGenericMinFloat64(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.Min(tc.x, tc.y)
+			result := min(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -195,7 +195,7 @@ func TestGenericMinUInt64(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.Min(tc.x, tc.y)
+			result := min(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -225,7 +225,7 @@ func TestGenericMaxUInt64(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.Max(tc.x, tc.y)
+			result := max(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -255,7 +255,7 @@ func TestGenericMaxFloat64(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.Max(tc.x, tc.y)
+			result := max(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
