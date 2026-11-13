@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"context"
+
 	"github.com/gorilla/websocket"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,6 +16,10 @@ type WebsocketMessageSender struct {
 	cdc codec.JSONCodec
 
 	conn *websocket.Conn
+
+	// ctx is cancelled once the connection's read loop detects that the
+	// client has disconnected.
+	ctx context.Context
 }
 
 func (wms *WebsocketMessageSender) Send(
@@ -24,4 +30,8 @@ func (wms *WebsocketMessageSender) Send(
 		return err
 	}
 	return wms.conn.WriteMessage(websocket.TextMessage, responseJson)
+}
+
+func (wms *WebsocketMessageSender) Context() context.Context {
+	return wms.ctx
 }

@@ -107,10 +107,32 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// connCtx is cancelled as soon as the read loop below detects that the client
+	// has disconnected, independently of whether any updates are ever sent out on
+	// this connection. This lets Subscribe release the subscription immediately
+	// instead of only on a failed or backed-up Send.
+	connCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	websocketMessageSender := &WebsocketMessageSender{
 		cdc:  ws.cdc,
 		conn: conn,
+		ctx:  connCtx,
 	}
+
+	// gorilla/websocket requires the connection to be read from continuously in
+	// order to process control frames (e.g. close, ping/pong) and to detect
+	// disconnects. This API is server-to-client only, so any inbound data is
+	// discarded; only the resulting read error (once the client disconnects)
+	// is used, to cancel connCtx.
+	go func() {
+		defer cancel()
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}()
 
 	ws.logger.Info(
 		fmt.Sprintf("Received websocket streaming request for clob pair ids: %+v", clobPairIds),
