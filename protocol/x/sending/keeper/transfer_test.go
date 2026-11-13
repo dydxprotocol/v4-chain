@@ -21,6 +21,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	canonicalusdctypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 
@@ -608,6 +609,7 @@ func TestSendFromModuleToAccount_BlockedSenderModule(t *testing.T) {
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
 		satypes.ModuleName,
+		canonicalusdctypes.ModuleName,
 	} {
 		err := ks.SendingKeeper.SendFromModuleToAccount(
 			ks.Ctx,

@@ -24,6 +24,9 @@ export const createLCDClient = async ({
       bridge: new (await import("./bridge/query.lcd")).LCDQueryClient({
         requestClient
       }),
+      canonicalusdc: new (await import("./canonicalusdc/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       clob: new (await import("./clob/query.lcd")).LCDQueryClient({
         requestClient
       }),

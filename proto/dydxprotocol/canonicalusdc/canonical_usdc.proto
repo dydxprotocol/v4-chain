@@ -74,6 +74,13 @@ message Controls {
   // it; it is not a throttle. A withdrawal on either route needs a free slot,
   // so it is sized well above the expected in-flight volume.
   uint32 max_pending_settlements = 14;
+
+  // noble_deposits_disabled rejects Noble USDC received on the Noble channel
+  // with an error acknowledgement, refunding the sender on Noble. While false,
+  // those deposits mint logical USDC through ICS20 as before and are credited
+  // to noble_backing. It must be true before noble_withdrawals_enabled is
+  // false, or deposits would create Noble backing that cannot leave.
+  bool noble_deposits_disabled = 15;
 }
 
 // Ledger accounts for backing and in-flight settlement without changing the
@@ -102,6 +109,15 @@ message Ledger {
   // pending_noble is the logical USDC in flight to Noble awaiting ack or
   // timeout (already removed from supply).
   bytes pending_noble = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // refillable_capacity is logical USDC withdrawal capacity that Injective
+  // withdrawals consumed and that Injective deposits may restore, capped at
+  // the largest x/ratelimit baseline for the logical denom. A failed Injective
+  // settlement lowers it, since x/ratelimit undoes that charge itself.
+  bytes refillable_capacity = 5 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false

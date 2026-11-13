@@ -1,0 +1,159 @@
+package keeper
+
+import (
+	"fmt"
+
+	"cosmossdk.io/math"
+	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+type backingAmounts struct {
+	noble            math.Int
+	injective        math.Int
+	pendingInjective math.Int
+	pendingNoble     math.Int
+}
+
+func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
+	ir.RegisterRoute(types.ModuleName, "backing", BackingInvariant(keeper))
+}
+
+// BackingInvariant checks module balances and pending totals whenever routing
+// is not DISABLED. The supply equation is only checked in GRADUAL, because
+// PAUSED is where governance re-snapshots a drifted ledger.
+func BackingInvariant(keeper Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		controls := keeper.GetControls(ctx)
+		if controls.Mode == types.Mode_MODE_DISABLED {
+			return "", false
+		}
+		amounts, err := parseBackingAmounts(keeper.GetLedger(ctx))
+		if err != nil {
+			return err.Error(), true
+		}
+		if reason := checkModuleBalances(ctx, keeper, controls, amounts); reason != "" {
+			return reason, true
+		}
+		if controls.Mode == types.Mode_MODE_GRADUAL {
+			if reason := checkSupply(ctx, keeper, controls, amounts); reason != "" {
+				return reason, true
+			}
+		}
+		pending := keeper.GetAllPending(ctx)
+		if uint32(len(pending)) != keeper.PendingCount(ctx) {
+			return "canonical USDC pending count does not match stored settlements", true
+		}
+		if reason := checkPendingTotals(amounts, pending); reason != "" {
+			return reason, true
+		}
+		return "", false
+	}
+}
+
+func checkModuleBalances(ctx sdk.Context, keeper Keeper, controls types.Controls, amounts backingAmounts) string {
+	physicalBalance := keeper.bankKeeper.GetBalance(ctx, types.ModuleAddress, controls.InjectiveDenom).Amount
+	if physicalBalance.LT(amounts.injective) {
+		return fmt.Sprintf(
+			"canonical USDC physical reserve %s is below accounted reserve %s",
+			physicalBalance,
+			amounts.injective,
+		)
+	}
+	logicalBalance := keeper.bankKeeper.GetBalance(ctx, types.ModuleAddress, controls.LogicalDenom).Amount
+	if logicalBalance.LT(amounts.pendingInjective) {
+		return fmt.Sprintf(
+			"canonical USDC locked logical balance %s is below pending liability %s",
+			logicalBalance,
+			amounts.pendingInjective,
+		)
+	}
+	return ""
+}
+
+func parseBackingAmounts(ledger types.Ledger) (backingAmounts, error) {
+	parsed := backingAmounts{}
+	var err error
+	if parsed.noble, err = types.AmountOf(ledger.NobleBacking); err != nil {
+		return backingAmounts{}, err
+	}
+	if parsed.injective, err = types.AmountOf(ledger.InjectiveBacking); err != nil {
+		return backingAmounts{}, err
+	}
+	if parsed.pendingInjective, err = types.AmountOf(ledger.PendingInjective); err != nil {
+		return backingAmounts{}, err
+	}
+	if parsed.pendingNoble, err = types.AmountOf(ledger.PendingNoble); err != nil {
+		return backingAmounts{}, err
+	}
+	return parsed, nil
+}
+
+func checkPendingTotals(amounts backingAmounts, pending []types.PendingSettlement) string {
+	totals := map[types.Route]math.Int{
+		types.Route_ROUTE_INJECTIVE: math.ZeroInt(),
+		types.Route_ROUTE_NOBLE:     math.ZeroInt(),
+	}
+	for _, settlement := range pending {
+		amount, err := types.PositiveAmountOf(settlement.Amount)
+		if err != nil {
+			return "canonical USDC pending settlement has an invalid amount"
+		}
+		total, ok := totals[settlement.Route]
+		if !ok {
+			return "canonical USDC pending settlement has an invalid route"
+		}
+		totals[settlement.Route] = total.Add(amount)
+	}
+	if !totals[types.Route_ROUTE_INJECTIVE].Equal(amounts.pendingInjective) ||
+		!totals[types.Route_ROUTE_NOBLE].Equal(amounts.pendingNoble) {
+		return "canonical USDC pending settlement totals do not match the backing ledger"
+	}
+	return ""
+}
+
+func checkSupply(ctx sdk.Context, keeper Keeper, controls types.Controls, amounts backingAmounts) string {
+	logicalSupply := keeper.bankKeeper.GetSupply(ctx, controls.LogicalDenom).Amount
+	accountedBacking := amounts.noble.Add(amounts.injective).Add(amounts.pendingInjective)
+	if logicalSupply.Equal(accountedBacking) {
+		return ""
+	}
+	return fmt.Sprintf(
+		"canonical USDC logical supply %s does not equal accounted backing %s",
+		logicalSupply,
+		accountedBacking,
+	)
+}
+
+// EnforceBacking runs the constant-cost part of BackingInvariant (supply
+// equation and module balances, no pending scan) every block in GRADUAL and
+// pauses canonical routing if it breaks. Crisis invariants do not run on dYdX,
+// so this is the on-chain backstop. Governance resumes with PAUSED -> GRADUAL,
+// which re-snapshots Noble backing and re-checks the invariant.
+func (k Keeper) EnforceBacking(ctx sdk.Context) {
+	controls := k.GetControls(ctx)
+	if controls.Mode != types.Mode_MODE_GRADUAL {
+		return
+	}
+	reason := ""
+	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	if err != nil {
+		reason = err.Error()
+	} else if reason = checkModuleBalances(ctx, k, controls, amounts); reason == "" {
+		reason = checkSupply(ctx, k, controls, amounts)
+	}
+	if reason == "" {
+		return
+	}
+	controls.Mode = types.Mode_MODE_PAUSED
+	if err := k.SetControls(ctx, controls); err != nil {
+		k.Logger(ctx).Error("failed to pause canonical USDC after backing breach", "reason", reason, "error", err)
+		return
+	}
+	k.Logger(ctx).Error("canonical USDC backing breached; routing paused", "reason", reason)
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeBackingBreach,
+		sdk.NewAttribute(types.AttributeKeyReason, reason),
+	))
+}
