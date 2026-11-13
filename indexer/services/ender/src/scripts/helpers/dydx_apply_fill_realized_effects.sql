@@ -1,3 +1,10 @@
+/**
+  Folds one fill's realized effects into the position-level aggregate
+  perpetual_positions."totalRealizedPnl": the closing price-PnL (per
+  dydx_get_fill_closed_pnl, the same quantity persisted per fill as
+  fills."closedPnl") plus fees, which are charged on every fill — including
+  opening/increasing fills, where no price-PnL realizes.
+*/
 CREATE OR REPLACE FUNCTION dydx_apply_fill_realized_effects(
     position_id uuid,
     fill_side text,
@@ -9,42 +16,15 @@ CREATE OR REPLACE FUNCTION dydx_apply_fill_realized_effects(
     entry_price_before numeric
 ) RETURNS void AS $$
 DECLARE
-    is_reducing boolean;
-    closing_amount numeric;
-    pnl numeric := 0;
+    pnl numeric;
 BEGIN
-    IF pos_size_before IS NULL OR pos_size_before = 0 THEN
-        -- opening trade: only fees realize
-        UPDATE perpetual_positions
-            SET "totalRealizedPnl" =
-                COALESCE("totalRealizedPnl", 0) - COALESCE(fill_fee, 0)
-            WHERE "id" = position_id;
-        RETURN;
-    END IF;
-
-    is_reducing := (pos_side_before = 'LONG'  AND fill_side = 'SELL')
-                OR (pos_side_before = 'SHORT' AND fill_side = 'BUY');
-
-    IF NOT is_reducing THEN
-        -- increasing: fees only
-        UPDATE perpetual_positions
-            SET "totalRealizedPnl" =
-                COALESCE("totalRealizedPnl", 0) - COALESCE(fill_fee, 0)
-            WHERE "id" = position_id;
-        RETURN;
-    END IF;
-
-    closing_amount := LEAST(fill_size, pos_size_before); -- cap to existing
-
-    IF pos_side_before = 'LONG' THEN
-        pnl := (fill_price - entry_price_before) * closing_amount;
-    ELSE
-        pnl := (entry_price_before - fill_price) * closing_amount;
-    END IF;
+    pnl := COALESCE(dydx_get_fill_closed_pnl(
+        fill_side, fill_size, fill_price,
+        pos_side_before, pos_size_before, entry_price_before), 0);
 
     UPDATE perpetual_positions
         SET "totalRealizedPnl" =
-            COALESCE("totalRealizedPnl", 0) + COALESCE(pnl, 0) - COALESCE(fill_fee, 0)
+            COALESCE("totalRealizedPnl", 0) + pnl - COALESCE(fill_fee, 0)
         WHERE "id" = position_id;
 END;
 $$ LANGUAGE plpgsql;

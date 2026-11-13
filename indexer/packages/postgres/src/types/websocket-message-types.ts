@@ -150,6 +150,10 @@ export interface FillSubaccountMessageContents {
   orderId?: string,
   ticker: string,
   clientMetadata?: string,
+  // Realized price-PnL of the closing portion of this fill vs the position's
+  // average entry at fill time; excludes fees/funding. Undefined for
+  // opening/increasing fills.
+  closedPnl?: string,
 }
 
 export interface TransferSubaccountMessageContents {

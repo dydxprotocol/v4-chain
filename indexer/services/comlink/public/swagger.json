@@ -640,6 +640,9 @@
           "positionSizeBefore": {
             "type": "string"
           },
+          "closedPnl": {
+            "type": "string"
+          },
           "entryPriceBefore": {
             "type": "string"
           },

@@ -163,6 +163,7 @@ export function fillToResponseObject(
     positionSizeBefore: fill.positionSizeBefore ?? undefined,
     entryPriceBefore: fill.entryPriceBefore ?? undefined,
     positionSideBefore: fill.positionSideBefore ?? undefined,
+    closedPnl: fill.closedPnl ?? undefined,
   };
 }
 
