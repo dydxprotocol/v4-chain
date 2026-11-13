@@ -53,6 +53,8 @@ Noble route: never on testnet (expired clients). Finalize (disable Noble withdra
 - Legacy voucher: the pre-upgrade ibc/2614… voucher returned over channel-94 unwinds as plain ICS20; the ledger does not move.
 - Subaccount: canonical deposit -> deposit-to-subaccount -> indexer equity and transfers within 2 s -> withdraw-from-subaccount -> IBC out.
 - Governance (expedited, 10 min each on testnet): 413 PAUSED (deposit error-acks and refunds on the stand-in, withdrawal fails "canonical USDC routing is paused"), 414 GRADUAL + injective_deposits_disabled (deposit bounces, withdrawal works), 415 restore. MsgUpdateControls is a full replacement: always build it from the live controls (`gov.sh controls`).
+- Memo rejection: Injective-route withdrawals carrying a memo (wasm hook JSON, plain text, a PFM `forward` instruction) fail in DeliverTx with "memo not allowed on canonical USDC withdrawal" and the ledger does not move; the same withdrawal without a memo settles.
+- Pending cap: 416 set max_pending_settlements=2; with the relayer stopped two withdrawals went pending (send them with `--packet-timeout-timestamp 3600000000000` so they outlive the vote), the third failed "pending settlement limit reached"; 417 (cap 1, below the live count) passed the vote but failed execution and left the cap at 2, while 418 restored 10000; the relayer restart settled both packets in 6 s.
 - Gotchas: `q gov proposal -o json` prints the status as a number (3 = passed); against the stand-in always pass `--packet-timeout-height 0-0` on both sides (the CLI's relative height uses a light client that only moves when packets flow).
 
 ## Mainnet kill switch (prepare before the upgrade)
