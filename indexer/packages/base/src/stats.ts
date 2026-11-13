@@ -1,3 +1,6 @@
+import dns from 'dns';
+import { isIP } from 'net';
+
 import { StatsD } from 'hot-shots';
 
 import config from './config';
@@ -56,6 +59,24 @@ const stats = new StatsD({
 
   // Use tcp option for TCP protocol. Defaults to UDP otherwise
   /* protocol: */
+
+  /* datadog has had an issue for years with dns lookups on ips
+  https://github.com/brightcove/hot-shots/issues/198
+  */
+  udpSocketOptions: { // workaround for https://github.com/brightcove/hot-shots/issues/198
+    type: 'udp4',
+    lookup: (
+      hostname: string,
+      options: dns.LookupOneOptions,
+      callback: (err: Error | null, address: string, family: number) => void,
+    ) => {
+      if (isIP(hostname)) {
+        callback(null, hostname, 4);
+        return;
+      }
+      dns.lookup(hostname, options, callback);
+    },
+  },
 });
 
 stats.socket.on('error', (error) => {
