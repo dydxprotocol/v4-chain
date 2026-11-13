@@ -52,7 +52,7 @@ def get_release_notes(session, new, old, path):
     })
     r.raise_for_status()
 
-    # old commit will be the last commit iff it changes files in path. If it's there, remove it.
+    # old commit will be the last commit if it changes files in path. If it's there, remove it.
     commits = r.json()
     if commits[-1]["sha"] == old_json["sha"]:
         commits = commits[:-1]
