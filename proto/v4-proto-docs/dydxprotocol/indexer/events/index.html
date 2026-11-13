@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Protocol Documentation</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <style>
+      body {
+        width: 60em;
+        margin: 1em auto;
+        color: #222;
+        font-family: "Ubuntu", sans-serif;
+        padding-bottom: 4em;
+      }
+
+      h1 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      h2 {
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+        margin: 1.5em 0;
+      }
+
+      h3 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      a {
+        text-decoration: none;
+        color: #567e25;
+      }
+
+      table {
+        width: 100%;
+        font-size: 80%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        font-weight: 700;
+        background-color: #dcdcdc;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #fbfbfb;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5ex 2ex;
+      }
+
+      td p {
+        text-indent: 1em;
+        margin: 0;
+      }
+
+      td p:nth-child(1) {
+        text-indent: 0;  
+      }
+
+       
+      .field-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .field-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .field-table td:nth-child(3) {  
+        width: 6em;
+      }
+      .field-table td:nth-child(4) {  
+        width: auto;
+      }
+
+       
+      .extension-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(3) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(4) {  
+        width: 5em;
+      }
+      .extension-table td:nth-child(5) {  
+        width: auto;
+      }
+
+       
+      .enum-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .enum-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .enum-table td:nth-child(3) {  
+        width: auto;
+      }
+
+       
+      .scalar-value-types-table tr {
+        height: 3em;
+      }
+
+       
+      #toc-container ul {
+        list-style-type: none;
+        padding-left: 1em;
+        line-height: 180%;
+        margin: 0;
+      }
+      #toc > li > a {
+        font-weight: bold;
+      }
+
+       
+      .file-heading {
+        width: 100%;
+        display: table;
+        border-bottom: 1px solid #aaa;
+        margin: 4em 0 1.5em 0;
+      }
+      .file-heading h2 {
+        border: none;
+        display: table-cell;
+      }
+      .file-heading a {
+        text-align: right;
+        display: table-cell;
+      }
+
+       
+      .badge {
+        width: 1.6em;
+        height: 1.6em;
+        display: inline-block;
+
+        line-height: 1.6em;
+        text-align: center;
+        font-weight: bold;
+        font-size: 60%;
+
+        color: #89ba48;
+        background-color: #dff0c8;
+
+        margin: 0.5ex 1em 0.5ex -1em;
+        border: 1px solid #fbfbfb;
+        border-radius: 1ex;
+      }
+    </style>
+
+    
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+  </head>
+
+  <body>
+
+    <h1 id="title">Protocol Documentation</h1>
+
+    <h2>Table of Contents</h2>
+
+    <div id="toc-container">
+      <ul id="toc">
+        
+          
+          <li>
+            <a href="#dydxprotocol%2findexer%2fevents%2fevents.proto">dydxprotocol/indexer/events/events.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.AddressTradingReward"><span class="badge">M</span>AddressTradingReward</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.AssetCreateEventV1"><span class="badge">M</span>AssetCreateEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.DeleveragingEventV1"><span class="badge">M</span>DeleveragingEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.FundingEventV1"><span class="badge">M</span>FundingEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.FundingUpdateV1"><span class="badge">M</span>FundingUpdateV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.LiquidationOrderV1"><span class="badge">M</span>LiquidationOrderV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.LiquidityTierUpsertEventV1"><span class="badge">M</span>LiquidityTierUpsertEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.MarketBaseEventV1"><span class="badge">M</span>MarketBaseEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.MarketCreateEventV1"><span class="badge">M</span>MarketCreateEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.MarketEventV1"><span class="badge">M</span>MarketEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.MarketModifyEventV1"><span class="badge">M</span>MarketModifyEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.MarketPriceUpdateEventV1"><span class="badge">M</span>MarketPriceUpdateEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.OrderFillEventV1"><span class="badge">M</span>OrderFillEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.PerpetualMarketCreateEventV1"><span class="badge">M</span>PerpetualMarketCreateEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.SourceOfFunds"><span class="badge">M</span>SourceOfFunds</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.StatefulOrderEventV1"><span class="badge">M</span>StatefulOrderEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.ConditionalOrderPlacementV1"><span class="badge">M</span>StatefulOrderEventV1.ConditionalOrderPlacementV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.ConditionalOrderTriggeredV1"><span class="badge">M</span>StatefulOrderEventV1.ConditionalOrderTriggeredV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.LongTermOrderPlacementV1"><span class="badge">M</span>StatefulOrderEventV1.LongTermOrderPlacementV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.StatefulOrderPlacementV1"><span class="badge">M</span>StatefulOrderEventV1.StatefulOrderPlacementV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.StatefulOrderRemovalV1"><span class="badge">M</span>StatefulOrderEventV1.StatefulOrderRemovalV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.SubaccountUpdateEventV1"><span class="badge">M</span>SubaccountUpdateEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.TradingRewardsEventV1"><span class="badge">M</span>TradingRewardsEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.TransferEventV1"><span class="badge">M</span>TransferEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.UpdateClobPairEventV1"><span class="badge">M</span>UpdateClobPairEventV1</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.UpdatePerpetualEventV1"><span class="badge">M</span>UpdatePerpetualEventV1</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.events.FundingEventV1.Type"><span class="badge">E</span>FundingEventV1.Type</a>
+                </li>
+              
+              
+              
+            </ul>
+          </li>
+        
+        <li><a href="#scalar-value-types">Scalar Value Types</a></li>
+      </ul>
+    </div>
+
+    
+      
+      <div class="file-heading">
+        <h2 id="dydxprotocol/indexer/events/events.proto">dydxprotocol/indexer/events/events.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="dydxprotocol.indexer.events.AddressTradingReward">AddressTradingReward</h3>
+        <p>AddressTradingReward contains info on an instance of an address receiving a</p><p>reward</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>owner</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>The address of the wallet that will receive the trading reward. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>denom_amount</td>
+                  <td><a href="#bytes">bytes</a></td>
+                  <td></td>
+                  <td><p>The amount of trading rewards earned by the address above in denoms. 1e18
+denoms is equivalent to a single coin. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.AssetCreateEventV1">AssetCreateEventV1</h3>
+        <p>AssetCreateEventV1 message contains all the information about an new Asset on</p><p>the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique, sequentially-generated. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>symbol</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+Must be uppercase, unique and correspond to the canonical symbol of the
+full coin. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>has_market</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>`true` if this `Asset` has a valid `MarketId` value. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>market_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The `Id` of the `Market` associated with this `Asset`. It acts as the
+oracle price for the purposes of calculating collateral
+and margin requirements. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>atomic_resolution</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>The exponent for converting an atomic amount (1 &#39;quantum&#39;)
+to a full coin. For example, if `atomic_resolution = -8`
+then an `asset_position` with `base_quantums = 1e8` is equivalent to
+a position size of one full coin. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.DeleveragingEventV1">DeleveragingEventV1</h3>
+        <p>DeleveragingEvent message contains all the information for a deleveraging</p><p>on the dYdX chain. This includes the liquidated/offsetting subaccounts and</p><p>the amount filled.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>liquidated</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p>ID of the subaccount that was liquidated. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>offsetting</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p>ID of the subaccount that was used to offset the position. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>perpetual_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The ID of the perpetual that was liquidated. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>fill_amount</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>The amount filled between the liquidated and offsetting position, in
+base quantums. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>total_quote_quantums</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Total quote quantums filled. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>is_buy</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>`true` if liquidating a short position, `false` otherwise. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>is_final_settlement</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>`true` if the deleveraging event is for final settlement, indicating
+the match occurred at the oracle price rather than bankruptcy price.
+When this flag is `false`, the fill price is the bankruptcy price
+of the liquidated subaccount. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.FundingEventV1">FundingEventV1</h3>
+        <p>FundingEvent message contains a list of per-market funding values. The</p><p>funding values in the list is of the same type and the types are: which can</p><p>have one of the following types:</p><p>1. Premium vote: votes on the premium values injected by block proposers.</p><p>2. Premium sample: combined value from all premium votes during a</p><p>`funding-sample` epoch.</p><p>3. Funding rate and index: final funding rate combining all premium samples</p><p>during a `funding-tick` epoch and funding index accordingly updated with</p><p>`funding rate * price`.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>updates</td>
+                  <td><a href="#dydxprotocol.indexer.events.FundingUpdateV1">FundingUpdateV1</a></td>
+                  <td>repeated</td>
+                  <td><p>updates is a list of per-market funding updates for all existing perpetual
+markets. The list is sorted by `perpetualId`s which are unique. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>type</td>
+                  <td><a href="#dydxprotocol.indexer.events.FundingEventV1.Type">FundingEventV1.Type</a></td>
+                  <td></td>
+                  <td><p>type stores the type of funding updates. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.FundingUpdateV1">FundingUpdateV1</h3>
+        <p>FundingUpdate is used for funding update events and includes a funding</p><p>value and an optional funding index that correspond to a perpetual market.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>perpetual_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The id of the perpetual market. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>funding_value_ppm</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>funding value (in parts-per-million) can be premium vote, premium sample,
+or funding rate. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>funding_index</td>
+                  <td><a href="#bytes">bytes</a></td>
+                  <td></td>
+                  <td><p>funding index is required if and only if parent `FundingEvent` type is
+`TYPE_FUNDING_RATE_AND_INDEX`. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.LiquidationOrderV1">LiquidationOrderV1</h3>
+        <p>LiquidationOrder represents the liquidation taker order to be included in a</p><p>liquidation order fill event.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>liquidated</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p>ID of the subaccount that was liquidated. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clob_pair_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The ID of the clob pair involved in the liquidation. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>perpetual_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The ID of the perpetual involved in the liquidation. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>total_size</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>The total size of the liquidation order including any unfilled size,
+in base quantums. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>is_buy</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>`true` if liquidating a short position, `false` otherwise. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>subticks</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>The fillable price in subticks.
+This represents the lower-price-bound for liquidating longs
+and the upper-price-bound for liquidating shorts.
+Must be a multiple of ClobPair.SubticksPerTick
+(where `ClobPair.Id = orderId.ClobPairId`). </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.LiquidityTierUpsertEventV1">LiquidityTierUpsertEventV1</h3>
+        <p>LiquidityTierUpsertEventV1 message contains all the information to</p><p>create/update a Liquidity Tier on the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique id. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>The name of the tier purely for mnemonic purposes, e.g. &#34;Gold&#34;. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>initial_margin_ppm</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The margin fraction needed to open a position.
+In parts-per-million. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>maintenance_fraction_ppm</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The fraction of the initial-margin that the maintenance-margin is,
+e.g. 50%. In parts-per-million. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>base_position_notional</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p><strong>Deprecated.</strong> The maximum position size at which the margin requirements are
+not increased over the default values. Above this position size,
+the margin requirements increase at a rate of sqrt(size).
+
+Deprecated since v3.x. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>open_interest_lower_cap</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Lower cap of open interest in quote quantums. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>open_interest_upper_cap</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Upper cap of open interest in quote quantums. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+            
+            
+            <h4>Fields with deprecated option</h4>
+            <table>
+              <thead>
+                <tr>
+                  <td>Name</td>
+                  <td>Option</td>
+                </tr>
+              </thead>
+              <tbody>
+              
+                <tr>
+                  <td>base_position_notional</td>
+                  <td><p>true</p></td>
+                </tr>
+              
+              </tbody>
+            </table>
+            
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.MarketBaseEventV1">MarketBaseEventV1</h3>
+        <p>shared fields between MarketCreateEvent and MarketModifyEvent</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>pair</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>String representation of the market pair, e.g. `BTC-USD` </p></td>
+                </tr>
+              
+                <tr>
+                  <td>min_price_change_ppm</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The minimum allowable change in the Price value for a given update.
+Measured as 1e-6. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.MarketCreateEventV1">MarketCreateEventV1</h3>
+        <p>MarketCreateEvent message contains all the information about a new market on</p><p>the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>base</td>
+                  <td><a href="#dydxprotocol.indexer.events.MarketBaseEventV1">MarketBaseEventV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>exponent</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>Static value. The exponent of the price.
+For example if Exponent == -5 then a `exponent_price` of 1,000,000,000
+represents $10,000. Therefore 10 ^ Exponent represents the smallest
+price step (in dollars) that can be recorded. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.MarketEventV1">MarketEventV1</h3>
+        <p>MarketEvent message contains all the information about a market event on</p><p>the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>market_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>market id. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>price_update</td>
+                  <td><a href="#dydxprotocol.indexer.events.MarketPriceUpdateEventV1">MarketPriceUpdateEventV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>market_create</td>
+                  <td><a href="#dydxprotocol.indexer.events.MarketCreateEventV1">MarketCreateEventV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>market_modify</td>
+                  <td><a href="#dydxprotocol.indexer.events.MarketModifyEventV1">MarketModifyEventV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.MarketModifyEventV1">MarketModifyEventV1</h3>
+        <p>MarketModifyEvent message contains all the information about a market update</p><p>on the dYdX chain</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>base</td>
+                  <td><a href="#dydxprotocol.indexer.events.MarketBaseEventV1">MarketBaseEventV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.MarketPriceUpdateEventV1">MarketPriceUpdateEventV1</h3>
+        <p>MarketPriceUpdateEvent message contains all the information about a price</p><p>update on the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>price_with_exponent</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+price in dollars. For example if `Exponent == -5` then a `exponent_price`
+of `1,000,000,000` represents “$10,000`. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.OrderFillEventV1">OrderFillEventV1</h3>
+        <p>OrderFillEvent message contains all the information from an order match in</p><p>the dYdX chain. This includes the maker/taker orders that matched and the</p><p>amount filled.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>maker_order</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder">dydxprotocol.indexer.protocol.v1.IndexerOrder</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>order</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder">dydxprotocol.indexer.protocol.v1.IndexerOrder</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>liquidation_order</td>
+                  <td><a href="#dydxprotocol.indexer.events.LiquidationOrderV1">LiquidationOrderV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>fill_amount</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Fill amount in base quantums. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>maker_fee</td>
+                  <td><a href="#sint64">sint64</a></td>
+                  <td></td>
+                  <td><p>Maker fee in USDC quantums. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>taker_fee</td>
+                  <td><a href="#sint64">sint64</a></td>
+                  <td></td>
+                  <td><p>Taker fee in USDC quantums. If the taker order is a liquidation, then this
+represents the special liquidation fee, not the standard taker fee. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>total_filled_maker</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Total filled of the maker order in base quantums. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>total_filled_taker</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Total filled of the taker order in base quantums. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.PerpetualMarketCreateEventV1">PerpetualMarketCreateEventV1</h3>
+        <p>PerpetualMarketCreateEventV1 message contains all the information about a</p><p>new Perpetual Market on the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique Perpetual id.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clob_pair_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique clob pair Id associated with this perpetual market
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ticker</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>The name of the `Perpetual` (e.g. `BTC-USD`).
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>market_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique id of market param associated with this perpetual market.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>status</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.ClobPairStatus">dydxprotocol.indexer.protocol.v1.ClobPairStatus</a></td>
+                  <td></td>
+                  <td><p>Status of the CLOB </p></td>
+                </tr>
+              
+                <tr>
+                  <td>quantum_conversion_exponent</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>`10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+per Subtick.
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>atomic_resolution</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>The exponent for converting an atomic amount (`size = 1`)
+to a full coin. For example, if `AtomicResolution = -8`
+then a `PerpetualPosition` with `size = 1e8` is equivalent to
+a position size of one full coin.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>subticks_per_tick</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Defines the tick size of the orderbook by defining how many subticks
+are in one tick. That is, the subticks of any valid order must be a
+multiple of this value. Generally this value should start `&gt;= 100`to
+allow room for decreasing it.
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>step_base_quantums</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Minimum increment in the size of orders on the CLOB, in base quantums.
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>liquidity_tier</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The liquidity_tier that this perpetual is associated with.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>market_type</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.PerpetualMarketType">dydxprotocol.indexer.protocol.v1.PerpetualMarketType</a></td>
+                  <td></td>
+                  <td><p>Market type of the perpetual. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.SourceOfFunds">SourceOfFunds</h3>
+        <p>SourceOfFunds is the source of funds in a transfer event.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>subaccount_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>address</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.StatefulOrderEventV1">StatefulOrderEventV1</h3>
+        <p>StatefulOrderEvent message contains information about a change to a stateful</p><p>order. Currently, this is either the placement of a long-term order, the</p><p>placement or triggering of a conditional order, or the removal of a</p><p>stateful order.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>order_place</td>
+                  <td><a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.StatefulOrderPlacementV1">StatefulOrderEventV1.StatefulOrderPlacementV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>order_removal</td>
+                  <td><a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.StatefulOrderRemovalV1">StatefulOrderEventV1.StatefulOrderRemovalV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>conditional_order_placement</td>
+                  <td><a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.ConditionalOrderPlacementV1">StatefulOrderEventV1.ConditionalOrderPlacementV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>conditional_order_triggered</td>
+                  <td><a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.ConditionalOrderTriggeredV1">StatefulOrderEventV1.ConditionalOrderTriggeredV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>long_term_order_placement</td>
+                  <td><a href="#dydxprotocol.indexer.events.StatefulOrderEventV1.LongTermOrderPlacementV1">StatefulOrderEventV1.LongTermOrderPlacementV1</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.StatefulOrderEventV1.ConditionalOrderPlacementV1">StatefulOrderEventV1.ConditionalOrderPlacementV1</h3>
+        <p>A conditional order placement contains an order. The order is newly-placed</p><p>and untriggered when this event is emitted.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>order</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder">dydxprotocol.indexer.protocol.v1.IndexerOrder</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.StatefulOrderEventV1.ConditionalOrderTriggeredV1">StatefulOrderEventV1.ConditionalOrderTriggeredV1</h3>
+        <p>A conditional order trigger event contains an order id and is emitted when</p><p>an order is triggered.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>triggered_order_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrderId">dydxprotocol.indexer.protocol.v1.IndexerOrderId</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.StatefulOrderEventV1.LongTermOrderPlacementV1">StatefulOrderEventV1.LongTermOrderPlacementV1</h3>
+        <p>A long term order placement contains an order.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>order</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder">dydxprotocol.indexer.protocol.v1.IndexerOrder</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.StatefulOrderEventV1.StatefulOrderPlacementV1">StatefulOrderEventV1.StatefulOrderPlacementV1</h3>
+        <p>A stateful order placement contains an order.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>order</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder">dydxprotocol.indexer.protocol.v1.IndexerOrder</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.StatefulOrderEventV1.StatefulOrderRemovalV1">StatefulOrderEventV1.StatefulOrderRemovalV1</h3>
+        <p>A stateful order removal contains the id of an order that was already</p><p>placed and is now removed and the reason for the removal.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>removed_order_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrderId">dydxprotocol.indexer.protocol.v1.IndexerOrderId</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>reason</td>
+                  <td><a href="#dydxprotocol.indexer.shared.OrderRemovalReason">dydxprotocol.indexer.shared.OrderRemovalReason</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.SubaccountUpdateEventV1">SubaccountUpdateEventV1</h3>
+        <p>SubaccountUpdateEvent message contains information about an update to a</p><p>subaccount in the dYdX chain. This includes the list of updated perpetual</p><p>and asset positions for the subaccount.</p><p>Note: This event message will contain all the updates to a subaccount</p><p>at the end of a block which is why multiple asset/perpetual position</p><p>updates may exist.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>subaccount_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>updated_perpetual_positions</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerPerpetualPosition">dydxprotocol.indexer.protocol.v1.IndexerPerpetualPosition</a></td>
+                  <td>repeated</td>
+                  <td><p>updated_perpetual_positions will each be for unique perpetuals. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>updated_asset_positions</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerAssetPosition">dydxprotocol.indexer.protocol.v1.IndexerAssetPosition</a></td>
+                  <td>repeated</td>
+                  <td><p>updated_asset_positions will each be for unique assets. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.TradingRewardsEventV1">TradingRewardsEventV1</h3>
+        <p>TradingRewardsEventV1 is communicates all trading rewards for all accounts</p><p>that receive trade rewards in the block.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>trading_rewards</td>
+                  <td><a href="#dydxprotocol.indexer.events.AddressTradingReward">AddressTradingReward</a></td>
+                  <td>repeated</td>
+                  <td><p>The list of all trading rewards in the block. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.TransferEventV1">TransferEventV1</h3>
+        <p>TransferEvent message contains all the information about a transfer,</p><p>deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.</p><p>When a subaccount is involved, a SubaccountUpdateEvent message will</p><p>be produced with the updated asset positions.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>sender_subaccount_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>recipient_subaccount_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">dydxprotocol.indexer.protocol.v1.IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>asset_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Id of the asset transfered. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>amount</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>The amount of asset in quantums to transfer. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>sender</td>
+                  <td><a href="#dydxprotocol.indexer.events.SourceOfFunds">SourceOfFunds</a></td>
+                  <td></td>
+                  <td><p>The sender is one of below
+- a subaccount ID (in transfer and withdraw events).
+- a wallet address (in deposit events). </p></td>
+                </tr>
+              
+                <tr>
+                  <td>recipient</td>
+                  <td><a href="#dydxprotocol.indexer.events.SourceOfFunds">SourceOfFunds</a></td>
+                  <td></td>
+                  <td><p>The recipient is one of below
+- a subaccount ID (in transfer and deposit events).
+- a wallet address (in withdraw events). </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.UpdateClobPairEventV1">UpdateClobPairEventV1</h3>
+        <p>UpdateClobPairEventV1 message contains all the information about an update to</p><p>a clob pair on the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>clob_pair_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique clob pair Id associated with this perpetual market
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>status</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.ClobPairStatus">dydxprotocol.indexer.protocol.v1.ClobPairStatus</a></td>
+                  <td></td>
+                  <td><p>Status of the CLOB </p></td>
+                </tr>
+              
+                <tr>
+                  <td>quantum_conversion_exponent</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>`10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+per Subtick.
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>subticks_per_tick</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Defines the tick size of the orderbook by defining how many subticks
+are in one tick. That is, the subticks of any valid order must be a
+multiple of this value. Generally this value should start `&gt;= 100`to
+allow room for decreasing it.
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+                <tr>
+                  <td>step_base_quantums</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Minimum increment in the size of orders on the CLOB, in base quantums.
+Defined in clob.clob_pair </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.events.UpdatePerpetualEventV1">UpdatePerpetualEventV1</h3>
+        <p>UpdatePerpetualEventV1 message contains all the information about an update</p><p>to a perpetual on the dYdX chain.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique Perpetual id.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ticker</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>The name of the `Perpetual` (e.g. `BTC-USD`).
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>market_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Unique id of market param associated with this perpetual market.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>atomic_resolution</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>The exponent for converting an atomic amount (`size = 1`)
+to a full coin. For example, if `AtomicResolution = -8`
+then a `PerpetualPosition` with `size = 1e8` is equivalent to
+a position size of one full coin.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+                <tr>
+                  <td>liquidity_tier</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The liquidity_tier that this perpetual is associated with.
+Defined in perpetuals.perpetual </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+
+      
+        <h3 id="dydxprotocol.indexer.events.FundingEventV1.Type">FundingEventV1.Type</h3>
+        <p>Type is the type for funding values.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>TYPE_UNSPECIFIED</td>
+                <td>0</td>
+                <td><p>Unspecified type.</p></td>
+              </tr>
+            
+              <tr>
+                <td>TYPE_PREMIUM_SAMPLE</td>
+                <td>1</td>
+                <td><p>Premium sample is the combined value from all premium votes during a
+`funding-sample` epoch.</p></td>
+              </tr>
+            
+              <tr>
+                <td>TYPE_FUNDING_RATE_AND_INDEX</td>
+                <td>2</td>
+                <td><p>Funding rate is the final funding rate combining all premium samples
+during a `funding-tick` epoch.</p></td>
+              </tr>
+            
+              <tr>
+                <td>TYPE_PREMIUM_VOTE</td>
+                <td>3</td>
+                <td><p>TODO(DEC-1513): Investigate whether premium vote values need to be
+sent to indexer.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+    
+
+    <h2 id="scalar-value-types">Scalar Value Types</h2>
+    <table class="scalar-value-types-table">
+      <thead>
+        <tr><td>.proto Type</td><td>Notes</td><td>C++</td><td>Java</td><td>Python</td><td>Go</td><td>C#</td><td>PHP</td><td>Ruby</td></tr>
+      </thead>
+      <tbody>
+        
+          <tr id="double">
+            <td>double</td>
+            <td></td>
+            <td>double</td>
+            <td>double</td>
+            <td>float</td>
+            <td>float64</td>
+            <td>double</td>
+            <td>float</td>
+            <td>Float</td>
+          </tr>
+        
+          <tr id="float">
+            <td>float</td>
+            <td></td>
+            <td>float</td>
+            <td>float</td>
+            <td>float</td>
+            <td>float32</td>
+            <td>float</td>
+            <td>float</td>
+            <td>Float</td>
+          </tr>
+        
+          <tr id="int32">
+            <td>int32</td>
+            <td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="int64">
+            <td>int64</td>
+            <td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="uint32">
+            <td>uint32</td>
+            <td>Uses variable-length encoding.</td>
+            <td>uint32</td>
+            <td>int</td>
+            <td>int/long</td>
+            <td>uint32</td>
+            <td>uint</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="uint64">
+            <td>uint64</td>
+            <td>Uses variable-length encoding.</td>
+            <td>uint64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>uint64</td>
+            <td>ulong</td>
+            <td>integer/string</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="sint32">
+            <td>sint32</td>
+            <td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="sint64">
+            <td>sint64</td>
+            <td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="fixed32">
+            <td>fixed32</td>
+            <td>Always four bytes. More efficient than uint32 if values are often greater than 2^28.</td>
+            <td>uint32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>uint32</td>
+            <td>uint</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="fixed64">
+            <td>fixed64</td>
+            <td>Always eight bytes. More efficient than uint64 if values are often greater than 2^56.</td>
+            <td>uint64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>uint64</td>
+            <td>ulong</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="sfixed32">
+            <td>sfixed32</td>
+            <td>Always four bytes.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="sfixed64">
+            <td>sfixed64</td>
+            <td>Always eight bytes.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="bool">
+            <td>bool</td>
+            <td></td>
+            <td>bool</td>
+            <td>boolean</td>
+            <td>boolean</td>
+            <td>bool</td>
+            <td>bool</td>
+            <td>boolean</td>
+            <td>TrueClass/FalseClass</td>
+          </tr>
+        
+          <tr id="string">
+            <td>string</td>
+            <td>A string must always contain UTF-8 encoded or 7-bit ASCII text.</td>
+            <td>string</td>
+            <td>String</td>
+            <td>str/unicode</td>
+            <td>string</td>
+            <td>string</td>
+            <td>string</td>
+            <td>String (UTF-8)</td>
+          </tr>
+        
+          <tr id="bytes">
+            <td>bytes</td>
+            <td>May contain any arbitrary sequence of bytes.</td>
+            <td>string</td>
+            <td>ByteString</td>
+            <td>str</td>
+            <td>[]byte</td>
+            <td>ByteString</td>
+            <td>string</td>
+            <td>String (ASCII-8BIT)</td>
+          </tr>
+        
+      </tbody>
+    </table>
+  </body>
+</html>
+

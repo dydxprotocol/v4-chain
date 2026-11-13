@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Protocol Documentation</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <style>
+      body {
+        width: 60em;
+        margin: 1em auto;
+        color: #222;
+        font-family: "Ubuntu", sans-serif;
+        padding-bottom: 4em;
+      }
+
+      h1 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      h2 {
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+        margin: 1.5em 0;
+      }
+
+      h3 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      a {
+        text-decoration: none;
+        color: #567e25;
+      }
+
+      table {
+        width: 100%;
+        font-size: 80%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        font-weight: 700;
+        background-color: #dcdcdc;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #fbfbfb;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5ex 2ex;
+      }
+
+      td p {
+        text-indent: 1em;
+        margin: 0;
+      }
+
+      td p:nth-child(1) {
+        text-indent: 0;  
+      }
+
+       
+      .field-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .field-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .field-table td:nth-child(3) {  
+        width: 6em;
+      }
+      .field-table td:nth-child(4) {  
+        width: auto;
+      }
+
+       
+      .extension-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(3) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(4) {  
+        width: 5em;
+      }
+      .extension-table td:nth-child(5) {  
+        width: auto;
+      }
+
+       
+      .enum-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .enum-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .enum-table td:nth-child(3) {  
+        width: auto;
+      }
+
+       
+      .scalar-value-types-table tr {
+        height: 3em;
+      }
+
+       
+      #toc-container ul {
+        list-style-type: none;
+        padding-left: 1em;
+        line-height: 180%;
+        margin: 0;
+      }
+      #toc > li > a {
+        font-weight: bold;
+      }
+
+       
+      .file-heading {
+        width: 100%;
+        display: table;
+        border-bottom: 1px solid #aaa;
+        margin: 4em 0 1.5em 0;
+      }
+      .file-heading h2 {
+        border: none;
+        display: table-cell;
+      }
+      .file-heading a {
+        text-align: right;
+        display: table-cell;
+      }
+
+       
+      .badge {
+        width: 1.6em;
+        height: 1.6em;
+        display: inline-block;
+
+        line-height: 1.6em;
+        text-align: center;
+        font-weight: bold;
+        font-size: 60%;
+
+        color: #89ba48;
+        background-color: #dff0c8;
+
+        margin: 0.5ex 1em 0.5ex -1em;
+        border: 1px solid #fbfbfb;
+        border-radius: 1ex;
+      }
+    </style>
+
+    
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+  </head>
+
+  <body>
+
+    <h1 id="title">Protocol Documentation</h1>
+
+    <h2>Table of Contents</h2>
+
+    <div id="toc-container">
+      <ul id="toc">
+        
+          
+          <li>
+            <a href="#dydxprotocol%2findexer%2fprotocol%2fv1%2fclob.proto">dydxprotocol/indexer/protocol/v1/clob.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder"><span class="badge">M</span>IndexerOrder</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.protocol.v1.IndexerOrderId"><span class="badge">M</span>IndexerOrderId</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.protocol.v1.ClobPairStatus"><span class="badge">E</span>ClobPairStatus</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder.ConditionType"><span class="badge">E</span>IndexerOrder.ConditionType</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder.Side"><span class="badge">E</span>IndexerOrder.Side</a>
+                </li>
+              
+                <li>
+                  <a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder.TimeInForce"><span class="badge">E</span>IndexerOrder.TimeInForce</a>
+                </li>
+              
+              
+              
+            </ul>
+          </li>
+        
+        <li><a href="#scalar-value-types">Scalar Value Types</a></li>
+      </ul>
+    </div>
+
+    
+      
+      <div class="file-heading">
+        <h2 id="dydxprotocol/indexer/protocol/v1/clob.proto">dydxprotocol/indexer/protocol/v1/clob.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="dydxprotocol.indexer.protocol.v1.IndexerOrder">IndexerOrder</h3>
+        <p>IndexerOrderV1 represents a single order belonging to a `Subaccount`</p><p>for a particular `ClobPair`.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>order_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrderId">IndexerOrderId</a></td>
+                  <td></td>
+                  <td><p>The unique ID of this order. Meant to be unique across all orders. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>side</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder.Side">IndexerOrder.Side</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>quantums</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>The size of this order in base quantums. Must be a multiple of
+`ClobPair.StepBaseQuantums` (where `ClobPair.Id = orderId.ClobPairId`). </p></td>
+                </tr>
+              
+                <tr>
+                  <td>subticks</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>The price level that this order will be placed at on the orderbook,
+in subticks. Must be a multiple of ClobPair.SubticksPerTick
+(where `ClobPair.Id = orderId.ClobPairId`). </p></td>
+                </tr>
+              
+                <tr>
+                  <td>good_til_block</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>The last block this order can be executed at (after which it will be
+unfillable). Used only for Short-Term orders. If this value is non-zero
+then the order is assumed to be a Short-Term order. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>good_til_block_time</td>
+                  <td><a href="#fixed32">fixed32</a></td>
+                  <td></td>
+                  <td><p>good_til_block_time represents the unix timestamp (in seconds) at which a
+stateful order will be considered expired. The
+good_til_block_time is always evaluated against the previous block&#39;s
+`BlockTime` instead of the block in which the order is committed. If this
+value is non-zero then the order is assumed to be a stateful or
+conditional order. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>time_in_force</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder.TimeInForce">IndexerOrder.TimeInForce</a></td>
+                  <td></td>
+                  <td><p>The time in force of this order. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>reduce_only</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>Enforces that the order can only reduce the size of an existing position.
+If a ReduceOnly order would change the side of the existing position,
+its size is reduced to that of the remaining size of the position.
+If existing orders on the book with ReduceOnly
+would already close the position, the least aggressive (out-of-the-money)
+ReduceOnly orders are resized and canceled first. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>client_metadata</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Set of bit flags set arbitrarily by clients and ignored by the protocol.
+Used by indexer to infer information about a placed order. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>condition_type</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerOrder.ConditionType">IndexerOrder.ConditionType</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>conditional_order_trigger_subticks</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>conditional_order_trigger_subticks represents the price at which this order
+will be triggered. If the condition_type is CONDITION_TYPE_UNSPECIFIED,
+this value is enforced to be 0. If this value is nonzero, condition_type
+cannot be CONDITION_TYPE_UNSPECIFIED. Value is in subticks.
+Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
+orderId.ClobPairId`). </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="dydxprotocol.indexer.protocol.v1.IndexerOrderId">IndexerOrderId</h3>
+        <p>IndexerOrderId refers to a single order belonging to a Subaccount.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>subaccount_id</td>
+                  <td><a href="#dydxprotocol.indexer.protocol.v1.IndexerSubaccountId">IndexerSubaccountId</a></td>
+                  <td></td>
+                  <td><p>The subaccount ID that opened this order.
+Note that this field has `gogoproto.nullable = false` so that it is
+generated as a value instead of a pointer. This is because the `OrderId`
+proto is used as a key within maps, and map comparisons will compare
+pointers for equality (when the desired behavior is to compare the values). </p></td>
+                </tr>
+              
+                <tr>
+                  <td>client_id</td>
+                  <td><a href="#fixed32">fixed32</a></td>
+                  <td></td>
+                  <td><p>The client ID of this order, unique with respect to the specific
+sub account (I.E., the same subaccount can&#39;t have two orders with
+the same ClientId). </p></td>
+                </tr>
+              
+                <tr>
+                  <td>order_flags</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>order_flags represent order flags for the order. This field is invalid if
+it&#39;s greater than 127 (larger than one byte). Each bit in the first byte
+represents a different flag. Currently only two flags are supported.
+
+Starting from the bit after the most MSB (note that the MSB is used in
+proto varint encoding, and therefore cannot be used): Bit 1 is set if this
+order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
+order is a Conditional order (0x20, or 32 as a uint8).
+
+If neither bit is set, the order is assumed to be a Short-Term order.
+
+If both bits are set or bits other than the 2nd and 3rd are set, the order
+ID is invalid. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clob_pair_id</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>ID of the CLOB the order is created for. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+
+      
+        <h3 id="dydxprotocol.indexer.protocol.v1.ClobPairStatus">ClobPairStatus</h3>
+        <p>Status of the CLOB.</p><p>Defined in clob.clob_pair</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_UNSPECIFIED</td>
+                <td>0</td>
+                <td><p>Default value. This value is invalid and unused.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_ACTIVE</td>
+                <td>1</td>
+                <td><p>CLOB_PAIR_STATUS_ACTIVE behavior is unfinalized.
+TODO(DEC-600): update this documentation.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_PAUSED</td>
+                <td>2</td>
+                <td><p>CLOB_PAIR_STATUS_PAUSED behavior is unfinalized.
+TODO(DEC-600): update this documentation.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_CANCEL_ONLY</td>
+                <td>3</td>
+                <td><p>CLOB_PAIR_STATUS_CANCEL_ONLY behavior is unfinalized.
+TODO(DEC-600): update this documentation.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_POST_ONLY</td>
+                <td>4</td>
+                <td><p>CLOB_PAIR_STATUS_POST_ONLY behavior is unfinalized.
+TODO(DEC-600): update this documentation.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_INITIALIZING</td>
+                <td>5</td>
+                <td><p>CLOB_PAIR_STATUS_INITIALIZING represents a newly-added clob pair.
+Clob pairs in this state only accept orders which are
+both short-term and post-only.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CLOB_PAIR_STATUS_FINAL_SETTLEMENT</td>
+                <td>6</td>
+                <td><p>CLOB_PAIR_STATUS_FINAL_SETTLEMENT represents a clob pair that has been
+deactivated. Clob pairs in this state do not accept new orders and trading
+is blocked. All open positions are closed and open stateful orders canceled
+by the protocol when the clob pair transitions to this status. All
+short-term orders are left to expire.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="dydxprotocol.indexer.protocol.v1.IndexerOrder.ConditionType">IndexerOrder.ConditionType</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CONDITION_TYPE_UNSPECIFIED</td>
+                <td>0</td>
+                <td><p>CONDITION_TYPE_UNSPECIFIED represents the default behavior where an
+order will be placed immediately on the orderbook.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CONDITION_TYPE_STOP_LOSS</td>
+                <td>1</td>
+                <td><p>CONDITION_TYPE_STOP_LOSS represents a stop order. A stop order will
+trigger when the oracle price moves at or above the trigger price for
+buys, and at or below the trigger price for sells.</p></td>
+              </tr>
+            
+              <tr>
+                <td>CONDITION_TYPE_TAKE_PROFIT</td>
+                <td>2</td>
+                <td><p>CONDITION_TYPE_TAKE_PROFIT represents a take profit order. A take profit
+order will trigger when the oracle price moves at or below the trigger
+price for buys and at or above the trigger price for sells.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="dydxprotocol.indexer.protocol.v1.IndexerOrder.Side">IndexerOrder.Side</h3>
+        <p>Represents the side of the orderbook the order will be placed on.</p><p>Note that Side.SIDE_UNSPECIFIED is an invalid order and cannot be</p><p>placed on the orderbook.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>SIDE_UNSPECIFIED</td>
+                <td>0</td>
+                <td><p>Default value. This value is invalid and unused.</p></td>
+              </tr>
+            
+              <tr>
+                <td>SIDE_BUY</td>
+                <td>1</td>
+                <td><p>SIDE_BUY is used to represent a BUY order.</p></td>
+              </tr>
+            
+              <tr>
+                <td>SIDE_SELL</td>
+                <td>2</td>
+                <td><p>SIDE_SELL is used to represent a SELL order.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="dydxprotocol.indexer.protocol.v1.IndexerOrder.TimeInForce">IndexerOrder.TimeInForce</h3>
+        <p>TimeInForce indicates how long an order will remain active before it</p><p>is executed or expires.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>TIME_IN_FORCE_UNSPECIFIED</td>
+                <td>0</td>
+                <td><p>TIME_IN_FORCE_UNSPECIFIED represents the default behavior where an
+order will first match with existing orders on the book, and any
+remaining size will be added to the book as a maker order.</p></td>
+              </tr>
+            
+              <tr>
+                <td>TIME_IN_FORCE_IOC</td>
+                <td>1</td>
+                <td><p>TIME_IN_FORCE_IOC enforces that an order only be matched with
+maker orders on the book. If the order has remaining size after
+matching with existing orders on the book, the remaining size
+is not placed on the book.</p></td>
+              </tr>
+            
+              <tr>
+                <td>TIME_IN_FORCE_POST_ONLY</td>
+                <td>2</td>
+                <td><p>TIME_IN_FORCE_POST_ONLY enforces that an order only be placed
+on the book as a maker order. Note this means that validators will cancel
+any newly-placed post only orders that would cross with other maker
+orders.</p></td>
+              </tr>
+            
+              <tr>
+                <td>TIME_IN_FORCE_FILL_OR_KILL</td>
+                <td>3</td>
+                <td><p>TIME_IN_FORCE_FILL_OR_KILL enforces that an order will either be filled
+completely and immediately by maker orders on the book or canceled if the
+entire amount can‘t be matched.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+    
+
+    <h2 id="scalar-value-types">Scalar Value Types</h2>
+    <table class="scalar-value-types-table">
+      <thead>
+        <tr><td>.proto Type</td><td>Notes</td><td>C++</td><td>Java</td><td>Python</td><td>Go</td><td>C#</td><td>PHP</td><td>Ruby</td></tr>
+      </thead>
+      <tbody>
+        
+          <tr id="double">
+            <td>double</td>
+            <td></td>
+            <td>double</td>
+            <td>double</td>
+            <td>float</td>
+            <td>float64</td>
+            <td>double</td>
+            <td>float</td>
+            <td>Float</td>
+          </tr>
+        
+          <tr id="float">
+            <td>float</td>
+            <td></td>
+            <td>float</td>
+            <td>float</td>
+            <td>float</td>
+            <td>float32</td>
+            <td>float</td>
+            <td>float</td>
+            <td>Float</td>
+          </tr>
+        
+          <tr id="int32">
+            <td>int32</td>
+            <td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="int64">
+            <td>int64</td>
+            <td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="uint32">
+            <td>uint32</td>
+            <td>Uses variable-length encoding.</td>
+            <td>uint32</td>
+            <td>int</td>
+            <td>int/long</td>
+            <td>uint32</td>
+            <td>uint</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="uint64">
+            <td>uint64</td>
+            <td>Uses variable-length encoding.</td>
+            <td>uint64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>uint64</td>
+            <td>ulong</td>
+            <td>integer/string</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="sint32">
+            <td>sint32</td>
+            <td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="sint64">
+            <td>sint64</td>
+            <td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="fixed32">
+            <td>fixed32</td>
+            <td>Always four bytes. More efficient than uint32 if values are often greater than 2^28.</td>
+            <td>uint32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>uint32</td>
+            <td>uint</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="fixed64">
+            <td>fixed64</td>
+            <td>Always eight bytes. More efficient than uint64 if values are often greater than 2^56.</td>
+            <td>uint64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>uint64</td>
+            <td>ulong</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="sfixed32">
+            <td>sfixed32</td>
+            <td>Always four bytes.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>integer</td>
+            <td>Bignum or Fixnum (as required)</td>
+          </tr>
+        
+          <tr id="sfixed64">
+            <td>sfixed64</td>
+            <td>Always eight bytes.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>integer/string</td>
+            <td>Bignum</td>
+          </tr>
+        
+          <tr id="bool">
+            <td>bool</td>
+            <td></td>
+            <td>bool</td>
+            <td>boolean</td>
+            <td>boolean</td>
+            <td>bool</td>
+            <td>bool</td>
+            <td>boolean</td>
+            <td>TrueClass/FalseClass</td>
+          </tr>
+        
+          <tr id="string">
+            <td>string</td>
+            <td>A string must always contain UTF-8 encoded or 7-bit ASCII text.</td>
+            <td>string</td>
+            <td>String</td>
+            <td>str/unicode</td>
+            <td>string</td>
+            <td>string</td>
+            <td>string</td>
+            <td>String (UTF-8)</td>
+          </tr>
+        
+          <tr id="bytes">
+            <td>bytes</td>
+            <td>May contain any arbitrary sequence of bytes.</td>
+            <td>string</td>
+            <td>ByteString</td>
+            <td>str</td>
+            <td>[]byte</td>
+            <td>ByteString</td>
+            <td>string</td>
+            <td>String (ASCII-8BIT)</td>
+          </tr>
+        
+      </tbody>
+    </table>
+  </body>
+</html>
+
