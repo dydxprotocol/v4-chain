@@ -85,7 +85,9 @@ class HistoricalPnlController extends Controller {
         [QueryableField.LIMIT],
         {
           ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
+          // createdAt uses the (subaccountId, createdAt) index; no index covers blockHeight, so
+          // sorting on it reads every tick the subaccount has.
+          orderBy: [[QueryableField.CREATED_AT, Ordering.DESC]],
         },
       ),
     ]);
