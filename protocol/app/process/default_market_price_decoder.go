@@ -8,7 +8,7 @@ import (
 // This implementation is expected to default MarketPriceUpdates in accordance with the dydx process-proposal
 // logic pre vote-extensions
 type DefaultUpdateMarketPriceTxDecoder struct {
-	// pk is the expecte dependency on x/prices keeper, used for stateful validation of the returned MarketPriceUpdateTx
+	// pk is the expected dependency on x/prices keeper, used for stateful validation of the returned MarketPriceUpdateTx
 	pk ProcessPricesKeeper
 
 	// tx decoder used for unmarshalling the market-price-update tx

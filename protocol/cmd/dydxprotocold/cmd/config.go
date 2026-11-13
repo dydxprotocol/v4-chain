@@ -19,7 +19,7 @@ const (
 	// the chain stake token. It's also recommended that the min gas price in stake token
 	// is roughly the same in value as 0.025 micro USDC.
 	minGasPriceStakeToken = "25000000000adv4tnt"
-	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
+	// `MinGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
 	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
 
 	// DefaultQueryGasLimit is the default `query-gas-limit` attribute in validator's `app.toml` file.

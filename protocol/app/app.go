@@ -765,7 +765,7 @@ func New(
 	canonicalUsdcModule := canonicalusdcmodule.NewAppModule(*app.CanonicalUsdcKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
-	// Wrap the x/ratelimit middlware over the IBC Transfer module
+	// Wrap the x/ratelimit middleware over the IBC Transfer module
 	var transferStack ibcporttypes.IBCModule = transferIBCModule
 	transferStack = ratelimitmodule.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
 	transferStack = canonicalusdcmodule.NewIBCMiddleware(app.CanonicalUsdcKeeper, transferStack)
