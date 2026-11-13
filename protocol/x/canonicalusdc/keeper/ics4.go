@@ -1,0 +1,63 @@
+package keeper
+
+import (
+	errorsmod "cosmossdk.io/errors"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+func (k Keeper) SendPacket(
+	ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort,
+	sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+) (uint64, error) {
+	controls := k.GetControls(ctx)
+	if controls.Mode != types.Mode_MODE_DISABLED {
+		var packetData transfertypes.FungibleTokenPacketData
+		if err := transfertypes.ModuleCdc.UnmarshalJSON(data, &packetData); err != nil {
+			return 0, err
+		}
+		if requiresCanonicalAuthorization(controls, packetData.Denom, packetData.Sender) {
+			authorized, _ := ctx.Value(transferAuthorizationKey{}).(bool)
+			if !authorized {
+				return 0, errorsmod.Wrapf(types.ErrBypass, "channel %s", sourceChannel)
+			}
+		}
+	}
+	return k.ics4Wrapper.SendPacket(
+		ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data,
+	)
+}
+
+// requiresCanonicalAuthorization matches the full denom trace, which is what
+// ICS20 writes into packets for vouchers leaving this chain. Logical Noble USDC
+// is gated on every channel. Users may move existing Injective USDC; only
+// module-sent Injective packets are canonical.
+func requiresCanonicalAuthorization(controls types.Controls, denom, sender string) bool {
+	if denom == controls.NobleTrace() {
+		return true
+	}
+	return sender == types.ModuleAddress.String() && denom == controls.InjectiveTrace()
+}
+
+func (k Keeper) WriteAcknowledgement(
+	ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	packet ibcexported.PacketI,
+	ack ibcexported.Acknowledgement,
+) error {
+	return k.ics4Wrapper.WriteAcknowledgement(ctx, chanCap, packet, ack)
+}
+
+func (k Keeper) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
+	return k.ics4Wrapper.GetAppVersion(ctx, portID, channelID)
+}

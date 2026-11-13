@@ -19,6 +19,7 @@ import (
 	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	canonicalusdc "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -84,6 +85,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*bridge.MsgUpdateEventParams,
 		*bridge.MsgUpdateProposeParams,
 		*bridge.MsgUpdateSafetyParams,
+
+		// canonicalusdc
+		*canonicalusdc.MsgUpdateControls,
 
 		// clob
 		*clob.MsgCreateClobPair,

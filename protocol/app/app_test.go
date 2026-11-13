@@ -38,6 +38,7 @@ import (
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
+	canonicalusdcmodule "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc"
 	clobmodule "github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
@@ -208,6 +209,7 @@ func TestModuleBasics(t *testing.T) {
 		assetsmodule.AppModuleBasic{},
 		blocktimemodule.AppModuleBasic{},
 		bridgemodule.AppModuleBasic{},
+		canonicalusdcmodule.AppModuleBasic{},
 		feetiersmodule.AppModuleBasic{},
 		perpetualsmodule.AppModuleBasic{},
 		statsmodule.AppModuleBasic{},

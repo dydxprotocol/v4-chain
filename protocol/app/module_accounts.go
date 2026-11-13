@@ -11,6 +11,7 @@ import (
 	marketmapmoduletypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	canonicalusdctypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -39,6 +40,9 @@ var (
 		// -------- dYdX custom module accounts --------
 		// bridge module account mints tokens for bridged funds.
 		bridgemoduletypes.ModuleName: {authtypes.Minter},
+		// canonicalusdc mints logical USDC for inbound Injective USDC and burns
+		// locked logical USDC after an Injective withdrawal settles.
+		canonicalusdctypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
 		// insurance fund account manages insurance fund for liquidations.

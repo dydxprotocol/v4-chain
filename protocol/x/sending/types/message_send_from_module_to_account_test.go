@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	canonicalusdctypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -66,6 +67,15 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 			msg: types.MsgSendFromModuleToAccount{
 				Authority:        validAuthority,
 				SenderModuleName: stakingtypes.NotBondedPoolName,
+				Recipient:        constants.BobAccAddress.String(),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
+			},
+			err: types.ErrBlockedSenderModule,
+		},
+		"Blocked sender module name - canonicalusdc": {
+			msg: types.MsgSendFromModuleToAccount{
+				Authority:        validAuthority,
+				SenderModuleName: canonicalusdctypes.ModuleName,
 				Recipient:        constants.BobAccAddress.String(),
 				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 			},

@@ -14,6 +14,7 @@ import (
 	marketmapmoduletypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	canonicalusdctypes "github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -25,6 +26,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 	expectedModuleAccToAddresses := map[string]string{
 		authtypes.FeeCollectorName:                   "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
 		bridgemoduletypes.ModuleName:                 "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+		canonicalusdctypes.ModuleName:                "dydx1xl0ph9qhsyp3smtyhgxzjkz7yvxtqp92rjq7nt",
 		distrtypes.ModuleName:                        "dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg",
 		stakingtypes.BondedPoolName:                  "dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq",
 		stakingtypes.NotBondedPoolName:               "dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605",
@@ -66,6 +68,7 @@ func TestMaccPerms(t *testing.T) {
 	expectedMaccPerms := map[string][]string{
 		"bonded_tokens_pool":     {"burner", "staking"},
 		"bridge":                 {"minter"},
+		"canonicalusdc":          {"minter", "burner"},
 		"distribution":           nil,
 		"fee_collector":          nil,
 		"gov":                    {"burner"},
@@ -88,6 +91,7 @@ func TestModuleAccountAddrs(t *testing.T) {
 	expectedModuleAccAddresses := map[string]bool{
 		"dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2": true, // x/auth.FeeCollector
 		"dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv": true, // x/bridge
+		"dydx1xl0ph9qhsyp3smtyhgxzjkz7yvxtqp92rjq7nt": true, // x/canonicalusdc
 		"dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg": true, // x/distribution
 		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true, // x/staking.bondedPool
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true, // x/staking.notBondedPool

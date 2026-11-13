@@ -1,0 +1,120 @@
+package keeper
+
+import (
+	"context"
+
+	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/canonicalusdc/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+type msgServer struct {
+	keeper *Keeper
+}
+
+func NewMsgServer(keeper *Keeper) types.MsgServer {
+	return msgServer{keeper: keeper}
+}
+
+var _ types.MsgServer = msgServer{}
+
+func (m msgServer) UpdateControls(
+	goCtx context.Context,
+	msg *types.MsgUpdateControls,
+) (*types.MsgUpdateControlsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg == nil || !m.keeper.HasAuthority(msg.Authority) {
+		return nil, types.ErrUnauthorized
+	}
+	if err := m.keeper.ApplyControls(ctx, msg.Controls); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateControlsResponse{}, nil
+}
+
+// ApplyControls validates and stores next, entering GRADUAL when it says so.
+// Governance goes through here, and so does the upgrade handler that enters
+// GRADUAL without a proposal.
+func (k Keeper) ApplyControls(ctx sdk.Context, next types.Controls) error {
+	if err := next.Validate(); err != nil {
+		return err
+	}
+	if err := k.ValidateRouteBindings(ctx, next); err != nil {
+		return err
+	}
+	current := k.GetControls(ctx)
+	if err := k.validateTransition(ctx, current, next); err != nil {
+		return err
+	}
+	cacheCtx, write := ctx.CacheContext()
+	if err := k.SetControls(cacheCtx, next); err != nil {
+		return err
+	}
+	if next.Mode == types.Mode_MODE_GRADUAL {
+		if err := k.enterGradual(cacheCtx, current.Mode); err != nil {
+			return err
+		}
+	}
+	write()
+	return nil
+}
+
+// enterGradual snapshots Noble backing when GRADUAL is entered, verifies the
+// backing invariant at that point, and requires the Noble route to stay open
+// while any Noble backing or Noble settlement remains.
+func (k Keeper) enterGradual(ctx sdk.Context, previous types.Mode) error {
+	if previous != types.Mode_MODE_GRADUAL {
+		if err := k.snapshotNobleBacking(ctx); err != nil {
+			return err
+		}
+		if reason, broken := BackingInvariant(k)(ctx); broken {
+			return errorsmod.Wrap(types.ErrInvalidLedger, reason)
+		}
+	}
+	if k.GetControls(ctx).NobleWithdrawalsEnabled {
+		return nil
+	}
+	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	if err != nil {
+		return err
+	}
+	if !amounts.noble.IsZero() || !amounts.pendingNoble.IsZero() {
+		return types.ErrNobleBackingRemains
+	}
+	return nil
+}
+
+// validateTransition keeps the Injective reserve and in-flight settlements on
+// the route that created them. While any is outstanding, routing cannot be
+// disabled (DISABLED would let Injective-backed supply leave through the legacy
+// Noble route) and route identity cannot change (the reserve would be stranded
+// in the old physical denom). The pending cap cannot drop below the live
+// count, or exported genesis would fail validation.
+func (k Keeper) validateTransition(ctx sdk.Context, current, next types.Controls) error {
+	amounts, err := parseBackingAmounts(k.GetLedger(ctx))
+	if err != nil {
+		return err
+	}
+	pendingCount := k.PendingCount(ctx)
+	outstanding := pendingCount != 0 || !amounts.injective.IsZero() ||
+		!amounts.pendingInjective.IsZero() || !amounts.pendingNoble.IsZero()
+	if outstanding && next.Mode == types.Mode_MODE_DISABLED {
+		return errorsmod.Wrap(
+			types.ErrInvalidControls, "cannot disable while Injective backing or settlements are outstanding",
+		)
+	}
+	// DISABLED binds no route, and it cannot be entered with anything outstanding.
+	if outstanding && current.Mode != types.Mode_MODE_DISABLED && !current.SameRoute(next) {
+		return errorsmod.Wrap(
+			types.ErrInvalidControls,
+			"cannot change route identity while Injective backing or settlements are outstanding",
+		)
+	}
+	if next.Mode != types.Mode_MODE_DISABLED && next.MaxPendingSettlements < pendingCount {
+		return errorsmod.Wrapf(
+			types.ErrInvalidControls, "max pending settlements below current pending count %d", pendingCount,
+		)
+	}
+	return nil
+}
