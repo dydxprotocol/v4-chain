@@ -216,16 +216,19 @@ func parseUint32(r *http.Request, queryParam string) ([]uint32, error) {
 	return ids, nil
 }
 
+func (ws *WebsocketServer) mux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", ws.Handler)
+	return mux
+}
+
 // Start the websocket server in a separate goroutine.
 func (ws *WebsocketServer) Start() {
+	addr := fmt.Sprintf(":%d", ws.port)
+	ws.server = &http.Server{Addr: addr, Handler: ws.mux()}
 	go func() {
-		http.HandleFunc("/ws", ws.Handler)
-		addr := fmt.Sprintf(":%d", ws.port)
 		ws.logger.Info("Starting websocket server on address " + addr)
-
-		server := &http.Server{Addr: addr}
-		ws.server = server
-		err := server.ListenAndServe()
+		err := ws.server.ListenAndServe()
 		if err != nil {
 			ws.logger.Error(
 				"Http websocket server error",
