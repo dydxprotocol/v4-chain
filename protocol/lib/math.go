@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"sort"
+	"slices"
 
 	"golang.org/x/exp/constraints"
 )
@@ -182,7 +182,7 @@ func Median[V uint64 | uint32 | int64 | int32](input []V) (V, error) {
 
 	inputCopy := make([]V, l)
 	copy(inputCopy, input)
-	sort.Slice(inputCopy, func(i, j int) bool { return inputCopy[i] < inputCopy[j] })
+	slices.Sort(inputCopy)
 
 	midIdx := l / 2
 
