@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -43,6 +44,14 @@ func (k msgServer) UpdateMarketParam(
 	}
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	// Normalize the pair to match x/listing and MsgCreateOracleMarket.
+	// Without this, a governance update that passes a non-canonical case
+	// (e.g. "btc-usd") stores the pair verbatim, while the pricefeed daemon
+	// keys its exchange-config lookup on the exact stored string
+	// (marketNameToId[param.Pair]), so AdjustByMarket / ticker mapping breaks
+	// and the market stops receiving prices.
+	msg.MarketParam.Pair = strings.ToUpper(msg.MarketParam.Pair)
 
 	if _, err = k.Keeper.ModifyMarketParam(ctx, msg.MarketParam); err != nil {
 		return nil, err
