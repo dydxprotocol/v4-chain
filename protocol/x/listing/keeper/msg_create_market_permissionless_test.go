@@ -42,6 +42,15 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 
 			expectedErr: types.ErrMarketsHardCapReached,
 		},
+		// hardCap equal to the current perpetual count must reject. A `>` check
+		// would admit one more listing and leave the chain at hardCap+1.
+		"failure - hard cap equal to current perpetual count": {
+			ticker:  "TEST2-USD",
+			hardCap: 0, // overwritten below to len(GetAllPerpetuals)
+			balance: big.NewInt(10_000_000_000),
+
+			expectedErr: types.ErrMarketsHardCapReached,
+		},
 		"failure - ticker not found": {
 			ticker:  "INVALID-USD",
 			hardCap: 300,
@@ -112,8 +121,14 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 				k := tApp.App.ListingKeeper
 				ms := keeper.NewMsgServerImpl(k)
 
+				hardCap := tc.hardCap
+				if name == "failure - hard cap equal to current perpetual count" {
+					hardCap = uint32(len(k.PerpetualsKeeper.GetAllPerpetuals(ctx)))
+					require.Greater(t, hardCap, uint32(0))
+				}
+
 				// Set hard cap
-				err := k.SetMarketsHardCap(ctx, tc.hardCap)
+				err := k.SetMarketsHardCap(ctx, hardCap)
 				require.NoError(t, err)
 
 				// Add TEST2-USD market to market map
