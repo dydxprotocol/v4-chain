@@ -41,12 +41,12 @@ noble_withdrawals_enabled true, noble_deposits_disabled true (Noble deposits bou
 If the node log says "canonicalusdc stays DISABLED after the upgrade", the bindings did not validate; the proposal path remains.
 Then `snapshot.sh take after` and `snapshot.sh diff before after`: subaccounts, vault, supply and perpetuals identical apart from accounts that traded meanwhile.
 
-## 5. GRADUAL walk
-- Injective deposit: from the stand-in, `ibc-simd tx ibc-transfer transfer transfer channel-0 <dydx addr> <amt>erc20:0xa00C... --home ~/.ibc-staging/injective --node tcp://127.0.0.1:29657 --chain-id injective-1 --from user --keyring-backend test --fees 0stake`.
-  Expect uusdc minted to the receiver, injective_backing up, the voucher held by the module.
-- Injective withdrawal: `dydxprotocold tx ibc-transfer transfer transfer channel-94 <cosmos addr> <amt>ibc/8E27... --from dydx-1 ...`; settles on ack, burns backing.
-- Rate limit: `q ratelimit capacity-by-denom ibc/8E27...` before/after; a round trip is neutral.
-- Noble route only with a channel-0 relayer. Finalize (disable Noble withdrawals) is reversible by proposal on testnet.
+Outcome 2026-11-12: proposal 412, plan height 92344645 reached at 23:32:58Z; the six live hosts relaunched on the staged binary within the same minute (the indexer snapshot node was mid-tar and swaps when it catches up); state matched the expectations above with noble_backing == supply.
+
+## 5. GRADUAL walk (loop.sh)
+`loop.sh state|round [uusdc]|drain|reject` drives the Injective leg through the stand-in (standin.sh must be up). It sends with `--packet-timeout-height 0-0`: the stand-in's dYdX client only moves when packets flow, so the CLI's default relative timeout height is already in the past on dYdX and the packet times out and refunds.
+Observed 2026-11-12/13 (three 25 USDC rounds plus drain and rejection, ~10 s per leg): a deposit mints uusdc to the receiver, raises injective_backing and parks the voucher in the module account; a withdrawal moves the amount from injective_backing to pending_injective at send and the ack clears it; supply == noble_backing + injective_backing + pending_injective at every step; a withdrawal above injective_backing fails in DeliverTx with "insufficient route backing" (fee charged, nothing moves); refillable_capacity accrues on Injective withdrawals and is consumed by deposits; the uusdc limiter capacity only followed the TVL baseline (~476M USDC per hour on testnet, so a shortfall regenerates within a block).
+Noble route: never on testnet (expired clients). Finalize (disable Noble withdrawals) is reversible by proposal on testnet.
 
 ## 0. Cutting the testnet rc (rc0 = 1bc6a8009, superseded; rc1 = c6a7d60c3 with Noble deposits closed at the upgrade)
 Testnet images are built by `protocol-build-and-push-testnet.yml` on pushes to `main` or `release/protocol/vX[.Y].x`

@@ -31,7 +31,7 @@ take() {
 	paginate "dydxprotocol/perpetuals/perpetual?x=1" perpetual | jq -c '{id: .params.id, open_interest}' | jq -s 'sort_by(.id)' >"$dir/perpetuals.json"
 	get "ibc/core/channel/v1/channels/channel-0/ports/transfer/packet_commitments?pagination.limit=1000" |
 		jq '[.commitments[].sequence]' >"$dir/noble_commitments.json"
-	get "dydxprotocol/canonicalusdc/state" >"$dir/canonicalusdc.json" 2>/dev/null || echo '{"absent": true}' >"$dir/canonicalusdc.json"
+	get "dydxprotocol/v4/canonicalusdc/state" >"$dir/canonicalusdc.json" 2>/dev/null || echo '{"absent": true}' >"$dir/canonicalusdc.json"
 	echo "snapshot at height $(jq -r .height "$dir/meta.json"): $(jq length "$dir/subaccounts.json") subaccounts with positions, $(jq '.owners | length' "$dir/vault.json") MegaVault owners, USDC supply $(jq -r .amount "$dir/supply.json")"
 }
 diff_snapshots() {
