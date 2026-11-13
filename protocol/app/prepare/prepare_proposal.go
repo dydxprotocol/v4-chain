@@ -35,7 +35,7 @@ type FundingTxResponse struct {
 	NumVotes int
 }
 
-// OperationTxResponse represents a response for creating 'ProposedOperations' tx
+// OperationsTxResponse represents a response for creating 'ProposedOperations' tx
 type OperationsTxResponse struct {
 	Tx            []byte
 	NumOperations int
