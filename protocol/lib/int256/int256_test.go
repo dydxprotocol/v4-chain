@@ -548,6 +548,19 @@ func TestMulExp10(t *testing.T) {
 			x: NewInt(-9),
 			y: 7,
 		},
+		// Exponents whose absolute value is >= 100 fall outside exp10Lookup and take
+		// the fallback branch that computes the power directly. A zero base keeps the
+		// result exact regardless of the exponent.
+		"zero with large pos exponent": {
+			z: NewInt(0),
+			x: NewInt(0),
+			y: 150,
+		},
+		"zero with large neg exponent": {
+			z: NewInt(0),
+			x: NewInt(0),
+			y: -150,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

@@ -176,7 +176,7 @@ func mulExp10(z *uint256.Int, x *uint256.Int, y int64) *uint256.Int {
 	if ok {
 		exp10 = &lookup
 	} else {
-		exp10.Exp((*uint256.Int)(TenInt256), uint256.NewInt(abs))
+		exp10 = new(uint256.Int).Exp((*uint256.Int)(TenInt256), uint256.NewInt(abs))
 	}
 	if y < 0 {
 		return z.Div(x, exp10)
