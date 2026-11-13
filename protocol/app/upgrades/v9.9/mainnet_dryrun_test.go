@@ -14,6 +14,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
@@ -26,11 +27,8 @@ import (
 
 // Runs the v9.9 upgrade handler against a real node home (MAINNET_HOME, holding
 // data/application.db) without committing, and reports what GRADUAL would look like.
-func TestMainnetStateDryRun(t *testing.T) {
+func loadMainnet(t *testing.T) (*app.App, sdk.Context, int64, time.Duration) {
 	home := os.Getenv("MAINNET_HOME")
-	if home == "" {
-		t.Skip("MAINNET_HOME not set")
-	}
 	chainID := os.Getenv("DRYRUN_CHAIN_ID")
 	if chainID == "" {
 		chainID = "dydx-mainnet-1"
@@ -38,7 +36,7 @@ func TestMainnetStateDryRun(t *testing.T) {
 	dataDir := filepath.Join(home, "data")
 	db, err := dbm.NewDB("application", dbm.GoLevelDBBackend, dataDir)
 	require.NoError(t, err)
-	defer db.Close()
+	t.Cleanup(func() { _ = db.Close() })
 
 	last := rootmulti.GetLatestVersion(db)
 	require.Greater(t, last, int64(0))
@@ -47,24 +45,36 @@ func TestMainnetStateDryRun(t *testing.T) {
 	require.NoError(t, os.WriteFile(filepath.Join(dataDir, "upgrade-info.json"), []byte(info), 0o644))
 
 	logger := log.NewLogger(os.Stdout, log.LevelOption(zerolog.WarnLevel))
-	opened := time.Now()
 	dydxApp := app.New(logger, db, nil, true, appoptions.GetDefaultTestAppOptions(home, map[string]interface{}{
 		flags.FlagChainID: chainID,
 	}))
-	loadTime := time.Since(opened)
 	require.Equal(t, last, dydxApp.LastBlockHeight())
-
 	ctx := dydxApp.NewUncachedContext(false, cmtproto.Header{ChainID: chainID, Height: upgradeHeight, Time: time.Now().UTC()})
-	before, err := dydxApp.UpgradeKeeper.GetModuleVersionMap(ctx)
-	require.NoError(t, err)
-	require.NotContains(t, before, canonicalusdctypes.ModuleName)
-	k := dydxApp.CanonicalUsdcKeeper
-	supplyBefore := dydxApp.BankKeeper.GetSupply(ctx, canonicalusdctypes.DefaultControls().LogicalDenom).Amount
-
 	started := time.Now()
 	require.NoError(t, dydxApp.UpgradeKeeper.ApplyUpgrade(ctx, upgradetypes.Plan{Name: v_9_9.UpgradeName, Height: upgradeHeight}))
-	handlerTime := time.Since(started)
+	return dydxApp, ctx, last, time.Since(started)
+}
 
+func TestMainnetStateDryRun(t *testing.T) {
+	if os.Getenv("MAINNET_HOME") == "" {
+		t.Skip("MAINNET_HOME not set")
+	}
+	chainID := os.Getenv("DRYRUN_CHAIN_ID")
+	if chainID == "" {
+		chainID = "dydx-mainnet-1"
+	}
+	opened := time.Now()
+	dydxApp, ctx, last, handlerTime := loadMainnet(t)
+	loadTime := time.Since(opened) - handlerTime
+	upgradeHeight := last + 1
+	k := dydxApp.CanonicalUsdcKeeper
+	supplyBefore := dydxApp.BankKeeper.GetSupply(ctx, canonicalusdctypes.DefaultControls().LogicalDenom).Amount
+	before := map[string]uint64{}
+	for name, v := range dydxApp.ModuleManager.GetVersionMap() {
+		if name != canonicalusdctypes.ModuleName {
+			before[name] = v
+		}
+	}
 	after, err := dydxApp.UpgradeKeeper.GetModuleVersionMap(ctx)
 	require.NoError(t, err)
 	changed := map[string][2]uint64{}
