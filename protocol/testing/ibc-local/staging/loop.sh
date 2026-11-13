@@ -53,7 +53,7 @@ deposit() {
 withdraw() {
 	local amt=$1 before h; before=$(inj_bal "$INJ_USER" "$INJECTIVE_USDC")
 	echo "== withdraw $amt logical dydx -> stand-in"
-	h=$("$DYDX" tx ibc-transfer transfer transfer "$DYDX_SIDE_CHANNEL" "$INJ_USER" "$amt$LOGICAL" --from relayer --keyring-backend test --home "$DYDX_KEYS" \
+	h=$("$DYDX" tx ibc-transfer transfer transfer "$DYDX_SIDE_CHANNEL" "$INJ_USER" "$amt$LOGICAL" --packet-timeout-height 0-0 --from relayer --keyring-backend test --home "$DYDX_KEYS" \
 		--chain-id dydx-testnet-4 --node "$NODE" --gas 500000 --gas-prices 25000000000adv4tnt -y -o json | jq -r .txhash)
 	echo "   dydx tx $h: $(tx_result "$DYDX" "$NODE" "$h")"
 	echo "   ledger after send: $(ledger)"
@@ -68,7 +68,7 @@ case "${1:-state}" in
 	round) deposit "${2:-25000000}"; withdraw "${2:-25000000}" ;;
 	drain) withdraw "$(backing)" ;;
 	reject)
-		h=$("$DYDX" tx ibc-transfer transfer transfer "$DYDX_SIDE_CHANNEL" "$INJ_USER" "1000000$LOGICAL" --from relayer --keyring-backend test --home "$DYDX_KEYS" \
+		h=$("$DYDX" tx ibc-transfer transfer transfer "$DYDX_SIDE_CHANNEL" "$INJ_USER" "1000000$LOGICAL" --packet-timeout-height 0-0 --from relayer --keyring-backend test --home "$DYDX_KEYS" \
 			--chain-id dydx-testnet-4 --node "$NODE" --gas 500000 --gas-prices 25000000000adv4tnt -y -o json | jq -r .txhash)
 		echo "== withdraw 1 USDC with no backing, dydx tx $h: $(tx_result "$DYDX" "$NODE" "$h")"
 		state "after the rejected withdrawal" ;;
