@@ -561,6 +561,15 @@ func TestMulExp10(t *testing.T) {
 			x: NewInt(0),
 			y: -150,
 		},
+		// 10^78 exceeds 2^256, so for a negative exponent with abs >= 78 the true
+		// power is larger than any uint256 value and the exact quotient is 0. A
+		// nonzero base must still divide down to 0 rather than relying on a wrapped
+		// power. 2^254 is a large nonzero base well within range.
+		"nonzero with large neg exponent": {
+			z: NewInt(0),
+			x: MustFromBig(new(big.Int).Lsh(big.NewInt(1), 254)),
+			y: -150,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
