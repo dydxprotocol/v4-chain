@@ -267,6 +267,104 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 	}
 }
 
+func TestModifyMarketParam_PairDecimals(t *testing.T) {
+	const storedExponent = int32(-8)
+	oldParam := types.MarketParam{
+		Id:                 1,
+		Pair:               "foo-bar",
+		Exponent:           storedExponent,
+		MinExchanges:       uint32(2),
+		MinPriceChangePpm:  uint32(50),
+		ExchangeConfigJson: `{"id":"1"}`,
+	}
+
+	tests := map[string]struct {
+		pair              string
+		tickerExponent    int32
+		minPriceChangePpm uint32
+		expectedErr       error
+	}{
+		"Pair update to ticker with different decimals fails": {
+			pair:              "bar-foo",
+			tickerExponent:    -6,
+			minPriceChangePpm: oldParam.MinPriceChangePpm,
+			expectedErr:       types.ErrInvalidMarketPriceExponent,
+		},
+		"Pair update to ticker with same decimals succeeds": {
+			pair:              "bar-foo",
+			tickerExponent:    storedExponent,
+			minPriceChangePpm: oldParam.MinPriceChangePpm,
+		},
+		"Update without pair change succeeds": {
+			pair:              oldParam.Pair,
+			minPriceChangePpm: 100,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, _, _, mockTimeProvider, _, marketMapKeeper := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+			ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+			_, err := keepertest.CreateTestMarket(t, ctx, keeper, oldParam, types.MarketPrice{
+				Id:       oldParam.Id,
+				Exponent: storedExponent,
+				Price:    1,
+			})
+			require.NoError(t, err)
+
+			if tc.pair != oldParam.Pair {
+				tickerParam := oldParam
+				tickerParam.Pair = tc.pair
+				tickerParam.Exponent = tc.tickerExponent
+				keepertest.CreateMarketsInMarketMapFromParams(
+					t,
+					ctx,
+					marketMapKeeper,
+					[]types.MarketParam{tickerParam},
+				)
+			}
+
+			newParam := oldParam
+			newParam.Pair = tc.pair
+			newParam.MinPriceChangePpm = tc.minPriceChangePpm
+			_, modifyErr := keeper.ModifyMarketParam(ctx, newParam)
+
+			storedParam, exists := keeper.GetMarketParam(ctx, oldParam.Id)
+			require.True(t, exists)
+			storedPrice, err := keeper.GetMarketPrice(ctx, oldParam.Id)
+			require.NoError(t, err)
+			require.Equal(t, storedExponent, storedPrice.Exponent)
+
+			oldCp, err := slinky.MarketPairToCurrencyPair(oldParam.Pair)
+			require.NoError(t, err)
+			oldMarket, err := marketMapKeeper.GetMarket(ctx, oldCp.String())
+			require.NoError(t, err)
+
+			if tc.expectedErr == nil {
+				require.NoError(t, modifyErr)
+				require.Equal(t, newParam, storedParam)
+				require.Equal(t, tc.pair == oldParam.Pair, oldMarket.Ticker.Enabled)
+				return
+			}
+
+			require.ErrorIs(t, modifyErr, tc.expectedErr)
+			require.Equal(t, oldParam, storedParam)
+			require.True(t, oldMarket.Ticker.Enabled)
+			_, found := keeper.GetIDForCurrencyPair(ctx, oldCp)
+			require.True(t, found)
+
+			newCp, err := slinky.MarketPairToCurrencyPair(tc.pair)
+			require.NoError(t, err)
+			newMarket, err := marketMapKeeper.GetMarket(ctx, newCp.String())
+			require.NoError(t, err)
+			require.False(t, newMarket.Ticker.Enabled)
+			_, found = keeper.GetIDForCurrencyPair(ctx, newCp)
+			require.False(t, found)
+		})
+	}
+}
+
 func TestGetMarketParam(t *testing.T) {
 	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
