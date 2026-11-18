@@ -4,6 +4,7 @@ import Big from 'big.js';
 import { CandleResolution } from './candle-types';
 import { ComplianceReason, ComplianceStatus } from './compliance-status-types';
 import { FillType, Liquidity } from './fill-types';
+import { GasSponsorshipStatus } from './gas-sponsorship-types';
 import {
   OrderSide, OrderStatus, OrderType, TimeInForce,
 } from './order-types';
@@ -375,6 +376,20 @@ export interface BridgeInformationFromDatabase {
   chain_id: string,
   amount: string,
   transaction_hash?: string,
+  created_at: IsoString,
+}
+
+export interface GasSponsorshipFromDatabase {
+  id: string,
+  chain_id: string,
+  granter_address: string,
+  grantee_address: string,
+  dydx_address: string,
+  spend_limit: string,
+  fee_amount: string,
+  status: GasSponsorshipStatus,
+  transaction_hash?: string | null,
+  expires_at: IsoString,
   created_at: IsoString,
 }
 

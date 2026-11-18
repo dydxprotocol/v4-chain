@@ -39,4 +39,5 @@ export * from './turnkey-user-types';
 export * from './permission-approval-types';
 export * from './pnl-types';
 export * from './bridge-information-types';
+export * from './gas-sponsorship-types';
 export { PositionSide } from './position-types';
