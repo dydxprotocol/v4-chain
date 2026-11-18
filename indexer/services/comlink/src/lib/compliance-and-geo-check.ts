@@ -16,7 +16,7 @@ import { matchedData } from 'express-validator';
 import { AddressRequest, BlockedCode } from '../types';
 import {
   create4xxResponse,
-  handleInternalServerError,
+  handleControllerError,
 } from './helpers';
 import { getIpAddr, isIndexerIp } from './utils';
 
@@ -70,7 +70,7 @@ export async function complianceAndGeoCheck(
         }
       }
     } catch (error) {
-      return handleInternalServerError(
+      return handleControllerError(
         'complianceAndGeoCheck',
         'complianceAndGeoCheck error',
         error,

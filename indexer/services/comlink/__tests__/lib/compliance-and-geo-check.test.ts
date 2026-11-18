@@ -10,8 +10,10 @@ import {
   ComplianceStatus,
   ComplianceStatusTable,
   dbHelpers,
+  FillModel,
   testConstants,
   testMocks,
+  Transaction,
 } from '@dydxprotocol-indexer/postgres';
 import request from 'supertest';
 import {
@@ -92,6 +94,31 @@ describe('compliance-check', () => {
     jest.restoreAllMocks();
     config.WHITELISTED_ADDRESSES = '';
     await dbHelpers.clearData();
+  });
+
+  it('returns 504 when the compliance lookup is cancelled by statement_timeout', async () => {
+    // Produce the cancellation in Postgres through objection, so the error has the shape a
+    // timed-out store query has in production.
+    const txId: number = await Transaction.start();
+    const trx = Transaction.get(txId);
+    await trx!.raw('SET LOCAL statement_timeout = 1');
+    // FROM a one-row VALUES list so pg_sleep runs whatever the fills table holds.
+    const cancelled: unknown = await FillModel.query(trx)
+      .select(FillModel.raw('pg_sleep(1)'))
+      .from(FillModel.raw('(VALUES (1)) AS one'))
+      .catch((error: unknown) => error);
+    expect(cancelled).toMatchObject({ nativeError: { code: '57014' } });
+    await Transaction.rollback(txId);
+    jest.spyOn(ComplianceStatusTable, 'findAll').mockRejectedValueOnce(cancelled);
+
+    const response: request.Response = await sendRequestToApp({
+      type: RequestMethod.GET,
+      path: `/v4/check-compliance-query?address=${testConstants.defaultAddress}`,
+      expressApp: complianceCheckApp,
+      expectedStatus: 504,
+    });
+
+    expect(response.body).toEqual({ errors: [{ msg: 'Request timed out' }] });
   });
 
   it('does not return 403 if no address in request', async () => {
