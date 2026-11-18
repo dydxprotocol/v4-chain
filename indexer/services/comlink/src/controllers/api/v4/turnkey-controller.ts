@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
@@ -300,22 +302,23 @@ export class TurnkeyController extends Controller {
 
 const turnkeyIpKey = (_req: express.Request, ipAddr: string): string => ipRateLimitKey(ipAddr);
 
-// Normalized the same way as emailSignin, so case and whitespace variants share one bucket.
-const turnkeyEmailKey = (req: express.Request): string | undefined => {
+// Normalized the same way as emailSignin, so case and whitespace variants share one bucket;
+// hashed so keys have a fixed size and the shared rate-limit Redis holds no email addresses.
+export const turnkeyEmailKey = (req: express.Request): string | undefined => {
   const { signinMethod, userEmail } = req.body ?? {};
   if (signinMethod !== SigninMethod.EMAIL || typeof userEmail !== 'string') {
     return undefined;
   }
-  return userEmail.trim().toLowerCase();
+  return createHash('sha256').update(userEmail.trim().toLowerCase()).digest('hex');
 };
 
 router.post(
   '/signin',
   rateLimiterMiddleware(defaultRateLimiter),
   rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey),
-  rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, turnkeyEmailKey),
   ...CheckSignInSchema,
   handleValidationErrors,
+  rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, turnkeyEmailKey),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

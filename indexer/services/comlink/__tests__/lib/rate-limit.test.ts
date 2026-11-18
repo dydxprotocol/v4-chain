@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
 import config from '../../src/config';
@@ -599,19 +600,47 @@ describe('rateLimit', () => {
   });
 
   describe('reserveNewSuborgSlot', () => {
+    // The slot check refuses while the client is disconnected, so wait for the connection.
+    beforeAll(async () => {
+      await ratelimitRedis.connect();
+    });
+
     it('refuses once the global cap is used up', async () => {
+      const increment = jest.spyOn(stats, 'increment');
       for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_POINTS; i += 1) {
         await reserveNewSuborgSlot();
       }
       await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+      expect(increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1,
+        { reason: 'cap_reached', limit: 'global' },
+      );
     });
 
     it('limits new sub-orgs per caller before the global cap', async () => {
       for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_POINTS; i += 1) {
         await reserveNewSuborgSlot(`2a03:4000:13:1a88::${i + 1}`);
       }
+      const increment = jest.spyOn(stats, 'increment');
       await expect(reserveNewSuborgSlot('2a03:4000:13:1a88::ff')).rejects.toThrow(TurnkeyError);
+      expect(increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1,
+        { reason: 'cap_reached', limit: 'ip' },
+      );
       await expect(reserveNewSuborgSlot('203.0.113.7')).resolves.toBeUndefined();
+    });
+
+    it('refuses at once, without touching the store, when Redis is disconnected', async () => {
+      const consume = jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume');
+      const client: any = ratelimitRedis.client;
+      const connected: boolean = client.connected;
+      client.connected = false;
+      try {
+        await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+        expect(consume).not.toHaveBeenCalled();
+      } finally {
+        client.connected = connected;
+      }
     });
 
     it('fails closed when the rate-limit store errors', async () => {

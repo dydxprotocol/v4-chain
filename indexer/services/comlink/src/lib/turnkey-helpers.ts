@@ -6,7 +6,11 @@ import { TurnkeyApiClient, TurnkeyApiTypes } from '@turnkey/sdk-server';
 import { decodeJwt } from 'jose';
 import { Address, checksumAddress } from 'viem';
 
-import { turnkeyNewSuborgGlobalLimiter, turnkeyNewSuborgIpLimiter } from '../caches/rate-limiters';
+import {
+  ratelimitRedis,
+  turnkeyNewSuborgGlobalLimiter,
+  turnkeyNewSuborgIpLimiter,
+} from '../caches/rate-limiters';
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
 import { getSmartAccountAddress } from '../helpers/alchemy-helpers';
@@ -394,14 +398,23 @@ export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
   if (!config.RATE_LIMIT_ENABLED) {
     return;
   }
+  let limit: 'store' | 'ip' | 'global' = 'store';
   try {
+    // node-redis 2.8 queues commands while disconnected, so consume() would hang instead of
+    // failing; rate-limiter-flexible's rejectIfRedisNotReady cannot detect this client.
+    if (!ratelimitRedis.client.connected) {
+      throw new Error('Rate-limit store not connected');
+    }
+    limit = 'ip';
     if (clientIp !== undefined && !isIndexerIp(clientIp)) {
       await turnkeyNewSuborgIpLimiter.consume(ipRateLimitKey(clientIp));
     }
+    limit = 'global';
     await turnkeyNewSuborgGlobalLimiter.consume('global');
   } catch (error) {
     stats.increment(`${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1, {
       reason: error instanceof Error ? 'store_error' : 'cap_reached',
+      limit,
     });
     if (error instanceof Error) {
       logger.error({
@@ -413,6 +426,7 @@ export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
       logger.warning({
         at: 'TurnkeyHelpers#reserveNewSuborgSlot',
         message: 'New Turnkey sub-org limit reached',
+        limit,
         clientIp,
       });
     }
