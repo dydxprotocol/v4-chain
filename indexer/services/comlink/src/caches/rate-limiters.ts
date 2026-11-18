@@ -23,6 +23,50 @@ export function getDefaultRateLimiter(): RateLimiterRedis {
 // Generic rate limiter for all GET requests, limits per IP
 export const defaultRateLimiter: RateLimiterRedis = getDefaultRateLimiter();
 
+// Rate-limiter for Turnkey /signin and /uploadAddress together, per IP (IPv6 per /64)
+export function getTurnkeyIpRateLimiter(): RateLimiterRedis {
+  return new RateLimiterRedis({
+    storeClient: ratelimitRedis.client,
+    points: config.RATE_LIMIT_TURNKEY_IP_POINTS,
+    duration: config.RATE_LIMIT_TURNKEY_IP_DURATION_SECONDS,
+    keyPrefix: `${config.SERVICE_NAME}/turnkey_ip`,
+  });
+}
+export const turnkeyIpRateLimiter: RateLimiterRedis = getTurnkeyIpRateLimiter();
+
+// Rate-limiter for Turnkey email /signin, per normalized email across all IPs
+export function getTurnkeyEmailRateLimiter(): RateLimiterRedis {
+  return new RateLimiterRedis({
+    storeClient: ratelimitRedis.client,
+    points: config.RATE_LIMIT_TURNKEY_EMAIL_POINTS,
+    duration: config.RATE_LIMIT_TURNKEY_EMAIL_DURATION_SECONDS,
+    keyPrefix: `${config.SERVICE_NAME}/turnkey_email`,
+  });
+}
+export const turnkeyEmailRateLimiter: RateLimiterRedis = getTurnkeyEmailRateLimiter();
+
+// New Turnkey sub-orgs per IP (IPv6 per /64), so one client cannot use up the global cap
+export function getTurnkeyNewSuborgIpLimiter(): RateLimiterRedis {
+  return new RateLimiterRedis({
+    storeClient: ratelimitRedis.client,
+    points: config.RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_POINTS,
+    duration: config.RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_DURATION_SECONDS,
+    keyPrefix: `${config.SERVICE_NAME}/turnkey_new_suborg_ip`,
+  });
+}
+export const turnkeyNewSuborgIpLimiter: RateLimiterRedis = getTurnkeyNewSuborgIpLimiter();
+
+// Cap on new Turnkey sub-orgs across all callers
+export function getTurnkeyNewSuborgGlobalLimiter(): RateLimiterRedis {
+  return new RateLimiterRedis({
+    storeClient: ratelimitRedis.client,
+    points: config.RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_POINTS,
+    duration: config.RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_DURATION_SECONDS,
+    keyPrefix: `${config.SERVICE_NAME}/turnkey_new_suborg_global`,
+  });
+}
+export const turnkeyNewSuborgGlobalLimiter: RateLimiterRedis = getTurnkeyNewSuborgGlobalLimiter();
+
 // Rate-limiter for /screen endpoint querying a compliance provider, limits per IP
 export function getScreenProviderLimiter(): RateLimiterRedis {
   return new RateLimiterRedis({

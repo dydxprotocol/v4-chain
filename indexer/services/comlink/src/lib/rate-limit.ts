@@ -16,6 +16,8 @@ const EXTERNAL_REQUEST_POINTS: number = 1;
 export function rateLimiterMiddleware(
   rateLimiter: RateLimiterRedis,
   postfixKey?: string,
+  // Overrides the IP-based key; returning undefined skips this limiter for the request.
+  getKey?: (req: express.Request, ipAddr: string) => string | undefined,
 ) {
   return async (
     req: express.Request,
@@ -40,8 +42,17 @@ export function rateLimiterMiddleware(
     const pointCost: number = Math.min(getPointCost(ipAddr, req), rateLimiter.points);
 
     // generate redis key
-    const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
-    const redisKey: string = postfix ? ipAddr.concat(postfix) : ipAddr;
+    let redisKey: string;
+    if (getKey) {
+      const key: string | undefined = getKey(req, ipAddr);
+      if (key === undefined) {
+        return next();
+      }
+      redisKey = key;
+    } else {
+      const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
+      redisKey = postfix ? ipAddr.concat(postfix) : ipAddr;
+    }
 
     try {
       const limitRes: RateLimiterRes = await rateLimiter.consume(redisKey, pointCost);

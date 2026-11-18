@@ -20,8 +20,14 @@ import {
   getHistoricalPnlRateLimiter,
   getPnlRateLimiter,
   getFundingRateLimiter,
+  turnkeyEmailRateLimiter,
+  turnkeyIpRateLimiter,
+  turnkeyNewSuborgGlobalLimiter,
 } from '../../src/caches/rate-limiters';
+import { TurnkeyError } from '../../src/lib/errors';
+import { reserveNewSuborgSlot } from '../../src/lib/turnkey-helpers';
 import * as utils from '../../src/lib/utils';
+import { ipRateLimitKey } from '../../src/lib/utils';
 
 describe('rateLimit', () => {
   const defaultHeaders: IncomingHttpHeaders = { 'cf-connecting-ip': '0.0.0.0' };
@@ -549,6 +555,68 @@ describe('rateLimit', () => {
       expect(resetTime - currentTime).toBeGreaterThan(0);
 
       config.RATE_LIMIT_ORDERS_DURATION_SECONDS = originalDuration;
+    });
+  });
+
+  describe('ipRateLimitKey', () => {
+    it.each([
+      ['1.2.3.4', '1.2.3.4'],
+      ['::ffff:1.2.3.4', '1.2.3.4'],
+      ['::ffff:102:304', '1.2.3.4'],
+      ['2a03:4000:13:1a88:4403:f7ff:fe05:9e08', '2a03:4000:13:1a88::/64'],
+      ['2a03:4000:13:1a88::1', '2a03:4000:13:1a88::/64'],
+      ['2001:db8::1', '2001:db8:0:0::/64'],
+      ['2001:0DB8:0000:0001:0:0:0:1', '2001:db8:0:1::/64'],
+    ])('maps %s to %s', (ip, key) => {
+      expect(ipRateLimitKey(ip)).toBe(key);
+    });
+  });
+
+  describe('custom key', () => {
+    it('shares one bucket across a /64 and blocks past the limit', async () => {
+      const limit: number = config.RATE_LIMIT_TURNKEY_IP_POINTS;
+      const getKey = (_r: any, ip: string) => ipRateLimitKey(ip);
+      for (let i = 0; i < limit; i += 1) {
+        req.headers = { 'cf-connecting-ip': `2a03:4000:13:1a88::${i + 1}` };
+        await rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, getKey)(req, res, next);
+      }
+      expect(next).toHaveBeenCalledTimes(limit);
+
+      req.headers = { 'cf-connecting-ip': '2a03:4000:13:1a88:ffff::1' };
+      await rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, getKey)(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(next).toHaveBeenCalledTimes(limit);
+    });
+
+    it('skips the limiter when the key function returns undefined', async () => {
+      req.headers = defaultHeaders;
+      await rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, () => undefined)(
+        req, res, next,
+      );
+      expect(res.set).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('reserveNewSuborgSlot', () => {
+    it('refuses once the global cap is used up', async () => {
+      for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_POINTS; i += 1) {
+        await reserveNewSuborgSlot();
+      }
+      await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+    });
+
+    it('limits new sub-orgs per caller before the global cap', async () => {
+      for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_POINTS; i += 1) {
+        await reserveNewSuborgSlot(`2a03:4000:13:1a88::${i + 1}`);
+      }
+      await expect(reserveNewSuborgSlot('2a03:4000:13:1a88::ff')).rejects.toThrow(TurnkeyError);
+      await expect(reserveNewSuborgSlot('203.0.113.7')).resolves.toBeUndefined();
+    });
+
+    it('fails closed when the rate-limit store errors', async () => {
+      jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume').mockRejectedValueOnce(new Error('redis down'));
+      await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
     });
   });
 

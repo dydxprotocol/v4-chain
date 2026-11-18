@@ -1,3 +1,5 @@
+import { isIPv6 } from 'net';
+
 import express from 'express';
 
 import config from '../config';
@@ -6,6 +8,36 @@ const indexerIps: string[] = config.INDEXER_INTERNAL_IPS.split(',').map((l) => l
 
 export function isIndexerIp(ipAddress: string): boolean {
   return indexerIps.includes(ipAddress);
+}
+
+/**
+ * Rate-limit key for an IP: IPv4 as is, IPv6 as its /64. A single IPv6 host usually holds a
+ * whole /64, so per-address keys give it unlimited buckets.
+ */
+export function ipRateLimitKey(ipAddress: string): string {
+  if (!isIPv6(ipAddress)) {
+    return ipAddress;
+  }
+  const mappedV4: RegExpMatchArray | null = ipAddress.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (mappedV4) {
+    return mappedV4[1];
+  }
+  const [head, tail] = ipAddress.split('::');
+  const headGroups: string[] = head ? head.split(':') : [];
+  const tailGroups: string[] = tail ? tail.split(':') : [];
+  const groups: string[] = tail === undefined
+    ? headGroups
+    : [
+      ...headGroups,
+      ...Array(8 - headGroups.length - tailGroups.length).fill('0'),
+      ...tailGroups,
+    ];
+  const values: number[] = groups.map((g) => parseInt(g, 16));
+  // IPv4-mapped in hex form (::ffff:102:304): key it as the IPv4 address, not as ::/64.
+  if (values.length === 8 && values.slice(0, 5).every((v) => v === 0) && values[5] === 0xffff) {
+    return [values[6], values[7]].flatMap((v) => [Math.floor(v / 256), v % 256]).join('.');
+  }
+  return `${values.slice(0, 4).map((v) => v.toString(16)).join(':')}::/64`;
 }
 
 export function getIpAddr(req: express.Request): string | undefined {

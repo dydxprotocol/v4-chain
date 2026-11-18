@@ -80,6 +80,17 @@ export const configSchema = {
   RATE_LIMIT_PNL_DURATION_SECONDS: parseInteger({ default: 10 }),
   RATE_LIMIT_FUNDING_POINTS: parseInteger({ default: 100 }),
   RATE_LIMIT_FUNDING_DURATION_SECONDS: parseInteger({ default: 10 }),
+  // Turnkey sign-in and uploadAddress: each completed sign-up costs a Turnkey sub-org, an email
+  // from our domain and several signatures, so these are far tighter than the read limits.
+  RATE_LIMIT_TURNKEY_IP_POINTS: parseInteger({ default: 10 }),
+  RATE_LIMIT_TURNKEY_IP_DURATION_SECONDS: parseInteger({ default: 600 }),
+  RATE_LIMIT_TURNKEY_EMAIL_POINTS: parseInteger({ default: 5 }),
+  RATE_LIMIT_TURNKEY_EMAIL_DURATION_SECONDS: parseInteger({ default: 600 }),
+  RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_POINTS: parseInteger({ default: 3 }),
+  RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_DURATION_SECONDS: parseInteger({ default: 3600 }),
+  // Keep below the Create Sub Org limit Turnkey sets for the parent org.
+  RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_POINTS: parseInteger({ default: 30 }),
+  RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_DURATION_SECONDS: parseInteger({ default: 3600 }),
 
   // Affiliates config
   VOLUME_ELIGIBILITY_THRESHOLD: parseInteger({ default: 10_000 }),
@@ -127,7 +138,8 @@ export const configSchema = {
   TURNKEY_API_SENDER_PRIVATE_KEY: parseString({ default: '' }),
   TURNKEY_API_SENDER_PUBLIC_KEY: parseString({ default: '' }),
   TURNKEY_MAGIC_LINK_TEMPLATE: parseString({ default: '' }),
-  TURNKEY_MAGIC_LINK_VALIDATION: parseString({ default: 'https://dydx.trade' }),
+  // Origin (and optional path prefix) a client-supplied magic link must have.
+  TURNKEY_MAGIC_LINK_VALIDATION: parseString({ default: 'https://dydx.trade/' }),
   TURNKEY_ORGANIZATION_ID: parseString({ default: '' }),
   SOLANA_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
   // Default slippage tolerance for Skip bridge routes, in percent units

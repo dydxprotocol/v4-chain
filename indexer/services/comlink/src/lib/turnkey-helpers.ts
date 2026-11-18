@@ -1,11 +1,12 @@
 import { randomBytes, randomUUID } from 'crypto';
 
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes } from '@turnkey/sdk-server';
 import { decodeJwt } from 'jose';
 import { Address, checksumAddress } from 'viem';
 
+import { turnkeyNewSuborgGlobalLimiter, turnkeyNewSuborgIpLimiter } from '../caches/rate-limiters';
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
 import { getSmartAccountAddress } from '../helpers/alchemy-helpers';
@@ -16,6 +17,7 @@ import {
   TurnkeyAuthResponse,
 } from '../types';
 import { TurnkeyError } from './errors';
+import { ipRateLimitKey, isIndexerIp } from './utils';
 
 /**
  * Helper class for Turnkey-specific operations
@@ -114,6 +116,8 @@ export class TurnkeyHelpers {
         attestation: params.attestation,
       });
     }
+
+    await reserveNewSuborgSlot(params.clientIp);
 
     const subOrg = await this.turnkeyApiClient.createSubOrganization({
       subOrganizationName: TurnkeyHelpers.generateRandomString('uuid'),
@@ -264,6 +268,7 @@ export class TurnkeyHelpers {
     userEmail: string,
     targetPublicKey: string,
     magicLink?: string,
+    clientIp?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // lowercase email address.
     const lowerEmail = userEmail.trim().toLowerCase();
@@ -273,6 +278,7 @@ export class TurnkeyHelpers {
     if (!suborg) {
       suborg = await this.createSuborg({
         email: lowerEmail,
+        clientIp,
       });
     }
 
@@ -308,6 +314,7 @@ export class TurnkeyHelpers {
     provider: string,
     oidcToken: string,
     targetPublicKey: string,
+    clientIp?: string,
   ) {
     // Extract email from Google OIDC token if available
     const extractedEmail = extractEmailFromOidcToken(oidcToken, provider)?.toLowerCase();
@@ -332,6 +339,7 @@ export class TurnkeyHelpers {
         providerName: provider,
         oidcToken,
         email: extractedEmail, // Include extracted email when creating suborg
+        clientIp,
       });
     }
 
@@ -355,6 +363,7 @@ export class TurnkeyHelpers {
     challenge: string,
     authenticatorName: string,
     attestation: TurnkeyApiTypes['v1Attestation'],
+    clientIp?: string,
   ): Promise<TurnkeyAuthResponse> {
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       credentialId: attestation.credentialId,
@@ -364,6 +373,7 @@ export class TurnkeyHelpers {
         authenticatorName,
         challenge,
         attestation,
+        clientIp,
       });
     }
 
@@ -373,6 +383,61 @@ export class TurnkeyHelpers {
       dydxAddress: suborg.dydxAddress || '',
     };
   }
+}
+
+/**
+ * Takes one slot from the caller's and then the global new sub-org budget. The per-IP budget
+ * stops one client from using up the global cap for everyone. Fails closed: a Redis error also
+ * refuses, because an uncapped burst exhausts the Turnkey org's Create Sub Org limit.
+ */
+export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
+  if (!config.RATE_LIMIT_ENABLED) {
+    return;
+  }
+  try {
+    if (clientIp !== undefined && !isIndexerIp(clientIp)) {
+      await turnkeyNewSuborgIpLimiter.consume(ipRateLimitKey(clientIp));
+    }
+    await turnkeyNewSuborgGlobalLimiter.consume('global');
+  } catch (error) {
+    stats.increment(`${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1, {
+      reason: error instanceof Error ? 'store_error' : 'cap_reached',
+    });
+    if (error instanceof Error) {
+      logger.error({
+        at: 'TurnkeyHelpers#reserveNewSuborgSlot',
+        message: 'Rate-limit store error, refusing new Turnkey sub-org',
+        error,
+      });
+    } else {
+      logger.warning({
+        at: 'TurnkeyHelpers#reserveNewSuborgSlot',
+        message: 'New Turnkey sub-org limit reached',
+        clientIp,
+      });
+    }
+    throw new TurnkeyError('Sign-up is temporarily unavailable, please try again later');
+  }
+}
+
+/**
+ * Checks a client-supplied magic link against the allowed origin and path prefix.
+ */
+export function isAllowedMagicLink(magicLink: string, allowed: string): boolean {
+  let link: URL;
+  let allowedUrl: URL;
+  try {
+    link = new URL(magicLink);
+    allowedUrl = new URL(allowed);
+  } catch {
+    return false;
+  }
+  // Turnkey emails the raw string, so require it to be in canonical form.
+  return link.href === magicLink &&
+    link.username === '' &&
+    link.password === '' &&
+    link.origin === allowedUrl.origin &&
+    link.pathname.startsWith(allowedUrl.pathname);
 }
 
 /**
