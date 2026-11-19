@@ -771,6 +771,83 @@
         "type": "object",
         "additionalProperties": false
       },
+      "GasSponsorshipGrantStatus": {
+        "enum": [
+          "PENDING",
+          "CONFIRMED"
+        ],
+        "type": "string"
+      },
+      "GasSponsorshipGrant": {
+        "properties": {
+          "chainId": {
+            "type": "string"
+          },
+          "granter": {
+            "type": "string"
+          },
+          "grantee": {
+            "type": "string"
+          },
+          "feeDenom": {
+            "type": "string"
+          },
+          "spendLimit": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "allowedMessages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GasSponsorshipGrantStatus"
+          },
+          "transactionHash": {
+            "type": "string"
+          },
+          "gasLimit": {
+            "type": "string"
+          },
+          "gasPrice": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "chainId",
+          "granter",
+          "grantee",
+          "feeDenom",
+          "spendLimit",
+          "expiresAt",
+          "allowedMessages",
+          "status",
+          "gasLimit",
+          "gasPrice"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "GasSponsorshipRequestBody": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "injectiveAddress": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "injectiveAddress"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "HeightResponse": {
         "properties": {
           "height": {
@@ -2892,6 +2969,36 @@
             }
           }
         ]
+      }
+    },
+    "/gasSponsorship": {
+      "post": {
+        "operationId": "RequestSponsorship",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GasSponsorshipGrant"
+                }
+              }
+            }
+          }
+        },
+        "description": "Requests a fee allowance on Injective for an address that holds USDC to deposit to dYdX but\nno INJ to pay for gas.\n\nThe response names the granter. To use the allowance, the address sends its own transfer\nwith that granter set as the fee granter, and a fee of at most gasLimit * gasPrice.\n\nThe allowance can be used once its status is CONFIRMED. If the status is PENDING, repeat the\nrequest: it returns the same allowance, and never grants a second one.",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GasSponsorshipRequestBody"
+              }
+            }
+          }
+        }
       }
     },
     "/height": {

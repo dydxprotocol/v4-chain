@@ -1617,6 +1617,115 @@ fetch(`${baseURL}/fundingPayments/parentSubaccount?address=string&parentSubaccou
 This operation does not require authentication
 </aside>
 
+## RequestSponsorship
+
+<a id="opIdRequestSponsorship"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/gasSponsorship', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "address": "string",
+  "injectiveAddress": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/gasSponsorship`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /gasSponsorship`
+
+Requests a fee allowance on Injective for an address that holds USDC to deposit to dYdX but
+no INJ to pay for gas.
+
+The response names the granter. To use the allowance, the address sends its own transfer
+with that granter set as the fee granter, and a fee of at most gasLimit * gasPrice.
+
+The allowance can be used once its status is CONFIRMED. If the status is PENDING, repeat the
+request: it returns the same allowance, and never grants a second one.
+
+> Body parameter
+
+```json
+{
+  "address": "string",
+  "injectiveAddress": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[GasSponsorshipRequestBody](#schemagassponsorshiprequestbody)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "chainId": "string",
+  "granter": "string",
+  "grantee": "string",
+  "feeDenom": "string",
+  "spendLimit": "string",
+  "expiresAt": "string",
+  "allowedMessages": [
+    "string"
+  ],
+  "status": "PENDING",
+  "transactionHash": "string",
+  "gasLimit": "string",
+  "gasPrice": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[GasSponsorshipGrant](#schemagassponsorshipgrant)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetHeight
 
 <a id="opIdGetHeight"></a>
@@ -5952,6 +6061,95 @@ This operation does not require authentication
 |totalResults|integer(int32)|false|none|none|
 |offset|integer(int32)|false|none|none|
 |fundingPayments|[[FundingPaymentResponseObject](#schemafundingpaymentresponseobject)]|true|none|none|
+
+## GasSponsorshipGrantStatus
+
+<a id="schemagassponsorshipgrantstatus"></a>
+<a id="schema_GasSponsorshipGrantStatus"></a>
+<a id="tocSgassponsorshipgrantstatus"></a>
+<a id="tocsgassponsorshipgrantstatus"></a>
+
+```json
+"PENDING"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|PENDING|
+|*anonymous*|CONFIRMED|
+
+## GasSponsorshipGrant
+
+<a id="schemagassponsorshipgrant"></a>
+<a id="schema_GasSponsorshipGrant"></a>
+<a id="tocSgassponsorshipgrant"></a>
+<a id="tocsgassponsorshipgrant"></a>
+
+```json
+{
+  "chainId": "string",
+  "granter": "string",
+  "grantee": "string",
+  "feeDenom": "string",
+  "spendLimit": "string",
+  "expiresAt": "string",
+  "allowedMessages": [
+    "string"
+  ],
+  "status": "PENDING",
+  "transactionHash": "string",
+  "gasLimit": "string",
+  "gasPrice": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|chainId|string|true|none|none|
+|granter|string|true|none|none|
+|grantee|string|true|none|none|
+|feeDenom|string|true|none|none|
+|spendLimit|string|true|none|none|
+|expiresAt|string|true|none|none|
+|allowedMessages|[string]|true|none|none|
+|status|[GasSponsorshipGrantStatus](#schemagassponsorshipgrantstatus)|true|none|none|
+|transactionHash|string|false|none|none|
+|gasLimit|string|true|none|none|
+|gasPrice|string|true|none|none|
+
+## GasSponsorshipRequestBody
+
+<a id="schemagassponsorshiprequestbody"></a>
+<a id="schema_GasSponsorshipRequestBody"></a>
+<a id="tocSgassponsorshiprequestbody"></a>
+<a id="tocsgassponsorshiprequestbody"></a>
+
+```json
+{
+  "address": "string",
+  "injectiveAddress": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|address|string|true|none|none|
+|injectiveAddress|string|true|none|none|
 
 ## HeightResponse
 
