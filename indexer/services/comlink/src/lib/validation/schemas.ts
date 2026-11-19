@@ -9,6 +9,11 @@ import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
 import { SigninMethod } from '../../types';
+import {
+  DYDX_ADDRESS_PREFIX,
+  INJECTIVE_ADDRESS_PREFIX,
+  isValidAccountAddress,
+} from '../gas-sponsorship/addresses';
 
 const addressSchema = {
   isString: true as const,
@@ -450,6 +455,25 @@ export const CheckAppleLoginRedirectSchema = checkSchema(appleLoginRedirectSchem
 export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
 
 export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
+
+export const CheckGasSponsorshipSchema = checkSchema({
+  // The dYdX address the deposit is for. Named `address` so that the compliance check, which
+  // reads the address from this field, applies to it.
+  address: {
+    in: ['body'],
+    custom: {
+      options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
+    },
+    errorMessage: 'address must be a valid dydx address',
+  },
+  injectiveAddress: {
+    in: ['body'],
+    custom: {
+      options: (address: unknown) => isValidAccountAddress(address, INJECTIVE_ADDRESS_PREFIX),
+    },
+    errorMessage: 'injectiveAddress must be a valid Injective address',
+  },
+});
 
 export const CheckZeroPaymentsOptionalParamSchema = checkSchema({
   showZeroPayments: checkZeroPaymentsOptionalParamSchema,

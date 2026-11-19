@@ -14,6 +14,7 @@ const layer2Tables = [
   'turnkey_users',
   'permission_approval',
   'bridge_information',
+  'gas_sponsorships',
 ];
 
 const layer1Tables = [

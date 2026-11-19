@@ -939,3 +939,12 @@ export interface TradeHistoryResponseObject {
 export interface TradeHistoryResponse extends PaginationResponse {
   tradeHistory: TradeHistoryResponseObject[],
 }
+
+/* ------- GAS SPONSORSHIP TYPES ------- */
+
+export interface GasSponsorshipRequestBody {
+  // The dYdX address the deposit is for.
+  address: string,
+  // The Injective address that will send the deposit, and so pay its fee from the allowance.
+  injectiveAddress: string,
+}

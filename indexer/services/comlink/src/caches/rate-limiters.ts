@@ -122,3 +122,14 @@ export function getFundingRateLimiter(): RateLimiterRedis {
   });
 }
 export const fundingRateLimiter: RateLimiterRedis = getFundingRateLimiter();
+
+// Rate-limiter for /gasSponsorship endpoint, limits per IP
+export function getGasSponsorshipRateLimiter(): RateLimiterRedis {
+  return new RateLimiterRedis({
+    storeClient: ratelimitRedis.client,
+    points: config.RATE_LIMIT_GAS_SPONSORSHIP_POINTS,
+    duration: config.RATE_LIMIT_GAS_SPONSORSHIP_DURATION_SECONDS,
+    keyPrefix: `${config.SERVICE_NAME}/gasSponsorship`,
+  });
+}
+export const gasSponsorshipRateLimiter: RateLimiterRedis = getGasSponsorshipRateLimiter();
