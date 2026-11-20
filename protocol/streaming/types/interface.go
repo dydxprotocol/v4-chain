@@ -1,6 +1,8 @@
 package types
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -71,4 +73,8 @@ type FullNodeStreamingManager interface {
 
 type OutgoingMessageSender interface {
 	Send(*clobtypes.StreamOrderbookUpdatesResponse) error
+	// Context returns the context associated with the underlying stream/connection.
+	// Subscribe watches this to detect a client disconnect independently of
+	// whether any updates are ever sent to it.
+	Context() context.Context
 }
