@@ -37,8 +37,10 @@ describe('rateLimit', () => {
   let res: any;
   let next: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     config.RATE_LIMIT_ENABLED = true;
+    // Limiters skip the store until the client is ready, so wait for the connection.
+    await ratelimitRedis.connect();
   });
 
   beforeEach(() => {
@@ -600,11 +602,6 @@ describe('rateLimit', () => {
   });
 
   describe('reserveNewSuborgSlot', () => {
-    // The slot check refuses while the client is disconnected, so wait for the connection.
-    beforeAll(async () => {
-      await ratelimitRedis.connect();
-    });
-
     it('refuses once the global cap is used up', async () => {
       const increment = jest.spyOn(stats, 'increment');
       for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_POINTS; i += 1) {
@@ -630,22 +627,39 @@ describe('rateLimit', () => {
       await expect(reserveNewSuborgSlot('203.0.113.7')).resolves.toBeUndefined();
     });
 
-    it('refuses at once, without touching the store, when Redis is disconnected', async () => {
+    it('refuses at once, without touching the store, when Redis is not ready', async () => {
       const consume = jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume');
       const client: any = ratelimitRedis.client;
-      const connected: boolean = client.connected;
-      client.connected = false;
+      const ready: boolean = client.ready;
+      client.ready = false;
       try {
         await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
         expect(consume).not.toHaveBeenCalled();
       } finally {
-        client.connected = connected;
+        client.ready = ready;
       }
     });
 
     it('fails closed when the rate-limit store errors', async () => {
       jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume').mockRejectedValueOnce(new Error('redis down'));
       await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+    });
+  });
+
+  describe('rate-limit store not ready', () => {
+    it('lets the request through without calling the store', async () => {
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      const consume = jest.spyOn(defaultRateLimiter, 'consume');
+      client.ready = false;
+      req.headers = defaultHeaders;
+      try {
+        await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(consume).not.toHaveBeenCalled();
+      } finally {
+        client.ready = ready;
+      }
     });
   });
 

@@ -1,4 +1,6 @@
-import { RequestMethod } from '../../../src/types';
+import { validationResult } from 'express-validator';
+import { CheckSignInSchema } from '../../../src/lib/validation/schemas';
+import { RequestMethod, SigninMethod } from '../../../src/types';
 import { getQueryString, sendRequestToApp } from '../../helpers/helpers';
 import { schemaTestApp } from './helpers';
 import request from 'supertest';
@@ -10,6 +12,29 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 
 describe('schemas', () => {
+  describe('CheckSignInSchema magicLink', () => {
+    const errorsFor = async (magicLink: string) => {
+      const req: any = {
+        body: {
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'user@example.com',
+          targetPublicKey: 'target-public-key',
+          magicLink,
+        },
+      };
+      await Promise.all(CheckSignInSchema.map((chain) => chain.run(req)));
+      return validationResult(req).array().map((e) => e.msg);
+    };
+
+    it('accepts a link on the allowed origin', async () => {
+      expect(await errorsFor('https://dydx.trade/?token')).toEqual([]);
+    });
+
+    it('rejects a link outside the allowed origin before any limiter runs', async () => {
+      expect(await errorsFor('https://example.com/?token')).toContain('Invalid magic link template');
+    });
+  });
+
   const positiveNonInteger: number = 3.2;
   const negativeInteger: number = -1;
   const zeroInteger: number = 0;

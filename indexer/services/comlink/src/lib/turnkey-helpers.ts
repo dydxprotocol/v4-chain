@@ -7,7 +7,7 @@ import { decodeJwt } from 'jose';
 import { Address, checksumAddress } from 'viem';
 
 import {
-  ratelimitRedis,
+  isRateLimitStoreReady,
   turnkeyNewSuborgGlobalLimiter,
   turnkeyNewSuborgIpLimiter,
 } from '../caches/rate-limiters';
@@ -400,10 +400,9 @@ export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
   }
   let limit: 'store' | 'ip' | 'global' = 'store';
   try {
-    // node-redis 2.8 queues commands while disconnected, so consume() would hang instead of
-    // failing; rate-limiter-flexible's rejectIfRedisNotReady cannot detect this client.
-    if (!ratelimitRedis.client.connected) {
-      throw new Error('Rate-limit store not connected');
+    // rate-limiter-flexible's rejectIfRedisNotReady cannot detect node-redis 2.8, so check here.
+    if (!isRateLimitStoreReady()) {
+      throw new Error('Rate-limit store not ready');
     }
     limit = 'ip';
     if (clientIp !== undefined && !isIndexerIp(clientIp)) {
@@ -432,26 +431,6 @@ export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
     }
     throw new TurnkeyError('Sign-up is temporarily unavailable, please try again later');
   }
-}
-
-/**
- * Checks a client-supplied magic link against the allowed origin and path prefix.
- */
-export function isAllowedMagicLink(magicLink: string, allowed: string): boolean {
-  let link: URL;
-  let allowedUrl: URL;
-  try {
-    link = new URL(magicLink);
-    allowedUrl = new URL(allowed);
-  } catch {
-    return false;
-  }
-  // Turnkey emails the raw string, so require it to be in canonical form.
-  return link.href === magicLink &&
-    link.username === '' &&
-    link.password === '' &&
-    link.origin === allowedUrl.origin &&
-    link.pathname.startsWith(allowedUrl.pathname);
 }
 
 /**

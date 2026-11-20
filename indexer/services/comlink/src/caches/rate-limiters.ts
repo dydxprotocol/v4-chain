@@ -10,6 +10,11 @@ export const ratelimitRedis: {
 } = redisLib.createRedisClient(
   config.RATE_LIMIT_REDIS_URL, config.REDIS_RECONNECT_TIMEOUT_MS,
 );
+// node-redis 2.8 queues commands while Redis is unreachable, so a limiter that calls it then
+// hangs the request; callers check this first and apply their own policy instead.
+export function isRateLimitStoreReady(): boolean {
+  return (ratelimitRedis.client as RedisClient & { ready: boolean }).ready;
+}
 
 export function getDefaultRateLimiter(): RateLimiterRedis {
   return new RateLimiterRedis({

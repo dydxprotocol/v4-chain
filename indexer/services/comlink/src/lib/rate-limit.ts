@@ -3,6 +3,7 @@ import express from 'express';
 import _ from 'lodash';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 
+import { isRateLimitStoreReady } from '../caches/rate-limiters';
 import config from '../config';
 import { create4xxResponse } from './helpers';
 import { getIpAddr, isIndexerIp } from './utils';
@@ -30,7 +31,9 @@ export function rateLimiterMiddleware(
 
     const ipAddr: string | undefined = getIpAddr(req);
 
-    if (ipAddr === undefined) {
+    // Store errors already fail open below; without this, a Redis outage hangs the request in
+    // the client's offline queue instead of reaching that path.
+    if (ipAddr === undefined || !isRateLimitStoreReady()) {
       return next();
     }
 

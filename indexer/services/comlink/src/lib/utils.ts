@@ -40,6 +40,26 @@ export function ipRateLimitKey(ipAddress: string): string {
   return `${values.slice(0, 4).map((v) => v.toString(16)).join(':')}::/64`;
 }
 
+/**
+ * Checks a client-supplied magic link against the allowed origin and path prefix.
+ */
+export function isAllowedMagicLink(magicLink: string, allowed: string): boolean {
+  let link: URL;
+  let allowedUrl: URL;
+  try {
+    link = new URL(magicLink);
+    allowedUrl = new URL(allowed);
+  } catch {
+    return false;
+  }
+  // Turnkey emails the raw string, so require it to be in canonical form.
+  return link.href === magicLink &&
+    link.username === '' &&
+    link.password === '' &&
+    link.origin === allowedUrl.origin &&
+    link.pathname.startsWith(allowedUrl.pathname);
+}
+
 export function getIpAddr(req: express.Request): string | undefined {
   const {
     'cf-connecting-ip': cloudflareIP,

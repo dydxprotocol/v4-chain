@@ -4,7 +4,8 @@ import { TurnkeyController, turnkeyEmailKey } from '../../../../src/controllers/
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { SigninMethod } from '../../../../src/types';
 import { PolicyEngine } from '../../../../src/helpers/policy-engine';
-import { extractEmailFromOidcToken, isAllowedMagicLink } from '../../../../src/lib/turnkey-helpers';
+import { extractEmailFromOidcToken } from '../../../../src/lib/turnkey-helpers';
+import { isAllowedMagicLink } from '../../../../src/lib/utils';
 import { TurnkeyError } from '../../../../src/lib/errors';
 import { turnkeyNewSuborgGlobalLimiter } from '../../../../src/caches/rate-limiters';
 import config from '../../../../src/config';
