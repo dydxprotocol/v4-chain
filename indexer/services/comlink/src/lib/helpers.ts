@@ -53,6 +53,7 @@ import {
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
 import { InvalidParamError, NotFoundError, TurnkeyError } from './errors';
+import { createQueryTimeoutResponse, isQueryCanceledError } from './query-timeout';
 
 /* ------- GENERIC HELPERS ------- */
 
@@ -78,6 +79,15 @@ export function handleControllerError(
   }
   if (error instanceof TurnkeyError) {
     return handleTurnkeyError(error, res);
+  }
+  if (isQueryCanceledError(error)) {
+    logger.warning({
+      at,
+      message: 'Query cancelled by statement timeout',
+      params: JSON.stringify(req.params),
+      query: JSON.stringify(req.query),
+    });
+    return createQueryTimeoutResponse(res);
   }
   return handleInternalServerError(
     at,

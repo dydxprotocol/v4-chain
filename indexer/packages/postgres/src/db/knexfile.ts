@@ -13,7 +13,17 @@ if (!SUPPORTED_ENVIRONMENTS.includes(environment)) {
   throw new Error(`Unknown node environment ${environment}`);
 }
 
-export function getConfigForHost(host: string) : Knex.Config {
+export function getSessionSettingsSql(statementTimeoutMs: number): string {
+  const settings: string[] = [
+    `SET idle_in_transaction_session_timeout = ${config.PG_IDLE_IN_TX_TIMEOUT_MS}`,
+  ];
+  if (statementTimeoutMs > 0) {
+    settings.push(`SET statement_timeout = ${statementTimeoutMs}`);
+  }
+  return settings.join('; ');
+}
+
+export function getConfigForHost(host: string, statementTimeoutMs: number = 0) : Knex.Config {
   return {
     client: 'pg',
     connection: {
@@ -32,7 +42,7 @@ export function getConfigForHost(host: string) : Knex.Config {
       // transaction can't pin the vacuum xmin horizon (0 = disabled).
       afterCreate: (conn: { query: Function }, done: Function): void => {
         conn.query(
-          `SET idle_in_transaction_session_timeout = ${config.PG_IDLE_IN_TX_TIMEOUT_MS}`,
+          getSessionSettingsSql(statementTimeoutMs),
           (err: Error | null) => done(err, conn),
         );
       },
@@ -46,5 +56,7 @@ export function getConfigForHost(host: string) : Knex.Config {
 
 export const knexPrimaryConfigForEnv: Knex.Config = getConfigForHost(config.DB_HOSTNAME);
 
-export const knexReadReplicaConfigForEnv:
-Knex.Config = getConfigForHost(config.DB_READONLY_HOSTNAME);
+export const knexReadReplicaConfigForEnv: Knex.Config = getConfigForHost(
+  config.DB_READONLY_HOSTNAME,
+  config.PG_READ_REPLICA_STATEMENT_TIMEOUT_MS,
+);
