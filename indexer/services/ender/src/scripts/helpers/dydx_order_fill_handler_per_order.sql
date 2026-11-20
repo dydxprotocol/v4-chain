@@ -223,7 +223,8 @@ BEGIN
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
          "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", 
-         "builderFee", "builderAddress", "orderRouterFee", "orderRouterAddress", "positionSizeBefore", "entryPriceBefore", "positionSideBefore")
+         "builderFee", "builderAddress", "orderRouterFee", "orderRouterAddress", "positionSizeBefore", "entryPriceBefore", "positionSideBefore",
+         "closedPnl")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -247,7 +248,10 @@ BEGIN
             NULLIF(order_router_address, ''),
             snap_size_before,
             snap_entry_before,
-            snap_side_before)
+            snap_side_before,
+            dydx_get_fill_closed_pnl(
+                order_side, fill_amount, maker_price,
+                snap_side_before, snap_size_before, snap_entry_before))
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */

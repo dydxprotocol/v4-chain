@@ -96,6 +96,7 @@ export default class FillModel extends Model {
         positionSizeBefore: { type: ['string', 'null'], pattern: NumericPattern, default: null },
         entryPriceBefore: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
         positionSideBefore: { type: ['string', 'null'], enum: [...Object.values(PositionSide), null], default: null },
+        closedPnl: { type: ['string', 'null'], pattern: NumericPattern, default: null },
       },
     };
   }
@@ -132,6 +133,7 @@ export default class FillModel extends Model {
       positionSizeBefore: 'string',
       entryPriceBefore: 'string',
       positionSideBefore: 'string',
+      closedPnl: 'string',
     };
   }
 
@@ -182,4 +184,6 @@ export default class FillModel extends Model {
   entryPriceBefore?: string;
 
   positionSideBefore?: PositionSide;
+
+  closedPnl?: string;
 }
