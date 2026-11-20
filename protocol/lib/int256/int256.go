@@ -171,12 +171,19 @@ func mulExp10(z *uint256.Int, x *uint256.Int, y int64) *uint256.Int {
 	} else {
 		abs = uint64(y)
 	}
+	// 10^78 exceeds 2^256, so 10^abs wraps around for abs >= 78 (both in
+	// exp10Lookup and in the Exp fallback below). Every uint256 value is below
+	// 2^256 < 10^78, so x / 10^abs is exactly 0 for any x once abs >= 78. Guard
+	// the division path here to avoid dividing by a wrapped, incorrect power.
+	if y < 0 && abs >= 78 {
+		return z.Clear()
+	}
 	lookup, ok := exp10Lookup[abs]
 	var exp10 *uint256.Int
 	if ok {
 		exp10 = &lookup
 	} else {
-		exp10.Exp((*uint256.Int)(TenInt256), uint256.NewInt(abs))
+		exp10 = new(uint256.Int).Exp((*uint256.Int)(TenInt256), uint256.NewInt(abs))
 	}
 	if y < 0 {
 		return z.Div(x, exp10)
