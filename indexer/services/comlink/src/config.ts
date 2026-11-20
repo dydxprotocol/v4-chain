@@ -187,6 +187,61 @@ export const configSchema = {
   // Amplitude configuration
   AMPLITUDE_API_KEY: parseString({ default: '' }),
   AMPLITUDE_SERVER_URL: parseString({ default: 'https://api.eu.amplitude.com/2/httpapi' }),
+
+  // Gas sponsorship: fee allowances on Injective, so that an address holding USDC but no INJ can
+  // send that USDC to the dYdX chain. Off by default; this flag is also the kill switch. Turning
+  // it on additionally needs the REST URL and the sponsor public key below.
+  GAS_SPONSORSHIP_ENABLED: parseBoolean({ default: false }),
+  // REST (LCD) endpoint of an Injective node.
+  GAS_SPONSORSHIP_INJECTIVE_REST_URL: parseString({ default: '' }),
+  GAS_SPONSORSHIP_INJECTIVE_CHAIN_ID: parseString({ default: 'injective-1' }),
+  // Compressed secp256k1 public key, in hex, of the account that sponsors gas. Its private key
+  // is held in the Turnkey parent organization and signs through the TURNKEY_API_* credentials.
+  GAS_SPONSORSHIP_SPONSOR_PUBLIC_KEY: parseString({ default: '' }),
+  // How Turnkey identifies the sponsor key: a wallet account address, a private key address, or
+  // a private key id. Defaults to the key's Ethereum address.
+  GAS_SPONSORSHIP_TURNKEY_SIGN_WITH: parseString({ default: '' }),
+  GAS_SPONSORSHIP_FEE_DENOM: parseString({ default: 'inj' }),
+  // Denom of USDC on Injective. An address must hold at least the minimum balance of it, in its
+  // smallest unit (6 decimals), to be sponsored.
+  GAS_SPONSORSHIP_USDC_DENOM: parseString({
+    default: 'erc20:0xa00C59fF5a080D2b954d0c75e46E22a0c371235a',
+  }),
+  GAS_SPONSORSHIP_MIN_USDC_BALANCE: parseBigInt({ default: BigInt(1_000_000) }),
+  // Comma-separated message type URLs the allowance may pay for.
+  GAS_SPONSORSHIP_ALLOWED_MESSAGES: parseString({
+    default: '/ibc.applications.transfer.v1.MsgTransfer',
+  }),
+  // An allowance covers this many transactions at this gas limit, priced at the current base fee
+  // times the buffer.
+  GAS_SPONSORSHIP_TRANSFER_GAS_LIMIT: parseInteger({ default: 450_000 }),
+  GAS_SPONSORSHIP_TRANSFER_ATTEMPTS: parseInteger({ default: 3 }),
+  GAS_SPONSORSHIP_GAS_PRICE_BUFFER_PERCENT: parseInteger({ default: 150 }),
+  // Sponsorship pauses while the base fee per unit of gas, in the smallest unit of the fee denom,
+  // is above this. Bounds the size of an allowance. The default is ten times the minimum.
+  GAS_SPONSORSHIP_MAX_BASE_FEE: parseBigInt({ default: BigInt(1_600_000_000) }),
+  // Gas limit of the transaction that grants the allowance.
+  GAS_SPONSORSHIP_GRANT_GAS_LIMIT: parseInteger({ default: 250_000 }),
+  GAS_SPONSORSHIP_GRANT_EXPIRY_SECONDS: parseInteger({ default: 86_400 }),
+  // How long after being given an allowance an address must wait for another.
+  GAS_SPONSORSHIP_COOLDOWN_SECONDS: parseInteger({ default: 3_600 }),
+  // The most that may be committed in any 24 hours, in the smallest unit of the fee denom,
+  // counting each allowance in full plus the fee paid to grant it. The default is 1 INJ.
+  GAS_SPONSORSHIP_DAILY_BUDGET: parseBigInt({ default: BigInt('1000000000000000000') }),
+  // The sponsor's transactions are serialized with a Redis lock. The expiry must exceed the
+  // longest a single grant can take, including the wait for confirmation.
+  GAS_SPONSORSHIP_LOCK_EXPIRY_MS: parseInteger({ default: 60_000 }),
+  GAS_SPONSORSHIP_LOCK_WAIT_MS: parseInteger({ default: 10_000 }),
+  // How long to wait for the grant transaction to be included before reporting it as pending.
+  GAS_SPONSORSHIP_CONFIRMATION_TIMEOUT_MS: parseInteger({ default: 15_000 }),
+  GAS_SPONSORSHIP_CONFIRMATION_POLL_MS: parseInteger({ default: 500 }),
+  // Timeout of each request to a node.
+  GAS_SPONSORSHIP_REQUEST_TIMEOUT_MS: parseInteger({ default: 5_000 }),
+  // REST endpoint of a dYdX chain node. When set, sponsorship pauses while the chain is not
+  // accepting USDC deposits from Injective. When empty, that check is skipped.
+  GAS_SPONSORSHIP_DYDX_REST_URL: parseString({ default: '' }),
+  RATE_LIMIT_GAS_SPONSORSHIP_POINTS: parseInteger({ default: 5 }),
+  RATE_LIMIT_GAS_SPONSORSHIP_DURATION_SECONDS: parseInteger({ default: 60 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
