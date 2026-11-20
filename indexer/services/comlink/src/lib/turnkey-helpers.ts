@@ -1,11 +1,16 @@
 import { randomBytes, randomUUID } from 'crypto';
 
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes } from '@turnkey/sdk-server';
 import { decodeJwt } from 'jose';
 import { Address, checksumAddress } from 'viem';
 
+import {
+  isRateLimitStoreReady,
+  turnkeyNewSuborgGlobalLimiter,
+  turnkeyNewSuborgIpLimiter,
+} from '../caches/rate-limiters';
 import config from '../config';
 import { TURNKEY_EMAIL_CUSTOMIZATION } from '../constants';
 import { getSmartAccountAddress } from '../helpers/alchemy-helpers';
@@ -16,6 +21,7 @@ import {
   TurnkeyAuthResponse,
 } from '../types';
 import { TurnkeyError } from './errors';
+import { ipRateLimitKey, isIndexerIp } from './utils';
 
 /**
  * Helper class for Turnkey-specific operations
@@ -114,6 +120,8 @@ export class TurnkeyHelpers {
         attestation: params.attestation,
       });
     }
+
+    await reserveNewSuborgSlot(params.clientIp);
 
     const subOrg = await this.turnkeyApiClient.createSubOrganization({
       subOrganizationName: TurnkeyHelpers.generateRandomString('uuid'),
@@ -264,6 +272,7 @@ export class TurnkeyHelpers {
     userEmail: string,
     targetPublicKey: string,
     magicLink?: string,
+    clientIp?: string,
   ): Promise<TurnkeyCreateSuborgResponse> {
     // lowercase email address.
     const lowerEmail = userEmail.trim().toLowerCase();
@@ -273,6 +282,7 @@ export class TurnkeyHelpers {
     if (!suborg) {
       suborg = await this.createSuborg({
         email: lowerEmail,
+        clientIp,
       });
     }
 
@@ -308,6 +318,7 @@ export class TurnkeyHelpers {
     provider: string,
     oidcToken: string,
     targetPublicKey: string,
+    clientIp?: string,
   ) {
     // Extract email from Google OIDC token if available
     const extractedEmail = extractEmailFromOidcToken(oidcToken, provider)?.toLowerCase();
@@ -332,6 +343,7 @@ export class TurnkeyHelpers {
         providerName: provider,
         oidcToken,
         email: extractedEmail, // Include extracted email when creating suborg
+        clientIp,
       });
     }
 
@@ -355,6 +367,7 @@ export class TurnkeyHelpers {
     challenge: string,
     authenticatorName: string,
     attestation: TurnkeyApiTypes['v1Attestation'],
+    clientIp?: string,
   ): Promise<TurnkeyAuthResponse> {
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
       credentialId: attestation.credentialId,
@@ -364,6 +377,7 @@ export class TurnkeyHelpers {
         authenticatorName,
         challenge,
         attestation,
+        clientIp,
       });
     }
 
@@ -372,6 +386,51 @@ export class TurnkeyHelpers {
       salt: suborg.salt,
       dydxAddress: suborg.dydxAddress || '',
     };
+  }
+}
+
+/**
+ * Takes one slot from the caller's and then the global new sub-org budget. The per-network budget
+ * (IPv4 address or IPv6 /48) bounds what one network can take, but callers spread over enough
+ * networks can still use up the global cap. Fails closed: a Redis error also refuses, because an
+ * uncapped burst exhausts the Turnkey org's Create Sub Org limit.
+ */
+export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
+  if (!config.RATE_LIMIT_ENABLED) {
+    return;
+  }
+  let limit: 'store' | 'ip' | 'global' = 'store';
+  try {
+    // rate-limiter-flexible's rejectIfRedisNotReady cannot detect node-redis 2.8, so check here.
+    if (!isRateLimitStoreReady()) {
+      throw new Error('Rate-limit store not ready');
+    }
+    limit = 'ip';
+    if (clientIp !== undefined && !isIndexerIp(clientIp)) {
+      await turnkeyNewSuborgIpLimiter.consume(ipRateLimitKey(clientIp, 48));
+    }
+    limit = 'global';
+    await turnkeyNewSuborgGlobalLimiter.consume('global');
+  } catch (error) {
+    stats.increment(`${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1, {
+      reason: error instanceof Error ? 'store_error' : 'cap_reached',
+      limit,
+    });
+    if (error instanceof Error) {
+      logger.error({
+        at: 'TurnkeyHelpers#reserveNewSuborgSlot',
+        message: 'Rate-limit store error, refusing new Turnkey sub-org',
+        error,
+      });
+    } else {
+      logger.warning({
+        at: 'TurnkeyHelpers#reserveNewSuborgSlot',
+        message: 'New Turnkey sub-org limit reached',
+        limit,
+        clientIp,
+      });
+    }
+    throw new TurnkeyError('Sign-up is temporarily unavailable, please try again later');
   }
 }
 

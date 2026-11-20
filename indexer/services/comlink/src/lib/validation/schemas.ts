@@ -14,6 +14,7 @@ import {
   INJECTIVE_ADDRESS_PREFIX,
   isValidAccountAddress,
 } from '../gas-sponsorship/addresses';
+import { isAllowedMagicLink } from '../utils';
 
 const addressSchema = {
   isString: true as const,
@@ -366,6 +367,16 @@ const signInSchema: Record<string, ParamSchema> = {
     optional: true,
     isString: true,
     errorMessage: 'Magic link must be a string',
+    // Checked here rather than in the controller so a bad link is refused before it counts
+    // against the per-email limit.
+    custom: {
+      options: (value: string) => {
+        if (!isAllowedMagicLink(value, config.TURNKEY_MAGIC_LINK_VALIDATION)) {
+          throw new Error('Invalid magic link template');
+        }
+        return true;
+      },
+    },
   },
   targetPublicKey: {
     in: ['body'],

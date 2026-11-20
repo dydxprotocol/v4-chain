@@ -1,10 +1,14 @@
 import { dbHelpers, TurnkeyUserCreateObject, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient } from '@turnkey/sdk-server';
-import { TurnkeyController } from '../../../../src/controllers/api/v4/turnkey-controller';
+import { TurnkeyController, turnkeyEmailKey } from '../../../../src/controllers/api/v4/turnkey-controller';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { SigninMethod } from '../../../../src/types';
 import { PolicyEngine } from '../../../../src/helpers/policy-engine';
 import { extractEmailFromOidcToken } from '../../../../src/lib/turnkey-helpers';
+import { isAllowedMagicLink } from '../../../../src/lib/utils';
+import { TurnkeyError } from '../../../../src/lib/errors';
+import { turnkeyNewSuborgGlobalLimiter } from '../../../../src/caches/rate-limiters';
+import config from '../../../../src/config';
 
 jest.mock('../../../../src/config', () => ({
   ...jest.requireActual('../../../../src/config'),
@@ -188,6 +192,36 @@ describe('TurnkeyController', () => {
           userEmail: 'test@example.com',
         })).rejects.toThrow();
       });
+
+      it('should not create a sub-org when the new sub-org limit refuses', async () => {
+        config.RATE_LIMIT_ENABLED = true;
+        jest.mocked(mockParentApiClient.createSubOrganization).mockClear();
+        const consume = jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume')
+          .mockRejectedValueOnce(new Error('store down'));
+        try {
+          await expect(controller.signIn({
+            signinMethod: SigninMethod.EMAIL,
+            userEmail: 'new-user-capped@example.com',
+            targetPublicKey: 'target-public-key',
+          })).rejects.toThrow(TurnkeyError);
+          expect(jest.mocked(mockParentApiClient.createSubOrganization)).not.toHaveBeenCalled();
+        } finally {
+          consume.mockRestore();
+          config.RATE_LIMIT_ENABLED = false;
+        }
+      });
+
+      it('should reject a magic link outside the allowed origin', async () => {
+        jest.mocked(mockParentApiClient.emailAuth).mockClear();
+
+        await expect(controller.signIn({
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'test@example.com',
+          targetPublicKey: 'target-public-key',
+          magicLink: 'https://example.com/?token',
+        })).rejects.toThrow(TurnkeyError);
+        expect(jest.mocked(mockParentApiClient.emailAuth)).not.toHaveBeenCalled();
+      });
     });
 
     describe('Social signin', () => {
@@ -348,6 +382,55 @@ describe('TurnkeyController', () => {
         user?.suborg_id,
       );
     });
+  });
+});
+
+describe('turnkeyEmailKey', () => {
+  const key = (body: any) => turnkeyEmailKey({ body } as any);
+
+  it('gives case and whitespace variants of one email the same fixed-size key', () => {
+    const a = key({ signinMethod: SigninMethod.EMAIL, userEmail: ' User@Example.com ' });
+    const b = key({ signinMethod: SigninMethod.EMAIL, userEmail: 'user@example.com' });
+    expect(a).toBe(b);
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('skips non-email sign-ins and non-string emails', () => {
+    expect(key({ signinMethod: SigninMethod.PASSKEY })).toBeUndefined();
+    expect(key({ signinMethod: SigninMethod.EMAIL, userEmail: ['a@example.com'] })).toBeUndefined();
+  });
+});
+
+describe('isAllowedMagicLink', () => {
+  const allowed = 'https://dydx.trade/';
+
+  it.each([
+    'https://dydx.trade/?token',
+    'https://dydx.trade/portfolio?foo=bar&token',
+    'https://dydx.trade/#/trade?token',
+  ])('accepts %s', (link) => {
+    expect(isAllowedMagicLink(link, allowed)).toBe(true);
+  });
+
+  it.each([
+    'https://example.com/?token',
+    'https://user:pass@dydx.trade/?token',
+    'http://dydx.trade/?token',
+    'https://dydx.trade:8443/?token',
+    'https://dydx.trade?token',
+    'https://DYDX.trade/?token',
+    'not a url',
+  ])('rejects %s', (link) => {
+    expect(isAllowedMagicLink(link, allowed)).toBe(false);
+  });
+
+  it('enforces a configured path prefix', () => {
+    expect(isAllowedMagicLink('https://dydx.trade/app/x?token', 'https://dydx.trade/app/')).toBe(true);
+    expect(isAllowedMagicLink('https://dydx.trade/other?token', 'https://dydx.trade/app/')).toBe(false);
+  });
+
+  it('rejects everything when the allowed value is not a URL', () => {
+    expect(isAllowedMagicLink('https://dydx.trade/?token', '')).toBe(false);
   });
 });
 

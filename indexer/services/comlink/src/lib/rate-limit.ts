@@ -1,8 +1,9 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import express from 'express';
 import _ from 'lodash';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 
+import { isRateLimitStoreReady } from '../caches/rate-limiters';
 import config from '../config';
 import { create4xxResponse } from './helpers';
 import { getIpAddr, isIndexerIp } from './utils';
@@ -16,6 +17,11 @@ const EXTERNAL_REQUEST_POINTS: number = 1;
 export function rateLimiterMiddleware(
   rateLimiter: RateLimiterRedis,
   postfixKey?: string,
+  // Overrides the IP-based key; returning undefined skips this limiter for the request.
+  getKey?: (req: express.Request, ipAddr: string) => string | undefined,
+  // Refuse with 503 while the store is not ready, instead of waiting in the client's offline
+  // queue. Opt-in, for routes that must not run unlimited during a Redis outage.
+  refuseWhenStoreNotReady: boolean = false,
 ) {
   return async (
     req: express.Request,
@@ -27,6 +33,13 @@ export function rateLimiterMiddleware(
     }
 
     const ipAddr: string | undefined = getIpAddr(req);
+
+    if (refuseWhenStoreNotReady && !isRateLimitStoreReady()) {
+      stats.increment(`${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1, {
+        key_prefix: rateLimiter.keyPrefix,
+      });
+      return create4xxResponse(res, 'Service temporarily unavailable', 503);
+    }
 
     if (ipAddr === undefined) {
       return next();
@@ -40,8 +53,17 @@ export function rateLimiterMiddleware(
     const pointCost: number = Math.min(getPointCost(ipAddr, req), rateLimiter.points);
 
     // generate redis key
-    const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
-    const redisKey: string = postfix ? ipAddr.concat(postfix) : ipAddr;
+    let redisKey: string;
+    if (getKey) {
+      const key: string | undefined = getKey(req, ipAddr);
+      if (key === undefined) {
+        return next();
+      }
+      redisKey = key;
+    } else {
+      const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
+      redisKey = postfix ? ipAddr.concat(postfix) : ipAddr;
+    }
 
     try {
       const limitRes: RateLimiterRes = await rateLimiter.consume(redisKey, pointCost);

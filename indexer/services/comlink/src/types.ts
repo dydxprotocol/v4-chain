@@ -839,6 +839,8 @@ export interface CreateSuborgParams {
   authenticatorName?: string,
   challenge?: string,
   attestation?: TurnkeyApiTypes['v1Attestation'],
+  // Caller IP for the per-IP new sub-org limit; absent for internal callers.
+  clientIp?: string,
 }
 export interface GetSuborgParams {
   email?: string,

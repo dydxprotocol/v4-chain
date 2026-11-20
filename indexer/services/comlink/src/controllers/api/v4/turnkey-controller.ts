@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
@@ -5,11 +7,15 @@ import express from 'express';
 import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
 import {
-  Controller, Post, Route, Body,
+  Controller, Post, Route, Body, Inject,
 } from 'tsoa';
 import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
-import { defaultRateLimiter } from '../../../caches/rate-limiters';
+import {
+  defaultRateLimiter,
+  turnkeyEmailRateLimiter,
+  turnkeyIpRateLimiter,
+} from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
@@ -18,6 +24,7 @@ import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { extractEmailFromOidcToken, TurnkeyHelpers } from '../../../lib/turnkey-helpers';
+import { getIpAddr, ipRateLimitKey, isAllowedMagicLink } from '../../../lib/utils';
 import { CheckSignInSchema, CheckUploadDydxAddressSchema, CheckAppleLoginRedirectSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -151,6 +158,7 @@ export class TurnkeyController extends Controller {
   @Post('/signin')
   async signIn(
     @Body() body: SignInRequest,
+      @Inject() clientIp?: string,
   ): Promise<TurnkeyAuthResponse> {
     const {
       signinMethod,
@@ -167,14 +175,13 @@ export class TurnkeyController extends Controller {
       if (!userEmail || !targetPublicKey) {
         throw new Error('userEmail and targetPublicKey are required for email signin');
       }
-      if (magicLink) {
-        const isValidMagicLink = magicLink.startsWith(config.TURNKEY_MAGIC_LINK_VALIDATION);
-        if (!isValidMagicLink) {
-          throw new Error('Invalid magic link template');
-        }
+      if (magicLink && !isAllowedMagicLink(magicLink, config.TURNKEY_MAGIC_LINK_VALIDATION)) {
+        throw new TurnkeyError('Invalid magic link template');
       }
       try {
-        const resp = await this.turnkeyHelpers.emailSignin(userEmail, targetPublicKey!, magicLink);
+        const resp = await this.turnkeyHelpers.emailSignin(
+          userEmail, targetPublicKey!, magicLink, clientIp,
+        );
         if (resp.userId === undefined || resp.apiKeyId === undefined) {
           throw new Error('Could not send email auth bundle');
         }
@@ -195,7 +202,9 @@ export class TurnkeyController extends Controller {
         throw new Error('provider, oidcToken, and targetPublicKey are required for social signin');
       }
       try {
-        const resp = await this.turnkeyHelpers.socialSignin(provider, oidcToken, targetPublicKey);
+        const resp = await this.turnkeyHelpers.socialSignin(
+          provider, oidcToken, targetPublicKey, clientIp,
+        );
         return {
           alreadyExists: resp.alreadyExists,
           session: resp.session,
@@ -210,7 +219,9 @@ export class TurnkeyController extends Controller {
         throw new Error('Passkey signin requires challenge and attestation.');
       }
       try {
-        const resp = await this.turnkeyHelpers.passkeySignin(challenge, 'Passkey', attestation);
+        const resp = await this.turnkeyHelpers.passkeySignin(
+          challenge, 'Passkey', attestation, clientIp,
+        );
         return {
           organizationId: resp.organizationId,
           salt: resp.salt,
@@ -230,6 +241,7 @@ export class TurnkeyController extends Controller {
   @Post('/appleLoginRedirect')
   async appleLoginRedirect(
     @Body() body: AppleLoginRedirectRequest,
+      @Inject() clientIp?: string,
   ): Promise<AppleLoginResponse> {
     const { state: publicKey, code } = body;
 
@@ -261,6 +273,7 @@ export class TurnkeyController extends Controller {
         'apple',
         tokenResponse.id_token,
         publicKey,
+        clientIp,
       );
       // Convert social response to TurnkeyAuthResponse format
       const authResponse: TurnkeyAuthResponse = {
@@ -287,11 +300,28 @@ export class TurnkeyController extends Controller {
   }
 }
 
+const turnkeyIpKey = (_req: express.Request, ipAddr: string): string => ipRateLimitKey(ipAddr);
+
+// The Turnkey routes refuse with 503 while the rate-limit store is not ready (last argument
+// below): every sign-in sends an email or creates a sub-org, so they must not run unlimited.
+
+// Normalized the same way as emailSignin, so case and whitespace variants share one bucket;
+// hashed so keys have a fixed size and the shared rate-limit Redis holds no email addresses.
+export const turnkeyEmailKey = (req: express.Request): string | undefined => {
+  const { signinMethod, userEmail } = req.body ?? {};
+  if (signinMethod !== SigninMethod.EMAIL || typeof userEmail !== 'string') {
+    return undefined;
+  }
+  return createHash('sha256').update(userEmail.trim().toLowerCase()).digest('hex');
+};
+
 router.post(
   '/signin',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true),
+  rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey, true),
   ...CheckSignInSchema,
   handleValidationErrors,
+  rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, turnkeyEmailKey, true),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
@@ -310,7 +340,7 @@ router.post(
 
       const controller: TurnkeyController = new TurnkeyController();
 
-      const response: TurnkeyAuthResponse = await controller.signIn(body);
+      const response: TurnkeyAuthResponse = await controller.signIn(body, getIpAddr(req));
 
       return res.send(response);
     } catch (error) {
@@ -332,7 +362,8 @@ router.post(
 
 router.post(
   '/uploadAddress',
-  rateLimiterMiddleware(defaultRateLimiter),
+  rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true),
+  rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey, true),
   ...CheckUploadDydxAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
@@ -372,7 +403,7 @@ router.get(
     try {
       const query = matchedData(req) as AppleLoginRedirectRequest;
       const controller: TurnkeyController = new TurnkeyController();
-      const response = await controller.appleLoginRedirect(query);
+      const response = await controller.appleLoginRedirect(query, getIpAddr(req));
 
       if (response.success && response.encodedPayload) {
         const encodedPayload = encodeURIComponent(response.encodedPayload);

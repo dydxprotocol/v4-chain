@@ -1,5 +1,7 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
+import { createClient } from 'redis';
 import config from '../../src/config';
 import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
 import {
@@ -20,8 +22,14 @@ import {
   getHistoricalPnlRateLimiter,
   getPnlRateLimiter,
   getFundingRateLimiter,
+  turnkeyEmailRateLimiter,
+  turnkeyIpRateLimiter,
+  turnkeyNewSuborgGlobalLimiter,
 } from '../../src/caches/rate-limiters';
+import { TurnkeyError } from '../../src/lib/errors';
+import { reserveNewSuborgSlot } from '../../src/lib/turnkey-helpers';
 import * as utils from '../../src/lib/utils';
+import { ipRateLimitKey } from '../../src/lib/utils';
 
 describe('rateLimit', () => {
   const defaultHeaders: IncomingHttpHeaders = { 'cf-connecting-ip': '0.0.0.0' };
@@ -30,8 +38,10 @@ describe('rateLimit', () => {
   let res: any;
   let next: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     config.RATE_LIMIT_ENABLED = true;
+    // Limiters skip the store until the client is ready, so wait for the connection.
+    await ratelimitRedis.connect();
   });
 
   beforeEach(() => {
@@ -549,6 +559,175 @@ describe('rateLimit', () => {
       expect(resetTime - currentTime).toBeGreaterThan(0);
 
       config.RATE_LIMIT_ORDERS_DURATION_SECONDS = originalDuration;
+    });
+  });
+
+  describe('ipRateLimitKey', () => {
+    it.each([
+      ['1.2.3.4', '1.2.3.4'],
+      ['::ffff:1.2.3.4', '1.2.3.4'],
+      ['::ffff:102:304', '1.2.3.4'],
+      ['2a03:4000:13:1a88:4403:f7ff:fe05:9e08', '2a03:4000:13:1a88::/64'],
+      ['2a03:4000:13:1a88::1', '2a03:4000:13:1a88::/64'],
+      ['2001:db8::1', '2001:db8:0:0::/64'],
+      ['2001:0DB8:0000:0001:0:0:0:1', '2001:db8:0:1::/64'],
+    ])('maps %s to %s', (ip, key) => {
+      expect(ipRateLimitKey(ip)).toBe(key);
+    });
+
+    it.each([
+      ['2a03:4000:13:1a88:4403:f7ff:fe05:9e08', '2a03:4000:13::/48'],
+      ['2a03:4000:13:ffff::1', '2a03:4000:13::/48'],
+      ['1.2.3.4', '1.2.3.4'],
+    ])('maps %s to %s at /48', (ip, key) => {
+      expect(ipRateLimitKey(ip, 48)).toBe(key);
+    });
+  });
+
+  describe('custom key', () => {
+    it('shares one bucket across a /64 and blocks past the limit', async () => {
+      const limit: number = config.RATE_LIMIT_TURNKEY_IP_POINTS;
+      const getKey = (_r: any, ip: string) => ipRateLimitKey(ip);
+      for (let i = 0; i < limit; i += 1) {
+        req.headers = { 'cf-connecting-ip': `2a03:4000:13:1a88::${i + 1}` };
+        await rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, getKey)(req, res, next);
+      }
+      expect(next).toHaveBeenCalledTimes(limit);
+
+      req.headers = { 'cf-connecting-ip': '2a03:4000:13:1a88:ffff::1' };
+      await rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, getKey)(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(next).toHaveBeenCalledTimes(limit);
+    });
+
+    it('skips the limiter when the key function returns undefined', async () => {
+      req.headers = defaultHeaders;
+      await rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, () => undefined)(
+        req, res, next,
+      );
+      expect(res.set).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('reserveNewSuborgSlot', () => {
+    it('refuses once the global cap is used up', async () => {
+      const increment = jest.spyOn(stats, 'increment');
+      for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_GLOBAL_POINTS; i += 1) {
+        await reserveNewSuborgSlot();
+      }
+      await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+      expect(increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1,
+        { reason: 'cap_reached', limit: 'global' },
+      );
+    });
+
+    it('limits new sub-orgs per caller before the global cap', async () => {
+      for (let i = 0; i < config.RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_POINTS; i += 1) {
+        await reserveNewSuborgSlot(`2a03:4000:13:1a88::${i + 1}`);
+      }
+      const increment = jest.spyOn(stats, 'increment');
+      await expect(reserveNewSuborgSlot('2a03:4000:13:1a88::ff')).rejects.toThrow(TurnkeyError);
+      // Another /64 in the same /48 shares the budget.
+      await expect(reserveNewSuborgSlot('2a03:4000:13:ffff::1')).rejects.toThrow(TurnkeyError);
+      expect(increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1,
+        { reason: 'cap_reached', limit: 'ip' },
+      );
+      await expect(reserveNewSuborgSlot('203.0.113.7')).resolves.toBeUndefined();
+    });
+
+    it('refuses at once, without touching the store, when Redis is not ready', async () => {
+      const consume = jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume');
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      client.ready = false;
+      try {
+        await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+        expect(consume).not.toHaveBeenCalled();
+      } finally {
+        client.ready = ready;
+      }
+    });
+
+    it('fails closed when the rate-limit store errors', async () => {
+      jest.spyOn(turnkeyNewSuborgGlobalLimiter, 'consume').mockRejectedValueOnce(new Error('redis down'));
+      await expect(reserveNewSuborgSlot()).rejects.toThrow(TurnkeyError);
+    });
+  });
+
+  describe('rate-limit store not ready', () => {
+    it('refuses with 503, without touching the store, when the route opts in', async () => {
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      const consume = jest.spyOn(defaultRateLimiter, 'consume');
+      const increment = jest.spyOn(stats, 'increment');
+      client.ready = false;
+      req.headers = defaultHeaders;
+      try {
+        await rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true)(req, res, next);
+        expect(res.status).toHaveBeenCalledWith(503);
+        expect(increment).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1,
+          { key_prefix: defaultRateLimiter.keyPrefix },
+        );
+        expect(next).not.toHaveBeenCalled();
+        expect(consume).not.toHaveBeenCalled();
+      } finally {
+        client.ready = ready;
+      }
+    });
+
+    it('still uses the store when the route does not opt in', async () => {
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      // Mocked: with ready=false a real command would wait in the client's offline queue.
+      const consume = jest.spyOn(defaultRateLimiter, 'consume')
+        .mockResolvedValue({ remainingPoints: 1, msBeforeNext: 1000 } as any);
+      client.ready = false;
+      req.headers = defaultHeaders;
+      try {
+        await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+        expect(consume).toHaveBeenCalledTimes(1);
+      } finally {
+        client.ready = ready;
+      }
+    });
+  });
+
+  describe('rate-limit store reconnects', () => {
+    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
+      const deadline: number = Date.now() + ms;
+      while (Date.now() < deadline) {
+        if (check()) {
+          return true;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      return check();
+    };
+    const unreachableClient = (connectTimeout: number): any => {
+      const client: any = createClient({ host: '127.0.0.1', port: 1, retry_strategy: () => 10 });
+      client.on('error', () => {});
+      client.connect_timeout = connectTimeout;
+      return client;
+    };
+
+    it('never gives up on the rate-limit client', () => {
+      expect((ratelimitRedis.client as any).connect_timeout).toBe(Infinity);
+    });
+
+    it('node-redis gives up once retries add up to connect_timeout, unless it is Infinity', async () => {
+      const capped: any = unreachableClient(50);
+      const uncapped: any = unreachableClient(Infinity);
+      try {
+        expect(await waitFor(() => capped.closing, 2000)).toBe(true);
+        expect(await waitFor(() => uncapped.closing, 300)).toBe(false);
+      } finally {
+        capped.end(false);
+        uncapped.end(false);
+      }
     });
   });
 
