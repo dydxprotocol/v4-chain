@@ -112,6 +112,12 @@ export class Subscriptions {
   // so a late-resolving request can tell that the connection it belongs to is gone.
   private connectionEpochs: Map<string, number>;
   private nextConnectionEpoch: number;
+  // connectionId -> (channel + id -> in-flight request). Unsubscribe (or a newer
+  // subscribe for the same channel+id) sets `cancelled` so the awaiting request
+  // does not create subscription state. Per-subscription, not per-connection:
+  // invalidating the connection epoch on unsubscribe would also drop every other
+  // in-flight subscribe on the same socket.
+  private inFlightSubscribes: Map<string, Map<string, { cancelled: boolean }>>;
   // Connections that exceeded the abuse allowance since the last metrics emit. Counted whether
   // or not the drop is enabled: the size of this set is how many connections the drop would
   // disconnect per interval, which is the number that decides whether it is safe to enable.
@@ -145,6 +151,7 @@ export class Subscriptions {
     this.subsByChannelByConnectionId = {};
     this.connectionEpochs = new Map();
     this.nextConnectionEpoch = 1;
+    this.inFlightSubscribes = new Map();
     this.subscriptionLimitAbuseCandidates = new Set();
     this.subscriptionLimitAbuseOverflow = 0;
     this.forwardMessage = undefined;
@@ -217,6 +224,102 @@ export class Subscriptions {
    */
   private isStaleConnection(connectionId: string, epoch: number): boolean {
     return this.connectionEpochs.get(connectionId) !== epoch;
+  }
+
+  private inFlightSubKey(channel: Channel, subscriptionId: string): string {
+    return `${channel}\0${subscriptionId}`;
+  }
+
+  private startInFlightSubscribe(
+    connectionId: string,
+    channel: Channel,
+    subscriptionId: string,
+  ): { cancelled: boolean } {
+    let connMap: Map<string, { cancelled: boolean }> | undefined = this.inFlightSubscribes.get(
+      connectionId,
+    );
+    if (connMap === undefined) {
+      connMap = new Map();
+      this.inFlightSubscribes.set(connectionId, connMap);
+    }
+    const key: string = this.inFlightSubKey(channel, subscriptionId);
+    const previous: { cancelled: boolean } | undefined = connMap.get(key);
+    if (previous !== undefined) {
+      previous.cancelled = true;
+    }
+    const inFlight: { cancelled: boolean } = { cancelled: false };
+    connMap.set(key, inFlight);
+    return inFlight;
+  }
+
+  private cancelInFlightSubscribe(
+    connectionId: string,
+    channel: Channel,
+    subscriptionId: string,
+  ): void {
+    const connMap: Map<string, { cancelled: boolean }> | undefined = this.inFlightSubscribes.get(
+      connectionId,
+    );
+    if (connMap === undefined) {
+      return;
+    }
+    const key: string = this.inFlightSubKey(channel, subscriptionId);
+    const inFlight: { cancelled: boolean } | undefined = connMap.get(key);
+    if (inFlight === undefined) {
+      return;
+    }
+    inFlight.cancelled = true;
+    connMap.delete(key);
+    if (connMap.size === 0) {
+      this.inFlightSubscribes.delete(connectionId);
+    }
+  }
+
+  private clearInFlightSubscribe(
+    connectionId: string,
+    channel: Channel,
+    subscriptionId: string,
+    inFlight: { cancelled: boolean },
+  ): void {
+    const connMap: Map<string, { cancelled: boolean }> | undefined = this.inFlightSubscribes.get(
+      connectionId,
+    );
+    if (connMap === undefined) {
+      return;
+    }
+    const key: string = this.inFlightSubKey(channel, subscriptionId);
+    if (connMap.get(key) !== inFlight) {
+      return;
+    }
+    connMap.delete(key);
+    if (connMap.size === 0) {
+      this.inFlightSubscribes.delete(connectionId);
+    }
+  }
+
+  /**
+   * Pairs the increment from a subscribe that was cancelled or superseded
+   * while its snapshot fetch was in flight. Does not send a websocket message:
+   * the client already got `unsubscribed`, or a newer subscribe owns the slot.
+   */
+  private abandonCancelledInFlight(
+    connectionId: string,
+    channel: Channel,
+  ): void {
+    stats.increment(
+      `${config.SERVICE_NAME}.subscription_abandoned_unsubscribed`,
+      1,
+      undefined,
+      { channel, instance: getInstanceId() },
+    );
+
+    logger.info({
+      at: 'Subscription#subscribe',
+      message: 'Abandoned subscription unsubscribed while the initial response was in flight',
+      channel,
+      connectionId,
+    });
+    this.decrementSubscriptions(channel, connectionId);
   }
 
   public removeSubscriptions(connectionId: string): void {
@@ -465,6 +568,12 @@ export class Subscriptions {
       return;
     }
 
+    const inFlight: { cancelled: boolean } = this.startInFlightSubscribe(
+      connectionId,
+      channel,
+      subscriptionId,
+    );
+
     let initialResponse: string;
     const startGetInitialResponse: number = Date.now();
     try {
@@ -472,6 +581,10 @@ export class Subscriptions {
     } catch (error) {
       if (this.isStaleConnection(connectionId, connectionEpoch)) {
         // The connection is already gone; do not touch its counters or write to its socket.
+        return;
+      }
+      if (inFlight.cancelled) {
+        this.abandonCancelledInFlight(connectionId, channel);
         return;
       }
 
@@ -512,6 +625,7 @@ export class Subscriptions {
           channel,
         },
       );
+      this.clearInFlightSubscribe(connectionId, channel, subscriptionId, inFlight);
       this.decrementSubscriptions(channel, connectionId);
       return;
     } finally {
@@ -542,6 +656,13 @@ export class Subscriptions {
       });
       return;
     }
+
+    if (inFlight.cancelled) {
+      this.abandonCancelledInFlight(connectionId, channel);
+      return;
+    }
+
+    this.clearInFlightSubscribe(connectionId, channel, subscriptionId, inFlight);
 
     const subscription: Subscription = {
       channel,
@@ -632,7 +753,9 @@ export class Subscriptions {
    * unsubscribe handles:
    * - removing a websocket connection from data structures tracking channels + ids the connection
    * is subscribed to for a specific channel + id
-   * Note: This is a no-op if the connection is not subscribed to the channel + id
+   * - cancelling a subscribe for the same channel+id that is still awaiting its initial response
+   * Note: This is a no-op if the connection is not subscribed and has no in-flight subscribe
+   * for the channel + id
    * @param connectionId Connection id of the websocket unsubscribing
    * @param channel Channel being unsubscribed from
    * @param id Specific id within the channel being unsubscribed from
@@ -647,6 +770,11 @@ export class Subscriptions {
 
     // remove subscription from subscription list
     const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
+    // Cancel any subscribe still awaiting its initial response for this
+    // channel+id. Do not touch the connection epoch: other in-flight subscribes
+    // on this socket must still complete. Decrement is left to that subscribe
+    // when it sees `cancelled`, so we do not double-decrement.
+    this.cancelInFlightSubscribe(connectionId, channel, subscriptionId);
     if (this.subscriptionLists[connectionId]) {
       const idx = this.subscriptionLists[connectionId]
         .findIndex((e: Subscription) => e.channel === channel && e.id === subscriptionId);
@@ -701,6 +829,7 @@ export class Subscriptions {
     this.subscriptionLimitReachedRateLimiter.removeConnection(connectionId);
     // Invalidate any subscribe request still awaiting its initial response.
     this.connectionEpochs.delete(connectionId);
+    this.inFlightSubscribes.delete(connectionId);
     // Deliberately not pruning subscriptionLimitAbuseCandidates here. The drop itself calls this
     // method, so removing the entry would undercount exactly the connections being measured. The
     // set is cleared wholesale on every metrics emit, so it stays bounded either way.
