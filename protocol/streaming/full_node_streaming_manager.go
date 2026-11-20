@@ -418,11 +418,17 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 				),
 				"err", err,
 			)
-			// Break out of the loop, stopping this goroutine.
-			// The channel will fill up and the main thread will prune the subscription.
 			break
 		}
 	}
+
+	sm.Lock()
+	if sm.orderbookSubscriptions[subscription.subscriptionId] == subscription {
+		// Subscription ids are reused, so the cache must not hold updates addressed to a freed id.
+		sm.FlushStreamUpdatesWithLock()
+		sm.removeSubscription(subscription.subscriptionId)
+	}
+	sm.Unlock()
 
 	sm.logger.Info(
 		fmt.Sprintf(
