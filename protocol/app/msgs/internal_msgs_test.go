@@ -70,10 +70,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.accountplus.MsgSetActiveStateResponse",
 
 		// affiliates
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverrides",
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateOverridesResponse",
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateParameters",
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateParametersResponse",
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers",
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse",
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist",
