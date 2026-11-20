@@ -19,6 +19,10 @@ export function rateLimiterMiddleware(
   postfixKey?: string,
   // Overrides the IP-based key; returning undefined skips this limiter for the request.
   getKey?: (req: express.Request, ipAddr: string) => string | undefined,
+  // Skip the limiter while the store is not ready instead of waiting in the client's offline
+  // queue. Opt-in: only for routes with their own fail-closed guard behind them, since it lets
+  // requests through unlimited during an outage.
+  skipWhenStoreNotReady: boolean = false,
 ) {
   return async (
     req: express.Request,
@@ -31,9 +35,7 @@ export function rateLimiterMiddleware(
 
     const ipAddr: string | undefined = getIpAddr(req);
 
-    // Store errors already fail open below; without this, a Redis outage hangs the request in
-    // the client's offline queue instead of reaching that path.
-    if (ipAddr === undefined || !isRateLimitStoreReady()) {
+    if (ipAddr === undefined || (skipWhenStoreNotReady && !isRateLimitStoreReady())) {
       return next();
     }
 

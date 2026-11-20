@@ -647,16 +647,32 @@ describe('rateLimit', () => {
   });
 
   describe('rate-limit store not ready', () => {
-    it('lets the request through without calling the store', async () => {
+    it('skips the limiter when the route opts in', async () => {
       const client: any = ratelimitRedis.client;
       const ready: boolean = client.ready;
       const consume = jest.spyOn(defaultRateLimiter, 'consume');
       client.ready = false;
       req.headers = defaultHeaders;
       try {
-        await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+        await rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true)(req, res, next);
         expect(next).toHaveBeenCalledTimes(1);
         expect(consume).not.toHaveBeenCalled();
+      } finally {
+        client.ready = ready;
+      }
+    });
+
+    it('still uses the store when the route does not opt in', async () => {
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      // Mocked: with ready=false a real command would wait in the client's offline queue.
+      const consume = jest.spyOn(defaultRateLimiter, 'consume')
+        .mockResolvedValue({ remainingPoints: 1, msBeforeNext: 1000 } as any);
+      client.ready = false;
+      req.headers = defaultHeaders;
+      try {
+        await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+        expect(consume).toHaveBeenCalledTimes(1);
       } finally {
         client.ready = ready;
       }

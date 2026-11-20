@@ -302,6 +302,9 @@ export class TurnkeyController extends Controller {
 
 const turnkeyIpKey = (_req: express.Request, ipAddr: string): string => ipRateLimitKey(ipAddr);
 
+// The Turnkey routes skip their limiters while the rate-limit store is not ready (last argument
+// below): new sub-orgs are still refused by reserveNewSuborgSlot, so nothing costly gets through.
+
 // Normalized the same way as emailSignin, so case and whitespace variants share one bucket;
 // hashed so keys have a fixed size and the shared rate-limit Redis holds no email addresses.
 export const turnkeyEmailKey = (req: express.Request): string | undefined => {
@@ -314,11 +317,11 @@ export const turnkeyEmailKey = (req: express.Request): string | undefined => {
 
 router.post(
   '/signin',
-  rateLimiterMiddleware(defaultRateLimiter),
-  rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey),
+  rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true),
+  rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey, true),
   ...CheckSignInSchema,
   handleValidationErrors,
-  rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, turnkeyEmailKey),
+  rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, turnkeyEmailKey, true),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
@@ -359,8 +362,8 @@ router.post(
 
 router.post(
   '/uploadAddress',
-  rateLimiterMiddleware(defaultRateLimiter),
-  rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey),
+  rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true),
+  rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey, true),
   ...CheckUploadDydxAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
