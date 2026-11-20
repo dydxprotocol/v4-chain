@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import express from 'express';
 import _ from 'lodash';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
@@ -19,10 +19,9 @@ export function rateLimiterMiddleware(
   postfixKey?: string,
   // Overrides the IP-based key; returning undefined skips this limiter for the request.
   getKey?: (req: express.Request, ipAddr: string) => string | undefined,
-  // Skip the limiter while the store is not ready instead of waiting in the client's offline
-  // queue. Opt-in: only for routes with their own fail-closed guard behind them, since it lets
-  // requests through unlimited during an outage.
-  skipWhenStoreNotReady: boolean = false,
+  // Refuse with 503 while the store is not ready, instead of waiting in the client's offline
+  // queue. Opt-in, for routes that must not run unlimited during a Redis outage.
+  refuseWhenStoreNotReady: boolean = false,
 ) {
   return async (
     req: express.Request,
@@ -35,7 +34,14 @@ export function rateLimiterMiddleware(
 
     const ipAddr: string | undefined = getIpAddr(req);
 
-    if (ipAddr === undefined || (skipWhenStoreNotReady && !isRateLimitStoreReady())) {
+    if (refuseWhenStoreNotReady && !isRateLimitStoreReady()) {
+      stats.increment(`${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1, {
+        key_prefix: rateLimiter.keyPrefix,
+      });
+      return create4xxResponse(res, 'Service temporarily unavailable', 503);
+    }
+
+    if (ipAddr === undefined) {
       return next();
     }
 

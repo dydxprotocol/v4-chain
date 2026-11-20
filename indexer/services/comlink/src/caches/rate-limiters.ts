@@ -10,6 +10,12 @@ export const ratelimitRedis: {
 } = redisLib.createRedisClient(
   config.RATE_LIMIT_REDIS_URL, config.REDIS_RECONNECT_TIMEOUT_MS,
 );
+// node-redis 2.8 stops reconnecting for good once its retries add up to connect_timeout (default
+// 1 hour), even with a retry_strategy, and the sub-org guard would then refuse every new sign-up
+// until comlink restarts. The client reads this on each retry, so raising it here keeps the shared
+// redis package unchanged.
+(ratelimitRedis.client as RedisClient & { connect_timeout: number }).connect_timeout = Infinity;
+
 // node-redis 2.8 queues commands while Redis is unreachable, so a limiter that calls it then
 // hangs the request; callers check this first and apply their own policy instead.
 export function isRateLimitStoreReady(): boolean {
@@ -50,7 +56,8 @@ export function getTurnkeyEmailRateLimiter(): RateLimiterRedis {
 }
 export const turnkeyEmailRateLimiter: RateLimiterRedis = getTurnkeyEmailRateLimiter();
 
-// New Turnkey sub-orgs per IP (IPv6 per /64), so one client cannot use up the global cap
+// New Turnkey sub-orgs per IPv4 address or IPv6 /48, which bounds how much of the global cap one
+// network can take
 export function getTurnkeyNewSuborgIpLimiter(): RateLimiterRedis {
   return new RateLimiterRedis({
     storeClient: ratelimitRedis.client,

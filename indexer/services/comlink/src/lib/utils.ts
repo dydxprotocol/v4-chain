@@ -11,10 +11,10 @@ export function isIndexerIp(ipAddress: string): boolean {
 }
 
 /**
- * Rate-limit key for an IP: IPv4 as is, IPv6 as its /64. A single IPv6 host usually holds a
- * whole /64, so per-address keys give it unlimited buckets.
+ * Rate-limit key for an IP: IPv4 as is, IPv6 as its /64 (or /48). A single IPv6 host usually holds
+ * a whole /64 and one site often a /48, so per-address keys give them unlimited buckets.
  */
-export function ipRateLimitKey(ipAddress: string): string {
+export function ipRateLimitKey(ipAddress: string, ipv6PrefixBits: 48 | 64 = 64): string {
   if (!isIPv6(ipAddress)) {
     return ipAddress;
   }
@@ -37,7 +37,8 @@ export function ipRateLimitKey(ipAddress: string): string {
   if (values.length === 8 && values.slice(0, 5).every((v) => v === 0) && values[5] === 0xffff) {
     return [values[6], values[7]].flatMap((v) => [Math.floor(v / 256), v % 256]).join('.');
   }
-  return `${values.slice(0, 4).map((v) => v.toString(16)).join(':')}::/64`;
+  const groupCount: number = ipv6PrefixBits / 16;
+  return `${values.slice(0, groupCount).map((v) => v.toString(16)).join(':')}::/${ipv6PrefixBits}`;
 }
 
 /**

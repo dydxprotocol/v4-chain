@@ -390,9 +390,10 @@ export class TurnkeyHelpers {
 }
 
 /**
- * Takes one slot from the caller's and then the global new sub-org budget. The per-IP budget
- * stops one client from using up the global cap for everyone. Fails closed: a Redis error also
- * refuses, because an uncapped burst exhausts the Turnkey org's Create Sub Org limit.
+ * Takes one slot from the caller's and then the global new sub-org budget. The per-network budget
+ * (IPv4 address or IPv6 /48) bounds what one network can take, but callers spread over enough
+ * networks can still use up the global cap. Fails closed: a Redis error also refuses, because an
+ * uncapped burst exhausts the Turnkey org's Create Sub Org limit.
  */
 export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
   if (!config.RATE_LIMIT_ENABLED) {
@@ -406,7 +407,7 @@ export async function reserveNewSuborgSlot(clientIp?: string): Promise<void> {
     }
     limit = 'ip';
     if (clientIp !== undefined && !isIndexerIp(clientIp)) {
-      await turnkeyNewSuborgIpLimiter.consume(ipRateLimitKey(clientIp));
+      await turnkeyNewSuborgIpLimiter.consume(ipRateLimitKey(clientIp, 48));
     }
     limit = 'global';
     await turnkeyNewSuborgGlobalLimiter.consume('global');

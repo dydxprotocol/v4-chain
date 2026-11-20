@@ -1,6 +1,7 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
+import { createClient } from 'redis';
 import config from '../../src/config';
 import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
 import {
@@ -573,6 +574,14 @@ describe('rateLimit', () => {
     ])('maps %s to %s', (ip, key) => {
       expect(ipRateLimitKey(ip)).toBe(key);
     });
+
+    it.each([
+      ['2a03:4000:13:1a88:4403:f7ff:fe05:9e08', '2a03:4000:13::/48'],
+      ['2a03:4000:13:ffff::1', '2a03:4000:13::/48'],
+      ['1.2.3.4', '1.2.3.4'],
+    ])('maps %s to %s at /48', (ip, key) => {
+      expect(ipRateLimitKey(ip, 48)).toBe(key);
+    });
   });
 
   describe('custom key', () => {
@@ -620,6 +629,8 @@ describe('rateLimit', () => {
       }
       const increment = jest.spyOn(stats, 'increment');
       await expect(reserveNewSuborgSlot('2a03:4000:13:1a88::ff')).rejects.toThrow(TurnkeyError);
+      // Another /64 in the same /48 shares the budget.
+      await expect(reserveNewSuborgSlot('2a03:4000:13:ffff::1')).rejects.toThrow(TurnkeyError);
       expect(increment).toHaveBeenCalledWith(
         `${config.SERVICE_NAME}.turnkey_new_suborg_rejected`, 1,
         { reason: 'cap_reached', limit: 'ip' },
@@ -647,15 +658,21 @@ describe('rateLimit', () => {
   });
 
   describe('rate-limit store not ready', () => {
-    it('skips the limiter when the route opts in', async () => {
+    it('refuses with 503, without touching the store, when the route opts in', async () => {
       const client: any = ratelimitRedis.client;
       const ready: boolean = client.ready;
       const consume = jest.spyOn(defaultRateLimiter, 'consume');
+      const increment = jest.spyOn(stats, 'increment');
       client.ready = false;
       req.headers = defaultHeaders;
       try {
         await rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true)(req, res, next);
-        expect(next).toHaveBeenCalledTimes(1);
+        expect(res.status).toHaveBeenCalledWith(503);
+        expect(increment).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1,
+          { key_prefix: defaultRateLimiter.keyPrefix },
+        );
+        expect(next).not.toHaveBeenCalled();
         expect(consume).not.toHaveBeenCalled();
       } finally {
         client.ready = ready;
@@ -675,6 +692,41 @@ describe('rateLimit', () => {
         expect(consume).toHaveBeenCalledTimes(1);
       } finally {
         client.ready = ready;
+      }
+    });
+  });
+
+  describe('rate-limit store reconnects', () => {
+    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
+      const deadline: number = Date.now() + ms;
+      while (Date.now() < deadline) {
+        if (check()) {
+          return true;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      return check();
+    };
+    const unreachableClient = (connectTimeout: number): any => {
+      const client: any = createClient({ host: '127.0.0.1', port: 1, retry_strategy: () => 10 });
+      client.on('error', () => {});
+      client.connect_timeout = connectTimeout;
+      return client;
+    };
+
+    it('never gives up on the rate-limit client', () => {
+      expect((ratelimitRedis.client as any).connect_timeout).toBe(Infinity);
+    });
+
+    it('node-redis gives up once retries add up to connect_timeout, unless it is Infinity', async () => {
+      const capped: any = unreachableClient(50);
+      const uncapped: any = unreachableClient(Infinity);
+      try {
+        expect(await waitFor(() => capped.closing, 2000)).toBe(true);
+        expect(await waitFor(() => uncapped.closing, 300)).toBe(false);
+      } finally {
+        capped.end(false);
+        uncapped.end(false);
       }
     });
   });

@@ -302,8 +302,8 @@ export class TurnkeyController extends Controller {
 
 const turnkeyIpKey = (_req: express.Request, ipAddr: string): string => ipRateLimitKey(ipAddr);
 
-// The Turnkey routes skip their limiters while the rate-limit store is not ready (last argument
-// below): new sub-orgs are still refused by reserveNewSuborgSlot, so nothing costly gets through.
+// The Turnkey routes refuse with 503 while the rate-limit store is not ready (last argument
+// below): every sign-in sends an email or creates a sub-org, so they must not run unlimited.
 
 // Normalized the same way as emailSignin, so case and whitespace variants share one bucket;
 // hashed so keys have a fixed size and the shared rate-limit Redis holds no email addresses.
