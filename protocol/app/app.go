@@ -245,6 +245,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
+// foo change
+
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
