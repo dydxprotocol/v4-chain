@@ -13,10 +13,10 @@ import {
 
 describe('schemas', () => {
   describe('CheckSignInSchema magicLink', () => {
-    const errorsFor = async (magicLink: string) => {
+    const errorsFor = async (magicLink: string, signinMethod: string = SigninMethod.EMAIL) => {
       const req: any = {
         body: {
-          signinMethod: SigninMethod.EMAIL,
+          signinMethod,
           userEmail: 'user@example.com',
           targetPublicKey: 'target-public-key',
           magicLink,
@@ -32,6 +32,11 @@ describe('schemas', () => {
 
     it('rejects a link outside the allowed origin before any limiter runs', async () => {
       expect(await errorsFor('https://example.com/?token')).toContain('Invalid magic link template');
+    });
+
+    it('does not check the link for other sign-in methods, which do not use it', async () => {
+      expect(await errorsFor('https://example.com/?token', SigninMethod.SOCIAL))
+        .not.toContain('Invalid magic link template');
     });
   });
 

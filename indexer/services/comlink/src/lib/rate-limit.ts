@@ -19,10 +19,19 @@ export function rateLimiterMiddleware(
   postfixKey?: string,
   // Overrides the IP-based key; returning undefined skips this limiter for the request.
   getKey?: (req: express.Request, ipAddr: string) => string | undefined,
-  // Refuse with 503 while the store is not ready, instead of waiting in the client's offline
-  // queue. Opt-in, for routes that must not run unlimited during a Redis outage.
+  // Refuse with 503 while the store is not ready (instead of waiting in the client's offline
+  // queue) or errors (READONLY, OOM). Opt-in, for routes that must not run unlimited during a
+  // Redis outage; every other route keeps failing open on store errors.
   refuseWhenStoreNotReady: boolean = false,
 ) {
+  const refuseStoreUnavailable = (res: express.Response, reason: 'not_ready' | 'error') => {
+    stats.increment(`${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1, {
+      key_prefix: rateLimiter.keyPrefix,
+      reason,
+    });
+    return create4xxResponse(res, 'Service temporarily unavailable', 503);
+  };
+
   return async (
     req: express.Request,
     res: express.Response,
@@ -35,10 +44,7 @@ export function rateLimiterMiddleware(
     const ipAddr: string | undefined = getIpAddr(req);
 
     if (refuseWhenStoreNotReady && !isRateLimitStoreReady()) {
-      stats.increment(`${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1, {
-        key_prefix: rateLimiter.keyPrefix,
-      });
-      return create4xxResponse(res, 'Service temporarily unavailable', 503);
+      return refuseStoreUnavailable(res, 'not_ready');
     }
 
     if (ipAddr === undefined) {
@@ -79,7 +85,14 @@ export function rateLimiterMiddleware(
           message: 'redis error when checking rate limit',
           reject,
         });
+        if (refuseWhenStoreNotReady) {
+          return refuseStoreUnavailable(res, 'error');
+        }
       } else {
+        // Response-code stats are registered after the limiters, so this is the only count of 429s.
+        stats.increment(`${config.SERVICE_NAME}.rate_limited`, 1, {
+          key_prefix: rateLimiter.keyPrefix,
+        });
         const rejectRes: RateLimiterRes = reject as RateLimiterRes;
         res.set({
           'RateLimit-Remaining': rejectRes.remainingPoints,

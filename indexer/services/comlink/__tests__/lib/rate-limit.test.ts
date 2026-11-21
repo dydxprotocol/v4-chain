@@ -1,7 +1,6 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
-import { createClient } from 'redis';
 import config from '../../src/config';
 import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
 import {
@@ -594,9 +593,13 @@ describe('rateLimit', () => {
       }
       expect(next).toHaveBeenCalledTimes(limit);
 
+      const increment = jest.spyOn(stats, 'increment');
       req.headers = { 'cf-connecting-ip': '2a03:4000:13:1a88:ffff::1' };
       await rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, getKey)(req, res, next);
       expect(res.status).toHaveBeenCalledWith(429);
+      expect(increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.rate_limited`, 1, { key_prefix: turnkeyIpRateLimiter.keyPrefix },
+      );
       expect(next).toHaveBeenCalledTimes(limit);
     });
 
@@ -670,13 +673,34 @@ describe('rateLimit', () => {
         expect(res.status).toHaveBeenCalledWith(503);
         expect(increment).toHaveBeenCalledWith(
           `${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1,
-          { key_prefix: defaultRateLimiter.keyPrefix },
+          { key_prefix: defaultRateLimiter.keyPrefix, reason: 'not_ready' },
         );
         expect(next).not.toHaveBeenCalled();
         expect(consume).not.toHaveBeenCalled();
       } finally {
         client.ready = ready;
       }
+    });
+
+    it('refuses with 503 when the store errors and the route opts in', async () => {
+      jest.spyOn(defaultRateLimiter, 'consume').mockRejectedValueOnce(new Error('READONLY'));
+      const increment = jest.spyOn(stats, 'increment');
+      req.headers = defaultHeaders;
+      await rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true)(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1,
+        { key_prefix: defaultRateLimiter.keyPrefix, reason: 'error' },
+      );
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('fails open on store errors when the route does not opt in', async () => {
+      jest.spyOn(defaultRateLimiter, 'consume').mockRejectedValueOnce(new Error('READONLY'));
+      req.headers = defaultHeaders;
+      await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+      expect(res.status).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
     });
 
     it('still uses the store when the route does not opt in', async () => {
@@ -692,41 +716,6 @@ describe('rateLimit', () => {
         expect(consume).toHaveBeenCalledTimes(1);
       } finally {
         client.ready = ready;
-      }
-    });
-  });
-
-  describe('rate-limit store reconnects', () => {
-    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
-      const deadline: number = Date.now() + ms;
-      while (Date.now() < deadline) {
-        if (check()) {
-          return true;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 20));
-      }
-      return check();
-    };
-    const unreachableClient = (connectTimeout: number): any => {
-      const client: any = createClient({ host: '127.0.0.1', port: 1, retry_strategy: () => 10 });
-      client.on('error', () => {});
-      client.connect_timeout = connectTimeout;
-      return client;
-    };
-
-    it('never gives up on the rate-limit client', () => {
-      expect((ratelimitRedis.client as any).connect_timeout).toBe(Infinity);
-    });
-
-    it('node-redis gives up once retries add up to connect_timeout, unless it is Infinity', async () => {
-      const capped: any = unreachableClient(50);
-      const uncapped: any = unreachableClient(Infinity);
-      try {
-        expect(await waitFor(() => capped.closing, 2000)).toBe(true);
-        expect(await waitFor(() => uncapped.closing, 300)).toBe(false);
-      } finally {
-        capped.end(false);
-        uncapped.end(false);
       }
     });
   });

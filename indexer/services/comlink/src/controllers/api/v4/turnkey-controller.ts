@@ -24,7 +24,7 @@ import { TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { extractEmailFromOidcToken, TurnkeyHelpers } from '../../../lib/turnkey-helpers';
-import { getIpAddr, ipRateLimitKey, isAllowedMagicLink } from '../../../lib/utils';
+import { getIpAddr, ipRateLimitKey } from '../../../lib/utils';
 import { CheckSignInSchema, CheckUploadDydxAddressSchema, CheckAppleLoginRedirectSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -174,9 +174,6 @@ export class TurnkeyController extends Controller {
     if (signinMethod === SigninMethod.EMAIL) {
       if (!userEmail || !targetPublicKey) {
         throw new Error('userEmail and targetPublicKey are required for email signin');
-      }
-      if (magicLink && !isAllowedMagicLink(magicLink, config.TURNKEY_MAGIC_LINK_VALIDATION)) {
-        throw new TurnkeyError('Invalid magic link template');
       }
       try {
         const resp = await this.turnkeyHelpers.emailSignin(

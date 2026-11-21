@@ -210,18 +210,6 @@ describe('TurnkeyController', () => {
           config.RATE_LIMIT_ENABLED = false;
         }
       });
-
-      it('should reject a magic link outside the allowed origin', async () => {
-        jest.mocked(mockParentApiClient.emailAuth).mockClear();
-
-        await expect(controller.signIn({
-          signinMethod: SigninMethod.EMAIL,
-          userEmail: 'test@example.com',
-          targetPublicKey: 'target-public-key',
-          magicLink: 'https://example.com/?token',
-        })).rejects.toThrow(TurnkeyError);
-        expect(jest.mocked(mockParentApiClient.emailAuth)).not.toHaveBeenCalled();
-      });
     });
 
     describe('Social signin', () => {

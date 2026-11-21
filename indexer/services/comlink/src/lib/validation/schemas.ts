@@ -368,10 +368,11 @@ const signInSchema: Record<string, ParamSchema> = {
     isString: true,
     errorMessage: 'Magic link must be a string',
     // Checked here rather than in the controller so a bad link is refused before it counts
-    // against the per-email limit.
+    // against the per-email limit. Only email sign-in sends the link.
     custom: {
-      options: (value: string) => {
-        if (!isAllowedMagicLink(value, config.TURNKEY_MAGIC_LINK_VALIDATION)) {
+      options: (value: string, { req }) => {
+        if (req.body.signinMethod === SigninMethod.EMAIL &&
+          !isAllowedMagicLink(value, config.TURNKEY_MAGIC_LINK_VALIDATION)) {
           throw new Error('Invalid magic link template');
         }
         return true;
