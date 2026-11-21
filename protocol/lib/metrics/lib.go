@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"slices"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -98,12 +99,7 @@ func isAllowedExecutionMode(
 	allowedModes []sdk.ExecMode,
 ) bool {
 	contextExecMode := ctx.ExecMode()
-	for _, mode := range allowedModes {
-		if contextExecMode == mode {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(allowedModes, contextExecMode)
 }
 
 func EmitTelemetryWithLabelsForExecMode(
