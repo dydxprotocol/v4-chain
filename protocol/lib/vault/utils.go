@@ -45,7 +45,7 @@ func SpreadPpm(
 	quotingParams *types.QuotingParams,
 	marketParam *pricestypes.MarketParam,
 ) uint32 {
-	return lib.Max(
+	return max(
 		quotingParams.SpreadMinPpm,
 		quotingParams.SpreadBufferPpm+marketParam.MinPriceChangePpm,
 	)
