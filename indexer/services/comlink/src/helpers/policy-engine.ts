@@ -11,7 +11,7 @@ import {
 } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import {
-  Address, LocalAccount, PublicClient, verifyTypedData,
+  Address, getTypesForEIP712Domain, LocalAccount, PublicClient, verifyTypedData,
 } from 'viem';
 import {
   avalanche, optimism, base, arbitrum, mainnet,
@@ -448,8 +448,19 @@ export class PolicyEngine {
       user.smart_account_address as Address | undefined,
     );
     const typedData = await account.kernelPluginManager.getPluginsEnableTypedData(account.address);
+    // The SDK leaves the type of the domain out, to be derived from the domain's fields. Not
+    // every signer derives it: one that takes a missing domain type to be empty would sign a
+    // different hash. Spelling it out makes this the complete `eth_signTypedData_v4` payload,
+    // which hashes the same either way.
+    const complete = {
+      ...typedData,
+      types: {
+        EIP712Domain: getTypesForEIP712Domain({ domain: typedData.domain }),
+        ...typedData.types,
+      },
+    };
     // Through JSON, so that it is exactly what the user is given to sign.
-    return { account, typedData: JSON.parse(JSON.stringify(typedData)) };
+    return { account, typedData: JSON.parse(JSON.stringify(complete)) };
   }
 
   private async buildApproval(

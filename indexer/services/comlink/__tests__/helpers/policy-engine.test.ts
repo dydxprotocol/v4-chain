@@ -6,7 +6,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient } from '@turnkey/sdk-server';
 import * as turnkeyViem from '@turnkey/viem';
-import { Address } from 'viem';
+import { Address, hashTypedData } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import {
   arbitrum, avalanche, base, mainnet, optimism,
@@ -32,6 +32,7 @@ import {
 import {
   DYDX_ADDRESS,
   evaluateInstructionClauses,
+  hashTypedDataV4,
   INJECTIVE_ADDRESS,
   SKIP_SOLANA_BRIDGE_INSTRUCTIONS,
 } from './deposit-policy-helpers';
@@ -289,7 +290,17 @@ describe('policy-engine', () => {
           verifyingContract: isAvalanche ? SMART_ACCOUNT_ADDRESS : owner.address,
         });
         expect(typedData.primaryType).toEqual('Enable');
-        expect(Object.keys(typedData.types)).toEqual(['Enable']);
+        // A complete eth_signTypedData_v4 payload: the type of the domain is spelled out.
+        expect(Object.keys(typedData.types)).toEqual(['EIP712Domain', 'Enable']);
+        expect(typedData.types.EIP712Domain).toEqual([
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
+        ]);
+        expect(Object.keys(typedData.domain)).toEqual(
+          typedData.types.EIP712Domain.map((field) => field.name),
+        );
         expect(Object.keys(typedData.message)).toEqual(
           typedData.types.Enable.map((field) => field.name),
         );
@@ -409,6 +420,41 @@ describe('policy-engine', () => {
         expect(await getStoredApproval(chainId)).toEqual(
           await approvalMadeWithKey(chainId, 'injective'),
         );
+      }
+    });
+
+    it('accepts signatures made from the payload alone, as eth_signTypedData_v4 defines', async () => {
+      await seedNobleRouteApprovals();
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      // A signer that derives nothing: it hashes the domain with the type the payload gives.
+      const signatures: DepositPolicySignature[] = await signAll(policy, {
+        signTypedData: (typedData: DepositPolicyTypedData) => {
+          return owner.sign({ hash: hashTypedDataV4(typedData) });
+        },
+      });
+
+      expect(await engine.submitDepositApprovals(user, signatures)).toEqual(EVM_CHAIN_IDS);
+
+      for (const chainId of EVM_CHAIN_IDS) {
+        expect(await getStoredApproval(chainId)).toEqual(
+          await approvalMadeWithKey(chainId, 'injective'),
+        );
+      }
+    });
+
+    it('gives a payload whose hash does not depend on how the signer finds the domain type', async () => {
+      await seedNobleRouteApprovals();
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+
+      for (const { typedData } of policy.evm.approvals) {
+        // With the domain type taken from the payload, and with it derived from the domain.
+        const otherTypes = { Enable: typedData!.types.Enable };
+        const derived = { ...typedData!, types: otherTypes } as Parameters<typeof hashTypedData>[0];
+        expect(hashTypedDataV4(typedData!)).toEqual(hashTypedData(derived));
+        // The hash a signer would make if it took a missing domain type to be empty is another
+        // one, which is why the payload spells the type out.
+        expect(hashTypedDataV4({ ...typedData!, types: { ...otherTypes, EIP712Domain: [] } }))
+          .not.toEqual(hashTypedDataV4(typedData!));
       }
     });
 

@@ -865,7 +865,8 @@ export enum DepositPolicyStatus {
 
 /**
  * EIP-712 typed data that enables the bridge session key on a user's smart account, limited to
- * the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData_v4`).
+ * the calls of a deposit. It is a complete `eth_signTypedData_v4` payload, including the type of
+ * the domain, to be signed as-is with the user's EVM key.
  */
 export interface DepositPolicyTypedData {
   domain: {
@@ -875,6 +876,7 @@ export interface DepositPolicyTypedData {
     verifyingContract: string,
   },
   types: {
+    EIP712Domain: { name: string, type: string }[],
     Enable: { name: string, type: string }[],
   },
   primaryType: string,

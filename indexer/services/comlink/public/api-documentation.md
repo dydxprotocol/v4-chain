@@ -7879,6 +7879,12 @@ or
         "type": "string",
         "name": "string"
       }
+    ],
+    "EIP712Domain": [
+      {
+        "type": "string",
+        "name": "string"
+      }
     ]
   },
   "primaryType": "string",
@@ -7895,7 +7901,8 @@ or
 ```
 
 EIP-712 typed data that enables the bridge session key on a user's smart account, limited to
-the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData_v4`).
+the calls of a deposit. It is a complete `eth_signTypedData_v4` payload, including the type of
+the domain, to be signed as-is with the user's EVM key.
 
 ### Properties
 
@@ -7908,6 +7915,9 @@ the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData
 |» name|string|true|none|none|
 |types|object|true|none|none|
 |» Enable|[object]|true|none|none|
+|»» type|string|true|none|none|
+|»» name|string|true|none|none|
+|» EIP712Domain|[object]|true|none|none|
 |»» type|string|true|none|none|
 |»» name|string|true|none|none|
 |primaryType|string|true|none|none|
@@ -7943,6 +7953,12 @@ the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData
           "type": "string",
           "name": "string"
         }
+      ],
+      "EIP712Domain": [
+        {
+          "type": "string",
+          "name": "string"
+        }
       ]
     },
     "primaryType": "string",
@@ -7965,7 +7981,7 @@ the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData
 |---|---|---|---|---|
 |chainId|string|true|none|none|
 |status|[DepositPolicyStatus](#schemadepositpolicystatus)|true|none|none|
-|typedData|[DepositPolicyTypedData](#schemadepositpolicytypeddata)|false|none|EIP-712 typed data that enables the bridge session key on a user's smart account, limited to<br />the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData_v4`).|
+|typedData|[DepositPolicyTypedData](#schemadepositpolicytypeddata)|false|none|EIP-712 typed data that enables the bridge session key on a user's smart account, limited to<br />the calls of a deposit. It is a complete `eth_signTypedData_v4` payload, including the type of<br />the domain, to be signed as-is with the user's EVM key.|
 
 ## DepositPolicyTurnkeyPolicy
 
