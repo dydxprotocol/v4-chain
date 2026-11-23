@@ -28,7 +28,10 @@ const POLICY: DepositPolicyResponse = {
           domain: {
             name: 'Kernel', version: '0.3.3', chainId: 42161, verifyingContract: EVM_ADDRESS,
           },
-          types: { Enable: [{ name: 'validationId', type: 'bytes21' }] },
+          types: {
+            EIP712Domain: [{ name: 'name', type: 'string' }],
+            Enable: [{ name: 'validationId', type: 'bytes21' }],
+          },
           primaryType: 'Enable',
           message: {
             validationId: '0x02',
