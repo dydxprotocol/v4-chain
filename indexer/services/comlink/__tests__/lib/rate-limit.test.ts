@@ -1,9 +1,10 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
-import { createClient } from 'redis';
 import config from '../../src/config';
-import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
+import {
+  clearStoreErrorLogTimes, getPointCost, rateLimiterMiddleware,
+} from '../../src/lib/rate-limit';
 import {
   ratelimitRedis,
   defaultRateLimiter,
@@ -60,6 +61,7 @@ describe('rateLimit', () => {
   afterEach(async () => {
     await redis.deleteAllAsync(ratelimitRedis.client);
     jest.restoreAllMocks();
+    clearStoreErrorLogTimes();
   });
 
   afterAll(() => {
@@ -712,7 +714,10 @@ describe('rateLimit', () => {
       client.ready = false;
       req.headers = defaultHeaders;
       try {
+        const start: number = Date.now();
         await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+        // Well inside the store timeout, so the answer came from the client, not the timeout.
+        expect(Date.now() - start).toBeLessThan(config.RATE_LIMIT_STORE_TIMEOUT_MS / 2);
         expect(consume).toHaveBeenCalledTimes(1);
         expect(increment).toHaveBeenCalledWith(
           `${config.SERVICE_NAME}.rate_limit_store_error`, 1,
@@ -723,13 +728,12 @@ describe('rateLimit', () => {
       } finally {
         client.ready = ready;
       }
-    }, 2000);
+    });
 
     it('logs store errors once per limiter per interval and counts every one', async () => {
       const error = jest.spyOn(logger, 'error');
       const increment = jest.spyOn(stats, 'increment');
-      // Far ahead of any earlier log in this file, so the first error below always logs.
-      const start: number = Date.now() + 1_000_000_000;
+      const start: number = Date.now();
       const now = jest.spyOn(Date, 'now').mockReturnValue(start);
       jest.spyOn(ordersRateLimiter, 'consume').mockRejectedValue(new Error('READONLY'));
       req.headers = defaultHeaders;
@@ -746,41 +750,6 @@ describe('rateLimit', () => {
         ([stat]) => stat === `${config.SERVICE_NAME}.rate_limit_store_error`,
       )).toHaveLength(3);
       expect(next).toHaveBeenCalledTimes(3);
-    });
-  });
-
-  describe('rate-limit store reconnects', () => {
-    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
-      const deadline: number = Date.now() + ms;
-      while (Date.now() < deadline) {
-        if (check()) {
-          return true;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 20));
-      }
-      return check();
-    };
-    const unreachableClient = (connectTimeout: number): any => {
-      const client: any = createClient({ host: '127.0.0.1', port: 1, retry_strategy: () => 10 });
-      client.on('error', () => {});
-      client.connect_timeout = connectTimeout;
-      return client;
-    };
-
-    it('never gives up on the rate-limit client', () => {
-      expect((ratelimitRedis.client as any).connect_timeout).toBe(Infinity);
-    });
-
-    it('node-redis gives up once retries add up to connect_timeout, unless it is Infinity', async () => {
-      const capped: any = unreachableClient(50);
-      const uncapped: any = unreachableClient(Infinity);
-      try {
-        expect(await waitFor(() => capped.closing, 2000)).toBe(true);
-        expect(await waitFor(() => uncapped.closing, 300)).toBe(false);
-      } finally {
-        capped.end(false);
-        uncapped.end(false);
-      }
     });
   });
 

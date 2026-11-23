@@ -287,6 +287,9 @@ describe('compliance-controller#V4', () => {
       expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(
         config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS,
       );
+      expect(stats.increment).toHaveBeenCalledWith(
+        'comlink.rate_limit_fallback_used', 1, { key_prefix: 'comlink/screen_providers' },
+      );
     });
 
     it('GET /screen for invalid address does not upsert compliance data', async () => {

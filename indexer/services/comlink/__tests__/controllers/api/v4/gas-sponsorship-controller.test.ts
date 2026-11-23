@@ -279,7 +279,9 @@ describe('gas-sponsorship-controller#V4', () => {
       try {
         const response: request.Response = await postFrom('203.0.113.9');
         expect(response.status).toEqual(503);
-        expect(response.body).toEqual({ errors: [{ msg: 'Service temporarily unavailable' }] });
+        expect(response.body).toEqual({
+          errors: [{ code: 'RATE_LIMIT_STORE_UNAVAILABLE', msg: 'Service temporarily unavailable' }],
+        });
       } finally {
         client.ready = ready;
       }

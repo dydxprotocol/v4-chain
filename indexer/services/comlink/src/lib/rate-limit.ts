@@ -12,9 +12,13 @@ const INTERNAL_REQUEST_POINTS: number = 0;
 const EXTERNAL_REQUEST_POINTS: number = 1;
 
 // During a Redis outage every limited request errors at once, so log one line per limiter per
-// interval; the store_error metric still counts every error.
+// interval; the store_error metric still counts every store error seen by this middleware.
 const STORE_ERROR_LOG_INTERVAL_MS: number = 10_000;
 const lastStoreErrorLogAt: Map<string, number> = new Map();
+
+export function clearStoreErrorLogTimes(): void {
+  lastStoreErrorLogAt.clear();
+}
 
 function logStoreError(keyPrefix: string, reject: Error): void {
   const now: number = Date.now();
@@ -48,7 +52,9 @@ export function rateLimiterMiddleware(
       key_prefix: rateLimiter.keyPrefix,
       reason,
     });
-    return create4xxResponse(res, 'Service temporarily unavailable', 503);
+    return create4xxResponse(
+      res, 'Service temporarily unavailable', 503, { code: 'RATE_LIMIT_STORE_UNAVAILABLE' },
+    );
   };
 
   return async (

@@ -44,6 +44,10 @@ export const configSchema = {
   RATE_LIMIT_REDIS_URL: parseString({
     default: 'redis://localhost:6382',
   }),
+  // A rate-limit store call that takes longer counts as a store error (see caches/rate-limiters.ts)
+  RATE_LIMIT_STORE_TIMEOUT_MS: parseInteger({ default: 1_000 }),
+  // Delay before reconnecting after the store's ready check fails (e.g. NOAUTH)
+  RATE_LIMIT_STORE_READY_RETRY_MS: parseInteger({ default: 5_000 }),
   // Rate limits
   RATE_LIMIT_ENABLED: parseBoolean({ default: true }),
   // IP addresses internal to the Indexer have no rate-limit
