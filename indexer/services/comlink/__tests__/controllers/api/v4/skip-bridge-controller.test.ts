@@ -52,7 +52,14 @@ import { privateKeyToAccount } from 'viem/accounts';
 
 import { alchemyNetworkToChainIdMap } from '../../../../src/helpers/alchemy-helpers';
 import * as skipHelpers from '../../../../src/helpers/skip-helper';
+import config from '../../../../src/config';
 import { RequestMethod } from '../../../../src/types';
+import {
+  DYDX_ADDRESS,
+  INJECTIVE_EVM_ADDRESS,
+  INJECTIVE_ROUTE_APPROVAL,
+  NOBLE_ROUTE_APPROVAL,
+} from '../../../helpers/deposit-policy-helpers';
 import { sendRequest } from '../../../helpers/helpers';
 
 const geoOriginHeaders = {
@@ -583,14 +590,31 @@ describe('skip-bridge-controller#V4', () => {
     const arbNetwork = 'ARB_MAINNET';
     const arbChainId = alchemyNetworkToChainIdMap[arbNetwork];
     const evmFromAddress = '0x1111111111111111111111111111111111111111';
-    const dydxAddress = 'dydx1234567890123456789012345678901234567899';
+    const svmFromAddress = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
+    const dydxAddress = DYDX_ADDRESS;
+    const evmDepositBody = {
+      id: 'id',
+      type: 'BLOCK_ACTIVITY',
+      webhookId: 'wh_xxx',
+      event: {
+        network: arbNetwork,
+        activity: [
+          {
+            fromAddress: '0x0000000000000000000000000000000000000000',
+            toAddress: evmFromAddress,
+            asset: 'USDC',
+            value: '100',
+          },
+        ],
+      },
+    };
 
     beforeEach(async () => {
       // Create a user record needed by sweep/startEvmBridge
       await TurnkeyUsersTable.create({
         suborg_id: 'suborg-arb',
         evm_address: evmFromAddress,
-        svm_address: 'svm1234567890123456789012345678901234567890',
+        svm_address: svmFromAddress,
         dydx_address: dydxAddress,
         salt: 'salt',
         created_at: new Date().toISOString(),
@@ -653,7 +677,7 @@ describe('skip-bridge-controller#V4', () => {
       await PermissionApprovalTable.create({
         suborg_id: 'suborg-arb',
         chain_id: arbChainId,
-        approval: '0xapproval',
+        approval: INJECTIVE_ROUTE_APPROVAL,
       });
 
       const response: request.Response = await sendRequest({
@@ -687,6 +711,92 @@ describe('skip-bridge-controller#V4', () => {
         zeroDev.createKernelAccountClient as unknown as jest.Mock
       ).mock.results[0].value;
       expect(client.sendUserOperation).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['has only approved the earlier route through Noble', NOBLE_ROUTE_APPROVAL],
+      ['has an approval that cannot be read', '0xapproval'],
+      ['has no approval', undefined],
+    ])('should leave the deposit in place when the user %s', async (
+      _name: string,
+      approval: string | undefined,
+    ) => {
+      if (approval !== undefined) {
+        await PermissionApprovalTable.create({
+          suborg_id: 'suborg-arb',
+          chain_id: arbChainId,
+          approval,
+        });
+      }
+
+      // Still a 200, so that the webhook is not retried.
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/bridging/startBridge',
+        expectedStatus: 200,
+        body: evmDepositBody,
+      });
+
+      expect(skipHelpers.getSkipCallData).not.toHaveBeenCalled();
+      expect(zeroDev.createKernelAccountClient).not.toHaveBeenCalled();
+      expect(await BridgeInformationTable.searchBridgeInformation(
+        { from_addresses: [evmFromAddress] },
+        {},
+      )).toEqual(expect.objectContaining({ results: [] }));
+    });
+
+    it('should bridge a Solana deposit to the user\'s own Injective account', async () => {
+      const previousSponsor: string = config.SOLANA_SPONSOR_PUBLIC_KEY;
+      config.SOLANA_SPONSOR_PUBLIC_KEY = 'Fee1111111111111111111111111111111111111111';
+      const solanaUsdc: string = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+      const path = { requiredChainAddresses: ['solana', '1776'], txsRequired: 1 };
+      (skipClient.route as unknown as jest.Mock).mockResolvedValue(path);
+      (skipClient.executeRoute as unknown as jest.Mock).mockResolvedValue(undefined);
+
+      try {
+        await sendRequest({
+          type: RequestMethod.POST,
+          path: '/v4/bridging/startBridge',
+          expectedStatus: 200,
+          body: {
+            id: 'id',
+            type: 'BLOCK_ACTIVITY',
+            webhookId: 'wh_xxx',
+            event: {
+              network: 'SOLANA_MAINNET',
+              transaction: [{
+                meta: [{
+                  post_token_balances: [{
+                    owner: svmFromAddress,
+                    mint: solanaUsdc,
+                    ui_token_amount: { ui_amount: 100, amount: '100000000' },
+                  }],
+                }],
+              }],
+            },
+          },
+        });
+      } finally {
+        config.SOLANA_SPONSOR_PUBLIC_KEY = previousSponsor;
+      }
+
+      // The route ends at USDC on Injective, not on dYdX.
+      expect(skipClient.route).toHaveBeenCalledTimes(1);
+      expect(skipClient.route).toHaveBeenCalledWith(expect.objectContaining({
+        amountIn: '100000000',
+        sourceAssetDenom: solanaUsdc,
+        sourceAssetChainId: 'solana',
+        destAssetDenom: '0xa00C59fF5a080D2b954d0c75e46E22a0c371235a',
+        destAssetChainId: '1776',
+      }));
+      expect(skipClient.executeRoute).toHaveBeenCalledTimes(1);
+      expect(skipClient.executeRoute).toHaveBeenCalledWith(expect.objectContaining({
+        route: path,
+        userAddresses: [
+          { chainId: 'solana', address: svmFromAddress },
+          { chainId: '1776', address: INJECTIVE_EVM_ADDRESS },
+        ],
+      }));
     });
 
     it('should return 500 for unsupported network', async () => {

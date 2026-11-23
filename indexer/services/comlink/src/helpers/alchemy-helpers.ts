@@ -16,8 +16,10 @@ import {
 
 import config from '../config';
 import { create4xxResponse } from '../lib/helpers';
+import { getInjectiveAddress, getInjectiveEvmAddress } from '../lib/injective-address';
 import {
   nobleChainId, osmosisChainId, neutronChainId, dydxChainId,
+  injectiveChainId, injectiveEvmChainId,
 } from '../lib/smart-contract-constants';
 
 const evmChainIdToAlchemyWebhookId: Record<string, string> = {
@@ -305,6 +307,11 @@ export function getAddress(
       return toClientAddressWithPrefix(CosmosPrefix.NEUTRON, dydxAddress);
     case dydxChainId:
       return dydxAddress;
+    // Both are the user's Injective account, which shares its bytes with their dYdX account.
+    case injectiveChainId:
+      return getInjectiveAddress(dydxAddress);
+    case injectiveEvmChainId:
+      return getInjectiveEvmAddress(dydxAddress);
     default:
       throw new Error(`Unsupported chain ID: ${chainId}`);
   }

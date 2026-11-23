@@ -4433,6 +4433,225 @@ Status Code **200**
 This operation does not require authentication
 </aside>
 
+## GetDepositPolicy
+
+<a id="opIdGetDepositPolicy"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/turnkey/depositPolicy/{dydxAddress}', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/depositPolicy/{dydxAddress}`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /turnkey/depositPolicy/{dydxAddress}`
+
+Returns what the user has to approve before deposits to their deposit addresses can be
+bridged, for an account that was set up before the deposit route changed to go through
+Injective. The service cannot make these approvals itself: once an account is set up, only
+the user can change what the service may sign for them.
+
+- `evm.approvals`: for each chain with status ACTION_REQUIRED, sign `typedData` with the
+  user's EVM key and send the signatures to POST /depositPolicy.
+- `solana`: with status ACTION_REQUIRED, create `policy` in the user's Turnkey
+  sub-organization. The policies in `obsoletePolicyIds` can be deleted.
+
+Deposits arrive at `injectiveAddress`, and the user sends them on to dYdX from there.
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|dydxAddress|path|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "dydxAddress": "string",
+  "injectiveAddress": "string",
+  "evm": {
+    "approvals": [
+      {
+        "chainId": "string",
+        "status": "UP_TO_DATE",
+        "typedData": {
+          "domain": {},
+          "types": {},
+          "primaryType": "string",
+          "message": {}
+        }
+      }
+    ],
+    "address": "string"
+  },
+  "solana": {
+    "obsoletePolicyIds": [
+      "string"
+    ],
+    "policy": {
+      "policyName": "string",
+      "effect": "EFFECT_ALLOW",
+      "condition": "string",
+      "consensus": "string",
+      "notes": "string"
+    },
+    "status": "UP_TO_DATE"
+  }
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[DepositPolicyResponse](#schemadepositpolicyresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## SubmitDepositPolicy
+
+<a id="opIdSubmitDepositPolicy"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/depositPolicy', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "dydxAddress": "string",
+  "signatures": [
+    {
+      "chainId": "string",
+      "signature": "string"
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/depositPolicy`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/depositPolicy`
+
+Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress}. A
+signature that is not the user's signature of that typed data is rejected, and nothing is
+stored.
+
+> Body parameter
+
+```json
+{
+  "dydxAddress": "string",
+  "signatures": [
+    {
+      "chainId": "string",
+      "signature": "string"
+    }
+  ]
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[SubmitDepositPolicyRequest](#schemasubmitdepositpolicyrequest)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "approvedChainIds": [
+    "string"
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[SubmitDepositPolicyResponse](#schemasubmitdepositpolicyresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## SignIn
 
 <a id="opIdSignIn"></a>
@@ -7612,6 +7831,305 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## DepositPolicyStatus
+
+<a id="schemadepositpolicystatus"></a>
+<a id="schema_DepositPolicyStatus"></a>
+<a id="tocSdepositpolicystatus"></a>
+<a id="tocsdepositpolicystatus"></a>
+
+```json
+"UP_TO_DATE"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|UP_TO_DATE|
+|*anonymous*|ACTION_REQUIRED|
+|*anonymous*|UNAVAILABLE|
+
+## DepositPolicyTypedData
+
+<a id="schemadepositpolicytypeddata"></a>
+<a id="schema_DepositPolicyTypedData"></a>
+<a id="tocSdepositpolicytypeddata"></a>
+<a id="tocsdepositpolicytypeddata"></a>
+
+```json
+{
+  "domain": {
+    "verifyingContract": "string",
+    "chainId": 0.1,
+    "version": "string",
+    "name": "string"
+  },
+  "types": {
+    "Enable": [
+      {
+        "type": "string",
+        "name": "string"
+      }
+    ]
+  },
+  "primaryType": "string",
+  "message": {
+    "selectorData": "string",
+    "hookData": "string",
+    "validatorData": "string",
+    "hook": "string",
+    "nonce": 0.1,
+    "validationId": "string"
+  }
+}
+
+```
+
+EIP-712 typed data that enables the bridge session key on a user's smart account, limited to
+the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData_v4`).
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|domain|object|true|none|none|
+|» verifyingContract|string|true|none|none|
+|» chainId|number(double)|true|none|none|
+|» version|string|true|none|none|
+|» name|string|true|none|none|
+|types|object|true|none|none|
+|» Enable|[object]|true|none|none|
+|»» type|string|true|none|none|
+|»» name|string|true|none|none|
+|primaryType|string|true|none|none|
+|message|object|true|none|none|
+|» selectorData|string|true|none|none|
+|» hookData|string|true|none|none|
+|» validatorData|string|true|none|none|
+|» hook|string|true|none|none|
+|» nonce|number(double)|true|none|none|
+|» validationId|string|true|none|none|
+
+## DepositPolicyEvmApproval
+
+<a id="schemadepositpolicyevmapproval"></a>
+<a id="schema_DepositPolicyEvmApproval"></a>
+<a id="tocSdepositpolicyevmapproval"></a>
+<a id="tocsdepositpolicyevmapproval"></a>
+
+```json
+{
+  "chainId": "string",
+  "status": "UP_TO_DATE",
+  "typedData": {
+    "domain": {
+      "verifyingContract": "string",
+      "chainId": 0.1,
+      "version": "string",
+      "name": "string"
+    },
+    "types": {
+      "Enable": [
+        {
+          "type": "string",
+          "name": "string"
+        }
+      ]
+    },
+    "primaryType": "string",
+    "message": {
+      "selectorData": "string",
+      "hookData": "string",
+      "validatorData": "string",
+      "hook": "string",
+      "nonce": 0.1,
+      "validationId": "string"
+    }
+  }
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|chainId|string|true|none|none|
+|status|[DepositPolicyStatus](#schemadepositpolicystatus)|true|none|none|
+|typedData|[DepositPolicyTypedData](#schemadepositpolicytypeddata)|false|none|EIP-712 typed data that enables the bridge session key on a user's smart account, limited to<br />the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData_v4`).|
+
+## DepositPolicyTurnkeyPolicy
+
+<a id="schemadepositpolicyturnkeypolicy"></a>
+<a id="schema_DepositPolicyTurnkeyPolicy"></a>
+<a id="tocSdepositpolicyturnkeypolicy"></a>
+<a id="tocsdepositpolicyturnkeypolicy"></a>
+
+```json
+{
+  "policyName": "string",
+  "effect": "EFFECT_ALLOW",
+  "condition": "string",
+  "consensus": "string",
+  "notes": "string"
+}
+
+```
+
+A Turnkey policy, in the shape Turnkey's `createPolicy` activity takes.
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|policyName|string|true|none|none|
+|effect|string|true|none|none|
+|condition|string|true|none|none|
+|consensus|string|true|none|none|
+|notes|string|true|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|effect|EFFECT_ALLOW|
+
+## DepositPolicyResponse
+
+<a id="schemadepositpolicyresponse"></a>
+<a id="schema_DepositPolicyResponse"></a>
+<a id="tocSdepositpolicyresponse"></a>
+<a id="tocsdepositpolicyresponse"></a>
+
+```json
+{
+  "dydxAddress": "string",
+  "injectiveAddress": "string",
+  "evm": {
+    "approvals": [
+      {
+        "chainId": "string",
+        "status": "UP_TO_DATE",
+        "typedData": {
+          "domain": {},
+          "types": {},
+          "primaryType": "string",
+          "message": {}
+        }
+      }
+    ],
+    "address": "string"
+  },
+  "solana": {
+    "obsoletePolicyIds": [
+      "string"
+    ],
+    "policy": {
+      "policyName": "string",
+      "effect": "EFFECT_ALLOW",
+      "condition": "string",
+      "consensus": "string",
+      "notes": "string"
+    },
+    "status": "UP_TO_DATE"
+  }
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|dydxAddress|string|true|none|none|
+|injectiveAddress|string|true|none|none|
+|evm|object|true|none|none|
+|» approvals|[[DepositPolicyEvmApproval](#schemadepositpolicyevmapproval)]|true|none|none|
+|» address|string|true|none|none|
+|solana|object|true|none|none|
+|» obsoletePolicyIds|[string]|true|none|none|
+|» policy|[DepositPolicyTurnkeyPolicy](#schemadepositpolicyturnkeypolicy)|false|none|A Turnkey policy, in the shape Turnkey's `createPolicy` activity takes.|
+|» status|[DepositPolicyStatus](#schemadepositpolicystatus)|true|none|none|
+
+## SubmitDepositPolicyResponse
+
+<a id="schemasubmitdepositpolicyresponse"></a>
+<a id="schema_SubmitDepositPolicyResponse"></a>
+<a id="tocSsubmitdepositpolicyresponse"></a>
+<a id="tocssubmitdepositpolicyresponse"></a>
+
+```json
+{
+  "approvedChainIds": [
+    "string"
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|approvedChainIds|[string]|true|none|none|
+
+## DepositPolicySignature
+
+<a id="schemadepositpolicysignature"></a>
+<a id="schema_DepositPolicySignature"></a>
+<a id="tocSdepositpolicysignature"></a>
+<a id="tocsdepositpolicysignature"></a>
+
+```json
+{
+  "chainId": "string",
+  "signature": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|chainId|string|true|none|none|
+|signature|string|true|none|none|
+
+## SubmitDepositPolicyRequest
+
+<a id="schemasubmitdepositpolicyrequest"></a>
+<a id="schema_SubmitDepositPolicyRequest"></a>
+<a id="tocSsubmitdepositpolicyrequest"></a>
+<a id="tocssubmitdepositpolicyrequest"></a>
+
+```json
+{
+  "dydxAddress": "string",
+  "signatures": [
+    {
+      "chainId": "string",
+      "signature": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|dydxAddress|string|true|none|none|
+|signatures|[[DepositPolicySignature](#schemadepositpolicysignature)]|true|none|none|
 
 ## TurnkeyAuthResponse
 
