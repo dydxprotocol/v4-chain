@@ -1,3 +1,7 @@
+import {
+  concat, keccak256, pad, toHex,
+} from 'viem';
+
 /**
  * Fixtures and helpers for the tests of the deposit route to Injective.
  */
@@ -118,3 +122,54 @@ export const INJECTIVE_ROUTE_APPROVAL: string = makeApproval(
   SKIP_CCTP_V2_RELAYER,
   INJECTIVE_MINT_RECIPIENT,
 );
+
+type Hex = `0x${string}`;
+interface TypedDataField { name: string, type: string }
+
+/**
+ * Hashes typed data the way EIP-712 defines for `eth_signTypedData_v4`, using only what the
+ * payload contains: the domain is hashed with the `EIP712Domain` type given in `types`, and
+ * nothing is derived. Covers the field types the deposit policy uses, without nested structs.
+ */
+export function hashTypedDataV4(typedData: {
+  domain: object,
+  types: { [name: string]: TypedDataField[] },
+  primaryType: string,
+  message: object,
+}): Hex {
+  const { types } = typedData;
+  if (types.EIP712Domain === undefined) {
+    throw new Error('types.EIP712Domain is required');
+  }
+  const encodeValue = (type: string, value: unknown): Hex => {
+    if (type === 'string') {
+      return keccak256(toHex(value as string));
+    }
+    if (type === 'bytes') {
+      return keccak256(value as Hex);
+    }
+    if (type === 'address') {
+      return pad(value as Hex, { size: 32 });
+    }
+    if (/^uint\d+$/.test(type)) {
+      return pad(toHex(BigInt(value as number | string)), { size: 32 });
+    }
+    if (/^bytes\d+$/.test(type)) {
+      return pad(value as Hex, { size: 32, dir: 'right' });
+    }
+    throw new Error(`unsupported type: ${type}`);
+  };
+  const hashStruct = (name: string, data: object): Hex => {
+    const fields: TypedDataField[] = types[name];
+    const typeString: string = `${name}(${fields.map((f) => `${f.type} ${f.name}`).join(',')})`;
+    return keccak256(concat([
+      keccak256(toHex(typeString)),
+      ...fields.map((f) => encodeValue(f.type, (data as { [key: string]: unknown })[f.name])),
+    ]));
+  };
+  return keccak256(concat([
+    '0x1901',
+    hashStruct('EIP712Domain', typedData.domain),
+    hashStruct(typedData.primaryType, typedData.message),
+  ]));
+}
