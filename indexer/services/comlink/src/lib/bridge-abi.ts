@@ -219,3 +219,26 @@ export const abi = [
     type: 'function',
   },
 ] as const;
+
+// Skip's CCTP v2 relayer. Kept apart from the ABI above because that also has a function of
+// this name, with different parameters, for the CCTP v1 relayer. The parameter types are those
+// of the deployed function; the names of the last five follow CCTP v2's `depositForBurn`.
+export const cctpV2RelayerAbi = [
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'transferAmount', type: 'uint256' },
+      { internalType: 'uint32', name: 'destinationDomain', type: 'uint32' },
+      { internalType: 'bytes32', name: 'mintRecipient', type: 'bytes32' },
+      { internalType: 'address', name: 'burnToken', type: 'address' },
+      { internalType: 'uint256', name: 'feeAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'maxFee', type: 'uint256' },
+      { internalType: 'uint32', name: 'minFinalityThreshold', type: 'uint32' },
+      { internalType: 'bytes32', name: 'destinationCaller', type: 'bytes32' },
+      { internalType: 'bytes', name: 'hookData', type: 'bytes' },
+    ],
+    name: 'requestCCTPTransferWithCaller',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+] as const;

@@ -852,6 +852,94 @@ export enum SigninMethod {
   PASSKEY = 'passkey',
 }
 
+/* ------- DEPOSIT POLICY TYPES ------- */
+
+export enum DepositPolicyStatus {
+  // The account already permits the deposit route. Nothing to do.
+  UP_TO_DATE = 'UP_TO_DATE',
+  // The user has to act: sign `typedData`, or create `policy`.
+  ACTION_REQUIRED = 'ACTION_REQUIRED',
+  // What the user has to do could not be worked out just now. Ask again later.
+  UNAVAILABLE = 'UNAVAILABLE',
+}
+
+/**
+ * EIP-712 typed data that enables the bridge session key on a user's smart account, limited to
+ * the calls of a deposit. Signed as-is with the user's EVM key (`eth_signTypedData_v4`).
+ */
+export interface DepositPolicyTypedData {
+  domain: {
+    name: string,
+    version: string,
+    chainId: number,
+    verifyingContract: string,
+  },
+  types: {
+    Enable: { name: string, type: string }[],
+  },
+  primaryType: string,
+  message: {
+    validationId: string,
+    nonce: number,
+    hook: string,
+    validatorData: string,
+    hookData: string,
+    selectorData: string,
+  },
+}
+
+export interface DepositPolicyEvmApproval {
+  chainId: string,
+  status: DepositPolicyStatus,
+  // Present when status is ACTION_REQUIRED.
+  typedData?: DepositPolicyTypedData,
+}
+
+/**
+ * A Turnkey policy, in the shape Turnkey's `createPolicy` activity takes.
+ */
+export interface DepositPolicyTurnkeyPolicy {
+  policyName: string,
+  effect: 'EFFECT_ALLOW',
+  condition: string,
+  consensus: string,
+  notes: string,
+}
+
+export interface DepositPolicyResponse {
+  dydxAddress: string,
+  // Where deposits arrive on Injective. It holds the same key as the dYdX address, which signs
+  // the transfer on to dYdX.
+  injectiveAddress: string,
+  evm: {
+    // The address that signs the typed data.
+    address: string,
+    approvals: DepositPolicyEvmApproval[],
+  },
+  solana: {
+    status: DepositPolicyStatus,
+    // Present when status is ACTION_REQUIRED. Created in the user's sub-organization.
+    policy?: DepositPolicyTurnkeyPolicy,
+    // Policies for the earlier deposit route, which can be deleted.
+    obsoletePolicyIds: string[],
+  },
+}
+
+export interface DepositPolicySignature {
+  chainId: string,
+  signature: string,
+}
+
+export interface SubmitDepositPolicyRequest {
+  dydxAddress: string,
+  signatures: DepositPolicySignature[],
+}
+
+export interface SubmitDepositPolicyResponse {
+  // The chains whose approval was stored.
+  approvedChainIds: string[],
+}
+
 /* ------- APPLE LOGIN TYPES ------- */
 
 export interface AppleLoginRedirectRequest {
