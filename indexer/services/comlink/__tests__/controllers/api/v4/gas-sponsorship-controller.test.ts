@@ -270,6 +270,21 @@ describe('gas-sponsorship-controller#V4', () => {
       // Another IP address has its own allowance of requests.
       expect((await postFrom('203.0.113.8')).status).toEqual(200);
     });
+
+    it('refuses while the rate-limit store is not ready, without sponsoring', async () => {
+      config.RATE_LIMIT_ENABLED = true;
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      client.ready = false;
+      try {
+        const response: request.Response = await postFrom('203.0.113.9');
+        expect(response.status).toEqual(503);
+        expect(response.body).toEqual({ errors: [{ msg: 'Service temporarily unavailable' }] });
+      } finally {
+        client.ready = ready;
+      }
+      expect(sponsor).not.toHaveBeenCalled();
+    });
   });
 
   describe('when the service refuses or fails', () => {

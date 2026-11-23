@@ -262,6 +262,33 @@ describe('compliance-controller#V4', () => {
       );
     });
 
+    it('Get /screen keeps screening and its per-IP cap while the rate-limit store is down', async () => {
+      const client: any = ratelimitRedis.client;
+      const ready: boolean = client.ready;
+      // With the offline queue off, every store call now fails at once.
+      client.ready = false;
+      ipAddrMock.mockReturnValue('192.168.1.2');
+      try {
+        for (let i: number = 0; i < config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS; i++) {
+          await sendRequest({
+            type: RequestMethod.GET,
+            path: `/v4/screen?address=${i}`,
+          });
+        }
+        await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/screen?address=${testConstants.defaultAddress}`,
+          errorMsg: 'Too many requests',
+          expectedStatus: 429,
+        });
+      } finally {
+        client.ready = ready;
+      }
+      expect(complianceProvider.client.getComplianceResponse).toHaveBeenCalledTimes(
+        config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS,
+      );
+    });
+
     it('GET /screen for invalid address does not upsert compliance data', async () => {
       const invalidAddress: string = 'invalidAddress';
       const notInBlockchainRiskScore: string = NOT_IN_BLOCKCHAIN_RISK_SCORE.toString();

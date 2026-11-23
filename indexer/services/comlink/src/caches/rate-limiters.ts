@@ -1,5 +1,5 @@
 import { redis as redisLib } from '@dydxprotocol-indexer/redis';
-import { RateLimiterRedis } from 'rate-limiter-flexible';
+import { RateLimiterMemory, RateLimiterRedis } from 'rate-limiter-flexible';
 import { RedisClient } from 'redis';
 
 import config from '../config';
@@ -10,8 +10,20 @@ export const ratelimitRedis: {
 } = redisLib.createRedisClient(
   config.RATE_LIMIT_REDIS_URL, config.REDIS_RECONNECT_TIMEOUT_MS,
 );
-// node-redis 2.8 queues commands while Redis is unreachable, so a limiter that calls it then
-// hangs the request; callers check this first and apply their own policy instead.
+// node-redis 2.8 reads both properties on each command or retry, so setting them here leaves the
+// shared redis package unchanged. Without the offline queue a limiter call fails at once while
+// Redis is unreachable, instead of holding the request for the whole outage and replaying it on
+// recovery. With nothing queued it is safe to keep reconnecting for good: the default gives up
+// after 1 hour of retries, leaving every limiter failing until comlink restarts.
+const rateLimitClient = ratelimitRedis.client as RedisClient & {
+  enable_offline_queue: boolean,
+  connect_timeout: number,
+};
+rateLimitClient.enable_offline_queue = false;
+rateLimitClient.connect_timeout = Infinity;
+
+// rate-limiter-flexible's rejectIfRedisNotReady cannot see node-redis 2.8's state, so callers
+// that must refuse while Redis is unreachable check this instead.
 export function isRateLimitStoreReady(): boolean {
   return (ratelimitRedis.client as RedisClient & { ready: boolean }).ready;
 }
@@ -73,26 +85,40 @@ export function getTurnkeyNewSuborgGlobalLimiter(): RateLimiterRedis {
 }
 export const turnkeyNewSuborgGlobalLimiter: RateLimiterRedis = getTurnkeyNewSuborgGlobalLimiter();
 
-// Rate-limiter for /screen endpoint querying a compliance provider, limits per IP
-export function getScreenProviderLimiter(): RateLimiterRedis {
+// The screen limiters guard a paid provider, so on store errors they fall back to the same limits
+// kept in memory: screening keeps working and stays capped, per comlink task rather than shared.
+function getScreenProviderStoreLimiter(
+  points: number,
+  duration: number,
+  keyPrefix: string,
+): RateLimiterRedis {
   return new RateLimiterRedis({
     storeClient: ratelimitRedis.client,
-    points: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS,
-    duration: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_DURATION_SECONDS,
-    keyPrefix: `${config.SERVICE_NAME}/screen_providers`,
+    points,
+    duration,
+    keyPrefix,
+    insuranceLimiter: new RateLimiterMemory({ points, duration, keyPrefix }),
   });
+}
+
+// Rate-limiter for /screen endpoint querying a compliance provider, limits per IP
+export function getScreenProviderLimiter(): RateLimiterRedis {
+  return getScreenProviderStoreLimiter(
+    config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_POINTS,
+    config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_DURATION_SECONDS,
+    `${config.SERVICE_NAME}/screen_providers`,
+  );
 }
 export const screenProviderLimiter: RateLimiterRedis = getScreenProviderLimiter();
 
 // Rate-limiter for /screen endpoint querying a compliance provider, limits the total calls made
 // across all IPs
 export function getScreenProviderGlobalLimiter(): RateLimiterRedis {
-  return new RateLimiterRedis({
-    storeClient: ratelimitRedis.client,
-    points: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_POINTS,
-    duration: config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS,
-    keyPrefix: `${config.SERVICE_NAME}/screen_providers_global`,
-  });
+  return getScreenProviderStoreLimiter(
+    config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_POINTS,
+    config.RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS,
+    `${config.SERVICE_NAME}/screen_providers_global`,
+  );
 }
 export const screenProviderGlobalLimiter: RateLimiterRedis = getScreenProviderGlobalLimiter();
 

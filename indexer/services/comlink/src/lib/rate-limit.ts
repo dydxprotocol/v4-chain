@@ -11,6 +11,26 @@ import { getIpAddr, isIndexerIp } from './utils';
 const INTERNAL_REQUEST_POINTS: number = 0;
 const EXTERNAL_REQUEST_POINTS: number = 1;
 
+// During a Redis outage every limited request errors at once, so log one line per limiter per
+// interval; the store_error metric still counts every error.
+const STORE_ERROR_LOG_INTERVAL_MS: number = 10_000;
+const lastStoreErrorLogAt: Map<string, number> = new Map();
+
+function logStoreError(keyPrefix: string, reject: Error): void {
+  const now: number = Date.now();
+  const last: number | undefined = lastStoreErrorLogAt.get(keyPrefix);
+  if (last !== undefined && now - last < STORE_ERROR_LOG_INTERVAL_MS) {
+    return;
+  }
+  lastStoreErrorLogAt.set(keyPrefix, now);
+  logger.error({
+    at: 'rate-limit',
+    message: 'redis error when checking rate limit',
+    keyPrefix,
+    reject,
+  });
+}
+
 // Note, the return-type of this method and the return type of the middle-ware function have are
 // not defined in the Express types package, and so are omitted for readability as the inferred
 // types are too verbose.
@@ -19,9 +39,8 @@ export function rateLimiterMiddleware(
   postfixKey?: string,
   // Overrides the IP-based key; returning undefined skips this limiter for the request.
   getKey?: (req: express.Request, ipAddr: string) => string | undefined,
-  // Refuse with 503 while the store is not ready (instead of waiting in the client's offline
-  // queue) or errors (READONLY, OOM). Opt-in, for routes that must not run unlimited during a
-  // Redis outage; every other route keeps failing open on store errors.
+  // Refuse with 503 while the store is not ready or errors (READONLY, OOM). Opt-in, for routes
+  // that must not run unlimited during a Redis outage; every other route fails open.
   refuseWhenStoreNotReady: boolean = false,
 ) {
   const refuseStoreUnavailable = (res: express.Response, reason: 'not_ready' | 'error') => {
@@ -80,11 +99,10 @@ export function rateLimiterMiddleware(
       });
     } catch (reject) {
       if (reject instanceof Error) {
-        logger.error({
-          at: 'rate-limit',
-          message: 'redis error when checking rate limit',
-          reject,
+        stats.increment(`${config.SERVICE_NAME}.rate_limit_store_error`, 1, {
+          key_prefix: rateLimiter.keyPrefix,
         });
+        logStoreError(rateLimiter.keyPrefix, reject);
         if (refuseWhenStoreNotReady) {
           return refuseStoreUnavailable(res, 'error');
         }

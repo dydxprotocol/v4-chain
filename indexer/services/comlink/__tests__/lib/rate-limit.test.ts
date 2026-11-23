@@ -1,6 +1,7 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
+import { createClient } from 'redis';
 import config from '../../src/config';
 import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
 import {
@@ -703,19 +704,82 @@ describe('rateLimit', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('still uses the store when the route does not opt in', async () => {
+    it('fails open at once, without waiting for Redis, when the route does not opt in', async () => {
       const client: any = ratelimitRedis.client;
       const ready: boolean = client.ready;
-      // Mocked: with ready=false a real command would wait in the client's offline queue.
-      const consume = jest.spyOn(defaultRateLimiter, 'consume')
-        .mockResolvedValue({ remainingPoints: 1, msBeforeNext: 1000 } as any);
+      const consume = jest.spyOn(defaultRateLimiter, 'consume');
+      const increment = jest.spyOn(stats, 'increment');
       client.ready = false;
       req.headers = defaultHeaders;
       try {
         await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
         expect(consume).toHaveBeenCalledTimes(1);
+        expect(increment).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.rate_limit_store_error`, 1,
+          { key_prefix: defaultRateLimiter.keyPrefix },
+        );
+        expect(res.status).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledTimes(1);
       } finally {
         client.ready = ready;
+      }
+    }, 2000);
+
+    it('logs store errors once per limiter per interval and counts every one', async () => {
+      const error = jest.spyOn(logger, 'error');
+      const increment = jest.spyOn(stats, 'increment');
+      // Far ahead of any earlier log in this file, so the first error below always logs.
+      const start: number = Date.now() + 1_000_000_000;
+      const now = jest.spyOn(Date, 'now').mockReturnValue(start);
+      jest.spyOn(ordersRateLimiter, 'consume').mockRejectedValue(new Error('READONLY'));
+      req.headers = defaultHeaders;
+
+      await rateLimiterMiddleware(ordersRateLimiter)(req, res, next);
+      now.mockReturnValue(start + 9_999);
+      await rateLimiterMiddleware(ordersRateLimiter)(req, res, next);
+      expect(error).toHaveBeenCalledTimes(1);
+
+      now.mockReturnValue(start + 10_000);
+      await rateLimiterMiddleware(ordersRateLimiter)(req, res, next);
+      expect(error).toHaveBeenCalledTimes(2);
+      expect(increment.mock.calls.filter(
+        ([stat]) => stat === `${config.SERVICE_NAME}.rate_limit_store_error`,
+      )).toHaveLength(3);
+      expect(next).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('rate-limit store reconnects', () => {
+    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
+      const deadline: number = Date.now() + ms;
+      while (Date.now() < deadline) {
+        if (check()) {
+          return true;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      return check();
+    };
+    const unreachableClient = (connectTimeout: number): any => {
+      const client: any = createClient({ host: '127.0.0.1', port: 1, retry_strategy: () => 10 });
+      client.on('error', () => {});
+      client.connect_timeout = connectTimeout;
+      return client;
+    };
+
+    it('never gives up on the rate-limit client', () => {
+      expect((ratelimitRedis.client as any).connect_timeout).toBe(Infinity);
+    });
+
+    it('node-redis gives up once retries add up to connect_timeout, unless it is Infinity', async () => {
+      const capped: any = unreachableClient(50);
+      const uncapped: any = unreachableClient(Infinity);
+      try {
+        expect(await waitFor(() => capped.closing, 2000)).toBe(true);
+        expect(await waitFor(() => uncapped.closing, 300)).toBe(false);
+      } finally {
+        capped.end(false);
+        uncapped.end(false);
       }
     });
   });
