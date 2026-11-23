@@ -988,8 +988,7 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
 	sm.cacheStreamUpdatesByClobPairWithLock(updates, clobPairIds)
 
 	sm.EmitMetrics()
-	// Remove all subscriptions and wipe the buffer if buffer overflows.
-	sm.RemoveSubscriptionsAndClearBufferIfFull()
+	sm.flushStreamUpdatesIfFullWithLock()
 }
 
 // AddSubaccountUpdatesToCache adds a series of updates to the full node streaming cache.
@@ -1009,23 +1008,15 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 	sm.cacheStreamUpdatesBySubaccountWithLock(updates, subaccountIds)
 
 	sm.EmitMetrics()
-	sm.RemoveSubscriptionsAndClearBufferIfFull()
+	sm.flushStreamUpdatesIfFullWithLock()
 }
 
-// RemoveSubscriptionsAndClearBufferIfFull removes all subscriptions and wipes the buffer if buffer overflows.
-// Note this method requires the lock and assumes that the lock has already been
-// acquired by the caller.
-func (sm *FullNodeStreamingManagerImpl) RemoveSubscriptionsAndClearBufferIfFull() {
-	// Remove all subscriptions and wipe the buffer if buffer overflows.
+// flushStreamUpdatesIfFullWithLock flushes the cache without waiting for the ticker once it
+// holds more than maxUpdatesInCache updates. Note this method requires the lock and assumes
+// that the lock has already been acquired by the caller.
+func (sm *FullNodeStreamingManagerImpl) flushStreamUpdatesIfFullWithLock() {
 	if len(sm.streamUpdateCache) > int(sm.maxUpdatesInCache) {
-		sm.logger.Error("Streaming buffer full capacity. Dropping messages and all subscriptions. " +
-			"Disconnect all clients and increase buffer size via the grpc-stream-buffer-size flag.")
-		for id := range sm.orderbookSubscriptions {
-			sm.removeSubscription(id)
-		}
-		sm.streamUpdateCache = nil
-		sm.streamUpdateSubscriptionCache = nil
-		sm.EmitMetrics()
+		sm.FlushStreamUpdatesWithLock()
 	}
 }
 
