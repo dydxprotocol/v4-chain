@@ -5,6 +5,7 @@ import {
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BridgeInformationTable,
+  PermissionApprovalTable,
   TurnkeyUsersTable,
   TurnkeyUserFromDatabase,
   BridgeInformationCreateObject,
@@ -52,11 +53,14 @@ import {
   limitAmount,
 } from '../../../helpers/skip-helper';
 import { trackTurnkeyDepositSubmitted } from '../../../lib/amplitude-helpers';
+import { approvalAllowsInjectiveBridge } from '../../../lib/call-policies';
 import { handleControllerError } from '../../../lib/helpers';
 import {
-  dydxChainId, usdcAddressByChainId, ethDenomByChainId,
+  usdcAddressByChainId, ethDenomByChainId,
   SOLANA_USDC_QUANTUM,
   ETH_USDC_QUANTUM,
+  INJECTIVE_EVM_USDC_ADDRESS,
+  injectiveEvmChainId,
 } from '../../../lib/smart-contract-constants';
 import {
   CheckBridgeSchema,
@@ -274,9 +278,11 @@ class BridgeController extends Controller {
       amountIn,
       sourceAssetDenom,
       sourceAssetChainId: chainId,
-      destAssetChainId: dydxChainId,
+      // USDC on Injective, in the user's own Injective account. The user sends it on to dYdX
+      // from there.
+      destAssetChainId: injectiveEvmChainId,
       cumulativeAffiliateFeeBps: '0',
-      destAssetDenom: usdcAddressByChainId[dydxChainId],
+      destAssetDenom: INJECTIVE_EVM_USDC_ADDRESS,
     });
     if (!path) {
       throw new Error('Failed to create route');
@@ -465,6 +471,26 @@ class BridgeController extends Controller {
     );
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
+    }
+    // An approval made for the earlier route through Noble does not permit this one, and the
+    // user operation would be refused. The funds stay where they are until the user approves
+    // the Injective route.
+    const approval: string | undefined = await PermissionApprovalTable.getApprovalForSuborgAndChain(
+      record.suborg_id,
+      chainId,
+    );
+    if (!approval || !approvalAllowsInjectiveBridge(approval, record.dydx_address)) {
+      logger.warning({
+        at: `${controllerName}#startEvmBridge`,
+        message: 'User has not approved the Injective deposit route, skipping bridge',
+        fromAddress,
+        chainId,
+        sourceAssetDenom,
+      });
+      return {
+        success: false,
+        message: 'User has not approved the Injective deposit route',
+      };
     }
     // we cannot bridge more than the max amount allowed through the bridge.
     const amountToUse = await limitAmount(chainId, amount, sourceAssetDenom);

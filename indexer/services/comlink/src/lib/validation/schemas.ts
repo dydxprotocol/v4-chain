@@ -454,6 +454,51 @@ export const CheckAppleLoginRedirectSchema = checkSchema(appleLoginRedirectSchem
 
 export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
 
+export const CheckGetDepositPolicySchema = checkSchema({
+  dydxAddress: {
+    in: ['params'],
+    custom: {
+      options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
+    },
+    errorMessage: 'dydxAddress must be a valid dydx address',
+  },
+});
+
+export const CheckSubmitDepositPolicySchema = checkSchema({
+  dydxAddress: {
+    in: ['body'],
+    custom: {
+      options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
+    },
+    errorMessage: 'dydxAddress must be a valid dydx address',
+  },
+  signatures: {
+    in: ['body'],
+    isArray: {
+      // One signature per EVM chain at most.
+      options: { min: 1, max: 5 },
+    },
+    errorMessage: 'signatures must be a list of one to five signatures',
+  },
+  'signatures.*.chainId': {
+    in: ['body'],
+    isString: true,
+    matches: {
+      options: /^[0-9]{1,10}$/,
+    },
+    errorMessage: 'chainId must be the id of an EVM chain, as a string',
+  },
+  'signatures.*.signature': {
+    in: ['body'],
+    isString: true,
+    matches: {
+      // A 65-byte signature.
+      options: /^0x[0-9a-fA-F]{130}$/,
+    },
+    errorMessage: 'signature must be a 65-byte signature in hex',
+  },
+});
+
 export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
 
 export const CheckGasSponsorshipSchema = checkSchema({
