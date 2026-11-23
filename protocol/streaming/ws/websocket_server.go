@@ -21,6 +21,9 @@ const (
 	MARKET_IDS_QUERY_PARAM    = "marketIds"
 
 	CLOSE_DEADLINE = 5 * time.Second
+	WRITE_DEADLINE = 10 * time.Second
+	PING_PERIOD    = 30 * time.Second
+	PONG_DEADLINE  = 60 * time.Second
 )
 
 var upgrader = websocket.Upgrader{
@@ -37,6 +40,10 @@ type WebsocketServer struct {
 	logger           log.Logger
 	port             uint16
 	server           *http.Server
+
+	writeDeadline time.Duration
+	pingPeriod    time.Duration
+	pongDeadline  time.Duration
 }
 
 func NewWebsocketServer(
@@ -50,6 +57,9 @@ func NewWebsocketServer(
 		cdc:              cdc,
 		logger:           logger.With(log.ModuleKey, "full-node-streaming"),
 		port:             port,
+		writeDeadline:    WRITE_DEADLINE,
+		pingPeriod:       PING_PERIOD,
+		pongDeadline:     PONG_DEADLINE,
 	}
 }
 
@@ -108,9 +118,15 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	websocketMessageSender := &WebsocketMessageSender{
-		cdc:  ws.cdc,
-		conn: conn,
+		cdc:           ws.cdc,
+		conn:          conn,
+		writeDeadline: ws.writeDeadline,
 	}
+
+	done := make(chan struct{})
+	defer close(done)
+	go ws.readPongs(conn)
+	go ws.sendPings(conn, done)
 
 	ws.logger.Info(
 		fmt.Sprintf("Received websocket streaming request for clob pair ids: %+v", clobPairIds),
@@ -132,6 +148,40 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 			ws.logger.Error("Error sending close message", "err", err)
 		}
 		return
+	}
+}
+
+// readPongs closes the connection once the client stops answering pings. Clients are not expected
+// to send anything, but gorilla only processes pongs and close frames while the connection is read.
+func (ws *WebsocketServer) readPongs(conn *websocket.Conn) {
+	defer conn.Close()
+	extendReadDeadline := func(string) error {
+		return conn.SetReadDeadline(time.Now().Add(ws.pongDeadline))
+	}
+	conn.SetPongHandler(extendReadDeadline)
+	if err := extendReadDeadline(""); err != nil {
+		return
+	}
+	for {
+		if _, _, err := conn.NextReader(); err != nil {
+			return
+		}
+	}
+}
+
+func (ws *WebsocketServer) sendPings(conn *websocket.Conn, done <-chan struct{}) {
+	ticker := time.NewTicker(ws.pingPeriod)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			deadline := time.Now().Add(ws.writeDeadline)
+			if err := conn.WriteControl(websocket.PingMessage, nil, deadline); err != nil {
+				return
+			}
+		case <-done:
+			return
+		}
 	}
 }
 

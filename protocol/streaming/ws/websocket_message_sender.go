@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"time"
+
 	"github.com/gorilla/websocket"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,7 +15,8 @@ var _ types.OutgoingMessageSender = (*WebsocketMessageSender)(nil)
 type WebsocketMessageSender struct {
 	cdc codec.JSONCodec
 
-	conn *websocket.Conn
+	conn          *websocket.Conn
+	writeDeadline time.Duration
 }
 
 func (wms *WebsocketMessageSender) Send(
@@ -21,6 +24,9 @@ func (wms *WebsocketMessageSender) Send(
 ) (err error) {
 	responseJson, err := wms.cdc.MarshalJSON(response)
 	if err != nil {
+		return err
+	}
+	if err := wms.conn.SetWriteDeadline(time.Now().Add(wms.writeDeadline)); err != nil {
 		return err
 	}
 	return wms.conn.WriteMessage(websocket.TextMessage, responseJson)
