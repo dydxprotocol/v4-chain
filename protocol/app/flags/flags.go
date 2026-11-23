@@ -123,7 +123,7 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint32(
 		GrpcStreamingMaxBatchSize,
 		DefaultGrpcStreamingMaxBatchSize,
-		"Maximum batch size before grpc streaming cancels all subscriptions",
+		"Maximum number of buffered updates before grpc streaming flushes without waiting for the flush interval",
 	)
 	cmd.Flags().Uint32(
 		GrpcStreamingMaxChannelBufferSize,
