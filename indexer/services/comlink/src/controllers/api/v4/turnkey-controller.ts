@@ -1,11 +1,11 @@
 import { stats } from '@dydxprotocol-indexer/base';
-import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
+import { TurnkeyUserFromDatabase, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
 import {
-  Controller, Post, Route, Body,
+  Controller, Get, Path, Post, Route, Body,
 } from 'tsoa';
 import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
@@ -14,11 +14,17 @@ import config from '../../../config';
 import { addAddressesToAlchemyWebhook } from '../../../helpers/alchemy-helpers';
 import { PolicyEngine } from '../../../helpers/policy-engine';
 import { AppleHelpers } from '../../../lib/apple-helpers';
-import { TurnkeyError } from '../../../lib/errors';
+import { NotFoundError, TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { extractEmailFromOidcToken, TurnkeyHelpers } from '../../../lib/turnkey-helpers';
-import { CheckSignInSchema, CheckUploadDydxAddressSchema, CheckAppleLoginRedirectSchema } from '../../../lib/validation/schemas';
+import {
+  CheckSignInSchema,
+  CheckUploadDydxAddressSchema,
+  CheckAppleLoginRedirectSchema,
+  CheckGetDepositPolicySchema,
+  CheckSubmitDepositPolicySchema,
+} from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -26,6 +32,10 @@ import {
   TurnkeyAuthResponse,
   AppleLoginRedirectRequest,
   AppleLoginResponse,
+  DepositPolicyResponse,
+  DepositPolicySignature,
+  SubmitDepositPolicyRequest,
+  SubmitDepositPolicyResponse,
 } from '../../../types';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
@@ -146,6 +156,51 @@ export class TurnkeyController extends Controller {
     await TurnkeyUsersTable.updateDydxAddressByEvmAddress(user.evm_address, dydxAddress);
 
     return { success: true };
+  }
+
+  /**
+   * Returns what the user has to approve before deposits to their deposit addresses can be
+   * bridged, for an account that was set up before the deposit route changed to go through
+   * Injective. The service cannot make these approvals itself: once an account is set up, only
+   * the user can change what the service may sign for them.
+   *
+   * - `evm.approvals`: for each chain with status ACTION_REQUIRED, sign `typedData` with the
+   *   user's EVM key and send the signatures to POST /depositPolicy.
+   * - `solana`: with status ACTION_REQUIRED, create `policy` in the user's Turnkey
+   *   sub-organization. The policies in `obsoletePolicyIds` can be deleted.
+   *
+   * Deposits arrive at `injectiveAddress`, and the user sends them on to dYdX from there.
+   */
+  @Get('/depositPolicy/{dydxAddress}')
+  async getDepositPolicy(
+    @Path() dydxAddress: string,
+  ): Promise<DepositPolicyResponse> {
+    return this.policyEngine.getDepositPolicy(await TurnkeyController.findUser(dydxAddress));
+  }
+
+  /**
+   * Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress}. A
+   * signature that is not the user's signature of that typed data is rejected, and nothing is
+   * stored.
+   */
+  @Post('/depositPolicy')
+  async submitDepositPolicy(
+    @Body() body: SubmitDepositPolicyRequest,
+  ): Promise<SubmitDepositPolicyResponse> {
+    const user: TurnkeyUserFromDatabase = await TurnkeyController.findUser(body.dydxAddress);
+    return {
+      approvedChainIds: await this.policyEngine.submitDepositApprovals(user, body.signatures),
+    };
+  }
+
+  private static async findUser(dydxAddress: string): Promise<TurnkeyUserFromDatabase> {
+    const user: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findByDydxAddress(
+      dydxAddress,
+    );
+    if (!user) {
+      throw new NotFoundError(`No user found with dydx address: ${dydxAddress}`);
+    }
+    return user;
   }
 
   @Post('/signin')
@@ -354,6 +409,73 @@ router.post(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.post_uploadAddress.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.get(
+  '/depositPolicy/:dydxAddress',
+  rateLimiterMiddleware(defaultRateLimiter),
+  ...CheckGetDepositPolicySchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const { dydxAddress } = matchedData(req) as { dydxAddress: string };
+      const controller: TurnkeyController = new TurnkeyController();
+      const response: DepositPolicyResponse = await controller.getDepositPolicy(dydxAddress);
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController GET /depositPolicy',
+        'Turnkey getDepositPolicy error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_depositPolicy.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/depositPolicy',
+  rateLimiterMiddleware(defaultRateLimiter),
+  ...CheckSubmitDepositPolicySchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const { dydxAddress, signatures } = matchedData(req) as SubmitDepositPolicyRequest;
+      const controller: TurnkeyController = new TurnkeyController();
+      const response: SubmitDepositPolicyResponse = await controller.submitDepositPolicy({
+        dydxAddress,
+        // Only what was validated: an entry may carry other fields.
+        signatures: signatures.map(({ chainId, signature }: DepositPolicySignature) => ({
+          chainId,
+          signature,
+        })),
+      });
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'TurnkeyController POST /depositPolicy',
+        'Turnkey submitDepositPolicy error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.post_depositPolicy.timing`,
         Date.now() - start,
       );
     }
