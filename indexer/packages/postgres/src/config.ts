@@ -34,6 +34,10 @@ export const postgresConfigSchema = {
   // Abort a transaction left idle (no active query) past this, so a leaked/abandoned
   // transaction can never pin the vacuum xmin horizon for hours. 0 disables.
   PG_IDLE_IN_TX_TIMEOUT_MS: parseInteger({ default: 300_000 }), // 5 minutes
+  // statement_timeout for read-replica connections only; writers on the primary are never capped.
+  // It caps each statement, not the request: pool waits and the request's other queries add to it,
+  // so keep it below the load balancer's idle timeout with room for both. 0 disables.
+  PG_READ_REPLICA_STATEMENT_TIMEOUT_MS: parseInteger({ default: 0 }),
   PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
   ASSET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
   MARKET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
