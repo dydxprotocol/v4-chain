@@ -1,10 +1,12 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
+import { RateLimiterRedis } from 'rate-limiter-flexible';
 import { createClient, RedisClient } from 'redis';
 
 import {
   defaultRateLimiter,
   ratelimitRedis,
+  resetRateLimitStoreThrottles,
   screenProviderGlobalLimiter,
 } from '../../src/caches/rate-limiters';
 import config from '../../src/config';
@@ -13,7 +15,8 @@ import { clearStoreErrorLogTimes, rateLimiterMiddleware } from '../../src/lib/ra
 import { reserveNewSuborgSlot } from '../../src/lib/turnkey-helpers';
 
 // These tests drive the real rate-limit client against the test Redis, stalling, demoting or
-// locking that Redis through a second connection.
+// locking that Redis through a second connection. They need DEBUG, REPLICAOF and CONFIG SET, which
+// the compose image (redis:5.0.6-alpine) allows; Redis 7 refuses DEBUG by default.
 describe('rate-limit store', () => {
   const client: any = ratelimitRedis.client;
   let admin: RedisClient;
@@ -56,6 +59,7 @@ describe('rate-limit store', () => {
   afterEach(async () => {
     jest.restoreAllMocks();
     clearStoreErrorLogTimes();
+    resetRateLimitStoreThrottles();
     expect(await waitFor(() => client.ready, 5000)).toBe(true);
     await redis.deleteAllAsync(client);
   });
@@ -115,6 +119,30 @@ describe('rate-limit store', () => {
       expect(Date.now() - start).toBeLessThan(1000);
     });
 
+    it('drops the connection on a timeout, so later calls fail at once instead of queueing', async () => {
+      await expect(defaultRateLimiter.consume('203.0.113.22')).rejects.toThrow('did not answer');
+      expect(await waitFor(() => !client.ready, 500)).toBe(true);
+      expect(client.command_queue.length).toBe(0);
+      const start: number = Date.now();
+      await expect(defaultRateLimiter.consume('203.0.113.22')).rejects.toThrow();
+      expect(Date.now() - start).toBeLessThan(100);
+    });
+
+    it('drops again, within the floor, when the reconnect\'s ready check gets no answer', async () => {
+      let ends: number = 0;
+      const onEnd = (): void => { ends += 1; };
+      client.on('end', onEnd);
+      try {
+        await expect(defaultRateLimiter.consume('203.0.113.24')).rejects.toThrow('did not answer');
+        // Reconnected, with the ready check waiting on the stalled server.
+        expect(await waitFor(() => client.connected && !client.ready, 1000)).toBe(true);
+        await expect(defaultRateLimiter.consume('203.0.113.24')).rejects.toThrow('did not answer');
+        expect(await waitFor(() => ends === 2, 300)).toBe(true);
+      } finally {
+        client.removeListener('end', onEnd);
+      }
+    });
+
     it('answers screening from memory within the timeout, and counts it', async () => {
       const increment = jest.spyOn(stats, 'increment');
       const start: number = Date.now();
@@ -136,6 +164,24 @@ describe('rate-limit store', () => {
     } finally {
       await send('replicaof', ['no', 'one']);
     }
+    expect(await waitFor(() => client.ready, 5000)).toBe(true);
+  });
+
+  it('drops the connection at most once per 5 s on READONLY', async () => {
+    jest.spyOn(RateLimiterRedis.prototype, 'consume').mockRejectedValue(
+      new Error("ERR Error running script: -READONLY You can't write against a read only replica."),
+    );
+    const destroy = jest.spyOn(client.stream, 'destroy').mockImplementation(() => client.stream);
+    const start: number = Date.now();
+    const now = jest.spyOn(Date, 'now').mockReturnValue(start);
+
+    await expect(defaultRateLimiter.consume('203.0.113.23')).rejects.toThrow('READONLY');
+    now.mockReturnValue(start + 4_999);
+    await expect(defaultRateLimiter.consume('203.0.113.23')).rejects.toThrow('READONLY');
+    expect(destroy).toHaveBeenCalledTimes(1);
+    now.mockReturnValue(start + 5_000);
+    await expect(defaultRateLimiter.consume('203.0.113.23')).rejects.toThrow('READONLY');
+    expect(destroy).toHaveBeenCalledTimes(2);
   });
 
   it('reconnects after a failed ready check once the cause is gone', async () => {
@@ -153,10 +199,12 @@ describe('rate-limit store', () => {
       await send('config', ['set', 'requirepass', '']);
       config.RATE_LIMIT_STORE_READY_RETRY_MS = retryMs;
     }
+    expect(await waitFor(() => client.ready, 5000)).toBe(true);
   });
 
-  it('logs reconnect attempts once per interval', () => {
+  it('logs reconnect attempts once per interval and counts every one', async () => {
     const error = jest.spyOn(logger, 'error');
+    const distribution = jest.spyOn(stats, 'distribution');
     const start: number = Date.now() + 1_000_000_000;
     const now = jest.spyOn(Date, 'now').mockReturnValue(start);
     const options: any = { attempt: 50, error: new Error('ECONNREFUSED') };
@@ -165,9 +213,21 @@ describe('rate-limit store', () => {
     now.mockReturnValue(start + 9_999);
     expect(client.options.retry_strategy(options)).toBe(config.REDIS_RECONNECT_TIMEOUT_MS);
     expect(error).toHaveBeenCalledTimes(1);
+    expect(distribution.mock.calls.filter(
+      ([stat]) => stat === 'redis.connection_retries',
+    )).toHaveLength(2);
     now.mockReturnValue(start + 10_000);
     client.options.retry_strategy(options);
     expect(error).toHaveBeenCalledTimes(2);
+
+    // Once the client is ready again, the next outage's first attempt is logged at once.
+    now.mockRestore();
+    client.stream.destroy();
+    expect(await waitFor(() => !client.ready, 1000)).toBe(true);
+    expect(await waitFor(() => client.ready, 5000)).toBe(true);
+    jest.spyOn(Date, 'now').mockReturnValue(start + 10_001);
+    client.options.retry_strategy(options);
+    expect(error).toHaveBeenCalledTimes(3);
   });
 
   // Last: without the fix the client ends for good, which would break the tests after it.

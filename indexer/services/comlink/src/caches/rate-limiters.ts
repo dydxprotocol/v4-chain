@@ -34,11 +34,18 @@ let lastRetryLogAt: number = -Infinity;
 rateLimitClient.options.retry_strategy = (options: RetryStrategyOptions): number => {
   const now: number = Date.now();
   if (now - lastRetryLogAt < RECONNECT_LOG_INTERVAL_MS) {
+    stats.distribution('redis.connection_retries', options.attempt, {
+      url: config.RATE_LIMIT_REDIS_URL,
+    });
     return config.REDIS_RECONNECT_TIMEOUT_MS;
   }
   lastRetryLogAt = now;
   return sharedRetryStrategy(options);
 };
+// So the first failed attempt of the next outage is logged.
+rateLimitClient.on('ready', () => {
+  lastRetryLogAt = -Infinity;
+});
 
 // node-redis 2.8 never leaves two states by itself: a server demoted to replica keeps answering
 // READONLY on a live connection, and a failed ready check (e.g. NOAUTH after a credential change)
@@ -46,6 +53,29 @@ rateLimitClient.options.retry_strategy = (options: RetryStrategyOptions): number
 // reconnect, which also resolves the host again.
 function reconnectRateLimitStore(): void {
   rateLimitClient.stream.destroy();
+}
+
+// Limiter calls drop the socket on a timeout (the connection may be half-open, and dropping it
+// fails the calls queued on it instead of charging them late) or on READONLY. At most once per
+// floor, since a reconnect to a healthy replica becomes ready and answers READONLY again. A
+// timeout while not ready skips the floor: node-redis queues even its fast-fail errors behind the
+// pending ready check, so that check got no answer and every call would wait out the timeout.
+const STORE_FAILURE_RECONNECT_FLOOR_MS: number = 5_000;
+let lastStoreFailureReconnectAt: number = -Infinity;
+
+function reconnectAfterStoreFailure(readyCheckHangs: boolean): void {
+  const now: number = Date.now();
+  if (!readyCheckHangs && now - lastStoreFailureReconnectAt < STORE_FAILURE_RECONNECT_FLOOR_MS) {
+    return;
+  }
+  lastStoreFailureReconnectAt = now;
+  logger.info({ at: 'rate-limiters#storeFailure', message: 'Reconnecting rate-limit Redis' });
+  reconnectRateLimitStore();
+}
+
+export function resetRateLimitStoreThrottles(): void {
+  lastRetryLogAt = -Infinity;
+  lastStoreFailureReconnectAt = -Infinity;
 }
 rateLimitClient.on('error', (error: Error) => {
   if (error.message.startsWith('Ready check failed')) {
@@ -65,11 +95,13 @@ export function isRateLimitStoreReady(): boolean {
   return rateLimitClient.ready;
 }
 
+class StoreTimeoutError extends Error {}
+
 function withStoreTimeout<T>(call: Promise<T>): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
   const timeout: Promise<never> = new Promise((_resolve, reject) => {
     timer = setTimeout(
-      () => reject(new Error(
+      () => reject(new StoreTimeoutError(
         `Rate-limit store did not answer within ${config.RATE_LIMIT_STORE_TIMEOUT_MS} ms`,
       )),
       config.RATE_LIMIT_STORE_TIMEOUT_MS,
@@ -108,8 +140,8 @@ class StoreRateLimiter extends RateLimiterRedis {
         throw error;
       }
       // A write inside the limiter's Lua script fails with code ERR, so match the message.
-      if (error.message.includes('READONLY')) {
-        reconnectRateLimitStore();
+      if (error instanceof StoreTimeoutError || error.message.includes('READONLY')) {
+        reconnectAfterStoreFailure(error instanceof StoreTimeoutError && !rateLimitClient.ready);
       }
       if (this.fallback === undefined) {
         throw error;
