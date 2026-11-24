@@ -178,3 +178,46 @@ func TestUpdateMarketParam(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateMarketParamNormalizesPairCase(t *testing.T) {
+	ctx, pricesKeeper, _, _, mockTimeProvider, _, marketMapKeeper := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+	msgServer := keeper.NewMsgServerImpl(pricesKeeper)
+
+	initial := *pricestest.GenerateMarketParamPrice(
+		pricestest.WithId(1),
+		pricestest.WithPair("BTC-USD"),
+		pricestest.WithExponent(-8),
+		pricestest.WithPriceValue(0),
+	)
+	_, err := keepertest.CreateTestMarket(t, ctx, pricesKeeper, initial.Param, initial.Price)
+	require.NoError(t, err)
+
+	// Target pair exists in marketmap under canonical case, but governance
+	// submits a non-canonical case — same class of bug as CreateOracleMarket
+	// before pair uppercasing (#3375).
+	newParam := pricestypes.MarketParam{
+		Id:                 initial.Param.Id,
+		Pair:               "newmarket-usd",
+		Exponent:           initial.Param.Exponent,
+		MinExchanges:       72,
+		MinPriceChangePpm:  2_023,
+		ExchangeConfigJson: `{"exchanges":[{"exchangeName":"XYZ","ticker":"PIKACHU"}]}`,
+	}
+	keepertest.CreateMarketsInMarketMapFromParams(
+		t,
+		ctx,
+		marketMapKeeper,
+		[]pricestypes.MarketParam{newParam},
+	)
+
+	_, err = msgServer.UpdateMarketParam(ctx, &pricestypes.MsgUpdateMarketParam{
+		Authority:   lib.GovModuleAddress.String(),
+		MarketParam: newParam,
+	})
+	require.NoError(t, err)
+
+	updated, exists := pricesKeeper.GetMarketParam(ctx, 1)
+	require.True(t, exists)
+	require.Equal(t, "NEWMARKET-USD", updated.Pair)
+}
