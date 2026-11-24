@@ -64,7 +64,6 @@ describe('TurnkeyController', () => {
     // Create mock PolicyEngine
     mockPolicyEngine = {
       configurePolicy: jest.fn().mockResolvedValue(undefined),
-      configureSolanaPolicy: jest.fn().mockResolvedValue(undefined),
       removeSelfFromRootQuorum: jest.fn().mockResolvedValue(undefined),
       getAPIUserId: jest.fn().mockResolvedValue('mock-api-user-id'),
     } as unknown as jest.Mocked<PolicyEngine>;
@@ -342,8 +341,9 @@ describe('TurnkeyController', () => {
       expect(mockPolicyEngine.configurePolicy).toHaveBeenCalledWith(
         user?.suborg_id,
         user?.evm_address,
-        user?.dydx_address,
       );
+      // The user has not yet named the Injective account their deposits go to.
+      expect(user?.injective_address).toBeNull();
       expect(mockPolicyEngine.removeSelfFromRootQuorum).toHaveBeenCalledWith(
         user?.suborg_id,
       );

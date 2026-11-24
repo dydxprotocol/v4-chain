@@ -21,18 +21,18 @@ const valueLimit: bigint = BigInt(0);
  * nothing else. It permits the two calls of a deposit:
  *
  * 1. approving Skip's CCTP v2 relayer to spend the user's USDC, and
- * 2. asking that relayer to burn USDC for minting on Injective to the user's own Injective
- *    account (see `injective-address.ts`), keeping at most `EVM_BRIDGE_MAX_RELAY_FEE` of it as
+ * 2. asking that relayer to burn USDC for minting on Injective to the Injective account the user
+ *    named (see `injective-address.ts`), keeping at most `EVM_BRIDGE_MAX_RELAY_FEE` of it as
  *    its fee.
  *
  * Deposits of the native token are not covered: Skip has no route for them to Injective.
  *
  * @param chainId - one of ethereum, arbitrum, base, optimism, avalanche.
- * @returns a function from the user's dYdX address to the policy.
+ * @returns a function from the user's Injective address to the policy.
  */
-function constructPolicy(chainId: string): (dydxAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>> {
+function constructPolicy(chainId: string): (injectiveAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>> {
   const usdc = usdcAddressByChainId[chainId] as `0x${string}`;
-  return (dydxAddress: string) => {
+  return (injectiveAddress: string) => {
     return Promise.resolve({
       policyVersion: CallPolicyVersion.V0_0_5,
       permissions: [
@@ -63,9 +63,9 @@ function constructPolicy(chainId: string): (dydxAddress: string) => Promise<Call
               value: INJECTIVE_CCTP_DOMAIN,
             },
             {
-              // The mint recipient is the user's own Injective account.
+              // The mint recipient is the Injective account the user named.
               condition: ParamCondition.EQUAL,
-              value: getInjectiveMintRecipient(dydxAddress),
+              value: getInjectiveMintRecipient(injectiveAddress),
             },
             {
               // The token burned is USDC.
@@ -88,7 +88,7 @@ function constructPolicy(chainId: string): (dydxAddress: string) => Promise<Call
   };
 }
 
-export const callPolicyByChainId: Record<string, (dydxAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>>> = {
+export const callPolicyByChainId: Record<string, (injectiveAddress: string) => Promise<CallPolicyParams<Abi, `0x${string}`>>> = {
   [mainnet.id.toString()]: constructPolicy(mainnet.id.toString()),
   [arbitrum.id.toString()]: constructPolicy(arbitrum.id.toString()),
   [avalanche.id.toString()]: constructPolicy(avalanche.id.toString()),
@@ -97,15 +97,31 @@ export const callPolicyByChainId: Record<string, (dydxAddress: string) => Promis
 };
 
 /**
- * Whether a stored approval permits the deposit route to Injective for this user, as opposed to
- * the earlier route through Noble. A user's approval is replaced when they approve the new
- * route; until then their deposits cannot be bridged.
+ * The policy a new account starts with: the bridge session key is permitted no calls at all.
+ *
+ * An account is set up before the user has named the Injective account their deposits go to, so
+ * there is nothing yet that the key could be permitted to do. The approval made with this policy
+ * still matters: on the EIP-7702 chains it carries the authorization that makes the user's
+ * address a smart account, which the approval the user makes later is built on.
+ */
+export function getNoCallsPolicy(): CallPolicyParams<Abi, `0x${string}`> {
+  return {
+    policyVersion: CallPolicyVersion.V0_0_5,
+    permissions: [],
+  };
+}
+
+/**
+ * Whether a stored approval permits bridging deposits to `injectiveAddress`. It does not if it
+ * was made for the earlier route through Noble, for another Injective account, or when the
+ * account was set up. A user's approval is replaced when they approve the deposit policy; until
+ * then their deposits cannot be bridged.
  *
  * @param approval - a serialized permission account, as stored in the permission_approval table.
  */
-export function approvalAllowsInjectiveBridge(approval: string, dydxAddress: string): boolean {
+export function approvalAllowsInjectiveBridge(approval: string, injectiveAddress: string): boolean {
   try {
-    const mintRecipient: string = getInjectiveMintRecipient(dydxAddress).toLowerCase();
+    const mintRecipient: string = getInjectiveMintRecipient(injectiveAddress).toLowerCase();
     const params = JSON.parse(Buffer.from(approval, 'base64').toString('utf8'));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return params.permissionParams.policies.some((policy: any) => {
@@ -122,7 +138,8 @@ export function approvalAllowsInjectiveBridge(approval: string, dydxAddress: str
       });
     });
   } catch (error) {
-    // Not a serialized permission account, or not one with a call policy.
+    // Not a serialized permission account, not one with a call policy, or not an Injective
+    // address.
     return false;
   }
 }

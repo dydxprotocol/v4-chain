@@ -1,23 +1,25 @@
 import { decode, encode, fromWords } from 'bech32';
 import { getAddress, pad } from 'viem';
 
-const DYDX_PREFIX: string = 'dydx';
 const INJECTIVE_PREFIX: string = 'inj';
 const ACCOUNT_ADDRESS_LENGTH: number = 20;
 
 /**
- * Deposits are bridged to the Injective account that shares its 20 address bytes with the user's
- * dYdX account. Injective accepts the dYdX key type and derives that key's address the same way
- * dYdX does, so the key that controls the dYdX account also controls this one. The user then
- * sends the funds on to dYdX from it.
+ * Deposits are bridged to an Injective account that the user names, and the user sends the funds
+ * on to dYdX from it. It is the account their app holds the key for.
  *
- * The three forms below are the same account: as an Injective address, as the EVM-style address
- * Skip and CCTP use for Injective, and as the 32-byte CCTP mint recipient.
+ * This service cannot work that account out. The app derives its Injective key from the same
+ * secret as the dYdX key, but as a different key, and nothing known here leads from one to the
+ * other. So the user gives the address when they approve the deposit policy, where it becomes
+ * part of what they sign (see `policy-engine.ts`), and it is stored with the user from then on.
+ *
+ * The forms below are the same account: as an Injective address, as the EVM-style address Skip
+ * and CCTP use for Injective, and as the 32-byte CCTP mint recipient.
  */
-function getAddressBytes(dydxAddress: string): Buffer {
-  const { prefix, words } = decode(dydxAddress);
-  if (prefix !== DYDX_PREFIX) {
-    throw new Error(`Expected a dydx address, got prefix "${prefix}"`);
+function getAddressBytes(injectiveAddress: string): Buffer {
+  const { prefix, words } = decode(injectiveAddress);
+  if (prefix !== INJECTIVE_PREFIX) {
+    throw new Error(`Expected an Injective address, got prefix "${prefix}"`);
   }
   const bytes: Buffer = Buffer.from(fromWords(words));
   if (bytes.length !== ACCOUNT_ADDRESS_LENGTH) {
@@ -26,18 +28,24 @@ function getAddressBytes(dydxAddress: string): Buffer {
   return bytes;
 }
 
-export function getInjectiveAddress(dydxAddress: string): string {
-  getAddressBytes(dydxAddress);
-  return encode(INJECTIVE_PREFIX, decode(dydxAddress).words);
+/**
+ * The one way of writing an Injective address that is stored and compared: bech32 allows an
+ * address to be written in upper case as well.
+ *
+ * @throws if `injectiveAddress` is not the address of an Injective account.
+ */
+export function normalizeInjectiveAddress(injectiveAddress: string): string {
+  getAddressBytes(injectiveAddress);
+  return encode(INJECTIVE_PREFIX, decode(injectiveAddress).words);
 }
 
-export function getInjectiveEvmAddress(dydxAddress: string): `0x${string}` {
-  return getAddress(`0x${getAddressBytes(dydxAddress).toString('hex')}`);
+export function getInjectiveEvmAddress(injectiveAddress: string): `0x${string}` {
+  return getAddress(`0x${getAddressBytes(injectiveAddress).toString('hex')}`);
 }
 
 /**
  * The CCTP mint recipient: the address left-padded with zeros to 32 bytes, in lower-case hex.
  */
-export function getInjectiveMintRecipient(dydxAddress: string): `0x${string}` {
-  return pad(`0x${getAddressBytes(dydxAddress).toString('hex')}`, { size: 32 });
+export function getInjectiveMintRecipient(injectiveAddress: string): `0x${string}` {
+  return pad(`0x${getAddressBytes(injectiveAddress).toString('hex')}`, { size: 32 });
 }

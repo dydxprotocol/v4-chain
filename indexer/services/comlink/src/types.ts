@@ -902,8 +902,8 @@ export interface DepositPolicyTurnkeyPolicy {
 
 export interface DepositPolicyResponse {
   dydxAddress: string,
-  // Where deposits arrive on Injective. It holds the same key as the dYdX address, which signs
-  // the transfer on to dYdX.
+  // Where deposits arrive on Injective once the policy is approved: the account named in the
+  // request. The user sends the funds on to dYdX from it.
   injectiveAddress: string,
   evm: {
     // The address that signs the typed data.
@@ -914,7 +914,8 @@ export interface DepositPolicyResponse {
     status: DepositPolicyStatus,
     // Present when status is ACTION_REQUIRED. Created in the user's sub-organization.
     policy?: DepositPolicyTurnkeyPolicy,
-    // Policies for the earlier deposit route, which can be deleted.
+    // Policies for the earlier deposit route or for another Injective account, which can be
+    // deleted.
     obsoletePolicyIds: string[],
   },
 }
@@ -926,6 +927,8 @@ export interface DepositPolicySignature {
 
 export interface SubmitDepositPolicyRequest {
   dydxAddress: string,
+  // The Injective account that was named when the typed data was requested.
+  injectiveAddress: string,
   signatures: DepositPolicySignature[],
 }
 
