@@ -466,6 +466,13 @@ export const CheckAppleLoginRedirectSchema = checkSchema(appleLoginRedirectSchem
 
 export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
 
+const depositPolicyInjectiveAddressSchema: ParamSchema = {
+  custom: {
+    options: (address: unknown) => isValidAccountAddress(address, INJECTIVE_ADDRESS_PREFIX),
+  },
+  errorMessage: 'injectiveAddress must be a valid injective address',
+};
+
 export const CheckGetDepositPolicySchema = checkSchema({
   dydxAddress: {
     in: ['params'],
@@ -473,6 +480,10 @@ export const CheckGetDepositPolicySchema = checkSchema({
       options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
     },
     errorMessage: 'dydxAddress must be a valid dydx address',
+  },
+  injectiveAddress: {
+    in: ['query'],
+    ...depositPolicyInjectiveAddressSchema,
   },
 });
 
@@ -483,6 +494,10 @@ export const CheckSubmitDepositPolicySchema = checkSchema({
       options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
     },
     errorMessage: 'dydxAddress must be a valid dydx address',
+  },
+  injectiveAddress: {
+    in: ['body'],
+    ...depositPolicyInjectiveAddressSchema,
   },
   signatures: {
     in: ['body'],

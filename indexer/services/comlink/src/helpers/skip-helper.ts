@@ -41,11 +41,12 @@ export async function buildUserAddresses(
   requiredChainAddresses: string[],
   sourceAddress: string,
   dydxAddress: string,
+  injectiveAddress: string,
 ) {
   return Promise.all(
     requiredChainAddresses.map(async (cid: string) => ({
       chainId: cid,
-      address: await getAddress(cid, sourceAddress, dydxAddress),
+      address: await getAddress(cid, sourceAddress, dydxAddress, injectiveAddress),
     })),
   );
 }
@@ -54,12 +55,13 @@ const skipMessagesTimeoutSeconds = '300'; // 5 minutes.
 const dydxNobleChannel = 33;
 // Grabs the raw skip route data to carry out the bridge on our own.
 //
-// The route ends at USDC on Injective, in the user's own Injective account. It is a single
+// The route ends at USDC on Injective, in the Injective account the user named. It is a single
 // transaction on the source chain; the user sends the funds on to dYdX from Injective.
 export async function getSkipCallData(
   sourceAddress: string,
   sourceAssetDenom: string,
   dydxAddress: string,
+  injectiveAddress: string,
   amount: string,
   chainId: string,
 ): Promise<Parameters<SmartAccountImplementation['encodeCalls']>[0]> {
@@ -96,6 +98,7 @@ export async function getSkipCallData(
     routeResult.requiredChainAddresses,
     sourceAddress,
     dydxAddress,
+    injectiveAddress,
   );
 
   let addressList: string[] = [];

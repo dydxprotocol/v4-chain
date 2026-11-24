@@ -3,6 +3,7 @@ import {
   PermissionApprovalFromDatabase,
   PermissionApprovalTable,
   TurnkeyUserFromDatabase,
+  TurnkeyUsersTable,
 } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient } from '@turnkey/sdk-server';
 import * as turnkeyViem from '@turnkey/viem';
@@ -18,9 +19,12 @@ import {
   getSolanaBridgePolicy,
   OBSOLETE_SOLANA_BRIDGE_POLICY_NAME,
   PolicyEngine,
-  SOLANA_BRIDGE_POLICY_NAME,
 } from '../../src/helpers/policy-engine';
-import { approvalAllowsInjectiveBridge, callPolicyByChainId } from '../../src/lib/call-policies';
+import {
+  approvalAllowsInjectiveBridge,
+  callPolicyByChainId,
+  getNoCallsPolicy,
+} from '../../src/lib/call-policies';
 import { TurnkeyError } from '../../src/lib/errors';
 import {
   DepositPolicyEvmApproval,
@@ -34,6 +38,10 @@ import {
   evaluateInstructionClauses,
   hashTypedDataV4,
   INJECTIVE_ADDRESS,
+  INJECTIVE_ADDRESS_WITH_DYDX_BYTES,
+  INJECTIVE_MINT_RECIPIENT,
+  OTHER_INJECTIVE_ADDRESS,
+  OTHER_INJECTIVE_MINT_RECIPIENT,
   SKIP_SOLANA_BRIDGE_INSTRUCTIONS,
 } from './deposit-policy-helpers';
 import {
@@ -90,19 +98,34 @@ describe('policy-engine', () => {
   };
   let engine: PolicyEngine;
 
-  /** The approval the SDK makes for `chainId` when it holds the user's key. */
+  /**
+   * The approval the SDK makes for `chainId` when it holds the user's key: for the Injective
+   * route to `injectiveAddress`, for the earlier route through Noble, or the one a new account
+   * is set up with.
+   */
   const approvalMadeWithKey = async (
     chainId: string,
-    route: 'injective' | 'noble',
-  ): Promise<string> => serializeApprovalWithKey({
-    client: publicClients[chainId],
-    owner,
-    sessionKeyAddress,
-    policy: route === 'injective'
-      ? await callPolicyByChainId[chainId](DYDX_ADDRESS)
-      : getNobleRoutePolicy(),
-    accountAddress: SMART_ACCOUNT_ADDRESS,
-  });
+    route: 'injective' | 'noble' | 'new',
+    injectiveAddress: string = INJECTIVE_ADDRESS,
+  ): Promise<string> => {
+    const policies = {
+      injective: () => callPolicyByChainId[chainId](injectiveAddress),
+      noble: () => Promise.resolve(getNobleRoutePolicy()),
+      new: () => Promise.resolve(getNoCallsPolicy()),
+    };
+    return serializeApprovalWithKey({
+      client: publicClients[chainId],
+      owner,
+      sessionKeyAddress,
+      policy: await policies[route](),
+      accountAddress: SMART_ACCOUNT_ADDRESS,
+    });
+  };
+
+  /** The user as the database has them now. */
+  const getUser = async (): Promise<TurnkeyUserFromDatabase> => {
+    return (await TurnkeyUsersTable.findBySuborgId(SUBORG_ID))!;
+  };
 
   /** Gives the account the approvals it was set up with, for the earlier route. */
   const seedNobleRouteApprovals = async (chainIds: string[] = EVM_CHAIN_IDS): Promise<void> => {
@@ -144,7 +167,8 @@ describe('policy-engine', () => {
     await dbHelpers.migrate();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await TurnkeyUsersTable.create(user);
     turnkeyClient = {
       getUsers: jest.fn().mockResolvedValue({
         users: [
@@ -169,10 +193,10 @@ describe('policy-engine', () => {
   });
 
   describe('getSolanaBridgePolicy', () => {
-    const policy = getSolanaBridgePolicy(DYDX_ADDRESS, API_USER_ID);
+    const policy = getSolanaBridgePolicy(INJECTIVE_ADDRESS, API_USER_ID);
     const [burn, feeTransfer] = SKIP_SOLANA_BRIDGE_INSTRUCTIONS;
 
-    it('allows the bridge API user to sign a CCTP burn to the user\'s Injective account', () => {
+    it('allows the bridge API user to sign a CCTP burn to the Injective account named', () => {
       expect(policy).toEqual({
         policyName: 'Injective Bridging Policy',
         effect: 'EFFECT_ALLOW',
@@ -236,35 +260,115 @@ describe('policy-engine', () => {
     ) => {
       expect(evaluateInstructionClauses(policy.condition, instructions).result).toEqual(false);
     });
+
+    it('names another account when the user names another account', () => {
+      const other = getSolanaBridgePolicy(OTHER_INJECTIVE_ADDRESS, API_USER_ID);
+
+      expect(other.condition).toEqual(policy.condition.replace(
+        INJECTIVE_MINT_RECIPIENT.slice(2),
+        OTHER_INJECTIVE_MINT_RECIPIENT.slice(2),
+      ));
+      expect(
+        evaluateInstructionClauses(other.condition, SKIP_SOLANA_BRIDGE_INSTRUCTIONS).result,
+      ).toEqual(false);
+    });
+
+    it('refuses to make a policy for something that is not an Injective account', () => {
+      expect(() => getSolanaBridgePolicy(DYDX_ADDRESS, API_USER_ID)).toThrow(
+        'Expected an Injective address',
+      );
+    });
   });
 
   describe('configurePolicy, for a new account', () => {
-    it('approves the Injective route on the EIP-7702 chains', async () => {
-      await engine.configurePolicy(SUBORG_ID, owner.address, DYDX_ADDRESS);
+    // Avalanche is left out of these: the address of the user's smart account there is read from
+    // the chain, which these tests do not have.
+    it('sets up the smart account on the EIP-7702 chains, with no calls permitted yet', async () => {
+      await engine.configurePolicy(SUBORG_ID, owner.address);
 
       for (const chainId of EIP_7702_CHAIN_IDS) {
         const approval: string | undefined = await getStoredApproval(chainId);
-        expect(approval).toEqual(await approvalMadeWithKey(chainId, 'injective'));
-        expect(approvalAllowsInjectiveBridge(approval!, DYDX_ADDRESS)).toEqual(true);
+        expect(approval).toEqual(await approvalMadeWithKey(chainId, 'new'));
+        expect(decodeApproval(approval!).permissionParams.policies).toEqual([
+          expect.objectContaining({
+            policyParams: expect.objectContaining({ type: 'call', permissions: [] }),
+          }),
+        ]);
+        // Wherever the user's deposits are to go, this does not let them be bridged there.
+        for (const address of [INJECTIVE_ADDRESS, INJECTIVE_ADDRESS_WITH_DYDX_BYTES]) {
+          expect(approvalAllowsInjectiveBridge(approval!, address)).toEqual(false);
+        }
       }
     });
 
-    it('creates the Solana policy in the user\'s sub-organization', async () => {
-      await engine.configurePolicy(SUBORG_ID, owner.address, DYDX_ADDRESS);
+    it('carries the authorization that makes the user\'s address a smart account', async () => {
+      await engine.configurePolicy(SUBORG_ID, owner.address);
 
-      expect(turnkeyClient.createPolicy).toHaveBeenCalledTimes(1);
-      expect(turnkeyClient.createPolicy).toHaveBeenCalledWith({
-        organizationId: SUBORG_ID,
-        ...getSolanaBridgePolicy(DYDX_ADDRESS, API_USER_ID),
-      });
+      for (const chainId of EIP_7702_CHAIN_IDS) {
+        expect(decodeApproval((await getStoredApproval(chainId))!).eip7702Auth).toEqual(
+          expect.objectContaining({ chainId: Number(chainId), nonce: 0 }),
+        );
+      }
+    });
+
+    it('creates no Solana policy and names no Injective account', async () => {
+      await engine.configurePolicy(SUBORG_ID, owner.address);
+
+      expect(turnkeyClient.createPolicy).not.toHaveBeenCalled();
+      expect((await getUser()).injective_address).toBeNull();
+    });
+
+    it('leaves an approval that is already there as it is', async () => {
+      await seedNobleRouteApprovals([arbitrum.id.toString()]);
+
+      await engine.configurePolicy(SUBORG_ID, owner.address);
+
+      expect(await getStoredApproval(arbitrum.id.toString())).toEqual(
+        await approvalMadeWithKey(arbitrum.id.toString(), 'noble'),
+      );
+      expect(await getStoredApproval(base.id.toString())).toEqual(
+        await approvalMadeWithKey(base.id.toString(), 'new'),
+      );
+    });
+
+    it('is followed by the user approving the route to the account they name', async () => {
+      await engine.configurePolicy(SUBORG_ID, owner.address);
+
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+        await getUser(),
+        INJECTIVE_ADDRESS,
+      );
+      expect(policy.evm.approvals.map((a) => a.status)).toEqual(
+        EVM_CHAIN_IDS.map(() => DepositPolicyStatus.ACTION_REQUIRED),
+      );
+      expect(policy.solana.status).toEqual(DepositPolicyStatus.ACTION_REQUIRED);
+
+      await engine.submitDepositApprovals(
+        await getUser(),
+        INJECTIVE_ADDRESS,
+        await signAll(policy),
+      );
+
+      for (const chainId of EVM_CHAIN_IDS) {
+        // What the SDK would have made at set-up, had the account been known then.
+        expect(await getStoredApproval(chainId)).toEqual(
+          await approvalMadeWithKey(chainId, 'injective'),
+        );
+      }
+      expect((await getUser()).injective_address).toEqual(INJECTIVE_ADDRESS);
     });
   });
 
   describe('getDepositPolicy', () => {
+    /** Whether typed data enables a policy that names `mintRecipient` as a recipient. */
+    const namesRecipient = (typedData: DepositPolicyTypedData, mintRecipient: string): boolean => {
+      return typedData.message.validatorData.toLowerCase().includes(mintRecipient.slice(2));
+    };
+
     it('names the account deposits arrive at and the address that signs', async () => {
       await seedNobleRouteApprovals();
 
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
 
       expect(policy.dydxAddress).toEqual(DYDX_ADDRESS);
       expect(policy.injectiveAddress).toEqual(INJECTIVE_ADDRESS);
@@ -274,7 +378,7 @@ describe('policy-engine', () => {
     it('asks an account approved for the earlier route to sign on every chain', async () => {
       await seedNobleRouteApprovals();
 
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
 
       expect(policy.evm.approvals.map((a) => [a.chainId, a.status])).toEqual(
         EVM_CHAIN_IDS.map((chainId: string) => [chainId, DepositPolicyStatus.ACTION_REQUIRED]),
@@ -307,10 +411,66 @@ describe('policy-engine', () => {
       }
     });
 
+    it('asks the user to approve bridging to the account they name, and to no other', async () => {
+      await seedNobleRouteApprovals();
+
+      const named: DepositPolicyResponse = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+      const other: DepositPolicyResponse = await engine.getDepositPolicy(
+        user,
+        OTHER_INJECTIVE_ADDRESS,
+      );
+
+      expect(other.injectiveAddress).toEqual(OTHER_INJECTIVE_ADDRESS);
+      for (const chainId of EVM_CHAIN_IDS) {
+        const typedData: DepositPolicyTypedData = getApproval(named, chainId).typedData!;
+        expect(namesRecipient(typedData, INJECTIVE_MINT_RECIPIENT)).toEqual(true);
+        expect(namesRecipient(typedData, OTHER_INJECTIVE_MINT_RECIPIENT)).toEqual(false);
+        // Nothing is taken from the dYdX address.
+        expect(typedData.message.validatorData.toLowerCase()).not.toContain(
+          '29560455cdfcf9504be6c5c2df4328ad2a58faf2',
+        );
+
+        const otherTypedData: DepositPolicyTypedData = getApproval(other, chainId).typedData!;
+        expect(namesRecipient(otherTypedData, OTHER_INJECTIVE_MINT_RECIPIENT)).toEqual(true);
+        expect(namesRecipient(otherTypedData, INJECTIVE_MINT_RECIPIENT)).toEqual(false);
+      }
+    });
+
+    it('reads an address written in upper case as the same account', async () => {
+      await seedNobleRouteApprovals();
+
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+        user,
+        INJECTIVE_ADDRESS.toUpperCase(),
+      );
+
+      expect(policy).toEqual(await engine.getDepositPolicy(user, INJECTIVE_ADDRESS));
+    });
+
+    it('refuses something that is not an Injective account', async () => {
+      await seedNobleRouteApprovals();
+
+      await expect(engine.getDepositPolicy(user, DYDX_ADDRESS)).rejects.toThrow(
+        'Expected an Injective address',
+      );
+    });
+
+    it('stores nothing', async () => {
+      await seedNobleRouteApprovals();
+      const before: PermissionApprovalFromDatabase[] = (
+        await PermissionApprovalTable.findBySuborgId(SUBORG_ID)
+      );
+
+      await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+
+      expect(await PermissionApprovalTable.findBySuborgId(SUBORG_ID)).toEqual(before);
+      expect((await getUser()).injective_address).toBeNull();
+    });
+
     it('gives typed data that survives being sent as JSON', async () => {
       await seedNobleRouteApprovals();
 
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
 
       expect(JSON.parse(JSON.stringify(policy))).toEqual(policy);
     });
@@ -318,7 +478,7 @@ describe('policy-engine', () => {
     it('cannot renew an EIP-7702 chain that has no approval on record', async () => {
       await seedNobleRouteApprovals([arbitrum.id.toString()]);
 
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
 
       expect(getApproval(policy, arbitrum.id.toString()).status).toEqual(
         DepositPolicyStatus.ACTION_REQUIRED,
@@ -333,39 +493,96 @@ describe('policy-engine', () => {
       );
     });
 
-    it('asks nothing of a chain that is already approved for the Injective route', async () => {
-      await seedNobleRouteApprovals();
-      await PermissionApprovalTable.upsert({
-        suborg_id: SUBORG_ID,
-        chain_id: optimism.id.toString(),
-        approval: await approvalMadeWithKey(optimism.id.toString(), 'injective'),
+    describe('for an account whose deposits are already bridged to an Injective account', () => {
+      let approved: TurnkeyUserFromDatabase;
+
+      beforeEach(async () => {
+        await seedNobleRouteApprovals();
+        await engine.submitDepositApprovals(
+          user,
+          INJECTIVE_ADDRESS,
+          await signAll(await engine.getDepositPolicy(user, INJECTIVE_ADDRESS)),
+        );
+        approved = await getUser();
       });
 
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      it('asks nothing when the same account is named', async () => {
+        const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+          approved,
+          INJECTIVE_ADDRESS,
+        );
 
-      expect(getApproval(policy, optimism.id.toString())).toEqual({
-        chainId: optimism.id.toString(),
-        status: DepositPolicyStatus.UP_TO_DATE,
+        expect(policy.evm.approvals).toEqual(EVM_CHAIN_IDS.map((chainId: string) => ({
+          chainId,
+          status: DepositPolicyStatus.UP_TO_DATE,
+        })));
       });
-      expect(getApproval(policy, mainnet.id.toString()).status).toEqual(
-        DepositPolicyStatus.ACTION_REQUIRED,
-      );
+
+      it('asks the user to sign on every chain when another account is named', async () => {
+        const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+          approved,
+          OTHER_INJECTIVE_ADDRESS,
+        );
+
+        expect(policy.evm.approvals.map((a) => a.status)).toEqual(
+          EVM_CHAIN_IDS.map(() => DepositPolicyStatus.ACTION_REQUIRED),
+        );
+        for (const { typedData } of policy.evm.approvals) {
+          expect(namesRecipient(typedData!, OTHER_INJECTIVE_MINT_RECIPIENT)).toEqual(true);
+        }
+      });
+
+      it('asks the user to sign again on a chain whose approval is for another account', async () => {
+        const chainId: string = optimism.id.toString();
+        await PermissionApprovalTable.upsert({
+          suborg_id: SUBORG_ID,
+          chain_id: chainId,
+          approval: await approvalMadeWithKey(chainId, 'injective', OTHER_INJECTIVE_ADDRESS),
+        });
+
+        const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+          approved,
+          INJECTIVE_ADDRESS,
+        );
+
+        expect(getApproval(policy, chainId).status).toEqual(DepositPolicyStatus.ACTION_REQUIRED);
+        expect(getApproval(policy, mainnet.id.toString())).toEqual({
+          chainId: mainnet.id.toString(),
+          status: DepositPolicyStatus.UP_TO_DATE,
+        });
+      });
+
+      it('asks the user to sign when the approvals are in place but the account is not on record', async () => {
+        // Deposits are bridged to the account on record, so approvals alone are not enough.
+        const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+          { ...approved, injective_address: undefined },
+          INJECTIVE_ADDRESS,
+        );
+
+        expect(policy.evm.approvals.map((a) => a.status)).toEqual(
+          EVM_CHAIN_IDS.map(() => DepositPolicyStatus.ACTION_REQUIRED),
+        );
+      });
     });
 
     describe('solana', () => {
-      it('asks for the policy to be created, and names the earlier one as obsolete', async () => {
-        turnkeyClient.getPolicies.mockResolvedValue({
-          policies: [
-            { policyId: 'policy-1', policyName: OBSOLETE_SOLANA_BRIDGE_POLICY_NAME },
-            { policyId: 'policy-2', policyName: 'Something else' },
-          ],
-        });
+      const current = getSolanaBridgePolicy(INJECTIVE_ADDRESS, API_USER_ID);
+      const forOtherAccount = getSolanaBridgePolicy(OTHER_INJECTIVE_ADDRESS, API_USER_ID);
+      const earlierRoute = {
+        policyId: 'policy-1',
+        policyName: OBSOLETE_SOLANA_BRIDGE_POLICY_NAME,
+        condition: "solana.tx.instructions[0].program_key == 'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'",
+      };
+      const unrelated = { policyId: 'policy-2', policyName: 'Something else', condition: 'true' };
 
-        const { solana } = await engine.getDepositPolicy(user);
+      it('asks for the policy to be created, and names the earlier one as obsolete', async () => {
+        turnkeyClient.getPolicies.mockResolvedValue({ policies: [earlierRoute, unrelated] });
+
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
 
         expect(solana).toEqual({
           status: DepositPolicyStatus.ACTION_REQUIRED,
-          policy: getSolanaBridgePolicy(DYDX_ADDRESS, API_USER_ID),
+          policy: current,
           obsoletePolicyIds: ['policy-1'],
         });
         expect(turnkeyClient.getPolicies).toHaveBeenCalledWith({ organizationId: SUBORG_ID });
@@ -373,15 +590,12 @@ describe('policy-engine', () => {
         expect(turnkeyClient.createPolicy).not.toHaveBeenCalled();
       });
 
-      it('asks nothing once the policy exists', async () => {
+      it('asks nothing once the policy for the account exists', async () => {
         turnkeyClient.getPolicies.mockResolvedValue({
-          policies: [
-            { policyId: 'policy-1', policyName: OBSOLETE_SOLANA_BRIDGE_POLICY_NAME },
-            { policyId: 'policy-3', policyName: SOLANA_BRIDGE_POLICY_NAME },
-          ],
+          policies: [earlierRoute, { policyId: 'policy-3', ...current }],
         });
 
-        const { solana } = await engine.getDepositPolicy(user);
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
 
         expect(solana).toEqual({
           status: DepositPolicyStatus.UP_TO_DATE,
@@ -389,11 +603,86 @@ describe('policy-engine', () => {
         });
       });
 
+      it('recognises the policy however Turnkey spells its condition', async () => {
+        turnkeyClient.getPolicies.mockResolvedValue({
+          policies: [{
+            policyId: 'policy-3',
+            ...current,
+            condition: current.condition.replace(/ && /g, '  &&\n').toUpperCase(),
+          }],
+        });
+
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+
+        expect(solana).toEqual({ status: DepositPolicyStatus.UP_TO_DATE, obsoletePolicyIds: [] });
+      });
+
+      it('asks for a policy, and names as obsolete one for another Injective account', async () => {
+        turnkeyClient.getPolicies.mockResolvedValue({
+          policies: [{ policyId: 'policy-4', ...forOtherAccount }],
+        });
+
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+
+        expect(solana).toEqual({
+          status: DepositPolicyStatus.ACTION_REQUIRED,
+          policy: current,
+          obsoletePolicyIds: ['policy-4'],
+        });
+      });
+
+      it('names as obsolete a policy for another account once the one for this account exists', async () => {
+        turnkeyClient.getPolicies.mockResolvedValue({
+          policies: [
+            { policyId: 'policy-4', ...forOtherAccount },
+            { policyId: 'policy-3', ...current },
+          ],
+        });
+
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+
+        expect(solana).toEqual({
+          status: DepositPolicyStatus.UP_TO_DATE,
+          obsoletePolicyIds: ['policy-4'],
+        });
+      });
+
+      it('names as obsolete a bridge policy that has no condition', async () => {
+        turnkeyClient.getPolicies.mockResolvedValue({
+          policies: [{ policyId: 'policy-6', policyName: current.policyName }],
+        });
+
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+
+        expect(solana).toEqual({
+          status: DepositPolicyStatus.ACTION_REQUIRED,
+          policy: current,
+          obsoletePolicyIds: ['policy-6'],
+        });
+      });
+
+      it('does not take a policy of another name for the bridge policy', async () => {
+        turnkeyClient.getPolicies.mockResolvedValue({
+          policies: [{ policyId: 'policy-5', ...current, policyName: 'Something else' }],
+        });
+
+        const { solana } = await engine.getDepositPolicy(user, INJECTIVE_ADDRESS);
+
+        expect(solana).toEqual({
+          status: DepositPolicyStatus.ACTION_REQUIRED,
+          policy: current,
+          obsoletePolicyIds: [],
+        });
+      });
+
       it('is unavailable when Turnkey cannot be read, without affecting the EVM chains', async () => {
         await seedNobleRouteApprovals();
         turnkeyClient.getPolicies.mockRejectedValue(new Error('turnkey is down'));
 
-        const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+        const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+          user,
+          INJECTIVE_ADDRESS,
+        );
 
         expect(policy.solana).toEqual({
           status: DepositPolicyStatus.UNAVAILABLE,
@@ -407,13 +696,28 @@ describe('policy-engine', () => {
   });
 
   describe('submitDepositApprovals', () => {
+    const getPolicy = (
+      injectiveAddress: string = INJECTIVE_ADDRESS,
+    ): Promise<DepositPolicyResponse> => engine.getDepositPolicy(user, injectiveAddress);
+
+    /** Signs and submits everything the policy for `injectiveAddress` asks for. */
+    const approve = async (injectiveAddress: string = INJECTIVE_ADDRESS): Promise<string[]> => {
+      return engine.submitDepositApprovals(
+        user,
+        injectiveAddress,
+        await signAll(await getPolicy(injectiveAddress)),
+      );
+    };
+
     it('stores, for each chain, the approval the SDK makes when it holds the key', async () => {
       await seedNobleRouteApprovals();
-      const signatures: DepositPolicySignature[] = await signAll(
-        await engine.getDepositPolicy(user),
-      );
+      const signatures: DepositPolicySignature[] = await signAll(await getPolicy());
 
-      const approved: string[] = await engine.submitDepositApprovals(user, signatures);
+      const approved: string[] = await engine.submitDepositApprovals(
+        user,
+        INJECTIVE_ADDRESS,
+        signatures,
+      );
 
       expect(approved).toEqual(EVM_CHAIN_IDS);
       for (const chainId of EVM_CHAIN_IDS) {
@@ -423,9 +727,45 @@ describe('policy-engine', () => {
       }
     });
 
+    it('records the account the user named as where their deposits are bridged to', async () => {
+      await seedNobleRouteApprovals();
+      expect((await getUser()).injective_address).toBeNull();
+
+      await approve();
+
+      expect((await getUser()).injective_address).toEqual(INJECTIVE_ADDRESS);
+    });
+
+    it('records the account the usual way when it was written in upper case', async () => {
+      await seedNobleRouteApprovals();
+      const upperCase: string = INJECTIVE_ADDRESS.toUpperCase();
+
+      await approve(upperCase);
+
+      expect((await getUser()).injective_address).toEqual(INJECTIVE_ADDRESS);
+    });
+
+    it('replaces the account when the user approves another one', async () => {
+      await seedNobleRouteApprovals();
+      await approve();
+
+      await engine.submitDepositApprovals(
+        await getUser(),
+        OTHER_INJECTIVE_ADDRESS,
+        await signAll(await engine.getDepositPolicy(await getUser(), OTHER_INJECTIVE_ADDRESS)),
+      );
+
+      expect((await getUser()).injective_address).toEqual(OTHER_INJECTIVE_ADDRESS);
+      for (const chainId of EVM_CHAIN_IDS) {
+        const approval: string = (await getStoredApproval(chainId))!;
+        expect(approvalAllowsInjectiveBridge(approval, OTHER_INJECTIVE_ADDRESS)).toEqual(true);
+        expect(approvalAllowsInjectiveBridge(approval, INJECTIVE_ADDRESS)).toEqual(false);
+      }
+    });
+
     it('accepts signatures made from the payload alone, as eth_signTypedData_v4 defines', async () => {
       await seedNobleRouteApprovals();
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await getPolicy();
       // A signer that derives nothing: it hashes the domain with the type the payload gives.
       const signatures: DepositPolicySignature[] = await signAll(policy, {
         signTypedData: (typedData: DepositPolicyTypedData) => {
@@ -433,7 +773,9 @@ describe('policy-engine', () => {
         },
       });
 
-      expect(await engine.submitDepositApprovals(user, signatures)).toEqual(EVM_CHAIN_IDS);
+      expect(
+        await engine.submitDepositApprovals(user, INJECTIVE_ADDRESS, signatures),
+      ).toEqual(EVM_CHAIN_IDS);
 
       for (const chainId of EVM_CHAIN_IDS) {
         expect(await getStoredApproval(chainId)).toEqual(
@@ -444,7 +786,7 @@ describe('policy-engine', () => {
 
     it('gives a payload whose hash does not depend on how the signer finds the domain type', async () => {
       await seedNobleRouteApprovals();
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await getPolicy();
 
       for (const { typedData } of policy.evm.approvals) {
         // With the domain type taken from the payload, and with it derived from the domain.
@@ -463,7 +805,7 @@ describe('policy-engine', () => {
       const chainId: string = arbitrum.id.toString();
       const before = decodeApproval((await getStoredApproval(chainId))!);
 
-      await engine.submitDepositApprovals(user, await signAll(await engine.getDepositPolicy(user)));
+      await approve();
 
       const after = decodeApproval((await getStoredApproval(chainId))!);
       expect(before.eip7702Auth).toEqual(
@@ -475,9 +817,12 @@ describe('policy-engine', () => {
 
     it('leaves nothing more to approve', async () => {
       await seedNobleRouteApprovals();
-      await engine.submitDepositApprovals(user, await signAll(await engine.getDepositPolicy(user)));
+      await approve();
 
-      const policy: DepositPolicyResponse = await engine.getDepositPolicy(user);
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+        await getUser(),
+        INJECTIVE_ADDRESS,
+      );
 
       expect(policy.evm.approvals).toEqual(EVM_CHAIN_IDS.map((chainId: string) => ({
         chainId,
@@ -485,7 +830,7 @@ describe('policy-engine', () => {
       })));
       for (const chainId of EVM_CHAIN_IDS) {
         expect(
-          approvalAllowsInjectiveBridge((await getStoredApproval(chainId))!, DYDX_ADDRESS),
+          approvalAllowsInjectiveBridge((await getStoredApproval(chainId))!, INJECTIVE_ADDRESS),
         ).toEqual(true);
       }
     });
@@ -493,17 +838,30 @@ describe('policy-engine', () => {
     it('stores the approval of one chain, leaving the others as they were', async () => {
       await seedNobleRouteApprovals();
       const chainId: string = base.id.toString();
-      const [signature] = (await signAll(await engine.getDepositPolicy(user))).filter(
+      const [signature] = (await signAll(await getPolicy())).filter(
         (s: DepositPolicySignature) => s.chainId === chainId,
       );
 
-      expect(await engine.submitDepositApprovals(user, [signature])).toEqual([chainId]);
+      expect(
+        await engine.submitDepositApprovals(user, INJECTIVE_ADDRESS, [signature]),
+      ).toEqual([chainId]);
 
       expect(await getStoredApproval(chainId)).toEqual(
         await approvalMadeWithKey(chainId, 'injective'),
       );
       expect(await getStoredApproval(arbitrum.id.toString())).toEqual(
         await approvalMadeWithKey(arbitrum.id.toString(), 'noble'),
+      );
+      // The account is on record, and the chains not approved yet still have to be.
+      const policy: DepositPolicyResponse = await engine.getDepositPolicy(
+        await getUser(),
+        INJECTIVE_ADDRESS,
+      );
+      expect(policy.injectiveAddress).toEqual(INJECTIVE_ADDRESS);
+      expect((await getUser()).injective_address).toEqual(INJECTIVE_ADDRESS);
+      expect(getApproval(policy, chainId).status).toEqual(DepositPolicyStatus.UP_TO_DATE);
+      expect(getApproval(policy, arbitrum.id.toString()).status).toEqual(
+        DepositPolicyStatus.ACTION_REQUIRED,
       );
     });
 
@@ -514,28 +872,31 @@ describe('policy-engine', () => {
       const expectRefusal = async (
         submitted: DepositPolicySignature[],
         message: string,
+        injectiveAddress: string = INJECTIVE_ADDRESS,
       ): Promise<void> => {
-        const error: Error = await engine.submitDepositApprovals(user, submitted).then(
+        const error: Error = await engine.submitDepositApprovals(
+          user,
+          injectiveAddress,
+          submitted,
+        ).then(
           () => { throw new Error('expected a refusal, but the approvals were stored'); },
           (e: Error) => e,
         );
         expect(error).toBeInstanceOf(TurnkeyError);
         expect(error.message).toContain(message);
         expect(await PermissionApprovalTable.findBySuborgId(SUBORG_ID)).toEqual(before);
+        expect((await getUser()).injective_address).toBeNull();
       };
 
       beforeEach(async () => {
         await seedNobleRouteApprovals();
         before = await PermissionApprovalTable.findBySuborgId(SUBORG_ID);
-        signatures = await signAll(await engine.getDepositPolicy(user));
+        signatures = await signAll(await getPolicy());
       });
 
       it('a signature made with another key', async () => {
         const stranger = privateKeyToAccount(generatePrivateKey());
-        const forged: DepositPolicySignature[] = await signAll(
-          await engine.getDepositPolicy(user),
-          stranger,
-        );
+        const forged: DepositPolicySignature[] = await signAll(await getPolicy(), stranger);
 
         await expectRefusal(forged, 'does not match the deposit policy');
       });
@@ -549,13 +910,18 @@ describe('policy-engine', () => {
         );
       });
 
-      it('the user\'s signature of the policy of another dYdX address', async () => {
-        const other: DepositPolicySignature[] = await signAll(await engine.getDepositPolicy({
-          ...user,
-          dydx_address: 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4',
-        }));
-
-        await expectRefusal(other, 'does not match the deposit policy');
+      it('another Injective account than the one the user signed for', async () => {
+        // The user approved bridging to one account. That is no approval of any other.
+        await expectRefusal(
+          signatures,
+          'does not match the deposit policy',
+          OTHER_INJECTIVE_ADDRESS,
+        );
+        await expectRefusal(
+          signatures,
+          'does not match the deposit policy',
+          INJECTIVE_ADDRESS_WITH_DYDX_BYTES,
+        );
       });
 
       it('every signature when one of them is wrong', async () => {
@@ -589,6 +955,34 @@ describe('policy-engine', () => {
           'Unsupported chain: 1776',
         );
       });
+    });
+
+    it('stores no approval when the account cannot be recorded', async () => {
+      await seedNobleRouteApprovals();
+      const before: PermissionApprovalFromDatabase[] = (
+        await PermissionApprovalTable.findBySuborgId(SUBORG_ID)
+      );
+      const signatures: DepositPolicySignature[] = await signAll(await getPolicy());
+      const update = jest.spyOn(TurnkeyUsersTable, 'updateInjectiveAddressBySuborgId')
+        .mockRejectedValueOnce(new Error('database is down'));
+
+      await expect(
+        engine.submitDepositApprovals(user, INJECTIVE_ADDRESS, signatures),
+      ).rejects.toThrow('database is down');
+
+      update.mockRestore();
+      expect(await PermissionApprovalTable.findBySuborgId(SUBORG_ID)).toEqual(before);
+      expect((await getUser()).injective_address).toBeNull();
+    });
+
+    it('refuses something that is not an Injective account', async () => {
+      await seedNobleRouteApprovals();
+      const signatures: DepositPolicySignature[] = await signAll(await getPolicy());
+
+      await expect(
+        engine.submitDepositApprovals(user, DYDX_ADDRESS, signatures),
+      ).rejects.toThrow('Expected an Injective address');
+      expect((await getUser()).injective_address).toBeNull();
     });
   });
 });
