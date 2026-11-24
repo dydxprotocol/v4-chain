@@ -6,6 +6,8 @@ export interface TurnkeyUserCreateObject {
   smart_account_address?: string,
   salt: string,
   dydx_address?: string,
+  // The Injective account the user's deposits are bridged to, once the user has named it.
+  injective_address?: string,
   created_at: string,
 }
 
@@ -17,5 +19,6 @@ export enum TurnkeyUserColumns {
   smart_account_address = 'smart_account_address',
   salt = 'salt',
   dydx_address = 'dydx_address',
+  injective_address = 'injective_address',
   created_at = 'created_at',
 }

@@ -1,26 +1,35 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { PermissionApprovalTable, TurnkeyUserFromDatabase } from '@dydxprotocol-indexer/postgres';
+import {
+  PermissionApprovalTable,
+  Transaction,
+  TurnkeyUserFromDatabase,
+  TurnkeyUsersTable,
+} from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import { createAccount } from '@turnkey/viem';
 import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
 import { serializePermissionAccount, toPermissionValidator } from '@zerodev/permissions';
-import { toCallPolicy } from '@zerodev/permissions/policies';
+import { toCallPolicy, type CallPolicyParams } from '@zerodev/permissions/policies';
 import { toECDSASigner } from '@zerodev/permissions/signers';
 import {
   addressToEmptyAccount, createKernelAccount, CreateKernelAccountReturnType,
 } from '@zerodev/sdk';
 import { KERNEL_V3_1, KERNEL_V3_3 } from '@zerodev/sdk/constants';
 import {
-  Address, getTypesForEIP712Domain, LocalAccount, PublicClient, verifyTypedData,
+  Abi, Address, getTypesForEIP712Domain, LocalAccount, PublicClient, verifyTypedData,
 } from 'viem';
 import {
   avalanche, optimism, base, arbitrum, mainnet,
 } from 'viem/chains';
 
 import config from '../config';
-import { approvalAllowsInjectiveBridge, callPolicyByChainId } from '../lib/call-policies';
+import {
+  approvalAllowsInjectiveBridge,
+  callPolicyByChainId,
+  getNoCallsPolicy,
+} from '../lib/call-policies';
 import { TurnkeyError } from '../lib/errors';
-import { getInjectiveAddress, getInjectiveMintRecipient } from '../lib/injective-address';
+import { getInjectiveMintRecipient, normalizeInjectiveAddress } from '../lib/injective-address';
 import {
   entryPoint,
   INJECTIVE_CCTP_DOMAIN,
@@ -57,17 +66,17 @@ export const OBSOLETE_SOLANA_BRIDGE_POLICY_NAME: string = 'Solana Bridging Polic
  *
  * 1. CCTP v2 `deposit_for_burn`, whose data is an 8-byte discriminator, the amount (u64), the
  *    destination domain (u32, little-endian) and the 32-byte mint recipient. The domain must be
- *    Injective's and the recipient the user's own Injective account.
+ *    Injective's and the recipient the Injective account the user named.
  * 2. A token transfer that pays Skip's relayer its fee, capped so that it cannot be used to
  *    move the user's balance.
  */
 export function getSolanaBridgePolicy(
-  dydxAddress: string,
+  injectiveAddress: string,
   apiUserId: string,
 ): DepositPolicyTurnkeyPolicy {
   const domain: Buffer = Buffer.alloc(4);
   domain.writeUInt32LE(INJECTIVE_CCTP_DOMAIN);
-  const mintRecipient: string = getInjectiveMintRecipient(dydxAddress).slice(2).toLowerCase();
+  const mintRecipient: string = getInjectiveMintRecipient(injectiveAddress).slice(2).toLowerCase();
   const burn: string = 'solana.tx.instructions[0]';
   return {
     policyName: SOLANA_BRIDGE_POLICY_NAME,
@@ -89,7 +98,7 @@ export function getSolanaBridgePolicy(
 
 /**
  * Builds the user's smart account on `chainId` with the bridge session key enabled on it,
- * limited to the calls of a deposit.
+ * limited to the calls `policy` permits.
  *
  * @param owner - the user's EVM account. It only needs to be able to sign if the account is
  * serialized without an enable signature.
@@ -99,7 +108,7 @@ export function getSolanaBridgePolicy(
 async function buildSessionAccount(
   chainId: string,
   owner: LocalAccount,
-  dydxAddress: string,
+  policy: CallPolicyParams<Abi, `0x${string}`>,
   accountAddress?: Address,
 ): Promise<CreateKernelAccountReturnType<'0.7'>> {
   const client: PublicClient = publicClients[chainId];
@@ -114,7 +123,7 @@ async function buildSessionAccount(
     kernelVersion,
     signer: sessionKeySigner,
     policies: [
-      toCallPolicy(await callPolicyByChainId[chainId](dydxAddress)),
+      toCallPolicy(policy),
     ],
   });
 
@@ -178,14 +187,17 @@ export class PolicyEngine {
   }
 
   /**
-   * Sets up a new user's account so that their deposits can be bridged. Runs while the API user
-   * is still in the root quorum of the user's sub-organization, so it can sign for the user.
-   * For an account set up before the deposit route changed, see `getDepositPolicy`.
+   * Sets up a new user's smart accounts. Runs while the API user is still in the root quorum of
+   * the user's sub-organization, so it can sign for the user.
+   *
+   * This does not yet let deposits be bridged. They go to an Injective account that only the
+   * user can name, so the bridge session key is enabled with no calls permitted (see
+   * `getNoCallsPolicy`), and no Solana policy is created. The user grants the rest through
+   * `getDepositPolicy`, as the user of an account set up for an earlier route does.
    */
   async configurePolicy(
     suborgId: string, // sender api must have access to this.
     fromAddress: string,
-    dydxAddress: string,
   ) {
 
     const turnkeyAccount = await createAccount({
@@ -209,7 +221,7 @@ export class PolicyEngine {
             return;
           }
           const approval = await serializePermissionAccount(
-            await buildSessionAccount(chain, turnkeyAccount, dydxAddress),
+            await buildSessionAccount(chain, turnkeyAccount, getNoCallsPolicy()),
           );
           logger.info({
             at: 'policy-controller#configurePolicy',
@@ -234,7 +246,7 @@ export class PolicyEngine {
           );
           if (!exists) {
             const avalancheApproval = await serializePermissionAccount(
-              await buildSessionAccount(AVALANCHE_CHAIN_ID, turnkeyAccount, dydxAddress),
+              await buildSessionAccount(AVALANCHE_CHAIN_ID, turnkeyAccount, getNoCallsPolicy()),
             );
             await PermissionApprovalTable.create({
               suborg_id: suborgId,
@@ -249,14 +261,6 @@ export class PolicyEngine {
           }
         } catch (error) {
           logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring avalanche policy', error });
-        }
-      })(),
-      // Process Solana chain
-      (async () => {
-        try {
-          await this.configureSolanaPolicy(dydxAddress, suborgId);
-        } catch (error) {
-          logger.error({ at: 'policy-controller#configurePolicy', message: 'Error configuring solana policy', error });
         }
       })(),
     ]);
@@ -275,14 +279,6 @@ export class PolicyEngine {
     return userId;
   }
 
-  async configureSolanaPolicy(dydxAddress: string, suborgId: string) {
-    const userId = await this.getAPIUserId(suborgId);
-    await this.turnkeySenderClient.createPolicy({
-      organizationId: suborgId,
-      ...getSolanaBridgePolicy(dydxAddress, userId),
-    });
-  }
-
   async removeSelfFromRootQuorum(suborgId: string) {
     const users = await this.turnkeySenderClient.getUsers({ organizationId: suborgId });
     const userIds = users.users.filter((user) => user.userName !== 'API User').map((x) => x.userId);
@@ -295,8 +291,8 @@ export class PolicyEngine {
   }
 
   /**
-   * Works out what an existing user has to do before their deposits can be bridged over the
-   * current route.
+   * Works out what a user has to do before their deposits can be bridged to `injectiveAddress`,
+   * the Injective account they name for them.
    *
    * Once an account is set up, the API user is no longer in the root quorum of the user's
    * sub-organization and cannot change what it is permitted to do there. The user has to grant
@@ -305,19 +301,30 @@ export class PolicyEngine {
    * - EVM: for each chain, sign typed data that enables the bridge session key on their smart
    *   account, and hand the signatures to `submitDepositApprovals`.
    * - Solana: create a Turnkey policy in their sub-organization.
+   *
+   * Both name `injectiveAddress` as the only recipient, so the address is part of what the user
+   * approves. Asking changes nothing: the address is only stored by `submitDepositApprovals`.
+   *
+   * @throws if `injectiveAddress` is not the address of an Injective account.
    */
-  async getDepositPolicy(user: TurnkeyUserFromDatabase): Promise<DepositPolicyResponse> {
+  async getDepositPolicy(
+    user: TurnkeyUserFromDatabase,
+    injectiveAddress: string,
+  ): Promise<DepositPolicyResponse> {
     const dydxAddress: string = user.dydx_address!;
+    const recipient: string = normalizeInjectiveAddress(injectiveAddress);
     const [approvals, solana]: [
       DepositPolicyEvmApproval[],
       DepositPolicyResponse['solana'],
     ] = await Promise.all([
-      Promise.all(EVM_CHAIN_IDS.map((chainId: string) => this.getEvmApproval(user, chainId))),
-      this.getSolanaPolicy(user),
+      Promise.all(
+        EVM_CHAIN_IDS.map((chainId: string) => this.getEvmApproval(user, recipient, chainId)),
+      ),
+      this.getSolanaPolicy(user, recipient),
     ]);
     return {
       dydxAddress,
-      injectiveAddress: getInjectiveAddress(dydxAddress),
+      injectiveAddress: recipient,
       evm: {
         address: user.evm_address,
         approvals,
@@ -327,17 +334,24 @@ export class PolicyEngine {
   }
 
   /**
-   * Stores the approvals made by signing the typed data from `getDepositPolicy`. Each signature
-   * is checked against the typed data for its chain as it stands now, so only the user can
-   * change their approval, and only to the policy this service asks for.
+   * Stores the approvals made by signing the typed data from `getDepositPolicy`, and
+   * `injectiveAddress` as the account the user's deposits are bridged to. Each signature is
+   * checked against the typed data for its chain and that address as it stands now, so only the
+   * user can change their approval or the address, and only to the policy this service asks for.
+   *
+   * The approvals and the address are stored together or not at all. A chain that is not among
+   * `signatures` keeps its approval: if that one is for another address, deposits on that chain
+   * are not bridged until the user approves it as well.
    *
    * @returns the ids of the chains whose approval was stored.
    * @throws TurnkeyError if a signature is not the user's signature of the typed data.
    */
   async submitDepositApprovals(
     user: TurnkeyUserFromDatabase,
+    injectiveAddress: string,
     signatures: DepositPolicySignature[],
   ): Promise<string[]> {
+    const recipient: string = normalizeInjectiveAddress(injectiveAddress);
     const chainIds: string[] = signatures.map((s: DepositPolicySignature) => s.chainId);
     if (new Set(chainIds).size !== chainIds.length) {
       throw new TurnkeyError('Each chain may appear only once');
@@ -352,21 +366,37 @@ export class PolicyEngine {
     // Check every signature before storing anything.
     const approvals: { chainId: string, approval: string }[] = await Promise.all(
       signatures.map(async ({ chainId, signature }: DepositPolicySignature) => {
-        return { chainId, approval: await this.buildApproval(user, chainId, signature) };
+        return {
+          chainId,
+          approval: await this.buildApproval(user, recipient, chainId, signature),
+        };
       }),
     );
-    await Promise.all(approvals.map(({ chainId, approval }) => {
-      return PermissionApprovalTable.upsert({
-        suborg_id: user.suborg_id,
-        chain_id: chainId,
-        approval,
-      });
-    }));
+    const txId: number = await Transaction.start();
+    try {
+      for (const { chainId, approval } of approvals) {
+        await PermissionApprovalTable.upsert({
+          suborg_id: user.suborg_id,
+          chain_id: chainId,
+          approval,
+        }, { txId });
+      }
+      await TurnkeyUsersTable.updateInjectiveAddressBySuborgId(
+        user.suborg_id,
+        recipient,
+        { txId },
+      );
+      await Transaction.commit(txId);
+    } catch (error) {
+      await Transaction.rollback(txId);
+      throw error;
+    }
     return chainIds;
   }
 
   private async getEvmApproval(
     user: TurnkeyUserFromDatabase,
+    injectiveAddress: string,
     chainId: string,
   ): Promise<DepositPolicyEvmApproval> {
     try {
@@ -374,7 +404,13 @@ export class PolicyEngine {
         user.suborg_id,
         chainId,
       );
-      if (stored !== undefined && approvalAllowsInjectiveBridge(stored, user.dydx_address!)) {
+      // Deposits are bridged to the address on record, within what the approval permits. Both
+      // have to be for this address before there is nothing left to do.
+      if (
+        stored !== undefined &&
+        approvalAllowsInjectiveBridge(stored, injectiveAddress) &&
+        user.injective_address === injectiveAddress
+      ) {
         return { chainId, status: DepositPolicyStatus.UP_TO_DATE };
       }
       // The user's address became a smart account through the approval made when the account
@@ -388,7 +424,7 @@ export class PolicyEngine {
         });
         return { chainId, status: DepositPolicyStatus.UNAVAILABLE };
       }
-      const { typedData } = await this.getEnableTypedData(user, chainId);
+      const { typedData } = await this.getEnableTypedData(user, injectiveAddress, chainId);
       return { chainId, status: DepositPolicyStatus.ACTION_REQUIRED, typedData };
     } catch (error) {
       logger.error({
@@ -404,21 +440,35 @@ export class PolicyEngine {
 
   private async getSolanaPolicy(
     user: TurnkeyUserFromDatabase,
+    injectiveAddress: string,
   ): Promise<DepositPolicyResponse['solana']> {
     try {
       const [apiUserId, { policies }] = await Promise.all([
         this.getAPIUserId(user.suborg_id),
         this.turnkeySenderClient.getPolicies({ organizationId: user.suborg_id }),
       ]);
-      const obsoletePolicyIds: string[] = policies
-        .filter((policy) => policy.policyName === OBSOLETE_SOLANA_BRIDGE_POLICY_NAME)
-        .map((policy) => policy.policyId);
-      if (policies.some((policy) => policy.policyName === SOLANA_BRIDGE_POLICY_NAME)) {
+      const bridgePolicies = policies.filter((existing) => {
+        return existing.policyName === SOLANA_BRIDGE_POLICY_NAME ||
+          existing.policyName === OBSOLETE_SOLANA_BRIDGE_POLICY_NAME;
+      });
+      // The policy is in place if a bridge policy for the Injective route names this account as
+      // the recipient. It is recognised by that rather than by its whole condition, so as not
+      // to depend on Turnkey returning a condition character for character as it was created.
+      // Any other bridge policy is for the earlier route or for another Injective account.
+      const recipient: string = `'${getInjectiveMintRecipient(injectiveAddress).slice(2)}'`;
+      const isCurrent = (existing: typeof bridgePolicies[number]): boolean => {
+        return existing.policyName === SOLANA_BRIDGE_POLICY_NAME &&
+          (existing.condition ?? '').toLowerCase().includes(recipient.toLowerCase());
+      };
+      const obsoletePolicyIds: string[] = bridgePolicies
+        .filter((existing) => !isCurrent(existing))
+        .map((existing) => existing.policyId);
+      if (bridgePolicies.some(isCurrent)) {
         return { status: DepositPolicyStatus.UP_TO_DATE, obsoletePolicyIds };
       }
       return {
         status: DepositPolicyStatus.ACTION_REQUIRED,
-        policy: getSolanaBridgePolicy(user.dydx_address!, apiUserId),
+        policy: getSolanaBridgePolicy(injectiveAddress, apiUserId),
         obsoletePolicyIds,
       };
     } catch (error) {
@@ -438,13 +488,14 @@ export class PolicyEngine {
    */
   private async getEnableTypedData(
     user: TurnkeyUserFromDatabase,
+    injectiveAddress: string,
     chainId: string,
   ): Promise<{ account: CreateKernelAccountReturnType<'0.7'>, typedData: DepositPolicyTypedData }> {
     const account: CreateKernelAccountReturnType<'0.7'> = await buildSessionAccount(
       chainId,
       // Stands in for the user's key, which signs elsewhere.
       addressToEmptyAccount(user.evm_address as Address),
-      user.dydx_address!,
+      await callPolicyByChainId[chainId](injectiveAddress),
       user.smart_account_address as Address | undefined,
     );
     const typedData = await account.kernelPluginManager.getPluginsEnableTypedData(account.address);
@@ -465,10 +516,11 @@ export class PolicyEngine {
 
   private async buildApproval(
     user: TurnkeyUserFromDatabase,
+    injectiveAddress: string,
     chainId: string,
     signature: string,
   ): Promise<string> {
-    const { account, typedData } = await this.getEnableTypedData(user, chainId);
+    const { account, typedData } = await this.getEnableTypedData(user, injectiveAddress, chainId);
     let isValid: boolean = false;
     try {
       isValid = await verifyTypedData({
