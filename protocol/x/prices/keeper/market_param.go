@@ -52,8 +52,14 @@ func (k Keeper) ModifyMarketParam(
 	if err != nil {
 		return types.MarketParam{}, errorsmod.Wrap(types.ErrMarketPairConversionFailed, updatedMarketParam.Pair)
 	}
-	if _, err := k.MarketMapKeeper.GetMarket(ctx, cp.String()); err != nil {
+	market, err := k.MarketMapKeeper.GetMarket(ctx, cp.String())
+	if err != nil {
 		return types.MarketParam{}, errorsmod.Wrap(types.ErrTickerNotFoundInMarketMap, cp.String())
+	}
+	if existingParam.Pair != updatedMarketParam.Pair {
+		if err := k.validatePairDecimals(ctx, updatedMarketParam.Id, cp.String(), market.Ticker.Decimals); err != nil {
+			return types.MarketParam{}, err
+		}
 	}
 
 	// Store the modified market param.
@@ -116,6 +122,31 @@ func (k Keeper) ModifyMarketParam(
 	metrics.SetMarketPairForTelemetry(updatedMarketParam.Id, updatedMarketParam.Pair)
 
 	return updatedMarketParam, nil
+}
+
+// validatePairDecimals returns an error unless the stored market price exponent for the given
+// market id is the negation of the given ticker decimals.
+func (k Keeper) validatePairDecimals(
+	ctx sdk.Context,
+	id uint32,
+	ticker string,
+	decimals uint64,
+) error {
+	marketPrice, err := k.GetMarketPrice(ctx, id)
+	if err != nil {
+		return err
+	}
+	if marketPrice.Exponent != -int32(decimals) {
+		return errorsmod.Wrapf(
+			types.ErrInvalidMarketPriceExponent,
+			"market %d exponent %d does not match %s decimals %d",
+			id,
+			marketPrice.Exponent,
+			ticker,
+			decimals,
+		)
+	}
+	return nil
 }
 
 // GetMarketParam returns a market param from its id.

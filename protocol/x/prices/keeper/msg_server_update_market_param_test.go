@@ -24,8 +24,9 @@ func TestUpdateMarketParam(t *testing.T) {
 	testMarketParam, testMarketPrice := testMarket.Param, testMarket.Price
 
 	tests := map[string]struct {
-		msg         *pricestypes.MsgUpdateMarketParam
-		expectedErr string
+		msg          *pricestypes.MsgUpdateMarketParam
+		createTicker bool
+		expectedErr  string
 	}{
 		"Succeeds: update all parameters except exponent and pair": {
 			msg: &pricestypes.MsgUpdateMarketParam{
@@ -108,6 +109,21 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedErr: "NONEXISTENT/PAIR: Ticker not found in market map",
 		},
+		"Failure: new pair decimals do not match market price exponent": {
+			msg: &pricestypes.MsgUpdateMarketParam{
+				Authority: lib.GovModuleAddress.String(),
+				MarketParam: pricestypes.MarketParam{
+					Id:                 testMarketParam.Id,
+					Pair:               "NEWMARKET-USD",
+					Exponent:           testMarketParam.Exponent + 2,
+					MinExchanges:       testMarketParam.MinExchanges,
+					MinPriceChangePpm:  testMarketParam.MinPriceChangePpm,
+					ExchangeConfigJson: testMarketParam.ExchangeConfigJson,
+				},
+			},
+			createTicker: true,
+			expectedErr:  pricestypes.ErrInvalidMarketPriceExponent.Error(),
+		},
 		"Failure: empty authority": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: "",
@@ -136,8 +152,8 @@ func TestUpdateMarketParam(t *testing.T) {
 			initialMarketParam, err := keepertest.CreateTestMarket(t, ctx, pricesKeeper, testMarketParam, testMarketPrice)
 			require.NoError(t, err)
 
-			// Create new pair in marketmap if test is expected to succeed
-			if (initialMarketParam.Pair != tc.msg.MarketParam.Pair) && tc.expectedErr == "" {
+			// Create new pair in marketmap if test is expected to succeed or requires the ticker
+			if initialMarketParam.Pair != tc.msg.MarketParam.Pair && (tc.expectedErr == "" || tc.createTicker) {
 				keepertest.CreateMarketsInMarketMapFromParams(
 					t,
 					ctx,
