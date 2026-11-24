@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -43,6 +44,13 @@ func (k msgServer) CreateOracleMarket(
 	}
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	// Normalize the pair to match the permissionless listing path (x/listing
+	// uppercases tickers before creation). Without this, a governance proposal
+	// that passes a non-canonical case (e.g. "btc-usd") stores the pair
+	// verbatim, while the pricefeed daemon keys its exchange-config lookup on
+	// the exact stored string, so the market is created but never priced.
+	msg.Params.Pair = strings.ToUpper(msg.Params.Pair)
 
 	exponent, err := k.Keeper.GetExponent(ctx, msg.Params.Pair)
 	if err != nil {
