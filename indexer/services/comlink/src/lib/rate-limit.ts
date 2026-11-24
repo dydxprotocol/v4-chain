@@ -1,8 +1,9 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import express from 'express';
 import _ from 'lodash';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 
+import { isRateLimitStoreReady } from '../caches/rate-limiters';
 import config from '../config';
 import { create4xxResponse } from './helpers';
 import { getIpAddr, isIndexerIp } from './utils';
@@ -16,7 +17,21 @@ const EXTERNAL_REQUEST_POINTS: number = 1;
 export function rateLimiterMiddleware(
   rateLimiter: RateLimiterRedis,
   postfixKey?: string,
+  // Overrides the IP-based key.
+  getKey?: (req: express.Request, ipAddr: string) => string,
+  // Refuse with 503 while the store is not ready (instead of waiting in the client's offline
+  // queue) or errors (READONLY, OOM). Opt-in, for routes that must not run unlimited during a
+  // Redis outage; every other route keeps failing open on store errors.
+  refuseWhenStoreNotReady: boolean = false,
 ) {
+  const refuseStoreUnavailable = (res: express.Response, reason: 'not_ready' | 'error') => {
+    stats.increment(`${config.SERVICE_NAME}.rate_limit_store_not_ready`, 1, {
+      key_prefix: rateLimiter.keyPrefix,
+      reason,
+    });
+    return create4xxResponse(res, 'Service temporarily unavailable', 503);
+  };
+
   return async (
     req: express.Request,
     res: express.Response,
@@ -27,6 +42,10 @@ export function rateLimiterMiddleware(
     }
 
     const ipAddr: string | undefined = getIpAddr(req);
+
+    if (refuseWhenStoreNotReady && !isRateLimitStoreReady()) {
+      return refuseStoreUnavailable(res, 'not_ready');
+    }
 
     if (ipAddr === undefined) {
       return next();
@@ -40,8 +59,13 @@ export function rateLimiterMiddleware(
     const pointCost: number = Math.min(getPointCost(ipAddr, req), rateLimiter.points);
 
     // generate redis key
-    const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
-    const redisKey: string = postfix ? ipAddr.concat(postfix) : ipAddr;
+    let redisKey: string;
+    if (getKey) {
+      redisKey = getKey(req, ipAddr);
+    } else {
+      const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
+      redisKey = postfix ? ipAddr.concat(postfix) : ipAddr;
+    }
 
     try {
       const limitRes: RateLimiterRes = await rateLimiter.consume(redisKey, pointCost);
@@ -57,7 +81,14 @@ export function rateLimiterMiddleware(
           message: 'redis error when checking rate limit',
           reject,
         });
+        if (refuseWhenStoreNotReady) {
+          return refuseStoreUnavailable(res, 'error');
+        }
       } else {
+        // Response-code stats are registered after the limiters, so this is the only count of 429s.
+        stats.increment(`${config.SERVICE_NAME}.rate_limited`, 1, {
+          key_prefix: rateLimiter.keyPrefix,
+        });
         const rejectRes: RateLimiterRes = reject as RateLimiterRes;
         res.set({
           'RateLimit-Remaining': rejectRes.remainingPoints,
