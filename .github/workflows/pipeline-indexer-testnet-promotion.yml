@@ -1,0 +1,13 @@
+name: Snapshot indexer staging
+
+on:
+  schedule:
+    # 12pm ET from Mar to Oct, 1pm ET from Nov to Feb due to daylight saving
+    - cron: '0 16 * * *'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+        
+    steps:
+      - name: Echo Hello World
+        run: echo "Hello World"
