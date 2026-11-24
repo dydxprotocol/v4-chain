@@ -56,9 +56,6 @@ func main() {
 		Type:   vaultType,
 		Number: vaultNumber,
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	vault := vaultId.ToSubaccountId()
 
