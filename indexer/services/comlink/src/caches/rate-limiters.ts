@@ -39,17 +39,6 @@ export function getTurnkeyIpRateLimiter(): RateLimiterRedis {
 }
 export const turnkeyIpRateLimiter: RateLimiterRedis = getTurnkeyIpRateLimiter();
 
-// Rate-limiter for Turnkey email /signin, per normalized email across all IPs
-export function getTurnkeyEmailRateLimiter(): RateLimiterRedis {
-  return new RateLimiterRedis({
-    storeClient: ratelimitRedis.client,
-    points: config.RATE_LIMIT_TURNKEY_EMAIL_POINTS,
-    duration: config.RATE_LIMIT_TURNKEY_EMAIL_DURATION_SECONDS,
-    keyPrefix: `${config.SERVICE_NAME}/turnkey_email`,
-  });
-}
-export const turnkeyEmailRateLimiter: RateLimiterRedis = getTurnkeyEmailRateLimiter();
-
 // New Turnkey sub-orgs per IPv4 address or IPv6 /48, which bounds how much of the global cap one
 // network can take
 export function getTurnkeyNewSuborgIpLimiter(): RateLimiterRedis {

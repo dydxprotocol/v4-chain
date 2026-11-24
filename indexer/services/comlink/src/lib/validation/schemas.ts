@@ -367,8 +367,8 @@ const signInSchema: Record<string, ParamSchema> = {
     optional: true,
     isString: true,
     errorMessage: 'Magic link must be a string',
-    // Checked here rather than in the controller so a bad link is refused before it counts
-    // against the per-email limit. Only email sign-in sends the link.
+    // Checked here rather than in the controller so a bad link is refused before any Turnkey
+    // call. Only email sign-in sends the link.
     custom: {
       options: (value: string, { req }) => {
         if (req.body.signinMethod === SigninMethod.EMAIL &&

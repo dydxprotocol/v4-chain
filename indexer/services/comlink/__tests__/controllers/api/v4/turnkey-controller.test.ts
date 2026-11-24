@@ -1,6 +1,6 @@
 import { dbHelpers, TurnkeyUserCreateObject, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient } from '@turnkey/sdk-server';
-import { TurnkeyController, turnkeyEmailKey } from '../../../../src/controllers/api/v4/turnkey-controller';
+import { TurnkeyController } from '../../../../src/controllers/api/v4/turnkey-controller';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { SigninMethod } from '../../../../src/types';
 import { PolicyEngine } from '../../../../src/helpers/policy-engine';
@@ -370,22 +370,6 @@ describe('TurnkeyController', () => {
         user?.suborg_id,
       );
     });
-  });
-});
-
-describe('turnkeyEmailKey', () => {
-  const key = (body: any) => turnkeyEmailKey({ body } as any);
-
-  it('gives case and whitespace variants of one email the same fixed-size key', () => {
-    const a = key({ signinMethod: SigninMethod.EMAIL, userEmail: ' User@Example.com ' });
-    const b = key({ signinMethod: SigninMethod.EMAIL, userEmail: 'user@example.com' });
-    expect(a).toBe(b);
-    expect(a).toMatch(/^[0-9a-f]{64}$/);
-  });
-
-  it('skips non-email sign-ins and non-string emails', () => {
-    expect(key({ signinMethod: SigninMethod.PASSKEY })).toBeUndefined();
-    expect(key({ signinMethod: SigninMethod.EMAIL, userEmail: ['a@example.com'] })).toBeUndefined();
   });
 });
 

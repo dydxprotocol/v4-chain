@@ -17,8 +17,8 @@ const EXTERNAL_REQUEST_POINTS: number = 1;
 export function rateLimiterMiddleware(
   rateLimiter: RateLimiterRedis,
   postfixKey?: string,
-  // Overrides the IP-based key; returning undefined skips this limiter for the request.
-  getKey?: (req: express.Request, ipAddr: string) => string | undefined,
+  // Overrides the IP-based key.
+  getKey?: (req: express.Request, ipAddr: string) => string,
   // Refuse with 503 while the store is not ready (instead of waiting in the client's offline
   // queue) or errors (READONLY, OOM). Opt-in, for routes that must not run unlimited during a
   // Redis outage; every other route keeps failing open on store errors.
@@ -61,11 +61,7 @@ export function rateLimiterMiddleware(
     // generate redis key
     let redisKey: string;
     if (getKey) {
-      const key: string | undefined = getKey(req, ipAddr);
-      if (key === undefined) {
-        return next();
-      }
-      redisKey = key;
+      redisKey = getKey(req, ipAddr);
     } else {
       const postfix: string | undefined = postfixKey ? _.get(req, postfixKey) : undefined;
       redisKey = postfix ? ipAddr.concat(postfix) : ipAddr;

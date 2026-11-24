@@ -1,5 +1,3 @@
-import { createHash } from 'crypto';
-
 import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUserFromDatabase, TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
@@ -13,7 +11,6 @@ import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
 import {
   defaultRateLimiter,
-  turnkeyEmailRateLimiter,
   turnkeyIpRateLimiter,
 } from '../../../caches/rate-limiters';
 import config from '../../../config';
@@ -368,23 +365,12 @@ const turnkeyIpKey = (_req: express.Request, ipAddr: string): string => ipRateLi
 // The Turnkey routes refuse with 503 while the rate-limit store is not ready (last argument
 // below): every sign-in sends an email or creates a sub-org, so they must not run unlimited.
 
-// Normalized the same way as emailSignin, so case and whitespace variants share one bucket;
-// hashed so keys have a fixed size and the shared rate-limit Redis holds no email addresses.
-export const turnkeyEmailKey = (req: express.Request): string | undefined => {
-  const { signinMethod, userEmail } = req.body ?? {};
-  if (signinMethod !== SigninMethod.EMAIL || typeof userEmail !== 'string') {
-    return undefined;
-  }
-  return createHash('sha256').update(userEmail.trim().toLowerCase()).digest('hex');
-};
-
 router.post(
   '/signin',
   rateLimiterMiddleware(defaultRateLimiter, undefined, undefined, true),
   rateLimiterMiddleware(turnkeyIpRateLimiter, undefined, turnkeyIpKey, true),
   ...CheckSignInSchema,
   handleValidationErrors,
-  rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, turnkeyEmailKey, true),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
