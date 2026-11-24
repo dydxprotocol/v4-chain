@@ -16,6 +16,7 @@ import { PolicyEngine } from '../../../helpers/policy-engine';
 import { AppleHelpers } from '../../../lib/apple-helpers';
 import { NotFoundError, TurnkeyError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
+import { originAllowlistMiddleware } from '../../../lib/origin-check';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { extractEmailFromOidcToken, TurnkeyHelpers } from '../../../lib/turnkey-helpers';
 import {
@@ -44,6 +45,10 @@ import {
 
 export const router: express.Router = express.Router();
 const controllerName: string = 'turnkey-controller';
+
+// Built once at module load so the allowlist is parsed a single time rather
+// than on every request.
+const turnkeyOriginAllowlist = originAllowlistMiddleware(config.TURNKEY_ALLOWED_ORIGINS);
 
 /**
  * Request interface for user sign-in operations
@@ -355,6 +360,7 @@ export class TurnkeyController extends Controller {
 
 router.post(
   '/signin',
+  turnkeyOriginAllowlist,
   rateLimiterMiddleware(defaultRateLimiter),
   ...CheckSignInSchema,
   handleValidationErrors,
@@ -398,6 +404,7 @@ router.post(
 
 router.post(
   '/uploadAddress',
+  turnkeyOriginAllowlist,
   rateLimiterMiddleware(defaultRateLimiter),
   ...CheckUploadDydxAddressSchema,
   handleValidationErrors,
