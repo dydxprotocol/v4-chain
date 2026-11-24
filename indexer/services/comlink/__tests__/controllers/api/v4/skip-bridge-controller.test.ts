@@ -56,9 +56,14 @@ import config from '../../../../src/config';
 import { RequestMethod } from '../../../../src/types';
 import {
   DYDX_ADDRESS,
+  INJECTIVE_ADDRESS,
   INJECTIVE_EVM_ADDRESS,
   INJECTIVE_ROUTE_APPROVAL,
+  makeApproval,
   NOBLE_ROUTE_APPROVAL,
+  OTHER_INJECTIVE_ADDRESS,
+  OTHER_INJECTIVE_MINT_RECIPIENT,
+  SKIP_CCTP_V2_RELAYER,
 } from '../../../helpers/deposit-policy-helpers';
 import { sendRequest } from '../../../helpers/helpers';
 
@@ -609,8 +614,35 @@ describe('skip-bridge-controller#V4', () => {
       },
     };
 
+    const solanaUsdc: string = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+    const solanaDepositBody = {
+      id: 'id',
+      type: 'BLOCK_ACTIVITY',
+      webhookId: 'wh_xxx',
+      event: {
+        network: 'SOLANA_MAINNET',
+        transaction: [{
+          meta: [{
+            post_token_balances: [{
+              owner: svmFromAddress,
+              mint: solanaUsdc,
+              ui_token_amount: { ui_amount: 100, amount: '100000000' },
+            }],
+          }],
+        }],
+      },
+    };
+
+    /** Records the Injective account the user named when they approved the deposit policy. */
+    const nameInjectiveAccount = async (
+      injectiveAddress: string = INJECTIVE_ADDRESS,
+    ): Promise<void> => {
+      await TurnkeyUsersTable.updateInjectiveAddressBySuborgId('suborg-arb', injectiveAddress);
+    };
+
     beforeEach(async () => {
-      // Create a user record needed by sweep/startEvmBridge
+      // Create a user record needed by sweep/startEvmBridge. The user has not yet named the
+      // Injective account their deposits go to.
       await TurnkeyUsersTable.create({
         suborg_id: 'suborg-arb',
         evm_address: evmFromAddress,
@@ -674,6 +706,7 @@ describe('skip-bridge-controller#V4', () => {
     });
 
     it('should process EVM bridge request and send a user operation', async () => {
+      await nameInjectiveAccount();
       await PermissionApprovalTable.create({
         suborg_id: 'suborg-arb',
         chain_id: arbChainId,
@@ -703,8 +736,16 @@ describe('skip-bridge-controller#V4', () => {
       });
 
       expect(response.status).toBe(200);
-      // Called to build call data for bridging
-      expect(skipHelpers.getSkipCallData).toHaveBeenCalled();
+      // Called to build call data for bridging, to the Injective account the user named
+      expect(skipHelpers.getSkipCallData).toHaveBeenCalledTimes(1);
+      expect(skipHelpers.getSkipCallData).toHaveBeenCalledWith(
+        evmFromAddress,
+        '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+        dydxAddress,
+        INJECTIVE_ADDRESS,
+        '100000000',
+        arbChainId,
+      );
       // User operation should be sent once
       expect(zeroDev.createKernelAccountClient).toHaveBeenCalledTimes(1);
       const client = (
@@ -714,13 +755,32 @@ describe('skip-bridge-controller#V4', () => {
     });
 
     it.each([
-      ['has only approved the earlier route through Noble', NOBLE_ROUTE_APPROVAL],
-      ['has an approval that cannot be read', '0xapproval'],
-      ['has no approval', undefined],
+      [
+        'has only approved the earlier route through Noble',
+        NOBLE_ROUTE_APPROVAL,
+        INJECTIVE_ADDRESS,
+      ],
+      ['has an approval that cannot be read', '0xapproval', INJECTIVE_ADDRESS],
+      ['has no approval', undefined, INJECTIVE_ADDRESS],
+      [
+        'has approved bridging to another Injective account than the one on record',
+        makeApproval(SKIP_CCTP_V2_RELAYER, OTHER_INJECTIVE_MINT_RECIPIENT),
+        INJECTIVE_ADDRESS,
+      ],
+      [
+        'has another Injective account on record than the one approved',
+        INJECTIVE_ROUTE_APPROVAL,
+        OTHER_INJECTIVE_ADDRESS,
+      ],
+      ['has an approval but no Injective account on record', INJECTIVE_ROUTE_APPROVAL, undefined],
     ])('should leave the deposit in place when the user %s', async (
       _name: string,
       approval: string | undefined,
+      injectiveAddress: string | undefined,
     ) => {
+      if (injectiveAddress !== undefined) {
+        await nameInjectiveAccount(injectiveAddress);
+      }
       if (approval !== undefined) {
         await PermissionApprovalTable.create({
           suborg_id: 'suborg-arb',
@@ -745,10 +805,10 @@ describe('skip-bridge-controller#V4', () => {
       )).toEqual(expect.objectContaining({ results: [] }));
     });
 
-    it('should bridge a Solana deposit to the user\'s own Injective account', async () => {
+    it('should bridge a Solana deposit to the Injective account the user named', async () => {
+      await nameInjectiveAccount();
       const previousSponsor: string = config.SOLANA_SPONSOR_PUBLIC_KEY;
       config.SOLANA_SPONSOR_PUBLIC_KEY = 'Fee1111111111111111111111111111111111111111';
-      const solanaUsdc: string = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
       const path = { requiredChainAddresses: ['solana', '1776'], txsRequired: 1 };
       (skipClient.route as unknown as jest.Mock).mockResolvedValue(path);
       (skipClient.executeRoute as unknown as jest.Mock).mockResolvedValue(undefined);
@@ -758,23 +818,7 @@ describe('skip-bridge-controller#V4', () => {
           type: RequestMethod.POST,
           path: '/v4/bridging/startBridge',
           expectedStatus: 200,
-          body: {
-            id: 'id',
-            type: 'BLOCK_ACTIVITY',
-            webhookId: 'wh_xxx',
-            event: {
-              network: 'SOLANA_MAINNET',
-              transaction: [{
-                meta: [{
-                  post_token_balances: [{
-                    owner: svmFromAddress,
-                    mint: solanaUsdc,
-                    ui_token_amount: { ui_amount: 100, amount: '100000000' },
-                  }],
-                }],
-              }],
-            },
-          },
+          body: solanaDepositBody,
         });
       } finally {
         config.SOLANA_SPONSOR_PUBLIC_KEY = previousSponsor;
@@ -797,6 +841,19 @@ describe('skip-bridge-controller#V4', () => {
           { chainId: '1776', address: INJECTIVE_EVM_ADDRESS },
         ],
       }));
+    });
+
+    it('should leave a Solana deposit in place when the user has named no Injective account', async () => {
+      // Still a 200, so that the webhook is not retried.
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/bridging/startBridge',
+        expectedStatus: 200,
+        body: solanaDepositBody,
+      });
+
+      expect(skipClient.route).not.toHaveBeenCalled();
+      expect(skipClient.executeRoute).not.toHaveBeenCalled();
     });
 
     it('should return 500 for unsupported network', async () => {

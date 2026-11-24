@@ -132,3 +132,23 @@ export async function updateDydxAddressByEvmAddress(
 
   return updated as unknown as TurnkeyUserFromDatabase | undefined;
 }
+
+/**
+ * Records the Injective account a user's deposits are bridged to.
+ *
+ * @returns the updated user, or undefined if there is no user with this sub-organization.
+ */
+export async function updateInjectiveAddressBySuborgId(
+  suborgId: string,
+  injectiveAddress: string,
+  options: Options = { txId: undefined },
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const updated: TurnkeyUserModel[] = await TurnkeyUserModel.query(
+    Transaction.get(options.txId),
+  )
+    .where(TurnkeyUserColumns.suborg_id, suborgId)
+    .patch({ [TurnkeyUserColumns.injective_address]: injectiveAddress })
+    .returning('*');
+
+  return updated[0];
+}
