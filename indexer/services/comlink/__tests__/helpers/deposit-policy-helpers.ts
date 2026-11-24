@@ -6,15 +6,21 @@ import {
  * Fixtures and helpers for the tests of the deposit route to Injective.
  */
 
-// A dYdX address and the same account on Injective, in its three forms. The 20 address bytes are
-// 0x01 to 0x14.
-export const DYDX_ADDRESS: string = 'dydx1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5kmz6xt';
+// A user's dYdX address, and the Injective account they name for their deposits, in its three
+// forms. The two share nothing: the 20 bytes of the Injective address are 0x01 to 0x14.
+export const DYDX_ADDRESS: string = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
 export const INJECTIVE_ADDRESS: string = 'inj1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc54tm65y';
 export const INJECTIVE_EVM_ADDRESS: string = '0x0102030405060708090a0B0c0d0e0f1011121314';
 export const INJECTIVE_MINT_RECIPIENT: string = '0x0000000000000000000000000102030405060708090a0b0c0d0e0f1011121314';
+// Another Injective account, with the address bytes 0x1234567890 four times over.
+export const OTHER_INJECTIVE_ADDRESS: string = 'inj1zg69v7yszg69v7yszg69v7yszg69v7ysljkwjv';
+export const OTHER_INJECTIVE_MINT_RECIPIENT: string = '0x0000000000000000000000001234567890123456789012345678901234567890';
+// The Injective account with the same address bytes as the dYdX address. Deposits do not go
+// here unless the user names it.
+export const INJECTIVE_ADDRESS_WITH_DYDX_BYTES: string = 'inj199tqg4wdlnu4qjlxchpd7seg454937hjqx2jw6';
 
-// The transaction Skip returned on 2026-11-23 for bridging 100 USDC from Arbitrum to the account
-// above on Injective.
+// The transaction Skip returned on 2026-11-23 for bridging 100 USDC from Arbitrum to
+// INJECTIVE_ADDRESS.
 export const SKIP_ARBITRUM_BRIDGE_TX: { to: string, data: string } = {
   to: '0x400BB58033a7763A834199190B68F66A2661aE73',
   data: [
@@ -33,7 +39,7 @@ export const SKIP_ARBITRUM_BRIDGE_TX: { to: string, data: string } = {
 };
 
 // The instructions of the transaction Skip returned on the same day for bridging 100 USDC from
-// Solana to the same account.
+// Solana to the same Injective account.
 export const SKIP_SOLANA_BRIDGE_INSTRUCTIONS: { programKey: string, dataHex: string }[] = [
   {
     programKey: 'CCTPV2vPZJS2u2BBsUoscuikbYjnpFmbFsvVuJdgUMQe',

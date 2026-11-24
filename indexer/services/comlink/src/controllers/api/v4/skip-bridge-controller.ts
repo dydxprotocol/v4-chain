@@ -266,6 +266,30 @@ class BridgeController extends Controller {
       throw new Error('Failed to derive dYdX address');
     }
 
+    // find the suborgId for the user
+    const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findBySvmAddress(
+      fromAddress,
+    );
+    if (!record) {
+      throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
+    }
+    // Deposits go to the Injective account the user named when they approved the deposit
+    // policy. Until they have, there is nowhere to send the funds, and they stay where they are.
+    if (!record.injective_address) {
+      logger.warning({
+        at: `${controllerName}#startSolanaBridge`,
+        message: 'User has not approved the Injective deposit route, skipping bridge',
+        fromAddress,
+        chainId,
+        sourceAssetDenom,
+      });
+      return {
+        success: false,
+        message: 'User has not approved the Injective deposit route',
+      };
+    }
+    const injectiveAddress: string = record.injective_address;
+
     const amountIn = await limitAmount(chainId, amount, sourceAssetDenom);
 
     const path = await route({
@@ -278,8 +302,8 @@ class BridgeController extends Controller {
       amountIn,
       sourceAssetDenom,
       sourceAssetChainId: chainId,
-      // USDC on Injective, in the user's own Injective account. The user sends it on to dYdX
-      // from there.
+      // USDC on Injective, in the Injective account the user named. The user sends it on to
+      // dYdX from there.
       destAssetChainId: injectiveEvmChainId,
       cumulativeAffiliateFeeBps: '0',
       destAssetDenom: INJECTIVE_EVM_USDC_ADDRESS,
@@ -292,16 +316,8 @@ class BridgeController extends Controller {
     // they are the addresses that the funds will be deposited into in case
     // of a failure.
     const userAddresses = await buildUserAddresses(
-      path.requiredChainAddresses, fromAddress, dydxAddress,
+      path.requiredChainAddresses, fromAddress, dydxAddress, injectiveAddress,
     );
-
-    // find the suborgId for the user
-    const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findBySvmAddress(
-      fromAddress,
-    );
-    if (!record) {
-      throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
-    }
 
     const solanaSponsorPublicKey = config.SOLANA_SPONSOR_PUBLIC_KEY;
     if (!solanaSponsorPublicKey) {
@@ -472,14 +488,21 @@ class BridgeController extends Controller {
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
-    // An approval made for the earlier route through Noble does not permit this one, and the
-    // user operation would be refused. The funds stay where they are until the user approves
-    // the Injective route.
+    // Deposits go to the Injective account the user named when they approved the deposit
+    // policy, and the approval on this chain has to permit bridging to that account. One made
+    // when the account was set up, for the earlier route through Noble, or for another Injective
+    // account does not, and the user operation would be refused. The funds stay where they are
+    // until the user approves the Injective route.
+    const injectiveAddress: string | undefined = record.injective_address ?? undefined;
     const approval: string | undefined = await PermissionApprovalTable.getApprovalForSuborgAndChain(
       record.suborg_id,
       chainId,
     );
-    if (!approval || !approvalAllowsInjectiveBridge(approval, record.dydx_address)) {
+    if (
+      !injectiveAddress ||
+      !approval ||
+      !approvalAllowsInjectiveBridge(approval, injectiveAddress)
+    ) {
       logger.warning({
         at: `${controllerName}#startEvmBridge`,
         message: 'User has not approved the Injective deposit route, skipping bridge',
@@ -500,6 +523,7 @@ class BridgeController extends Controller {
         srcAddress,
         sourceAssetDenom,
         record.dydx_address,
+        injectiveAddress,
         amountToUse,
         chainId,
       );

@@ -4449,7 +4449,9 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
-r = requests.get(f'{baseURL}/turnkey/depositPolicy/{dydxAddress}', headers = headers)
+r = requests.get(f'{baseURL}/turnkey/depositPolicy/{dydxAddress}', params={
+  'injectiveAddress': 'string'
+}, headers = headers)
 
 print(r.json())
 
@@ -4465,7 +4467,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/turnkey/depositPolicy/{dydxAddress}`,
+fetch(`${baseURL}/turnkey/depositPolicy/{dydxAddress}?injectiveAddress=string`,
 {
   method: 'GET',
 
@@ -4482,22 +4484,24 @@ fetch(`${baseURL}/turnkey/depositPolicy/{dydxAddress}`,
 `GET /turnkey/depositPolicy/{dydxAddress}`
 
 Returns what the user has to approve before deposits to their deposit addresses can be
-bridged, for an account that was set up before the deposit route changed to go through
-Injective. The service cannot make these approvals itself: once an account is set up, only
-the user can change what the service may sign for them.
+bridged to `injectiveAddress`, the Injective account they hold the key for. The service
+cannot work that account out or make these approvals itself: once an account is set up,
+only the user can change what the service may sign for them.
 
 - `evm.approvals`: for each chain with status ACTION_REQUIRED, sign `typedData` with the
   user's EVM key and send the signatures to POST /depositPolicy.
 - `solana`: with status ACTION_REQUIRED, create `policy` in the user's Turnkey
   sub-organization. The policies in `obsoletePolicyIds` can be deleted.
 
-Deposits arrive at `injectiveAddress`, and the user sends them on to dYdX from there.
+Both permit bridging to `injectiveAddress` and nowhere else. Deposits arrive there once
+they are approved, and the user sends them on to dYdX from it.
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |dydxAddress|path|string|true|none|
+|injectiveAddress|query|string|true|none|
 
 > Example responses
 
@@ -4574,6 +4578,7 @@ print(r.json())
 ```javascript
 const inputBody = '{
   "dydxAddress": "string",
+  "injectiveAddress": "string",
   "signatures": [
     {
       "chainId": "string",
@@ -4606,7 +4611,8 @@ fetch(`${baseURL}/turnkey/depositPolicy`,
 
 `POST /turnkey/depositPolicy`
 
-Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress}. A
+Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress} for
+`injectiveAddress`, and that address as the account the user's deposits are bridged to. A
 signature that is not the user's signature of that typed data is rejected, and nothing is
 stored.
 
@@ -4615,6 +4621,7 @@ stored.
 ```json
 {
   "dydxAddress": "string",
+  "injectiveAddress": "string",
   "signatures": [
     {
       "chainId": "string",
@@ -8130,6 +8137,7 @@ A Turnkey policy, in the shape Turnkey's `createPolicy` activity takes.
 ```json
 {
   "dydxAddress": "string",
+  "injectiveAddress": "string",
   "signatures": [
     {
       "chainId": "string",
@@ -8145,6 +8153,7 @@ A Turnkey policy, in the shape Turnkey's `createPolicy` activity takes.
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |dydxAddress|string|true|none|none|
+|injectiveAddress|string|true|none|none|
 |signatures|[[DepositPolicySignature](#schemadepositpolicysignature)]|true|none|none|
 
 ## TurnkeyAuthResponse

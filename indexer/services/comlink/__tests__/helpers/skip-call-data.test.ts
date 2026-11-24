@@ -6,7 +6,9 @@ import { buildUserAddresses, getSkipCallData } from '../../src/helpers/skip-help
 import {
   DYDX_ADDRESS,
   INJECTIVE_ADDRESS,
+  INJECTIVE_ADDRESS_WITH_DYDX_BYTES,
   INJECTIVE_EVM_ADDRESS,
+  OTHER_INJECTIVE_ADDRESS,
   SKIP_ARBITRUM_BRIDGE_TX,
 } from './deposit-policy-helpers';
 
@@ -53,24 +55,49 @@ describe('deposit route to Injective', () => {
   });
 
   describe('getAddress', () => {
-    it('gives the user\'s own Injective account for Injective', () => {
-      expect(getAddress('injective-1', SOURCE_ADDRESS, DYDX_ADDRESS)).toEqual(INJECTIVE_ADDRESS);
+    it('gives the Injective account the user named for Injective', () => {
+      expect(
+        getAddress('injective-1', SOURCE_ADDRESS, DYDX_ADDRESS, INJECTIVE_ADDRESS),
+      ).toEqual(INJECTIVE_ADDRESS);
     });
 
     it('gives the same account in EVM form for Injective\'s EVM chain id', () => {
-      expect(getAddress(INJECTIVE_EVM, SOURCE_ADDRESS, DYDX_ADDRESS)).toEqual(
-        INJECTIVE_EVM_ADDRESS,
-      );
+      expect(
+        getAddress(INJECTIVE_EVM, SOURCE_ADDRESS, DYDX_ADDRESS, INJECTIVE_ADDRESS),
+      ).toEqual(INJECTIVE_EVM_ADDRESS);
+    });
+
+    it('does not derive the Injective account from the dYdX address', () => {
+      expect(
+        getAddress('injective-1', SOURCE_ADDRESS, DYDX_ADDRESS, OTHER_INJECTIVE_ADDRESS),
+      ).toEqual(OTHER_INJECTIVE_ADDRESS);
+      expect(
+        getAddress('injective-1', SOURCE_ADDRESS, DYDX_ADDRESS, INJECTIVE_ADDRESS),
+      ).not.toEqual(INJECTIVE_ADDRESS_WITH_DYDX_BYTES);
+    });
+
+    it('refuses to route to something that is not an Injective account', () => {
+      expect(() => getAddress(INJECTIVE_EVM, SOURCE_ADDRESS, DYDX_ADDRESS, DYDX_ADDRESS)).toThrow();
+      expect(() => getAddress('injective-1', SOURCE_ADDRESS, DYDX_ADDRESS, '')).toThrow();
     });
 
     it('still gives the source address for the source chain', () => {
-      expect(getAddress(ARBITRUM, SOURCE_ADDRESS, DYDX_ADDRESS)).toEqual(SOURCE_ADDRESS);
-      expect(getAddress('solana', 'solana-address', DYDX_ADDRESS)).toEqual('solana-address');
+      expect(
+        getAddress(ARBITRUM, SOURCE_ADDRESS, DYDX_ADDRESS, INJECTIVE_ADDRESS),
+      ).toEqual(SOURCE_ADDRESS);
+      expect(
+        getAddress('solana', 'solana-address', DYDX_ADDRESS, INJECTIVE_ADDRESS),
+      ).toEqual('solana-address');
     });
 
     it('builds the addresses of a route from a source chain to Injective', async () => {
       expect(
-        await buildUserAddresses([ARBITRUM, INJECTIVE_EVM], SOURCE_ADDRESS, DYDX_ADDRESS),
+        await buildUserAddresses(
+          [ARBITRUM, INJECTIVE_EVM],
+          SOURCE_ADDRESS,
+          DYDX_ADDRESS,
+          INJECTIVE_ADDRESS,
+        ),
       ).toEqual([
         { chainId: ARBITRUM, address: SOURCE_ADDRESS },
         { chainId: INJECTIVE_EVM, address: INJECTIVE_EVM_ADDRESS },
@@ -80,7 +107,14 @@ describe('deposit route to Injective', () => {
 
   describe('getSkipCallData', () => {
     it('asks Skip for a route that ends at USDC on Injective', async () => {
-      await getSkipCallData(SOURCE_ADDRESS, ARBITRUM_USDC, DYDX_ADDRESS, AMOUNT, ARBITRUM);
+      await getSkipCallData(
+        SOURCE_ADDRESS,
+        ARBITRUM_USDC,
+        DYDX_ADDRESS,
+        INJECTIVE_ADDRESS,
+        AMOUNT,
+        ARBITRUM,
+      );
 
       expect(route).toHaveBeenCalledTimes(1);
       expect(route).toHaveBeenCalledWith(expect.objectContaining({
@@ -92,8 +126,15 @@ describe('deposit route to Injective', () => {
       }));
     });
 
-    it('names the user\'s own Injective account as where the funds arrive', async () => {
-      await getSkipCallData(SOURCE_ADDRESS, ARBITRUM_USDC, DYDX_ADDRESS, AMOUNT, ARBITRUM);
+    it('names the Injective account the user named as where the funds arrive', async () => {
+      await getSkipCallData(
+        SOURCE_ADDRESS,
+        ARBITRUM_USDC,
+        DYDX_ADDRESS,
+        INJECTIVE_ADDRESS,
+        AMOUNT,
+        ARBITRUM,
+      );
 
       expect(messages).toHaveBeenCalledWith(expect.objectContaining({
         addressList: [SOURCE_ADDRESS, INJECTIVE_EVM_ADDRESS],
@@ -107,6 +148,7 @@ describe('deposit route to Injective', () => {
         SOURCE_ADDRESS,
         ARBITRUM_USDC,
         DYDX_ADDRESS,
+        INJECTIVE_ADDRESS,
         AMOUNT,
         ARBITRUM,
       );
@@ -138,7 +180,14 @@ describe('deposit route to Injective', () => {
       });
 
       await expect(
-        getSkipCallData(SOURCE_ADDRESS, ARBITRUM_USDC, DYDX_ADDRESS, AMOUNT, ARBITRUM),
+        getSkipCallData(
+          SOURCE_ADDRESS,
+          ARBITRUM_USDC,
+          DYDX_ADDRESS,
+          INJECTIVE_ADDRESS,
+          AMOUNT,
+          ARBITRUM,
+        ),
       ).rejects.toThrow(
         'Skip route does not go through the CCTP v2 relayer: 0x6d4d4A979D766e8b87C985a61B262cfCDf8d6446',
       );
@@ -148,7 +197,14 @@ describe('deposit route to Injective', () => {
       messages.mockResolvedValue({ msgs: [{ multiChainMsg: { chainId: 'injective-1' } }] });
 
       await expect(
-        getSkipCallData(SOURCE_ADDRESS, ARBITRUM_USDC, DYDX_ADDRESS, AMOUNT, ARBITRUM),
+        getSkipCallData(
+          SOURCE_ADDRESS,
+          ARBITRUM_USDC,
+          DYDX_ADDRESS,
+          INJECTIVE_ADDRESS,
+          AMOUNT,
+          ARBITRUM,
+        ),
       ).rejects.toThrow('Skip route does not go through the CCTP v2 relayer: no EVM transaction');
     });
 
@@ -156,7 +212,14 @@ describe('deposit route to Injective', () => {
       route.mockResolvedValue(undefined);
 
       await expect(
-        getSkipCallData(SOURCE_ADDRESS, 'arbitrum-native', DYDX_ADDRESS, AMOUNT, ARBITRUM),
+        getSkipCallData(
+          SOURCE_ADDRESS,
+          'arbitrum-native',
+          DYDX_ADDRESS,
+          INJECTIVE_ADDRESS,
+          AMOUNT,
+          ARBITRUM,
+        ),
       ).rejects.toThrow('Failed to find a route');
     });
   });

@@ -5,7 +5,7 @@ import express from 'express';
 import { matchedData } from 'express-validator';
 import fetch from 'node-fetch';
 import {
-  Controller, Get, Path, Post, Route, Body,
+  Controller, Get, Path, Post, Query, Route, Body,
 } from 'tsoa';
 import { Address, checksumAddress, recoverMessageAddress } from 'viem';
 
@@ -145,8 +145,9 @@ export class TurnkeyController extends Controller {
     await Promise.all([
       // alchemy webhook upload
       addAddressesToAlchemyWebhook(user.evm_address, user.svm_address),
-      // configure the policies now
-      this.policyEngine.configurePolicy(user.suborg_id, user.evm_address, dydxAddress),
+      // Set up the smart accounts now. Deposits are not bridged until the user approves the
+      // deposit policy, which names the Injective account they go to.
+      this.policyEngine.configurePolicy(user.suborg_id, user.evm_address),
     ]);
 
     // Remove self from root quorum (depends on policy configuration)
@@ -160,26 +161,32 @@ export class TurnkeyController extends Controller {
 
   /**
    * Returns what the user has to approve before deposits to their deposit addresses can be
-   * bridged, for an account that was set up before the deposit route changed to go through
-   * Injective. The service cannot make these approvals itself: once an account is set up, only
-   * the user can change what the service may sign for them.
+   * bridged to `injectiveAddress`, the Injective account they hold the key for. The service
+   * cannot work that account out or make these approvals itself: once an account is set up,
+   * only the user can change what the service may sign for them.
    *
    * - `evm.approvals`: for each chain with status ACTION_REQUIRED, sign `typedData` with the
    *   user's EVM key and send the signatures to POST /depositPolicy.
    * - `solana`: with status ACTION_REQUIRED, create `policy` in the user's Turnkey
    *   sub-organization. The policies in `obsoletePolicyIds` can be deleted.
    *
-   * Deposits arrive at `injectiveAddress`, and the user sends them on to dYdX from there.
+   * Both permit bridging to `injectiveAddress` and nowhere else. Deposits arrive there once
+   * they are approved, and the user sends them on to dYdX from it.
    */
   @Get('/depositPolicy/{dydxAddress}')
   async getDepositPolicy(
     @Path() dydxAddress: string,
+      @Query() injectiveAddress: string,
   ): Promise<DepositPolicyResponse> {
-    return this.policyEngine.getDepositPolicy(await TurnkeyController.findUser(dydxAddress));
+    return this.policyEngine.getDepositPolicy(
+      await TurnkeyController.findUser(dydxAddress),
+      injectiveAddress,
+    );
   }
 
   /**
-   * Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress}. A
+   * Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress} for
+   * `injectiveAddress`, and that address as the account the user's deposits are bridged to. A
    * signature that is not the user's signature of that typed data is rejected, and nothing is
    * stored.
    */
@@ -189,7 +196,11 @@ export class TurnkeyController extends Controller {
   ): Promise<SubmitDepositPolicyResponse> {
     const user: TurnkeyUserFromDatabase = await TurnkeyController.findUser(body.dydxAddress);
     return {
-      approvedChainIds: await this.policyEngine.submitDepositApprovals(user, body.signatures),
+      approvedChainIds: await this.policyEngine.submitDepositApprovals(
+        user,
+        body.injectiveAddress,
+        body.signatures,
+      ),
     };
   }
 
@@ -424,9 +435,15 @@ router.get(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     try {
-      const { dydxAddress } = matchedData(req) as { dydxAddress: string };
+      const { dydxAddress, injectiveAddress } = matchedData(req) as {
+        dydxAddress: string,
+        injectiveAddress: string,
+      };
       const controller: TurnkeyController = new TurnkeyController();
-      const response: DepositPolicyResponse = await controller.getDepositPolicy(dydxAddress);
+      const response: DepositPolicyResponse = await controller.getDepositPolicy(
+        dydxAddress,
+        injectiveAddress,
+      );
       return res.send(response);
     } catch (error) {
       return handleControllerError(
@@ -454,10 +471,15 @@ router.post(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     try {
-      const { dydxAddress, signatures } = matchedData(req) as SubmitDepositPolicyRequest;
+      const {
+        dydxAddress,
+        injectiveAddress,
+        signatures,
+      } = matchedData(req) as SubmitDepositPolicyRequest;
       const controller: TurnkeyController = new TurnkeyController();
       const response: SubmitDepositPolicyResponse = await controller.submitDepositPolicy({
         dydxAddress,
+        injectiveAddress,
         // Only what was validated: an entry may carry other fields.
         signatures: signatures.map(({ chainId, signature }: DepositPolicySignature) => ({
           chainId,

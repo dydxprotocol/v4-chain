@@ -27,6 +27,7 @@ export default class TurnkeyUserModel extends BaseModel {
         smart_account_address: { type: ['string', 'null'] },
         salt: { type: 'string' },
         dydx_address: { type: ['string', 'null'] },
+        injective_address: { type: ['string', 'null'] },
         created_at: { type: 'string' },
       },
     };
@@ -45,6 +46,7 @@ export default class TurnkeyUserModel extends BaseModel {
       smart_account_address: 'stringOrNull',
       salt: 'string',
       dydx_address: 'stringOrNull',
+      injective_address: 'stringOrNull',
       created_at: 'string',
     };
   }
@@ -62,6 +64,8 @@ export default class TurnkeyUserModel extends BaseModel {
   salt!: string;
 
   dydx_address?: string | undefined;
+
+  injective_address?: string | undefined;
 
   created_at!: string;
 }

@@ -182,4 +182,75 @@ describe('TurnkeyUser store', () => {
       expect(userByEmptyEmail).toBeUndefined();
     });
   });
+
+  describe('updateInjectiveAddressBySuborgId', () => {
+    const injectiveAddress = 'inj1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc54tm65y';
+
+    it('has no Injective address for a new user', async () => {
+      const user = await TurnkeyUserTable.create(defaultTurnkeyUser1);
+
+      expect(user.injective_address).toBeNull();
+    });
+
+    it('records the Injective address of one user', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+      await TurnkeyUserTable.create(defaultTurnkeyUser2);
+
+      const updated = await TurnkeyUserTable.updateInjectiveAddressBySuborgId(
+        defaultTurnkeyUser1.suborg_id,
+        injectiveAddress,
+      );
+
+      expect(updated).toEqual(expect.objectContaining({
+        ...defaultTurnkeyUser1,
+        injective_address: injectiveAddress,
+      }));
+      expect(
+        (await TurnkeyUserTable.findBySuborgId(defaultTurnkeyUser1.suborg_id))?.injective_address,
+      ).toEqual(injectiveAddress);
+      expect(
+        (await TurnkeyUserTable.findBySuborgId(defaultTurnkeyUser2.suborg_id))?.injective_address,
+      ).toBeNull();
+    });
+
+    it('replaces an earlier Injective address', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+      await TurnkeyUserTable.updateInjectiveAddressBySuborgId(
+        defaultTurnkeyUser1.suborg_id,
+        'inj1zg69v7yszg69v7yszg69v7yszg69v7ysljkwjv',
+      );
+
+      const updated = await TurnkeyUserTable.updateInjectiveAddressBySuborgId(
+        defaultTurnkeyUser1.suborg_id,
+        injectiveAddress,
+      );
+
+      expect(updated?.injective_address).toEqual(injectiveAddress);
+    });
+
+    it('lets two users name the same Injective address', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+      await TurnkeyUserTable.create(defaultTurnkeyUser2);
+
+      await TurnkeyUserTable.updateInjectiveAddressBySuborgId(
+        defaultTurnkeyUser1.suborg_id,
+        injectiveAddress,
+      );
+      const second = await TurnkeyUserTable.updateInjectiveAddressBySuborgId(
+        defaultTurnkeyUser2.suborg_id,
+        injectiveAddress,
+      );
+
+      expect(second?.injective_address).toEqual(injectiveAddress);
+    });
+
+    it('returns undefined for a user that does not exist', async () => {
+      const updated = await TurnkeyUserTable.updateInjectiveAddressBySuborgId(
+        'suborg-nobody',
+        injectiveAddress,
+      );
+
+      expect(updated).toBeUndefined();
+    });
+  });
 });
