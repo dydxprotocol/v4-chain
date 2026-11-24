@@ -101,6 +101,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_protocol_vault_status_to_vault_status.sql',
   'dydx_order_flags.sql',
   'dydx_apply_fill_realized_effects.sql',
+  'dydx_get_fill_closed_pnl.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [

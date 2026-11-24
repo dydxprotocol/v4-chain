@@ -185,6 +185,10 @@ export interface FillResponseObject {
   orderRouterAddress?: string,
   orderRouterFee?: string,
   positionSizeBefore?: string,
+  // Realized price-PnL of the closing portion of this fill vs the position's
+  // average entry at fill time; excludes fees/funding. Undefined for
+  // opening/increasing fills and fills predating the closedPnl migration.
+  closedPnl?: string,
   entryPriceBefore?: string,
   positionSideBefore?: string,
 }
