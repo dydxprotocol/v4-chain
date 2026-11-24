@@ -48,6 +48,25 @@ Outcome 2026-11-12: proposal 412, plan height 92344645 reached at 23:32:58Z; the
 Observed 2026-11-12/13 (three 25 USDC rounds plus drain and rejection, ~10 s per leg): a deposit mints uusdc to the receiver, raises injective_backing and parks the voucher in the module account; a withdrawal moves the amount from injective_backing to pending_injective at send and the ack clears it; supply == noble_backing + injective_backing + pending_injective at every step; a withdrawal above injective_backing fails in DeliverTx with "insufficient route backing" (fee charged, nothing moves); refillable_capacity accrues on Injective withdrawals and is consumed by deposits; the uusdc limiter capacity only followed the TVL baseline (~476M USDC per hour on testnet, so a shortfall regenerates within a block).
 Noble route: never on testnet (expired clients). Finalize (disable Noble withdrawals) is reversible by proposal on testnet.
 
+### Failure paths and governance, rehearsed 2026-11-13 (loop.sh, gov.sh)
+- Timeout: relayer stopped, 10 USDC withdrawal with a 60 s timeout; the relayed MsgTimeout refunded the sender, restored injective_backing and reversed the refillable accrual. Error ack (invalid recipient): identical.
+- Legacy voucher: the pre-upgrade ibc/2614… voucher returned over channel-94 unwinds as plain ICS20; the ledger does not move.
+- Subaccount: canonical deposit -> deposit-to-subaccount -> indexer equity and transfers within 2 s -> withdraw-from-subaccount -> IBC out.
+- Governance (expedited, 10 min each on testnet): 413 PAUSED (deposit error-acks and refunds on the stand-in, withdrawal fails "canonical USDC routing is paused"), 414 GRADUAL + injective_deposits_disabled (deposit bounces, withdrawal works), 415 restore. MsgUpdateControls is a full replacement: always build it from the live controls (`gov.sh controls`).
+- Memo rejection: Injective-route withdrawals carrying a memo (wasm hook JSON, plain text, a PFM `forward` instruction) fail in DeliverTx with "memo not allowed on canonical USDC withdrawal" and the ledger does not move; the same withdrawal without a memo settles.
+- Pending cap: 416 set max_pending_settlements=2; with the relayer stopped two withdrawals went pending (send them with `--packet-timeout-timestamp 3600000000000` so they outlive the vote), the third failed "pending settlement limit reached"; 417 (cap 1, below the live count) passed the vote but failed execution and left the cap at 2, while 418 restored 10000; the relayer restart settled both packets in 6 s.
+- Gotchas: `q gov proposal -o json` prints the status as a number (3 = passed); against the stand-in always pass `--packet-timeout-height 0-0` on both sides (the CLI's relative height uses a light client that only moves when packets flow).
+
+## Mainnet kill switch (prepare before the upgrade)
+On mainnet the expedited voting period is 1.5 days, so the pause proposal must be drafted in advance and submitted the moment it is needed:
+```
+dydxprotocold q canonicalusdc state --node <mainnet rpc> -o json | jq '.controls | .mode = "MODE_PAUSED"' > controls.json
+jq -n --argjson c "$(cat controls.json)" '{messages: [{"@type": "/dydxprotocol.canonicalusdc.MsgUpdateControls",
+  authority: "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky", controls: $c}],
+  deposit: "<min deposit>adydx", title: "Pause canonical USDC routing", summary: "...", metadata: "", expedited: true}' > pause.json
+```
+PAUSED error-acks every canonical deposit (refund on the source chain) and rejects every canonical withdrawal; the automatic brakes that act faster are the EndBlock auto-pause on an invariant breach and max_pending_settlements. Resume = the same message with `.mode = "MODE_GRADUAL"`.
+
 ## 0. Cutting the testnet rc (rc0 = 1bc6a8009, superseded; rc1 = c6a7d60c3 with Noble deposits closed at the upgrade)
 Testnet images are built by `protocol-build-and-push-testnet.yml` on pushes to `main` or `release/protocol/vX[.Y].x`
 in dydxprotocol/v4-chain, tagged by 7-char commit hash in ECR `testnet-validator`. Tags `protocol/vX.Y.Z-rcN` trigger
