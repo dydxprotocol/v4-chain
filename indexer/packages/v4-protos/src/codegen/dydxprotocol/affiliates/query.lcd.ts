@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { AffiliateInfoRequest, AffiliateInfoResponseSDKType, ReferredByRequest, ReferredByResponseSDKType, AllAffiliateTiersRequest, AllAffiliateTiersResponseSDKType, AffiliateWhitelistRequest, AffiliateWhitelistResponseSDKType, AffiliateParametersRequest, AffiliateParametersResponseSDKType, AffiliateOverridesRequest, AffiliateOverridesResponseSDKType } from "./query";
+import { AffiliateInfoRequest, AffiliateInfoResponseSDKType, ReferredByRequest, ReferredByResponseSDKType, AllAffiliateTiersRequest, AllAffiliateTiersResponseSDKType, AffiliateWhitelistRequest, AffiliateWhitelistResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -13,8 +13,6 @@ export class LCDQueryClient {
     this.referredBy = this.referredBy.bind(this);
     this.allAffiliateTiers = this.allAffiliateTiers.bind(this);
     this.affiliateWhitelist = this.affiliateWhitelist.bind(this);
-    this.affiliateParameters = this.affiliateParameters.bind(this);
-    this.affiliateOverrides = this.affiliateOverrides.bind(this);
   }
   /* Query AffiliateInfo returns the affiliate info for a given address. */
 
@@ -43,20 +41,6 @@ export class LCDQueryClient {
   async affiliateWhitelist(_params: AffiliateWhitelistRequest = {}): Promise<AffiliateWhitelistResponseSDKType> {
     const endpoint = `dydxprotocol/affiliates/affiliate_whitelist`;
     return await this.req.get<AffiliateWhitelistResponseSDKType>(endpoint);
-  }
-  /* Query AffiliateParameters returns the affiliate parameters. */
-
-
-  async affiliateParameters(_params: AffiliateParametersRequest = {}): Promise<AffiliateParametersResponseSDKType> {
-    const endpoint = `dydxprotocol/affiliates/affiliate_parameters`;
-    return await this.req.get<AffiliateParametersResponseSDKType>(endpoint);
-  }
-  /* Query AffiliateOverrides returns the affiliate overrides. */
-
-
-  async affiliateOverrides(_params: AffiliateOverridesRequest = {}): Promise<AffiliateOverridesResponseSDKType> {
-    const endpoint = `dydxprotocol/affiliates/affiliate_overrides`;
-    return await this.req.get<AffiliateOverridesResponseSDKType>(endpoint);
   }
 
 }
