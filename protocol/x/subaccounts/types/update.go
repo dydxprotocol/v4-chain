@@ -62,6 +62,7 @@ var updateResultStringMap = map[UpdateResult]string{
 	WithdrawalsAndTransfersBlocked:        "WithdrawalsAndTransfersBlocked",
 	UpdateCausedError:                     "UpdateCausedError",
 	ViolatesIsolatedSubaccountConstraints: "ViolatesIsolatedSubaccountConstraints",
+	ViolatesDepositConstraints:            "ViolatesDepositConstraints",
 }
 
 const (
@@ -71,6 +72,7 @@ const (
 	WithdrawalsAndTransfersBlocked
 	UpdateCausedError
 	ViolatesIsolatedSubaccountConstraints
+	ViolatesDepositConstraints
 )
 
 // Update is used by the subaccounts keeper to allow other modules
@@ -157,3 +159,5 @@ func (u UpdateType) String() string {
 const WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS = 50
 
 const WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_CHAIN_OUTAGE_DURATION = 5 * time.Minute
+
+const MIN_SUBACCOUNT_INITIAL_DEPOSIT_QUANTUMS = 100_000 // 0.1 USDC
