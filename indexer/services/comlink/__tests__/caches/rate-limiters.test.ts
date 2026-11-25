@@ -230,6 +230,31 @@ describe('rate-limit store', () => {
     expect(error).toHaveBeenCalledTimes(3);
   });
 
+  it('does not time out a reply that arrived while the event loop was blocked', async () => {
+    const timeoutMs: number = config.RATE_LIMIT_STORE_TIMEOUT_MS;
+    config.RATE_LIMIT_STORE_TIMEOUT_MS = 200;
+    let ends: number = 0;
+    const onEnd = (): void => { ends += 1; };
+    client.on('end', onEnd);
+    try {
+      // From the check phase, the next loop turn runs timers before it reads the socket; from the
+      // timers phase it would not, and the test would pass without the fix.
+      await new Promise((r) => setImmediate(r));
+      const call: Promise<unknown> = defaultRateLimiter.consume('203.0.113.25');
+      const end: number = Date.now() + 400;
+      while (Date.now() < end) {
+        // Busy-wait: Redis answers while comlink cannot read the reply.
+      }
+      await expect(call).resolves.toBeDefined();
+      await sleep(50);
+      expect(ends).toBe(0);
+      expect(client.ready).toBe(true);
+    } finally {
+      client.removeListener('end', onEnd);
+      config.RATE_LIMIT_STORE_TIMEOUT_MS = timeoutMs;
+    }
+  });
+
   // Last: without the fix the client ends for good, which would break the tests after it.
   it('keeps reconnecting after more than an hour of retries', async () => {
     client.retry_totaltime = 3_700_000;

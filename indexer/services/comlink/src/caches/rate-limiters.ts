@@ -100,10 +100,13 @@ class StoreTimeoutError extends Error {}
 function withStoreTimeout<T>(call: Promise<T>): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
   const timeout: Promise<never> = new Promise((_resolve, reject) => {
+    // After the event loop itself was blocked (GC, a long synchronous handler), Node runs expired
+    // timers before it reads the socket. setImmediate runs after that read, so a reply already
+    // received wins and a slow comlink is not taken for a failed store (which drops the socket).
     timer = setTimeout(
-      () => reject(new StoreTimeoutError(
+      () => setImmediate(() => reject(new StoreTimeoutError(
         `Rate-limit store did not answer within ${config.RATE_LIMIT_STORE_TIMEOUT_MS} ms`,
-      )),
+      ))),
       config.RATE_LIMIT_STORE_TIMEOUT_MS,
     );
   });
