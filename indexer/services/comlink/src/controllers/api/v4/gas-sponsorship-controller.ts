@@ -79,7 +79,7 @@ class GasSponsorshipController extends Controller {
 router.post(
   '/',
   requireGasSponsorshipEnabled,
-  rateLimiterMiddleware(gasSponsorshipRateLimiter),
+  rateLimiterMiddleware(gasSponsorshipRateLimiter, undefined, undefined, true),
   ...CheckGasSponsorshipSchema,
   handleValidationErrors,
   complianceAndGeoCheck,

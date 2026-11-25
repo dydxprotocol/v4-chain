@@ -181,6 +181,8 @@ async function checkRateLimit(ipAddress: string) {
       screenProviderGlobalLimiter.consume(GLOBAL_RATE_LIMIT_KEY, UNCACHED_QUERY_POINTS),
     ]);
   } catch (reject) {
+    // The screening limiters answer from memory on store errors and timeouts, so an Error here is
+    // unexpected; it still fails open, as before.
     if (reject instanceof Error) {
       logger.error({
         at: 'rate-limit',

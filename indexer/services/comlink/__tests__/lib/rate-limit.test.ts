@@ -1,8 +1,10 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { IncomingHttpHeaders } from 'http';
 import config from '../../src/config';
-import { getPointCost, rateLimiterMiddleware } from '../../src/lib/rate-limit';
+import {
+  clearStoreErrorLogTimes, getPointCost, rateLimiterMiddleware,
+} from '../../src/lib/rate-limit';
 import {
   ratelimitRedis,
   defaultRateLimiter,
@@ -58,6 +60,7 @@ describe('rateLimit', () => {
   afterEach(async () => {
     await redis.deleteAllAsync(ratelimitRedis.client);
     jest.restoreAllMocks();
+    clearStoreErrorLogTimes();
   });
 
   afterAll(() => {
@@ -693,20 +696,50 @@ describe('rateLimit', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('still uses the store when the route does not opt in', async () => {
+    it('fails open at once, without waiting for Redis, when the route does not opt in', async () => {
       const client: any = ratelimitRedis.client;
       const ready: boolean = client.ready;
-      // Mocked: with ready=false a real command would wait in the client's offline queue.
-      const consume = jest.spyOn(defaultRateLimiter, 'consume')
-        .mockResolvedValue({ remainingPoints: 1, msBeforeNext: 1000 } as any);
+      const consume = jest.spyOn(defaultRateLimiter, 'consume');
+      const increment = jest.spyOn(stats, 'increment');
       client.ready = false;
       req.headers = defaultHeaders;
       try {
+        const start: number = Date.now();
         await rateLimiterMiddleware(defaultRateLimiter)(req, res, next);
+        // Well inside the store timeout, so the answer came from the client, not the timeout.
+        expect(Date.now() - start).toBeLessThan(config.RATE_LIMIT_STORE_TIMEOUT_MS / 2);
         expect(consume).toHaveBeenCalledTimes(1);
+        expect(increment).toHaveBeenCalledWith(
+          `${config.SERVICE_NAME}.rate_limit_store_error`, 1,
+          { key_prefix: defaultRateLimiter.keyPrefix },
+        );
+        expect(res.status).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledTimes(1);
       } finally {
         client.ready = ready;
       }
+    });
+
+    it('logs store errors once per limiter per interval and counts every one', async () => {
+      const error = jest.spyOn(logger, 'error');
+      const increment = jest.spyOn(stats, 'increment');
+      const start: number = Date.now();
+      const now = jest.spyOn(Date, 'now').mockReturnValue(start);
+      jest.spyOn(ordersRateLimiter, 'consume').mockRejectedValue(new Error('READONLY'));
+      req.headers = defaultHeaders;
+
+      await rateLimiterMiddleware(ordersRateLimiter)(req, res, next);
+      now.mockReturnValue(start + 9_999);
+      await rateLimiterMiddleware(ordersRateLimiter)(req, res, next);
+      expect(error).toHaveBeenCalledTimes(1);
+
+      now.mockReturnValue(start + 10_000);
+      await rateLimiterMiddleware(ordersRateLimiter)(req, res, next);
+      expect(error).toHaveBeenCalledTimes(2);
+      expect(increment.mock.calls.filter(
+        ([stat]) => stat === `${config.SERVICE_NAME}.rate_limit_store_error`,
+      )).toHaveLength(3);
+      expect(next).toHaveBeenCalledTimes(3);
     });
   });
 
