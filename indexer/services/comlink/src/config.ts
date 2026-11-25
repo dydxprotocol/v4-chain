@@ -88,8 +88,6 @@ export const configSchema = {
   // from our domain and several signatures, so these are far tighter than the read limits.
   RATE_LIMIT_TURNKEY_IP_POINTS: parseInteger({ default: 10 }),
   RATE_LIMIT_TURNKEY_IP_DURATION_SECONDS: parseInteger({ default: 600 }),
-  RATE_LIMIT_TURNKEY_EMAIL_POINTS: parseInteger({ default: 5 }),
-  RATE_LIMIT_TURNKEY_EMAIL_DURATION_SECONDS: parseInteger({ default: 600 }),
   RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_POINTS: parseInteger({ default: 3 }),
   RATE_LIMIT_TURNKEY_NEW_SUBORG_IP_DURATION_SECONDS: parseInteger({ default: 3600 }),
   // Keep below the Create Sub Org limit Turnkey sets for the parent org.

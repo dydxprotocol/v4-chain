@@ -1892,6 +1892,294 @@
         "type": "object",
         "additionalProperties": false
       },
+      "DepositPolicyStatus": {
+        "enum": [
+          "UP_TO_DATE",
+          "ACTION_REQUIRED",
+          "UNAVAILABLE"
+        ],
+        "type": "string"
+      },
+      "DepositPolicyTypedData": {
+        "description": "EIP-712 typed data that enables the bridge session key on a user's smart account, limited to\nthe calls of a deposit. It is a complete `eth_signTypedData_v4` payload, including the type of\nthe domain, to be signed as-is with the user's EVM key.",
+        "properties": {
+          "domain": {
+            "properties": {
+              "verifyingContract": {
+                "type": "string"
+              },
+              "chainId": {
+                "type": "number",
+                "format": "double"
+              },
+              "version": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "verifyingContract",
+              "chainId",
+              "version",
+              "name"
+            ],
+            "type": "object"
+          },
+          "types": {
+            "properties": {
+              "Enable": {
+                "items": {
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "EIP712Domain": {
+                "items": {
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "Enable",
+              "EIP712Domain"
+            ],
+            "type": "object"
+          },
+          "primaryType": {
+            "type": "string"
+          },
+          "message": {
+            "properties": {
+              "selectorData": {
+                "type": "string"
+              },
+              "hookData": {
+                "type": "string"
+              },
+              "validatorData": {
+                "type": "string"
+              },
+              "hook": {
+                "type": "string"
+              },
+              "nonce": {
+                "type": "number",
+                "format": "double"
+              },
+              "validationId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "selectorData",
+              "hookData",
+              "validatorData",
+              "hook",
+              "nonce",
+              "validationId"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "domain",
+          "types",
+          "primaryType",
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DepositPolicyEvmApproval": {
+        "properties": {
+          "chainId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DepositPolicyStatus"
+          },
+          "typedData": {
+            "$ref": "#/components/schemas/DepositPolicyTypedData"
+          }
+        },
+        "required": [
+          "chainId",
+          "status"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DepositPolicyTurnkeyPolicy": {
+        "description": "A Turnkey policy, in the shape Turnkey's `createPolicy` activity takes.",
+        "properties": {
+          "policyName": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "EFFECT_ALLOW"
+            ],
+            "nullable": false
+          },
+          "condition": {
+            "type": "string"
+          },
+          "consensus": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "policyName",
+          "effect",
+          "condition",
+          "consensus",
+          "notes"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DepositPolicyResponse": {
+        "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
+          "injectiveAddress": {
+            "type": "string"
+          },
+          "evm": {
+            "properties": {
+              "approvals": {
+                "items": {
+                  "$ref": "#/components/schemas/DepositPolicyEvmApproval"
+                },
+                "type": "array"
+              },
+              "address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "approvals",
+              "address"
+            ],
+            "type": "object"
+          },
+          "solana": {
+            "properties": {
+              "obsoletePolicyIds": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "policy": {
+                "$ref": "#/components/schemas/DepositPolicyTurnkeyPolicy"
+              },
+              "status": {
+                "$ref": "#/components/schemas/DepositPolicyStatus"
+              }
+            },
+            "required": [
+              "obsoletePolicyIds",
+              "status"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "dydxAddress",
+          "injectiveAddress",
+          "evm",
+          "solana"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SubmitDepositPolicyResponse": {
+        "properties": {
+          "approvedChainIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "approvedChainIds"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DepositPolicySignature": {
+        "properties": {
+          "chainId": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "chainId",
+          "signature"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SubmitDepositPolicyRequest": {
+        "properties": {
+          "dydxAddress": {
+            "type": "string"
+          },
+          "injectiveAddress": {
+            "type": "string"
+          },
+          "signatures": {
+            "items": {
+              "$ref": "#/components/schemas/DepositPolicySignature"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "dydxAddress",
+          "injectiveAddress",
+          "signatures"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "TurnkeyAuthResponse": {
         "properties": {
           "dydxAddress": {
@@ -4670,6 +4958,73 @@
                   "dydxAddress"
                 ],
                 "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/turnkey/depositPolicy/{dydxAddress}": {
+      "get": {
+        "operationId": "GetDepositPolicy",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositPolicyResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Returns what the user has to approve before deposits to their deposit addresses can be\nbridged to `injectiveAddress`, the Injective account they hold the key for. The service\ncannot work that account out or make these approvals itself: once an account is set up,\nonly the user can change what the service may sign for them.\n\n- `evm.approvals`: for each chain with status ACTION_REQUIRED, sign `typedData` with the\n  user's EVM key and send the signatures to POST /depositPolicy.\n- `solana`: with status ACTION_REQUIRED, create `policy` in the user's Turnkey\n  sub-organization. The policies in `obsoletePolicyIds` can be deleted.\n\nBoth permit bridging to `injectiveAddress` and nowhere else. Deposits arrive there once\nthey are approved, and the user sends them on to dYdX from it.",
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dydxAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "injectiveAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/turnkey/depositPolicy": {
+      "post": {
+        "operationId": "SubmitDepositPolicy",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitDepositPolicyResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Stores the user's signatures of the typed data from GET /depositPolicy/{dydxAddress} for\n`injectiveAddress`, and that address as the account the user's deposits are bridged to. A\nsignature that is not the user's signature of that typed data is rejected, and nothing is\nstored.",
+        "security": [],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDepositPolicyRequest"
               }
             }
           }

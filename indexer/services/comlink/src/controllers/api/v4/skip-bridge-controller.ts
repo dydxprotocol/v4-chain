@@ -5,6 +5,7 @@ import {
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BridgeInformationTable,
+  PermissionApprovalTable,
   TurnkeyUsersTable,
   TurnkeyUserFromDatabase,
   BridgeInformationCreateObject,
@@ -52,11 +53,14 @@ import {
   limitAmount,
 } from '../../../helpers/skip-helper';
 import { trackTurnkeyDepositSubmitted } from '../../../lib/amplitude-helpers';
+import { approvalAllowsInjectiveBridge } from '../../../lib/call-policies';
 import { handleControllerError } from '../../../lib/helpers';
 import {
-  dydxChainId, usdcAddressByChainId, ethDenomByChainId,
+  usdcAddressByChainId, ethDenomByChainId,
   SOLANA_USDC_QUANTUM,
   ETH_USDC_QUANTUM,
+  INJECTIVE_EVM_USDC_ADDRESS,
+  injectiveEvmChainId,
 } from '../../../lib/smart-contract-constants';
 import {
   CheckBridgeSchema,
@@ -262,6 +266,30 @@ class BridgeController extends Controller {
       throw new Error('Failed to derive dYdX address');
     }
 
+    // find the suborgId for the user
+    const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findBySvmAddress(
+      fromAddress,
+    );
+    if (!record) {
+      throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
+    }
+    // Deposits go to the Injective account the user named when they approved the deposit
+    // policy. Until they have, there is nowhere to send the funds, and they stay where they are.
+    if (!record.injective_address) {
+      logger.warning({
+        at: `${controllerName}#startSolanaBridge`,
+        message: 'User has not approved the Injective deposit route, skipping bridge',
+        fromAddress,
+        chainId,
+        sourceAssetDenom,
+      });
+      return {
+        success: false,
+        message: 'User has not approved the Injective deposit route',
+      };
+    }
+    const injectiveAddress: string = record.injective_address;
+
     const amountIn = await limitAmount(chainId, amount, sourceAssetDenom);
 
     const path = await route({
@@ -274,9 +302,11 @@ class BridgeController extends Controller {
       amountIn,
       sourceAssetDenom,
       sourceAssetChainId: chainId,
-      destAssetChainId: dydxChainId,
+      // USDC on Injective, in the Injective account the user named. The user sends it on to
+      // dYdX from there.
+      destAssetChainId: injectiveEvmChainId,
       cumulativeAffiliateFeeBps: '0',
-      destAssetDenom: usdcAddressByChainId[dydxChainId],
+      destAssetDenom: INJECTIVE_EVM_USDC_ADDRESS,
     });
     if (!path) {
       throw new Error('Failed to create route');
@@ -286,16 +316,8 @@ class BridgeController extends Controller {
     // they are the addresses that the funds will be deposited into in case
     // of a failure.
     const userAddresses = await buildUserAddresses(
-      path.requiredChainAddresses, fromAddress, dydxAddress,
+      path.requiredChainAddresses, fromAddress, dydxAddress, injectiveAddress,
     );
-
-    // find the suborgId for the user
-    const record: TurnkeyUserFromDatabase | undefined = await TurnkeyUsersTable.findBySvmAddress(
-      fromAddress,
-    );
-    if (!record) {
-      throw new Error(`Failed to find a turnkey user for svm address: ${fromAddress}`);
-    }
 
     const solanaSponsorPublicKey = config.SOLANA_SPONSOR_PUBLIC_KEY;
     if (!solanaSponsorPublicKey) {
@@ -466,6 +488,33 @@ class BridgeController extends Controller {
     if (!record || !record.dydx_address) {
       throw new Error('Failed to derive dYdX address');
     }
+    // Deposits go to the Injective account the user named when they approved the deposit
+    // policy, and the approval on this chain has to permit bridging to that account. One made
+    // when the account was set up, for the earlier route through Noble, or for another Injective
+    // account does not, and the user operation would be refused. The funds stay where they are
+    // until the user approves the Injective route.
+    const injectiveAddress: string | undefined = record.injective_address ?? undefined;
+    const approval: string | undefined = await PermissionApprovalTable.getApprovalForSuborgAndChain(
+      record.suborg_id,
+      chainId,
+    );
+    if (
+      !injectiveAddress ||
+      !approval ||
+      !approvalAllowsInjectiveBridge(approval, injectiveAddress)
+    ) {
+      logger.warning({
+        at: `${controllerName}#startEvmBridge`,
+        message: 'User has not approved the Injective deposit route, skipping bridge',
+        fromAddress,
+        chainId,
+        sourceAssetDenom,
+      });
+      return {
+        success: false,
+        message: 'User has not approved the Injective deposit route',
+      };
+    }
     // we cannot bridge more than the max amount allowed through the bridge.
     const amountToUse = await limitAmount(chainId, amount, sourceAssetDenom);
     let callData: Parameters<SmartAccountImplementation['encodeCalls']>[0] = [];
@@ -474,6 +523,7 @@ class BridgeController extends Controller {
         srcAddress,
         sourceAssetDenom,
         record.dydx_address,
+        injectiveAddress,
         amountToUse,
         chainId,
       );

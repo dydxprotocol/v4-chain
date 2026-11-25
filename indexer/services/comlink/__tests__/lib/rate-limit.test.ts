@@ -23,7 +23,6 @@ import {
   getHistoricalPnlRateLimiter,
   getPnlRateLimiter,
   getFundingRateLimiter,
-  turnkeyEmailRateLimiter,
   turnkeyIpRateLimiter,
   turnkeyNewSuborgGlobalLimiter,
 } from '../../src/caches/rate-limiters';
@@ -604,15 +603,6 @@ describe('rateLimit', () => {
         `${config.SERVICE_NAME}.rate_limited`, 1, { key_prefix: turnkeyIpRateLimiter.keyPrefix },
       );
       expect(next).toHaveBeenCalledTimes(limit);
-    });
-
-    it('skips the limiter when the key function returns undefined', async () => {
-      req.headers = defaultHeaders;
-      await rateLimiterMiddleware(turnkeyEmailRateLimiter, undefined, () => undefined)(
-        req, res, next,
-      );
-      expect(res.set).not.toHaveBeenCalled();
-      expect(next).toHaveBeenCalledTimes(1);
     });
   });
 

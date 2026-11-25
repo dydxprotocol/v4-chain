@@ -367,8 +367,8 @@ const signInSchema: Record<string, ParamSchema> = {
     optional: true,
     isString: true,
     errorMessage: 'Magic link must be a string',
-    // Checked here rather than in the controller so a bad link is refused before it counts
-    // against the per-email limit. Only email sign-in sends the link.
+    // Checked here rather than in the controller so a bad link is refused before any Turnkey
+    // call. Only email sign-in sends the link.
     custom: {
       options: (value: string, { req }) => {
         if (req.body.signinMethod === SigninMethod.EMAIL &&
@@ -465,6 +465,66 @@ export const CheckUploadDydxAddressSchema = checkSchema(uploadDydxAddressSchema)
 export const CheckAppleLoginRedirectSchema = checkSchema(appleLoginRedirectSchema);
 
 export const CheckGetDepositAddressSchema = checkSchema(getDepositAddressSchema);
+
+const depositPolicyInjectiveAddressSchema: ParamSchema = {
+  custom: {
+    options: (address: unknown) => isValidAccountAddress(address, INJECTIVE_ADDRESS_PREFIX),
+  },
+  errorMessage: 'injectiveAddress must be a valid injective address',
+};
+
+export const CheckGetDepositPolicySchema = checkSchema({
+  dydxAddress: {
+    in: ['params'],
+    custom: {
+      options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
+    },
+    errorMessage: 'dydxAddress must be a valid dydx address',
+  },
+  injectiveAddress: {
+    in: ['query'],
+    ...depositPolicyInjectiveAddressSchema,
+  },
+});
+
+export const CheckSubmitDepositPolicySchema = checkSchema({
+  dydxAddress: {
+    in: ['body'],
+    custom: {
+      options: (address: unknown) => isValidAccountAddress(address, DYDX_ADDRESS_PREFIX),
+    },
+    errorMessage: 'dydxAddress must be a valid dydx address',
+  },
+  injectiveAddress: {
+    in: ['body'],
+    ...depositPolicyInjectiveAddressSchema,
+  },
+  signatures: {
+    in: ['body'],
+    isArray: {
+      // One signature per EVM chain at most.
+      options: { min: 1, max: 5 },
+    },
+    errorMessage: 'signatures must be a list of one to five signatures',
+  },
+  'signatures.*.chainId': {
+    in: ['body'],
+    isString: true,
+    matches: {
+      options: /^[0-9]{1,10}$/,
+    },
+    errorMessage: 'chainId must be the id of an EVM chain, as a string',
+  },
+  'signatures.*.signature': {
+    in: ['body'],
+    isString: true,
+    matches: {
+      // A 65-byte signature.
+      options: /^0x[0-9a-fA-F]{130}$/,
+    },
+    errorMessage: 'signature must be a 65-byte signature in hex',
+  },
+});
 
 export const CheckBridgeSchema = checkSchema(checkBridgeSchema);
 

@@ -19,11 +19,14 @@ import { avalanche } from 'viem/chains';
 
 import config from '../config';
 import {
-  dydxChainId,
   entryPoint,
   ETH_USDC_QUANTUM,
   ETH_WEI_QUANTUM,
-  ethDenomByChainId, usdcAddressByChainId,
+  ethDenomByChainId,
+  INJECTIVE_EVM_USDC_ADDRESS,
+  injectiveEvmChainId,
+  SKIP_CCTP_V2_RELAYER_ADDRESS,
+  usdcAddressByChainId,
 } from '../lib/smart-contract-constants';
 import { getAddress, getETHPrice, publicClients } from './alchemy-helpers';
 
@@ -38,11 +41,12 @@ export async function buildUserAddresses(
   requiredChainAddresses: string[],
   sourceAddress: string,
   dydxAddress: string,
+  injectiveAddress: string,
 ) {
   return Promise.all(
     requiredChainAddresses.map(async (cid: string) => ({
       chainId: cid,
-      address: await getAddress(cid, sourceAddress, dydxAddress),
+      address: await getAddress(cid, sourceAddress, dydxAddress, injectiveAddress),
     })),
   );
 }
@@ -50,10 +54,14 @@ const nobleForwardingModule = 'https://api.noble.xyz/noble/forwarding/v1/address
 const skipMessagesTimeoutSeconds = '300'; // 5 minutes.
 const dydxNobleChannel = 33;
 // Grabs the raw skip route data to carry out the bridge on our own.
+//
+// The route ends at USDC on Injective, in the Injective account the user named. It is a single
+// transaction on the source chain; the user sends the funds on to dYdX from Injective.
 export async function getSkipCallData(
   sourceAddress: string,
   sourceAssetDenom: string,
   dydxAddress: string,
+  injectiveAddress: string,
   amount: string,
   chainId: string,
 ): Promise<Parameters<SmartAccountImplementation['encodeCalls']>[0]> {
@@ -66,8 +74,8 @@ export async function getSkipCallData(
     amountIn: amountToUse, // Desired amount in smallest denomination (e.g., uatom)
     sourceAssetDenom,
     sourceAssetChainId: chainId,
-    destAssetDenom: usdcAddressByChainId[dydxChainId],
-    destAssetChainId: dydxChainId,
+    destAssetDenom: INJECTIVE_EVM_USDC_ADDRESS,
+    destAssetChainId: injectiveEvmChainId,
     cumulativeAffiliateFeeBps: '0',
     smartRelay: true, // skip recommended to enable for better routes and less faults.
     smartSwapOptions: {
@@ -90,6 +98,7 @@ export async function getSkipCallData(
     routeResult.requiredChainAddresses,
     sourceAddress,
     dydxAddress,
+    injectiveAddress,
   );
 
   let addressList: string[] = [];
@@ -142,6 +151,15 @@ export async function getSkipCallData(
       toAddress = msg.evmTx.to || '';
     }
   });
+
+  // The session key that signs for the user is only permitted to call Skip's CCTP v2 relayer.
+  // Anything else would be refused on chain, so stop here with a message that says why.
+  if (toAddress.replace(/^0x/, '').toLowerCase() !==
+    SKIP_CCTP_V2_RELAYER_ADDRESS.slice(2).toLowerCase()) {
+    throw new Error(
+      `Skip route does not go through the CCTP v2 relayer: ${toAddress || 'no EVM transaction'}`,
+    );
+  }
 
   // need value to be the amount if native asset.
   let value = BigInt(0);

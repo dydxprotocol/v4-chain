@@ -358,6 +358,7 @@ export interface TurnkeyUserFromDatabase {
   smart_account_address?: string,
   salt: string,
   dydx_address?: string,
+  injective_address?: string,
   created_at: string,
 }
 
